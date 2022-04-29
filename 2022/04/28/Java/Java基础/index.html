@@ -348,6 +348,296 @@ name : Ransika
 salary :1000.0
 </code></pre>
 <hr>
+<h1 id="Java修饰符"><a href="#Java修饰符" class="headerlink" title="Java修饰符"></a>Java修饰符</h1><h4 id="访问控制修饰符"><a href="#访问控制修饰符" class="headerlink" title="访问控制修饰符"></a>访问控制修饰符</h4><ul>
+<li><strong>default 默认的：</strong>在同一包内可见，不使用任何修饰符</li>
+<li><strong>private 私有的：</strong>在同一类内可见。私有访问修饰符是最严格的访问级别，所以被声明为private的方法、变量和构造方法只能被所属类访问，并且类和接口不能声明为private。private访问修饰符的作用主要用来隐藏类的实现细节和保护类的数据</li>
+</ul>
+<pre><code class="java">public class Logger&#123;
+    private String format;
+    public String getFormat()&#123;
+        return this.format;
+    &#125;
+    public void setFormat(String format)&#123;
+        this.format = format;
+    &#125;
+&#125;
+</code></pre>
+<p>实例中，Logger类中的format变量为私有变量，所以其他类不能直接得到和设置该变量的值。为了使其他类能够操作该变量，定义了两个public方法：<strong>getFormat()</strong> (返回format的值) 和 <strong>setFormat(String)</strong> (设置format的值)</p>
+<ul>
+<li><strong>public 公有的：</strong>对所有类可见，被声明public的类、方法、构造方法和接口能够被任何其他类访问。如果几个互相访问的public类分布在不同的包中，则需要导入相应public类所在的包。由于类的继承性，类所有的共有方法和变量都能被子类继承</li>
+</ul>
+<pre><code class="java">public static void main(String[] arguments)&#123;
+    //...(公有访问控制)
+&#125;
+</code></pre>
+<p>Java程序的main()方法必须设置成共有的，否则，不能运行该类</p>
+<ul>
+<li><strong>proteed 受保护的：</strong>对同一包内的类和所有子类可见</li>
+</ul>
+<p>被声明为protected的变量、方法和构造器能被同一个包中的任何其他类访问，也能够被不同包中的子类访问。protected访问修饰符不能修饰类和接口，方法和成员变量能够声明protected，但是接口的成员变量和成员方法不能声明为protected，子类能访问protected修饰符声明的方法和变量，这样就能保护不相关的类使用这些方法和变量。</p>
+<p>下面的父类使用了protected访问修饰符，子类重载了父类的openSpeaker()方法。</p>
+<pre><code class="java">class AudioPlayer&#123;
+    protected boolean openSpeaker(Speaker sp)&#123;
+        //实现细节
+    &#125;
+&#125;
+class StreamingAudioPlayer&#123;
+    boolean openSpeaker(Speaker sp)&#123;
+        //实现细节
+    &#125;
+&#125;
+</code></pre>
+<p>如果把openSpeaker()方法声明为private，那么除了AudioPlayer之外的类将不能访问该方法</p>
+<p>如果把openSpeaker()方法声明为public，那么所有的类都能够访问该方法</p>
+<p>如果我们只想让该方法对其所在的类的子类可见，则将该方法声明为protected</p>
+<ul>
+<li><strong>访问控制和继承</strong>规则：<ul>
+<li>父类中声明为public的方法在子类中也必须为public</li>
+<li>父类中声明为protected的方法在子类中要么声明为protected，要么声明为public，不能声明为private</li>
+<li>父类中声明为private的方法，不能够被继承</li>
+</ul>
+</li>
+</ul>
+<h4 id="控制非访问修饰符"><a href="#控制非访问修饰符" class="headerlink" title="控制非访问修饰符"></a>控制非访问修饰符</h4><ul>
+<li><p><strong>static 修饰符：</strong>用来创建类方法和类变量</p>
+<ul>
+<li><strong>静态变量：</strong>static关键字用来声明独立于对象的静态变量，无论一个类实例化多少对象，它的静态变量只有一份拷贝。静态变量也成为类变量。局部变量不能被声明为static变量</li>
+<li><strong>静态方法：</strong>static关键词用来声明独立于对象的静态方法。静态方法不能使用类的非静态变量。静态方法从参数列表得到数据，然后计算这些数据</li>
+</ul>
+<p>对类变量和方法的访问可以直接使用classname.variablename 和 classname.methodname的方式访问 </p>
+<p>下面为static修饰符用来创建类方法和类变量</p>
+</li>
+</ul>
+<pre><code class="java">public class InstanceCounter&#123;
+    private static int numInstances = 0;
+    protected static int getCount()&#123;
+        return numInstances;
+    &#125;
+    
+    private static void addInstance()&#123;
+        numInstances++;
+    &#125;
+    
+    InstanceCounter()&#123;
+        InstanceCounter.addInstance();
+    &#125;
+    
+    public static void main(String[] arguments)&#123;
+        sout(&quot;Starting with&quot; + InstanceCounter.getCount() + &quot; instances&quot;);
+        for(int i = 0; i &lt; 500; ++i)&#123;
+            new InstanceCounter();
+        &#125;
+        sout(&quot;Created &quot; + InstanceCounter.getCount() + &quot;instances&quot;);
+    &#125;
+&#125;
+输出结果：
+Started with 0 instances
+Created 500 instances
+</code></pre>
+<ul>
+<li><p><strong>final 修饰符：</strong>用来修饰类、方法和变量，final修饰的类不能够被继承，修饰的方法不能被继承类重新定义，修饰的变量为常量，是不可修改的</p>
+<ul>
+<li><strong>final变量：</strong>能被显示地初始化并且只能初始化一次。被声明为final的对象的引用不能指向不同的对象。但是final对象里的数据可以被改变，也就是说final对象的引用不能改变，但是里面的值可以改变。final修饰符通常和static修饰符一起使用来创建类常量。</li>
+</ul>
+<pre><code class="java">public class Test&#123;
+    final int value = 10;
+    //下面是声明常量的实例
+    public static final int BOXWIDTH = 6;
+    static final String TITLE = &quot;Manger&quot;;
+    
+    public void changeValue()&#123;
+        value = 12; //将输出一个错误
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>final方法：</strong> 类中的final方法可以被子类继承，但是不能被子类修改。声明final方法的主要目的是防止该方法的内容被修改</li>
+</ul>
+<p>如图为final修饰符声明方法</p>
+<pre><code class="java">public class Test&#123;
+    public final void changeName()&#123;
+        //方法体
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>final类：</strong> final类不能被继承，没有类能够继承final类的任何特性</li>
+</ul>
+<pre><code class="java">public final class Test&#123;
+    //类体
+&#125;
+</code></pre>
+</li>
+<li><p><strong>abstrat 修饰符：</strong>用来创建抽象类和抽象方法</p>
+<ul>
+<li><strong>抽象类：</strong>抽象类不能用来实例化对象，声明抽象类的唯一目的是为了将来对该类进行扩充。一个类不能同时被abstract和final修饰，如果一个类包含抽象方法，那么该类一定要声明为抽象类，否则编译错误。抽象类包含抽象方法和非抽象方法。</li>
+<li><strong>抽象方法：</strong>是一种没有任何实现的方法，该方法的具体实现由子类提供，抽象方法不能被声明成final和static。任何继承抽象类的子类必须实现父类的所有抽象方法，除非子类也是抽象类。抽象类可以不包含抽象方法。</li>
+</ul>
+<pre><code class="java">abstract class Caraven&#123;
+    private double price;
+    private String model;
+    private String year;
+    public abstract void goFast(); //抽象方法
+    public abstract void changeColor();
+&#125;
+</code></pre>
+<pre><code class="java">public abstract class SuperClass&#123;
+    abstract void m(); //抽象方法
+&#125;
+class SubClass extends SuperClass&#123;
+    //实现抽象方法
+    void m()&#123;
+        // ......
+    &#125;
+&#125;
+</code></pre>
+</li>
+<li><p><strong>synchronized和volatile 修饰符：</strong> 主要用于线程的编程 （这里不具体研究）</p>
+</li>
+</ul>
+<hr>
+<h1 id="Java运算符"><a href="#Java运算符" class="headerlink" title="Java运算符"></a>Java运算符</h1><h4 id="位运算"><a href="#位运算" class="headerlink" title="位运算"></a>位运算</h4><p>假设a&#x3D;60，b&#x3D;13；</p>
+<pre><code class="java">    a = 0011 1100
+    b = 0000 1101
+----------------------
+a &amp; b = 0000 1100
+a | b = 0011 1101
+a ^ b = 0011 0001
+~ a   = 1100 0011
+</code></pre>
+<h4 id="instanceof-运算符"><a href="#instanceof-运算符" class="headerlink" title="instanceof 运算符"></a>instanceof 运算符</h4><p>该运算符用于操作对象实例，检查该对象是否是一个特定类型(类类型 或 接口类型)</p>
+<p>instanof运算符使用格式如下：</p>
+<pre><code class="java">(Object reference variable)instanceof(class/interface type)
+</code></pre>
+<p>如果运算符左侧变量所指的对象，是操作符右侧类或接口(class&#x2F;interface)的一个对象，那么结果为真</p>
+<pre><code class="java">String name = &quot;James&quot;;
+boolean result = name instanceof String;
+//由于name是String类型，所以返回真
+</code></pre>
+<pre><code class="java">class Vehicle&#123;&#125;
+public class Car extends Vehicle&#123;
+    public static void main(String args[])&#123;
+        Vehicle a = new Car();
+        boolean result = a instanceof Car;
+        sout(result);
+    &#125;
+&#125;
+输出结果：
+true
+</code></pre>
+<h4 id="continue关键字-增强型for循环"><a href="#continue关键字-增强型for循环" class="headerlink" title="continue关键字 + 增强型for循环"></a>continue关键字 + 增强型for循环</h4><p>continue适用于任何循环控制结构中，作用是让程序立刻跳转到下一次循环的迭代</p>
+<p>在<strong>for循环</strong>中，continue语句使程序立刻跳转到更新语句</p>
+<p>在<strong>while</strong>或者<strong>do…while循环</strong>中，程序立刻跳转到布尔表达式的判断语句</p>
+<pre><code class="java">public class Test&#123;
+    public static void main(String args[])&#123;
+        int &#123;&#125; numbers = &#123;10, 20, 30, 40, 50&#125;;
+        for(int x : numbers)&#123;
+            if(x == 30)&#123;
+                continue;
+            &#125;
+            sout(x);
+            sout(&quot;\n&quot;);
+        &#125;
+    &#125;
+&#125;
+输出结果：
+10
+20
+40
+50
+</code></pre>
+<h1 id="Java-Number类-与-Math类"><a href="#Java-Number类-与-Math类" class="headerlink" title="Java Number类 与 Math类"></a>Java Number类 与 Math类</h1><h4 id="Number包装类型"><a href="#Number包装类型" class="headerlink" title="Number包装类型"></a>Number包装类型</h4><pre><code class="java">byte -&gt; Byte        int -&gt; Integer        short -&gt; Short        long -&gt; Long
+double -&gt; Double    float -&gt; Float        boolean -&gt; Boolean    char -&gt; Character
+</code></pre>
+<p>包装类型都是用final声明了，不可能被继承重写。在实际情况中编译器会自动的将基本类型数据<strong>装箱</strong>成对象类型，或者将对象类型<strong>拆箱</strong>成基本类型</p>
+<pre><code class="java">public static void main(String[] args)&#123;
+    int num1 = 1;
+    //将基本类型数据装箱成对象包装类型
+    Integer num2 = num1;
+    Integer num3 = 3;
+    //将对象数据类拆箱
+    int num4 = num3;
+&#125;
+</code></pre>
+<p>下面是一个装箱与拆箱的例子：</p>
+<pre><code class="java">public class Test&#123;
+    public static void main(String args[])&#123;
+        Integer x = 5;
+        x = x + 10;
+        sout(x);
+    &#125;
+&#125;
+输出结果：
+15
+</code></pre>
+<h4 id="Math类型"><a href="#Math类型" class="headerlink" title="Math类型"></a>Math类型</h4><p>Java的Math包含了用于执行基本数学运算的属性和方法：初等指数、对数、平方根和三角函数</p>
+<p>Math的方法都被定义为static形式，通过Math类可以在主函数中直接调用 sout(“90°正弦值：” + Math.sin(Math.PI &#x2F; 2))；</p>
+<p>下表是常用的Number类和Math类的方法：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>方法与描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>xxxValue()：将number对象转换为xxx数据类型的值并返回</td>
+</tr>
+<tr>
+<td>2</td>
+<td>compareTo()：将number对象与参数比较</td>
+</tr>
+<tr>
+<td>3</td>
+<td>equals()：判断number对象是否与参数相等</td>
+</tr>
+<tr>
+<td>4</td>
+<td>valueOf()：返回一个Integer对象指定的内置数据类型</td>
+</tr>
+<tr>
+<td>5</td>
+<td>toString()：以字符串形式返回值</td>
+</tr>
+<tr>
+<td>6</td>
+<td>parseInt()：将字符串解析为int类型</td>
+</tr>
+<tr>
+<td>7</td>
+<td>abs()：返回参数的绝对值</td>
+</tr>
+<tr>
+<td>8</td>
+<td>floor()：返回小于等于给定参数的最大整数</td>
+</tr>
+<tr>
+<td>9</td>
+<td>round()：返回一个最接近的int、long型值</td>
+</tr>
+<tr>
+<td>10</td>
+<td>exp()：返回自然数底数e的参数次方</td>
+</tr>
+<tr>
+<td>11</td>
+<td>log()：返回参数的自然数底数的对数值</td>
+</tr>
+<tr>
+<td>12</td>
+<td>pow()：返回第一个参数的第二个参数次方</td>
+</tr>
+<tr>
+<td>13</td>
+<td>sqrt()：求参数的算术平方个</td>
+</tr>
+<tr>
+<td>14</td>
+<td>random()：返回一个随机数</td>
+</tr>
+</tbody></table>
+<p>1</p>
 
     </div>
 
