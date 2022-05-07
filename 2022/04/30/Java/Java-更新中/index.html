@@ -491,6 +491,147 @@ public class className&#123;
 运行结果：
 Exception thrown :java.l
 </code></pre>
+<h1 id="Java继承"><a href="#Java继承" class="headerlink" title="Java继承"></a>Java继承</h1><p>如果类A是类B的父亲，而类B是类C的父亲，我们也称类C是A的子类，类C是从类A继承而来的，在Java中，类的继承是单一继承，一个子类只能拥有一个父类。</p>
+<p>继承中最常使用的两个关键词是<strong>extends</strong>和<strong>implements</strong></p>
+<p>这两个关键字的使用决定了一个对象和另一个对象是否是一个关系，我们能实现一个对象获取另一个对象的属性</p>
+<p>所有Java的类均是由java.lang.Object类继承而来的，所以Object是所有类的祖先类，而除了Object外，所有类必须有一个父类。</p>
+<p>通过<strong>extends关键字</strong>可以申明一个类是继承另一个类而来的</p>
+<pre><code class="java">public class A&#123;
+    private int i;
+    protected int j;
+    
+    public void func()&#123;
+        
+    &#125;
+&#125;
+
+public class B extends A&#123;
+    public int z;
+    public void fund()&#123;
+        
+    &#125;
+&#125;
+类B由类A继承而来的，类B是类A的子类，而类A是Object的子类，这里可以不显示地声明
+作为子类，类B的实例拥有类A所有的成员变量，但对于private类型的成员变量类B却没有访问权限
+这保障了类A的封装性
+</code></pre>
+<pre><code class="java">public class Animal&#123;&#125;
+public class Mammal extends Animal&#123;&#125;  Animal类是Mammal类的父类
+public class Reptile extends Animal&#123;&#125; Animal类是Reptile类的父类
+                                       Mammal类和Reptile类是Animal类的子类   
+public class Dog extends Mammal&#123;&#125; Dog类既是Mammal类的子类 又是 Animal类的子类
+//通过使用关键字 extends,子类可以继承父类的除privat属性外所有的属性
+//通过使用 instanceof 操作符,能够确定左边的对象是不是右边类的实例
+public class Dog extends Mammal&#123;
+    public static void main(String args[])&#123;
+        Animal a = new Animal();
+        Mammal m = new Mammal();
+        Dog d = new Dog();
+        sout(m instanceof Animal);
+        sout(d instanceof Mammal);
+        sout(d instanceof Animal);
+    &#125;
+&#125;
+运行结果
+true
+true
+true
+</code></pre>
+<h4 id="HAS-A关系"><a href="#HAS-A关系" class="headerlink" title="HAS-A关系"></a>HAS-A关系</h4><p>HAS-A代表类和它的成员之间的从属关系，有助于代码的重用和减少代码的错误。</p>
+<pre><code class="java">public class Vehicle&#123;&#125;
+public class Speed&#123;&#125;
+public class Van extends Vehicle&#123;
+    private Speed sp;
+&#125;
+//Van类将实现的细节对用户隐藏起来，因此，用户只需要知道怎样调用Van类来完成某一功能
+//而不必知道Van类是自己来做还是调用其他类来做这些工作
+</code></pre>
+<p>Java只支持单继承，一个类不能继承多个类</p>
+<pre><code class="java">（×） public class test extends Animal, Mammal&#123;&#125;  (×)
+</code></pre>
+<p>Java只支持单继承(<u><strong>继承基本类</strong></u>和<u><strong>抽象类</strong></u>)，可以用接口来实现(<u><strong>多继承接口实现</strong></u>)</p>
+<pre><code class="java">public class Apple extends Fruit implements Fruit1, Fruit2&#123;&#125;
+一般继承基本类和抽象类用extends关键字，实现接口类的继承用implements关键字。
+</code></pre>
+<h3 id="重写"><a href="#重写" class="headerlink" title="重写"></a>重写</h3><p>重写重要的地方是<u>返回值</u>和<u>形参</u>都不能改变，外壳不变，核心重写！</p>
+<p>重写的好处在于子类可以根据需要，定义特定与自己的行为。</p>
+<pre><code class="java">class Animal&#123;
+    public void move()&#123;
+        sout(&quot;动物可以移动&quot;);
+    &#125;
+&#125;
+class Dog extends Animal&#123;
+    public void move()&#123;
+        sout(&quot;狗可以跑和走&quot;);
+    &#125;
+  /*  
+      public void bark()&#123;
+        sout(&quot;狗可以吠叫&quot;);
+    &#125; 
+  */
+&#125;
+public class TestDog&#123;
+    public static void main(String args[])&#123;
+        Animal a = new Animal();
+        Animal b = new Dog();
+        a.move();
+        b.move();
+       // a.bark();//此处会报错,因为a的引用类型Animal没有bark方法
+    &#125;
+&#125;
+运行结果：
+动物可以移动
+狗可以跑和走
+</code></pre>
+<p>尽管b属于Animal类型，但是它可以运行Dog类的move方法</p>
+<h4 id="方法重写的规则"><a href="#方法重写的规则" class="headerlink" title="方法重写的规则"></a>方法重写的规则</h4><ul>
+<li>参数列表与被重写方法的参数列表必须完全相同</li>
+<li>返回类型与被重写方法的返回类型可以不相同，但是必须是父类返回值的派生类</li>
+<li>子类方法的访问权限必须大于或等于父类方法的访问权限：如果父类的一个方法被声明为public，那么在子类中重写该方法就不能声明为protected</li>
+<li>父类的成员方法只能被它的子类重写</li>
+<li>声明为final的方法不能被重写</li>
+<li>声明为static的方法不能被重写，但可以被再次声明</li>
+<li>子类和父类在同一个包中，那么子类可以重写父类所有方法，除了声明为private和final的方法</li>
+<li>子类和父类不在同一个包中，那么子类可以重写父类的声明为public和protected的非final方法</li>
+<li>构造方法不能被重写</li>
+<li>如果不能继承一个方法，则不能重写这个方法</li>
+<li>权限受阻：如果父类的一个方法被声明为public，那么在子类中重写该方法就不能声明为protected</li>
+</ul>
+<h4 id="Super关键字的使用"><a href="#Super关键字的使用" class="headerlink" title="Super关键字的使用"></a>Super关键字的使用</h4><p>当需要在子类中调用父类的被重写方法时，要使用super关键字</p>
+<pre><code class="java">class Animal&#123;
+    public void move()&#123;
+        sout(&quot;动物可以移动&quot;);
+    &#125;
+&#125;
+class Dog extends Animal&#123;
+    public void move()&#123;
+        super.move();
+        sout(&quot;狗可以跑和走&quot;);
+    &#125;
+&#125;
+public class TestDog&#123;
+    public static void main(String args[])&#123;
+        Animal b = new Dog();
+        b.move();
+    &#125;
+&#125;
+运行结果：
+动物可以移动
+狗可以跑和走
+</code></pre>
+<h4 id="重载"><a href="#重载" class="headerlink" title="重载"></a>重载</h4><p>重载是在一个类里面，<u>方法名字</u>相同，而<u>参数</u>不同，<u>返回类型</u>可以相同也可以不同</p>
+<p>每个重载的方法(或者构造函数)都必须有一个独一无二的参数类型列表</p>
+<p>重载规则：</p>
+<ul>
+<li>被重载的方法必须改变参数列表</li>
+<li>被重载的方法可以改变返回类型</li>
+<li>被重载的方法可以改变访问修饰符</li>
+<li>被重载的方法可以声明新的或更广的检查异常</li>
+<li>方法能够在同一个类中或者在一个子类中被重载</li>
+<li>无法以返回值类型作为重载函数的区分标准</li>
+</ul>
+<pre><code class="java">
+</code></pre>
 
     </div>
 
