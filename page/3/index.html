@@ -133,6 +133,205 @@
 
 <div class="post">
 
+    <a href="/2022/03/29/语法/标准JDBC操作五步骤/">
+        <h2>
+            标准JDBC操作五步骤 + 自动提交事务
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/3/29
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h4 id="标准JDBC操作五步骤"><a href="#标准JDBC操作五步骤" class="headerlink" title="标准JDBC操作五步骤"></a>标准JDBC操作五步骤</h4><pre><code class="java">package jdbc.sample;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+/**
+ * 标准JDBC操作五步骤
+ */
+public class StandardJDBCSample &#123;
+    public static void main(String[] args) &#123;
+        Connection conn = null;
+        try &#123;
+            //1. 加载并注册JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+            //2. 创建数据库连接
+            conn = DriverManager.getConnection(
+                    &quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;&amp;allowPublicKeyRetrieval=true&quot;,
+                    &quot;root&quot;, &quot;root&quot;
+            );
+            //3. 创建Statement对象
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(&quot;select * from employee where dname=&#39;研发部&#39;&quot;);
+            //4. 遍历查询结果
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1); //eno
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+            &#125;
+        &#125;catch(Exception e)&#123;
+            e.printStackTrace();
+        &#125;finally &#123;
+            try &#123;
+                if (conn != null &amp;&amp; conn.isClosed() == false) &#123;
+                    //5. 关闭连接,释放资源
+                    conn.close();
+                &#125;
+            &#125;catch(Exception ex)&#123;
+                ex.printStackTrace();
+            &#125;
+        &#125;
+
+    &#125;
+&#125;
+</code></pre>
+<h4 id="自动提交事务"><a href="#自动提交事务" class="headerlink" title="自动提交事务"></a>自动提交事务</h4><pre><code class="java">package jdbc.sample;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Date;
+
+/**
+ * JDBC批处理
+ */
+public class BatchSample &#123;
+    //标准方式插入若干数据
+    private static void tc1()&#123;
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            long startTime = new Date().getTime();
+            conn = DbUtils.getConnection();
+            //JDBC默认使用自动提交模式
+            conn.setAutoCommit(false);//关闭自动提交
+            String sql = &quot;insert into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            for (int i=100000;i&lt;200000;i++)&#123;
+//                if (i == 10) &#123;
+////                    throw new RuntimeException(&quot;插入失败&quot;);
+//                &#125;
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1, i);
+                pstmt.setString(2, &quot;员工&quot; + i);
+                pstmt.setFloat(3, 4000f);
+                pstmt.setString(4, &quot;市场部&quot;);
+                pstmt.executeUpdate();
+            &#125;
+            conn.commit();//提交数据
+            long endTime = new Date().getTime();
+            System.out.println(&quot;tc1()执行时长：&quot; + (endTime-startTime));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback();//回滚数据
+                &#125;
+            &#125;catch (SQLException ex)&#123;
+                ex.printStackTrace();
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null, pstmt, conn);
+        &#125;
+    &#125;
+
+
+    //使用批处理插入若干数据
+    private static void tc2()&#123;
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            long startTime = new Date().getTime();
+            conn = DbUtils.getConnection();
+            //JDBC默认使用自动提交模式
+            conn.setAutoCommit(false);//关闭自动提交
+            String sql = &quot;insert into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            pstmt = conn.prepareStatement(sql);
+            for (int i=200000;i&lt;300000;i++)&#123;
+//                if (i == 10) &#123;
+////                    throw new RuntimeException(&quot;插入失败&quot;);
+//                &#125;
+                pstmt.setInt(1, i);
+                pstmt.setString(2, &quot;员工&quot; + i);
+                pstmt.setFloat(3, 4000f);
+                pstmt.setString(4, &quot;市场部&quot;);
+                pstmt.addBatch();//将参数加入批处理任务
+//                pstmt.executeUpdate();对同一个对象进行操作所以注释
+            &#125;
+            pstmt.executeBatch();//执行批处理任务(一次性打包 一下子全部发给mysql)
+            conn.commit();//提交数据
+            long endTime = new Date().getTime();
+            System.out.println(&quot;tc2()执行时长：&quot; + (endTime-startTime));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback();//回滚数据
+                &#125;
+            &#125;catch (SQLException ex)&#123;
+                ex.printStackTrace();
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null, pstmt, conn);
+        &#125;
+    &#125;
+
+
+    public static void main(String[] args) &#123;
+        tc1();
+        tc2();
+    &#125;
+&#125;
+
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/语法" style=color:#ff7d73>
+                语法
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2022/03/29/语法/标准JDBC操作五步骤/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2022/03/29/语法/Apache_Druid/">
         <h2>
             Apache_Druid
@@ -251,7 +450,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/语法" style=color:#00bcd4>
+            <a href="/tags/语法" style=color:#879cff>
                 语法
             </a>
         </span>
@@ -302,7 +501,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/破解" style=color:#00bcd4>
+            <a href="/tags/破解" style=color:#ff7d73>
                 破解
             </a>
         </span>
@@ -503,7 +702,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -750,7 +949,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -819,7 +1018,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/破解" style=color:#879cff>
+            <a href="/tags/破解" style=color:#ffa2c4>
                 破解
             </a>
         </span>
@@ -1394,7 +1593,7 @@ if(find(vc.begin(),vc.end(),0) != vc.end()); //序列式容器可以通过algori
         
         <span class="tag">
             
-            <a href="/tags/竞赛/算法" style=color:#00bcd4>
+            <a href="/tags/竞赛/算法" style=color:#1bccbc>
                 竞赛/算法
             </a>
         </span>
