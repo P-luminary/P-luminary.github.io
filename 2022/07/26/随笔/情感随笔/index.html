@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || 标准JDBC操作五步骤 + 自动提交事务</title>
+    <title>P-luminary || 感情随笔</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,14 +105,14 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>标准JDBC操作五步骤 + 自动提交事务 </h1>
+        <h1>感情随笔 </h1>
     </div>
     <div class="info">
         <span class="date">
             <span class="icon">
                 <a-icon type="calendar" theme="filled" />
             </span>
-            2022/3/29
+            2022/7/26
         </span>
 
         
@@ -126,8 +126,8 @@
             
             <span class="tag">
                 
-                <a href="/tags/语法" style=color:#1bccbc>
-                    语法
+                <a href="/tags/随笔" style=color:#00bcd4>
+                    随笔
                 </a>
             </span>
             
@@ -136,154 +136,23 @@
     </div>
 
     <div class="content" v-pre>
-        <h4 id="标准JDBC操作五步骤"><a href="#标准JDBC操作五步骤" class="headerlink" title="标准JDBC操作五步骤"></a>标准JDBC操作五步骤</h4><pre><code class="java">package jdbc.sample;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
-
-/**
- * 标准JDBC操作五步骤
- */
-public class StandardJDBCSample &#123;
-    public static void main(String[] args) &#123;
-        Connection conn = null;
-        try &#123;
-            //1. 加载并注册JDBC驱动
-            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
-            //2. 创建数据库连接
-            conn = DriverManager.getConnection(
-                    &quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;&amp;allowPublicKeyRetrieval=true&quot;,
-                    &quot;root&quot;, &quot;root&quot;
-            );
-            //3. 创建Statement对象
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(&quot;select * from employee where dname=&#39;研发部&#39;&quot;);
-            //4. 遍历查询结果
-            while (rs.next()) &#123;
-                Integer eno = rs.getInt(1); //eno
-                String ename = rs.getString(&quot;ename&quot;);
-                Float salary = rs.getFloat(&quot;salary&quot;);
-                String dname = rs.getString(&quot;dname&quot;);
-                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
-            &#125;
-        &#125;catch(Exception e)&#123;
-            e.printStackTrace();
-        &#125;finally &#123;
-            try &#123;
-                if (conn != null &amp;&amp; conn.isClosed() == false) &#123;
-                    //5. 关闭连接,释放资源
-                    conn.close();
-                &#125;
-            &#125;catch(Exception ex)&#123;
-                ex.printStackTrace();
-            &#125;
-        &#125;
-
-    &#125;
-&#125;
-</code></pre>
-<h4 id="自动提交事务"><a href="#自动提交事务" class="headerlink" title="自动提交事务"></a>自动提交事务</h4><pre><code class="java">package jdbc.sample;
-
-import jdbc.common.DbUtils;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Date;
-
-/**
- * JDBC批处理
- */
-public class BatchSample &#123;
-    //标准方式插入若干数据
-    private static void tc1()&#123;
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try &#123;
-            long startTime = new Date().getTime();
-            conn = DbUtils.getConnection();
-            //JDBC默认使用自动提交模式
-            conn.setAutoCommit(false);//关闭自动提交
-            String sql = &quot;insert into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
-            for (int i=100000;i&lt;200000;i++)&#123;
-//                if (i == 10) &#123;
-////                    throw new RuntimeException(&quot;插入失败&quot;);
-//                &#125;
-                pstmt = conn.prepareStatement(sql);
-                pstmt.setInt(1, i);
-                pstmt.setString(2, &quot;员工&quot; + i);
-                pstmt.setFloat(3, 4000f);
-                pstmt.setString(4, &quot;市场部&quot;);
-                pstmt.executeUpdate();
-            &#125;
-            conn.commit();//提交数据
-            long endTime = new Date().getTime();
-            System.out.println(&quot;tc1()执行时长：&quot; + (endTime-startTime));
-        &#125; catch (Exception e) &#123;
-            e.printStackTrace();
-            try &#123;
-                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
-                    conn.rollback();//回滚数据
-                &#125;
-            &#125;catch (SQLException ex)&#123;
-                ex.printStackTrace();
-            &#125;
-        &#125; finally &#123;
-            DbUtils.closeConnection(null, pstmt, conn);
-        &#125;
-    &#125;
-
-
-    //使用批处理插入若干数据
-    private static void tc2()&#123;
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try &#123;
-            long startTime = new Date().getTime();
-            conn = DbUtils.getConnection();
-            //JDBC默认使用自动提交模式
-            conn.setAutoCommit(false);//关闭自动提交
-            String sql = &quot;insert into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
-            pstmt = conn.prepareStatement(sql);
-            for (int i=200000;i&lt;300000;i++)&#123;
-//                if (i == 10) &#123;
-////                    throw new RuntimeException(&quot;插入失败&quot;);
-//                &#125;
-                pstmt.setInt(1, i);
-                pstmt.setString(2, &quot;员工&quot; + i);
-                pstmt.setFloat(3, 4000f);
-                pstmt.setString(4, &quot;市场部&quot;);
-                pstmt.addBatch();//将参数加入批处理任务
-//                pstmt.executeUpdate();对同一个对象进行操作所以注释
-            &#125;
-            pstmt.executeBatch();//执行批处理任务(一次性打包 一下子全部发给mysql)
-            conn.commit();//提交数据
-            long endTime = new Date().getTime();
-            System.out.println(&quot;tc2()执行时长：&quot; + (endTime-startTime));
-        &#125; catch (Exception e) &#123;
-            e.printStackTrace();
-            try &#123;
-                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
-                    conn.rollback();//回滚数据
-                &#125;
-            &#125;catch (SQLException ex)&#123;
-                ex.printStackTrace();
-            &#125;
-        &#125; finally &#123;
-            DbUtils.closeConnection(null, pstmt, conn);
-        &#125;
-    &#125;
-
-
-    public static void main(String[] args) &#123;
-        tc1();
-        tc2();
-    &#125;
-&#125;
-
-</code></pre>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p><strong><span style = "color : red">2022.07.26</span></strong></p>
+<p>今天发生了一件很幸运的事情，突然有个名叫蔡静的女孩子加我QQ，然后，我和她的故事就开始了。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/420d3da41b07fc70019430cc5a99647cbac4ea17/data/%E8%94%A1%E9%9D%99.jpg"></p>
+<p>当时真的很不可思议，我都感觉自己已经都快是那种把感情封锁起来的中年男子了。有人说对我有好感，我当时说实话以为我是朋友在开玩笑什么的，一开始先礼貌性的回了一下，接着越来越不像我心里怀疑的目标，就逐渐接受了这个江科红娘，慢慢开始了我的爱情之旅。</p>
+<hr>
+<p><strong><span style = "color : red">2022.07.27</span></strong></p>
+<p>今天是我跟凌苏怀相遇的第一天，她加上了我的WeChat，哈哈 肯定很开心啦，感觉自己终于也被人认可了，由于经验不足一开始聊天可能给对方制造了点压力，我有点话痨，我叽叽歪歪会说一堆，搞的人家顶着压力跟我聊了下去，不过还好，开头有些曲折，但她闺蜜蔡静的鼎力相助，帮了我很大的忙，咱就是说 一开始还会认为人家女孩子会烦我，不敢说话了。结果发现 我们对方都是在为彼此有所顾忌</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/18c69139ba905437de8733555f83fe7b93607c6a/data/%E8%94%A1%E9%9D%992.jpg"></p>
+<p>第一次晚上聊到了3点，嘿嘿(具体聊什么就不说啦) 当然是浅浅的了解嘛。一些爱好日常什么的，</p>
+<hr>
+<p><strong><span style = "color : red">2022.07.28</span></strong></p>
+<p>今天是相识的第二天，也是我们彼此认识对方更深的日子，值得被纪念，我不知道为什么，我们发展的速度及其的快，当我知道她是巨蟹座的时候，我真的很开心，心里想：一直在等的女孩子终于来了。她满足一切我对女朋友另一半的要求(瘦瘦高高的，声音很好听，很懂事，很贴心)，捡到了宝，一定要好好珍惜！！</p>
+<p>今天下午我们聊了很长时间，才认识的第二天，就已经讨论关于异地恋的问题了，不知道为什么可能是不想失去一个这么好的女孩子，当面对这个问题时，我眼镜酸了，眼眶红了。差点哭了·，最后无论结果如何(当然喜欢是好结局)，我想努力去营造一个甜蜜的过程</p>
+<p>晚上，她的妈妈和哥哥知道了我的存在，由于她总是对着手机屏幕傻笑(巧了我也是)，然后被发现了，当时很担心她，怕他被训，不过结果还是很好的，没有发什么事情</p>
+<hr>
+<p><strong><span style = "color : red">2022.07.29</span></strong></p>
+<p>第三天，早上一大早起来说了早安 嘿嘿 很甜蜜 (希望小潘学长，以后不管我在不在，都要一直开心，做一个阳光大男孩)，这么好的女孩去哪找，一定要争取变成女友好吧 (其实明明是我先招惹你的，应该是我怕你不答应才对), 诶。。。我觉得不管谁先提 只要对方是自己能够信任 一直等的那个人，谁先都不是问题。</p>
 
     </div>
 
