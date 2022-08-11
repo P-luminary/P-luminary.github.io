@@ -866,6 +866,112 @@ img&#123;
 &#125;
 </code></pre>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/0e1bbce6bfe8c73565124f1589e69bc3d50e6915/data/%E7%9B%92%E5%AD%90%E5%8C%85%E8%A3%B9%E6%80%A7%E4%BB%A5%E5%8F%8A%E4%BF%AE%E6%94%B9.jpg"></p>
+<h2 id="浮动清除"><a href="#浮动清除" class="headerlink" title="浮动清除"></a>浮动清除</h2><p>为了父元素不会出现“高度崩塌”；如果强制规定外层容器的尺寸，就显得不灵活，高度不能自动适应；从某个元素开始，不再需要浮动的效果。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/a555c4443258a9d867266d3a551f7b6911f496ee/data/%E6%B8%85%E9%99%A4%E6%B5%AE%E5%8A%A8.jpg"></p>
+<pre><code class="javascript">clear: both/left/right; //清除该元素之前的浮动  
+#div2&#123;
+    background-color: yellow;
+    float: left;
+    width: 200px;
+    height: 200px;
+&#125;
+#div3&#123;
+    background-color: blue;
+    float: right;
+    width: 220px;
+    height: 220px;
+&#125;
+#div4&#123;
+    background-color: black;
+    width: 240px;
+    height: 240px;
+    clear: right;
+&#125;
+div4的黑色盒子清除了蓝色盒子右侧的浮动
+所以使蓝色盒子进入文档流，之后盒子就与蓝色盒子底线对齐
+=============================================
+也可以专门加一个div清除的id 
+&lt;div id=&quot;div1&quot;&gt;
+        &lt;div id=&quot;div2&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;div3&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;clearDiv&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;div4&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+---------------------------------------------
+#clearDiv&#123;
+    clear: both;
+&#125;
+=============================================
+★★  清除浮动的主流  ★★
+#clearDiv::after&#123; //在clearDiv结束的后面加上内容
+    content: &quot;&quot;; //要有对象 可以为空(不显示内容)
+    visibility: hidden; //以防显示(用来隐藏)
+    height: 0px;
+    display: block; //将36、37行转换为块级元素
+    clear: both;
+&#125;
+#clearDiv&#123; //使页面重新加载、重新计算渲染
+    zoom：1; //解决IE浏览器下的各种bug
+&#125;
+</code></pre>
+<h2 id="相对定位"><a href="#相对定位" class="headerlink" title="相对定位"></a>相对定位</h2><h3 id="定位-position"><a href="#定位-position" class="headerlink" title="定位(position)"></a>定位(position)</h3><p>相对 和 绝对取决于<strong>是否破坏文档流</strong></p>
+<ul>
+<li><p><span style = "color : red"><strong>relative 相对</strong></span>(相对自己<u>以前的位置</u>进行的偏移)</p>
+<p>(配合其他的子元素<strong>当成父元素</strong>来操作)(破坏文档流)(以自己所在的位置进行参照)</p>
+</li>
+</ul>
+<p><strong>相对定位</strong>的偏移参考元素是元素本身，不会使元素脱离文档流。元素的初始位置占据的空间会被保留</p>
+<p>主要代码—&gt; <u>position：relative</u></p>
+<p>示例：<img src="https://raw.githubusercontent.com/P-luminary/images/fc6ea341a58b6f450caa721c005d38eaa9378700/data/%E7%9B%B8%E5%AF%B9%E5%AE%9A%E4%BD%8D.jpg"></p>
+<pre><code class="javascript">&lt;div class=&quot;main&quot;&gt;
+    &lt;div class=&quot;div1&quot;&gt;&lt;/div&gt;
+        在我们这样的国家，社会主义建设具有...
+&lt;/div&gt;
+--------------------------------------------
+.main&#123;
+    width: 600px;
+    height: 600px;
+    background-color: aqua;
+&#125;
+.div1&#123;
+    width: 100px;
+    height: 100px;
+    background-color: red;
+    position: relative;
+    top: 20px;
+    left: 30px;
+&#125;
+</code></pre>
+<ul>
+<li><span style = "color : red"><strong>absolute 绝对</strong></span>(不破坏文档流)</li>
+</ul>
+<p><strong>绝对定位</strong>相对于已定位的最近的祖先元素，如果没有已定位的最近的祖先元素，那么它的位置就相当于最初的包含块(比如：<strong>body</strong>)</p>
+<p>主要代码—&gt; <u>position：absolute</u></p>
+<p>示例：<img src="https://raw.githubusercontent.com/P-luminary/images/4bcfdac7941a42db93503ba2de374632b7d9ce3e/data/%E7%BB%9D%E5%AF%B9%E5%AE%9A%E4%BD%8D.jpg"></p>
+<h4 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h4><pre><code class="javascript">☆ 草原三剑客 ☆
+position：absolute / relative
+top/bottom: 20px;
+left/right: 20px;
+
+☆ 组合版本 ☆
+position: relative;
+float: right;
+</code></pre>
+<p><strong>z-index</strong>：决定谁在前面，谁在后面（<u><strong>数值越大 越在前面</strong></u>）(一般用<strong>十位数</strong>、整倍数)</p>
+<ul>
+<li><p><span style = "color : red"><strong>static 无定位</strong></span></p>
+</li>
+<li><p><span style = "color : red"><strong>fixed 固定</strong></span></p>
+</li>
+</ul>
+<p>固定定位：相对于浏览器窗口进行定位(<strong>位置随着移动保持不变</strong>)</p>
+<p>主要代码—&gt; <strong>position：fiexd</strong></p>
+<pre><code class="javascript">.div1&#123;
+    width: 5%; //相对于body宽度的5%
+    height: 100px;
+    position: fixed;
+&#125;
+</code></pre>
 
     </div>
 
