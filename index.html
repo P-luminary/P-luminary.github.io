@@ -339,6 +339,7 @@ for(i;i&lt;n;i++)&#123;
 <p><strong>JS做什么</strong>：<strong>设置或获取</strong>各种表单元素的值</p>
 <p>示例：利用js给列表框等表单元素初始化</p>
 <p>在js中所有事件都是以on开头 eg: <u>onclick</u></p>
+<p>&lt; span &gt; &lt; label &gt;不涉及到换行</p>
 <pre><code class="javascript">onload + onclick
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -439,11 +440,14 @@ function initSelect(obj,start,end)&#123;
     &lt;script type=&quot;text/javascript&quot; src=&quot;a.js&quot;&gt;&lt;/script&gt;
 &lt;/head&gt; 
 &lt;!-- onload是刷新页面时候执行 onchange是改变效果--&gt;
-&lt;body onload=&quot;ymd()&quot;&gt;
+&lt;body onload=&quot;ymd(),initLogo()&quot;&gt;
     &lt;form&gt;
         &lt;select name=&quot;yyyy&quot; id=&quot;yyyy&quot; onchange=&quot;selectYmd()&quot;&gt;&lt;/select&gt;年
         &lt;select name=&quot;mm&quot; id=&quot;mm&quot; onchange=&quot;selectYmd()&quot;&gt;&lt;/select&gt;月
         &lt;select name=&quot;dd&quot; id=&quot;dd&quot;&gt;&lt;/select&gt;日
+        &lt;input type=&quot;button&quot; value=&quot;删除列表框条目&quot; onclick=&quot;deleteSelect()&quot; /&gt;&lt;br&gt;
+        &lt;img id=&quot;logoImg&quot; src=&quot;../image/1.gif&quot;&gt;
+        &lt;select id=&quot;logo&quot; onchange=&quot;selectLogo()&quot;&gt;&lt;/select&gt;
     &lt;/form&gt;
 &lt;/body&gt;
 &lt;/html&gt;
@@ -492,7 +496,126 @@ function selectYmd()&#123;
     dd.options.length = 0;
     initSelect(dd,1,dayEnd);
 &#125;
+// 删除列表框的某一个条目，即：按索引号删除
+function deleteSelect()&#123;
+    var dd = document.getElementById(&quot;dd&quot;);
+    // dd.options.remove(1);
+    for(i=dd.length;i&gt;=0;i--)&#123;
+        dd.options.remove(0);
+    &#125;
+&#125;
+function initLogo()&#123;
+    var logo = document.getElementById(&quot;logo&quot;);
+    for(i=1;i&lt;=15;i++)&#123;
+        logo.options.add(new Option(i,i));
+    &#125;
+&#125;
+function selectLogo()&#123;
+    var logo = document.getElementById(&quot;logo&quot;);
+    var n = logo.value;//value是属性 不是函数
+    // alert(n);测试的值
+    var logoImg = document.getElementById(&quot;logoImg&quot;);
+    logoImg.src = &quot;../image/&quot;+ n +&quot;.gif&quot;; //字段的链接匹配
+    
+&#125;
 </code></pre>
+<pre><code class="javascript">复选框全选+反选
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;a.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form&gt;
+    &lt;input type=&quot;checkbox&quot; name=&quot;interest&quot; value=&quot;youyong&quot;/&gt;&lt;label&gt;游泳&lt;/label&gt;
+    &lt;input type=&quot;checkbox&quot; name=&quot;interest&quot; value=&quot;pashan&quot; /&gt;&lt;label&gt;爬山&lt;/label&gt;
+    &lt;input type=&quot;checkbox&quot; name=&quot;interest&quot; value=&quot;kanshu&quot; /&gt;&lt;label&gt;看书&lt;/label&gt;
+    &lt;input type=&quot;checkbox&quot; name=&quot;interest&quot; value=&quot;tingge&quot; /&gt;&lt;label&gt;听歌&lt;/label&gt;&lt;br&gt;
+    &lt;input type=&quot;button&quot; id=&quot;btn1&quot; value=&quot;全选&quot; onclick=&quot;checkInterest()&quot;/&gt;
+    &lt;input type=&quot;button&quot; value=&quot;反选&quot; onclick=&quot;checkInterest1()&quot;/&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+--------------------------------------------------------------------
+var flag = true;
+function checkInterest()&#123;
+    var interest = document.getElementsByName(&quot;interest&quot;);
+    for(i=0;i&lt;interest.length;i++)&#123;
+        interest[i].checked=flag;
+    &#125;
+    if(flag)&#123;
+        document.getElementById(&quot;btn1&quot;).value=&quot;全不选&quot;;
+    &#125;else&#123;
+        document.getElementById(&quot;btn1&quot;).value=&quot;全选&quot;;
+    &#125;
+    flag=!flag;//开关变量
+&#125;
+function checkInterest1()&#123;
+    var interest = document.getElementsByName(&quot;interest&quot;);
+    for(i=0;i&lt;interest.length;i++)&#123;
+        interest[i].checked=!interest[i].checked;
+        // 复选框获取console值
+        console.log(interest[i].value);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h2><p>事件是指被程序发现的行为或发生的事情，并且它可能会被程序处理</p>
+<p><strong>特点</strong>：js的事件、都是以on开头，有onclick[当鼠标点击时]、onchange[当列表框发生改变]、onload…</p>
+<p><strong>分类</strong>：键盘事件、鼠标事件、表单事件…</p>
+<ul>
+<li><p><strong>鼠标事件</strong></p>
+<ul>
+<li><p><strong>onclick</strong>、ondblclick</p>
+</li>
+<li><p>onmouseover、onmouseout、onmousedown</p>
+</li>
+</ul>
+</li>
+<li><p><strong>键盘事件</strong></p>
+<ul>
+<li>onkeydown[按下去还没松开之前]、onkeyup、keypress</li>
+</ul>
+</li>
+<li><p><strong>表单事件</strong></p>
+<ul>
+<li>onfoucs、onsubmit、onblur、<strong>onchange</strong></li>
+</ul>
+</li>
+</ul>
+<h2 id="Dom-Document-Object-Model"><a href="#Dom-Document-Object-Model" class="headerlink" title="Dom(Document Object Model)"></a>Dom(Document Object Model)</h2><p><strong>什么是DOM</strong>：将文档(页面)表现为结构化的表现方法，<strong>使每一个页面元素都是可操控</strong>，DOM将网页和脚本以及其他的编程语言联系了起来。</p>
+<p><strong>特点</strong>：利用js控制页面中的所有元素，使页面更加”聪明”</p>
+<p><strong>分类</strong>：元素节点、属性节点、文本节点</p>
+<p><img src="/"></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>getElementById</td>
+<td>返回带有指定ID的元素</td>
+</tr>
+<tr>
+<td>getElementByName</td>
+<td>获取相同名称(name)的元素的节点列表</td>
+</tr>
+<tr>
+<td>getElementByClassName</td>
+<td>返回包含带又指定类名的所有元素的节点列表</td>
+</tr>
+<tr>
+<td>getElementByTagName</td>
+<td>返回包括含有指定标签名称的所有元素的节点列表</td>
+</tr>
+</tbody></table>
+<h4 id="DOM作用"><a href="#DOM作用" class="headerlink" title="DOM作用"></a>DOM作用</h4><ul>
+<li>通过id、name获取元素</li>
+<li>通过标签名获取所有的标签</li>
+<li>改变HTML属性，例如：改变img的src属性</li>
+</ul>
 
             
         </div>
@@ -779,7 +902,7 @@ function selectYmd()&#123;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#879cff>
                 政治
             </a>
         </span>
@@ -1673,7 +1796,7 @@ float: right;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#00bcd4>
                 前端
             </a>
         </span>
@@ -2081,7 +2204,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -2553,7 +2676,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -2681,6 +2804,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
 <hr>
 <p><strong><span style = "color : red">2022.08.14</span></strong></p>
 <p>现在时间凌晨2:11，但我还在敲代码，我沉迷于代码无法自拔了，越打越上瘾！！现在很想跟苏苏发消息，但是我不敢，她不让我发！</p>
+<p>今天苏苏发烧了，下午还跟我有说有笑 结果发烧38度多去打吊水了，我真的很担心诶。今天绝对不能让她熬夜，我不知道我的心情就很急</p>
 
             
         </div>
@@ -2695,7 +2819,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#ff7d73>
+            <a href="/tags/随笔" style=color:#00bcd4>
                 随笔
             </a>
         </span>
@@ -3117,7 +3241,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -3724,7 +3848,7 @@ oi*5 + Tab = 快速生成五个&lt;oi&gt;
         
         <span class="tag">
             
-            <a href="/tags/高数" style=color:#ff7d73>
+            <a href="/tags/高数" style=color:#1bccbc>
                 高数
             </a>
         </span>
