@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || 高数函数图像</title>
+    <title>P-luminary || Mysql</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,14 +105,14 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>高数函数图像 </h1>
+        <h1>Mysql </h1>
     </div>
     <div class="info">
         <span class="date">
             <span class="icon">
                 <a-icon type="calendar" theme="filled" />
             </span>
-            2022/4/1
+            2022/9/5
         </span>
 
         
@@ -126,8 +126,8 @@
             
             <span class="tag">
                 
-                <a href="/tags/数学" style=color:#ff7d73>
-                    数学
+                <a href="/tags/后端" style=color:#ffa2c4>
+                    后端
                 </a>
             </span>
             
@@ -136,9 +136,70 @@
     </div>
 
     <div class="content" v-pre>
-        <h1 id="高数基本函数图像"><a href="#高数基本函数图像" class="headerlink" title="高数基本函数图像"></a>高数基本函数图像</h1><p><img src="https://raw.githubusercontent.com/P-luminary/images/master/data/%E6%95%B0%E5%AD%A6%E5%87%BD%E6%95%B01.png"></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/master/data/%E6%95%B0%E5%AD%A6%E5%87%BD%E6%95%B02.png"></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/master/data/%E6%95%B0%E5%AD%A6%E5%87%BD%E6%95%B03.png"></p>
+        <p>中：Mysql SqlServer</p>
+<p>大：Oracle DB2</p>
+<p>数据类型：</p>
+<ul>
+<li>数值：int、float</li>
+<li>非数值：char、<strong>varchar</strong><ul>
+<li>char 和 varchar 的区别</li>
+</ul>
+</li>
+</ul>
+<p>(占用空间)(查询效率快) char是定长 char 8是八个字符长度</p>
+<p>(节省空间)(查询效率慢) varchar是变长</p>
+<h2 id="增："><a href="#增：" class="headerlink" title="增："></a>增：</h2><pre><code class="sql">CREATE TABLE a_user(id int,name varchar(100)); //字段名和数据类型用逗号分隔
+INSERT INTO a_user VALUES(1,&#39;小明&#39;);
+INSERT INTO a_user(id,name) VALUES(2,&#39;小红2&#39;);
+INSERT INTO a_user(id) VALUES(3);
+</code></pre>
+<h6 id="快速复制一张表-复制表结构及其所有数据"><a href="#快速复制一张表-复制表结构及其所有数据" class="headerlink" title="快速复制一张表 (复制表结构及其所有数据)"></a>快速复制一张表 (复制表结构及其所有数据)</h6><pre><code class="sql">CREATE TABLE a_user1 AS SELECT * FROM a_user;
+</code></pre>
+<h6 id="复制一张表-不要数据"><a href="#复制一张表-不要数据" class="headerlink" title="复制一张表 (不要数据)"></a>复制一张表 (不要数据)</h6><pre><code class="sql">CREATE TABLE a_user2 AS SELECT * FROM a_user WHERE 1=2;
+</code></pre>
+<h6 id="复制一张表-复制部分表结构及其部分数据"><a href="#复制一张表-复制部分表结构及其部分数据" class="headerlink" title="复制一张表 (复制部分表结构及其部分数据)"></a>复制一张表 (复制部分表结构及其部分数据)</h6><pre><code class="sql">CREATE TABLE a_user3 AS SELECT id FROM a_user;
+</code></pre>
+<h2 id="删："><a href="#删：" class="headerlink" title="删："></a>删：</h2><pre><code class="sql">DELETE FROM a_user1; (可以还原数据)
+删除表中的部分数据(可以通过where子句)
+会造成磁盘高位现象
+让数据不可见(仍占用磁盘空间)-&gt;单纯拖到回车站
+===============================
+TRUNCATE TABLE a_user3; (永远不可以还原数据)
+只能清空表的数据，不能进行删除
+能够清楚磁盘高位现象
+彻底删除-&gt;Shift + Delete
+===============================
+DROP table_user; (永远不可以还原数据)
+DROP COLUMN age, DROP COLUMN password
+</code></pre>
+<p>一张表100万条数据，每天删除100万，每天新增100万，1年后还是100万<br>但查询效率低下，问 为什么？ 如何解决？</p>
+<pre><code class="sql">CREATE TABLE t_userbak AS SELECT * FROM t_user;
+TRUNCATE TABLE t_user;
+INSERT INTO t_user SELECT * FROM t_userbak;
+DROP TABLE t_usebak;
+</code></pre>
+<h2 id="改："><a href="#改：" class="headerlink" title="改："></a>改：</h2><pre><code class="sql">增加表字段：
+ALTER TABLE t_user add(age INT, password VARCHAR(255))
+</code></pre>
+<pre><code class="sql">删除表字段：
+ALTER TABLE t_user
+DROP COLUMN age, DROP COLUMN password
+</code></pre>
+<pre><code class="SQL">修改字段的长度：
+变更表字段name-&gt;name(名字未改变，但是长度改变)
+ALTER TABLE t_user
+CHANGE name NAME VARCHAR(200), 
+CHANGE password PASSWORD VARCHAR(255)
+</code></pre>
+<h6 id="ALTER隐藏报错：已经有了原始数据不允许往回缩小"><a href="#ALTER隐藏报错：已经有了原始数据不允许往回缩小" class="headerlink" title="ALTER隐藏报错：已经有了原始数据不允许往回缩小"></a>ALTER隐藏报错：已经有了原始数据不允许往回缩小</h6><h2 id="查"><a href="#查" class="headerlink" title="查"></a>查</h2><pre><code class="sql">SELECT * FROM t_user 查询表
+</code></pre>
+<h2 id="★-数据库六大约束-★"><a href="#★-数据库六大约束-★" class="headerlink" title="★ 数据库六大约束 ★"></a>★ 数据库六大约束 ★</h2><p>作用：保证数据的完整性和合理性</p>
+<p>主键约束</p>
+<p>非空约束</p>
+<p>自增长约束 </p>
+<p>非负约束</p>
+<p>唯一约束</p>
+<p>外键约束</p>
 
     </div>
 
