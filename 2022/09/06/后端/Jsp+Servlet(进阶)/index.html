@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -326,6 +326,130 @@ public class RequestServlet extends HttpServlet &#123;
 
 &#125;
 </code></pre>
+<h3 id="响应的结构"><a href="#响应的结构" class="headerlink" title="响应的结构"></a>响应的结构</h3><ul>
+<li>HTTP响应包括三部分：响应行、响应头、响应体</li>
+</ul>
+<h4 id="HTTP常见状态码"><a href="#HTTP常见状态码" class="headerlink" title="HTTP常见状态码"></a>HTTP常见状态码</h4><table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>错误描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200</td>
+<td>服务器处理成功</td>
+</tr>
+<tr>
+<td>404</td>
+<td>无法找到文件</td>
+</tr>
+<tr>
+<td>500</td>
+<td>内部服务器错误</td>
+</tr>
+<tr>
+<td>403</td>
+<td>服务器拒绝访问</td>
+</tr>
+<tr>
+<td>301、302</td>
+<td>请求重定向</td>
+</tr>
+<tr>
+<td>400</td>
+<td>无效的请求</td>
+</tr>
+<tr>
+<td>401</td>
+<td>未经过授权</td>
+</tr>
+<tr>
+<td>503</td>
+<td>服务器超负载或正停机维护，无法处理请求</td>
+</tr>
+</tbody></table>
+<h4 id="ContentType作用"><a href="#ContentType作用" class="headerlink" title="ContentType作用"></a>ContentType作用</h4><ul>
+<li>ContentType决定浏览器采用何种方式对响应体进行处理</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>MINE类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>text&#x2F;plain</td>
+<td>纯文本</td>
+</tr>
+<tr>
+<td>text&#x2F;html</td>
+<td>HTML文档</td>
+</tr>
+<tr>
+<td>text&#x2F;xml</td>
+<td>XML文档</td>
+</tr>
+<tr>
+<td>application&#x2F;x-msdownload</td>
+<td>需要下载的资源</td>
+</tr>
+<tr>
+<td>image&#x2F;jpeg、image&#x2F;gif、image&#x2F;…</td>
+<td>图片资源</td>
+</tr>
+</tbody></table>
+<pre><code class="java">protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException &#123;
+        String output = &quot;&lt;h1&gt;&lt;a href=&#39;http://www.baidu.com&#39;&gt;&lt;span&gt;百度&lt;/span&gt;&lt;/a&gt;&lt;/h1&gt;&quot;;
+        response.setContentType(&quot;text/html; charset=utf-8&quot;);
+        response.getWriter().println(output);
+    &#125;
+</code></pre>
+<h4 id="请求转发与重定向"><a href="#请求转发与重定向" class="headerlink" title="请求转发与重定向"></a>请求转发与重定向</h4><ul>
+<li>多个Servlet (JSP) 之间跳转有两种方式</li>
+<li>request.getRequestDispatcher().forward() - <u><strong>请求转发</strong></u></li>
+<li>response.sendRedirect() - <u><strong>响应重定向</strong></u></li>
+</ul>
+<p>[端口被占用时 运行cmd-&gt;netstat -avo，找出被占用的PID，打开任务管理器删除]</p>
+<h5 id="CheckLoginServelt-java"><a href="#CheckLoginServelt-java" class="headerlink" title="CheckLoginServelt.java"></a>CheckLoginServelt.java</h5><pre><code class="java">@WebServlet(&quot;/direct/check&quot;)
+public class CheckLoginServlet extends HttpServlet &#123;
+protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        System.out.println(&quot;用户登录成功&quot;);                         //
+        //实现了请求转发的功能 forward(请求 + 响应)
+        request.getRequestDispatcher(&quot;/direct/index&quot;).forward(request, response);\
+        //响应重定向需要增加contextPath(工程名字)
+      //response.sendRedirect(&quot;/servlet_advanced/direct/index&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="IndexServlet-java"><a href="#IndexServlet-java" class="headerlink" title="IndexServlet.java"></a>IndexServlet.java</h5><pre><code class="java">@WebServlet(&quot;/direct/index&quot;)
+public class IndexServlet extends HttpServlet &#123;
+protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        response.getWriter().println(&quot;This is index page!&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>当输入” localhost:8081&#x2F;servlet_advanced&#x2F;direct&#x2F;check “ 时，Console中报出用户登录成功，随后跳转到@WebServlet(“&#x2F;direct&#x2F;index”)完成IndexServlet.java的功能，最后页面上显示<strong>This is index page!</strong></p>
+<h4 id="请求转发"><a href="#请求转发" class="headerlink" title="请求转发"></a>请求转发</h4><ul>
+<li>请求转发是服务器跳转，只会产生一次请求</li>
+<li>请求转发语句是：<strong>request.getRequestDispatcher().forward()</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/d1444fbcabab5be3dbda42fe590f5566b3830ca2/data/%E8%AF%B7%E6%B1%82%E8%BD%AC%E5%8F%91.jpg"></p>
+<h4 id="响应重定向"><a href="#响应重定向" class="headerlink" title="响应重定向"></a>响应重定向</h4><ul>
+<li>重定向则是浏览器端跳转，会产生两次请求</li>
+<li>响应重定向的语句是：<strong>response.sendRedirect()</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9f42b643d3c6a0d9147acff92623c447152666dd/data/%E5%93%8D%E5%BA%94%E9%87%8D%E5%AE%9A%E5%90%91.jpg"></p>
+<h4 id="设置请求自定义属性"><a href="#设置请求自定义属性" class="headerlink" title="设置请求自定义属性"></a>设置请求自定义属性</h4><ul>
+<li>请求允许创建自定义属性</li>
+<li>设置请求属性：<strong>request.setAttribute(属性名，属性值)</strong></li>
+<li>获取请求属性：<strong>Object attr &#x3D; request.getAttribute(属性名)</strong></li>
+</ul>
 
     </div>
 
