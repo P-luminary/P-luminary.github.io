@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -447,10 +447,78 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response) t
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/9f42b643d3c6a0d9147acff92623c447152666dd/data/%E5%93%8D%E5%BA%94%E9%87%8D%E5%AE%9A%E5%90%91.jpg"></p>
 <h4 id="设置请求自定义属性"><a href="#设置请求自定义属性" class="headerlink" title="设置请求自定义属性"></a>设置请求自定义属性</h4><ul>
 <li>请求允许创建自定义属性</li>
-<li>设置请求属性：<strong>request.setAttribute(属性名，属性值)</strong></li>
-<li>获取请求属性：<strong>Object attr &#x3D; request.getAttribute(属性名)</strong></li>
+<li><strong>设置</strong>请求属性：<strong>request.setAttribute(属性名，属性值)</strong></li>
+<li><strong>获取</strong>请求属性：<strong>Object attr &#x3D; request.getAttribute(属性名)</strong></li>
 </ul>
-<p>4&#x2F;14   5:49</p>
+<pre><code class="java">package com.imooc.servlet.direct;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * Servlet implementation class CheckLoginServlet
+ */
+@WebServlet(&quot;/direct/check&quot;)
+public class CheckLoginServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public CheckLoginServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        System.out.println(&quot;用户登录成功&quot;);                         //
+        request.setAttribute(&quot;username&quot;,&quot;admin&quot;);
+        ★ //实现了请求转发的功能 forward(请求 + 响应) ★
+        request.getRequestDispatcher(&quot;/direct/index&quot;).forward(request, response);
+ 打印：This is index page! Current username is admin
+        ★ //实现了响应重定向，需要加contextPath ★
+        response.sendRedirect(&quot;/servlet_advanced/direct/index&quot;);
+ 打印：This is index page! Current username is null[结果已被重定向]
+    &#125;
+
+&#125;
+</code></pre>
+<h3 id="浏览器Cookie"><a href="#浏览器Cookie" class="headerlink" title="浏览器Cookie"></a>浏览器Cookie</h3><ul>
+<li>Cookie(小甜饼) 是浏览器保存在本地的文本内容</li>
+<li>Cookie常用于保存登录状态、用户资料等小文本</li>
+<li>Cookie具有时效性，Cookie内容会伴随请求发送给Tomcat</li>
+</ul>
+<pre><code class="java">[网站：http://localhost:8081/servlet_advanced/cookies/login]
+@WebServlet(&quot;/cookies/login&quot;)
+public class ImoocLoginServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public ImoocLoginServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+    System.out.println(&quot;用户登录成功&quot;);
+    Cookie cookie = new Cookie(&quot;user&quot;, &quot;admin&quot;);
+    response.addCookie(cookie);
+&#125;
+//每次发送请求的时候都会将user与admin通过cookie的方式发送到服务器上
+</code></pre>
 
     </div>
 
