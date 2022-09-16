@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -492,9 +492,12 @@ public class CheckLoginServlet extends HttpServlet &#123;
 &#125;
 </code></pre>
 <h3 id="浏览器Cookie"><a href="#浏览器Cookie" class="headerlink" title="浏览器Cookie"></a>浏览器Cookie</h3><ul>
-<li>Cookie(小甜饼) 是浏览器保存在本地的文本内容</li>
-<li>Cookie常用于保存登录状态、用户资料等小文本</li>
-<li>Cookie具有时效性，Cookie内容会伴随请求发送给Tomcat</li>
+<li><p>Cookie(小甜饼) 是浏览器保存在本地的文本内容</p>
+</li>
+<li><p>Cookie常用于保存登录状态、用户资料等小文本</p>
+</li>
+<li><p>Cookie具有时效性，Cookie内容会伴随请求发送给Tomcat</p>
+<h4 id="ImoocLoginServlet-java"><a href="#ImoocLoginServlet-java" class="headerlink" title="ImoocLoginServlet.java"></a>ImoocLoginServlet.java</h4></li>
 </ul>
 <pre><code class="java">[网站：http://localhost:8081/servlet_advanced/cookies/login]
 @WebServlet(&quot;/cookies/login&quot;)
@@ -515,10 +518,62 @@ public class ImoocLoginServlet extends HttpServlet &#123;
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
     System.out.println(&quot;用户登录成功&quot;);
     Cookie cookie = new Cookie(&quot;user&quot;, &quot;admin&quot;);
-    response.addCookie(cookie);
+    cookie.setMaxAge(60 * 60 * 24 * 7); //设置cookie时长在7天内有效
+    //每次发送请求的时候都会将user与admin通过cookie的方式发送到服务器上
+    response.addCookie(cookie); //获取所有的cookie信息
+    response.getWriter().println(&quot;login success&quot;);
 &#125;
 //每次发送请求的时候都会将user与admin通过cookie的方式发送到服务器上
 </code></pre>
+<h4 id="ImoocIndexSerlvet-java"><a href="#ImoocIndexSerlvet-java" class="headerlink" title="ImoocIndexSerlvet.java"></a>ImoocIndexSerlvet.java</h4><pre><code class="java">@WebServlet(&quot;/cookies/index&quot;)
+public class ImoocIndexServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public ImoocIndexServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        Cookie[] cs = request.getCookies();
+        if(cs==null) &#123;
+            response.getWriter().println(&quot;user not login&quot;);
+            return;
+        &#125;
+        String user = null;
+        for(Cookie c : cs) &#123;
+            System.out.println(c.getName()+&quot;:&quot;+c.getValue());
+            if(c.getName().equals(&quot;user&quot;)) &#123;
+                user = c.getValue();
+                break;
+            &#125;
+        &#125;
+        if(user == null) &#123;
+            response.getWriter().println(&quot;user not login&quot;);
+        &#125; else &#123;
+            response.getWriter().println(&quot;user: &quot;+ user);
+        &#125;
+    &#125;
+
+&#125;
+</code></pre>
+<h2 id="Session-用户会话"><a href="#Session-用户会话" class="headerlink" title="Session-用户会话"></a>Session-用户会话</h2><ul>
+<li><p>Session(用户会话)用于保存与“浏览器窗口”对应的数据</p>
+</li>
+<li><p>cookie是把数据存储在客户端，session是把数据存储在服务器端</p>
+</li>
+<li><p>Session的数据存储在Tomcat服务器的内存中，具有时效性</p>
+</li>
+<li><p>Session通过浏览器Cookie的SessionId值提取</p>
+</li>
+</ul>
 
     </div>
 
