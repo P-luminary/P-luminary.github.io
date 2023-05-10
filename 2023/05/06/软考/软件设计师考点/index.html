@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/软考" style=color:#879cff>
+                <a href="/tags/软考" style=color:#ff7d73>
                     软考
                 </a>
             </span>
@@ -527,6 +527,167 @@
 <blockquote>
 <p>CPU在读取数据中首先对Cache中读取，如果读到了则表示对该数据的命中，如果Cache中没有我们需要的数据，CPU会在内存里去调</p>
 </blockquote>
+<h3 id="局部性原理"><a href="#局部性原理" class="headerlink" title="局部性原理"></a>局部性原理</h3><blockquote>
+<p>时间局部性<br>空间局部性(<u>适用于数组</u>)<br>工作集理论：工作集是进程运行时被频繁访问的页面集合<del>短时间不被替换成cache</del></p>
+</blockquote>
+<pre><code class="java">int i, s = 0;  ==&gt;  全局变量直接调用Cache
+for(i = 1; i &lt; 1000; i++)   ==&gt; 在内存中循环100w次
+    for(j = 1; j &lt; 1000; j++)
+        s+=j;
+cout &lt;&lt; s &lt;&lt; end;
+</code></pre>
+<h3 id="内存-外存"><a href="#内存-外存" class="headerlink" title="内存+外存"></a>内存+外存</h3><ul>
+<li><h4 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h4><ul>
+<li>ROM<del>BIOS</del> 只读存储器<br>ROM-Read Only Memory只读存储器。断电后信息不丢失，如计算机启动用的BIOS芯片。<br>MROM(Mask ROM, 掩模式ROM)<br>PROM 可编程只读存储器<br>EPROM 可擦写可编程只读存储器<br>EEPROM 点可擦可编程只读存储器<br>Flash Memory 闪存 ≈ SSD</li>
+<li>RAM随机存储器<br>DRAM(动态存储器) 不断刷新 速度比SRAM慢 价格低 常用于主存储器<br>SRAM(静态存储器 ) 不需刷新 速度比DRAM快 价格贵  cache属于SRAM<br> <u>CPU → <strong>Cache</strong> → 内存 → 外存</u></li>
+</ul>
+</li>
+<li><h4 id="外存"><a href="#外存" class="headerlink" title="外存"></a>外存</h4><ul>
+<li>硬盘：<strong>机械硬盘</strong>HDD(SATA、IDE、SCSI接口)    <strong>固态硬盘</strong>SSD(SATA接口)</li>
+<li>光盘：CD&#x2F;VCD：650MB、CD-ROM(只读光盘)、CD-R(一次性写入、永久读)、CD-RW(可重复擦写光盘)<br>DVD：4.7GB、DVD-ROM、DVD-R、DVD-RW</li>
+</ul>
+</li>
+</ul>
+<h3 id="主存-—-编址"><a href="#主存-—-编址" class="headerlink" title="主存 — 编址"></a><strong>主存 — 编址</strong></h3><p><strong>8 × 4 位的存储器 &#x3D;&#x3D;&gt; 8个地址空间，每一个存储空间存储了4个bit位的信息</strong></p>
+<table>
+<thead>
+<tr>
+<th>000 这一存储空间</th>
+<th>存放了4个</th>
+<th>bit的</th>
+<th>信息容量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>001</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>010</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>011</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>100</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>101</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>110</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>111</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>@@ 内存地址从AC000H到C7FFFH，共有 <span style = "color : red"> <u><strong>1C000&#x2F; $2^{10}$</strong></u>&#x3D;112</span> <strong>K</strong>个地址单位<br>如果该内存地址按字(16bit)编址，由28片存储器芯片构成。已知构成此内存的芯片每片有16K个内存单元，则该芯片每个存储单元存储  <span style = "color : red"><u><strong>4</strong></u></span> 位</p>
+<blockquote>
+<p>原理是后面地址-前面地址+1；  C7FFFH + 1 - AC000H &#x3D; 1C000H<br>K &#x3D; $2^{10}$B   &#x3D;&#x3D;&gt; 共有 1C000&#x2F; $2^{10}$&#x3D;112K 个地址单位</p>
+<p>用一系列的芯片组成这样 <strong>112K×16<del>bit位</del></strong> 的内存块，需要28个芯片，每个芯片是16K个存储单元**$\frac{112K×16}{28×16K×a}$ &#x3D; 1**，比值是1因为用这些芯片去成立这个空间。解得a&#x3D;4</p>
+</blockquote>
+<h3 id="磁盘结构与参数"><a href="#磁盘结构与参数" class="headerlink" title="磁盘结构与参数"></a>磁盘结构与参数</h3><p><span style = "color : red"><strong>存取时间 &#x3D; 寻道时间 + 等待时间(平均定位时间 + 转动延迟)</strong></span><br>注意：<u><strong>寻道时间</strong></u>是指<strong>磁头</strong>移动到<strong>磁道</strong>所需的时间；<u><strong>等待时间</strong></u>为等待读写的<strong>扇区</strong>转到<strong>磁头</strong>下方所用的时间。</p>
+<blockquote>
+<ul>
+<li>硬盘</li>
+</ul>
+<p><span style = "color : red">机械硬盘(<strong>HDD</strong>)</span>：存储介质 磁介质；参数：[主慈善]**磁(道)头数、柱面数、扇区(**硬盘的基本读写单位，大小是512B)；</p>
+<p><strong>硬盘容量 &#x3D; 磁头数 * 柱面数 * 扇区数 * 512B</strong>；<br>性能指标：<u>存储容量、转速、访问时间、传输速率、缓存等</u>；<br>[硬盘内部结构按<strong>扇区、磁道、柱面</strong>的格式组织存储信息]</p>
+<p>接口：SATA、<strong>IDE</strong>、SCSI、光纤通道</p>
+<p><span style = "color : red">固态硬盘(<strong>SSD</strong>)</span>：存储介质(Flash Memory闪存) 接口 SATA等</p>
+</blockquote>
+<p>旋转的延迟时间是磁盘转一圈的时间</p>
+<p>@@ 假设某磁盘的每个磁道划分成11个物理块，每块存放1个逻辑记录。逻辑记录R<del>0</del>，R<del>1</del>，…… ，R<del>9</del>，R<del>10</del>存放在同一个磁道上，记录的存放顺序如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>物理块</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>逻辑记录</td>
+<td>R1</td>
+<td>R2</td>
+<td>R3</td>
+<td>R4</td>
+<td>R5</td>
+<td>R6</td>
+<td>R7</td>
+<td>R8</td>
+<td>R9</td>
+<td>R10</td>
+<td>R11</td>
+</tr>
+</tbody></table>
+<p>如果磁盘的旋转周期为33ms，磁头当前处在R<del>0</del>的开始处。若系统使用单缓存区顺序处理这些记录，每个记录处理时间为3ms，则处理这11个记录的最长时间为<strong>366ms</strong>；若对信息存储进行优化分布后，处理11个记录的最少时间为<strong>66ms</strong></p>
+<blockquote>
+<p>一圈11个记录 转一圈33ms，则每个记录旋转的时间是3ms，读取一个记录的时间是3ms；告诉单缓存区，转到R0时处理R0需要3ms<del>因为是单缓存区，不能同时进行，必须等R0处理完成才能进入下一个任务处理[处理的途中磁盘仍在转动,磁头仍在向前]</del>，而一个记录正好也需要3ms，所以当处理完R0时，磁头已经到达了R2的位置，所以要再转一圈才能去处理R1，以此类推，除了最后一个R10就可以找到规律，<strong>把R0处理完，再等到指针走到R1的位置的时候转了<u>一圈加一条</u>记录的时间 &#x3D; [33+3] &#x3D; 36ms</strong>，以此类推R0 ~ R9都是这样处理的，所以处理R0~R9共需要 <strong>36ms × 10</strong>，最后一个R10，把它读取出来3ms，再处理完3ms。<strong>综上一共需要 (33+3)×10+6 &#x3D; 366ms</strong>；</p>
+<p>优化处理：当处理完R0的时候，磁头正好下一位置是R1，而不用再去等它转动一个周期后；优化后的图为<strong>右侧图二</strong>！旋转+处理&#x3D;(3ms+3ms)×10<del>个</del>&#x3D;<strong>66ms</strong></p>
+</blockquote>
+<h3 id="总线"><a href="#总线" class="headerlink" title="总线"></a>总线</h3><p>根据总线所处的位置不同，总线通常被分成三种类型，分别是：</p>
+<h5 id="内部总线"><a href="#内部总线" class="headerlink" title="内部总线"></a>内部总线</h5><p>是指微机内部各个<strong>外围的芯片</strong>与<strong>处理器</strong>之间的总线 属于<u>芯片</u>级别</p>
+<h5 id="系统总线"><a href="#系统总线" class="headerlink" title="系统总线"></a>系统总线</h5><p>是指各个<strong>插件板</strong>和<strong>系统板</strong>之间的总线  属于<u>插件版</u>级别</p>
+<ul>
+<li>&#x3D;&#x3D;<u><strong>数据总线(DB)</strong></u>&#x3D;&#x3D;：用来传输数据信息 双向传输</li>
+<li>&#x3D;&#x3D;<u><strong>地址总线(AB)</strong></u>&#x3D;&#x3D;：用来传输数据地址 单向传输</li>
+</ul>
+<p>地址总线的位数决定了CPU可直接寻址的内存空间大小</p>
+<p>若地址总线为n位，寻址空间为2的n次方个B，如微机的地址总线为16位，则最大寻址空间为64KB</p>
+<ul>
+<li>&#x3D;&#x3D;<u><strong>控制总线(CB)</strong></u>&#x3D;&#x3D;：用来传输控制信号</li>
+</ul>
+<h5 id="外部总线"><a href="#外部总线" class="headerlink" title="外部总线"></a>外部总线</h5><p>是指<strong>微机</strong>和<strong>外部设备</strong>的总线</p>
+<h3 id="系统可靠性分析-—-串联系统与并联系统"><a href="#系统可靠性分析-—-串联系统与并联系统" class="headerlink" title="系统可靠性分析 — 串联系统与并联系统"></a>系统可靠性分析 — 串联系统与并联系统</h3><p>【<strong>串联</strong>】输入 → R1 → R2 → … → Rn → 输出<br><strong>R &#x3D; R1 × R2 × … × Rn</strong><br><strong>λ &#x3D; λ1 + λ2 + … + λn</strong></p>
+<p>【<strong>并联</strong>】</p>
+<blockquote>
+<pre><code>     →R1
+</code></pre>
+<p>输入 →R2 → 输出<br>         →Rn</p>
+</blockquote>
+<p><strong>R &#x3D;  1 - (1 - R1) × (1 - R2) × … × (1 - Rn)</strong><br>**μ &#x3D; **$\frac{1}{\frac{1}{λ}\quad\sum_{j&#x3D;1}^{n}\frac{1}{j}}$</p>
+<p>【<strong>模冗余系统与混合系统</strong>】</p>
+<blockquote>
+<p>​         →R1  →↓</p>
+<p>输入 →R2   →     表决器  → 输出</p>
+<p>​         →Rm →↑</p>
+</blockquote>
+<p>**R &#x3D; **$\quad\sum_{j&#x3D;1}^{n}{C{^j}{_m}×R{<em>0}{^i}(1-R</em>{0})^{m-i}}$</p>
+<p>【<strong>串并联</strong>】</p>
+<blockquote>
+<p>​           |—  R  —|         |—R—|<br>—R —|—  R  —|—— |           |——<br>​           |—  R  —|         |—R—|</p>
+</blockquote>
+<p><strong>R×(1-(1-R$)^3$×(1-(1-R$)^2$))</strong></p>
 
     </div>
 
