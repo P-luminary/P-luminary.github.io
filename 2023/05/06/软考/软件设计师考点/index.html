@@ -889,6 +889,92 @@ cout &lt;&lt; s &lt;&lt; end;
 </tbody></table>
 <p>P1 &#x3D;&gt; ③⑤⑦⑨⑪ &#x3D;&gt; 1⊕1⊕1⊕0⊕0 &#x3D;&gt; 1<br>P2 &#x3D;&gt; ③⑥⑦⑩⑪ &#x3D;&gt; 1⊕0⊕1⊕1⊕0 &#x3D;&gt; 1<br>P3 &#x3D;&gt; ⑤⑥⑦⑫ &#x3D;&gt; 1⊕0⊕1⊕1 &#x3D;&gt; 1<br>P4 &#x3D;&gt; ⑨⑩⑪⑫ &#x3D;&gt; 0⊕1⊕0⊕1 &#x3D;&gt; 0<br>故海明校验码为：1010<strong>0</strong>101<strong>1</strong>1<strong>11</strong></p>
 </blockquote>
+<h3 id="操作系统基本原理"><a href="#操作系统基本原理" class="headerlink" title="操作系统基本原理"></a>操作系统基本原理</h3><h5 id="操作系统-—-概述："><a href="#操作系统-—-概述：" class="headerlink" title="操作系统 — 概述："></a>操作系统 — 概述：</h5><ul>
+<li>管理系统的硬件、软件、数据资源</li>
+<li>控制程序运行</li>
+<li>人机之间的接口</li>
+<li>应用软件与硬件之间的接口[API接口]</li>
+</ul>
+<p><strong>操作系统 — 管理职能：</strong></p>
+<ul>
+<li>进程管理<ul>
+<li>进程的状态</li>
+<li><strong>前趋图</strong></li>
+<li><strong>PV操作</strong></li>
+<li>死锁问题</li>
+</ul>
+</li>
+<li>存储管理<ul>
+<li><strong>段页式存储</strong></li>
+<li>页面置换算法</li>
+</ul>
+</li>
+<li>文件管理<ul>
+<li>索引文件</li>
+<li><strong>位示图</strong></li>
+</ul>
+</li>
+<li>作业管理</li>
+<li>设备管理</li>
+<li>微内核操作系统<ul>
+<li>虚设备与SPOOLING技术</li>
+</ul>
+</li>
+</ul>
+<p>所属范围：<strong>应用程序</strong>【<strong>语言处理程序</strong>{<strong>操作系统</strong>[计算机硬件]}】</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/66ab60b30acd298347efc9b06e3be945f99ebeea/data/%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81.jpg" alt="三态→五态，时间片轮转"></p>
+<p><strong>进程管理 — 前趋图</strong></p>
+<p>A:绞肉  B:切葱末  C:切姜末  D:搅拌  E:包饺子<br><strong>①</strong> A → B → C → D → E<br><strong>②</strong> A↘<br>     B → D → E<br>     C↗</p>
+<p><strong>进程管理 — 进程的同步与互斥</strong></p>
+<p><strong>互斥</strong>：千军万马过独木桥<br><strong>同步</strong>：(小明步行, 小红自行车从A到B点) 速度有差异，在一定情况停下等待<br><u>互斥反义词是共享，同步反义词是异步</u><br><strong><u>进程的互斥</u></strong>:是指当有若干个进程都要使用某一共享资源时，任何时刻最多只允许一个进程去使用该资源，其他要使用它的进程必须等待，直到该资源的占用着释放了该资源。<br><strong><u>进程的同步</u></strong>:是指在并发进程之间存在这一种制约关系，一个进程依赖另一个进程的消息，当一个进程没有得到另一个进程的消息时应等待，直到消息到达才被唤醒。</p>
+<h3 id="进程管理-—-PV操作"><a href="#进程管理-—-PV操作" class="headerlink" title="进程管理 — PV操作"></a>进程管理 — PV操作</h3><p>PV操作是一种实现进程互斥与同步的有效方法。PV操作与信号量的处理相关<br><strong>P表示通过的意思，V表示释放的意思</strong>。<br>P操作可以看作是<strong>获得</strong>或者<strong>请求、消耗</strong>一个信号量<br>V操作可以看作是<strong>释放</strong>或者<strong>发送</strong>一个信号量</p>
+<blockquote>
+<p>P操作会阻塞；<br>V操作会唤醒P操作；<br>P操作与V操作成对出现；</p>
+</blockquote>
+<p><strong>临界资源</strong>：诸进程间需要互斥方式对其进行共享的资源，如打印机、磁带机等。<br><strong>临界区</strong>：每个进程中访问临界资源的那段代码称为临界区<br><strong>信号量</strong>：信号量的值与相应资源的使用情况有关。当它的值大于0时，表示当前可用资源的数量；当它的值小于0时，其绝对值表示等待使用该资源的进程个数。</p>
+<p><strong>P(S)操作：</strong>S-&#x3D;1  →  S&lt;0  →<del>T</del>   进程队列 <strong>or</strong> →<del>F</del>向下进行<br><strong>V(S)操作：</strong>S+&#x3D;1 →  S≤0  →<del>T</del>   进程队列 <strong>or</strong> →<del>F</del>向下进行</p>
+<blockquote>
+<p>P(S)、V(S)中的S就是信号量<br>T–进程操作阻塞（不会往下执行）<br>F–继续循环操作（执行下面的内容）</p>
+</blockquote>
+<h6 id="单缓冲区生产者、消费者问题PV原语描述：S1初值1，S2初值0"><a href="#单缓冲区生产者、消费者问题PV原语描述：S1初值1，S2初值0" class="headerlink" title="单缓冲区生产者、消费者问题PV原语描述：S1初值1，S2初值0"></a>单缓冲区生产者、消费者问题PV原语描述：S1初值1，S2初值0</h6><table>
+<thead>
+<tr>
+<th>生产者：(先执行)</th>
+<th>消费者：</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>生产一个产品；</td>
+<td><strong>P</strong>(S2);   [S2&#x3D;0]</td>
+</tr>
+<tr>
+<td><strong>P</strong>(S1);   [S1&#x3D;0, S1&#x3D;-1]</td>
+<td>从缓冲区取产品;</td>
+</tr>
+<tr>
+<td>送产品到缓冲区;</td>
+<td><strong>V</strong>(S1);</td>
+</tr>
+<tr>
+<td><strong>V</strong>(S2);   [S2&#x3D;1]</td>
+<td>消费产品;</td>
+</tr>
+</tbody></table>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/dfaac2ea85671c477f9008c1aa3dc70b68012a90/data/PV%E6%93%8D%E4%BD%9C%E4%BE%8B%E9%A2%98.png"></p>
+<p>付款要双方的配合，会有同步的关系；假设没有这个操作；若先进行收银员操作，则没有购书者先购书，收银员无法操作。此时b1有个P操作，P操作需要付款V操作来唤醒；所以一开始的PV是同一信号量P(S1), V(S1)；对于购书者有个等待阻塞操作，等待收银员P(S2), V(S2)。<br>n+1个人进来的话会被阻塞。</p>
+<blockquote>
+<p>注意：<br>①P操作具备阻塞的职能，V操作不具备阻塞能力。<br>②PV操作关键要找到约束，找到谁是因变量，谁是自变量，谁约束谁。【PV操作是成对出现的】<br>③一对儿PV操作信号量是相同的。<br>看题发现已经存在了一对PV操作，信号量为Sn，Sn的值为n，很容易想到这对PV操作的作用就是控制进入书店的人数的。当人数达到n了，阻止人继续进入书店，这种状态直到有人付款离开书店为止。</p>
+<p>再来看题发现还有两对PV操作，首先通过图能知道购书者和收银员之间存在约束关系，收银员要等待购书者付款才能工作，购书者要等待收银员反馈才能离开书店。那么这两对PV操作就是控制这个约束的。</p>
+<p>先从购书者分析，购书者开始付款了，收银员才能开始收款，所以a1与b1之间是一对PV操作，进一步分析，如果没有购书者付款，那么收银员是不能执行收款操作的，也就是说收银员进程应该及时阻塞，故b1应该是P（S1）,a1应该是V（S1）。</p>
+<p>购书者发起付款操作的时候，不能马上离开书店，因为他要等收银员的反馈，付款成功拿到 小票才能离开，也就是说购书者在等待收银员反馈的时候应该及时阻塞住，故a2与b2之间是一对PV操作，且a2是P（S2），对应的b2就是V（S2）。</p>
+<p>再检查一遍看看是否合理呢？</p>
+<p>从收银员角度开始，假设没有人付款，P操作能及时阻塞，使得收银员进程不会进入收费状态，所以b1位置放P操作没有问题，进一步分析信号量S1的初始值应该为0，经过b1后S1为-1，阻塞。</p>
+<p>从购书者角度看，开始付款的时候激活收银员进程，所以a1是V操作也没有问题，通过a1的操作，S1信号量又为0了，收银员进程可以进行收费了。</p>
+<p>再返回收银员角度，收费完毕后要给购书者信号，购书者从才能离开，所以b2为V操作没有问题。</p>
+<p>从购书者角度看，a2应该是P操作，应该及时阻塞住。进一步分析，S2信号量也应该是0才符合要求。</p>
+<p>😁总结<br>PV操作从做题的角度出发，我认为首先要找到约束关系，就是谁和谁是一对约束，第二步确定这对约束谁是P谁是V（用反证方法推一下看看），最后一步考虑信号量，信号量为多少取决于是否马上阻塞还是说执行几次后再阻塞，这个要结合具体问题具体分析。</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_37063785/article/details/88802580">(53条消息) 软考必考题型之PV操作_pv操作中p和v各代表什么_du-hyper的博客-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_42539194/article/details/129647813?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2~default~YuanLiJiHua~Position-3-129647813-blog-88802580.235%5Ev35%5Epc_relevant_increate_t0_download_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~YuanLiJiHua~Position-3-129647813-blog-88802580.235%5Ev35%5Epc_relevant_increate_t0_download_v2&utm_relevant_index=6">(53条消息) 软考–快速掌握操作系统的PV操作_pv操作 软考_韦_恩的博客-CSDN博客</a></p>
 
     </div>
 
