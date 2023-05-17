@@ -949,7 +949,11 @@ cout &lt;&lt; s &lt;&lt; end;
 <p><strong>互斥</strong>：千军万马过独木桥<br><strong>同步</strong>：(小明步行, 小红自行车从A到B点) 速度有差异，在一定情况停下等待<br><u>互斥反义词是共享，同步反义词是异步</u><br><strong><u>进程的互斥</u></strong>:是指当有若干个进程都要使用某一共享资源时，任何时刻最多只允许一个进程去使用该资源，其他要使用它的进程必须等待，直到该资源的占用着释放了该资源。<br><strong><u>进程的同步</u></strong>:是指在并发进程之间存在这一种制约关系，一个进程依赖另一个进程的消息，当一个进程没有得到另一个进程的消息时应等待，直到消息到达才被唤醒。</p>
 <h3 id="进程管理-—-PV操作"><a href="#进程管理-—-PV操作" class="headerlink" title="进程管理 — PV操作"></a>进程管理 — PV操作</h3><p>PV操作是一种实现进程互斥与同步的有效方法。PV操作与信号量的处理相关<br><strong>P表示通过的意思，V表示释放的意思</strong>。<br>P操作可以看作是<strong>获得</strong>或者<strong>请求、消耗</strong>一个信号量<br>V操作可以看作是<strong>释放</strong>或者<strong>发送</strong>一个信号量</p>
 <blockquote>
-<p>P操作会阻塞；<br>V操作会唤醒P操作；<br>P操作与V操作成对出现；</p>
+<p><span style = "color : red">P操作会阻塞；</span><br><span style = "color : red">V操作会唤醒P操作；</span><br><span style = "color : red">P操作与V操作成对出现；</span></p>
+<p>int f1&#x3D;0;   &#x2F;&#x2F;表示进程P1是否执行完毕</p>
+<p>main()<br>{<br>    cobegin<br>    p1();</p>
+<p>​    coend<br>}</p>
+<p><strong>p1() {</strong><br>    <strong>…</strong><br>    <strong>v(f1);</strong><br>    <strong>v(f1);</strong><br><strong>}</strong></p>
 </blockquote>
 <p><strong>临界资源</strong>：诸进程间需要互斥方式对其进行共享的资源，如打印机、磁带机等。<br><strong>临界区</strong>：每个进程中访问临界资源的那段代码称为临界区<br><strong>信号量</strong>：信号量的值与相应资源的使用情况有关。当它的值大于0时，表示当前可用资源的数量；当它的值小于0时，其绝对值表示等待使用该资源的进程个数。</p>
 <p><strong>P(S)操作：</strong>S-&#x3D;1  →  S&lt;0  →<del>T</del>   进程队列 <strong>or</strong> →<del>F</del>向下进行<br><strong>V(S)操作：</strong>S+&#x3D;1 →  S≤0  →<del>T</del>   进程队列 <strong>or</strong> →<del>F</del>向下进行</p>
@@ -981,7 +985,7 @@ cout &lt;&lt; s &lt;&lt; end;
 </tr>
 </tbody></table>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/dfaac2ea85671c477f9008c1aa3dc70b68012a90/data/PV%E6%93%8D%E4%BD%9C%E4%BE%8B%E9%A2%98.png"></p>
-<p>付款要双方的配合，会有同步的关系；假设没有这个操作；若先进行收银员操作，则没有购书者先购书，收银员无法操作。此时b1有个P操作，P操作需要付款V操作来唤醒；所以一开始的PV是同一信号量P(S1), V(S1)；对于购书者有个等待阻塞操作，等待收银员P(S2), V(S2)。<br>n+1个人进来的话会被阻塞。</p>
+<p>付款要双方的配合，会有同步的关系；假设没有这个操作；若先进行收银员操作，则没有购书者先购书，收银员无法操作。此时b1有个P操作，P操作需要付款V操作来唤醒；所以一开始的PV是同一信号量P(S1), V(S1)；对于购书者有个等待阻塞操作，等待收银员P(S2), V(S2)。【V(S1)唤醒P(S1)，收费后由收银员的V(S2)唤醒付款的P(S2)】<br>n+1个人进来的话会被阻塞。</p>
 <blockquote>
 <p>注意：<br>①P操作具备阻塞的职能，V操作不具备阻塞能力。<br>②PV操作关键要找到约束，找到谁是因变量，谁是自变量，谁约束谁。【PV操作是成对出现的】<br>③一对儿PV操作信号量是相同的。<br>看题发现已经存在了一对PV操作，信号量为Sn，Sn的值为n，很容易想到这对PV操作的作用就是控制进入书店的人数的。当人数达到n了，阻止人继续进入书店，这种状态直到有人付款离开书店为止。</p>
 <p>再来看题发现还有两对PV操作，首先通过图能知道购书者和收银员之间存在约束关系，收银员要等待购书者付款才能工作，购书者要等待收银员反馈才能离开书店。那么这两对PV操作就是控制这个约束的。</p>
@@ -995,6 +999,55 @@ cout &lt;&lt; s &lt;&lt; end;
 <p>😁总结<br>PV操作从做题的角度出发，我认为首先要找到约束关系，就是谁和谁是一对约束，第二步确定这对约束谁是P谁是V（用反证方法推一下看看），最后一步考虑信号量，信号量为多少取决于是否马上阻塞还是说执行几次后再阻塞，这个要结合具体问题具体分析。</p>
 </blockquote>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_37063785/article/details/88802580">(53条消息) 软考必考题型之PV操作_pv操作中p和v各代表什么_du-hyper的博客-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_42539194/article/details/129647813?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2~default~YuanLiJiHua~Position-3-129647813-blog-88802580.235%5Ev35%5Epc_relevant_increate_t0_download_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~YuanLiJiHua~Position-3-129647813-blog-88802580.235%5Ev35%5Epc_relevant_increate_t0_download_v2&utm_relevant_index=6">(53条消息) 软考–快速掌握操作系统的PV操作_pv操作 软考_韦_恩的博客-CSDN博客</a></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f6094b2857a22777d38b9ed2362cf00c60b926a6/data/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86PV%E6%93%8D%E4%BD%9C.jpg"></p>
+<p>箭头的起始位置是V操作，箭头的终止位置是P操作</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/45ad39c827d6c05d3e7d27552d3fd1a7313a574c/data/PV%2B%E5%89%8D%E8%B6%8B%E5%9B%BE%E5%A4%A7%E9%A2%98.jpg"></p>
+<h3 id="进程管理-—-死锁问题"><a href="#进程管理-—-死锁问题" class="headerlink" title="进程管理 — 死锁问题"></a>进程管理 — 死锁问题</h3><h6 id="进程管理是操作系统的核心，但如果设计不当，就会出现死锁的问题。如果一个进程在等待一件不可能发生的事，则进程就死锁了。而如果一个或多个进程产生死锁，就会造成系统死锁。"><a href="#进程管理是操作系统的核心，但如果设计不当，就会出现死锁的问题。如果一个进程在等待一件不可能发生的事，则进程就死锁了。而如果一个或多个进程产生死锁，就会造成系统死锁。" class="headerlink" title="进程管理是操作系统的核心，但如果设计不当，就会出现死锁的问题。如果一个进程在等待一件不可能发生的事，则进程就死锁了。而如果一个或多个进程产生死锁，就会造成系统死锁。"></a>进程管理是操作系统的核心，但如果设计不当，就会出现死锁的问题。如果一个进程在等待一件不可能发生的事，则进程就死锁了。而如果一个或多个进程产生死锁，就会造成系统死锁。</h6><p>资源都被分配且无法得到资源释放</p>
+<p>例题：系统有3个进程：A、B、C。这3个进程都需要5个系统资源。如果系统至少有多少个资源，则不可能发生死锁[<u>有多少资源 无论怎么分配都不会产生死锁</u>]</p>
+<table>
+<thead>
+<tr>
+<th align="center">进程A</th>
+<th align="center">进程B</th>
+<th align="center">进程C</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p><strong><span style = "color : red">如果每个进程需要n个资源，总共有k个进程 &#x3D;&gt;分配情况：k × (n-1) + 1</span></strong><br>答：每个进程都需要5个资源，共有3个进程 &#x3D;&gt; n &#x3D; 5; k &#x3D; 3 &#x3D;&#x3D;&gt; 3 × (5 - 1) + 1 &#x3D; 12+1 &#x3D;13<br><img src="https://raw.githubusercontent.com/P-luminary/images/b65167c6d6f03ed5726ddd517ab0e89ec0df46c9/data/%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98.jpg"></p>
+<p>打破<strong>互斥</strong>：让大家同时共享资源<br>打破<strong>保持和等待</strong>：得不到相应的资源就会把资源分享出去，不会霸占并等待别人给与<br>打破<strong>不剥夺</strong>：不去抢别人分配到的资源</p>
+<h4 id="银行家算法：分配资源的原则"><a href="#银行家算法：分配资源的原则" class="headerlink" title="银行家算法：分配资源的原则"></a>银行家算法：分配资源的原则</h4><p>√ 当一个进程对资源的最大需求量<strong>不超过</strong>系统重的资源数时可以接纳该进程<br>√ 进程可以<strong>分期请求</strong>资源，但请求的总数不能超过最大需求量<br>√ 当系统现有的资源不能满足尚需资源数时，对进程的请求可以<strong>推迟分配</strong>，但总能使进程在有限的时间里得到资源</p>
+<p><strong>@@</strong> 例：假设系统中有三类互斥资源<strong>R1、R2、R3</strong>，可用资源数分别是<strong>9、8、5</strong>。在T<del>0</del>时刻系统中有<strong>P1、P2、P3、P4、P5</strong>五个进程，这些进程对资源的最大需求量和已分配资源数如下所示，如果进程按<strong>？</strong>序列执行，那么系统状态是安全的<del>不发生死锁</del><br>【列表口诀：<strong>现</strong> <strong>需要</strong> <strong>已</strong>(<u>蚁</u>)<strong>精</strong>(经)子来分娩】<br><strong>剩下的资源</strong>：总资源 — 已分配资源</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/5c9c14e04f67a7fd291fa566beaa4b0ee4506bb2/data/%E9%93%B6%E8%A1%8C%E5%AE%B6%E7%AE%97%E6%B3%95%E4%BE%8B%E9%A2%98.jpg"></p>
+<p>A. P1→P2→P4→P5→P3                    <strong>B. P2→P4→P5→P1→P3</strong><br>C. P2→P1→P4→P5→P3                    D. P4→P2→P4→P1→P3</p>
+<ul>
+<li>若先不执行P2，先执行P1，则右图R1还需资源数还需要5个，则你R1剩下的2个不够分配到，会发生进程死锁。即第一个先执行 P2。</li>
+<li>若先执行P2，再执行P1，则我们发现进程P1需要R1资源为5，我们能提供的R1资源为4，所以序列无法进行下去，为不安全序列<br>【<span style = "color :red">只要<strong>现有资源</strong>可以满足<strong>需要资源</strong>的分配即可True，执行完后释放资源给下一步进程使用</span>】</li>
+</ul>
 
             
         </div>
@@ -1288,7 +1341,7 @@ cout &lt;&lt; s &lt;&lt; end;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#879cff>
                 政治
             </a>
         </span>
@@ -1929,7 +1982,7 @@ cout &lt;&lt; s &lt;&lt; end;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -2300,7 +2353,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -2618,7 +2671,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ff7d73>
+            <a href="/tags/计算机" style=color:#00bcd4>
                 计算机
             </a>
         </span>
@@ -3075,7 +3128,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ffa2c4>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
@@ -3234,7 +3287,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ffa2c4>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -3786,7 +3839,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
