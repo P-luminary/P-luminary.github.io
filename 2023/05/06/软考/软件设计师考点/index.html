@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/软考" style=color:#1bccbc>
+                <a href="/tags/软考" style=color:#879cff>
                     软考
                 </a>
             </span>
@@ -1028,6 +1028,71 @@ cout &lt;&lt; s &lt;&lt; end;
 <li>若先不执行P2，先执行P1，则右图R1还需资源数还需要5个，则你R1剩下的2个不够分配到，会发生进程死锁。即第一个先执行 P2。</li>
 <li>若先执行P2，再执行P1，则我们发现进程P1需要R1资源为5，我们能提供的R1资源为4，所以序列无法进行下去，为不安全序列<br>【<span style = "color :red">只要<strong>现有资源</strong>可以满足<strong>需要资源</strong>的分配即可True，执行完后释放资源给下一步进程使用</span>】</li>
 </ul>
+<h3 id="存储管理-—-分区存储组织"><a href="#存储管理-—-分区存储组织" class="headerlink" title="存储管理 — 分区存储组织"></a>存储管理 — 分区存储组织</h3><p>某计算机系统的内存大小为128k，采用可变分区分配进行内存分配，当前系统的内存分块情况如下图所示，现有<strong>作业4</strong>申请<strong>内存9k</strong>，几种不同的存储分配算法在分配中，会产生什么样的结果呢？</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/31409e62be82acbe02077d84d12e51f146d9948e/data/%E6%9C%80%E4%BD%B3-%E6%9C%80%E5%B7%AE-%E5%BE%AA%E7%8E%AF%E9%A6%96%E6%AC%A1%E9%80%82%E5%BA%94%E7%AE%97%E6%B3%95.png"></p>
+<p><strong>最佳适应算法</strong>：分配任务空间时。任务由闲余空间从小到大依次尝试是否能成功分配。若小闲余空间能分配就分配。不可则进入下一个闲余空间进行空间区域切割划分。<strong>缺陷</strong>：内存的碎块(<u>几k的闲余空间</u>)；<br><u><strong>最差适应算法</strong></u>：则逆过来表示(先考虑从大的块中分配出来)<br><strong>循环首次适应法</strong>：(分配较均匀)</p>
+<h3 id="存储管理-—-页式存储组织"><a href="#存储管理-—-页式存储组织" class="headerlink" title="存储管理 — 页式存储组织"></a>存储管理 — 页式存储组织</h3><p><strong>逻辑地址</strong>的<strong>页号</strong>对应<strong>物理地址</strong>的<strong>块号</strong>(通过查表可得出)；其<strong>页内地址</strong>都是一样的(调用的时候以页为单位, 偏移量不会有太大的变化)</p>
+<p> <img src="https://raw.githubusercontent.com/P-luminary/images/4ac7b79184178af545b460f5427fe9c9cd5cb9c5/data/%E9%A1%B5%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E7%BB%87.png"></p>
+<p>例：进程P有6个页面，页号分别为0-5，页面大小为4K，页面转换表如下所示。表中<u>状态位等于<strong>1</strong>和<strong>0</strong>分别表示页面在<strong>内存</strong>和<strong>不在内存</strong></u>。假设系统给进程P分配了4个存储块，进程P要访问的逻辑地址为十六进制5A29H，那么该地址经过变换后，其物理地址应为十六进制(<strong>6A29H</strong>)；如果进程P要访问的页面4不在内存，那么应该淘汰页号为(<strong>1</strong>)的页面。</p>
+<table>
+<thead>
+<tr>
+<th align="center">页号</th>
+<th align="center">页帧号</th>
+<th align="center">状态位</th>
+<th align="center">访问位</th>
+<th align="center">修改位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">2</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td align="center">3</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">5</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">一</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">一</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td align="center"><strong>5</strong></td>
+<td align="center"><strong>6</strong></td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">1</td>
+</tr>
+</tbody></table>
+<p>(1) A. 1A29H        B. 3A29H        C. 5A29H        D. 6A29H<br>(2) A. 0                  B. 1                  C. 2                 D. 5</p>
+<p>4k &#x3D; 4×1024 &#x3D; 2$^{2+10}$ &#x3D; $2^{12}$ 说明一个页内地址是12位，高于12位的就是页号<br>由于进制P要访问的逻辑地址是十六进制5A29H，则一个十六进制位 &#x3D; 4个二进制位<br>说明有3个位是页内地址 &#x3D;&gt; A 2 9；所以页内地址无需求，是为A29<br>页号5需要查表观测它的页帧号是6；然后与后面拼接起来 为6A29H<br>将要淘汰的页号一定是在存在的里面选出 存在的才能淘汰，则1代表存在；<br>就要从页号0 1 2 5中淘汰一个，看其访问位，刚刚访问过的是1不能淘汰，<br>只能淘汰访问位是0的，综上所述，应该淘汰1页号</p>
+<h3 id="存储管理-—-段式存储组织"><a href="#存储管理-—-段式存储组织" class="headerlink" title="存储管理 —  段式存储组织"></a>存储管理 —  段式存储组织</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/540c15f503aa3e817771ddb1ace41a4d15c66015/data/%E6%AE%B5%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E7%BB%87.png"></p>
+<h3 id="存储管理-—-段页式存储组织"><a href="#存储管理-—-段页式存储组织" class="headerlink" title="存储管理 — 段页式存储组织"></a>存储管理 — 段页式存储组织</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/46c912294b0428ab3464f49e504e47de54ea3e01/data/%E6%AE%B5%E9%A1%B5%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E7%BB%87.png"></p>
+<p>先查段表 查完段表 查页表</p>
+<h4 id="存储管理-—-快表"><a href="#存储管理-—-快表" class="headerlink" title="存储管理 — 快表"></a>存储管理 — 快表</h4><p>快表是一块小容量的相联存储器(Associative Memory), 由高速缓存器组成，速度快，并且可以从硬件上保证按内容并行查找，一般用来存放当前访问最频繁的少数活动页面的页号。<br>若将这些东西放在内存当中则称为慢表(放在内存)、快表(放在Cache)</p>
 
     </div>
 
