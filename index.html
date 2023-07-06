@@ -1374,6 +1374,94 @@ cout &lt;&lt; s &lt;&lt; end;
 <td>使用一个专用文件(日志)或数据库，自动将用户对数据库的所有操作记录下来</td>
 </tr>
 </tbody></table>
+<h3 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h3><p><strong>√ 冷备份</strong>也称为静态备份，是将数据库正常关闭，在停止状态，将数据库的文件全部备份(复制)下来。<br><strong>√ 热备份</strong>也称为动态备份，是利用备份软件，在数据库正常运行的状态下，将数据库中的数据文件备份出来 </p>
+<table>
+<thead>
+<tr>
+<th align="left">备份方式 &#x2F; 优缺点</th>
+<th align="center">优点</th>
+<th align="center">缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">冷备份</td>
+<td align="center">非常快速的备份方法只需要复制文件；容易归档(简单复制即可)；容易恢复到某个时间点上(只需要将文件再复制回去)；能与归档方法相结合，做数据库”最佳状态“的恢复；低度维护，高度安全</td>
+<td align="center">单独使用时，只能提供到某一个时间点上的恢复；再实施备份的全过程中，数据库必须要作备份二不能做其他工作；若磁盘空间有限只能复制到磁带等其他外部存储设备上，速度会很慢；不能按表或按用户恢复</td>
+</tr>
+<tr>
+<td align="left">热备份</td>
+<td align="center">可再表空间或数据库文件级备份，备份的时间短；备份时数据库仍可使用；可达到秒级恢复(恢复到某一时间点上)；可对几乎所有数据库实体做恢复；恢复是快速的</td>
+<td align="center">不能出错，否则后果严重；如我热备份不成功所得结果不可用于时间点的恢复；因难于维护，所以要特别小心，不允许”以失败告终“</td>
+</tr>
+</tbody></table>
+<p><strong>√ 完全备份：</strong>备份所有数据<br><strong>√ 差量备份：</strong>仅备份上一次完全备份之后变化的数据<br><strong>√ 增量备份：</strong>备份上一次备份之后变化的数据</p>
+<table>
+<thead>
+<tr>
+<th align="center">日</th>
+<th align="center">一</th>
+<th align="center">二</th>
+<th align="center">三</th>
+<th align="center">四</th>
+<th align="center">五</th>
+<th align="center">六</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">完</td>
+<td align="center">增</td>
+<td align="center">增</td>
+<td align="center">增</td>
+<td align="center">差</td>
+<td align="center">增</td>
+<td align="center">增</td>
+</tr>
+</tbody></table>
+<p>若在周一的增量备份后系统出现故障，首先恢复<strong>周日</strong>的<strong>完整版</strong>，再其上恢复<strong>周一增量版</strong><br>如果周三的增量备份系统出现了故障，首先恢复<strong>周日</strong>的<strong>完整版</strong>，再其上恢复<strong>周一周二周三增量版</strong><br>这样恢复太麻烦，所以提出了<strong>差量备份</strong>, <strong>周四</strong>的差量备份直接针对<strong>周日的差量变化</strong><br>如果周四的增量备份系统出现了故障，首先恢复<strong>周日</strong>的<strong>完整版</strong>，再其上恢复<strong>周四的差量版</strong></p>
+<ul>
+<li><p><strong>静态海量存储</strong>：在系统中无运行事务时进行, 每次存储全部数据库</p>
+</li>
+<li><p><strong>静态增量存储</strong>：在系统中无运行事务时进行，每次只存储上一个转储后更新过的数据库</p>
+</li>
+<li><p><strong>动态海量存储</strong>：转储期间允许对数据库进行存取或修改，每次转储全部数据库</p>
+</li>
+<li><p><strong>动态增量转储</strong>：转储期间允许对数进行存取或修改，每次只转储上一次转储后更新过的数据</p>
+</li>
+</ul>
+<p>日志文件：事务日志是针对数据库改变所做的记录，它可以记录针对数据库的任何操作(增删改查)，并将记录结果保存在独立的 (<u>先写日志 再写数据文件</u>)</p>
+<table>
+<thead>
+<tr>
+<th align="center">故障关系</th>
+<th align="center">故障原因</th>
+<th align="center">解决办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">事务本身的可预期故障</td>
+<td align="center">本身逻辑</td>
+<td align="center">再程序中预先设置Rollback语句</td>
+</tr>
+<tr>
+<td align="center">事务本身的不可预期故障</td>
+<td align="center">算数溢出, 违反存储保护</td>
+<td align="center">由DBMS的恢复子系统通过日志,撤销事务对数据库的修改,回退到事务初始状态</td>
+</tr>
+<tr>
+<td align="center">系统故障</td>
+<td align="center">系统停止运转</td>
+<td align="center">通常采用检查点法</td>
+</tr>
+<tr>
+<td align="center">介质故障</td>
+<td align="center">外存被破坏</td>
+<td align="center">一般使用日志重做业务</td>
+</tr>
+</tbody></table>
+<h3 id="数据仓库与数据挖掘"><a href="#数据仓库与数据挖掘" class="headerlink" title="数据仓库与数据挖掘"></a>数据仓库与数据挖掘</h3><p><strong>数据仓库</strong>是面向各各主题的；会记录一些集成式的数据(报表)</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/c60e0ed20bce0df65d296e7f30cc4c1ee207aeb9/data/%E4%BB%93%E5%BA%93%E6%95%B0%E6%8D%AE.jpg"></p>
+<h3 id="反规范化-牺牲空间-规范化程度来换时间"><a href="#反规范化-牺牲空间-规范化程度来换时间" class="headerlink" title="反规范化(牺牲空间+规范化程度来换时间)"></a>反规范化(牺牲<u>空间</u>+<u>规范化程度</u>来换<u>时间</u>)</h3><p>由于规范化会使表不断的拆分，从而导致数据表过多。这样虽然减少了<strong>数据冗余</strong>，<u>提高了增、删、改的速度，但会增加查询的工作量</u>。系统需要进行多次连接，才能进行查询操作，使得系统效率大大下降。</p>
+<h6 id="技术手段"><a href="#技术手段" class="headerlink" title="技术手段"></a>技术手段</h6><p><strong>√ 增加派生性冗余列</strong> (在成绩表里添加 姓名&#x2F;课程名 能够快速查到哪个人成绩多少分)<br><strong>√ 增肌冗余列</strong><br><strong>√ 重新组表</strong>(依据查询效率的原则)<br><strong>√ 分割表</strong>(从效率角度看进行垂直分割、水平分割)</p>
 
             
         </div>
@@ -1388,7 +1476,7 @@ cout &lt;&lt; s &lt;&lt; end;
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#1bccbc>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -1667,7 +1755,7 @@ cout &lt;&lt; s &lt;&lt; end;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#1bccbc>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -2308,7 +2396,7 @@ cout &lt;&lt; s &lt;&lt; end;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -2679,7 +2767,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -2997,7 +3085,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ff7d73>
+            <a href="/tags/计算机" style=color:#ffa2c4>
                 计算机
             </a>
         </span>
@@ -3613,7 +3701,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#1bccbc>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -4165,7 +4253,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
