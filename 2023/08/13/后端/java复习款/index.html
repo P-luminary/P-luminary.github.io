@@ -754,6 +754,278 @@ Student&#123;name=&#39;abc&#39;, age=16&#125;
 Student&#123;name=&#39;jack&#39;, age=16&#125;
 Student&#123;name=&#39;mark&#39;, age=16&#125;
 </code></pre>
+<h3 id="Map集合"><a href="#Map集合" class="headerlink" title="Map集合"></a>Map集合</h3><p><code>java.util.Map</code>接口</p>
+<p>Collection接口定义了单列集合规范 每次存储<strong>一个</strong>元素 单个元素<br>Map接口定义了双列集合的规范 每次存储<strong>一对儿</strong>元素(Key Value)</p>
+<ul>
+<li><code>Collection</code>中的集合，元素是孤立存在的（理解为单身），向集合中存储元素采用一个个元素的方式存储。</li>
+<li><code>Map</code>中的集合，元素是成对存在的(理解为夫妻)。每个元素由键与值两部分组成，通过键可以找对所对应的值。</li>
+<li><code>Collection</code>中的集合称为单列集合，<code>Map</code>中的集合称为双列集合。</li>
+<li>需要注意的是，<code>Map</code>中的集合不能包含重复的键，值可以重复；每个键只能对应一个值。</li>
+</ul>
+<pre><code class="java">HashMap&lt;K,V&gt;:存储数据采用的哈希表结构，元素的存取顺序不能保持一致，由于要保证键的唯一、不重复，需要重写键的hashCode()方法、equals()方法
+
+LinkedHashMap&lt;K,V&gt;: HashMap下有个子类LinkedHashMap，存储数据采用的哈希表结构+链表结构。通过链表结构可以保证元素的存取顺序一致；通过哈希表结构可以保证的键的唯一、不重复，需要重写键的hashCode()方法、equals()方法。
+
+public V put(K key, V value):把指定的键与指定的值添加到Map集合中
+public V remove(Object key):把指定的键所对应的键值对元素 在Map集合中删除，返回被删除元素的值
+public V get(Object key):根据指定的键，在Map集合中获取对应的值
+boolean containsKey(Object key) 判断集合中是否包含指定的键。
+public Set&lt;K&gt; keySet(): 获取Map集合中所有的键，存储到Set集合中。
+public Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet(): 获取到Map集合中所有的键值对对象的集合(Set集合)
+    
+使用put方法时，若指定的键(key)在集合中没有，则没有这个键对应的值，返回null，并把指定的键值添加到集合中； 
+若指定的键(key)在集合中存在，则返回值为集合中键对应的值（该值为替换前的值），并把指定键所对应的值，替换成指定的新值。 
+</code></pre>
+<h3 id="Map集合遍历-键找值-方式"><a href="#Map集合遍历-键找值-方式" class="headerlink" title="Map集合遍历 键找值 方式"></a>Map集合遍历 键找值 方式</h3><p>键找值方式：即通过元素中的键，获取键所对应的值</p>
+<p>分析步骤：</p>
+<ol>
+<li>获取Map中所有的键，由于键是唯一的，所以返回一个Set集合存储所有的键。方法: keyset()</li>
+<li>遍历键的Set集合，得到每一个键</li>
+<li>根据键，获取键所对应的值。方法: get(K key)</li>
+</ol>
+<pre><code class="java">public static void main(String[] args) &#123;
+        HashMap&lt;String,String&gt; map = new HashMap&lt;String,String&gt;();
+        map.put(&quot;胡歌&quot;, &quot;霍建华&quot;);
+        map.put(&quot;郭德纲&quot;, &quot;于谦&quot;);
+        map.put(&quot;薛之谦&quot;, &quot;大张伟&quot;);
+        Set&lt;String&gt; keys = map.keySet();
+        for (String key : keys)&#123;
+            String value = map.get(key);
+            System.out.println(key+&quot; &quot;+value);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="Map集合遍历键值对方式"><a href="#Map集合遍历键值对方式" class="headerlink" title="Map集合遍历键值对方式"></a>Map集合遍历键值对方式</h3><p>键值对方式：即通过集合中每个键值对(Entry)对象，获取键值对(Entry)对象中的键与值。</p>
+<p>操作步骤与图解：</p>
+<ol>
+<li><p>获取Map集合中，所有的键值对(Entry)对象，以Set集合形式返回。方法提示:<code>entrySet()</code>。</p>
+</li>
+<li><p>遍历包含键值对(Entry)对象的Set集合，得到每一个键值对(Entry)对象。</p>
+</li>
+<li><p>通过键值对(Entry)对象，获取Entry对象中的键与值。  方法提示:<code>getkey() getValue()</code></p>
+</li>
+</ol>
+<pre><code class="java">public static void main(String[] args) &#123;
+        // 创建Map集合对象 
+        HashMap&lt;String, String&gt; map = new HashMap&lt;String,String&gt;();
+        // 添加元素到集合 
+        map.put(&quot;胡歌&quot;, &quot;霍建华&quot;);
+        map.put(&quot;郭德纲&quot;, &quot;于谦&quot;);
+        map.put(&quot;薛之谦&quot;, &quot;大张伟&quot;);
+
+        // 获取 所有的 entry对象  entrySet
+        Set&lt;Entry&lt;String,String&gt;&gt; entrySet = map.entrySet();
+
+        // 遍历得到每一个entry对象
+        for (Entry&lt;String, String&gt; entry : entrySet) &#123;
+               // 解析 
+            String key = entry.getKey();
+            String value = entry.getValue();  
+            System.out.println(key+&quot;的CP是:&quot;+value);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="LinkedHashMap"><a href="#LinkedHashMap" class="headerlink" title="LinkedHashMap"></a>LinkedHashMap</h3><p>我们知道HashMap保证成对元素唯一，并且查询速度很快，可是成对元素存放进去是没有顺序的，那么我们要<strong>保证有序，还要速度快</strong>怎么办呢？ 在HashMap下面有一个子类LinkedHashMap，它是链表和哈希表组合的一个数据存储结构。</p>
+<pre><code class="java"> public static void main(String[] args) &#123;
+        LinkedHashMap&lt;String,String&gt; map = new LinkedHashMap&lt;String,String&gt;();
+        map.put(&quot;邓超&quot;, &quot;孙俪&quot;);
+        map.put(&quot;李晨&quot;, &quot;范冰冰&quot;);
+        map.put(&quot;刘德华&quot;, &quot;朱丽倩&quot;);
+        Set&lt;Map.Entry&lt;String,String&gt;&gt; entrySet = map.entrySet();
+        for (Map.Entry&lt;String,String&gt; entry : entrySet)&#123;
+            System.out.println(entry.getKey()+entry.getValue());
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="Map集合练习"><a href="#Map集合练习" class="headerlink" title="Map集合练习"></a>Map集合练习</h3><p><strong>需求：</strong></p>
+<p>计算一个字符串中每个字符出现次数。</p>
+<p><strong>分析：</strong></p>
+<ol>
+<li>获取一个字符串对象</li>
+<li>创建一个Map集合，<strong>键代表字符，值代表次数</strong>。</li>
+<li>遍历字符串得到每个字符。</li>
+<li>判断Map中是否有该键。</li>
+<li>如果没有，第一次出现，存储次数为1；如果有，则说明已经出现过，获取到对应的值进行++，再次存储。     </li>
+<li>打印最终结果</li>
+</ol>
+<pre><code class="java">public static void main(String[] args) &#123;
+        //友情提示
+        System.out.println(&quot;请录入一个字符串:&quot;);
+        String line = new Scanner(System.in).nextLine();
+        // 定义 每个字符出现次数的方法
+        findChar(line);
+    &#125;
+    private static void findChar(String line) &#123;
+        //1:创建一个集合 存储  字符 以及其出现的次数
+        HashMap&lt;Character, Integer&gt; map = new HashMap&lt;Character, Integer&gt;();
+        //2:遍历字符串
+        for (int i = 0; i &lt; line.length(); i++) &#123;
+            char c = line.charAt(i);
+            //判断 该字符 是否在键集中
+            if (!map.containsKey(c)) &#123;//说明这个字符没有出现过
+                //那就是第一次
+                map.put(c, 1);
+            &#125; else &#123;
+                //先获取之前的次数
+                Integer count = map.get(c);
+                //count++;
+                //再次存入  更新
+                map.put(c, ++count);
+            &#125;
+        &#125;
+        System.out.println(map);
+    &#125;
+</code></pre>
+<h4 id="JDK9对集合添加的优化"><a href="#JDK9对集合添加的优化" class="headerlink" title="JDK9对集合添加的优化"></a>JDK9对集合添加的优化</h4><p> Java 9，添加了几种集合工厂方法,更方便创建少量元素的集合、map实例。新的List、Set、Map的静态工厂方法可以更方便地创建集合的不可变实例。</p>
+<pre><code class="java">public class HelloJDK9 &#123;  
+    public static void main(String[] args) &#123;  
+        Set&lt;String&gt; str1=Set.of(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;);  
+        //str1.add(&quot;c&quot;);这里编译的时候不会错，但是执行的时候会报错，因为是不可变的集合  
+        System.out.println(str1);  
+        Map&lt;String,Integer&gt; str2=Map.of(&quot;a&quot;,1,&quot;b&quot;,2);  
+        System.out.println(str2);  
+        List&lt;String&gt; str3=List.of(&quot;a&quot;,&quot;b&quot;);  
+        System.out.println(str3);  
+    &#125;  
+&#125; 
+
+1: of()方法只是Map，List，Set这三个接口的静态方法，其父类接口和子类实现并没有这类方法，比如    HashSet，ArrayList等待；
+2: 返回的集合是不可变的；
+</code></pre>
+<h3 id="模拟斗地主洗牌发牌"><a href="#模拟斗地主洗牌发牌" class="headerlink" title="模拟斗地主洗牌发牌"></a>模拟斗地主洗牌发牌</h3><h5 id="案例规则"><a href="#案例规则" class="headerlink" title="案例规则"></a>案例规则</h5><ol>
+<li>组装54张扑克牌将</li>
+<li>54张牌顺序打乱</li>
+<li>三个玩家参与游戏，三人交替摸牌，每人17张牌，最后三张留作底牌。</li>
+<li>查看三人各自手中的牌（按照牌的大小排序）、底牌</li>
+</ol>
+<blockquote>
+<p>规则：手中扑克牌从大到小的摆放顺序：大王,小王,2,A,K,Q,J,10,9,8,7,6,5,4,3</p>
+</blockquote>
+<h5 id="案例需求分析"><a href="#案例需求分析" class="headerlink" title="案例需求分析"></a>案例需求分析</h5><ol>
+<li>准备牌：</li>
+</ol>
+<p>​        完成数字与纸牌的映射关系：</p>
+<p>​        使用双列Map(HashMap)集合，完成一个数字与字符串纸牌的对应关系(相当于一个字典)。</p>
+<ol start="2">
+<li>洗牌：</li>
+</ol>
+<p>​        通过数字完成洗牌发牌</p>
+<ol start="3">
+<li>发牌：</li>
+</ol>
+<p>​        将每个人以及底牌设计为ArrayList<String>,将最后3张牌直接存放于底牌，剩余牌通过对3取模依次发牌。</p>
+<p>​        存放的过程中要求数字大小与斗地主规则的大小对应。</p>
+<p>​        将代表不同纸牌的数字分配给不同的玩家与底牌。</p>
+<ol start="4">
+<li>看牌：</li>
+</ol>
+<p>​        通过Map集合找到对应字符展示。</p>
+<p>​        通过查询纸牌与数字的对应关系，由数字转成纸牌字符串再进行展示</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+        /*
+         * 1组装54张扑克牌
+         */
+        // 1.1 创建Map集合存储
+        HashMap&lt;Integer, String&gt; pokerMap = new HashMap&lt;Integer, String&gt;();
+        // 1.2 创建 花色集合 与 数字集合
+        ArrayList&lt;String&gt; colors = new ArrayList&lt;String&gt;();
+        ArrayList&lt;String&gt; numbers = new ArrayList&lt;String&gt;();
+
+        // 1.3 存储 花色 与数字
+        Collections.addAll(colors, &quot;♦&quot;, &quot;♣&quot;, &quot;♥&quot;, &quot;♠&quot;);
+        Collections.addAll(numbers, &quot;2&quot;, &quot;A&quot;, &quot;K&quot;, &quot;Q&quot;, &quot;J&quot;, &quot;10&quot;, &quot;9&quot;, &quot;8&quot;, &quot;7&quot;, &quot;6&quot;, &quot;5&quot;, &quot;4&quot;, &quot;3&quot;);
+        // 设置 存储编号变量
+        int count = 1;
+        pokerMap.put(count++, &quot;大王&quot;);
+        pokerMap.put(count++, &quot;小王&quot;);
+        // 1.4 创建牌 存储到map集合中
+        for (String number : numbers) &#123;
+            for (String color : colors) &#123;
+                String card = color + number;
+                pokerMap.put(count++, card);
+            &#125;
+        &#125;
+        /*
+         * 2 将54张牌顺序打乱
+         */
+        // 取出编号 集合
+        Set&lt;Integer&gt; numberSet = pokerMap.keySet();
+        // 因为要将编号打乱顺序 所以 应该先进行转换到 list集合中
+        ArrayList&lt;Integer&gt; numberList = new ArrayList&lt;Integer&gt;();
+        numberList.addAll(numberSet);
+
+        // 打乱顺序
+        Collections.shuffle(numberList);
+
+        // 3 完成三个玩家交替摸牌，每人17张牌，最后三张留作底牌
+        // 3.1 发牌的编号
+        // 创建三个玩家编号集合 和一个 底牌编号集合
+        ArrayList&lt;Integer&gt; noP1 = new ArrayList&lt;Integer&gt;();
+        ArrayList&lt;Integer&gt; noP2 = new ArrayList&lt;Integer&gt;();
+        ArrayList&lt;Integer&gt; noP3 = new ArrayList&lt;Integer&gt;();
+        ArrayList&lt;Integer&gt; dipaiNo = new ArrayList&lt;Integer&gt;();
+
+        // 3.2发牌的编号
+        for (int i = 0; i &lt; numberList.size(); i++) &#123;
+            // 获取该编号
+            Integer no = numberList.get(i);
+            // 发牌
+            // 留出底牌
+            if (i &gt;= 51) &#123;
+                dipaiNo.add(no);
+            &#125; else &#123;
+                if (i % 3 == 0) &#123;
+                    noP1.add(no);
+                &#125; else if (i % 3 == 1) &#123;
+                    noP2.add(no);
+                &#125; else &#123;
+                    noP3.add(no);
+                &#125;
+            &#125;
+        &#125;
+
+        // 4 查看三人各自手中的牌（按照牌的大小排序）、底牌
+        // 4.1 对手中编号进行排序
+        Collections.sort(noP1);
+        Collections.sort(noP2);
+        Collections.sort(noP3);
+        Collections.sort(dipaiNo);
+
+        // 4.2 进行牌面的转换
+        // 创建三个玩家牌面集合 以及底牌牌面集合
+        ArrayList&lt;String&gt; player1 = new ArrayList&lt;String&gt;();
+        ArrayList&lt;String&gt; player2 = new ArrayList&lt;String&gt;();
+        ArrayList&lt;String&gt; player3 = new ArrayList&lt;String&gt;();
+        ArrayList&lt;String&gt; dipai = new ArrayList&lt;String&gt;();
+
+        // 4.3转换
+        for (Integer i : noP1) &#123;
+            // 4.4 根据编号找到 牌面 pokerMap
+            String card = pokerMap.get(i);
+            // 添加到对应的 牌面集合中
+            player1.add(card);
+        &#125;
+
+        for (Integer i : noP2) &#123;
+            String card = pokerMap.get(i);
+            player2.add(card);
+        &#125;
+        for (Integer i : noP3) &#123;
+            String card = pokerMap.get(i);
+            player3.add(card);
+        &#125;
+        for (Integer i : dipaiNo) &#123;
+            String card = pokerMap.get(i);
+            dipai.add(card);
+        &#125;
+
+        //4.5 查看
+        System.out.println(&quot;令狐冲：&quot;+player1);
+        System.out.println(&quot;石破天：&quot;+player2);
+        System.out.println(&quot;鸠摩智：&quot;+player3);
+        System.out.println(&quot;底牌：&quot;+dipai);
+    &#125;
+</code></pre>
 
     </div>
 
