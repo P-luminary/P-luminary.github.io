@@ -1407,7 +1407,7 @@ public class MyRunnable implements Runnable&#123;
 </tr>
 </tbody></table>
 <blockquote>
-<p>一个调用了某个对象的 Object.wait 方法的线程会等待另一个线程调用此对象的 Object.notify()方法 或 Object.notifyAll()方法。 </p>
+<p><strong>一个调用了某个对象的 Object.wait 方法的线程会<span style = "color : red">等待另一个线程调用此对象的 Object.notify()方法 或 Object.notifyAll()方法。</span></strong> </p>
 <p>其实waiting状态并不是一个线程的操作，它体现的是多个线程间的通信，可以理解为多个线程之间的协作关系， 多个线程会争取锁，同时相互之间又存在协作关系。就好比在公司里你和你的同事们，你们可能存在晋升时的竞 争，但更多时候你们更多是一起合作以完成某些任务。</p>
 <p> 当多个线程协作时，比如A，B线程，如果A线程在Runnable（可运行）状态中调用了wait()方法那么A线程就进入 了Waiting（无限等待）状态，同时失去了同步锁。假如这个时候B线程获取到了同步锁，在运行状态中调用了 notify()方法，那么就会将无限等待的A线程唤醒。注意是唤醒，如果获取到锁对象，那么A线程唤醒后就进入 Runnable（可运行）状态；如果没有获取锁对象，那么就进入到Blocked（锁阻塞状态）</p>
 </blockquote>
@@ -1455,6 +1455,257 @@ public class MyRunnable implements Runnable&#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="等待唤醒机制"><a href="#等待唤醒机制" class="headerlink" title="等待唤醒机制"></a>等待唤醒机制</h3><p>1.wait: 线程不再活动, 不再参与调度, 进入wait set中, 因此不会浪费CPU资源, 也不会去竞争锁, 这时的线程状态即是Waiting。它还要等着别的线程执行一个特别的动作, 也即是”<strong>通知(notify)</strong>“在这个对象上等待的线程从wait set中释放出来, 重新进入到调度队列(ready queue)中<br>2.notify: 选取所通知对象的wait set中的一个线程释放：例如, 餐馆有空位置后, 等候就餐最久的顾客最先入座<br>3.notifyAll: 释放所通知的对象的wait set上的全部线程</p>
+<blockquote>
+<p>哪怕只通知了一个等待的线程, 被通知线程也不能立即恢复执行, 因为它当初终端的地方是在同步块内, 而此刻它偶已经不持有锁, 所以她需要再次尝试去获取锁(可能面临其他线程的竞争), 成功后才能在当初调用wait方法之后的地方恢复执行</p>
+<ul>
+<li>如果能获取锁, 线程就从Waiting状态变成Bunnable状态</li>
+<li>否则, 从wait set出来, 又进入entry set, 线程就从Waiting状态变成了Blocked状态</li>
+</ul>
+</blockquote>
+<h5 id="调用wait和notify方法需要注意的细节"><a href="#调用wait和notify方法需要注意的细节" class="headerlink" title="调用wait和notify方法需要注意的细节"></a>调用wait和notify方法需要注意的细节</h5><p>1.wait方法与notify方法必须由同一锁对象调用 因为对应锁对象可以通过notify唤醒使用同一锁对象调用的wait方法后的线程<br>2.wait方法与notify方法是属于Object类的方法的 因为锁对象是可以是任意对象，而任意对象的所属类都是继承了Object类的<br>3.wait方法与notify方法必须要在同步代码块或者是同步函数中使用 因为必须通过锁对象调用这2个方法</p>
+<pre><code class="java">void notify():唤醒在此对象监视器上等待的单个线程
+void notifyAll():唤醒在此对象监视器上等待的所有线程
+void wait():导致当前的线程等待, 直到其他线程调用此对象的notify()方法或者notifyAll()方法
+void wait(long timeout):导致当前的线程等待, 直到其他线程调用此对象的notify()方法或notifyAll()方法, 或者指定的时间过完
+void wait(long timeout, intik nanos):导致当前的线程等待，直到其他线程调用此对象的notify( ) 方法或 notifyAll( ) 方法，或者其他线程打断了当前线程，或者指定的时间过完。
+</code></pre>
+<ul>
+<li>wait( )，notify( )，notifyAll( )都不属于Thread类，而是属于Object基础类，也就是每个对象都有wait( )，notify( )，notifyAll( ) 的功能，因为每个对象都有锁，锁是每个对象的基础，当然操作锁的方法也是最基础了。</li>
+<li>当需要调用以上的方法的时候，一定要对竞争资源进行加锁，如果不加锁的话，则会报 IllegalMonitorStateException 异常</li>
+<li>当想要调用wait( )进行线程等待时，必须要取得这个锁对象的控制权（对象监视器），一般是放到synchronized(obj)代码中。</li>
+<li>在while循环里而不是if语句下使用wait，这样，会在线程暂停恢复后都检查wait的条件，并在条件实际上并未改变的情况下处理唤醒通知</li>
+<li>调用obj.wait( )释放了obj的锁，否则其他线程也无法获得obj的锁，也就无法在synchronized(obj){ obj.notify() } 代码段内唤醒A。</li>
+<li>notify( )方法只会通知等待队列中的第一个相关线程（不会通知优先级比较高的线程）</li>
+<li>notifyAll( )通知所有等待该竞争资源的线程（也不会按照线程的优先级来执行）</li>
+<li>假设有三个线程执行了obj.wait()，那么obj.notifyAll()则能全部唤醒thread1，thread2，thread3，但是要继续执行obj.wait()的下一条语句，必须获取obj锁，因此，thread1，thread2，thread3只有一个有机会获得锁继续执行，例如tread1，其余的需要等待thread1释放obj锁之后才能继续执行。</li>
+<li>当调用obj.notify&#x2F;notifyAll后，调用线程依旧持有obj锁，因此，thread1，thread2，thread3虽被唤醒，但是仍无法获得obj锁。直到调用线程退出synchronized块，释放obj锁后，thread1，thread2，thread3中的一个才有机会获得锁继续执行</li>
+</ul>
+<h3 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h3><p>Java里面线程池的顶级接口是<code>java.util.concurrent.Executor</code>，但是严格意义上讲<code>Executor</code>并不是一个线程池，而只是一个执行线程的工具。真正的线程池接口是<code>java.util.concurrent.ExecutorService</code></p>
+<pre><code class="java">Executoturs类中有个创建线程池的方法：
+public static ExecutorService nweFixedThreadPool(int nThreads):返回线程池对象(创建的是有界线程池,也就是池中的线程个数可以指定最大数量)
+
+获取到了一个线程池ExecutorService 对象，那么怎么使用呢，在这里定义了一个使用线程池对象的方法如下：
+public Future&lt;?&gt; submit(Runnable task):获取线程池中的某一个线程对象并执行
+Future接口：用来记录线程任务执行完毕后产生的结果。线程池创建于使用
+</code></pre>
+<blockquote>
+<p>使用线程池中线程对象的步骤：</p>
+<ol>
+<li>创建线程池对象。</li>
+<li>创建Runnable接口子类对象。(task)</li>
+<li>提交Runnable接口子类对象。(take task)</li>
+<li>关闭线程池(一般不做)。</li>
+</ol>
+</blockquote>
+<pre><code class="java">public class MyRunnable implements Runnable &#123;
+    @Override
+    public void run() &#123;
+        System.out.println(&quot;我要一个教练&quot;);
+        try &#123;
+            Thread.sleep(2000);
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125;
+        System.out.println(&quot;教练来了： &quot; + Thread.currentThread().getName());
+        System.out.println(&quot;教我游泳,交完后，教练回到了游泳池&quot;);
+    &#125;
+&#125;
+==========================================================
+public class ThreadPoolDemo &#123;
+    public static void main(String[] args) &#123;
+        // 创建线程池对象
+        ExecutorService service = Executors.newFixedThreadPool(2);//包含2个线程对象
+        // 创建Runnable实例对象
+        MyRunnable r = new MyRunnable();
+
+        //自己创建线程对象的方式
+        // Thread t = new Thread(r);
+        // t.start(); ---&gt; 调用MyRunnable中的run()
+
+        // 从线程池中获取线程对象,然后调用MyRunnable中的run()
+        service.submit(r);
+        // 再获取个线程对象，调用MyRunnable中的run()
+        service.submit(r);
+        service.submit(r);
+        // 注意：submit方法调用结束后，程序并不终止，是因为线程池控制了线程的关闭。
+        // 将使用完的线程又归还到了线程池中
+        // 关闭线程池
+        //service.shutdown();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Lambda表达式"><a href="#Lambda表达式" class="headerlink" title="Lambda表达式"></a>Lambda表达式</h3><h5 id="强调做什么，而不是以什么形式做"><a href="#强调做什么，而不是以什么形式做" class="headerlink" title="强调做什么，而不是以什么形式做"></a><strong>强调做什么，而不是以什么形式做</strong></h5><p>面向对象的思想:</p>
+<p>​    做一件事情,找一个能解决这个事情的对象,调用对象的方法,完成事情.</p>
+<p>函数式编程思想:</p>
+<p>​    只要能获取到结果,谁去做的,怎么做的都不重要,重视的是结果,不重视过程</p>
+<p>当需要启动一个线程去完成任务时，通常会通过<code>java.lang.Runnable</code>接口来定义任务内容，并使用<code>java.lang.Thread</code>类来启动该线程。代码如下：</p>
+<pre><code class="java">public class Demo01Runnable &#123;
+    public static void main(String[] args) &#123;
+        // 匿名内部类
+        Runnable task = new Runnable() &#123;
+            @Override
+            public void run() &#123; // 覆盖重写抽象方法
+                System.out.println(&quot;多线程任务执行！&quot;);
+            &#125;
+        &#125;;
+        new Thread(task).start(); // 启动线程
+    &#125;
+&#125;
+</code></pre>
+<p>本着“一切皆对象”的思想，这种做法是无可厚非的：首先创建一个<code>Runnable</code>接口的匿名内部类对象来指定任务内容，再将其交给一个线程来启动。</p>
+<h3 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h3><p>对于<code>Runnable</code>的匿名内部类用法，可以分析出几点内容：</p>
+<ul>
+<li><code>Thread</code>类需要<code>Runnable</code>接口作为参数，其中的抽象<code>run</code>方法是用来指定线程任务内容的核心；</li>
+<li>为了指定<code>run</code>的方法体，<strong>不得不</strong>需要<code>Runnable</code>接口的实现类；</li>
+<li>为了省去定义一个<code>RunnableImpl</code>实现类的麻烦，<strong>不得不</strong>使用匿名内部类；</li>
+<li>必须覆盖重写抽象<code>run</code>方法，所以方法名称、方法参数、方法返回值<strong>不得不</strong>再写一遍，且不能写错；</li>
+<li>而实际上，<strong>似乎只有方法体才是关键所在</strong>。</li>
+</ul>
+<p>上述<code>Runnable</code>接口的匿名内部类写法可以通过更简单的Lambda表达式达到等效：</p>
+<pre><code class="java">public class Demo02LambdaRunnable &#123;
+    public static void main(String[] args) &#123;
+        new Thread(() -&gt; System.out.println(&quot;多线程任务执行！&quot;)).start(); // 启动线程
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<h4 id="传统代码"><a href="#传统代码" class="headerlink" title="传统代码"></a>传统代码</h4><pre><code class="java">public class RunnableImpl implements Runnable &#123;
+    @Override
+    public void run() &#123;
+        System.out.println(&quot;多线程任务执行！&quot;);
+    &#125;
+&#125;
+
+public class Demo03ThreadInitParam &#123;
+    public static void main(String[] args) &#123;
+        Runnable task = new RunnableImpl();
+        new Thread(task).start();
+    &#125;
+&#125;
+</code></pre>
+<h4 id="使用匿名内部类"><a href="#使用匿名内部类" class="headerlink" title="使用匿名内部类"></a>使用匿名内部类</h4><p><strong>匿名内部类的好处与弊端</strong><br>一方面，匿名内部类可以帮我们<strong>省去实现类的定义</strong>；另一方面，匿名内部类的语法——<strong>确实太复杂了！</strong></p>
+<pre><code class="java">public class Demo04ThreadNameless &#123;
+    public static void main(String[] args) &#123;
+        new Thread(new Runnable() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(&quot;多线程任务执行！&quot;);
+            &#125;
+        &#125;).start();
+    &#125;
+&#125;
+</code></pre>
+<p>即制定了一种做事情的方案（其实就是一个函数）：</p>
+<ul>
+<li><strong>无参数</strong>：不需要任何条件即可执行该方案。</li>
+<li><strong>无返回值</strong>：该方案不产生任何结果。</li>
+<li><strong>代码块</strong>（方法体）：该方案的具体执行步骤。</li>
+</ul>
+<p>同样的语义体现在<code>Lambda</code>语法中，要更加简单：</p>
+<pre><code class="java">() -&gt; System.out.println(&quot;多线程任务执行！&quot;)
+</code></pre>
+<ul>
+<li>前面的一对小括号即<code>run</code>方法的参数（无），代表不需要任何条件；</li>
+<li>中间的一个箭头代表将前面的参数传递给后面的代码；</li>
+<li>后面的输出语句即业务逻辑代码。</li>
+</ul>
+<h3 id="Lambda标准格式"><a href="#Lambda标准格式" class="headerlink" title="Lambda标准格式"></a>Lambda标准格式</h3><p>Lambda省去面向对象的条条框框，格式由<strong>3个部分</strong>组成：</p>
+<ul>
+<li><strong>一些参数</strong></li>
+<li><strong>一个箭头</strong></li>
+<li><strong>一段代码</strong></li>
+</ul>
+<p>Lambda表达式的<strong>标准格式</strong>为：</p>
+<pre><code>(参数类型 参数名称) -&gt; &#123; 代码语句 &#125;
+</code></pre>
+<p>格式说明：</p>
+<ul>
+<li>小括号内的语法与传统方法参数列表一致：无参数则留空；多个参数则用逗号分隔。</li>
+<li><code>-&gt;</code>是新引入的语法格式，代表指向动作。</li>
+<li>大括号内的语法与传统方法体要求基本一致。</li>
+</ul>
+<h3 id="Lambda的参数和返回值"><a href="#Lambda的参数和返回值" class="headerlink" title="Lambda的参数和返回值"></a>Lambda的参数和返回值</h3><blockquote>
+<p>需求:<br>    使用数组存储多个Person对象<br>    对数组中的Person对象使用Arrays的sort方法通过年龄进行升序排序</p>
+</blockquote>
+<p>当需要对一个对象数组进行排序时，<code>Arrays.sort</code>方法需要一个<code>Comparator</code>接口实例来指定排序的规则。假设有一个<code>Person</code>类，含有<code>String name</code>和<code>int age</code>两个成员变量：</p>
+<pre><code class="java">public class Person &#123; 
+    private String name;
+    private int age;
+    
+    // 省略构造器、toString方法与Getter Setter 
+&#125;
+
+import java.util.Arrays;
+import java.util.Comparator;
+public class Demo06Comparator &#123;
+    public static void main(String[] args) &#123;
+          // 本来年龄乱序的对象数组
+        Person[] array = &#123;
+            new Person(&quot;古力娜扎&quot;, 19),
+            new Person(&quot;迪丽热巴&quot;, 18),
+               new Person(&quot;马尔扎哈&quot;, 20) &#125;;
+
+          // 匿名内部类
+        Comparator&lt;Person&gt; comp = new Comparator&lt;Person&gt;() &#123;
+            @Override
+            public int compare(Person o1, Person o2) &#123;
+                return o1.getAge() - o2.getAge();
+            &#125;
+        &#125;;
+        Arrays.sort(array, comp); // 第二个参数为排序规则，即Comparator接口实例
+
+        for (Person person : array) &#123;
+            System.out.println(person);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>这种做法在面向对象的思想中，似乎也是“理所当然”的。其中<code>Comparator</code>接口的实例（使用了匿名内部类）代表了“按照年龄从小到大”的排序规则。</p>
+<h6 id="代码分析-1"><a href="#代码分析-1" class="headerlink" title="代码分析"></a>代码分析</h6><p>下面我们来搞清楚上述代码真正要做什么事情。</p>
+<ul>
+<li>为了排序，<code>Arrays.sort</code>方法需要排序规则，即<code>Comparator</code>接口的实例，抽象方法<code>compare</code>是关键；</li>
+<li>为了指定<code>compare</code>的方法体，<strong>不得不</strong>需要<code>Comparator</code>接口的实现类；</li>
+<li>为了省去定义一个<code>ComparatorImpl</code>实现类的麻烦，<strong>不得不</strong>使用匿名内部类；</li>
+<li>必须覆盖重写抽象<code>compare</code>方法，所以方法名称、方法参数、方法返回值<strong>不得不</strong>再写一遍，且不能写错；</li>
+<li>实际上，<strong>只有参数和方法体才是关键</strong>。</li>
+</ul>
+<h6 id="Lambda写法"><a href="#Lambda写法" class="headerlink" title="Lambda写法"></a>Lambda写法</h6><pre><code class="java">import java.util.Arrays;
+
+public class Demo07ComparatorLambda &#123;
+    public static void main(String[] args) &#123;
+        Person[] array = &#123;
+              new Person(&quot;古力娜扎&quot;, 19),
+              new Person(&quot;迪丽热巴&quot;, 18),
+              new Person(&quot;马尔扎哈&quot;, 20) &#125;;
+
+        Arrays.sort(array, (Person a, Person b) -&gt; &#123;
+              return a.getAge() - b.getAge();
+        &#125;);
+
+        for (Person person : array) &#123;
+            System.out.println(person);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="省略规则"><a href="#省略规则" class="headerlink" title="省略规则"></a>省略规则</h3><p>在Lambda标准格式的基础上，使用省略写法的规则为：</p>
+<ol>
+<li>小括号内参数的类型可以省略；</li>
+<li>如果小括号内<strong>有且仅有一个参</strong>，则小括号可以省略；</li>
+<li>如果大括号内<strong>有且仅有一个语句</strong>，则无论是否有返回值，都可以省略大括号、return关键字及语句分号。</li>
+</ol>
+<blockquote>
+<p>备注：掌握这些省略规则后，请对应地回顾本章开头的多线程案例。</p>
+</blockquote>
+<p>Lambda的语法非常简洁，完全没有面向对象复杂的束缚。但是使用时有几个问题需要特别注意：</p>
+<ol>
+<li>使用Lambda必须具有接口，且要求<strong>接口中有且仅有一个抽象方法</strong>。<br>无论是JDK内置的<code>Runnable</code>、<code>Comparator</code>接口还是自定义的接口，只有当接口中的抽象方法存在且唯一时，才可以使用Lambda。</li>
+<li>使用Lambda必须具有<strong>上下文推断</strong>。<br>也就是方法的参数或局部变量类型必须为Lambda对应的接口类型，才能使用Lambda作为该接口的实例。</li>
+</ol>
+<blockquote>
+<p>备注：有且仅有一个抽象方法的接口，称为“<strong>函数式接口</strong>”。</p>
+</blockquote>
 
             
         </div>
@@ -1469,7 +1720,7 @@ public class MyRunnable implements Runnable&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -1534,7 +1785,7 @@ public class MyRunnable implements Runnable&#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#879cff>
+            <a href="/tags/随笔" style=color:#00bcd4>
                 随笔
             </a>
         </span>
@@ -3906,7 +4157,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ffa2c4>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -4185,7 +4436,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#879cff>
                 政治
             </a>
         </span>
@@ -4826,7 +5077,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -5197,7 +5448,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -5515,7 +5766,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#1bccbc>
+            <a href="/tags/计算机" style=color:#879cff>
                 计算机
             </a>
         </span>
@@ -5719,7 +5970,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -5872,7 +6123,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ffa2c4>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -5972,7 +6223,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
