@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1686,6 +1686,141 @@ public class Demo07ComparatorLambda &#123;
 <blockquote>
 <p>备注：有且仅有一个抽象方法的接口，称为“<strong>函数式接口</strong>”。</p>
 </blockquote>
+<h3 id="File类"><a href="#File类" class="headerlink" title="File类"></a>File类</h3><pre><code class="java">public File(String pathname):通过将给定的路径名字字符串转化为抽象路径名来创建新的File实例
+public File(String parent, String child):从父路径名字符串和子路径名字符串创建新的File实例
+public File(File parent, String child):从父抽象路径名和子路径名字符串创建新的File实例
+</code></pre>
+<pre><code class="java">// 文件路径名
+String pathname = &quot;D:\\aaa.txt&quot;;
+File file1 = new File(pathname); 
+
+// 文件路径名
+String pathname2 = &quot;D:\\aaa\\bbb.txt&quot;;
+File file2 = new File(pathname2); 
+
+// 通过父路径和子路径字符串
+ String parent = &quot;d:\\aaa&quot;;
+ String child = &quot;bbb.txt&quot;;
+ File file3 = new File(parent, child);
+
+// 通过父级File对象和子路径字符串
+File parentDir = new File(&quot;d:\\aaa&quot;);
+String child = &quot;bbb.txt&quot;;
+File file4 = new File(parentDir, child);
+
+小贴士：
+1. 一个File对象代表硬盘中实际存在的一个文件或者目录。
+2. 无论该路径下是否存在文件或者目录，都不影响File对象的创建。
+</code></pre>
+<h5 id="常用方法"><a href="#常用方法" class="headerlink" title="常用方法"></a>常用方法</h5><pre><code class="java">public String getAbsolutePath():返回此File的绝对路径名字符串
+public String getPath():将此File转换为路径名字符串
+public String getName():返回由此File表示的文件或目录的名称
+public long length():返回由此File表示的文件的长度
+</code></pre>
+<pre><code class="java">public class FileGet &#123;
+    public static void main(String[] args) &#123;
+        File f = new File(&quot;d:/aaa/bbb.java&quot;);     
+        System.out.println(&quot;文件绝对路径:&quot;+f.getAbsolutePath());
+        System.out.println(&quot;文件构造路径:&quot;+f.getPath());
+        System.out.println(&quot;文件名称:&quot;+f.getName());
+        System.out.println(&quot;文件长度:&quot;+f.length()+&quot;字节&quot;);
+
+        File f2 = new File(&quot;d:/aaa&quot;);     
+        System.out.println(&quot;目录绝对路径:&quot;+f2.getAbsolutePath());
+        System.out.println(&quot;目录构造路径:&quot;+f2.getPath());
+        System.out.println(&quot;目录名称:&quot;+f2.getName());
+        System.out.println(&quot;目录长度:&quot;+f2.length());
+    &#125;
+&#125;
+输出结果：
+文件绝对路径:d:\aaa\bbb.java
+文件构造路径:d:\aaa\bbb.java
+文件名称:bbb.java
+文件长度:636字节
+
+目录绝对路径:d:\aaa
+目录构造路径:d:\aaa
+目录名称:aaa
+目录长度:4096
+API中说明：length()，表示文件的长度。但是File对象表示目录，则返回值未指定。
+</code></pre>
+<h5 id="绝对路径和相对路径"><a href="#绝对路径和相对路径" class="headerlink" title="绝对路径和相对路径"></a>绝对路径和相对路径</h5><ul>
+<li><strong>绝对路径</strong>：从盘符开始的路径，这是一个完整的路径。</li>
+<li><strong>相对路径</strong>：相对于项目目录的路径，这是一个便捷的路径，开发中经常使用。</li>
+</ul>
+<pre><code class="java">public class FilePath &#123;
+    public static void main(String[] args) &#123;
+          // D盘下的bbb.java文件
+        File f = new File(&quot;D:\\bbb.java&quot;);
+        System.out.println(f.getAbsolutePath());
+          
+        // 项目下的bbb.java文件
+        File f2 = new File(&quot;bbb.java&quot;);
+        System.out.println(f2.getAbsolutePath());
+    &#125;
+&#125;
+输出结果：
+D:\bbb.java
+D:\idea_project_test4\bbb.java
+</code></pre>
+<h5 id="判断功能的方法"><a href="#判断功能的方法" class="headerlink" title="判断功能的方法"></a>判断功能的方法</h5><pre><code class="java">public boolean exists():此File表示的文件或目录是否真实存在
+public boolean isDirectory():此File表示的是否为目录
+public boolean isFile():此File表示的是否为文件
+</code></pre>
+<h5 id="创建删除功能的方法"><a href="#创建删除功能的方法" class="headerlink" title="创建删除功能的方法"></a>创建删除功能的方法</h5><pre><code class="java">public boolean createNewFile():当且仅当具有该名称的文件尚不存在时候,创建一个新的空文件
+public boolean delete():删除由此File表示的文件或目录
+public boolean mkdir():创建由此File表示的目录
+public boolean mkdirs():创建由此File表示的目录,包括任何必须旦不存在的父目录
+</code></pre>
+<pre><code class="java">public class FileCreateDelete &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 文件的创建
+        File f = new File(&quot;aaa.txt&quot;);
+        System.out.println(&quot;是否存在:&quot;+f.exists()); // false
+        System.out.println(&quot;是否创建:&quot;+f.createNewFile()); // true
+        System.out.println(&quot;是否存在:&quot;+f.exists()); // true
+        
+         // 目录的创建
+          File f2= new File(&quot;newDir&quot;);    
+        System.out.println(&quot;是否存在:&quot;+f2.exists());// false
+        System.out.println(&quot;是否创建:&quot;+f2.mkdir());    // true
+        System.out.println(&quot;是否存在:&quot;+f2.exists());// true
+
+        // 创建多级目录
+          File f3= new File(&quot;newDira\\newDirb&quot;);
+        System.out.println(f3.mkdir());// false
+        File f4= new File(&quot;newDira\\newDirb&quot;);
+        System.out.println(f4.mkdirs());// true
+      
+          // 文件的删除
+           System.out.println(f.delete());// true
+      
+          // 目录的删除
+        System.out.println(f2.delete());// true
+        System.out.println(f4.delete());// false
+    &#125;
+&#125;
+API中说明：delete方法，如果此File表示目录，则目录必须为空才能删除。
+</code></pre>
+<h5 id="目录的遍历"><a href="#目录的遍历" class="headerlink" title="目录的遍历"></a>目录的遍历</h5><pre><code class="java">public String[] list():返回一个String数组,表示该FIle目录中的所有子文件或目录
+public File[] listFiles():返回一个File数组,表示该FIle目录中的所有的子文件或目录
+</code></pre>
+<pre><code class="java">public class FileFor &#123;
+    public static void main(String[] args) &#123;
+        File dir = new File(&quot;d:\\java_code&quot;);
+      
+          //获取当前目录下的文件以及文件夹的名称。
+        String[] names = dir.list();
+        for(String name : names)&#123;
+            System.out.println(name);
+        &#125;
+        //获取当前目录下的文件以及文件夹对象，只要拿到了文件对象，那么就可以获取更多信息
+        File[] files = dir.listFiles();
+        for (File file : files) &#123;
+            System.out.println(file);
+        &#125;
+    &#125;
+</code></pre>
 
     </div>
 
