@@ -1839,7 +1839,245 @@ public File[] listFiles():返回一个File数组,表示该FIle目录中的所有
         for (File file : files) &#123;
             System.out.println(file);
         &#125;
+    &#125; //打印全文件地址名称
+</code></pre>
+<h4 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h4><h5 id="递归打印多级目录"><a href="#递归打印多级目录" class="headerlink" title="递归打印多级目录"></a>递归打印多级目录</h5><p><strong>分析</strong>：多级目录的打印，就是当目录的嵌套。遍历之前，无从知道到底有多少级目录，所以我们还是要使用递归实现。</p>
+<p><strong>代码实现</strong>：</p>
+<pre><code class="java">public class DiGuiDemo2 &#123;
+    public static void main(String[] args) &#123;
+          // 创建File对象
+        File dir  = new File(&quot;D:\\aaa&quot;);
+          // 调用打印目录方法
+        printDir(dir);
     &#125;
+
+    public static void  printDir(File dir) &#123;
+          // 获取子文件和目录
+        File[] files = dir.listFiles();
+          // 循环打印
+          /*
+            判断:
+            当是文件时,打印绝对路径.
+            当是目录时,继续调用打印目录的方法,形成递归调用.
+          */
+        for (File file : files) &#123;
+            // 判断
+            if (file.isFile()) &#123;
+                  // 是文件,输出文件绝对路径
+                System.out.println(&quot;文件名:&quot;+ file.getAbsolutePath());
+            &#125; else &#123;
+                  // 是目录,输出目录绝对路径
+                System.out.println(&quot;目录:&quot;+file.getAbsolutePath());
+                  // 继续遍历,调用printDir,形成递归
+                printDir(file);
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="文件搜索案例"><a href="#文件搜索案例" class="headerlink" title="文件搜索案例"></a>文件搜索案例</h4><p>搜索<code>D:\aaa</code> 目录中的<code>.java</code> 文件。</p>
+<p><strong>分析</strong>：</p>
+<ol>
+<li>目录搜索，无法判断多少级目录，所以使用递归，遍历所有目录。</li>
+<li>遍历目录时，获取的子文件，通过文件名称，判断是否符合条件。</li>
+</ol>
+<p><strong>代码实现</strong>：</p>
+<pre><code class="java">public class test &#123;
+    public static void main(String[] args) &#123;
+        File file = new File(&quot;D:\\NotePad++&quot;);
+        printFile(file);
+    &#125;
+    public static void printFile(File file)&#123;
+        File[] files = file.listFiles();
+        for (File f1 : files)&#123;
+            if (f1.isFile())&#123;
+                if (f1.getName().endsWith(&quot;.xml&quot;))&#123;
+                    System.out.println(&quot;文件名：&quot;+f1.getAbsolutePath());
+                &#125;
+            &#125;else &#123;
+                printFile(f1);
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="文件过滤器优化"><a href="#文件过滤器优化" class="headerlink" title="文件过滤器优化"></a>文件过滤器优化</h4><p><code>java.io.FileFilter</code>是一个接口，是File的过滤器。 该接口的对象可以传递给File类的<code> listFiles(FileFilter)</code> 作为参数， 接口中只有一个方法。</p>
+<pre><code class="java">boolean accept(File pathname)：测试pathname是否应该包含在当前File目录中，符合则返回true。
+</code></pre>
+<p><strong>分析</strong>：</p>
+<ol>
+<li>接口作为参数，需要传递子类对象，重写其中方法。我们选择匿名内部类方式，比较简单。</li>
+<li><code>accept</code>方法，参数为File，表示当前File下所有的子文件和子目录。保留住则返回true，过滤掉则返回false。保留规则：<ol>
+<li>要么是.java文件。</li>
+<li>要么是目录，用于继续遍历。</li>
+</ol>
+</li>
+<li>通过过滤器的作用，<code>listFiles(FileFilter)</code>返回的数组元素中，子文件对象都是符合条件的，可以直接打印。</li>
+</ol>
+<p><strong>代码实现：</strong></p>
+<pre><code class="java">public class DiGuiDemo4 &#123;
+    public static void main(String[] args) &#123;
+        File dir = new File(&quot;D:\\aaa&quot;);
+        printDir2(dir);
+    &#125;
+  
+    public static void printDir2(File dir) &#123;
+          // 匿名内部类方式,创建过滤器子类对象
+        File[] files = dir.listFiles(new FileFilter() &#123;
+            @Override
+            public boolean accept(File pathname) &#123;
+                return pathname.getName().endsWith(&quot;.java&quot;)||pathname.isDirectory();
+            &#125;   //public boolean isDirectory():此File表示的是否为目录
+        &#125;);
+          // 循环打印
+        for (File file : files) &#123;
+            if (file.isFile()) &#123;
+                System.out.println(&quot;文件名:&quot; + file.getAbsolutePath());
+            &#125; else &#123;
+                printDir2(file);
+            &#125;
+        &#125;
+    &#125;
+&#125;      
+</code></pre>
+<h4 id="Lambda优化"><a href="#Lambda优化" class="headerlink" title="Lambda优化"></a>Lambda优化</h4><p><strong>分析：</strong><code>FileFilter</code>是只有一个方法的接口，因此可以用lambda表达式简写。</p>
+<p>lambda格式：</p>
+<pre><code class="java">()-&gt;&#123; &#125;
+</code></pre>
+<p><strong>代码实现：</strong></p>
+<pre><code class="java">public static void printDir3(File dir) &#123;
+      // lambda的改写
+    File[] files = dir.listFiles(f -&gt;&#123; 
+          return f.getName().endsWith(&quot;.java&quot;) || f.isDirectory(); 
+    &#125;);
+      
+    // 循环打印
+    for (File file : files) &#123;
+        if (file.isFile()) &#123;
+            System.out.println(&quot;文件名:&quot; + file.getAbsolutePath());
+          &#125; else &#123;
+            printDir3(file);
+          &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="字节流、字符流"><a href="#字节流、字符流" class="headerlink" title="字节流、字符流"></a>字节流、字符流</h3><h6 id="顶级父类们"><a href="#顶级父类们" class="headerlink" title="顶级父类们"></a>顶级父类们</h6><table>
+<thead>
+<tr>
+<th></th>
+<th>输入流</th>
+<th>输出流</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字节流</td>
+<td>字节输入流 <strong>InputStream</strong></td>
+<td>字节输出流 <strong>OutputStream</strong></td>
+</tr>
+<tr>
+<td>字符流</td>
+<td>字符输入流 <strong>Reader</strong></td>
+<td>字符输出流 <strong>Writer</strong></td>
+</tr>
+</tbody></table>
+<h6 id="字节输出流-OutputStream类"><a href="#字节输出流-OutputStream类" class="headerlink" title="字节输出流 OutputStream类"></a>字节输出流 OutputStream类</h6><p><code>java.io.OutputStream </code>抽象类是表示字节输出流的所有类的超类，将指定的字节信息写出到目的地。它定义了字节输出流的基本共性功能方法。</p>
+<pre><code class="java">public void close():关闭此输出流并释放与此流相关联的任何系统资源
+public void flush():刷新此输出流并强制任何缓冲的输出字节被写出
+public void write(byte[] b):将b.length字节从指定的字节数组写入此输出流
+public void write(byte[] b, in off, int len):从指定的字节数组写入len字节,从偏移量off开始输出到此输出流
+public abstract void write(int b):将指定的字节输出流
+// close方法，当完成流的操作时，必须调用此方法，释放系统资源。
+</code></pre>
+<h6 id="字节输出流-FileOutputStream类"><a href="#字节输出流-FileOutputStream类" class="headerlink" title="字节输出流 FileOutputStream类"></a>字节输出流 FileOutputStream类</h6><p><code>OutputStream</code>有很多子类，我们从最简单的一个子类开始。<br><code>java.io.FileOutputStream </code>类是文件输出流，用于**<u>将数据写出到文件</u>**。</p>
+<pre><code class="java">public FileOutputStream(File file):创建文件输出流以写入由指定的File对象表示的文件
+public FileOutputStream(String name):创建文件输出流以指定的名称写入文件
+</code></pre>
+<p>当你创建一个流对象时，必须传入一个文件路径。该路径下，如果没有这个文件，会创建该文件。如果有这个文件，会清空这个文件的数据。</p>
+<pre><code class="java">public class FileOutputStreamConstructor throws IOException &#123;
+    public static void main(String[] args) &#123;
+           // 使用文件名称创建流对象
+        FileOutputStream fos = new FileOutputStream(&quot;D:\Clash\a.txt&quot;);
+        // 普通创建
+        File file = new File(&quot;a.txt&quot;);
+        FileOutputStream fos = new FileOutputStream(file);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="写出字节数据"><a href="#写出字节数据" class="headerlink" title="写出字节数据"></a>写出字节数据</h4><p><strong>写出字节</strong>：<code>write(int b)</code> 方法，每次可以写出一个字节数据，代码使用演示：</p>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+    FileOutputStream fos = new FileOutputStream(&quot;D:\\Clash\\a.txt&quot;);
+    fos.write(97); //a
+    fos.close();
+&#125;
+// 1. 虽然参数为int类型四个字节，但是只会保留一个字节的信息写出。
+// 2. 流操作完毕后，必须释放系统资源，调用close方法，千万记得。
+</code></pre>
+<p><strong>写出字节数组</strong>：<code>write(byte[] b)</code>，每次可以写出数组中的数据，代码使用演示：</p>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+    FileOutputStream fos = new FileOutputStream(&quot;D:\\clash\\a.txt&quot;);
+    yte[] b = &quot;黑马程序员&quot;.getBytes();
+    fos.write(b);
+    fos.close();
+&#125;
+</code></pre>
+<h4 id="数据追加续写"><a href="#数据追加续写" class="headerlink" title="数据追加续写"></a>数据追加续写</h4><p>经过以上的演示，每次程序运行，创建输出流对象，都会清空目标文件中的数据。如何保留目标文件中数据，还能继续添加新数据呢？</p>
+<pre><code class="java">public FileOutputStream(File file, boolean append):创建文件输出流以写入由指定的File对象表示的文件
+public FileOutputStream(String name, boolean append):创建文件输出流以指定的名称写入文件
+</code></pre>
+<p>这两个构造方法，参数中都需要传入一个boolean类型的值，<code>true</code> 表示追加数据，<code>false</code> 表示清空原有数据。这样创建的输出流对象，就可以指定是否追加续写了，代码使用演示：</p>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+    FileOutputStream fos = new FileOutputStream(&quot;D:\\Clash\\a.txt&quot;, true);
+    byte[] b = &quot;abcde&quot;.getBytes();
+    fos.write(b);
+    fos.close();
+&#125;
+</code></pre>
+<ul>
+<li>回车符<code>\r</code>和换行符<code>\n</code> ：<ul>
+<li>回车符：回到一行的开头（return）。</li>
+<li>换行符：下一行（newline）。</li>
+</ul>
+</li>
+<li>系统中的换行：<ul>
+<li>Windows系统里，每行结尾是 <code>回车+换行</code> ，即<code>\r\n</code>；</li>
+<li>Unix系统里，每行结尾只有 <code>换行</code> ，即<code>\n</code>；</li>
+<li>Mac系统里，每行结尾是 <code>回车</code> ，即<code>\r</code>。从 Mac OS X开始与Linux统一。</li>
+</ul>
+</li>
+</ul>
+<h4 id="字节输入流InputStream"><a href="#字节输入流InputStream" class="headerlink" title="字节输入流InputStream"></a>字节输入流InputStream</h4><p><code>java.io.InputStream </code>抽象类是表示字节输入流的所有类的超类，可以读取字节信息到内存中。它定义了字节输入流的基本共性功能方法。</p>
+<pre><code class="java">public void close():关闭此输入流并释放与此流相关的任何系统资源
+public abstract int read():从输入流读取数据的下一个字节
+public int read(byte[] b):从输入流中读取一些字节数,并把它们存储到字节数组b中
+close方法，当完成流的操作时，必须调用此方法，释放系统资源。
+</code></pre>
+<h3 id="FileInputStream类"><a href="#FileInputStream类" class="headerlink" title="FileInputStream类"></a>FileInputStream类</h3><p><code>java.io.FileInputStream </code>类是文件输入流，从文件中读取字节。</p>
+<h5 id="构造方法"><a href="#构造方法" class="headerlink" title="构造方法"></a>构造方法</h5><pre><code class="java">FileInputStream(File file):通过打开与实际文件的链接来创建一个FileInputStream，该文件由文件系统中的File对象 file命名
+FileInputStream(String name):通过打开与实际文件的链接来创建一个FileInputStream，该文件由文件系统中的路径名 name命名。  
+当你创建一个流对象时，必须传入一个文件路径。该路径下，如果没有该文件,会抛出FileNotFoundException 。
+</code></pre>
+<p><strong>读取字节</strong>：<code>read</code>方法，每次可以读取一个字节的数据，提升为int类型，读取到文件末尾，返回<code>-1</code>，代码使用演示：</p>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+   FileInputStream fis = new FileInputStream(&quot;D:\\Clash\\a.txt&quot;);
+   int b;
+   while((b=fis.read())!= -1)&#123;
+      System.out.println((char)b);
+   &#125;
+    fis.close();
+&#125;
+//1. 虽然读取了一个字节，但是会自动提升为int类型。
+//2. 流操作完毕后，必须释放系统资源，调用close方法，千万记得。
+</code></pre>
+<p><strong>使用字节数组读取</strong>：<code>read(byte[] b)</code>，每次读取b的长度个字节到数组中，返回读取到的有效字节个数，读取到末尾时，返回<code>-1</code> ，代码使用演示：</p>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+    FileInputStream fis = new FileInputStream(&quot;D:\\Clash\\a.txt&quot;);
+    int len;
+    byte[] b = new byte[2];
+    while((len = fis.read(b)) != -1)&#123;
+         System.out.println(new String(b,0,len));
+    &#125;
+    fis.close();
+ &#125;
 </code></pre>
 
             
@@ -1855,7 +2093,7 @@ public File[] listFiles():返回一个File数组,表示该FIle目录中的所有
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -1920,7 +2158,7 @@ public File[] listFiles():返回一个File数组,表示该FIle目录中的所有
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#879cff>
+            <a href="/tags/随笔" style=color:#ff7d73>
                 随笔
             </a>
         </span>
@@ -4292,7 +4530,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -4571,7 +4809,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -5212,7 +5450,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -5583,7 +5821,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -5901,7 +6139,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ff7d73>
+            <a href="/tags/计算机" style=color:#879cff>
                 计算机
             </a>
         </span>
@@ -6105,7 +6343,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
@@ -6258,7 +6496,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#1bccbc>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
