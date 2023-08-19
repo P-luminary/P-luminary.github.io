@@ -2274,6 +2274,306 @@ location -- D:\a.txt
 <blockquote>
 <p>小贴士：文本中的数据，必须是键值对形式，可以使用空格、等号、冒号等符号分隔。</p>
 </blockquote>
+<h3 id="缓冲流"><a href="#缓冲流" class="headerlink" title="缓冲流"></a>缓冲流</h3><p><strong>字节缓冲流</strong>  <code>BufferedInputStream</code>, <code>BufferedOutputStream</code><br><strong>字符缓冲流</strong>  <code>BufferedReader</code>, <code>BudfferedWeiter</code></p>
+<h4 id="字节缓冲流"><a href="#字节缓冲流" class="headerlink" title="字节缓冲流"></a>字节缓冲流</h4><pre><code class="java">public BufferedInputStream(InputStream in):创建一个新的缓冲输入流
+public BufferedOutputStream(OutputStream out):创建一个新的缓冲输出流
+</code></pre>
+<pre><code class="java">// 创建字节缓冲输入流
+BufferedInputStream bis = new BufferedInputStream(new FileInputStream(&quot;bis.txt&quot;));
+// 创建字节缓冲输出流
+BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(&quot;bos.txt&quot;));
+</code></pre>
+<pre><code class="java">public static void main(String[] args) throws FileNotFoundException &#123;
+          // 记录开始时间
+        long start = System.currentTimeMillis();
+        // 创建流对象
+        try (
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(&quot;jdk9.exe&quot;));
+         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(&quot;copy.exe&quot;));
+        )&#123;
+              // 读写数据
+            int len;
+            byte[] bytes = new byte[8*1024];
+            while ((len = bis.read(bytes)) != -1) &#123;
+                bos.write(bytes, 0 , len);
+            &#125;
+        &#125; catch (IOException e) &#123;
+            e.printStackTrace();
+        &#125;
+        // 记录结束时间
+        long end = System.currentTimeMillis();
+        System.out.println(&quot;缓冲流使用数组复制时间:&quot;+(end - start)+&quot; 毫秒&quot;);
+    &#125;
+缓冲流使用数组复制时间:666 毫秒
+</code></pre>
+<h4 id="字符缓冲流"><a href="#字符缓冲流" class="headerlink" title="字符缓冲流"></a>字符缓冲流</h4><pre><code class="java">public BufferedReader(Reader in):创建一个新的缓冲输入流
+public BufferedReader(Writer out):创建一个新的缓冲输出流
+</code></pre>
+<blockquote>
+<p><strong>字节(Byte)</strong> 是计量单位，表示数据量多少，是计算机信息技术用于计量存储容量的一种计量单位，通常情况下一字节等于八位。<br>**字符(Character) ** 是计算机中使用的字母、数字、字和符号，比如’A’、’B’、’$’、’&amp;’等。</p>
+</blockquote>
+<h5 id="特有方法"><a href="#特有方法" class="headerlink" title="特有方法"></a>特有方法</h5><pre><code class="java">BufferedReader：public String readLine():读一行文字
+bufferedWeiter：public void newLine():写一行行分隔符，由系统属性定义符号
+</code></pre>
+<pre><code class="java">readLine代码展示
+public static void main(String[] args) throws IOException &#123;
+           // 创建流对象
+        BufferedReader br = new BufferedReader(new FileReader(&quot;in.txt&quot;));
+        // 定义字符串,保存读取的一行文字
+        String line  = null;
+          // 循环读取,读取到最后返回null
+        while ((line = br.readLine())!=null) &#123;
+            System.out.print(line);
+            System.out.println(&quot;------&quot;);
+        &#125;
+        // 释放资源
+        br.close();
+    &#125;
+</code></pre>
+<pre><code class="java">newLine代码展示
+public static void main(String[] args) throws IOException  &#123;
+          // 创建流对象
+        BufferedWriter bw = new BufferedWriter(new FileWriter(&quot;out.txt&quot;));
+          // 写出数据
+        bw.write(&quot;黑马&quot;);
+          // 写出换行
+        bw.newLine();
+        bw.write(&quot;程序&quot;);
+        bw.newLine();
+        bw.write(&quot;员&quot;);
+        bw.newLine();
+        // 释放资源
+        bw.close();
+    &#125;
+&#125;
+输出效果:
+黑马
+程序
+员
+</code></pre>
+<h1 id="练习-文本排序"><a href="#练习-文本排序" class="headerlink" title="练习: 文本排序"></a>练习: 文本排序</h1><p>请将文本信息恢复顺序。</p>
+<pre><code>3.侍中、侍郎郭攸之、费祎、董允等，此皆良实，志虑忠纯，是以先帝简拔以遗陛下。愚以为宫中之事，事无大小，悉以咨之，然后施行，必得裨补阙漏，有所广益。
+8.愿陛下托臣以讨贼兴复之效，不效，则治臣之罪，以告先帝之灵。若无兴德之言，则责攸之、祎、允等之慢，以彰其咎；陛下亦宜自谋，以咨诹善道，察纳雅言，深追先帝遗诏，臣不胜受恩感激。
+4.将军向宠，性行淑均，晓畅军事，试用之于昔日，先帝称之曰能，是以众议举宠为督。愚以为营中之事，悉以咨之，必能使行阵和睦，优劣得所。
+2.宫中府中，俱为一体，陟罚臧否，不宜异同。若有作奸犯科及为忠善者，宜付有司论其刑赏，以昭陛下平明之理，不宜偏私，使内外异法也。
+1.先帝创业未半而中道崩殂，今天下三分，益州疲弊，此诚危急存亡之秋也。然侍卫之臣不懈于内，忠志之士忘身于外者，盖追先帝之殊遇，欲报之于陛下也。诚宜开张圣听，以光先帝遗德，恢弘志士之气，不宜妄自菲薄，引喻失义，以塞忠谏之路也。
+9.今当远离，临表涕零，不知所言。
+6.臣本布衣，躬耕于南阳，苟全性命于乱世，不求闻达于诸侯。先帝不以臣卑鄙，猥自枉屈，三顾臣于草庐之中，咨臣以当世之事，由是感激，遂许先帝以驱驰。后值倾覆，受任于败军之际，奉命于危难之间，尔来二十有一年矣。
+7.先帝知臣谨慎，故临崩寄臣以大事也。受命以来，夙夜忧叹，恐付托不效，以伤先帝之明，故五月渡泸，深入不毛。今南方已定，兵甲已足，当奖率三军，北定中原，庶竭驽钝，攘除奸凶，兴复汉室，还于旧都。此臣所以报先帝而忠陛下之职分也。至于斟酌损益，进尽忠言，则攸之、祎、允之任也。
+5.亲贤臣，远小人，此先汉所以兴隆也；亲小人，远贤臣，此后汉所以倾颓也。先帝在时，每与臣论此事，未尝不叹息痛恨于桓、灵也。侍中、尚书、长史、参军，此悉贞良死节之臣，愿陛下亲之信之，则汉室之隆，可计日而待也。
+</code></pre>
+<h3 id="案例分析"><a href="#案例分析" class="headerlink" title="案例分析"></a>案例分析</h3><ol>
+<li>逐行读取文本信息。</li>
+<li>解析文本信息到集合中。</li>
+<li>遍历集合，按顺序，写出文本信息。</li>
+</ol>
+<h3 id="案例实现"><a href="#案例实现" class="headerlink" title="案例实现"></a>案例实现</h3><pre><code class="java"> public static void main(String[] args) throws IOException &#123;
+        // 创建map集合,保存文本数据,键为序号,值为文字
+        HashMap&lt;String, String&gt; lineMap = new HashMap&lt;&gt;();
+
+        // 创建流对象
+        BufferedReader br = new BufferedReader(new FileReader(&quot;in.txt&quot;));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(&quot;out.txt&quot;));
+
+        // 读取数据
+        String line  = null;
+        while ((line = br.readLine())!=null) &#123;
+            // 解析文本
+            String[] split = line.split(&quot;\\.&quot;);
+            // 保存到集合
+            lineMap.put(split[0],split[1]);
+        &#125;
+        // 释放资源
+        br.close();
+
+        // 遍历map集合
+        for (int i = 1; i &lt;= lineMap.size(); i++) &#123;
+            String key = String.valueOf(i);
+            // 获取map中文本
+            String value = lineMap.get(key);
+              // 写出拼接文本
+            bw.write(key+&quot;.&quot;+value);
+              // 写出换行
+            bw.newLine();
+        &#125;
+        // 释放资源
+        bw.close();
+    &#125;
+</code></pre>
+<blockquote>
+<ul>
+<li><strong>Integer valueOf(int i)：</strong>返回一个表示指定的 int 值的 Integer 实例。</li>
+<li>**Integer valueOf(String s):**返回保存指定的 String 的值的 Integer 对象。</li>
+<li><strong>Integer valueOf(String s, int radix):</strong> 返回一个 Integer 对象，该对象中保存了用第二个参数提供的基数进行解析时从指定的 String 中提取的值。</li>
+</ul>
+</blockquote>
+<h2 id="OutputStreamWriter类"><a href="#OutputStreamWriter类" class="headerlink" title="OutputStreamWriter类"></a>OutputStreamWriter类</h2><p>转换流<code>java.io.OutputStreamWriter</code> ，是Writer的子类，是从字符流到字节流的桥梁。使用指定的字符集将字符编码为字节。它的字符集可以由名称指定，也可以接受平台的默认字符集。 </p>
+<h5 id="构造方法-2"><a href="#构造方法-2" class="headerlink" title="构造方法"></a>构造方法</h5><pre><code class="java">OutputStreamWriter(OutputStream in): 创建一个使用默认字符集的字符流
+OutputStreamWriter(OutputStream in, String charsetName): 创建一个指定字符集的字符流
+</code></pre>
+<pre><code class="java">OutputStreamWriter isr = new OutputStreamWriter(new FileOutputStream(&quot;out.txt&quot;));
+OutputStreamWriter isr2 = new OutputStreamWriter(new FileOutputStream(&quot;out.txt&quot;) , &quot;GBK&quot;);
+</code></pre>
+<pre><code class="java">public static void main(String[] args) throws IOException &#123;
+          // 定义文件路径
+        String FileName = &quot;E:\\out.txt&quot;;
+          // 创建流对象,默认UTF8编码
+        OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(FileName));
+        // 写出数据
+          osw.write(&quot;你好&quot;); // 保存为6个字节
+        osw.close();
+        // 定义文件路径
+        String FileName2 = &quot;E:\\out2.txt&quot;;
+         // 创建流对象,指定GBK编码
+        OutputStreamWriter osw2 = new OutputStreamWriter(new FileOutputStream(FileName2),&quot;GBK&quot;);
+        // 写出数据
+          osw2.write(&quot;你好&quot;);// 保存为4个字节
+        osw2.close();
+ &#125;
+</code></pre>
+<h2 id="ObjectOutputStream类"><a href="#ObjectOutputStream类" class="headerlink" title="ObjectOutputStream类"></a>ObjectOutputStream类</h2><p><code>java.io.ObjectOutputStream </code> 类，将Java对象的原始数据类型写出到文件,实现对象的持久存储。</p>
+<h4 id="构造方法-3"><a href="#构造方法-3" class="headerlink" title="构造方法"></a>构造方法</h4><pre><code class="java">public ObjectOutputStream(OutputStream out)：创建一个指定OutputStream的ObjectOutputStream。
+</code></pre>
+<h2 id="ObjectInputStream类"><a href="#ObjectInputStream类" class="headerlink" title="ObjectInputStream类"></a>ObjectInputStream类</h2><p>ObjectInputStream反序列化流，将之前使用ObjectOutputStream序列化的原始数据恢复为对象。 </p>
+<h3 id="构造方法-4"><a href="#构造方法-4" class="headerlink" title="构造方法"></a>构造方法</h3><ul>
+<li><code>public ObjectInputStream(InputStream in) </code>： 创建一个指定InputStream的ObjectInputStream。</li>
+</ul>
+<h3 id="反序列化操作1"><a href="#反序列化操作1" class="headerlink" title="反序列化操作1"></a>反序列化操作1</h3><p>如果能找到一个对象的class文件，我们可以进行反序列化操作，调用<code>ObjectInputStream</code>读取对象的方法：</p>
+<ul>
+<li><code>public final Object readObject ()</code> : 读取一个对象。</li>
+</ul>
+<p><strong>对于JVM可以反序列化对象，它必须是能够找到class文件的类。如果找不到该类的class文件，则抛出一个 <code>ClassNotFoundException</code> 异常。</strong><br><strong>另外，当JVM反序列化对象时，能找到class文件，但是class文件在序列化对象之后发生了修改，那么反序列化操作也会失败，抛出一个<code>InvalidClassException</code>异常。</strong>发生这个异常的原因如下：</p>
+<ul>
+<li>该类的序列版本号与从流中读取的类描述符的版本号不匹配 </li>
+<li>该类包含未知数据类型 </li>
+<li>该类没有可访问的无参数构造方法</li>
+</ul>
+<p><code>Serializable</code> 接口给需要序列化的类，提供了一个序列版本号。<code>serialVersionUID</code> 该版本号的目的在于验证序列化的对象和对应类是否版本匹配。</p>
+<h3 id="序列化操作"><a href="#序列化操作" class="headerlink" title="序列化操作"></a>序列化操作</h3><ol>
+<li>一个对象要想序列化，必须满足两个条件:</li>
+</ol>
+<ul>
+<li>该类必须实现<code>java.io.Serializable </code> 接口，<code>Serializable</code> 是一个标记接口，不实现此接口的类将不会使任何状态序列化或反序列化，会抛出<code>NotSerializableException</code> 。</li>
+<li>该类的所有属性必须是可序列化的。如果有一个属性不需要可序列化的，则该属性必须注明是瞬态的，使用<code>transient</code> 关键字修饰。</li>
+</ul>
+<blockquote>
+<h2 id="一、是什么"><a href="#一、是什么" class="headerlink" title="一、是什么"></a><strong>一、是什么</strong></h2><p>序列化：就是将对象转化成字节序列的过程。</p>
+<p>反序列化：就是讲字节序列转化成对象的过程。</p>
+<p>对象序列化成的字节序列会包含对象的类型信息、对象的数据等，说白了就是包含了描述这个对象的所有信息，能根据这些信息“复刻”出一个和原来一模一样的对象。</p>
+<h2 id="二、为什么"><a href="#二、为什么" class="headerlink" title="二、为什么"></a><strong>二、为什么</strong></h2><p>那么为什么要去进行序列化呢？有以下两个原因</p>
+<ol>
+<li>持久化：对象是存储在JVM中的堆区的，但是如果JVM停止运行了，对象也不存在了。序列化可以将对象转化成字节序列，可以写进硬盘文件中实现持久化。在新开启的JVM中可以读取字节序列进行反序列化成对象。</li>
+<li>网络传输：网络直接传输数据，但是无法直接传输对象，可在传输前序列化，传输完成后反序列化成对象。所以所有可在网络上传输的对象都必须是可序列化的。</li>
+</ol>
+<h2 id="三、怎么做"><a href="#三、怎么做" class="headerlink" title="三、怎么做"></a><strong>三、怎么做</strong></h2><p>怎么去实现对象的序列化呢？</p>
+<p>Java为我们提供了对象序列化的机制，规定了要实现序列化对象的类要满足的条件和实现方法。</p>
+<ol>
+<li>对于要序列化对象的类要去实现Serializable接口或者Externalizable接口</li>
+<li>实现方法：JDK提供的ObjectOutputStream和ObjectInputStream来实现序列化和反序列化</li>
+</ol>
+<p>下面分别实现Serializable和Externalizable接口来演示序列化和反序列化</p>
+</blockquote>
+<pre><code class="java">public class Employee implements java.io.Serializable &#123;
+    public String name;
+    public String address;
+    public transient int age; // transient瞬态修饰成员,不会被序列化
+    public void addressCheck() &#123;
+          System.out.println(&quot;Address  check : &quot; + name + &quot; -- &quot; + address);
+    &#125;
+&#125;
+
+public final void writeObject (Object obj) : 将指定的对象写出。
+    
+public class SerializeDemo&#123;
+       public static void main(String [] args)   &#123;
+        Employee e = new Employee();
+        e.name = &quot;zhangsan&quot;;
+        e.address = &quot;beiqinglu&quot;;
+        e.age = 20; 
+        try &#123;
+              // 创建序列化流对象
+          ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;employee.txt&quot;));
+            // 写出对象
+            out.writeObject(e);
+            // 释放资源
+            out.close();
+            fileOut.close();
+            System.out.println(&quot;Serialized data is saved&quot;); // 姓名，地址被序列化，年龄没有被序列化。
+        &#125; catch(IOException i)   &#123;
+            i.printStackTrace();
+        &#125;
+       &#125;
+&#125;
+输出结果：
+Serialized data is saved
+</code></pre>
+<h2 id="练习：序列化集合"><a href="#练习：序列化集合" class="headerlink" title="练习：序列化集合"></a>练习：序列化集合</h2><ol>
+<li>将存有多个自定义对象的集合序列化操作，保存到<code>list.txt</code>文件中。</li>
+<li>反序列化<code>list.txt</code> ，并遍历集合，打印对象信息。</li>
+</ol>
+<h3 id="案例分析-1"><a href="#案例分析-1" class="headerlink" title="案例分析"></a>案例分析</h3><ol>
+<li>把若干学生对象 ，保存到集合中。</li>
+<li>把集合序列化。</li>
+<li>反序列化读取时，只需要读取一次，转换为集合类型。</li>
+<li>遍历集合，可以打印所有的学生信息</li>
+</ol>
+<h3 id="案例实现-1"><a href="#案例实现-1" class="headerlink" title="案例实现"></a>案例实现</h3><pre><code class="java">public class SerTest &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 创建 学生对象
+        Student student = new Student(&quot;老王&quot;, &quot;laow&quot;);
+        Student student2 = new Student(&quot;老张&quot;, &quot;laoz&quot;);
+        Student student3 = new Student(&quot;老李&quot;, &quot;laol&quot;);
+
+        ArrayList&lt;Student&gt; arrayList = new ArrayList&lt;&gt;();
+        arrayList.add(student);
+        arrayList.add(student2);
+        arrayList.add(student3);
+        // 序列化操作
+        // serializ(arrayList);
+        
+        // 反序列化  
+        ObjectInputStream ois  = new ObjectInputStream(new FileInputStream(&quot;list.txt&quot;));
+        // 读取对象,强转为ArrayList类型
+        ArrayList&lt;Student&gt; list  = (ArrayList&lt;Student&gt;)ois.readObject();
+        
+          for (int i = 0; i &lt; list.size(); i++ )&#123;
+              Student s = list.get(i);
+            System.out.println(s.getName()+&quot;--&quot;+ s.getPwd());
+          &#125;
+    &#125;
+
+    private static void serializ(ArrayList&lt;Student&gt; arrayList) throws Exception &#123;
+        // 创建 序列化流 
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(&quot;list.txt&quot;));
+        // 写出对象
+        oos.writeObject(arrayList);
+        // 释放资源
+        oos.close();
+    &#125;
+&#125;
+</code></pre>
+<h2 id="PrintStream类"><a href="#PrintStream类" class="headerlink" title="PrintStream类"></a>PrintStream类</h2><h3 id="构造方法-5"><a href="#构造方法-5" class="headerlink" title="构造方法"></a>构造方法</h3><ul>
+<li><code>public PrintStream(String fileName)  </code>： 使用指定的文件名创建一个新的打印流。</li>
+</ul>
+<p>构造举例，代码如下：  </p>
+<pre><code class="java">PrintStream ps = new PrintStream(&quot;ps.txt&quot;)；
+</code></pre>
+<h3 id="改变打印流向"><a href="#改变打印流向" class="headerlink" title="改变打印流向"></a>改变打印流向</h3><p><code>System.out</code>就是<code>PrintStream</code>类型的，只不过它的流向是系统规定的，打印在控制台上。不过，既然是流对象，我们就可以玩一个”小把戏”，改变它的流向。</p>
+<pre><code class="java">public class PrintDemo &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 调用系统的打印流,控制台直接输出97
+        System.out.println(97);
+      
+        // 创建打印流,指定文件的名称
+        PrintStream ps = new PrintStream(&quot;ps.txt&quot;);
+          
+          // 设置系统的打印流流向,输出到ps.txt
+        System.setOut(ps);
+          // 调用系统的打印流,ps.txt中输出97
+        System.out.println(97);
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -2288,7 +2588,7 @@ location -- D:\a.txt
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -2353,7 +2653,7 @@ location -- D:\a.txt
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#ffa2c4>
+            <a href="/tags/随笔" style=color:#1bccbc>
                 随笔
             </a>
         </span>
@@ -4725,7 +5025,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -5004,7 +5304,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -5645,7 +5945,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -6016,7 +6316,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -6334,7 +6634,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#879cff>
+            <a href="/tags/计算机" style=color:#ff7d73>
                 计算机
             </a>
         </span>
@@ -6691,7 +6991,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#879cff>
                 政治
             </a>
         </span>
@@ -6791,7 +7091,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
