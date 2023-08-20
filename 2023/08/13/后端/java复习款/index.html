@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2551,6 +2551,127 @@ Serialized data is saved
         System.setOut(ps);
           // 调用系统的打印流,ps.txt中输出97
         System.out.println(97);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="Socket类"><a href="#Socket类" class="headerlink" title="Socket类"></a>Socket类</h2><p><code>Socket</code>类：该类实现客户端套接字，套接字指的是两台设备之间通讯的端点</p>
+<h5 id="构造方法-6"><a href="#构造方法-6" class="headerlink" title="构造方法"></a>构造方法</h5><pre><code class="java">public Socket(String host, int port):创建套接字对象并将其连接到指定主机上的指定端口号。如果指定的host是null ，则相当于指定地址为回送地址。
+</code></pre>
+<blockquote>
+<p>小贴士：回送地址(127.x.x.x) 是本机回送地址（Loopback Address），主要用于网络软件测试以及本地机进程间通信，无论什么程序，一旦使用回送地址发送数据，立即返回，不进行任何网络传输。</p>
+</blockquote>
+<p>构造举例，代码如下：</p>
+<pre><code class="java">Socket client = new Socket(&quot;127.0.0.1&quot;, 6666);
+</code></pre>
+<h5 id="成员方法"><a href="#成员方法" class="headerlink" title="成员方法"></a>成员方法</h5><pre><code class="java">public InputStream getInputStream() ： 返回此套接字的输入流。
+  - 如果此Scoket具有相关联的通道，则生成的InputStream 的所有操作也关联该通道。
+  - 关闭生成的InputStream也将关闭相关的Socket。
+public OutputStream getOutputStream() ： 返回此套接字的输出流。
+  - 如果此Scoket具有相关联的通道，则生成的OutputStream 的所有操作也关联该通道。
+  - 关闭生成的OutputStream也将关闭相关的Socket。
+public void close() ：关闭此套接字。
+  - 一旦一个socket被关闭，它不可再使用。
+  - 关闭此socket也将关闭相关的InputStream和OutputStream 。 
+public void shutdownOutput() ： 禁用此套接字的输出流。   
+  - 任何先前写出的数据将被发送，随后终止输出流。 
+</code></pre>
+<h2 id="ServerSocket类"><a href="#ServerSocket类" class="headerlink" title="ServerSocket类"></a>ServerSocket类</h2><p><code>ServerSocket</code>类：这个类实现了服务器套接字，该对象等待通过网络的请求。</p>
+<h5 id="构造方法-7"><a href="#构造方法-7" class="headerlink" title="构造方法"></a>构造方法</h5><pre><code class="java">ServerSocket类：这个类实现了服务器套接字，该对象等待通过网络的请求。
+ServerSocket server = new ServerSocket(6666);
+</code></pre>
+<h5 id="成员方法-1"><a href="#成员方法-1" class="headerlink" title="成员方法"></a>成员方法</h5><pre><code class="java">public Socket accept():侦听并接受链接，返回一个新的Socket对象，用于和客户端实现通信，该方法一直阻塞直到建立链接
+</code></pre>
+<h3 id="客户端向服务器发送数据"><a href="#客户端向服务器发送数据" class="headerlink" title="客户端向服务器发送数据"></a>客户端向服务器发送数据</h3><p><strong>服务端实现：</strong></p>
+<pre><code class="java">public class ServerTCP &#123;
+    public static void main(String[] args) throws IOException &#123;
+        System.out.println(&quot;服务端启动 , 等待连接 .... &quot;);
+        // 1.创建 ServerSocket对象，绑定端口，开始等待连接
+        ServerSocket ss = new ServerSocket(6666);
+        // 2.接收连接 accept 方法, 返回 socket 对象.
+        Socket server = ss.accept();
+        // 3.通过socket 获取输入流
+        InputStream is = server.getInputStream();
+        // 4.一次性读取数据
+          // 4.1 创建字节数组
+        byte[] b = new byte[1024];
+          // 4.2 据读取到字节数组中.
+        int len = is.read(b)；
+        // 4.3 解析数组,打印字符串信息
+        String msg = new String(b, 0, len);
+        System.out.println(msg);
+        //5.关闭资源.
+        is.close();
+        server.close();
+    &#125;
+&#125;
+</code></pre>
+<p><strong>客户端实现：</strong></p>
+<pre><code class="java">public class ClientTCP &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;客户端 发送数据&quot;);
+        // 1.创建 Socket ( ip , port ) , 确定连接到哪里.
+        Socket client = new Socket(&quot;localhost&quot;, 6666);
+        // 2.获取流对象 . 输出流
+        OutputStream os = client.getOutputStream();
+        // 3.写出数据.
+        os.write(&quot;你好么? tcp ,我来了&quot;.getBytes());
+        // 4. 关闭资源 .
+        os.close();
+        client.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="服务器向客户端回写数据"><a href="#服务器向客户端回写数据" class="headerlink" title="服务器向客户端回写数据"></a>服务器向客户端回写数据</h3><p><strong>服务端实现：</strong></p>
+<pre><code class="java">public class ServerTCP &#123;
+    public static void main(String[] args) throws IOException &#123;
+        System.out.println(&quot;服务端启动 , 等待连接 .... &quot;);
+        // 1.创建 ServerSocket对象，绑定端口，开始等待连接
+        ServerSocket ss = new ServerSocket(6666);
+        // 2.接收连接 accept 方法, 返回 socket 对象.
+        Socket server = ss.accept();
+        // 3.通过socket 获取输入流
+        InputStream is = server.getInputStream();
+        // 4.一次性读取数据
+          // 4.1 创建字节数组
+        byte[] b = new byte[1024];
+          // 4.2 据读取到字节数组中.
+        int len = is.read(b)；
+        // 4.3 解析数组,打印字符串信息
+        String msg = new String(b, 0, len);
+        System.out.println(msg);
+          // =================回写数据=======================
+          // 5. 通过 socket 获取输出流
+           OutputStream out = server.getOutputStream();
+          // 6. 回写数据
+           out.write(&quot;我很好,谢谢你&quot;.getBytes());
+          // 7.关闭资源.
+          out.close();
+        is.close();
+        server.close();
+    &#125;
+&#125;
+</code></pre>
+<p><strong>客户端实现：</strong></p>
+<pre><code class="java">public class ClientTCP &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;客户端 发送数据&quot;);
+        // 1.创建 Socket ( ip , port ) , 确定连接到哪里.
+        Socket client = new Socket(&quot;localhost&quot;, 6666);
+        // 2.通过Scoket,获取输出流对象 
+        OutputStream os = client.getOutputStream();
+        // 3.写出数据.
+        os.write(&quot;你好么? tcp ,我来了&quot;.getBytes());
+          // ==============解析回写=========================
+          // 4. 通过Scoket,获取 输入流对象
+          InputStream in = client.getInputStream();
+          // 5. 读取数据数据
+          byte[] b = new byte[100];
+          int len = in.read(b);
+          System.out.println(new String(b, 0, len));
+        // 6. 关闭资源 .
+          in.close();
+        os.close();
+        client.close();
     &#125;
 &#125;
 </code></pre>
