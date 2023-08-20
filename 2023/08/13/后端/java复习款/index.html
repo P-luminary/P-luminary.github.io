@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -2672,6 +2672,170 @@ ServerSocket server = new ServerSocket(6666);
           in.close();
         os.close();
         client.close();
+    &#125;
+&#125;
+</code></pre>
+<h2 id="函数式接口"><a href="#函数式接口" class="headerlink" title="函数式接口"></a>函数式接口</h2><p>函数式接口在Java中是指：<strong>有且仅有一个抽象方法的接口</strong></p>
+<p>函数式接口，即适用于函数式编程场景的接口。而Java中的函数式编程体现就是Lambda，所以函数式接口就是可 以适用于Lambda使用的接口。只有确保接口中有且仅有一个抽象方法，Java中的Lambda才能顺利地进行推导。</p>
+<blockquote>
+<p>备注：“语法糖”是指使用更加方便，但是原理不变的代码语法。例如在遍历集合时使用的for-each语法，其实 底层的实现原理仍然是迭代器，这便是“语法糖”。从应用层面来讲，Java中的Lambda可以被当做是匿名内部 类的“语法糖”，但是二者在原理上是不同的。</p>
+</blockquote>
+<pre><code class="java">修饰符 interface 接口名称 &#123;
+    public abstract 返回值类型 方法名称(可选参数信息);
+    // 其他非抽象方法内容
+&#125;
+</code></pre>
+<p><span style = "color:red"><strong>由于接口当中抽象方法的 <code>public abstract</code> 是可以省略的</strong></span>，所以定义一个函数式接口很简单：</p>
+<pre><code class="java">public interface MyFunctionalInterface&#123;
+    void myMethod(); //省略public abstract
+&#125;
+</code></pre>
+<h2 id="FunctionalInterface注解"><a href="#FunctionalInterface注解" class="headerlink" title="@FunctionalInterface注解"></a>@FunctionalInterface注解</h2><p>与<code>@Override</code>注解的作用类似，引入了一个新的注解<code>@FunctionalInterface</code> 该注解可用于上一个接口的定义上</p>
+<pre><code class="java">@FunctionalInterface
+public interface MyfunctionalInterface&#123;
+    void myMethod();
+&#125;
+</code></pre>
+<p><strong>一旦使用该注解来定义接口，编译器将会强制检查该接口是否确实有且仅有一个抽象方法，否则将会报错</strong>。需要注 意的是，即使不使用该注解，只要满足函数式接口的定义，这仍然是一个函数式接口，使用起来都一样。</p>
+<p>对于刚刚定义好的 <code>MyFunctionalInterface</code> 函数式接口，典型使用场景就是作为方法的参数：</p>
+<pre><code class="java">public class Demo09FunctionalInterface&#123;
+    //使用自定义的函数式接口方法
+    private static void deSomething(MyfunctionalInterfalce inter)&#123;
+        inter.myMethod(); //调用自定义的函数式接口方法
+    &#125;
+    
+    public static void main(String[] args)&#123;
+        //调用使用函数式接口的方法
+        doSomething(()-&gt;System.out,println(&quot;Lambda执行啦！&quot;));
+    &#125;
+&#125;
+</code></pre>
+<h2 id="Lambda的延迟"><a href="#Lambda的延迟" class="headerlink" title="Lambda的延迟"></a>Lambda的延迟</h2><pre><code class="java">public static void log(int level, MessageBuilder builder)&#123;
+        if (level == 1)&#123;
+            System.out.println(builder.buildMessage());
+        &#125;
+    &#125;
+
+    public static void main(String[] args)&#123;
+        String msgA = &quot;Hello&quot;;
+        String msgB = &quot;world&quot;;
+        String msgC = &quot;Java&quot;;
+        log(2,() -&gt; &#123;
+            System.out.println(&quot;Lambda执行啦！&quot;);
+            return msgA+msgB+msgC;
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<p>从结果中可以看出，在不符合级别要求的情况下，Lambda将不会执行。从而达到节省性能的效果。 </p>
+<blockquote>
+<p>扩展：实际上使用内部类也可以达到同样的效果，只是将代码操作延迟到了另外一个对象当中通过调用方法 来完成。而是否调用其所在方法是在条件判断之后才执行的。</p>
+</blockquote>
+<h2 id="使用Lambda作为参数和返回值"><a href="#使用Lambda作为参数和返回值" class="headerlink" title="使用Lambda作为参数和返回值"></a>使用Lambda作为参数和返回值</h2><p>如果抛开实现原理不说，Java中的Lambda表达式可以被当作是匿名内部类的替代品。如果方法的参数是一个函数 式接口类型，那么就可以使用Lambda表达式进行替代。使用Lambda表达式作为方法参数，其实就是使用函数式 接口作为方法参数。<br>例如 <code>java.lang.Runnable</code> 接口就是一个函数式接口，假设有一个 <code>startThread</code> 方法使用该接口作为参数，那么就 可以使用Lambda进行传参。这种情况其实和 <code>Thread</code> 类的构造方法参数为 <code>Runnable</code> 没有本质区别。</p>
+<pre><code class="java">public class DemoRunnable&#123;
+    private static void startThread(Runnable task)&#123;
+        new Thread(task).start();
+    &#125;
+    public static void main(String[] args)&#123;
+        startThread(()-&gt;System.out.println(&quot;线程任务执行！&quot;));
+    &#125;
+&#125;
+</code></pre>
+<p>类似地，如果一个方法的返回值类型是一个函数式接口，那么就可以直接返回一个Lambda表达式。当需要通过一 个方法来获取一个 <code>java.util.Comparator</code> 接口类型的对象作为排序器时, 就可以调该方法获取</p>
+<pre><code class="java">private static Comparable&lt;String&gt; newComparator()&#123;
+    return(a,b) -&gt; b.length() - a.length();
+    // 其中直接return一个Lambda表达式即可
+&#125;
+
+public static void main(String[] args) &#123;
+    String[] array = &#123;&quot;abc&quot;,&quot;ab&quot;,&quot;abcd&quot;&#125;;
+    System.out.println(Arrays.toString(array));
+    Arrays.sort(array,newComparator());
+    System.out.println(Arrays.toString(array));
+&#125;
+</code></pre>
+<h2 id="常用函数式接口"><a href="#常用函数式接口" class="headerlink" title="常用函数式接口"></a>常用函数式接口</h2><h4 id="Supplier接口"><a href="#Supplier接口" class="headerlink" title="Supplier接口"></a>Supplier接口</h4><p><code>java.util.function.Supplier&lt;T&gt;</code>接口仅包含一个无参的方法：<code>T get()</code> 用来获取一个泛型参数指定类型的对象数据。由于这是一个函数式接口，也就意味着对应Lambda表达式需要”<strong>对外提供</strong>“一个符合泛型类型的对象数据</p>
+<pre><code class="java">public class Demo08Supplier &#123;
+    private static String getString(Supplier&lt;String&gt; function) &#123;
+    return function.get();
+&#125;
+public static void main(String[] args) &#123;
+    String msgA = &quot;Hello&quot;;
+    String msgB = &quot;World&quot;;
+    System.out.println(getString(() ‐&gt; msgA + msgB));
+    &#125;
+&#125;
+</code></pre>
+<h4 id="求数组元素最大值"><a href="#求数组元素最大值" class="headerlink" title="求数组元素最大值"></a>求数组元素最大值</h4><h5 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h5><p>使用 <code>Supplier</code> 接口作为方法参数类型，通过<code>Lambda</code>表达式求出int数组中的最大值。<br>提示：接口的泛型请使用 <code>java.lang.Integer</code> 类。</p>
+<h5 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h5><pre><code class="java">public class Demo02Test &#123;
+//定一个方法,方法的参数传递Supplier,泛型使用Integer
+    public static int getMax(Supplier&lt;Integer&gt; sup)&#123;
+    return sup.get();
+&#125;
+public static void main(String[] args) &#123;
+    int arr[] = &#123;2,3,4,52,333,23&#125;;
+    //调用getMax方法,参数传递Lambda
+    int maxNum = getMax(()‐&gt;&#123;
+    //计算数组的最大值
+    int max = arr[0];
+    for(int i : arr)&#123;
+        if(i&gt;max)&#123;
+     max = i;
+     &#125;
+    &#125;
+     return max;
+   &#125;);
+    System.out.println(maxNum);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="Consumer接口"><a href="#Consumer接口" class="headerlink" title="Consumer接口"></a>Consumer接口</h4><p><code>java.util.function.Consumer</code> 接口则正好与Supplier接口相反，它不是生产一个数据，而是<strong>消费</strong>一个数据， 其数据类型由泛型决定。</p>
+<h5 id="抽象方法：accept"><a href="#抽象方法：accept" class="headerlink" title="抽象方法：accept"></a>抽象方法：accept</h5><p><code>Consumer</code>接口中包含抽象方法<code>void accept(T t)</code>, 意为消费一个指定泛型的数据</p>
+<pre><code class="java">private static void consumeString(Consumer&lt;String&gt; function)&#123;
+    function.accept(&quot;Hello!&quot;);
+&#125;
+public static void main(String[] args) &#123;
+    consumeString(s -&gt; System.out.println(s));
+&#125;
+</code></pre>
+<h5 id="默认方法：andThen"><a href="#默认方法：andThen" class="headerlink" title="默认方法：andThen"></a>默认方法：andThen</h5><p>如果一个方法的参数和返回值全都是 <code>Consumer</code> 类型，那么就可以实现效果：消费数据的时候，首先做一个操作， 然后再做一个操作，实现组合。而这个方法就是 <code>Consumer</code> 接口中的default方法 <code>andThen</code> 。下面是JDK的源代码：</p>
+<pre><code class="java">default Consumer&lt;T&gt; andThen(Consumer&lt;? super T&gt; after) &#123;
+    Objects.requireNonNull(after);
+    return (T t) ‐&gt; &#123; accept(t); after.accept(t); &#125;;
+&#125;
+</code></pre>
+<p>要想实现组合，需要两个或多个Lambda表达式即可，而 <code>andThen</code> 的语义正是“一步接一步”操作。例如两个步骤组合的情况：</p>
+<pre><code class="java">private static void consumeString(Consumer&lt;String&gt; one, Consumer&lt;String&gt;two)&#123;
+        one.andThen(two).accept(&quot;hello&quot;);
+&#125;
+
+    public static void main(String[] args) &#123;
+        consumeString(
+                s-&gt; System.out.println(s.toUpperCase()),
+                s -&gt; System.out.println(s.toLowerCase())
+    );
+&#125;
+// 运行结果将会首先打印完全大写的HELLO，然后打印完全小写的hello。当然，通过链式写法可以实现更多步骤的组合。
+</code></pre>
+<h4 id="格式化打印信息"><a href="#格式化打印信息" class="headerlink" title="格式化打印信息"></a>格式化打印信息</h4><h6 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h6><p> 下面的字符串数组当中存有多条信息，请按照格式“ <code>姓名：XX。性别：XX。</code>”的格式将信息打印出来。要求将打印姓 名的动作作为第一个 <code>Consumer</code> 接口的Lambda实例，将打印性别的动作作为第二个 <code>Consumer</code>接口的Lambda实 例，将两个 <code>Consumer</code> 接口按照顺序“拼接”到一起。</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+    String[] array = &#123; &quot;迪丽热巴,女&quot;, &quot;古力娜扎,女&quot;, &quot;马尔扎哈,男&quot; &#125;;
+&#125;
+</code></pre>
+<h6 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h6><pre><code class="java">import java.util.function.Consumer;
+public class test &#123;
+    private static void printInfo(Consumer&lt;String&gt;one, Consumer&lt;String&gt;two, String[] array)&#123;
+        for (String info : array)&#123;
+        one.andThen(two).accept(info);
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        String[] array = &#123;&quot;迪丽热巴,女&quot;, &quot;古力娜扎,女&quot;, &quot;马尔扎哈,男&quot;&#125;;
+        printInfo(s-&gt; System.out.print(&quot;姓名:&quot;+s.split(&quot;,&quot;)[0]),
+                  s-&gt; System.out.println(&quot;。性别：&quot;+s.split(&quot;,&quot;)[1]+&quot;。&quot;),
+                  array
+                  );
     &#125;
 &#125;
 </code></pre>
