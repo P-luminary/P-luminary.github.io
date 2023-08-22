@@ -2959,6 +2959,13 @@ public class test &#123;
                 .forEach(System.out::println);
 &#125;
 </code></pre>
+<h4 id="Stream流式思想改造"><a href="#Stream流式思想改造" class="headerlink" title="Stream流式思想改造"></a>Stream流式思想改造</h4><pre><code class="java"> public static void main(String[] args) &#123;
+        Stream&lt;String&gt;original = Stream.of(&quot;迪丽热巴,女&quot;, &quot;古力娜扎,女&quot;, &quot;马尔扎哈,男&quot;, &quot;赵丽颖,女&quot; );
+        Stream&lt;String&gt;result1 = original.filter(s -&gt; s.split(&quot;,&quot;)[1].startsWith(&quot;女&quot;));
+        Stream&lt;String&gt;result2 = result1.filter(s -&gt; s.split(&quot;,&quot;)[0].length()==3);
+        result2.forEach(System.out::println);
+    &#125;
+</code></pre>
 <h4 id="Function接口"><a href="#Function接口" class="headerlink" title="Function接口"></a>Function接口</h4><p><code>java.util.function.Function&lt;T,R&gt;</code>接口用来根据一个类型的数据得到另一个类型的数据，前者称为前置条件，后者成为后置条件。</p>
 <h4 id="抽象方法：apply"><a href="#抽象方法：apply" class="headerlink" title="抽象方法：apply"></a>抽象方法：apply</h4><p><code>apply Function</code> 接口中最主要的抽象方法为：<code>R apply(T t)</code> ，根据类型T的参数获取类型R的结果。 使用的场景例如：将 <code>String</code> 类型转换为 <code>Integer</code> 类型。</p>
 <pre><code class="java">private static void method(Function&lt;String,Integer&gt; function)&#123;
@@ -3077,7 +3084,7 @@ public static void main(String[] args) &#123;
     &#125;
 &#125;
 </code></pre>
-<h5 id="根据数组获取流"><a href="#根据数组获取流" class="headerlink" title="根据数组获取流"></a>根据数组获取流</h5><p>如果使用的不是集合或映射而是数组，由于数组对象不可能添加默认方法，所以 <strong>Stream</strong> 接口中提供了静态方法 <strong>of</strong> ，使用很简单：</p>
+<h3 id="根据数组获取流"><a href="#根据数组获取流" class="headerlink" title="根据数组获取流"></a>根据数组获取流</h3><p>如果使用的不是集合或映射而是数组，由于数组对象不可能添加默认方法，所以 <strong>Stream</strong> 接口中提供了静态方法 <strong>of</strong> ，使用很简单：</p>
 <pre><code class="java">public static void main(String[] args) &#123;
      String[] array = &#123; &quot;张无忌&quot;, &quot;张翠山&quot;, &quot;张三丰&quot;, &quot;张一元&quot; &#125;;
      Stream&lt;String&gt; stream = Stream.of(array);
@@ -3114,11 +3121,345 @@ import java.util.stream.Stream;
 <h4 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h4><p>Stream流中的 filter 方法基本使用的代码如：</p>
 <pre><code class="java">public class Demo07StreamFilter &#123;
     public static void main(String[] args) &#123;
-    Stream&lt;String&gt; original = Stream.of(&quot;张无忌&quot;, &quot;张三丰&quot;, &quot;周芷若&quot;);
-Stream&lt;String&gt; result = original.filter(s ‐&gt; s.startsWith(&quot;张&quot;));
-&#125;
+        Stream&lt;String&gt; original = Stream.of(&quot;张无忌&quot;, &quot;张三丰&quot;, &quot;周芷若&quot;);
+        Stream&lt;String&gt; result = original.filter(s ‐&gt; s.startsWith(&quot;张&quot;));
+    &#125;
 &#125;
 </code></pre>
+<h3 id="映射：map"><a href="#映射：map" class="headerlink" title="映射：map"></a>映射：map</h3><p>如果需要将流中的元素映射到另一个流中，可以使用<code>map</code>方法</p>
+<pre><code class="java">&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);
+</code></pre>
+<p>该接口需要一个 <strong>Function</strong> 函数式接口参数，可以将当前流中的T类型数据转换为另一种R类型的流。</p>
+<h3 id="复习Function接口"><a href="#复习Function接口" class="headerlink" title="复习Function接口"></a>复习Function接口</h3><p>此前我们已经学习过 <code>java.util.stream.Function</code> 函数式接口，其中唯一的抽象方法为：</p>
+<pre><code class="java">R apply(T t);
+</code></pre>
+<p>这可以将一种T类型转换成R类型，这种转换的动作，叫做<strong>映射</strong></p>
+<h4 id="基本使用-1"><a href="#基本使用-1" class="headerlink" title="基本使用"></a>基本使用</h4><p>Stream流中的 <code>map</code> 方法基本使用的代码如：</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+    Stream&lt;String&gt; original = Stream.of(&quot;10&quot;,&quot;22&quot;,&quot;452&quot;);
+    Stream&lt;Integer&gt; result = original.map(str -&gt; Integer.parseInt(str));
+    result.forEach(System.out::println);
+&#125;
+</code></pre>
+<p>这段代码中,<code>map</code> 方法的参数通过方法引用，将字符串类型转换成为了int类型（并自动装箱为 Integer 类对 象）。</p>
+<h3 id="统计个数"><a href="#统计个数" class="headerlink" title="统计个数"></a>统计个数</h3><p>正如旧集合 <code> Collection</code>  当中的 <code> size</code>  方法一样，流提供 <code> count</code>  方法来数一数其中的元素个数：</p>
+<pre><code class="java">long count();
+</code></pre>
+<p>该方法返回一个long值代表元素个数</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+    Stream&lt;String&gt; original = Stream.of(&quot;张无忌&quot;, &quot;张三丰&quot;, &quot;周芷若&quot;);
+    Stream&lt;String&gt; result = original.filter(s ‐&gt; s.startsWith(&quot;张&quot;));
+    System.out.println(result.count()); // 2
+&#125;
+</code></pre>
+<h3 id="取用前几个：limit"><a href="#取用前几个：limit" class="headerlink" title="取用前几个：limit"></a>取用前几个：limit</h3><p><code>limit</code> 方法可以对流进行截取，只取用前n个。方法签名</p>
+<pre><code class="java">Stream&lt;T&gt; limit(long maxSize);
+</code></pre>
+<p>参数是一个long型，如果集合当前长度大于参数则进行截取；否则不进行操作。基本使用:</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+    Stream&lt;String&gt; original = Stream.of(&quot;张无忌&quot;, &quot;张三丰&quot;, &quot;周芷若&quot;);
+    Stream&lt;String&gt; result = original.limit(2);
+    result.forEach(System.out::println); // 张无忌 张三丰
+    System.out.println(result.count()); // 2
+    &#125;
+&#125;
+</code></pre>
+<h3 id="跳过前几个：skip"><a href="#跳过前几个：skip" class="headerlink" title="跳过前几个：skip"></a>跳过前几个：skip</h3><p>如果希望跳过前几个元素，可以使用 <code>skip</code> 方法获取一个截取之后的新流：<br>如果流的当前长度大于n，则跳过前n个；否则将会得到一个长度为0的空流。基本使用：</p>
+<pre><code class="java">public class Demo11StreamSkip &#123;
+    public static void main(String[] args) &#123;
+         Stream&lt;String&gt; original = Stream.of(&quot;张无忌&quot;, &quot;张三丰&quot;, &quot;周芷若&quot;);
+         Stream&lt;String&gt; result = original.skip(2);
+         result.forEach(System.out::println); // 周芷若
+&#125;
+</code></pre>
+<h3 id="组合：concat"><a href="#组合：concat" class="headerlink" title="组合：concat"></a>组合：concat</h3><p>如果有两个流，希望合并成为一个流，那么可以使用 <code>Stream</code> 接口的静态方法 <code>concat</code> ：</p>
+<pre><code class="java">static &lt;T&gt; Stream&lt;T&gt; concat(Stream&lt;? extends T&gt; a, Stream&lt;? extends T&gt; b)
+// 这是一个静态方法，与 java.lang.String 当中的 concat 方法是不同的。
+</code></pre>
+<pre><code class="java">public static void main(String[] args) &#123;
+    Stream&lt;String&gt; streamA = Stream.of(&quot;张无忌&quot;);
+    Stream&lt;String&gt; streamB = Stream.of(&quot;张翠山&quot;);
+    Stream&lt;String&gt; result = Stream.concat(streamA, streamB);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="集合元素处理-Stream方式）"><a href="#集合元素处理-Stream方式）" class="headerlink" title="集合元素处理(Stream方式）"></a>集合元素处理(Stream方式）</h3><h5 id="题目-Stream流式处理方式"><a href="#题目-Stream流式处理方式" class="headerlink" title="题目(Stream流式处理方式)"></a>题目(Stream流式处理方式)</h5><blockquote>
+<p>第一个队伍只要名字为3个字的成员姓名；第一个队伍筛选之后只要前3个人；<br>第二个队伍只要姓张的成员姓名；第二个队伍筛选之后不要前2个人<br>将两个队伍合并为一个队伍；根据姓名创建Person对象；打印整个队伍的Person对象信息。</p>
+</blockquote>
+<pre><code class="java">public class Person &#123;
+    private String name;
+
+    public Person() &#123;
+    &#125;
+
+    public Person(String name) &#123;
+        this.name = name;
+    &#125;
+
+    public String getName() &#123;
+        return name;
+    &#125;
+
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Person&#123;&quot; +
+                &quot;name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &#39;&#125;&#39;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+public class test &#123;
+    public static void main(String[] args) &#123;
+        List&lt;String&gt; one = new ArrayList&lt;&gt;();
+        one.add(&quot;迪丽热巴&quot;);
+        one.add(&quot;宋远桥&quot;);
+        one.add(&quot;苏星河&quot;);
+        one.add(&quot;石破天&quot;);
+        one.add(&quot;石中玉&quot;);
+        one.add(&quot;老子&quot;);
+        one.add(&quot;庄子&quot;);
+        one.add(&quot;洪七公&quot;);
+
+        List&lt;String&gt; two = new ArrayList&lt;&gt;();
+        two.add(&quot;古力娜扎&quot;);
+        two.add(&quot;张无忌&quot;);
+        two.add(&quot;赵丽颖&quot;);
+        two.add(&quot;张三丰&quot;);
+        two.add(&quot;尼古拉斯赵四&quot;);
+        two.add(&quot;张天爱&quot;);
+        two.add(&quot;张二狗&quot;);
+
+        // 第一个队伍只要名字为3个字的成员姓名；第一个队伍筛选之后只要前3个人；
+        Stream&lt;String&gt; streamOne = one.stream().filter(s -&gt; s.length() == 3).limit(3);
+        // 第二个队伍只要姓张的成员姓名；第二个队伍筛选之后不要前2个人；
+        Stream&lt;String&gt; streamTwo = two.stream().filter(s -&gt; s.startsWith(&quot;张&quot;)).skip(2);
+        // 将两个队伍合并为一个队伍；根据姓名创建Person对象；打印整个队伍的Person对象信息。
+        Stream.concat(streamOne, streamTwo).map(Person::new).forEach(System.out::println);
+
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Lambda方法引用"><a href="#Lambda方法引用" class="headerlink" title="Lambda方法引用"></a>Lambda方法引用</h3><p>请注意其中的<strong>双冒号 ::</strong> 写法，这被称为“<strong>方法引用</strong>”，而双冒号是一种新的语法。</p>
+<pre><code class="java">简单的函数式接口以应用Lambda表达式:
+@FunctionalInterface
+public interface Printable &#123;
+    void print(String str);
+&#125;
+</code></pre>
+<pre><code class="java">private static void printString(Printable data)&#123;
+    data.print(&quot;Hello, World!&quot;);
+&#125;
+public static void main(String[] args)&#123;
+    printString(System.out::println);
+&#125;
+</code></pre>
+<h3 id="方法引用符"><a href="#方法引用符" class="headerlink" title="方法引用符"></a>方法引用符</h3><p>双冒号 <code>::</code> 为引用运算符，而它所在的表达式被称为<strong>方法引用</strong>。如果Lambda要表达的函数方案已经存在于某个方 法的实现中，那么则可以通过双冒号来引用该方法作为Lambda的替代者。</p>
+<p>例如上例中， <code>System.out</code> 对象中有一个重载的 println(String) 方法恰好就是我们所需要的。那么对于 printString 方法的函数式接口参数，对比下面两种写法，完全等效：</p>
+<ul>
+<li>Lambda表达式写法：<code>s -&gt; System.out.println(s);</code></li>
+<li>方法引用写法：<code>System.out::println</code></li>
+</ul>
+<p>第一种语义是指：拿到参数之后经Lambda之手，继而传递给 <code>System.out.println</code> 方法去处理。<br>第二种等效写法的语义是指：直接让 <code>System.out</code> 中的 <code>println</code> 方法来取代Lambda。两种写法的执行效果完全一 样，而第二种方法引用的写法复用了已有方案，更加简洁。</p>
+<p>注：Lambda 中 传递的参数 一定是方法引用中 的那个方法可以接收的类型,否则会抛出异常</p>
+<h3 id="推导与省略"><a href="#推导与省略" class="headerlink" title="推导与省略"></a>推导与省略</h3><p>如果使用Lambda，那么根据“<strong>可推导就是可省略</strong>”的原则，无需指定参数类型，也无需指定的重载形式——它们都 将被自动推导。而如果使用方法引用，也是同样可以根据上下文进行推导。<br>函数式接口是Lambda的基础，而方法引用是Lambda的孪生兄弟。 下面这段代码将会调用 <code>println</code> 方法的不同重载形式，将函数式接口改为int类型的参数：</p>
+<pre><code class="java">@FunctionalInterface
+public interface PrintableInteger &#123;
+    void print(int str);
+&#125;
+-------------------------------------------------------------
+public class Demo03PrintOverload &#123;
+    private static void printInteger(PrintableInteger data) &#123;
+        data.print(1024);
+&#125;
+public static void main(String[] args) &#123;
+    printInteger(System.out::println);
+&#125;
+    // 这次方法引用将会自动匹配到 println(int) 的重载形式。
+</code></pre>
+<h4 id="通过类名称引用静态方法"><a href="#通过类名称引用静态方法" class="headerlink" title="通过类名称引用静态方法"></a>通过类名称引用静态方法</h4><p>由于在 <code>java.lang.Math</code> 类中已经存在了静态方法 <code>abs</code> ，所以当我们需要通过Lambda来调用该方法时，有两种写法。首先是函数式接口：</p>
+<pre><code class="java">@FuctionalInterface
+public interface Calcable &#123;
+    double calc(int num);
+&#125;
+</code></pre>
+<pre><code class="java">private static void method(int num, Calcable lambda)&#123;
+     System.out.println(lambda.calc(num));
+&#125;
+
+public static void main(String[] args) &#123;
+     method(10, Math::sqrt);
+    // method(‐10, n ‐&gt; Math.abs(n)); 舍弃
+&#125;
+</code></pre>
+<p>在这个例子中，下面两种写法是等效的：</p>
+<ul>
+<li>Lambda表达式:  <code>n -&gt; Math.abs(n)</code></li>
+<li>方法引用: <code>Math::abs</code></li>
+</ul>
+<h4 id="通过super引用成员方法"><a href="#通过super引用成员方法" class="headerlink" title="通过super引用成员方法"></a>通过super引用成员方法</h4><p>如果存在继承关系，当Lambda中需要出现super调用时，也可以使用方法引用进行替代。首先是函数式接口：</p>
+<pre><code class="java">public interface Greetable &#123;
+    void greet();
+&#125;
+</code></pre>
+<p>然后是父类<code>Human</code>内容</p>
+<pre><code class="java">public class Human &#123;
+    public void sayHello()&#123;
+        System.out.println(&quot;Hello&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>最后是子类<code>Man</code>的内容，其中使用了Lambda写法</p>
+<pre><code class="java">public class Man extends Human &#123;
+    @Override
+    public void sayHello() &#123;
+        System.out.println(&quot;大家好，我是Man!&quot;);
+    &#125;
+    //定义方法method，参数传递Greetable接口
+    public void method(Greetable g)&#123;
+        g.greet();
+    &#125;
+
+    public void show()&#123;
+        method(super::sayHello);
+    &#125;
+</code></pre>
+<p>在这个例子中，下面两种写法是等效的：</p>
+<ul>
+<li><p>Lambda表达式： <code>() -&gt; super.sayHello()</code></p>
+</li>
+<li><p>方法引用： <code>super::sayHello</code></p>
+</li>
+</ul>
+<h4 id="通过this引用成员方法"><a href="#通过this引用成员方法" class="headerlink" title="通过this引用成员方法"></a>通过this引用成员方法</h4><p>this代表当前对象，如果需要引用的方法就是当前类中的成员方法，那么可以使用**<code>“this::成员方法”</code>**的格式来使用方 法引用。首先是简单的函数式接口：</p>
+<pre><code class="java">@FunctionalInterface
+public interface Richable &#123;
+    void buy();
+&#125;
+</code></pre>
+<p>下面是一个丈夫 <code>Husband</code> 类：</p>
+<pre><code class="java">public class Husband &#123;
+    private void marry(Richable lambda) &#123;
+        lambda.buy();
+    &#125;
+    public void beHappy() &#123;
+        marry(() ‐&gt; System.out.println(&quot;买套房子&quot;));
+    &#125;
+&#125;
+</code></pre>
+<p>开心方法 <code>beHappy</code> 调用了结婚方法 <code>marry</code> ，后者的参数为函数式接口 <code>Richable</code> ，所以需要一个Lambda表达式。 但是如果这个Lambda表达式的内容已经在本类当中存在了，则可以对<code>Husband</code>丈夫类进行修改：</p>
+<pre><code class="java">public class Husband &#123;
+    private void buyHouse() &#123;
+        System.out.println(&quot;买套房子&quot;);
+    &#125;
+private void marry(Richable lambda) &#123;
+        lambda.buy();
+    &#125;
+public void beHappy() &#123;
+        marry(() ‐&gt; this.buyHouse());
+    &#125;
+&#125;
+</code></pre>
+<p>如果希望取消掉Lambda表达式，用方法引用进行替换，则更好的写法为：</p>
+<pre><code class="java">public class Husband &#123;
+    private void buyHouse() &#123;
+        System.out.println(&quot;买套房子&quot;);
+    &#125;
+private void marry(Richable lambda) &#123;
+        lambda.buy();
+    &#125;
+public void beHappy() &#123;
+        marry(this::buyHouse);
+    &#125;
+&#125;
+</code></pre>
+<p>在这个例子中，下面两种写法是等效的：</p>
+<ul>
+<li>Lambda表达式： <code>() -&gt; this.buyHouse()</code> </li>
+<li>方法引用： <code>this::buyHouse</code></li>
+</ul>
+<h4 id="类的构造器引用"><a href="#类的构造器引用" class="headerlink" title="类的构造器引用"></a>类的构造器引用</h4><p>由于构造器的名称与类名完全一样，并不固定。所以构造器引用使用 <code>类名称::new</code> 的格式表示。首先是一个简单 的<code>Person</code>类：</p>
+<pre><code class="java">public class Person &#123;
+    private String name;
+    public Person(String name) &#123;
+        this.name = name;
+    &#125;
+    public String getName() &#123;
+        return name;
+    &#125;
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+&#125;
+</code></pre>
+<p>然后是用来创建 <code>Person</code> 对象的函数式接口：</p>
+<pre><code class="java">public interface PersonBuilder &#123;
+    Person buildPerson(String name);
+&#125;
+</code></pre>
+<p>要使用这个函数式接口，可以通过Lambda表达式：</p>
+<pre><code class="java">public class Demo09Lambda &#123;
+    public static void printName(String name, PersonBuilder builder) &#123;
+        System.out.println(builder.buildPerson(name).getName());
+    &#125;
+    public static void main(String[] args) &#123;
+        printName(&quot;赵丽颖&quot;, name ‐&gt; new Person(name));
+    &#125;
+&#125;
+</code></pre>
+<p><strong>但是通过构造器引用，有更好的写法：</strong></p>
+<pre><code class="java">public class Demo10ConstructorRef &#123;
+    public static void printName(String name, PersonBuilder builder) &#123;
+           System.out.println(builder.buildPerson(name).getName());
+    &#125;
+    public static void main(String[] args) &#123;
+        printName(&quot;赵丽颖&quot;, Person::new);
+    &#125;
+&#125;
+</code></pre>
+<p>在这个例子中，下面两种写法是等效的： </p>
+<ul>
+<li>Lambda表达式： <code>name -&gt; new Person(name) </code></li>
+<li>方法引用： <code>Person::new</code></li>
+</ul>
+<h4 id="数组的构造器引用"><a href="#数组的构造器引用" class="headerlink" title="数组的构造器引用"></a>数组的构造器引用</h4><p>数组也是 <code>Object</code> 的子类对象，所以同样具有构造器，只是语法稍有不同。如果对应到Lambda的使用场景中时， 需要一个函数式接口：</p>
+<pre><code class="java">@FunctionalInterface
+public interface ArrayBuilder &#123;
+    int[] buildArray(int length);
+&#125;
+</code></pre>
+<p>在应用该接口的时候，可以通过Lambda表达式：</p>
+<pre><code class="java">public class Demo11ArrayInitRef &#123;
+    private static int[] initArray(int length, ArrayBuilder builder) &#123;
+        return builder.buildArray(length);
+    &#125;
+    public static void main(String[] args) &#123;
+        int[] array = initArray(10, length ‐&gt; new int[length]);
+    &#125;
+&#125;
+</code></pre>
+<p>但是更好的写法是使用数组的构造器引用：</p>
+<pre><code class="java">public class Demo12ArrayInitRef &#123;
+    private static int[] initArray(int length, ArrayBuilder builder) &#123;
+        return builder.buildArray(length);
+    &#125;
+    public static void main(String[] args) &#123;
+        int[] array = initArray(10, int[]::new);
+    &#125;
+&#125;
+</code></pre>
+<p>在这个例子中，下面两种写法是等效的： </p>
+<ul>
+<li>Lambda表达式： <code>length -&gt; new int[length] </code></li>
+<li>方法引用： <code>int[]::new</code></li>
+</ul>
 
             
         </div>
@@ -3133,7 +3474,7 @@ Stream&lt;String&gt; result = original.filter(s ‐&gt; s.startsWith(&quot;张&q
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -5570,7 +5911,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#1bccbc>
                 软考
             </a>
         </span>
@@ -6490,7 +6831,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -6861,7 +7202,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -7179,7 +7520,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ff7d73>
+            <a href="/tags/计算机" style=color:#1bccbc>
                 计算机
             </a>
         </span>
@@ -7383,7 +7724,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -7636,7 +7977,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
