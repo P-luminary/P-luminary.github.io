@@ -1024,6 +1024,318 @@ public class Test &#123;
 <blockquote>
 <p><strong>static代码块</strong>也叫静态代码块，是在类中独立于类成员的static语句块，可以有多个，位置可以随便放，它不在任何的方法体内，JVM加载类时会执行这些静态的代码块，如果static代码块有多个，JVM将按照它们在类中出现的先后顺序依次执行它们，<u>每个代码块只会被执行一次</u>。[ <em><u>在此代码内适用于login方法中的list.size()</u></em> ]<br>static代码块只在类加载时执行，类是用类加载器来读取的，类加载器是带有一个缓存区的，<br>它会把读取到的类缓存起来，所以在一次虚拟机运行期间，一个类只会被加载一次，这样的话静态代码块只会运行一次</p>
 </blockquote>
+<h1 id="Object类-amp-Date类-amp-Calender-日期-类-amp-StringBuilder类"><a href="#Object类-amp-Date类-amp-Calender-日期-类-amp-StringBuilder类" class="headerlink" title="Object类&amp;Date类&amp;Calender(日期)类&amp;StringBuilder类"></a>Object类&amp;Date类&amp;Calender(日期)类&amp;StringBuilder类</h1><h3 id="练习：简述String和Object中的equals"><a href="#练习：简述String和Object中的equals" class="headerlink" title="练习：简述String和Object中的equals"></a>练习：简述String和Object中的equals</h3><p>简述String类中的equals方法 与 Object类中的equals方法的不同点</p>
+<blockquote>
+<p><strong>String类</strong>中的equals方法是用来<u>判断两个<strong>对象的内容</strong>是否相同</u>，而<strong>Object 类</strong>中的equals方法是用来<u>判断两个<strong>对象</strong>是否是同一个对象</u>，所谓同一个对象指的是内存中的同一块存储空间。</p>
+</blockquote>
+<h3 id="练习：Object类的toString方法"><a href="#练习：Object类的toString方法" class="headerlink" title="练习：Object类的toString方法"></a>练习：Object类的toString方法</h3><pre><code class="java">    public class ToStringTest&#123;
+        static int i = 1;
+        public static void main(String args[])&#123;
+            System.out.println(&quot;love &quot; + new ToStringTest());//love java
+            ToStringTest a = new ToStringTest();
+            a.i++;
+            System.out.println(&quot;me &quot; + a.i);//me 2
+        &#125;
+        public String toString()&#123;
+            System.out.print(&quot;I &quot;);//I
+            return &quot;java &quot;;
+        &#125;
+    &#125;
+</code></pre>
+<p>运行结果：I love java    me 2<br>原因：当执行代码的时候，首先加载静态变量，然后执行main方法，由于main方法内部第一行代码为输出语句，里面new了此类对象，当执行此行代码时会先创建了本类的对象，由于此类重写了toString方法，会先执行toString方法的打印输出，然后返回“java ”，再执行main方法第一行打印输出。在Java中“System.out.println(类对象名);”实际输出的是该对象的toString()方法返回的字符串，即括号中的内容等价于类对象名.toString(),toString方法的好处是在碰到println方法的时候会被自动调用，不用显示的写出来。</p>
+<h3 id="练习：Object类equals方法"><a href="#练习：Object类equals方法" class="headerlink" title="练习：Object类equals方法"></a>练习：Object类equals方法</h3><p>看下列程序，不运行说结果，写出答案后，并在IntelliJ IDEA中运行看看自己给的答案与运行结果是否正确，并分析原因。</p>
+<pre><code class="java">    (1)
+        String s1 = new String(&quot;abc&quot;);
+        String s2 = &quot;abc&quot;;
+        System.out.println(s1 == s2);         //false
+        System.out.println(s1.equals(s2));  //true
+    (2)
+        String s1 = &quot;abc&quot;;
+              String s2 = &quot;abc&quot;;
+        System.out.println(s1 == s2);         //true
+        System.out.println(s1.equals(s2));     //true
+    (3)
+        String s1 = &quot;a&quot; + &quot;b&quot; + &quot;c&quot;;
+              String s2 = &quot;abc&quot;;
+        System.out.println(s1 == s2);        //true
+        System.out.println(s1.equals(s2));     //true
+    (4)
+        String s1 = &quot;ab&quot;;
+             String s2 = &quot;abc&quot;;
+             String s3 = s1 + &quot;c&quot;;
+        System.out.println(s3 == s2);             //false
+              System.out.println(s3.equals(s2));  //true
+</code></pre>
+<h3 id="练习：StringBuilder类与String类的区别"><a href="#练习：StringBuilder类与String类的区别" class="headerlink" title="练习：StringBuilder类与String类的区别"></a>练习：StringBuilder类与String类的区别</h3><p>简述StringBuilder类与String类的区别</p>
+<blockquote>
+<p><strong>String类</strong>的对象内容不可改变，所以每当进行字符串拼接时，<strong>总是会在内存中创建一个新的对象</strong>，所以经常改变内容的字符串最好不要用String，因为<strong>每次生成对象都会对系统性能产生影响</strong>。</p>
+<p><strong>StringBuilder</strong>又称为可变字符序列，是JDK5.0中新增加的一个类，它是一个类似于String的字符串缓冲区，通过某些方法调用可以改变该序列的长度和内容。即它是一个容器，容器中可以装很多字符串，并且能够对其中的字符串进行各种操作。<strong>它的内部拥有一个数组用来存放字符串内容</strong>，进行字符串拼接时，直接在数组中加入新内容，<strong>StringBuilder会自动维护数组的扩容</strong>。</p>
+</blockquote>
+<h3 id="练习：Date类的使用"><a href="#练习：Date类的使用" class="headerlink" title="练习：Date类的使用"></a>练习：Date类的使用</h3><p>获取当前的日期, 并把这个日期转换为指定格式的字符串, 如2088-08-08 08:08:08</p>
+<pre><code class="java">    public static void main(String[] args) &#123;
+        //获取当前日期对象 now;
+        Date now = new Date();
+        //创建SimpleDateFormat对象 df,并制定日期格式
+        SimpleDateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+        //调用df的format(Date  date) 方法,传入now; 接收返回的字符串
+        String datestr = df.format(now);
+        //打印这个字符串
+        System.out.println(datestr);
+    &#125;
+</code></pre>
+<h3 id="练习：DateFormat类方法的使用"><a href="#练习：DateFormat类方法的使用" class="headerlink" title="练习：DateFormat类方法的使用"></a>练习：DateFormat类方法的使用</h3><p>使用SimpleDateFormat类,把2018-03-04转换为2018年03月04日</p>
+<pre><code class="java">    public static void main(String[] args) throws ParseException &#123;
+        //创建SimpleDateFormat对象df1,指定日期模式为yyyy-MM-dd
+        SimpleDateFormat df1 = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        //调用df1的parse(String str)方法传入2018-03-04,得到对应日期类型
+        Date date = df1.parse(&quot;2018-03-04&quot;);
+        //创建日期格式化对象df2,在获取格式化对象时可以指定风格
+        DateFormat df2 = new SimpleDateFormat(&quot;yyyy年MM月dd日&quot;);
+        //调用df2的format(Date date) 传入刚才转换的日期
+        String str = df2.format(date);
+        System.out.println(str);
+    &#125;
+</code></pre>
+<blockquote>
+<p>public Date parse(String text, ParsePosition pos)<br>从字符串中解析文本，产生一个<code>Date</code> 。</p>
+</blockquote>
+<h3 id="练习：Calendar类方法的使用"><a href="#练习：Calendar类方法的使用" class="headerlink" title="练习：Calendar类方法的使用"></a>练习：Calendar类方法的使用</h3><p>用程序判断2018年2月14日是星期几。</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+        //创建Calendar对象
+        Calendar c = Calendar.getInstance();
+        //将给定的日历字段设置到Calendar对象中
+        c.set(Calendar.YEAR, 2018);
+        c.set(Calendar.MONTH, 1);
+        c.set(Calendar.DATE, 14);
+        //设置年
+        int year = c.get(Calendar.YEAR);
+        //设置月
+        int month = c.get(Calendar.MONTH)+1;
+        //设置日
+        int date = c.get(Calendar.DATE);
+        //设置星期
+        char week = getWeek(c.get(Calendar.DAY_OF_WEEK));
+        //输出结果
+        System.out.println(year+&quot;年&quot;+month+&quot;月&quot;+date+&quot;日是星期&quot;+week);
+    &#125;
+    //定义方法，获取星期汉字
+    public static char getWeek(int a)&#123;
+        char[] c = &#123;&#39; &#39;,&#39;日&#39;,&#39;一&#39;,&#39;二&#39;,&#39;三&#39;,&#39;四&#39;,&#39;五&#39;,&#39;六&#39;&#125;;
+        return c[a];
+    &#125;
+&#125;
+</code></pre>
+<h1 id="Random类-amp-ArrayList集合习题"><a href="#Random类-amp-ArrayList集合习题" class="headerlink" title="Random类&amp;ArrayList集合习题"></a>Random类&amp;ArrayList集合习题</h1><h3 id="练习：随机验证码"><a href="#练习：随机验证码" class="headerlink" title="练习：随机验证码"></a>练习：随机验证码</h3><ul>
+<li>随机生成十组六位字符组成的验证码。</li>
+<li>验证码由大小写字母、数字字符组成。</li>
+</ul>
+<p><strong>开发提示</strong>：使用字符数组保存原始字符，利用Random类生成随机索引。</p>
+<pre><code class="java">    public static void main(String[] args) &#123;
+        for (int i = 0; i &lt; 10; i++) &#123;
+            String s = verifyCode();
+            System.out.println(&quot;随机验证码：&quot; + s);
+        &#125;
+    &#125;
+    public static String verifyCode()&#123;
+        char[] arr = &#123;&#39;0&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;, &#39;8&#39;, &#39;9&#39;, &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;, &#39;H&#39;, &#39;I&#39;, &#39;J&#39;, &#39;K&#39;, &#39;L&#39;, &#39;M&#39;, &#39;N&#39;, &#39;O&#39;, &#39;P&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;, &#39;T&#39;, &#39;U&#39;, &#39;V&#39;, &#39;W&#39;, &#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;, &#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, &#39;e&#39;, &#39;f&#39;, &#39;g&#39;, &#39;h&#39;, &#39;i&#39;, &#39;j&#39;, &#39;k&#39;, &#39;l&#39;, &#39;m&#39;, &#39;n&#39;, &#39;o&#39;, &#39;p&#39;, &#39;q&#39;, &#39;r&#39;, &#39;s&#39;, &#39;t&#39;, &#39;u&#39;, &#39;v&#39;, &#39;w&#39;, &#39;x&#39;, &#39;y&#39;, &#39;z&#39;&#125;;
+        Random random = new Random();
+        String code = &quot;&quot;;
+        for (int i = 0; i &lt; 6; i++) &#123;
+            int index = random.nextInt(arr.length);
+            code  += arr[index];
+        &#125;
+        return code;
+    &#125;
+</code></pre>
+<h3 id="练习：输入学生信息保存到集合"><a href="#练习：输入学生信息保存到集合" class="headerlink" title="练习：输入学生信息保存到集合"></a>练习：输入学生信息保存到集合</h3><p>键盘录入学生信息，保存到集合中。</p>
+<ul>
+<li>循环录入的方式，1：表示继续录入，0：表示结束录入。</li>
+<li>定义学生类，属性为姓名，年龄，使用学生对象保存录入数据。</li>
+<li>使用ArrayList集合，保存学生对象，录入结束后，遍历集合。</li>
+</ul>
+<pre><code class="java">public class Student &#123;
+    private String name;
+    private int age;
+     public void show()&#123;
+        System.out.println(&quot;姓名: &quot;+ name + &quot; &quot; + &quot;年龄: &quot; + age);
+    &#125;
+&#125;
+----------------------------------
+        public static void main(String[] args) &#123;
+            Scanner scanner = new Scanner(System.in);
+            ArrayList&lt;Student&gt; list = new ArrayList&lt;&gt;();
+            while (true) &#123;
+                System.out.println(&quot;1.录入信息 0.退出&quot;);
+                int i = scanner.nextInt();
+                switch (i) &#123;
+                    case 1:
+                        inputStu(list , scanner);
+                        break;
+                    case 0:
+                        System.out.println(&quot;录入完毕&quot;);
+                &#125;
+                if (i == 0)&#123;
+                    break;
+                &#125;
+            &#125;
+    
+            for (int i = 0; i &lt; list.size(); i++) &#123;
+                Student student = list.get(i);
+                student.show();
+            &#125;
+        &#125;
+    
+        private static void inputStu(ArrayList&lt;Student&gt; list , Scanner sc) &#123;
+            System.out.println(&quot;请输入姓名:&quot;);
+            String name = sc.next();
+            System.out.println(&quot;请输入年龄:&quot;);
+            int age = sc.nextInt();
+            Student student = new Student(name, age);
+            list.add(student);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="练习：随机数-次数打印"><a href="#练习：随机数-次数打印" class="headerlink" title="练习：随机数 次数打印"></a>练习：随机数 次数打印</h3><p>统计数字出现次数。</p>
+<ul>
+<li>定义getNumList方法，随机生成100个数字，数字范围从1到10。</li>
+<li>定义printCount方法，统计每个数字出现的次数并打印到控制台。</li>
+</ul>
+<pre><code class="java">    public class Test4 &#123;
+        public static void main(String[] args) &#123;
+            ArrayList&lt;Integer&gt; numList = getNumList();
+            //  统计字符数组中字母出现次数
+            printCount(numList);
+        &#125;
+        public static void printCount(ArrayList&lt;Integer&gt; list) &#123;
+            int[] count = new int[10];
+            // 对应保存数字出现的次数
+            for (int i = 0; i &lt; list.size(); i++) &#123;
+                int c = list.get(i);
+                count[c-1]++;
+            &#125;
+            // 打印数字和次数
+            for (int i = 0 ; i &lt; count.length; i++) &#123;
+                    System.out.println(&quot;数字:&quot;+(i+1) + &quot;--&quot; + count[i]+&quot;次&quot;);
+            &#125;
+        &#125;
+        public static ArrayList&lt;Integer&gt; getNumList() &#123;
+            ArrayList&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+            Random r = new Random();
+            for (int i = 0; i &lt; 100; i++) &#123;
+                int x = r.nextInt(10) + 1;
+                list.add(x);
+            &#125;
+            return list;
+        &#125;
+    &#125;    
+</code></pre>
+<h3 id="练习：需求实现"><a href="#练习：需求实现" class="headerlink" title="练习：需求实现"></a>练习：需求实现</h3><p>模拟统计班级考试分数分布情况，分别统计100-80，79-60，59-40，39-0各个阶段的人数。</p>
+<ul>
+<li>定义getScoreList方法，随机生成50个数字，数字范围从0到100。</li>
+<li>定义countScore方法，统计各个阶段的分数个数。</li>
+<li>定义printCount方法，打印各个阶段的统计结果。</li>
+</ul>
+<pre><code class="java">    public static void main(String[] args) &#123;
+        ArrayList&lt;Integer&gt; scoreList = getScoreList(); //获取随机分数
+        ArrayList&lt;Integer&gt; countList = countScore(scoreList); //定义计数的变量
+        printCount(countList);
+    &#125;
+    public static ArrayList&lt;Integer&gt; countScore(ArrayList&lt;Integer&gt; scoreList) &#123;
+        ArrayList&lt;Integer&gt; countList = new ArrayList&lt;&gt;();
+        int count100 = 0;
+        int count79 = 0;
+        int count59 = 0;
+        int count39 = 0;
+
+        for (int i = 0; i &lt; scoreList.size(); i++) &#123;
+            Integer score = scoreList.get(i);
+            if (score &lt;= 100 &amp;&amp; score &gt;= 80) &#123;
+                count100++;
+            &#125; else if (score &lt;= 79 &amp;&amp; score &gt;= 60) &#123;
+                count79++;
+            &#125; else if (score &lt;= 59 &amp;&amp; score &gt;= 40) &#123;
+                count59++;
+            &#125; else &#123;
+                count39++;
+            &#125;
+        &#125;
+
+        countList.add(count100);
+        countList.add(count79);
+        countList.add(count59);
+        countList.add(count39);
+
+        return countList;
+    &#125;
+
+    private static ArrayList&lt;Integer&gt; getScoreList()&#123;
+        ArrayList&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+        Random r = new Random();
+        for (int i = 0; i &lt; 50; i++) &#123;
+            int x = r.nextInt(100);
+            list.add(x);
+        &#125;
+        return list;
+    &#125;
+
+    private static void printCount(ArrayList&lt;Integer&gt; countList) &#123;
+        int start = 100;
+        int end = 80;
+        for (int i = 0; i &lt; countList.size(); i++) &#123;
+            Integer integer = countList.get(i);
+            System.out.println(start + &quot;\t分 --&quot; + end + &quot; \t分:&quot; + integer+&quot;人&quot;);
+            if (i == 0)&#123;
+                start-=21;
+                end -=20;
+            &#125;else if (i == countList.size()-2)&#123;
+                start-=20;
+                end-=40;
+            &#125;else &#123;
+                start -= 20;
+                end -= 20;
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="练习：添加移除展示元素"><a href="#练习：添加移除展示元素" class="headerlink" title="练习：添加移除展示元素"></a>练习：添加移除展示元素</h3><p>自定义MyList类，实现存取元素的功能。</p>
+<ul>
+<li>定义add方法，可以保存元素，添加MyList尾部。</li>
+<li>定义remove方法，可以获取到最后添加的元素，并从MyList中移除该元素。</li>
+<li>定义show方法，可以展示MyList中的元素。</li>
+</ul>
+<pre><code class="java">public static void main(String[] args) &#123;
+        MyList myList = new MyList();
+        for (int i = 0; i &lt; 3; i++) &#123;
+            myList.add(i);
+        &#125;
+        System.out.println(&quot;添加元素后:&quot;);
+        myList.show();
+
+        Integer remove = myList.remove();
+        System.out.println(&quot;获取元素:&quot;);
+        System.out.println(remove);
+        System.out.println(&quot;获取元素后:&quot;);
+        myList.show();
+    &#125;
+&#125;
+
+class MyList &#123;
+    ArrayList&lt;Integer&gt; ml = new ArrayList&lt;&gt;();
+
+    public void add(Integer i) &#123;
+        ml.add(i);
+    &#125;
+
+    public Integer remove() &#123;
+        Integer remove = ml.remove(ml.size() - 1);
+        return remove;
+    &#125;
+
+    public void show() &#123;
+        System.out.println(ml);
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -1038,7 +1350,7 @@ public class Test &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -4393,7 +4705,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -4458,7 +4770,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#ff7d73>
+            <a href="/tags/随笔" style=color:#ffa2c4>
                 随笔
             </a>
         </span>
@@ -6830,7 +7142,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -7750,7 +8062,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -8121,7 +8433,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -8643,7 +8955,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -8796,7 +9108,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
