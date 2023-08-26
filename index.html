@@ -1336,6 +1336,207 @@ class MyList &#123;
     &#125;
 &#125;
 </code></pre>
+<h1 id="Stream流"><a href="#Stream流" class="headerlink" title="Stream流"></a>Stream流</h1><h3 id="练习一：Pedicate接口使用"><a href="#练习一：Pedicate接口使用" class="headerlink" title="练习一：Pedicate接口使用"></a>练习一：Pedicate接口使用</h3><p>请在测试类main方法中完成以下需求</p>
+<p>已知有Integer[] arr &#x3D; {-12345, 9999, 520, 0,-38,-7758520,941213}</p>
+<p>a)     使用lambda表达式创建Predicate对象p1,p1能判断整数是否是自然数(大于等于0)</p>
+<p>b)    使用lambda表达式创建Predicate对象p2,p2能判断整数的绝对值是否大于100</p>
+<p>c)     使用lambda表达式创建Predicate对象p3,p3能判断整数是否是偶数</p>
+<p>遍历arr，仅利用已创建的Predicate对象(不使用任何逻辑运算符)，完成以下需求</p>
+<p>​             i.       打印自然数的个数</p>
+<p>​            ii.       打印负整数的个数</p>
+<p>​           iii.       打印绝对值大于100的偶数的个数</p>
+<p>​           iv.       打印是负整数或偶数的数的个数</p>
+<pre><code class="java">public static void main(String[] args) &#123;
+        Integer[] arr = &#123;-12345, 9999, 520, 0,-38,-7758520,941213&#125;;
+
+        //a)   使用lambda表达式创建Predicate对象p1,p1能判断整数是否是自然数
+        Predicate&lt;Integer&gt; p1 = (s) -&gt; s&gt;=0;
+        //b)   使用lambda表达式创建Predicate对象p2,p2能判断整数的绝对值是否大于100
+        Predicate&lt;Integer&gt; p2 = (s) -&gt; Math.abs(s)&gt;100;
+        //c)   使用lambda表达式创建Predicate对象p3,p3能判断整数是否是偶数
+        Predicate&lt;Integer&gt; p3 = (s) -&gt; s%2==0;
+
+        //e)   遍历arr，仅利用已创建的Predicate对象(不使用任何逻辑运算符)，完成以下需求
+        int count1 = 0;
+        int count2 = 0;
+        int count3 = 0;
+        int count4 = 0;
+        for (Integer i : arr) &#123;
+            //统计自然数个数
+            if (p1.test(i))&#123;
+                count1++;
+            &#125;
+            //统计负整数个数
+            if (p1.negate().test(i))&#123;
+                count2++;
+            &#125;
+            //统计绝对值大于100的偶数个数
+            if (p2.and(p3).test(i))&#123;
+                count3++;
+            &#125;
+            //统计是负整数或偶数的数的个数
+            if (p1.negate().or(p3).test(i))&#123;
+                count4++;
+            &#125;
+        &#125;
+        //分别打印结果
+        System.out.println(&quot;自然数的个数为：&quot;+count1);
+        System.out.println(&quot;负整数的个数为：&quot;+count2);
+        System.out.println(&quot;绝对值大于100的偶数的个数为：&quot;+count3);
+        System.out.println(&quot;是负整数或偶数的数的个数为：&quot;+count4);
+    &#125;
+</code></pre>
+<h3 id="练习：Function接口使用"><a href="#练习：Function接口使用" class="headerlink" title="练习：Function接口使用"></a>练习：Function接口使用</h3><p><code>[这是一个功能界面，因此可以用Lambda表达式或方法引用的赋值对象]</code></p>
+<blockquote>
+<p>Interface Function&lt;T,R&gt;<br>T：函数输入的类型<br>R：函数结果的类型</p>
+<p>Interface Map&lt;K,V&gt;<br>K：由此地图维护的键的类型<br>V：映射值的类型</p>
+</blockquote>
+<p>1.使用lambda表达式分别将以下功能封装到Function对象中</p>
+<p>a)    求Integer类型ArrayList中所有元素的平均数</p>
+<p>b)    将Map &lt; String,Integer &gt; 中value存到ArrayList &lt; Integer &gt;中</p>
+<p>2.已知学生成绩如下</p>
+<table>
+<thead>
+<tr>
+<th>姓名</th>
+<th>成绩</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>岑小村</td>
+<td>59</td>
+</tr>
+<tr>
+<td>谷天洛</td>
+<td>82</td>
+</tr>
+<tr>
+<td>渣渣辉</td>
+<td>98</td>
+</tr>
+<tr>
+<td>蓝小月</td>
+<td>65</td>
+</tr>
+<tr>
+<td>皮几万</td>
+<td>70</td>
+</tr>
+</tbody></table>
+<p>3.以学生姓名为key成绩为value创建集合并存储数据，使用刚刚创建的Function对象求学生的平均成绩</p>
+<pre><code class="java">    public static void main(String[] args) &#123;
+        //1.   使用lambda表达式分别将以下功能封装到Function对象中
+        //a)   求Integer类型ArrayList中所有元素的平均数
+        Function&lt;ArrayList&lt;Integer&gt;,Integer&gt; f1 = (list)-&gt;&#123;
+            Integer sum = 0;
+            for (Integer i : list) &#123;
+                sum+=i;
+            &#125;
+            return sum/list.size();
+        &#125;;
+
+        //b)   将Map&lt;String,Integer&gt;中value存到ArrayList&lt;Integer&gt;中
+        Function&lt;Map&lt;String,Integer&gt;,ArrayList&lt;Integer&gt;&gt; f2 = (map)-&gt;&#123;
+            /*ArrayList&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+            for (String s : map.keySet()) &#123;
+                Integer i = map.get(s);
+                list.add(i);
+            &#125;*/
+            Collection&lt;Integer&gt; values = map.values();
+            ArrayList&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+            list.addAll(values);
+            return list;
+        &#125;;
+        //2 将学生姓名和成绩封装到map中
+        Map&lt;String,Integer&gt; map = new HashMap&lt;String, Integer&gt;();
+        map.put(&quot;岑小村&quot;, 59);
+        map.put(&quot;谷天洛&quot;, 82);
+        map.put(&quot;渣渣辉&quot;, 98);
+        map.put(&quot;蓝小月&quot;, 65);
+        map.put(&quot;皮几万&quot;, 70);
+
+        //利用Function求平均成绩
+        Integer avg = f2.andThen(f1).apply(map);
+        System.out.println(&quot;学生平均成绩为：&quot;+avg);
+    &#125;
+</code></pre>
+<h3 id="练习：获取流"><a href="#练习：获取流" class="headerlink" title="练习：获取流"></a>练习：获取流</h3><p>简述单列集合、双列集合、数组分别如何获取Stream流对象，并进行演示</p>
+<pre><code class="java">1.java.util.Collection接口中加入了default方法 stream()获取流对象，因此其所有实现类均可通过此方式获取流
+
+2.java.util.Map接口想要获取流，先通过KeySet()、values()或entrySet()方法获取键、值或键值对的单列集合，再通过stream()获取流对象
+
+3.数组获取流，使用Stream接口中的静态方法of(T...values)获取流
+public static void main(String[] args) &#123;
+  List&lt;String&gt; list = new ArrayList&lt;&gt;();
+  Stream&lt;String&gt; stream1 = list.stream();
+  Set&lt;String&gt; set = new HashSet&lt;&gt;();
+  Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+
+  Stream&lt;String&gt; stream2 = set.stream();
+  Stream&lt;String&gt; keyStream = map.keySet().stream();
+  Stream&lt;String&gt; valueStream = map.values().stream();
+  Stream&lt;Map.Entry&lt;String,String&gt;&gt;entryStream = map.entrySet().stream();
+
+  String[] array = &#123;&quot;东邪&quot;, &quot;西毒&quot;, &quot;南帝&quot;, &quot;北丐&quot;, &quot;中神通&quot;&#125;;
+  Stream&lt;String&gt; stream = Stream.of(array);
+&#125;
+</code></pre>
+<h3 id="练习：过滤-filter-、结果收集-数组"><a href="#练习：过滤-filter-、结果收集-数组" class="headerlink" title="练习：过滤[filter]、结果收集(数组)"></a>练习：过滤[filter]、结果收集(数组)</h3><p>有如下7个元素黄药师，冯蘅，郭靖，黄蓉，郭芙，郭襄，郭破虏，使用Stream将以郭字开头的元素存入新数组</p>
+<pre><code class="java">public class Test &#123;
+    public static void main(String[] args) &#123;
+          Stream&lt;String&gt; stream = Stream.of(&quot;黄药师&quot;, &quot;冯蘅&quot;, &quot;郭靖&quot;, &quot;黄蓉&quot;, &quot;郭芙&quot;, &quot;郭襄&quot;, &quot;郭破虏&quot;);
+        String[] guos = stream.filter(s -&gt; s.startsWith(&quot;郭&quot;)).toArray(String[]::new);
+     &#125;
+&#125;
+// filter 返回由与此给定谓词匹配的此流的元素组成的流。
+// toArray 返回一个包含此流的元素的数组 结果: 一个包含此流的元素的数组
+</code></pre>
+<h3 id="练习：n-取用前几个-limit-、跳过前几个-skip"><a href="#练习：n-取用前几个-limit-、跳过前几个-skip" class="headerlink" title="练习：n 取用前几个[limit]、跳过前几个[skip]"></a>练习：n 取用前几个[limit]、跳过前几个[skip]</h3><p>已知ArrayList集合中有如下元素{陈玄风、梅超风、陆乘风、曲灵风、武眠风、冯默风、罗玉风}，使用Stream<br>1,取出前2个元素并在控制台打印输出。<br>2.取出后2个元素并在控制台打印输出。</p>
+<pre><code class="java">import java.util.ArrayList;
+    public class Test04 &#123;
+      public static void main(String[] args) &#123;
+        ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
+        list.add(&quot;陈玄风&quot;);
+        list.add(&quot;梅超风&quot;);
+        list.add(&quot;陆乘风&quot;);
+        list.add(&quot;曲灵风&quot;);
+        list.add(&quot;武眠风&quot;);
+        list.add(&quot;冯默风&quot;);
+        list.add(&quot;罗玉风&quot;);
+
+        list.stream().limit(2).forEach(System.out::println);
+        list.stream().skip(list.size() - 2).forEach(System.out::println);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：n-映射-map-、逐一消费-forEach"><a href="#练习：n-映射-map-、逐一消费-forEach" class="headerlink" title="练习：n 映射[map]、逐一消费[forEach]"></a>练习：n 映射[map]、逐一消费[forEach]</h3><p>有如下整数1，-2，-3，4，-5<br>使用Stream取元素绝对值并打印</p>
+<pre><code class="java">import java.util.stream.Stream;
+   public class Test &#123;
+      public static void main(String[] args) &#123;
+          Stream&lt;Integer&gt; stream = Stream.of(1, -2, -3, 4,-5);
+        stream.map(Math::abs).forEach(System.out::println);
+     &#125;
+&#125;
+</code></pre>
+<h3 id="练习：组合-concat-、结果收集-list"><a href="#练习：组合-concat-、结果收集-list" class="headerlink" title="练习：组合[concat]、结果收集[list]"></a>练习：组合[concat]、结果收集[list]</h3><p>已知数组arr1中有如下元素{郭靖，杨康}，arr2中有如下元素{黄蓉，穆念慈}，使用Stream将二者合并到List集合</p>
+<pre><code class="java">import java.util.stream.Stream;
+  public class Test &#123;
+    public static void main(String[] args) &#123;
+          Stream&lt;String&gt; streamA = Stream.of(&quot;郭靖&quot;, &quot;杨康&quot;);
+        Stream&lt;String&gt; streamB = Stream.of(&quot;黄蓉&quot;, &quot;穆念慈&quot;);
+        List&lt;String&gt; strList = Stream.concat(streamA, streamB).collect(Collectors.toList());
+     &#125;
+&#125;
+</code></pre>
+<h3 id="练习：获取并发流"><a href="#练习：获取并发流" class="headerlink" title="练习：获取并发流"></a>练习：获取并发流</h3><p>请分别写出获取并发流的两种方式。</p>
+<pre><code class="java">public class Test &#123;
+    public static void main(String[] args) &#123;
+          Collection&lt;String&gt; coll = new ArrayList&lt;&gt;();
+          Stream&lt;String&gt; parallelStream1 = coll.parallelStream();
+        Stream&lt;Integer&gt; parallelStream2 = Stream.of(100, 200, 300, 400).parallel();
+     &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -4274,7 +4475,6 @@ public static void main(String[] args) &#123;
 
     &#125;
 </code></pre>
-<p>宝宝七夕节快乐，今天是我们在一起的第一个七夕节噢。也是我们相识的第二个七夕节。最好的时代给你最长情的爱，与宝宝确认过眼神，是一直白头的人~ 宝宝 节日快乐吖！准备了小礼物，可能要等宝宝回来才能收到啦，不过先埋藏一个小小的惊喜，有一种期待感</p>
 <blockquote>
 <p>“Stream流”其实是一个集合元素的函数模型，它并不是集合，也不是数据结构，其本身并不存储任何 元素（或其地址值)。</p>
 </blockquote>
@@ -4492,7 +4692,7 @@ public static void main(String[] args)&#123;
     printString(System.out::println);
 &#125;
 </code></pre>
-<h3 id="方法引用符"><a href="#方法引用符" class="headerlink" title="方法引用符"></a>方法引用符</h3><p>双冒号 <code>::</code> 为引用运算符，而它所在的表达式被称为<strong>方法引用</strong>。如果Lambda要表达的函数方案已经存在于某个方 法的实现中，那么则可以通过双冒号来引用该方法作为Lambda的替代者。</p>
+<h3 id="方法引用符"><a href="#方法引用符" class="headerlink" title="方法引用符"></a><span style = "color:red">方法引用符</span></h3><h6 id="引出：我们在Lambda中所指定的操作方案，已经有地方存在相同方案，那是否还有必要再写重复逻辑"><a href="#引出：我们在Lambda中所指定的操作方案，已经有地方存在相同方案，那是否还有必要再写重复逻辑" class="headerlink" title="引出：我们在Lambda中所指定的操作方案，已经有地方存在相同方案，那是否还有必要再写重复逻辑?"></a>引出：我们在Lambda中所指定的操作方案，已经有地方存在相同方案，那是否还有必要再写重复逻辑?</h6><p>双冒号 <code>::</code> 为引用运算符，而它所在的表达式被称为<strong>方法引用</strong>。<u>如果Lambda要表达的函数方案已经存在于某个方法的实现中，那么则可以通过双冒号来引用该方法作为Lambda的替代者</u>。</p>
 <p>例如上例中， <code>System.out</code> 对象中有一个重载的 println(String) 方法恰好就是我们所需要的。那么对于 printString 方法的函数式接口参数，对比下面两种写法，完全等效：</p>
 <ul>
 <li>Lambda表达式写法：<code>s -&gt; System.out.println(s);</code></li>
@@ -4500,6 +4700,34 @@ public static void main(String[] args)&#123;
 </ul>
 <p>第一种语义是指：拿到参数之后经Lambda之手，继而传递给 <code>System.out.println</code> 方法去处理。<br>第二种等效写法的语义是指：直接让 <code>System.out</code> 中的 <code>println</code> 方法来取代Lambda。两种写法的执行效果完全一 样，而第二种方法引用的写法复用了已有方案，更加简洁。</p>
 <p>注：Lambda 中 传递的参数 一定是方法引用中 的那个方法可以接收的类型,否则会抛出异常</p>
+<p><strong>三种主要使用情况：</strong></p>
+<p>情况1：对象名::实例方法名<br>情况2：类名::静态方法名<br>情况3：类名::实例方法名</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1Yu411W77v/?spm_id_from=333.337.search-card.all.click&vd_source=a4d980c3208d51858f08b3025a6ab2d9">【方法引用】Java语法中的双冒号::到底是啥意思？_哔哩哔哩_bilibili</a><br><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1NK411f7Z5/?spm_id_from=333.788.recommend_more_video.1&vd_source=a4d980c3208d51858f08b3025a6ab2d9">lambda的双冒号是什么意思一个视频简简单单说清楚_哔哩哔哩_bilibili</a><br><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV19W4y1W7G2/?spm_id_from=333.337.search-card.all.click&vd_source=a4d980c3208d51858f08b3025a6ab2d9">【java面试技巧】双冒号之方法引用大家快来看看吧_哔哩哔哩_bilibili</a></p>
+</blockquote>
+<pre><code class="java">interface A&#123;
+    int method(String str);
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        A a1 = str -&gt; Integer.valueOf(str);
+        System.out.println(a1.method(&quot;111&quot;));
+
+        A a2 = Integer::valueOf;
+        System.out.println(a2.method(&quot;444&quot;));
+
+        A a = new A() &#123; //因为A是接口所以直接new不了 加上大括号 匿名内部类
+            @Override
+            public int method(String str) &#123;
+                return new Integer(str); //封装 拆箱
+            &#125;
+        &#125;;
+        A a3 = Integer::new;
+        System.out.println(a3.method(&quot;666&quot;));
+    &#125;
+&#125;
+</code></pre>
 <h3 id="推导与省略"><a href="#推导与省略" class="headerlink" title="推导与省略"></a>推导与省略</h3><p>如果使用Lambda，那么根据“<strong>可推导就是可省略</strong>”的原则，无需指定参数类型，也无需指定的重载形式——它们都 将被自动推导。而如果使用方法引用，也是同样可以根据上下文进行推导。<br>函数式接口是Lambda的基础，而方法引用是Lambda的孪生兄弟。 下面这段代码将会调用 <code>println</code> 方法的不同重载形式，将函数式接口改为int类型的参数：</p>
 <pre><code class="java">@FunctionalInterface
 public interface PrintableInteger &#123;
@@ -4705,7 +4933,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -4770,7 +4998,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#00bcd4>
+            <a href="/tags/随笔" style=color:#879cff>
                 随笔
             </a>
         </span>
@@ -7142,7 +7370,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -7421,7 +7649,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ffa2c4>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -8062,7 +8290,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -8433,7 +8661,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -8751,7 +8979,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ffa2c4>
+            <a href="/tags/计算机" style=color:#879cff>
                 计算机
             </a>
         </span>
@@ -8955,7 +9183,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -9108,7 +9336,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
