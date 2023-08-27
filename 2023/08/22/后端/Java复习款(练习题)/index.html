@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1515,6 +1515,623 @@ public static void main(String[] args) &#123;
           Stream&lt;String&gt; parallelStream1 = coll.parallelStream();
         Stream&lt;Integer&gt; parallelStream2 = Stream.of(100, 200, 300, 400).parallel();
      &#125;
+&#125;
+</code></pre>
+<h1 id="函数式接口习题"><a href="#函数式接口习题" class="headerlink" title="函数式接口习题"></a>函数式接口习题</h1><h3 id="练习：函数式接口"><a href="#练习：函数式接口" class="headerlink" title="练习：函数式接口"></a>练习：函数式接口</h3><p>①.  定义一个函数式接口CurrentTimePrinter,其中抽象方法void printCurrentTime()，使用注解@FunctionalInterface<br>②. 在测试类中定义static void showLongTime(CurrentTimePrinter timePrinter)，该方法的预期行为是使用timePrinter打印系统当前毫秒值<br>③. 测试showLongTime(),通过lambda表达式完成需求</p>
+<pre><code class="java">@FunctionalInterface
+public interface CurrentTimePrinter
+&#123;
+    void printCurrenTime();
+&#125;
+
+public class Test01 &#123;
+    public static void main(String[] args) &#123;
+        showLongTime(()-&gt;System.out.println(System.currentTimeMillis()));
+    &#125;
+
+    public static void showLongTime(CurrentTimePrinter timePrinter)&#123;
+        timePrinter.printCurrentTime();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：函数式接口-1"><a href="#练习：函数式接口-1" class="headerlink" title="练习：函数式接口"></a>练习：函数式接口</h3><p>①. 定义一个函数式接口IntCalc,其中抽象方法int calc(int a , int b)，使用注解@FunctionalInterface<br>②. 在测试类中定义static void getProduct(int a , int b ,IntCalc calc), 该方法的预期行为是使用calc得到a和b的乘积并打印结果<br>③. 测试getProduct(),通过lambda表达式完成需求</p>
+<p>IntCalc接口：</p>
+<pre><code class="java">@FunctionalInterface
+ public interface IntCalc &#123;
+   int calc(int a, int b);
+ &#125;
+</code></pre>
+<p>测试类：</p>
+<pre><code class="java">public class Test02 &#123;
+   public static void main(String[] args) &#123;
+     getProduct(2,3,(a,b)-&gt;a*b);
+   &#125;
+   public static void getProduct(int a, int b, IntCalc intCalc)&#123;
+     int product = intCalc.calc(a,b);
+     System.out.println(product);
+
+   &#125;
+&#125;
+</code></pre>
+<h3 id="练习：静态方法引用"><a href="#练习：静态方法引用" class="headerlink" title="练习：静态方法引用"></a>练习：静态方法引用</h3><p>①. 定义一个函数式接口NumberToString,其中抽象方法String convert(int num)，使用注解@FunctionalInterface<br>②. 在测试类中定义static void decToHex(int num ,NumberToString nts), 该方法的预期行为是使用nts将一个十进制整数转换成十六进制表示的字符串，**<u>tips：已知该行为与Integer类中的toHexString方法一致</u>**<br>③. 测试decToHex (),使用方法引用完成需求</p>
+<pre><code class="java">interface NumberToString&#123;
+    String convert(int num);
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        decToHex(999, Integer::toHexString);
+    &#125;
+
+    public static void decToHex(int num ,NumberToString nts)&#123;
+        String convert = nts.convert(num);
+        System.out.println(convert);
+    &#125;
+
+&#125;
+</code></pre>
+<h1 id="缓冲流-amp-转换流习题"><a href="#缓冲流-amp-转换流习题" class="headerlink" title="缓冲流&amp;转换流习题"></a>缓冲流&amp;转换流习题</h1><h3 id="练习：高效字节输出流写出字节数据"><a href="#练习：高效字节输出流写出字节数据" class="headerlink" title="练习：高效字节输出流写出字节数据"></a>练习：高效字节输出流写出字节数据</h3><h6 id="描述-利用高效字节输出流往C盘下的d-txt文件输出一个字节数。"><a href="#描述-利用高效字节输出流往C盘下的d-txt文件输出一个字节数。" class="headerlink" title="描述: 利用高效字节输出流往C盘下的d.txt文件输出一个字节数。"></a>描述: 利用高效字节输出流往C盘下的d.txt文件输出一个字节数。</h6><p><strong>操作步骤</strong>:</p>
+<p>1.创建字节输出流对象关联文件路径<br>2.利用字节输出流对象创建高效字节输出流对象<br>3.调用高效字节输出流对象的write方法写出一个字节<br>4.关闭高效流，释放资源。</p>
+<pre><code class="java">public class Test01_01 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 创建字节输出流FileOutputStream对象并指定文件路径。
+        FileOutputStream fos = new FileOutputStream(&quot;c:\\d.txt&quot;);
+        // 利用字节输出流创建高效字节输出流对象
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        // 调用高效字节输出流对象的write(int byte)方法写出一个字节数据
+        bos.write(97);
+        // 关闭流
+        bos.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：高效字节输出流写出字节数组数据"><a href="#练习：高效字节输出流写出字节数组数据" class="headerlink" title="练习：高效字节输出流写出字节数组数据"></a>练习：高效字节输出流写出字节数组数据</h3><h6 id="描述-利用高效字节输出流往C盘下的e-txt文件写出一个字节数组数据，如写出：”i-love-java”"><a href="#描述-利用高效字节输出流往C盘下的e-txt文件写出一个字节数组数据，如写出：”i-love-java”" class="headerlink" title="描述: 利用高效字节输出流往C盘下的e.txt文件写出一个字节数组数据，如写出：”i love java”"></a>描述: 利用高效字节输出流往C盘下的e.txt文件写出一个字节数组数据，如写出：”i love java”</h6><p><strong>操作步骤:</strong></p>
+<p>1.创建字节输出流对象关联文件路径<br>2.利用字节输出流对象创建高效字节输出流对象<br>3.定义字符串存放要输出的数据，然后将字符串转换为字节数组。<br>4.调用高效字节输出流对象的write方法将字节数组输出。<br>5.关闭高效流。</p>
+<pre><code class="java">public class Test01_02 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 创建字节输出流FileOutputStream对象并指定文件路径。
+        FileOutputStream fos = new FileOutputStream(&quot;c:\\e.txt&quot;);
+        // 利用字节输出流创建高效字节输出流对象
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        // 调用高效字节输出流对象的write(byte[] buff)方法写出一个字节数据
+        bos.write(&quot;i love java&quot;.getBytes());
+        // 关闭流
+        bos.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：高效流文件复制"><a href="#练习：高效流文件复制" class="headerlink" title="练习：高效流文件复制"></a>练习：高效流文件复制</h3><h6 id="描述-利用高效字节输入流和高效字节输出流完成文件的复制。"><a href="#描述-利用高效字节输入流和高效字节输出流完成文件的复制。" class="headerlink" title="描述: 利用高效字节输入流和高效字节输出流完成文件的复制。"></a>描述: 利用高效字节输入流和高效字节输出流完成文件的复制。</h6><p>要求：</p>
+<p>1.将C盘下的c.png文件复制到D盘下<br>2.一次读写一个字节数组方式复制</p>
+<p>操作步骤:</p>
+<p>①.创建字节输入流对象并关联文件路径<br>②.利用字节输入流对象创建高效字节输入流对象<br>③.创建字节输出流对象并关联文件路径<br>④.利用字节输出流对象创建高效字节输出流对象<br>⑤.创建字节数组用来存放读取的字节数<br>⑥.利用高效字节输入流循环读取文件数据，每读取一个字节数组，利用高效字节输出流对象将字节数组的内容输出到目标文件中。直到读取到文件末尾。<br>⑦.关闭高效流对象</p>
+<pre><code class="java">public class Test01_03 &#123;
+    public static void main(String[] args) throws IOException&#123;
+        // 创建字节输入流对象并关联文件路径
+        FileInputStream fis = new FileInputStream(&quot;c:\\c.png&quot;);
+        // 利用字节输出流对象创建高效字节输出流对象
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        // 创建字节输出流对象并指定文件路径。
+        FileOutputStream fos = new FileOutputStream(&quot;d:\\c.png&quot;);
+        // 利用字节输出流创建高效字节输出流对象
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        // 定义字节数组接收读取的字节
+        byte[] buffer = new byte[1024];
+        // 定义变量接收读取的字节数
+        int len = -1;
+        // 循环读取图片数据
+        while((len = bis.read(buffer)) != -1) &#123;
+            // 每读取一个字节的数据就写出到目标文件中
+            bos.write(buffer,0,len);
+        &#125;
+        // 关闭流
+        bis.close();
+        bos.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：高效字符流和集合的综合使用"><a href="#练习：高效字符流和集合的综合使用" class="headerlink" title="练习：高效字符流和集合的综合使用"></a>练习：高效字符流和集合的综合使用</h3><p>描述:</p>
+<p>分析以下需求，并用代码实现<br>实现一个验证码小程序，要求如下：<br>① 在项目根目录下新建一个文件：data.txt,键盘录入3个字符串验证码，并存入data.txt中，要求一个验证码占一行；<br>② 键盘录入一个需要被校验的验证码，如果输入的验证码在data.txt中存在：在控制台提示验证成功，如果不存在控制台提示验证失败</p>
+<pre><code class="java">public class Test &#123;
+    public static void main(String[] args) throws IOException &#123;
+        writeString2File();
+        verifyCode();
+    &#125;
+
+    private static void writeString2File() throws IOException &#123;
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(&quot;D:\\Clash\\a.txt&quot;)));
+        String line = null;
+        Scanner sc = new Scanner(System.in);
+        for (int i = 0; i &lt; 3; i++) &#123;
+            System.out.println(&quot;请输入第&quot;+(i+1)+&quot;个字符串验证码&quot;);
+            line = sc.nextLine();
+            bw.write(line);
+            bw.newLine();
+        &#125;
+        bw.close();
+    &#125;
+
+    private static void verifyCode() throws IOException &#123;
+        ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
+        BufferedReader br = new BufferedReader(new FileReader(new File(&quot;D:\\Clash\\a.txt&quot;)));
+        String line = null;
+        while(null!=(line = br.readLine()))&#123;
+        list.add(line);
+    &#125;
+        br.close();
+        Scanner sc = new Scanner(System.in);
+        System.out.println(&quot;请输入一个验证码&quot;);
+        String code = sc.nextLine();
+        if (list.contains(code))&#123;
+            System.out.println(&quot;验证成功&quot;);
+        &#125;else &#123;
+            System.out.println(&quot;验证失败&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：转换输出流的使用"><a href="#练习：转换输出流的使用" class="headerlink" title="练习：转换输出流的使用"></a>练习：转换输出流的使用</h3><h6 id="描述-现有一字符串：”我爱Java”。将该字符串保存到当前项目根目录下的a-txt文件中。"><a href="#描述-现有一字符串：”我爱Java”。将该字符串保存到当前项目根目录下的a-txt文件中。" class="headerlink" title="描述: 现有一字符串：”我爱Java”。将该字符串保存到当前项目根目录下的a.txt文件中。"></a>描述: 现有一字符串：”我爱Java”。将该字符串保存到当前项目根目录下的a.txt文件中。</h6><p>要求：使用gbk编码保存。<br>注意：idea的默认编码是utf-8,所以可以通过fileàsettingsàfile encodings设置为gbk格式，否则打开a.txt文件看到的将会是乱码。</p>
+<p>操作步骤:</p>
+<p>1.创建文件字节输出流关联目标文件<br>2.根据文件字节输出流创建转换输出流对象，并指定编码字符集为：gbk<br>3.调用流对象的方法将字符串写出到文件中。<br>4.关闭流并释放资源。</p>
+<pre><code class="java">public class Test01_05 &#123;
+    public static void main(String[] args) throws IOException&#123;
+        // 要保存的字符串
+        String content = &quot;我爱Java&quot;;
+        // 创建字节输出流对象
+        FileOutputStream fos = new FileOutputStream(&quot;a.txt&quot;);
+        // 创建转换输出流对象
+        OutputStreamWriter osw = new OutputStreamWriter(fos, &quot;gbk&quot;);
+        // 调用方法写出数据
+        osw.write(content);
+        // 关闭流释放资源
+        osw.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：转换输入流的使用"><a href="#练习：转换输入流的使用" class="headerlink" title="练习：转换输入流的使用"></a>练习：转换输入流的使用</h3><h6 id="描述-利用转换输入流将当前项目根目录下使用gbk编码的a-txt文件的内容读取出来，并打印在控制台上。"><a href="#描述-利用转换输入流将当前项目根目录下使用gbk编码的a-txt文件的内容读取出来，并打印在控制台上。" class="headerlink" title="描述: 利用转换输入流将当前项目根目录下使用gbk编码的a.txt文件的内容读取出来，并打印在控制台上。"></a>描述: 利用转换输入流将当前项目根目录下使用gbk编码的a.txt文件的内容读取出来，并打印在控制台上。</h6><p>要求：不能出现乱码的情况。<br>操作步骤:</p>
+<p>1.创建字节输入流对象指定文件路径。<br>2.根据字节输入流对象创建转换输入流对象并指定字符集编码为：gbk<br>3.调用转换输入流对象的读取方法读取内容<br>4.关闭流释放资源</p>
+<pre><code class="java">public class Test01_06 &#123;
+    public static void main(String[] args) throws IOException&#123;
+        // 创建字节输入流对象并关联文件
+        FileInputStream fis = new FileInputStream(&quot;a.txt&quot;);
+        // 创建转换输入流对象
+        InputStreamReader isr = new InputStreamReader(fis,&quot;gbk&quot;);
+        // 定义字符数组存放读取的内容
+        char[] buffer = newchar[1024];
+        // 定义变量接收读取的字符个数
+        intlen = -1;
+        while((len = isr.read(buffer)) != -1) &#123;
+            System.out.print(new String(buffer,0,len));
+        &#125;
+        // 关闭流
+        isr.close();
+    &#125;
+&#125;
+</code></pre>
+<h1 id="继承-amp-抽象类习题"><a href="#继承-amp-抽象类习题" class="headerlink" title="继承&amp;抽象类习题"></a>继承&amp;抽象类习题</h1><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><h5 id="什么叫做类与类的继承，作用是什么？"><a href="#什么叫做类与类的继承，作用是什么？" class="headerlink" title="什么叫做类与类的继承，作用是什么？"></a><span style =  "color :red">什么叫做类与类的继承，作用是什么？</span></h5><p>就是子类继承父类的属性和行为，使得子类对象具有与父亲相同的属性、相同的行为；<br>作用是子类复用父类的内容</p>
+<h5 id="继承后，父类与子类之间，各成员有什么样的影响？"><a href="#继承后，父类与子类之间，各成员有什么样的影响？" class="headerlink" title="继承后，父类与子类之间，各成员有什么样的影响？"></a><span style =  "color :red">继承后，父类与子类之间，各成员有什么样的影响？</span></h5><p>成员变量：<br><u>不重名</u>，就没有影响；<u>重名</u>，就近使用，使用super分区父类变量</p>
+<p>构造方法：<br><u>无影响</u>，但是子类构造方法默认调用父类构造方法</p>
+<p>成员方法：<br>不重名，没有影响；重名，子类重写父类方法</p>
+<h5 id="子类中，如何调用父类的成员？如何使用本类的成员？"><a href="#子类中，如何调用父类的成员？如何使用本类的成员？" class="headerlink" title="子类中，如何调用父类的成员？如何使用本类的成员？"></a><span style =  "color :red">子类中，如何调用父类的成员？如何使用本类的成员？</span></h5><p>父类成员方法：super.方法名<br>父类非私有成员变量：super.变量名<br>子类成员方法：this.方法名<br>子类成员变量：this.变量名</p>
+<h5 id="抽象方法与普通成员方法有什么区别？"><a href="#抽象方法与普通成员方法有什么区别？" class="headerlink" title="抽象方法与普通成员方法有什么区别？"></a><span style =  "color :red">抽象方法与普通成员方法有什么区别？</span></h5><p>抽象方法使用abstract关键字修饰，没有方法体；成员方法有方法体</p>
+<h5 id="抽象类与普通类有什么区别？"><a href="#抽象类与普通类有什么区别？" class="headerlink" title="抽象类与普通类有什么区别？"></a><span style =  "color :red">抽象类与普通类有什么区别？</span></h5><p>方法：<br>抽象类可以包含抽象方法和成员方法；普通类不可以包含抽象方法，只有成员方法</p>
+<p>对象：<br>抽象类不可以创建对象；普通类可以创建对象</p>
+<h3 id="练习：语法练习"><a href="#练习：语法练习" class="headerlink" title="练习：语法练习"></a>练习：语法练习</h3><ul>
+<li><p>语法点：继承，抽象类</p>
+</li>
+<li><p>输出<code>A类中numa：10、B类中numb：20、C类中numc：30</code></p>
+</li>
+</ul>
+<pre><code class="java">abstract  class A&#123;
+    int numa = 10;
+    public abstract void showA();
+&#125;
+
+abstract class B extends A&#123;
+    int numb = 20;
+    public abstract void showB();
+&#125;
+
+class C extends B&#123;
+    int numc = 30;
+
+    @Override
+    public void showA() &#123;
+        System.out.println(&quot;A类中numa:&quot;+numa);
+    &#125;
+
+    @Override
+    public void showB() &#123;
+        System.out.println(&quot;B类中numb:&quot;+numb);
+
+    &#125;
+    public void showC()&#123;
+        System.out.println(&quot;C类中numc:&quot;+numc);
+    &#125;
+&#125;
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        C c = new C();
+        c.showA();
+        c.showB();
+        c.showC();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：语法练习-1"><a href="#练习：语法练习-1" class="headerlink" title="练习：语法练习"></a>练习：语法练习</h3><ul>
+<li>语法点：继承，抽象类</li>
+<li>输出<code>动物种类:鸭子，年龄：2岁、 入院原因：感冒、 症状为：发烧</code></li>
+</ul>
+<p>编写步骤：</p>
+<ol>
+<li>模拟农学院动物医疗系统信息。</li>
+<li>定义抽象家禽类(Poultry)<ol>
+<li>私有成员变量：动物种类(name)，症状(symptom)，年龄(age)， 病因（illness）</li>
+<li>提供空参和带参构造方法</li>
+<li>成员方法：<ol>
+<li>抽象方法症状(showSymptom)</li>
+<li>普通方法基本信息(showMsg)</li>
+<li>提供setXxx和getXxx方法</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>定义普通鸭子类(Duck)<ol>
+<li>提供空参和带参构造方法</li>
+<li>重写showSymptom方法，打印症状信息。</li>
+</ol>
+</li>
+</ol>
+<pre><code class="java">public class Test3 &#123;
+    public static void main(String[] args) &#123;
+        Duck duck = new Duck(&quot;鸭子&quot;, &quot;感冒&quot;, &quot;发烧&quot;, 2);
+        duck.showMsg();
+        duck.showSymptom();
+    &#125;
+&#125;
+
+/*
+1.定义抽象家禽类(Poultry)
+*/
+abstract class Poultry &#123;
+    //    i.成员变量(私有):
+
+    private String name;
+    private String illness;
+
+    // 症状(symptom)
+    private String symptom;
+    //    年龄(age)
+    private int age;
+
+    //    ii.成员方法:  showSymptom
+    public abstract void showSymptom();
+
+    // 成员方法:  showMsg
+    public void showMsg() &#123;
+        System.out.print(&quot;动物种类:&quot; + name);
+        System.out.println(&quot;,年龄:&quot; + age + &quot;岁&quot;);
+        System.out.println(&quot;入院原因:&quot; + illness);
+    &#125;
+
+    //    iii.提供空参和带参构造方法
+    public Poultry() &#123;
+        super();
+    &#125;
+
+    public Poultry(String name, String illness, String symptom, int age) &#123;
+        this.name = name;
+        this.illness = illness;
+        this.symptom = symptom;
+        this.age = age;
+    &#125;
+
+    //    iv.提供setXxx和getXxx方法
+    public int getAge() &#123;
+        return age;
+    &#125;
+
+    public void setAge(int age) &#123;
+        this.age = age;
+    &#125;
+
+    public String getName() &#123;
+        return name;
+    &#125;
+
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+
+    public String getIllness() &#123;
+        return illness;
+    &#125;
+
+    public void setIllness(String illness) &#123;
+        this.illness = illness;
+    &#125;
+
+    public String getSymptom() &#123;
+        return symptom;
+    &#125;
+
+    public void setSymptom(String symptom) &#123;
+        this.symptom = symptom;
+    &#125;
+&#125;
+
+// Duck 类
+
+class Duck extends Poultry &#123;
+
+    public Duck() &#123;
+
+    &#125;
+
+    public Duck(String name, String illness, String symptom, int age) &#123;
+
+        super(name, illness, symptom, age);
+
+    &#125;
+
+    @Override
+
+    public void showSymptom() &#123;
+
+        System.out.println(&quot;症状为:&quot; + getSymptom());
+
+    &#125;
+
+&#125;
+</code></pre>
+<h3 id="练习：语法练习-2"><a href="#练习：语法练习-2" class="headerlink" title="练习：语法练习"></a>练习：语法练习</h3><ul>
+<li><p>语法点：继承</p>
+</li>
+<li><p>输出：<code>王小平老师，讲授Java课、 李小乐同学，考试得了90分</code></p>
+</li>
+</ul>
+<p>编写步骤：</p>
+<ol>
+<li>模拟教学管理系统师生信息。</li>
+<li>定义Person类。<ol>
+<li>属性：姓名、年龄</li>
+<li>构造方法：无参构造方法，有参构造方法</li>
+<li>成员方法：getXxx方法，setXxx方法，显示基本信息showMsg方法</li>
+</ol>
+</li>
+<li>定义Teacher类，继承Person<ol>
+<li>属性：学科</li>
+<li>构造方法：无参构造方法，有参构造方法</li>
+<li>成员方法：getXxx方法，setXxx方法，讲课方法</li>
+</ol>
+</li>
+<li>定义Student类，继承Person<ol>
+<li>属性：分数</li>
+<li>构造方法：无参构造方法，有参构造方法</li>
+<li>成员方法：getXxx方法，setXxx方法，考试方法</li>
+</ol>
+</li>
+</ol>
+<pre><code class="java">public class Test &#123;
+
+    public static void main(String[] args) &#123;
+        //        i.创建老师对象t,并把名称赋值为”王小平”,年龄赋值为30,工资赋值为8000
+        Teacher t = new Teacher(&quot;王小平&quot;, 30, &quot;Java&quot;);
+        //        iii.调用老师对象t的讲解方法
+        t.teach();
+
+        //        iv.创建学生对象 s,并把名称赋值为”李小乐”,年龄赋值为14,成绩赋值为90分.
+        Student s = new Student(&quot;李小乐&quot;, 14, 90);
+        //        vi.调用学生对象 s 的考试方法
+        s.exam();
+    &#125;
+&#125;
+
+class Person &#123;
+    // 名称(name)
+    private String name;
+    //    年龄(age)
+    private int age;
+
+    //    空参构造
+    public Person() &#123;
+    &#125;
+    //  带参构造
+    public Person(String name, int age) &#123;
+        this.name = name;
+        this.age = age;
+    &#125;
+    // setXxx和getXxx方法
+    public String getName() &#123;
+        return name;
+    &#125;
+
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+
+    public int getAge() &#123;
+        return age;
+    &#125;
+
+    public void setAge(int age) &#123;
+        this.age = age;
+    &#125;
+&#125;
+/*
+ 2.定义老师类(Teacher),继承Person类
+ */
+class Teacher extends Person &#123;
+    //    course(科目)
+    private String course;
+    //    空参构造
+    public Teacher() &#123;
+    &#125;
+    //    带参构造方法
+    public Teacher(String name,int age, String course) &#123;
+        super(name,age);
+        this.course = course;
+    &#125;
+
+    //    提供setXxx和getXxx方法
+    public String getCourse() &#123;
+        return course;
+    &#125;
+    public void setCourse(String course) &#123;
+        this.course = course;
+    &#125;
+
+    public void teach() &#123;
+        System.out.println(getName() +&quot;老师,讲授&quot;+course +&quot;课&quot;);
+    &#125;
+&#125;
+/*
+ 3.定义学生类(Student),继承Person类
+ */
+class Student extends Person &#123;
+    //    score(成绩)
+    private int score;
+    //    无参构造
+    public Student() &#123;
+        super();
+    &#125;
+    //    带参构造
+    public Student(String name, int age,int score) &#123;
+        super(name, age);
+        this.score = score;
+    &#125;
+
+    //    提供setXxx和getXxx方法
+    public int getScore() &#123;
+        return score;
+    &#125;
+    public void setScore(int score) &#123;
+        this.score = score;
+    &#125;
+
+    public void exam()&#123;
+        System.out.println(getName()+&quot;同学,考试得了:&quot;+ score +&quot;分&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：语法练习-3"><a href="#练习：语法练习-3" class="headerlink" title="练习：语法练习"></a>练习：语法练习</h3><ul>
+<li><p>语法点：继承</p>
+</li>
+<li><p>编写步骤</p>
+<ol>
+<li>模拟汽车网站信息。</li>
+<li>定义汽车Auto类<ol>
+<li>属性：品牌，车长，价格</li>
+</ol>
+</li>
+<li>定义SUV继承Auto类<ol>
+<li>属性：小型车车长标准值：4295，中型车车长标准值：5070。</li>
+<li>定义判断车型方法<ol>
+<li>判断小型车：小于小型车车长标准值</li>
+<li>判断大型车：大于中型车车长标准值</li>
+<li>判断中型车：大于小型车车长标准值并且小于等于中型车车长标准值</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>测试类中，创建若干SUV对象，保存到集合，遍历集合，输出中型SUV。</li>
+</ol>
+</li>
+</ul>
+<pre><code class="java">public class Test5 &#123;
+    public static void main(String[] args) &#123;
+        // 创建SUV对象
+        SUV suv1 = new SUV(5079, 750000);
+        SUV suv2 = new SUV(4813, 760000);
+        SUV suv3 = new SUV(4270, 127800);
+        SUV suv4 = new SUV(4545, 188800);
+
+        //添加到集合中
+        ArrayList&lt;SUV&gt; list = new ArrayList&lt;&gt;();
+        list.add(suv1);
+        list.add(suv2);
+        list.add(suv3);
+        list.add(suv4);
+
+        // 遍历集合,查询中型SUV
+        for (int i = 0; i &lt; list.size(); i++) &#123;
+            SUV suv = list.get(i);
+            if (suv.midSUV())&#123;
+                suv.showMsg();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+// 定义汽车类
+class Auto &#123;
+    private String type;
+    private double length;
+    private double price;
+
+    public Auto() &#123;
+    &#125;
+
+    public Auto(String type, double length, double price) &#123;
+        this.type = type;
+        this.length = length;
+        this.price = price;
+    &#125;
+
+    public String getType() &#123;
+        return type;
+    &#125;
+
+    public void setType(String type) &#123;
+        this.type = type;
+    &#125;
+
+    public double getLength() &#123;
+        return length;
+    &#125;
+
+    public void setLength(double length) &#123;
+        this.length = length;
+    &#125;
+
+    public double getPrice() &#123;
+        return price;
+    &#125;
+
+    public void setPrice(double price) &#123;
+        this.price = price;
+    &#125;
+
+    public void showMsg() &#123;
+        System.out.println(&quot;车型:&quot; + type);
+        System.out.println(&quot;\t价格:&quot; + price);
+        System.out.println(&quot;\t车长:&quot; + length);
+
+    &#125;
+
+&#125;
+
+// 定义SUV类
+class SUV extends Auto &#123;
+    // 车长标准
+    private int miniLength = 4295;
+    private int midLength = 5070;
+
+    public SUV(double length, double price) &#123;
+        super(&quot;SUV&quot;, length, price);
+    &#125;
+    // 判断 小型车
+    public boolean miniSUV() &#123;
+        return getLength() &lt;= miniLength;
+    &#125;
+
+    // 判断 大型车
+    public boolean largeSUV() &#123;
+        return getLength() &gt; midLength;
+    &#125;
+
+    // 判断 中型车
+    public boolean midSUV() &#123;
+        return getLength() &gt; miniLength &amp;&amp; getLength() &lt;= midLength;
+    &#125;
 &#125;
 </code></pre>
 
