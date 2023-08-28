@@ -2134,6 +2134,182 @@ class SUV extends Auto &#123;
     &#125;
 &#125;
 </code></pre>
+<h1 id="接口-amp-多态"><a href="#接口-amp-多态" class="headerlink" title="接口&amp;多态"></a>接口&amp;多态</h1><h3 id="概念辨析"><a href="#概念辨析" class="headerlink" title="概念辨析"></a>概念辨析</h3><h5 id="什么是接口，如何定义接口？"><a href="#什么是接口，如何定义接口？" class="headerlink" title="什么是接口，如何定义接口？"></a><span style = "color :red">什么是接口，如何定义接口？</span></h5><ul>
+<li>接口，是java语言中一种类型，是方法的集合</li>
+<li>使用interface关键字定义接口，其中可以定义抽象方法，默认方法，私有方法，静态方法等方法</li>
+</ul>
+<h5 id="什么叫做多态，条件是什么？"><a href="#什么叫做多态，条件是什么？" class="headerlink" title="什么叫做多态，条件是什么？"></a><span style = "color :red">什么叫做多态，条件是什么？</span></h5><p>一类事物的行为，具有多种表现形式<br>条件：</p>
+<ul>
+<li>继承或实现[二选一]</li>
+<li>方法的重新</li>
+<li>父类引用指向子类对象</li>
+</ul>
+<h5 id="使用多态特性，带来了什么样的好处？"><a href="#使用多态特性，带来了什么样的好处？" class="headerlink" title="使用多态特性，带来了什么样的好处？"></a><span style = "color :red">使用多态特性，带来了什么样的好处？</span></h5><p>增强方法的扩展性和复用性</p>
+<h5 id="使用多态特性，注意什么样的弊端？"><a href="#使用多态特性，注意什么样的弊端？" class="headerlink" title="使用多态特性，注意什么样的弊端？"></a><span style = "color :red">使用多态特性，注意什么样的弊端？</span></h5><p>由于类型的提升，导致调用子类对象特有的方法，必须向下转型。</p>
+<h3 id="练习：接口"><a href="#练习：接口" class="headerlink" title="练习：接口"></a>练习：接口</h3><p>输出<code>AAAA\n  BBBB</code></p>
+<p>编写步骤：</p>
+<ol>
+<li>定义接口A，普通类B实现接口A</li>
+<li>A接口中，定义抽象方法showA。 </li>
+<li>A接口中，定义默认方法showB。</li>
+<li>B类中，重写showA方法</li>
+<li>测试类中，创建B类对象，调用showA方法，showB方法。</li>
+</ol>
+<pre><code class="java">interface A&#123;
+    public abstract void showA(); //抽象方法
+    public default void showB()&#123; //默认方法
+        System.out.println(&quot;BBB&quot;);
+    &#125;
+&#125;
+
+class B implements A&#123;
+    @Override
+    public void showA() &#123;
+        System.out.println(&quot;AAAA&quot;);
+    &#125;
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        B b = new B();
+        b.showA();
+        b.showB();
+
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：接口-1"><a href="#练习：接口-1" class="headerlink" title="练习：接口"></a>练习：接口</h3><p>输出<code>AAA\n  BBBB BBBB BBBB BBBB\n CCCC CCCC CCCC CCCC</code></p>
+<p>编写步骤：</p>
+<ol>
+<li>定义接口A，普通类B实现接口A。</li>
+<li>A接口中，定义抽象方法showA。 </li>
+<li>A接口中，定义私有方法show10（String str），循环打印10次str。</li>
+<li>A接口中，定义默认方法showB10，showC10，分别调用show10方法，传入参数。</li>
+<li>测试类中，创建B对象，调用showA方法，showB10方法，showC10方法</li>
+</ol>
+<pre><code class="java">interface AA&#123;
+    public abstract void showA();
+    private void show10(String str)&#123;
+        for (int i = 0; i &lt; 10; i++) &#123;
+            System.out.print(str + &quot; &quot;);
+        &#125;
+        System.out.println();
+    &#125;
+    public default void show10B()&#123;
+        show10(&quot;BBBB&quot;);
+    &#125;
+    public default void show10C()&#123;
+        show10(&quot;CCCC&quot;);
+    &#125;
+&#125;
+class BB implements AA&#123;
+    @Override
+    public void showA() &#123;
+        System.out.println(&quot;AAAA&quot;);
+    &#125;
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        BB b = new BB();
+        b.showA();
+        b.show10B();
+        b.show10C();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：接口，静态"><a href="#练习：接口，静态" class="headerlink" title="练习：接口，静态"></a>练习：接口，静态</h3><ul>
+<li>编写步骤</li>
+</ul>
+<ol>
+<li>定义接口A，普通类B实现接口A。</li>
+<li>A接口中，定义抽象方法showA。 </li>
+<li>A接口中，定义私有静态方法show10（String str），循环打印10次str。</li>
+<li>A接口中，定义静态方法showB()，showC()，分别调用show10方法，传入参数。</li>
+<li>B类中，定义静态方法showD</li>
+<li>测试类中，使用A接口，调用静态showB()方法，showC()方法，</li>
+<li>测试类中，使用B类，调用showA方法，showD方法。</li>
+</ol>
+<pre><code class="java">interface AAA&#123;
+    public abstract void showA();
+
+    public static void showB() &#123;
+        System.out.println(&quot;static BBBB&quot;);
+        show10(&quot;BBBB&quot;);
+    &#125;
+    public static void showC()&#123;
+        System.out.println(&quot;static CCCC&quot;);
+        show10(&quot;CCCC&quot;);
+    &#125;
+    private static void show10(String str)&#123;
+        for (int i = 0; i &lt; 10; i++) &#123;
+            System.out.println(str + &quot; &quot;);
+        &#125;
+        System.out.println();
+    &#125;
+&#125;
+
+class BBB implements AAA&#123;
+
+    @Override
+    public void showA() &#123;
+        System.out.println(&quot;AAA&quot;);
+    &#125;
+    public void showD()&#123;
+        System.out.println(&quot;DDDD&quot;);
+    &#125;
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        AAA.showB();
+        AAA.showC();
+        BBB bbb = new BBB();
+        bbb.showA();
+        bbb.showD();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="练习：接口，多态"><a href="#练习：接口，多态" class="headerlink" title="练习：接口，多态"></a>练习：接口，多态</h3><p>输出：<code>star:星星一闪一闪亮晶晶\n    =======\n     sun:太阳引着9大行星旋转\n    sun：光照八分钟，到达地球</code></p>
+<p>编写步骤</p>
+<ol>
+<li>定义接口Universe，提供抽象方法doAnything。</li>
+<li>定义普通类Star，提供成员发光shine方法</li>
+<li>定义普通类Sun，继承Star类，实现Universe接口</li>
+<li>测试类中，创建Star对象，调用shine方法</li>
+<li>测试类中，多态的方式创建Sun对象，调用doAnything方法，向下转型，调用shine方法。</li>
+</ol>
+<pre><code class="java">interface Universe&#123;
+    public abstract void doAnything();
+&#125;
+class Star&#123;
+    public void shine()&#123;
+        System.out.println(&quot;star:星星一闪一闪亮晶晶&quot;);
+    &#125;
+&#125;
+class Sun extends Star implements  Universe&#123;
+    @Override
+    public void doAnything() &#123;
+        System.out.println(&quot;sun:太阳吸引着9大行星旋转&quot;);
+    &#125;
+    @Override
+    public void shine() &#123;
+        System.out.println(&quot;sun:光照八分钟,到达地球&quot;);
+    &#125;
+&#125;
+
+public class Test &#123;
+    public static void main(String[] args) &#123;
+        Star s = new Star();
+        s.shine();
+        System.out.println(&quot;====================&quot;);
+        Universe universe = new Sun();
+        universe.doAnything();
+        Sun sun = (Sun)universe;
+        sun.shine();
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
