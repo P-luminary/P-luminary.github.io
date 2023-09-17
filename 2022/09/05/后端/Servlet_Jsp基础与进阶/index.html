@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -470,6 +470,8 @@ public class ImportServlet1 extends HttpServlet &#123;
 &#125;
 </code></pre>
 <p>其中必须<span style = "color:red">@WebServlet(<strong>urlPatterns</strong> &#x3D; “&#x2F;unused”, loadOnStartup &#x3D; 1</span>)<br>必须要地址<strong>url</strong></p>
+<img src="https://raw.githubusercontent.com/P-luminary/images/3c512d2eeb3be1c1f2cc4041362cb27865bf7519/data/htm%E4%B8%8Ejava%E4%BA%92%E9%80%9A(%E5%A4%8D%E6%9D%82vs%E7%AE%80%E6%98%93).jpg" style="zoom:50%;" />
+
 <hr>
 <hr>
 <h2 id="JSP-Java-Server-Pages-入门"><a href="#JSP-Java-Server-Pages-入门" class="headerlink" title="JSP(Java Server Pages)入门"></a>JSP(Java Server Pages)入门</h2><p>JSP是J2EE的功能模块，由Web服务器执行</p>
@@ -574,6 +576,550 @@ public class ImportServlet1 extends HttpServlet &#123;
 &lt;hr/&gt;
 Copyright 1999-2023
 </code></pre>
+<h1 id="JSP-amp-Servlet进阶"><a href="#JSP-amp-Servlet进阶" class="headerlink" title="JSP&amp;Servlet进阶"></a><span style = "color : red">JSP&amp;Servlet进阶</span></h1><h4 id="HTTP请求的结构"><a href="#HTTP请求的结构" class="headerlink" title="HTTP请求的结构"></a>HTTP请求的结构</h4><ul>
+<li>HTTP请求包含三部分：请求行、请求头、请求体</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/3e7ee53fc7f209b975a225a6dc267ec56b89c3ef/data/HTTP%E8%AF%B7%E6%B1%82%E7%BB%93%E6%9E%84.jpg"></p>
+<h5 id="eclipse导入jar包-工程名-Properties-Java-Build-Path-Libraries-Add-EXternal-JARs"><a href="#eclipse导入jar包-工程名-Properties-Java-Build-Path-Libraries-Add-EXternal-JARs" class="headerlink" title="eclipse导入jar包 (工程名 - Properties - Java Build Path - Libraries - Add EXternal JARs)"></a>eclipse导入jar包 (工程名 - Properties - Java Build Path - Libraries - Add EXternal JARs)</h5><h5 id="查看F12网络-All-可查看内部详细信息常规"><a href="#查看F12网络-All-可查看内部详细信息常规" class="headerlink" title="查看F12网络 - All 可查看内部详细信息常规"></a>查看F12网络 - All 可查看内部详细信息常规</h5><h5 id="input-html"><a href="#input-html" class="headerlink" title="input.html"></a>input.html</h5><p><strong>get</strong>请求把数据放在url中    <strong>post</strong>请求把数据放在请求体中</p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;                  &lt;!-- 工程名 + 映射地址 --&gt;
+    &lt;form action=&quot;/request-struc/request&quot; method=&quot;post&quot;&gt;
+        &lt;input name=&quot;username&quot;/&gt;
+        &lt;input name=&quot;password&quot; type=&quot;password&quot;/&gt;
+        &lt;input type=&quot;submit&quot;/&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4 id="巧用请求头开发多端应用"><a href="#巧用请求头开发多端应用" class="headerlink" title="巧用请求头开发多端应用"></a>巧用请求头开发多端应用</h4><p>根据请求头去对应不同的设备<br>同样的网址在<u>手机</u>和<u>电脑</u>上所呈现的内容是不一样的</p>
+<pre><code class="java">import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(&quot;/ua&quot;)
+public class UserAgentServlet extends HttpServlet &#123;
+    public UserAgentServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String userAgent = req.getHeader(&quot;User-Agent&quot;);
+        resp.setContentType(&quot;text/html; charset=utf-8&quot;);
+        resp.getWriter().println(userAgent);
+        String output = &quot;&quot;;
+        if (userAgent.indexOf(&quot;Windows NT&quot;)!=-1)&#123;
+            output = &quot;&lt;h1&gt;这是PC端首页&lt;/h1&gt;&quot;;
+        &#125; else if (userAgent.indexOf(&quot;iPhone&quot;)!=-1 || userAgent.indexOf(&quot;Android&quot;)!=-1) &#123;
+            output = &quot;&lt;h1&gt;这是移动端首页&lt;/h1&gt;&quot;;
+        &#125;
+        resp.getWriter().println(output);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="响应的结构-服务器返回給浏览器的显示结果"><a href="#响应的结构-服务器返回給浏览器的显示结果" class="headerlink" title="响应的结构 (服务器返回給浏览器的显示结果)"></a>响应的结构 (服务器返回給浏览器的显示结果)</h4><p>HTTP请求包含三部分：<strong>响应行、响应头、响应体</strong></p>
+<table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>错误描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200</td>
+<td>服务器处理成功</td>
+</tr>
+<tr>
+<td>404</td>
+<td>无法找到文件</td>
+</tr>
+<tr>
+<td>500</td>
+<td>内部服务器错误</td>
+</tr>
+<tr>
+<td>403</td>
+<td>服务器拒绝访问</td>
+</tr>
+<tr>
+<td>301、302</td>
+<td>请求重定向</td>
+</tr>
+<tr>
+<td>400</td>
+<td>无效的请求</td>
+</tr>
+<tr>
+<td>401</td>
+<td>未经过授权</td>
+</tr>
+<tr>
+<td>503</td>
+<td>服务器超负载或正停机维护，无法处理请求</td>
+</tr>
+</tbody></table>
+<h4 id="ContentType的作用"><a href="#ContentType的作用" class="headerlink" title="ContentType的作用"></a>ContentType的作用</h4><p>ContentType决定浏览器采用何种方式<u>对响应体进行处理</u></p>
+<blockquote>
+<p>response.setContentType(“text&#x2F;html; charset&#x3D;utf-8”);</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>MIME类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>text&#x2F;plain</td>
+<td>纯文本</td>
+</tr>
+<tr>
+<td>text&#x2F;html</td>
+<td>HTML文档</td>
+</tr>
+<tr>
+<td>text&#x2F;xml</td>
+<td>XML文档</td>
+</tr>
+<tr>
+<td>application&#x2F;x-msdownload</td>
+<td>需要下载的资源</td>
+</tr>
+<tr>
+<td>image&#x2F;jpeg<br />image&#x2F;gif<br />image&#x2F;…</td>
+<td>图片资源</td>
+</tr>
+</tbody></table>
+<pre><code class="java">protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException &#123;
+        String output = &quot;&lt;h1&gt;&lt;a href=&#39;http://www.baidu.com&#39;&gt;&lt;span&gt;百度&lt;/span&gt;&lt;/a&gt;&lt;/h1&gt;&quot;;
+        response.setContentType(&quot;text/html; charset=utf-8&quot;);
+        response.getWriter().println(output);
+    &#125;
+</code></pre>
+<h4 id="请求转发与重定向"><a href="#请求转发与重定向" class="headerlink" title="请求转发与重定向"></a>请求转发与重定向</h4><p>多个Servlet(JSP)之间跳转有两种方式：</p>
+<ul>
+<li><strong>request.getRequestDispatcher().forward()</strong> - <strong><u>请求转发</u></strong>[请求自发器]<br><u><span style =  "color : red"><strong>请求转发</strong></span></u>是服务器跳转，指挥产生一次请求</li>
+<li><strong>response.sendRedirect()</strong> - <u><strong>响应重定向</strong></u><br><span style =  "color : red"><u><strong>响应重定向</strong></u></span>是浏览器端跳转，会产生两次请求</li>
+<li><strong>request.setAttribute</strong>(属性名，属性值) - <u><strong>设置请求属性</strong></u><br><strong>Object attr &#x3D; request.getAttribute</strong>(属性名) - <u><strong>获取请求属性</strong></u><br>请求允许<span style =  "color : red"><u><strong>创建自定义属性</strong></u></span></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/26a7d7aac4670f1822db268025d446711c563373/data/%E8%AF%B7%E6%B1%82%E8%BD%AC%E5%8F%91%26%E5%93%8D%E5%BA%94%E9%87%8D%E5%AE%9A%E5%90%91.jpg"></p>
+<pre><code class="java">CheckLoginServlet.java
+package servlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(&quot;/direct/check&quot;)
+public class CheckLoginServlet extends HttpServlet &#123;
+    public CheckLoginServlet() &#123;
+    &#125;
+
+    @Override
+   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        System.out.println(&quot;用户登录成功&quot;);
+        //创建自定义属性
+        req.setAttribute(&quot;username&quot;,&quot;admin&quot;);
+
+        //实现了请求转发的功能[从服务器内部由第一个servlet转到第二个] forward(请求 + 响应)
+        req.getRequestDispatcher(&quot;/direct/index&quot;).forward(req, resp);
+        //响应重定向需要增加contextPath[将请求第一次处理完后将响应重新发送一个新的请求給index servlet]
+        resp.sendRedirect(&quot;/direct/index&quot;); //[结果已被重定向]
+    &#125;
+&#125;
+==============================================================
+indexServlet.java
+package servlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(&quot;/direct/index&quot;)
+public class indexServlet extends HttpServlet &#123;
+    public indexServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        //接收创建的自定义属性
+        String username = (String)req.getAttribute(&quot;username&quot;);
+        resp.getWriter().println(&quot;This is index page!current username is &quot; + username);
+    &#125;
+&#125;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/21d4e05b16134a3e3817e60bffe174723c0b76c8/data/%E8%AF%B7%E6%B1%82%E8%BD%AC%E5%8F%91%E4%B8%8E%E9%87%8D%E5%AE%9A%E5%90%91.png"></p>
+<h4 id="浏览器Cookie-浏览器重启但用户登录不会消失"><a href="#浏览器Cookie-浏览器重启但用户登录不会消失" class="headerlink" title="浏览器Cookie [浏览器重启但用户登录不会消失]"></a><span style = "color :red">浏览器Cookie</span> [浏览器重启但用户登录不会消失]</h4><ul>
+<li>Cookie是浏览器保存在本地的文本内容</li>
+<li>Cookie常用于保存登录状态、用户资料等小文本</li>
+<li>Cookie具有时效性，Cookie内容会伴随请求发送給Tomcat</li>
+<li>request.getCookies() 用户获取所有的Cookie</li>
+<li>cookie.setMaxAge() 用户设置cookie保存的时间(单位：秒s)</li>
+</ul>
+<pre><code class="java">ImoocLoginServlet.java
+package cookie;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(&quot;/cookies/login&quot;)
+public class ImoocLoginServlet extends HttpServlet &#123;
+    public ImoocLoginServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        System.out.println(&quot;用户登录成功&quot;);
+        Cookie cookie = new Cookie(&quot;user&quot;,&quot;admin&quot;);
+        cookie.setMaxAge(60 * 60 * 24 * 7); //单位是秒 七天内有效
+        resp.addCookie(cookie);
+        resp.getWriter().println(&quot;login success&quot;);
+    &#125;
+&#125;
+
+================================================================
+ImoocIndexServlet.java
+package cookie;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+@WebServlet(&quot;/cookies/index&quot;)
+public class ImoocIndexServlet extends HttpServlet &#123;
+    public ImoocIndexServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        Cookie[] cs = req.getCookies();
+        String user = null;
+        for (Cookie c : cs)&#123;
+            System.out.println(c.getName() + &quot;:&quot; + c.getValue());
+            if (c.getName().equals(&quot;user&quot;))&#123;
+                user = c.getValue();
+                break;
+            &#125;
+        &#125;
+        if (user == null)&#123;
+            resp.getWriter().println(&quot;user not login&quot;);
+        &#125;else &#123;
+            resp.getWriter().println(&quot;user:&quot; + user);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="Session-用户会话"><a href="#Session-用户会话" class="headerlink" title="Session-用户会话"></a><span style = "color :red">Session-用户会话</span></h4><ul>
+<li>Session(用户会话) 用于保存与 ”浏览器窗口“ 对应的数据</li>
+<li>Session的数据存储在Tomcat服务器的内存中，具有时效性 </li>
+<li>Session通过浏览器Cookie的SessionId值提取用户数据</li>
+</ul>
+<p>Session类似于是浏览器单独存储的空间，每个浏览器窗口所对应的Session空间是不同的；<br><strong>Session是与浏览器窗口绑定的且把数据存储在Tomcat内存中的对象</strong></p>
+<img src="https://raw.githubusercontent.com/P-luminary/images/1682f14fb87d47dc55745ae307e9211ce6e4326f/data/Session%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png" style="zoom:50%;" />
+
+<pre><code class="java">SessionLoginServlet.java
+package session;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+
+@WebServlet(&quot;/session/login&quot;)
+public class SessionLoginServlet extends HttpServlet &#123;
+    public SessionLoginServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        System.out.println(&quot;用户登录成功&quot;);
+        //获取到用户会话Session对象
+        HttpSession session = req.getSession();
+        String sessionId = session.getId(); //A99EA3178EDC7C490E29D8EC46930FC6
+        System.out.println(sessionId);
+        session.setAttribute(&quot;name&quot;,&quot;张三&quot;);
+        req.getRequestDispatcher(&quot;/session/index&quot;).forward(req,resp);
+    &#125;
+&#125;
+============================================================================
+SessionIndexServlet.java
+package session;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+
+@WebServlet(&quot;/session/index&quot;)
+public class SessionIndexServlet extends HttpServlet &#123;
+    public SessionIndexServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        HttpSession session = req.getSession();
+        String sessionId = session.getId(); //A99EA3178EDC7C490E29D8EC46930FC6
+        System.out.println(sessionId);
+        String name = (String)session.getAttribute(&quot;name&quot;);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        resp.getWriter().println(&quot;这是首页，当前用户为: &quot; + name);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="ServletContext"><a href="#ServletContext" class="headerlink" title="ServletContext"></a>ServletContext</h4><ul>
+<li>ServletContext(Servlet上下文对象)，是Web应用全局对象</li>
+<li>一个Web应用只会创建一个ServletContext对象</li>
+<li>ServletContext随着Web应用启动而自动创建</li>
+</ul>
+<p>如果是session 则关闭一次浏览器sessionId就会发生变化 重新加载session<br>只要设置了自定义属性就会在全局生效 </p>
+<h4 id="Java-Web三大作用域对象-作用域和生命周期依次递增"><a href="#Java-Web三大作用域对象-作用域和生命周期依次递增" class="headerlink" title="Java Web三大作用域对象 [作用域和生命周期依次递增]"></a>Java Web三大作用域对象 [<u>作用域</u>和<u>生命周期</u>依次递增]</h4><ul>
+<li><span style = "color:red"><strong>HttpServletRequest - 请求对象</strong> </span><br>[<u>网页请求 Tomcat响应一次后销毁</u>]</li>
+<li><strong>HttpSession - 用户会话对象</strong><br>[保存与浏览器窗口的数据 网页请求 Tomcat响应后有30分钟没有被访问则销毁]</li>
+<li><strong>ServletContext - web应用全局对象</strong><br>[Web启动时被创建]</li>
+</ul>
+<p>能用小作用域完成开发的功能就尽量不要使用大作用域</p>
+<h4 id="Web应用的中文乱码由来"><a href="#Web应用的中文乱码由来" class="headerlink" title="Web应用的中文乱码由来"></a>Web应用的中文乱码由来</h4><ul>
+<li>Tomcat默认使用字符集ISO-8859-1，属于西欧字符集</li>
+<li>解决乱码的核心思路是将ISO-8859-1转换为UTF-8</li>
+<li>Servlet中请求与响应都需要设置UTF-8字符集</li>
+</ul>
+<pre><code class="java">Ⅰ.麻烦且不实用
+String utf8Ename = new String(ename.getBytes(&quot;iso-8859-1&quot;), &quot;utf-8&quot;);
+String utf8EAddress = new String(address.getBytes(&quot;iso-8859-1&quot;), &quot;utf-8&quot;);
+
+Ⅱ.简便且实用 
+写在★★doPost★★下面的第一行
+request.setCharacterEncoding(&quot;UTF-8&quot;);
+//对于Tomocat8.x的版本, 默认get请求发送中文就是UTF-8, 因此无需转换
+写在★★doGet★★下面
+response.setContentType(&quot;text/html;charset=utf-8&quot;);
+</code></pre>
+<h4 id="web-xml常用配置"><a href="#web-xml常用配置" class="headerlink" title="web.xml常用配置"></a><span style =  "color : red">web.xml常用配置</span></h4><ul>
+<li>修改web应用默认首页</li>
+<li>Servlet通配符映射及初始化参数</li>
+<li>设置404、500等状态码默认页面</li>
+</ul>
+<pre><code class="xml">设置默认首页地址 =&gt; 在web.xml中 设置
+设置后启动tomcat后自动弹出首页为student.html中的内容
+&lt;welcome-file-list&gt;
+  &lt;welcome-file&gt;student.html&lt;/welcome-file&gt;
+&lt;/welcome-file-list&gt;
+根目录/二级页面也可以查找默认首页
+</code></pre>
+<p><strong>模糊匹配</strong>：* [Servlet通配符]</p>
+<p><strong>@WebServlet(“&#x2F;cookies&#x2F;*”)</strong></p>
+<pre><code class="xml">☆ ☆ ☆ ☆ web.xml ☆ ☆ ☆ ☆
+&lt;servlet&gt;
+ &lt;servlet-name&gt;patternServlet&lt;/servlet-name&gt;
+ &lt;servlet-class&gt;PatternServlet&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+ &lt;servlet-name&gt;patternServlet&lt;/servlet-name&gt;
+ &lt;url-pattern&gt;/pattern/*&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;
+</code></pre>
+<pre><code class="java">☆ ☆ ☆ ☆ PatternServlet.java ☆ ☆ ☆ ☆
+public class PatternServlet extends HttpServlet&#123;
+    @Override
+    protected void service(HttpServletRequest request,HttpServletReasponse reasponse)&#123;
+        //查询员工的基本信息 获取当前访问的URL
+        String url = request.getRequestURL().toString();
+        System.out.println(url);
+        String id = url.substring(url.lastIndexOf(&quot;/&quot;) + 1);
+        int eid =  Integer.parseInt(id);
+        response.setContentType(&quot;text/html;charest=utf-8&quot;);
+        PrintWriter out = response.getWriter();
+        out.println(id);
+        if(eid == 1) &#123;
+            out.println(&quot;张三&quot;);
+        &#125;else if(eid == 2) &#123;
+            out.println(&quot;李四&quot;);
+        &#125;else &#123;
+            out.println(&quot;其他员工&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="全局配置"><a href="#全局配置" class="headerlink" title="全局配置"></a>全局配置</h4><pre><code class="xml">这样做以后就可以直接修改xml里面的东西就好了
+&lt;context-param&gt;
+ &lt;param-name&gt;copyright&lt;/param-name&gt;
+ &lt;param-value&gt;@ 2023 imooc.com 京ICP备 12003892号-22&lt;/param-value&gt;
+&lt;/context-param&gt;
+&lt;context-param&gt;
+ &lt;param-name&gt;title&lt;/param-name&gt;
+ &lt;param-value&gt;慕课网-程序员的梦工厂&lt;/param-value&gt;
+&lt;/context-param&gt;
+</code></pre>
+<pre><code class="java">@WebServlet(&quot;/servletcontext/init&quot;)
+public class ServletContextInitServlet extends HttpServlet &#123;
+    public ServletContextInitServlet() &#123;
+        super();
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        ServletContext context = request.getServletContext();
+        String copyright = context.getInitParameter(&quot;copyright&quot;);
+        context.setAttribute(&quot;copyright&quot;, copyright);
+        String title = context.getInitParameter(&quot;title&quot;);
+        context.setAttribute(&quot;title&quot;, title);
+        response.getWriter().println(&quot;init success&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="针对404、500出现透露信息的bug处理方式"><a href="#针对404、500出现透露信息的bug处理方式" class="headerlink" title="针对404、500出现透露信息的bug处理方式"></a>针对404、500出现透露信息的bug处理方式</h4><pre><code class="html">☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ 404.html ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset = &quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;    
+&lt;/head&gt;
+&lt;body&gt;
+    资源不存在   
+&lt;/body&gt;
+&lt;/html&gt;
+
+☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ 500.html ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset = &quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;    
+&lt;/head&gt;
+&lt;body&gt;
+    服务器内部错误，请联系管理员  
+&lt;/body&gt;
+&lt;/html&gt;
+
+☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ web.xml ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆
+&lt;!-- 指定错误页面 --&gt;
+&lt;error-page&gt;
+ &lt;error-code&gt;404&lt;/error-code&gt;
+ &lt;location&gt;/error/404.html&lt;/location&gt;
+&lt;/error-page&gt;
+&lt;error-page&gt;
+ &lt;error-code&gt;500&lt;/error-code&gt;
+ &lt;location&gt;/error/500.html&lt;/location&gt;
+&lt;/error-page&gt;
+======================================================================
+可以把404\500.html随时转换成 404\500.jsp
+仅需在顶加上&lt;%@ page contentType=&quot;text/html;charset=utf-8&quot; isErrorPage=&quot;true&quot;%&gt;
+isErrorPage=&quot;true&quot; 说明此jsp专门用于错误页面
+
+&lt;%@ page contentType=&quot;text/html;charset=utf-8&quot; isErrorPage=&quot;true&quot;%&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset = &quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;    
+&lt;/head&gt;
+&lt;body&gt;
+    服务器内部错误，请联系管理员，错误信息如下:
+    &lt;%
+        String msg = exception.getMessage();
+        out.print(&quot;&lt;br&gt;&quot; + exception.getClass().getSimpleName() + &quot;:&quot; + msg);
+        &lt;!--  NumberFormatException:For input String:&quot;&quot;  --&gt;
+    %&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4 id="JSP九大内置对象-面试-x2F-笔试重点"><a href="#JSP九大内置对象-面试-x2F-笔试重点" class="headerlink" title="JSP九大内置对象[面试&#x2F;笔试重点]"></a><span style = "color : red">JSP九大内置对象</span>[面试&#x2F;笔试重点]</h4><table>
+<thead>
+<tr>
+<th>内置对象</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>request</td>
+<td>请求对象 -HttpServletRequest</td>
+</tr>
+<tr>
+<td>response</td>
+<td>响应对象 -HttpServletResponse</td>
+</tr>
+<tr>
+<td>session</td>
+<td>用户会话 -HttpSession</td>
+</tr>
+<tr>
+<td>application</td>
+<td>应用全局对象 -ServletContext</td>
+</tr>
+<tr>
+<td>out</td>
+<td>输出对象 -PrintWriter</td>
+</tr>
+<tr>
+<td>page</td>
+<td>当前页面对象 -this</td>
+</tr>
+<tr>
+<td>pageContext</td>
+<td>页面上下文对象 -PageContext</td>
+</tr>
+<tr>
+<td>config</td>
+<td>应用配置对象 -ServletConfig</td>
+</tr>
+<tr>
+<td>exception</td>
+<td>应用异常对象 -Throwable</td>
+</tr>
+</tbody></table>
+<pre><code class="jsp">&lt;body&gt; &lt;!--内置了许多java的类--&gt;
+    &lt;%
+        String url = request.getRequesrURL().toString(); //HttpServletRequest
+        response.getWriter().println(url); //HttpServletResponse
+    %&gt;
+    &lt;%
+        out.println(&quot;&lt;br&gt;ABCCC&quot;);
+        session.setAttribute(&quot;user&quot;,&quot;张三&quot;);
+        out.println((String)session.getAttribute(&quot;user&quot;));
+    %&gt;
+    &lt;%
+        String cp = application.getInitParameter(&quot;copyright&quot;); //ServletContext
+        out.println(&quot;&lt;hr/&gt;&quot;);
+        out.println(cp); 
+        pageContext.getRequest(); //pageContext就像一个中转站
+           pageContext.getResponse();
+        pageContext.getSession();
+        pageContext.getServletContext();
+    %&gt;
+&lt;/body&gt;
+</code></pre>
+<h4 id="Java-Web打包与发布"><a href="#Java-Web打包与发布" class="headerlink" title="Java Web打包与发布"></a><span style = "color : blue">Java Web打包与发布</span></h4><ul>
+<li>Java Web应用采用war包进行发布</li>
+<li>发布路径为：{TOMCAT_HOME}&#x2F;webapps</li>
+<li>Eclipse支持war包导出</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44741023/article/details/119298059">IDEA怎么把web项目打成war包最详细图文教程_idea web项目打成war包_Keeling1720的博客-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/github_38336924/article/details/82422888">IDEA 将项目打包war包_虚拟机安装tomcat_dadeity的博客-CSDN博客</a></p>
 
     </div>
 
