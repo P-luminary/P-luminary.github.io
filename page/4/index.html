@@ -997,7 +997,7 @@
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -1535,7 +1535,7 @@
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ff7d73>
                 政治
             </a>
         </span>
@@ -2791,7 +2791,7 @@
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ffa2c4>
+            <a href="/tags/计算机" style=color:#879cff>
                 计算机
             </a>
         </span>
@@ -3233,7 +3233,7 @@
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -3816,7 +3816,7 @@
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#879cff>
                 政治
             </a>
         </span>
@@ -4220,7 +4220,7 @@
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -4536,9 +4536,9 @@ HAVING avg(t1.score) &gt; 60
 
 <div class="post">
 
-    <a href="/2022/09/05/后端/Servlet_Jsp基础与进阶/">
+    <a href="/2022/09/05/后端/Servlet_Jsp基础与进阶+JSTLEL表达式/">
         <h2>
-            Servlet_Jsp基础与进阶
+            Servlet_Jsp基础与进阶+JSTL\EL表达式
         </h2>
     </a>
 
@@ -5543,6 +5543,269 @@ isErrorPage=&quot;true&quot; 说明此jsp专门用于错误页面
 <li>Eclipse支持war包导出</li>
 </ul>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44741023/article/details/119298059">IDEA怎么把web项目打成war包最详细图文教程_idea web项目打成war包_Keeling1720的博客-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/github_38336924/article/details/82422888">IDEA 将项目打包war包_虚拟机安装tomcat_dadeity的博客-CSDN博客</a></p>
+<h4 id="EL-Expression-Language-表达式"><a href="#EL-Expression-Language-表达式" class="headerlink" title="EL(Expression Language)表达式"></a>EL(Expression Language)表达式</h4><p>${student.name} &#x3D;&gt; [自定义属性名. 子属性]</p>
+<ul>
+<li>EL表达式用于简化JSP的输出</li>
+<li>EL表达式的基本语法：**${表达式}**</li>
+<li>示例：&lt; h1 &gt;学生姓名：**$(student.name)**  &lt; &#x2F;h1 &gt;</li>
+</ul>
+<pre><code class="java">StudentServlet.java
+protected void doGet(...)&#123;
+    Student stu = new Student();
+    stu.setName(&quot;子墨&quot;);
+    stu.setMobile(null);
+    String grade = &quot;A&quot;;
+    request.setAttribute(&quot;student&quot;,stu);
+    request.setAttribute(&quot;grade&quot;,grade);
+    request.getRequestDispatcher(&quot;/info.jsp&quot;).forward(request, response);
+
+&#125;
+</code></pre>
+<pre><code class="jsp">☆ ☆ ☆ ☆ ☆ ☆ info.jsp ☆ ☆ ☆ ☆ ☆ ☆
+&lt;body&gt;
+    &lt;% 
+        Student stu = (Student)request.getAttribute(&quot;student&quot;);
+           Student grade = (Student)request.getAttribute(&quot;grade&quot;);
+        out.println(&quot;姓名：&quot;+ stu.getName())
+        out.println(&quot;姓名：&quot;+ stu.getMobile())
+        out.println(&quot;姓名：&quot;+ grade)
+    %&gt;
+&lt;/body&gt;
+☆ ☆ ☆ ☆ ☆ ☆ el_info.jsp ☆ ☆ ☆ ☆ ☆ ☆
+&lt;body&gt;
+    姓名: $&#123;requestScope.student.name&#125;
+    手机: $&#123;requestScope.student.mobile&#125;
+    评级: $&#123;requestScope.grade&#125;
+&lt;/body&gt;
+</code></pre>
+<h4 id="作用域对象"><a href="#作用域对象" class="headerlink" title="作用域对象"></a>作用域对象</h4><ul>
+<li>requestScope是EL作用域对象</li>
+<li>EL表达式内置四种作用域对象</li>
+<li>忽略书写作用域对象时，el则按作用域从小到大一次尝试获取</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>作用域对象</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>pageScope</td>
+<td>从当前页面取值</td>
+</tr>
+<tr>
+<td>requestScope</td>
+<td>从当前请求中获取属性值</td>
+</tr>
+<tr>
+<td>sessionScope</td>
+<td>从当前会话中获取属性值</td>
+</tr>
+<tr>
+<td>applicationScope</td>
+<td>从当前应用获取全局属性值</td>
+</tr>
+</tbody></table>
+<p>姓名: ${requestScope.student.name} 其中的requestScope可以省略 el则按作用域从小到大一次尝试获取</p>
+<h4 id="EL表达式输出-支持运算"><a href="#EL表达式输出-支持运算" class="headerlink" title="EL表达式输出 [支持运算]"></a>EL表达式输出 [支持运算]</h4><ul>
+<li>语法：<span style = "color : red"><strong>${[作用域.]属性名[.子属性]}</strong></span></li>
+<li>EL表达式支持对运算结果进行输出</li>
+<li>EL支持绝大多数对象输出，<strong>本质是执行toString()方法</strong></li>
+</ul>
+<pre><code class="jsp">$&#123;title&#125;
+$&#123;requestScope.student.name&#125;
+$&#123;emp.salary + 300&#125;
+$&#123;1&lt;=3 &amp;&amp; 2&gt;4&#125;
+</code></pre>
+<h4 id="EL输出参数值"><a href="#EL输出参数值" class="headerlink" title="EL输出参数值"></a>EL输出参数值</h4><ul>
+<li>EL表达式内置<strong>param</strong>对象来简化参数的输出</li>
+<li>语法：<span style = "color : red"> <strong>$(param.参数名)</strong></span></li>
+</ul>
+<pre><code class="jsp">☆ ☆ ☆ ☆ ☆ ☆ el_info.jsp ☆ ☆ ☆ ☆ ☆ ☆
+&lt;body&gt;
+    姓名: $&#123;param.student.name&#125;
+    手机: $&#123;param.student.mobile&#125;
+    评级: $&#123;param.grade&#125;
+&lt;/body&gt;
+</code></pre>
+<h4 id="JSTL-JSP-Standard-Tag-Libarary-标签库"><a href="#JSTL-JSP-Standard-Tag-Libarary-标签库" class="headerlink" title="JSTL(JSP Standard Tag Libarary) 标签库"></a>JSTL(JSP Standard Tag Libarary) 标签库</h4><ul>
+<li>JSTL用于简化JSP开发，提高代码的可读性与可维护性</li>
+<li>JSTL由SUN(Oracle)定义规范，由Apache Tomcat团队实现</li>
+</ul>
+<h4 id="安装JSTL标签库"><a href="#安装JSTL标签库" class="headerlink" title="安装JSTL标签库"></a>安装JSTL标签库</h4><ul>
+<li>将Jar文件复制到工程的 <span style = "color : red"><strong>&#x2F;WEB-INF&#x2F;lib</strong></span> 目录</li>
+<li>将Jar文件复制到Tomcat安装目录的<strong>lib</strong>目录</li>
+</ul>
+<h4 id="JSTL的标签库种类"><a href="#JSTL的标签库种类" class="headerlink" title="JSTL的标签库种类"></a>JSTL的标签库种类</h4><ul>
+<li>JSTL按功能划分可分为五类标签库</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">类别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">核心标签库 - core</td>
+</tr>
+<tr>
+<td align="center">格式化输出标签库 - fmt</td>
+</tr>
+<tr>
+<td align="center">SQL操作标签库 - sql</td>
+</tr>
+<tr>
+<td align="center">XML操作标签库 - xml</td>
+</tr>
+<tr>
+<td align="center">函数标签库 - functions</td>
+</tr>
+</tbody></table>
+<h4 id="引用JSTL核心库-“-lt-c-gt-”"><a href="#引用JSTL核心库-“-lt-c-gt-”" class="headerlink" title="引用JSTL核心库 [“&lt; c:?? &gt;”]"></a>引用JSTL核心库 [“&lt; c:?? &gt;”]</h4><ul>
+<li>核心标签库 - core 是JSTL最重要的标签库，提供了JSTL的基础功能</li>
+<li><strong>&lt;%@ taglib prefix &#x3D; “c”  uri &#x3D; “<a target="_blank" rel="noopener" href="http://java.sun.com/jsp/jstl/core&quot;">http://java.sun.com/jsp/jstl/core&quot;</a> %&gt;</strong> 引入标签库</li>
+</ul>
+<p> <span style = "color : red"><strong>&lt; c: ?? &gt; … &lt; &#x2F;c:?? &gt;</strong></span></p>
+<h4 id="判断标签"><a href="#判断标签" class="headerlink" title="判断标签"></a>判断标签</h4><ul>
+<li>JSTL核心库提供了两组判断的标签</li>
+<li>&lt; c : if &gt; - 单分支判断</li>
+<li>&lt; c:choose &gt;、&lt; c:when&gt;、&lt; c:otherwise &gt; - 多分支判断</li>
+</ul>
+<pre><code class="java">import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(&quot;/jstl&quot;)
+public class JstlServlet extends HttpServlet &#123;
+    public JstlServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setAttribute(&quot;score&quot;,78);
+        req.setAttribute(&quot;grade&quot;,&quot;B&quot;);
+        req.getRequestDispatcher(&quot;/core.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="jsp">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot;
+         pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;!-- 在Java或者JSP文件中输入 Alt + / 可出现智能提示 --&gt;
+&lt;%@ taglib  uri = &quot;http://java.sun.com/jsp/jstl/core&quot; prefix = &quot;c&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Insert title here&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;$&#123;requestScope.score&#125;&lt;/h1&gt;
+&lt;c:if test = &quot;$&#123;score &gt;= 60 &#125;&quot;&gt;
+    &lt;h1 style = &quot;color:green&quot;&gt;恭喜，你已通过测试&lt;/h1&gt;
+&lt;/c:if&gt;
+&lt;c:if test = &quot;$&#123;score &lt; 60 &#125;&quot;&gt;
+    &lt;h1 style = &quot;color:red&quot;&gt;对不起，再接再厉&lt;/h1&gt;
+&lt;/c:if&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4 id="遍历集合"><a href="#遍历集合" class="headerlink" title="遍历集合"></a>遍历集合</h4><ul>
+<li>&lt; c:forEach &gt;标签用于遍历集合(Collection)中的每一个对象</li>
+</ul>
+<pre><code class="java">&lt;c:forEach var=&quot;p&quot; items=&quot;$&#123;persons&#125;&quot; varStatus=&quot;idx&quot;&gt;
+第$&#123;idx.index + 1&#125;位 &lt;br/&gt;
+姓名: $&#123;p.name&#125; 性别: $&#123;p.sex&#125; 年龄:$&#123;p.age&#125;
+&lt;/c:forEach&gt;
+</code></pre>
+<pre><code class="jsp">JstlServlet.java
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(&quot;/jstl&quot;)
+public class JstlServlet extends HttpServlet &#123;
+    public JstlServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setAttribute(&quot;score&quot;,20);
+        req.setAttribute(&quot;grade&quot;,&quot;E&quot;);
+        List list = new ArrayList();
+        list.add(new Company(&quot;腾讯&quot;, &quot;www.tencent.com&quot;));
+        list.add(new Company(&quot;百度&quot;, &quot;www.baidu.com&quot;));
+        list.add(new Company(&quot;慕课网&quot;, &quot;www.imooc.com&quot;));
+        //把list放在当前请求中
+        req.setAttribute(&quot;companies&quot;, list);
+        req.getRequestDispatcher(&quot;/core.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">core.jsp
+&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot;
+         pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;!-- 在Java或者JSP文件中输入 Alt + / 可出现智能提示 --&gt;
+&lt;%@ taglib  uri = &quot;http://java.sun.com/jsp/jstl/core&quot; prefix = &quot;c&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Insert title here&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;$&#123;requestScope.score&#125;&lt;/h1&gt;
+&lt;c:if test = &quot;$&#123;score &gt;= 60 &#125;&quot;&gt;
+    &lt;h1 style = &quot;color:green&quot;&gt;恭喜，你已通过测试&lt;/h1&gt;
+&lt;/c:if&gt;
+&lt;c:if test = &quot;$&#123;score &lt; 60 &#125;&quot;&gt;
+    &lt;h1 style = &quot;color:red&quot;&gt;对不起，再接再厉&lt;/h1&gt;
+&lt;/c:if&gt;
+$&#123;grade&#125;
+&lt;c:choose&gt;
+    &lt;c:when test=&quot;$&#123;grade == &#39;A&#39;&#125;&quot;&gt;
+        &lt;h2&gt;你很优秀&lt;/h2&gt;
+    &lt;/c:when&gt;
+    &lt;c:when test=&quot;$&#123;grade == &#39;B&#39;&#125;&quot;&gt;
+        &lt;h2&gt;不错哟&lt;/h2&gt;
+    &lt;/c:when&gt;
+    &lt;c:when test=&quot;$&#123;grade == &#39;C&#39;&#125;&quot;&gt;
+        &lt;h2&gt;水平一般，需要提高&lt;/h2&gt;
+    &lt;/c:when&gt;
+    &lt;c:when test=&quot;$&#123;grade == &#39;D&#39;&#125;&quot;&gt;
+        &lt;h2&gt;需要努力，不要气馁&lt;/h2&gt;
+    &lt;/c:when&gt;
+    &lt;c:otherwise&gt;
+        &lt;h2&gt;一切随缘吧&lt;/h2&gt;
+    &lt;/c:otherwise&gt;
+&lt;/c:choose&gt;
+&lt;!-- forEach标签用于遍历集合 
+        List companys = (List)request.getAttribute(&quot;companys&quot;)
+        for(Company c : companys)&#123;
+            out.print(&quot;...&quot;)
+        &#125;
+        idx = index
+        idx.index属性代表循环的索引值（0开始）
+    --&gt;
+    &lt;c:forEach items=&quot;$&#123;requestScope.companies&#125;&quot; var=&quot;c&quot;&gt;
+        &lt;h2 style=&quot;color: green&quot;&gt;$&#123;idx.index&#125;.$&#123;c.cname&#125;-$&#123;c.url&#125;&lt;/h2&gt;
+    &lt;/c:forEach&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4 id="fmt格式化标签库"><a href="#fmt格式化标签库" class="headerlink" title="fmt格式化标签库"></a>fmt格式化标签库</h4><ul>
+<li>fmt格式化标签库URl : <strong><a target="_blank" rel="noopener" href="http://java.sun.com/jsp/jstl/fmt">http://java.sun.com/jsp/jstl/fmt</a></strong></li>
+<li>&lt; fmt:formatDate value &#x3D; “” pattern &#x3D; “” &gt; 格式化日期标签</li>
+<li>&lt; fmt:formatNumber value &#x3D; “” pattern &#x3D; “”&gt; 格式化数字标签</li>
+</ul>
 
             
         </div>
@@ -5557,14 +5820,14 @@ isErrorPage=&quot;true&quot; 说明此jsp专门用于错误页面
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
         
     </div>
 
-    <a href="/2022/09/05/后端/Servlet_Jsp基础与进阶/ " class="go-post">
+    <a href="/2022/09/05/后端/Servlet_Jsp基础与进阶+JSTLEL表达式/ " class="go-post">
         阅读全文
     </a>
 </div>
@@ -5891,7 +6154,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
