@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1243,7 +1243,91 @@ $&#123;1&lt;=3 &amp;&amp; 2&gt;4&#125;
 <li>核心标签库 - core 是JSTL最重要的标签库，提供了JSTL的基础功能</li>
 <li><strong>&lt;%@ taglib prefix &#x3D; “c”  uri &#x3D; “<a target="_blank" rel="noopener" href="http://java.sun.com/jsp/jstl/core&quot;">http://java.sun.com/jsp/jstl/core&quot;</a> %&gt;</strong> 引入标签库</li>
 </ul>
-<p> <span style = "color : red"><strong>&lt; c: ?? &gt; … &lt; &#x2F;c:?? &gt;</strong></span></p>
+<p> <span style = "color : red"><strong>&lt; c: ?? &gt; … &lt; &#x2F;c:?? &gt;</strong></span><br>&lt; c:out &gt;输出</p>
+<h6 id="C标签c-forEach的用法"><a href="#C标签c-forEach的用法" class="headerlink" title="C标签c:forEach的用法"></a>C标签c:forEach的用法</h6><pre><code class="java">&lt;c:forEach var=&quot;name&quot; items=&quot;Collection&quot; varStatus=&quot;statusName&quot; begin=&quot;begin&quot; end=&quot;end&quot; step=&quot;step&quot;&gt;/c:forEach&gt;
+该标签根据循环条件遍历集合 Collection 中的元素。 var 用于存储从集合中取出的元素；items 指定要遍历的集合；varStatus 用于存放集合中元素的信息
+
+这个标签的目的就是要遍历
+
+items: 就是你要遍历的集合,就是要遍历的全部内容要放在这个下面
+
+var:  就是这个集合下面的每一个元素,比如一个集合&#123;1,2,3,4,5&#125;,那么var表示的就是1或者2或者3...
+
+begin: 默认从0开始,表示从第几个开始取元素
+
+end: 和begin对应,表示到第几个元素终止
+
+step:  步进,默认是1,表示一个一个跳,还是任意数字跳
+
+varStatus:  表示集合中每个元素的相关信息,有4种状态:index(所在位置，即索引).count(总共已迭代的次数).first(是否为第一个位置),last(是否为最后一个位置)
+</code></pre>
+<blockquote>
+<p>request.getAttribute表示从request范围取得设置的属性，必须要先setAttribute设置属性，才能通过getAttribute来取得，设置与取得的为Object对象类型 。<br>1.放的时候：Double res &#x3D; new Double(result);&#x2F;&#x2F;包装<br>request.setAttribute(“result”, res);&#x2F;&#x2F;再设置进去<br>2.取的时候：Double res &#x3D; (Double)request.getAttribute(“result”);<br>double result &#x3D; res.doublue();<br>另外，需要注意的是使用request.setAttribute时不能使redirect而是forward。即是将请求转发而不是重定向.</p>
+</blockquote>
+<pre><code class="jsp">&lt;%@ page contentType=&quot;text/html;charset=GBK&quot; %&gt;
+&lt;%@page import=&quot;java.util.List&quot; %&gt;
+&lt;%@page import=&quot;java.util.ArrayList&quot; %&gt;
+&lt;%@ taglib prefix=&quot;c&quot; uri=&quot;http://java.sun.com/jsp/jstl/core&quot; %&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;JSTL: -- forEach标签实例&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h4&gt;&lt;c:out value=&quot;forEach实例&quot;/&gt;&lt;/h4&gt;
+&lt;hr&gt;
+&lt;%
+    List a = new ArrayList();
+    a.add(&quot;贝贝&quot;);
+    a.add(&quot;晶晶&quot;);
+    a.add(&quot;欢欢&quot;);
+    a.add(&quot;莹莹&quot;);
+    a.add(&quot;妮妮&quot;);
+    request.setAttribute(&quot;a&quot;,a);
+%&gt;
+&lt;B&gt;&lt;c:out value=&quot;不指定begin和end的迭代&quot;/&gt;&lt;/B&gt;&lt;br&gt;
+&lt;c:forEach var=&quot;fuwa&quot; items=&quot;$&#123;a&#125;&quot;&gt;
+    &amp;nbsp;&lt;c:out value=&quot;$&#123;fuwa&#125;&quot;/&gt;&lt;br&gt;
+&lt;/c:forEach&gt;
+
+&lt;B&gt;&lt;c:out value=&quot;指定bigin和end的迭代&quot;/&gt;&lt;/B&gt;&lt;br&gt;
+&lt;c:forEach var=&quot;fuwa&quot; items=&quot;$&#123;a&#125;&quot; begin=&quot;1&quot; end=&quot;3&quot; step=&quot;2&quot;&gt;
+    &amp;nbsp;&lt;c:out value=&quot;$&#123;fuwa&#125;&quot;/&gt;&lt;br&gt;
+&lt;/c:forEach&gt;
+
+&lt;B&gt;&lt;c:out value=&quot;输出整个迭代信息&quot;/&gt;&lt;/B&gt;&lt;br&gt;
+&lt;c:forEach var=&quot;fuwa&quot; items=&quot;$&#123;a&#125;&quot; begin=&quot;3&quot; end=&quot;4&quot; step=&quot;1&quot; varStatus=&quot;s&quot;&gt;
+    &amp;nbsp;&lt;c:out value=&quot;&amp;&#123;fuwa&#125;&quot;/&gt;的四种属性：&lt;br&gt;
+    &amp;nbsp;&amp;nbsp;所在位置，即索引：&lt;c:out value=&quot;$&#123;s.index&#125;&quot;/&gt;&lt;br&gt;
+    &amp;nbsp;&amp;nbsp;总共已迭代的次数：&lt;c:out value=&quot;$&#123;s.count&#125;&quot;/&gt;&lt;br&gt;
+    &amp;nbsp;&amp;nbsp;是否为第一个位置：&lt;c:out value=&quot;$&#123;s.first&#125;&quot;/&gt;&lt;br&gt;
+    &amp;nbsp;&amp;nbsp;是否为最后一个位置：&lt;c:out value=&quot;$&#123;s.last&#125;&quot;/&gt;&lt;br&gt;
+&lt;/c:forEach&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+forEach实例
+---------------------------------------------------------
+不指定begin和end的迭代
+ 贝贝
+ 晶晶
+ 欢欢
+ 莹莹
+ 妮妮
+指定bigin和end的迭代
+ 晶晶
+ 莹莹
+输出整个迭代信息
+ &amp;&#123;fuwa&#125;的四种属性：
+  所在位置，即索引：3
+  总共已迭代的次数：1
+  是否为第一个位置：true
+  是否为最后一个位置：false
+ &amp;&#123;fuwa&#125;的四种属性：
+  所在位置，即索引：4
+  总共已迭代的次数：2
+  是否为第一个位置：false
+  是否为最后一个位置：true
+</code></pre>
 <h4 id="判断标签"><a href="#判断标签" class="headerlink" title="判断标签"></a>判断标签</h4><ul>
 <li>JSTL核心库提供了两组判断的标签</li>
 <li>&lt; c : if &gt; - 单分支判断</li>
@@ -1381,8 +1465,299 @@ $&#123;grade&#125;
 <h4 id="fmt格式化标签库"><a href="#fmt格式化标签库" class="headerlink" title="fmt格式化标签库"></a>fmt格式化标签库</h4><ul>
 <li>fmt格式化标签库URl : <strong><a target="_blank" rel="noopener" href="http://java.sun.com/jsp/jstl/fmt">http://java.sun.com/jsp/jstl/fmt</a></strong></li>
 <li>&lt; fmt:formatDate value &#x3D; “” pattern &#x3D; “” &gt; 格式化日期标签</li>
-<li>&lt; fmt:formatNumber value &#x3D; “” pattern &#x3D; “”&gt; 格式化数字标签</li>
+<li><strong>&lt; fmt:formatNumber value &#x3D; “” pattern &#x3D; “”&gt; 格式化数字标签</strong>，百分比，货币。</li>
 </ul>
+<pre><code class="java">import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(&quot;/jstl&quot;)
+public class JstlServlet extends HttpServlet &#123;
+    public JstlServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setAttribute(&quot;score&quot;,20);
+        req.setAttribute(&quot;grade&quot;,&quot;E&quot;);
+        List list = new ArrayList();
+        list.add(new Company(&quot;腾讯&quot;, &quot;www.tencent.com&quot;));
+        list.add(new Company(&quot;百度&quot;, &quot;www.baidu.com&quot;));
+        list.add(new Company(&quot;慕课网&quot;, &quot;www.imooc.com&quot;));
+        //把list放在当前请求中
+        req.setAttribute(&quot;companies&quot;, list);
+        req.getRequestDispatcher(&quot;/core.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="jsp">&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;
+&lt;%@ taglib prefix=&quot;fmt&quot; uri=&quot;http://java.sun.com/jsp/jstl/fmt&quot; %&gt;
+&lt;%@ taglib prefix=&quot;c&quot; uri=&quot;http://java.sun.com/jsp/jstl/core&quot; %&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;%
+    request.setAttribute(&quot;amt&quot;, 123456.789);
+    request.setAttribute(&quot;now&quot;, new java.util.Date());
+    request.setAttribute(&quot;html&quot;,&quot;&lt;a href=&#39;index.html&#39;&gt;index&lt;/a&gt;&quot;);
+    request.setAttribute(&quot;nothing&quot;,null);
+%&gt;
+&lt;h2&gt;$&#123;now &#125;&lt;/h2&gt;
+&lt;!--
+    formatDate pattern
+    yyyy - 四位年
+    MM - 两位月
+    dd - 两位日
+    HH - 24小时制
+    hh - 12小时制
+    mm - 分钟
+    ss - 秒数
+    SSS - 毫秒
+--&gt;
+&lt;h2&gt;
+    &lt;fmt:formatDate value=&quot;$&#123;requestScope.now&#125;&quot; pattern=&quot;yyyy年MM月dd日HH时mm分ss秒SSS毫秒&quot;/&gt;
+&lt;/h2&gt;
+&lt;h2&gt;$&#123;amt&#125;&lt;/h2&gt;
+&lt;h2&gt;￥&lt;fmt:formatNumber value = &quot;$&#123;amt&#125;&quot; pattern=&quot;0,000.00&quot;&gt;&lt;/fmt:formatNumber&gt;&lt;/h2&gt;
+&lt;h2&gt;null默认值：&lt;c:out value=&quot;$&#123;nothing&#125;&quot; default=&quot;无&quot;&gt;&lt;/c:out&gt;&lt;/h2&gt;
+&lt;h2&gt;&lt;c:out value=&quot;$&#123;html&#125;&quot; escapeXml=&quot;true&quot;&gt;&lt;/c:out&gt;&lt;/h2&gt; &lt;!--true时进行转译--&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h4 id="使用IDEA写的web项目无法加载css、js或图片等文件的解决方法"><a href="#使用IDEA写的web项目无法加载css、js或图片等文件的解决方法" class="headerlink" title="使用IDEA写的web项目无法加载css、js或图片等文件的解决方法"></a>使用IDEA写的web项目无法加载css、js或图片等文件的解决方法</h4><ul>
+<li>直接把css、js、图片等文件放在web目录下，这样就可以实现轻松访问！</li>
+<li>在web-inf目录下找到web.xml文件，添加以下代码也可以实现正常访问！</li>
+</ul>
+<pre><code class="java">Employee.java
+public class Employee &#123;
+    private Integer empno;
+    private String ename;
+    private String department;
+    private String job;
+    private Float salary;
+    ......
+&#125;
+
+CreateServlet.java
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
+@WebServlet(&quot;/create&quot;)
+public class CreateServlet extends HttpServlet &#123;
+    public CreateServlet() &#123;
+    &#125;
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setCharacterEncoding(&quot;UTF-8&quot;);
+        String empno = req.getParameter(&quot;empno&quot;);
+        String ename = req.getParameter(&quot;ename&quot;);
+        String department = req.getParameter(&quot;department&quot;);
+        String job = req.getParameter(&quot;job&quot;);
+        String salary = req.getParameter(&quot;salary&quot;);
+        System.out.println(empno);
+        Employee emp = new Employee(Integer.parseInt(empno),ename,department,job,Float.parseFloat(salary));
+        ServletContext context = req.getServletContext();
+        List employees = (List) context.getAttribute(&quot;employees&quot;);
+        employees.add(emp); //追加
+        context.setAttribute(&quot;employees&quot;, employees);
+        req.getRequestDispatcher(&quot;/employee.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">ListServlet.java
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(&quot;/Login&quot;)
+public class ListServlet extends HttpServlet &#123;
+    public ListServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;        //获取对象
+        ServletContext context = req.getServletContext();
+        if (context.getAttribute(&quot;employees&quot;)==null) &#123;
+            List list = new ArrayList();
+            Employee emp = new Employee(7731, &quot;刘志敏&quot;, &quot;市场部&quot;, &quot;客户代表&quot;, 10000f);
+            list.add(emp);
+            list.add(new Employee(8871, &quot;潘春尧&quot;, &quot;研发部&quot;, &quot;运维工程师&quot;, 80000f));
+            context.setAttribute(&quot;employees&quot;, list); //把list存放进去
+        &#125;//servlet中传递值
+        req.getRequestDispatcher(&quot;/employee.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="jsp">employee.jsp
+&lt;%@ page contentType=&quot;text/html;charset=utf-8&quot; %&gt;
+&lt;%@ taglib prefix=&quot;c&quot; uri=&quot;http://java.sun.com/jsp/jstl/core&quot; %&gt;
+&lt;%@ taglib prefix=&quot;fmt&quot; uri=&quot;http://java.sun.com/jsp/jstl/fmt&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+    &lt;title&gt;员工列表&lt;/title&gt;
+    &lt;link href=&quot;./css/bootstrap.css&quot; type=&quot;text/css&quot; rel=&quot;stylesheet&quot;/&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;./js/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;./js/bootstrap.js&quot;&gt;&lt;/script&gt;
+
+    &lt;style type=&quot;text/css&quot;&gt;
+        .pagination &#123;
+            margin: 0px
+        &#125;
+
+        .pagination &gt; li &gt; a, .pagination &gt; li &gt; span &#123;
+            margin: 0 5px;
+            border: 1px solid #dddddd;
+        &#125;
+
+        .glyphicon &#123;
+            margin-right: 3px;
+        &#125;
+
+        .form-control[readonly] &#123;
+            cursor: pointer;
+            background-color: white;
+        &#125;
+        #dlgPhoto .modal-body&#123;
+            text-align: center;
+        &#125;
+        .preview&#123;
+
+            max-width: 500px;
+        &#125;
+    &lt;/style&gt;
+    &lt;script&gt;
+        $(function () &#123;
+            
+            $(&quot;#btnAdd&quot;).click(function () &#123;
+                $(&#39;#dlgForm&#39;).modal()
+            &#125;);
+        &#125;)
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+        &lt;h1 style=&quot;text-align: center&quot;&gt;IMOOC员工信息表&lt;/h1&gt;
+        &lt;div class=&quot;panel panel-default&quot;&gt;
+            &lt;div class=&quot;clearfix panel-heading &quot;&gt;
+                &lt;div class=&quot;input-group&quot; style=&quot;width: 500px;&quot;&gt;
+                    &lt;button class=&quot;btn btn-primary&quot; id=&quot;btnAdd&quot;&gt;&lt;span class=&quot;glyphicon glyphicon-zoom-in&quot;&gt;&lt;/span&gt;新增
+                    &lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;table class=&quot;table table-bordered table-hover&quot;&gt;
+                &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;序号&lt;/th&gt;
+                    &lt;th&gt;员工编号&lt;/th&gt;
+                    &lt;th&gt;姓名&lt;/th&gt;
+                    &lt;th&gt;部门&lt;/th&gt;
+                    &lt;th&gt;职务&lt;/th&gt;
+                    &lt;th&gt;工资&lt;/th&gt;
+                    &lt;th&gt;&amp;nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+                &lt;/thead&gt;
+                &lt;tbody&gt;
+                &lt;c:forEach items=&quot;$&#123;applicationScope.employees&#125;&quot; var=&quot;emp&quot; varStatus=&quot;idx&quot;&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;$&#123;idx.index + 1&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.empno&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.ename&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.department&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.job&#125;&lt;/td&gt;
+                    &lt;td style=&quot;color: red;font-weight: bold&quot;&gt;￥&lt;fmt:formatNumber value=&quot;$&#123;emp.salary&#125;&quot; pattern=&quot;0,000.00&quot;&gt;&lt;/fmt:formatNumber&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;/c:forEach&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;3&lt;/td&gt;
+                    &lt;td&gt;7839&lt;/td&gt;
+                    &lt;td&gt;张丽&lt;/td&gt;
+                    &lt;td&gt;研发部&lt;/td&gt;
+                    &lt;td&gt;运维工程师&lt;/td&gt;
+                    &lt;td style=&quot;color: red;font-weight: bold&quot;&gt;￥8,820.00&lt;/td&gt;
+                    
+                &lt;/tr&gt;
+                &lt;/tbody&gt;
+            &lt;/table&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 表单 --&gt;
+&lt;div class=&quot;modal fade&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; id=&quot;dlgForm&quot;&gt;
+    &lt;div class=&quot;modal-dialog&quot; role=&quot;document&quot;&gt;
+        &lt;div class=&quot;modal-content&quot;&gt;
+            &lt;div class=&quot;modal-header&quot;&gt;
+                &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;&lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
+                &lt;/button&gt;
+                &lt;h4 class=&quot;modal-title&quot;&gt;新增员工&lt;/h4&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-body&quot;&gt;
+                &lt;form action=&quot;/untitled_war_exploded/create&quot; method=&quot;post&quot; &gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;empno&quot;&gt;员工编号&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;empno&quot; class=&quot;form-control&quot; id=&quot;empno&quot; placeholder=&quot;请输入员工编号&quot;&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;ename&quot;&gt;员工姓名&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;ename&quot; class=&quot;form-control&quot; id=&quot;ename&quot; placeholder=&quot;请输入员工姓名&quot;&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label&gt;部门&lt;/label&gt;
+                        &lt;select id=&quot;dname&quot; name=&quot;department&quot; class=&quot;form-control&quot;&gt;
+                            &lt;option selected=&quot;selected&quot;&gt;请选择部门&lt;/option&gt;
+                            &lt;option value=&quot;市场部&quot;&gt;市场部&lt;/option&gt;
+                            &lt;option value=&quot;研发部&quot;&gt;研发部&lt;/option&gt;
+                            &lt;option value=&quot;后勤部&quot;&gt;后勤部&lt;/option&gt;
+                        &lt;/select&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label&gt;职务&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;job&quot; class=&quot;form-control&quot; id=&quot;sal&quot; placeholder=&quot;请输入职务&quot;&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;sal&quot;&gt;工资&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;salary&quot; class=&quot;form-control&quot; id=&quot;sal&quot; placeholder=&quot;请输入工资&quot;&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot; style=&quot;text-align: center;&quot;&gt;
+                        &lt;button type=&quot;submit&quot; class=&quot;btn btn-primary&quot;&gt;保存&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/form&gt;
+            &lt;/div&gt;
+
+        &lt;/div&gt;&lt;!-- /.modal-content --&gt;
+    &lt;/div&gt;&lt;!-- /.modal-dialog --&gt;
+&lt;/div&gt;&lt;!-- /.modal --&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
 
     </div>
 
