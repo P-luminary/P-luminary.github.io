@@ -739,7 +739,7 @@ xmlhttp.send();
             &#125;
             console.log(xmlhttp); //在控制台console里有数据
             //2.发送Ajax请求 //F12中Network content有Response返回
-            xmlhttp.open(&quot;GET&quot;, &quot;/href...&quot;, true)
+            xmlhttp.open(&quot;GET&quot;, &quot;/json_war_exploded/news.html&quot;, true)
             //3.处理服务器响应
             xmlhttp.onreadystatechange = function()&#123;
             //响应已被接收且服务器处理成功时才执行
@@ -784,19 +784,294 @@ public class NewsListServlet extends HttpServlet&#123;
     public NewsListServlet()&#123;
         super();
     &#125;
-    protected void doGet(HttpServletReq req, HttpServletRespon res)&#123;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
         List list = new ArrayList();
         list.add(new News(&quot;TIOBE:2023年9月份日本排放核污染水&quot;,&quot;2020-9&quot;,&quot;TIOBE&quot;,&quot;...&quot;));
         list.add(new News(&quot;TIOBE:2023年9月份日本排放核污染水&quot;,&quot;2020-9&quot;,&quot;TIOBE&quot;,&quot;...&quot;));
         list.add(new News(&quot;TIOBE:2023年9月份日本排放核污染水&quot;,&quot;2020-9&quot;,&quot;TIOBE&quot;,&quot;...&quot;));
         list.add(new News(&quot;TIOBE:2023年9月份日本排放核污染水&quot;,&quot;2020-9&quot;,&quot;TIOBE&quot;,&quot;...&quot;));
         //用于把List或者java对象給json序列化生成对应的字符串
-        String json = JSON.toJSONString(list);
+        String json = JSON.toJSONString(list); //提供的java对象
         System.out.println(json);
-        res.setContentType(&quot;text/html;charst=UTF-8&quot;);
-        res.getWritre().println(json);
+        resp.setContentType(&quot;text/html;charset=UTF-8&quot;);
+        resp.getWriter().println(json);
     &#125;
 &#125;
+</code></pre>
+<pre><code class="html">news.html
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Insert title here&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;container&quot;&gt;
+&lt;/div&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+        //1.创建XmlHttpRequest对象
+        var xmlhttp;
+        if(window.XMLHttpRequest)&#123;
+            xmlhttp = new XMLHttpRequest();
+        &#125;else&#123;
+            xmlhttp = new ActiveXObject(&quot;Microsoft.XMLHTTP&quot;);
+        &#125;
+        //2.发送Ajax请求 //F12中Network content有Response返回
+        xmlhttp.open(&quot;GET&quot;, &quot;/json_war_exploded/news_list&quot;, true)
+        xmlhttp.send();
+        //3.处理服务器响应
+        xmlhttp.onreadystatechange = function()&#123;
+            //响应已被接收且服务器处理成功时才执行
+            if(xmlhttp.readyState == 4 &amp;&amp; xmlhttp.status == 200)&#123;
+                //获取响应体的文本
+                var text = xmlhttp.responseText;
+                //对服务器结果进行处理
+                console.log(text);
+                var json = JSON.parse(text);//内置的json对象
+                console.log(json);
+                var html = &quot;&quot;;
+                for (var i = 0; i &lt; json.length; i++) &#123;
+                    var news = json[i];
+                    html = html + &quot;&lt;h1&gt;&quot; + news.title + &quot;&lt;/h1&gt;&quot;;
+                    html = html + &quot;&lt;h2&gt;&quot; + news.title + &quot;&amp;nbsp&quot; + news.source + &quot;&lt;/h2&gt;&quot;;
+                    html = html + &quot;&lt;hr/&gt;&quot;
+                &#125;
+                //对html进行动态加载
+                document.getElementById(&quot;container&quot;).innerHTML = html;
+            &#125;
+        &#125;
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="同步与异步"><a href="#同步与异步" class="headerlink" title="同步与异步"></a>同步与异步</h3><p><strong>xmlhttp</strong>.open(“GET”, “&#x2F;json_war_exploded&#x2F;news_list”, <strong>false</strong>)</p>
+<p>**同步(false)**：程序会阻塞 进入等待的状态 数据不返回时程序是不会往下进行的<br><strong>异步(true)</strong>[<u>推荐</u>]：程序不会阻塞 程序依旧往下进行 数据返回是通过触发onreadystatechange数据监控进行处理的</p>
+<pre><code class="java">//    2.发送Ajax请求 //F12中Network content有Response返回
+        //true代表异步执行 false代表同步执行
+        xmlhttp.open(&quot;GET&quot;, &quot;/json_war_exploded/news_list&quot;, false)
+        //同步：在网络发布的过程中 数据没有返回的话会一直处于阻塞的状态(前面的没做完后面的不让做)
+        xmlhttp.send();
+        console.log(&quot;请求发送完成&quot;);
+        if(xmlhttp.readyState == 4 &amp;&amp; xmlhttp.status == 200) &#123;
+            //获取响应体的文本
+            var text = xmlhttp.responseText;
+            //对服务器结果进行处理
+            console.log(text);
+            var json = JSON.parse(text);//内置的json对象
+            console.log(json);
+            var html = &quot;&quot;;
+            for (var i = 0; i &lt; json.length; i++) &#123;
+                var news = json[i];
+                html = html + &quot;&lt;h1&gt;&quot; + news.title + &quot;&lt;/h1&gt;&quot;;
+                html = html + &quot;&lt;h2&gt;&quot; + news.date + &quot;&amp;nbsp&quot; + news.source + &quot;&lt;/h2&gt;&quot;;
+                html = html + &quot;&lt;hr/&gt;&quot;
+            &#125;
+            document.getElementById(&quot;container&quot;).innerHTML = html;
+        &#125;
+        /*3.处理服务器响应 异步[一直往下进行 onreadystatechange数据监控]
+        xmlhttp.onreadystatechange = function()&#123;
+            //响应已被接收且服务器处理成功时才执行
+            if(xmlhttp.readyState == 4 &amp;&amp; xmlhttp.status == 200)&#123;
+                //获取响应体的文本
+                var text = xmlhttp.responseText;
+                //对服务器结果进行处理
+                console.log(text);
+                var json = JSON.parse(text);//内置的json对象
+                console.log(json);
+                var html = &quot;&quot;;
+                for (var i = 0; i &lt; json.length; i++) &#123;
+                    var news = json[i];
+                    html = html + &quot;&lt;h1&gt;&quot; + news.title + &quot;&lt;/h1&gt;&quot;;
+                    html = html + &quot;&lt;h2&gt;&quot; + news.date + &quot;&amp;nbsp&quot; + news.source + &quot;&lt;/h2&gt;&quot;;
+                    html = html + &quot;&lt;hr/&gt;&quot;;
+                &#125;
+                //对html进行动态加载
+                document.getElementById(&quot;container&quot;).innerHTML = html;
+            &#125;
+        &#125;*/
+</code></pre>
+<h3 id="jQuery对Ajax的支持"><a href="#jQuery对Ajax的支持" class="headerlink" title="jQuery对Ajax的支持"></a>jQuery对Ajax的支持</h3><ul>
+<li>jQuery对Ajax进行封装，提供了**$.ajax()**方法</li>
+<li>语法：**$.ajax(options)**</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">常用设置项</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">url</td>
+<td align="center">发送请求地址</td>
+</tr>
+<tr>
+<td align="center">type</td>
+<td align="center">请求类型get|post</td>
+</tr>
+<tr>
+<td align="center">data</td>
+<td align="center">向服务器传递的参数</td>
+</tr>
+<tr>
+<td align="center">dataType</td>
+<td align="center">服务器响应的数据类型<br />text|<strong>json</strong>|xml|html|jsonp|script</td>
+</tr>
+<tr>
+<td align="center">success</td>
+<td align="center">接收响应时的处理函数</td>
+</tr>
+<tr>
+<td align="center">error</td>
+<td align="center">请求失败时的处理函数</td>
+</tr>
+</tbody></table>
+<pre><code class="html">jquery_news.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.1.1.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        $(function () &#123;
+            $.ajax(&#123;
+                &quot;url&quot;: &quot;/json_war_exploded/news_list&quot;,
+                &quot;type&quot;: &quot;get&quot;,
+                &quot;data&quot;: &quot;t=tiobe&quot;,//多个传参的参数用json格式写
+                //&quot;data&quot;: &#123;&quot;t&quot;:&quot;tiobe&quot;, &quot;abc&quot;:&quot;123&quot;, &quot;uu&quot;:&quot;777&quot;&#125;
+                //但是实际过程中jquery会以url形式传参 t=tiobe&amp;abc=123&amp;uu=777
+                &quot;dataType&quot;: &quot;json&quot;, //解析成json文件
+                &quot;success&quot;: function (json)&#123;
+                    console.log(json);
+                    for (var i = 0; i &lt; json.length; i++)&#123;
+                        $(&quot;#container&quot;).append(&quot;&lt;h1&gt;&quot; + json[i].title + &quot;&lt;/h1&gt;&quot;); //append追加
+                    &#125;
+                &#125;,   //ajax的核心信息 ↓
+                &quot;error&quot;: function (xmlhttp, errorText)&#123;
+                    console.log(xmlhttp);
+                    console.log(errorText);
+                    if(xmlhttp.status == &quot;405&quot;)&#123;
+                        alert(&quot;无效的请求方式&quot;);
+                    &#125;else if(xmlhttp.status == &quot;404&quot;)&#123;
+                        alert(&quot;未找到URL资源&quot;);
+                    &#125;else if(xmlhttp.status == &quot;500&quot;)&#123;
+                        alert(&quot;服务器内部错误，请联系管理员&quot;);
+                    &#125;else&#123;
+                        alert(&quot;产生异常，请联系管理员&quot;);
+                    &#125;
+                &#125;
+            &#125;)
+        &#125;)
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id = &quot;container&quot;&gt;&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现二级联动菜单-省-市-县"><a href="#实现二级联动菜单-省-市-县" class="headerlink" title="实现二级联动菜单 [省 市 县]"></a>实现二级联动菜单 [省 市 县]</h3><pre><code class="java">ChannelServlet.java
+package com.example.json;
+
+import com.alibaba.fastjson.JSON;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(&quot;/channel&quot;)
+public class ChannelServlet extends HttpServlet &#123;
+    public ChannelServlet() &#123;
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String level = req.getParameter(&quot;level&quot;);
+        String parent = req.getParameter(&quot;parent&quot;);
+        List chlist = new ArrayList();
+        if(level.equals(&quot;1&quot;)) &#123;
+            chlist.add(new Channel(&quot;ai&quot; , &quot;前沿/区块链/人工智能&quot;));
+            chlist.add(new Channel(&quot;web&quot; , &quot;前端/小程序/JS&quot;));
+        &#125;else if(level.equals(&quot;2&quot;)) &#123;
+            if(parent.equals(&quot;ai&quot;)) &#123;
+                chlist.add(new Channel(&quot;micro&quot; , &quot;微服务&quot;));
+                chlist.add(new Channel(&quot;blockchain&quot; , &quot;区块链&quot;));
+                chlist.add(new Channel(&quot;other&quot; , &quot;...&quot;));
+            &#125;else if(parent.equals(&quot;web&quot;))&#123;
+                chlist.add(new Channel(&quot;html&quot; , &quot;HTML&quot;));
+                chlist.add(new Channel(&quot;css&quot; , &quot;CSS&quot;));
+                chlist.add(new Channel(&quot;other&quot; , &quot;...&quot;));
+            &#125;
+        &#125;
+        //json序列化
+        String json = JSON.toJSONString(chlist);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        resp.getWriter().println(json);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">cascade_menu.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.1.1.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        $(function()&#123;
+            $.ajax(&#123;
+                &quot;url&quot; : &quot;/json_war_exploded/channel&quot;,
+                &quot;data&quot; : &#123;&quot;level&quot; : &quot;1&quot;&#125;,
+                &quot;type&quot; : &quot;get&quot; ,
+                &quot;dataType&quot; : &quot;json&quot; ,
+                &quot;success&quot; : function(json)&#123;
+                    console.log(json);
+                    for(var i = 0 ; i &lt; json.length ; i++)&#123;
+                        var ch = json[i];
+                        //append是在组件内部进行追加内容
+                        $(&quot;#lv1&quot;).append(&quot;&lt;option value=&#39;&quot; + ch.code + &quot;&#39;&gt;&quot; + ch.name + &quot;&lt;/option&gt;&quot;)
+                    &#125;
+                &#125;
+            &#125;)
+        &#125;)
+
+        $(function()&#123; //on是绑定事件 change是当变化时候发生function
+            $(&quot;#lv1&quot;).on(&quot;change&quot; , function()&#123;
+                var parent = $(this).val();//val()获取输入项的值
+                console.log(parent);
+                $.ajax(&#123;
+                    &quot;url&quot; : &quot;/json_war_exploded/channel&quot; ,
+                    &quot;data&quot; : &#123;&quot;level&quot; : &quot;2&quot; , &quot;parent&quot; : parent&#125;, //parent 一级频道的value值
+                    &quot;dataType&quot; : &quot;json&quot; ,
+                    &quot;type&quot; : &quot;get&quot; ,
+                    &quot;success&quot; : function(json)&#123;
+                        console.log(json);
+                        //移除所有lv2下的原始option选项
+                        $(&quot;#lv2&gt;option&quot;).remove();
+                        for(var i = 0 ; i &lt; json.length ; i++)&#123;
+                            var ch = json[i];
+                            $(&quot;#lv2&quot;).append(&quot;&lt;option value=&#39;&quot; + ch.code +&quot;&#39;&gt;&quot; + ch.name + &quot;&lt;/option&gt;&quot;)
+                        &#125;
+                    &#125;
+                &#125;)
+            &#125;)
+        &#125;)
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;select id=&quot;lv1&quot; style=&quot;width:200px;height:30px&quot;&gt;
+    &lt;option selected=&quot;selected&quot;&gt;请选择&lt;/option&gt;
+&lt;/select&gt;
+&lt;select id=&quot;lv2&quot; style=&quot;width:200px;height:30px&quot;&gt;&lt;/select&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
 
             
@@ -812,7 +1087,7 @@ public class NewsListServlet extends HttpServlet&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8018,7 +8293,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -8131,6 +8406,9 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.9.22</span></strong></p>
 <p>今天依旧是好好吃饭且自律跑步的一天呀。晚上的时候班里有会议，唉，因为一个国庆节请假的流程麻烦死了，还要开一场点名的会议才能解决。我真的会无语，然后呢，我去那边请假，准备请一下国庆回家的假，跟我妈去商量了一下，说我先请个假 但是我人还在学校，我想在这个时间里可能会出去玩一下。一下子请假就很方便，到时候如果我出去了请假就很麻烦。结果我妈来了一句话”我不管、随便你” 直接给我整无语了。。唉</p>
+<hr>
+<p><strong><span style = "color : red">2023.9.23</span></strong></p>
+<p>早上的时候为了2学分去献血车献了400cc的血，也是才知道我是O型血。献完血后送了一把伞 绿茶 还有饼干，还不错 嘿嘿。今天晚上和宝宝聊了好长时间的视频通话，用的是抖音噢~ 宝宝真的很美很可爱很好看，明天就可以见到宝宝啦，开心！！</p>
 
             
         </div>
@@ -8145,7 +8423,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#00bcd4>
+            <a href="/tags/随笔" style=color:#ff7d73>
                 随笔
             </a>
         </span>
@@ -10520,7 +10798,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -11440,7 +11718,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -11811,7 +12089,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -12129,7 +12407,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#ff7d73>
+            <a href="/tags/计算机" style=color:#00bcd4>
                 计算机
             </a>
         </span>
