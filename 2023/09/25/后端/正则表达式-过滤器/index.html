@@ -1,0 +1,698 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || 正则表达式,过滤器</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>正则表达式,过滤器 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2023/9/25
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#ff7d73>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h3 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h3><ul>
+<li>正则表达式是检查、匹配字符串的表达式</li>
+<li>正则表达式是描述规则、主流语言都有良好支持</li>
+<li>字符串校验、查找与替换是正则表达式主要使用场景</li>
+</ul>
+<h6 id="正则表达式的案例"><a href="#正则表达式的案例" class="headerlink" title="正则表达式的案例"></a>正则表达式的案例</h6><ul>
+<li>检查输入的身份证号是否合法(15位、18位)</li>
+<li>示例：13010220200328091x</li>
+</ul>
+<pre><code class="java">正则表达式：(^\d&#123;15&#125;$)|(^\d&#123;18&#125;$)|(^\d&#123;17&#125;(\d|X|x)$)
+</code></pre>
+<h3 id="字符范围匹配"><a href="#字符范围匹配" class="headerlink" title="字符范围匹配"></a>字符范围匹配</h3><table>
+<thead>
+<tr>
+<th align="center">正则表达式</th>
+<th align="center">说明</th>
+<th align="center">正确</th>
+<th align="center">错误</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">A</td>
+<td align="center">精准匹配单个字符</td>
+<td align="center">A</td>
+<td align="center">a</td>
+</tr>
+<tr>
+<td align="center">x|y</td>
+<td align="center">允许出现的2个字符</td>
+<td align="center">y</td>
+<td align="center">n</td>
+</tr>
+<tr>
+<td align="center">[xyz]</td>
+<td align="center">字符集合,允许出现集合内任意单个字符</td>
+<td align="center">z</td>
+<td align="center">c</td>
+</tr>
+<tr>
+<td align="center">[a-z] [A-Z] [0-9]</td>
+<td align="center">字符范围</td>
+<td align="center">a D 8</td>
+<td align="center">A a A</td>
+</tr>
+<tr>
+<td align="center">[^xyz] [‘^0-9]</td>
+<td align="center">集合内字符不允许出现</td>
+<td align="center">0 A</td>
+<td align="center">y 8</td>
+</tr>
+</tbody></table>
+<h6 id="训练题目"><a href="#训练题目" class="headerlink" title="训练题目"></a>训练题目</h6><ul>
+<li>精准匹配字符串”hallo” 或者 “hello” &#x3D;&gt; h**[ae]**llo</li>
+<li>请匹配数字范围(0570-0579) &#x3D;&gt; 057[<strong>0-9</strong>]</li>
+<li>单选题只允许输入ABCD其中一项 &#x3D;&gt; [<strong>ABCD</strong>] &#x2F; [<strong>A-D</strong>]</li>
+</ul>
+<h3 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h3><table>
+<thead>
+<tr>
+<th align="center">正则表达式</th>
+<th align="center">说明</th>
+<th align="center">正确</th>
+<th align="center">错误</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">\d</td>
+<td align="center">匹配任意单个数字</td>
+<td align="center">8</td>
+<td align="center">i</td>
+</tr>
+<tr>
+<td align="center">\D</td>
+<td align="center">匹配\d规则之外的任意单个字符</td>
+<td align="center">i</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">\w</td>
+<td align="center">匹配任意单个字母数字下划线</td>
+<td align="center">Y</td>
+<td align="center">&amp;</td>
+</tr>
+<tr>
+<td align="center">\W</td>
+<td align="center">匹配\w之外的任意单个字符</td>
+<td align="center">&amp;</td>
+<td align="center">Y</td>
+</tr>
+<tr>
+<td align="center">\s</td>
+<td align="center">匹配单个空格</td>
+<td align="center"></td>
+<td align="center">x</td>
+</tr>
+<tr>
+<td align="center">\n</td>
+<td align="center">匹配单个换行符</td>
+<td align="center"></td>
+<td align="center">x</td>
+</tr>
+<tr>
+<td align="center">.</td>
+<td align="center">匹配任意单个字符(换行符除外)</td>
+<td align="center">–</td>
+<td align="center">–</td>
+</tr>
+<tr>
+<td align="center">\。</td>
+<td align="center">特殊字符,只匹配 “.”</td>
+<td align="center">.</td>
+<td align="center">1</td>
+</tr>
+</tbody></table>
+<h6 id="训练题目-1"><a href="#训练题目-1" class="headerlink" title="训练题目"></a>训练题目</h6><ul>
+<li><p>请匹配数字(3213.383219)</p>
+<pre><code class="java">\d\d\d\d\.\d\d\d\d\d\d\d
+</code></pre>
+</li>
+<li><p>匹配杭州与宁波的座机号码(0571|0574-XXXXXXXX)</p>
+<pre><code class="java">057[14]-\d\d\d\d\d\d\d\d
+</code></pre>
+</li>
+<li><p>请匹配18位身份证号 [第一位1~6和8]</p>
+<pre><code class="java">[1234568]\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d[0-9xX]
+</code></pre>
+</li>
+</ul>
+<h3 id="多次重复匹配"><a href="#多次重复匹配" class="headerlink" title="多次重复匹配"></a>多次重复匹配</h3><table>
+<thead>
+<tr>
+<th align="center">正则表达式</th>
+<th align="center">说明</th>
+<th align="center">正确</th>
+<th align="center">错误</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">A{3}</td>
+<td align="center">精准N次匹配</td>
+<td align="center">AAA</td>
+<td align="center">AA</td>
+</tr>
+<tr>
+<td align="center">A{3,}</td>
+<td align="center">最少出现N</td>
+<td align="center">AAA</td>
+<td align="center">AA</td>
+</tr>
+<tr>
+<td align="center">\d{3,5}</td>
+<td align="center">约定出现最少次数与最大次数</td>
+<td align="center">1234</td>
+<td align="center">12</td>
+</tr>
+<tr>
+<td align="center">\d*</td>
+<td align="center">可以出现零次至无限次,相当于{0,}</td>
+<td align="center">1234</td>
+<td align="center">–</td>
+</tr>
+<tr>
+<td align="center">\d+</td>
+<td align="center">最少出现一次, 相当于{1,}</td>
+<td align="center">12</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">\d?</td>
+<td align="center">最多出现一次, 相当于{0,1}</td>
+<td align="center">1</td>
+<td align="center">12</td>
+</tr>
+</tbody></table>
+<h6 id="联系题目"><a href="#联系题目" class="headerlink" title="联系题目"></a>联系题目</h6><ul>
+<li><p>验证短信验证码(6位数字) &#x3D;&gt; <strong>\d[6]</strong></p>
+</li>
+<li><p>请匹配全国座机号(区号3或4位-电话号码7或8位) &#x3D;&gt; <strong>\d[3,4]-\d[7,8]</strong></p>
+</li>
+<li><p>请匹配英文姓名(例如：James Watson)</p>
+<pre><code class="java">[A-Z][a-z]&#123;1,&#125;\s[A-Z][a-z]&#123;0,&#125;
+[A-Z][a-z]&#123;1,&#125;\s[A-Z][a-z]*
+^[A-Z][a-z]&#123;1,&#125;+\s[A-Z][a-z]*$
+</code></pre>
+</li>
+</ul>
+<h3 id="定位匹配"><a href="#定位匹配" class="headerlink" title="定位匹配"></a>定位匹配</h3><table>
+<thead>
+<tr>
+<th align="center">正则表达式</th>
+<th align="center">说明</th>
+<th align="center">正确</th>
+<th align="center">错误</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">^A.*</td>
+<td align="center">头匹配</td>
+<td align="center">ABC</td>
+<td align="center">CBA</td>
+</tr>
+<tr>
+<td align="center">.*A$</td>
+<td align="center">尾匹配</td>
+<td align="center">CBA</td>
+<td align="center">ABC</td>
+</tr>
+<tr>
+<td align="center">^A.*A$</td>
+<td align="center">全字匹配</td>
+<td align="center">ACCCA</td>
+<td align="center">ACCCB</td>
+</tr>
+</tbody></table>
+<pre><code class="java">abb123123ab =&gt; ^ab.*ab$
+</code></pre>
+<h3 id="贪婪模式-默认匹配规则"><a href="#贪婪模式-默认匹配规则" class="headerlink" title="贪婪模式[默认匹配规则]"></a>贪婪模式[默认匹配规则]</h3><ul>
+<li>在满足条件的情况下尽可能<strong>多</strong>匹配到字符串</li>
+<li>示例：111222333     正则：<strong>\d{6,8}</strong></li>
+<li>匹配结果：11122233</li>
+</ul>
+<h3 id="非贪婪模式"><a href="#非贪婪模式" class="headerlink" title="非贪婪模式"></a>非贪婪模式</h3><ul>
+<li><p>在满足条件的情况下尽可能<strong>少</strong>匹配到字符串</p>
+</li>
+<li><p>示例：111222333     正则：<strong>\d{6,8}？</strong></p>
+</li>
+<li><p>匹配结果：111222</p>
+</li>
+</ul>
+<h6 id="贪婪模式举例"><a href="#贪婪模式举例" class="headerlink" title="贪婪模式举例"></a>贪婪模式举例</h6><pre><code class="java">&lt;a href = &quot;www.baidu.com&quot;&gt; 百度 &lt;/a&gt; &lt;a href =  &quot;www.baidu.com&quot;&gt;新浪&lt;/a&gt;
+规则: 想搜索&quot;www.baidu.com&quot; 仅此一个从&quot;开始 从&quot;结束 中间的片段
+正则表达式: &quot;.*&quot; 由于默认是贪婪模式 它会找到的结果如下
+&quot;www.baidu.com&quot;&gt; 百度 &lt;/a&gt; &lt;a href = “www.sina.com”
+
+改成非贪婪模式 正则表达式：&quot;.*?&quot;
+&quot;www.baidu.com&quot;  &quot;www.baidu.com&quot;
+</code></pre>
+<h3 id="表达式分组"><a href="#表达式分组" class="headerlink" title="表达式分组"></a>表达式分组</h3><ul>
+<li>分组将”正则”分组为多个子表达式</li>
+<li>示例：abababcdcdcd</li>
+<li>正则表达式：(ab){3}(cd){3}</li>
+</ul>
+<h6 id="训练题目-2"><a href="#训练题目-2" class="headerlink" title="训练题目"></a>训练题目</h6><ul>
+<li><p>匹配验证码(4位或6位)</p>
+<pre><code class="java">(^\d&#123;4&#125;$)|(^\d&#123;6&#125;$)
+</code></pre>
+</li>
+<li><p>匹配车牌号(冀B-U888G)</p>
+<pre><code class="java">^([冀黑粤晋][A-Z])-([A-Z0-9]&#123;5&#125;)$
+</code></pre>
+</li>
+<li><p>中文名字匹配 [Unicall码] [张三…]</p>
+<pre><code class="java">^[\u4e00-\u9fa5]&#123;2,8&#125;$
+</code></pre>
+</li>
+<li><p>中英文名字匹配</p>
+<pre><code class="java">(^[\u4e00-\u9fa5]&#123;2,8&#125;$)|(^[A-Z][a-z]*$)
+</code></pre>
+</li>
+</ul>
+<h3 id="正则表达式验证JavaScript表单"><a href="#正则表达式验证JavaScript表单" class="headerlink" title="正则表达式验证JavaScript表单"></a>正则表达式验证JavaScript表单</h3><pre><code class="html">&lt;body&gt;
+    &lt;form action=&quot;#&quot; method=&quot;post&quot; id=&quot;frmInfo&quot;&gt;
+        &lt;div id=&quot;err&quot; style=&quot;color : red&quot;&gt;
+            
+        &lt;/div&gt; 
+        &lt;div&gt;
+            姓名: &lt;input id=&quot;name&quot; name=&quot;name&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            身份证: &lt;input id=&quot;idno&quot; name=&quot;idno&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;input type=&quot;submit&quot;/&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        document.getElementById(&quot;frmInfo&quot;).onsubmit = function()&#123;
+            //在JS中定义正则表达式对象只需要在 /正则表达式/
+            var regex1 = /^[\u4e00-\u9fa5]&#123;2,8&#125;$/
+            var regex2 = /^rehextal
+            var name = document.getElementById(&quot;name&quot;).value;
+            var idno = document.getElementByid(&quot;inamd &quot;)
+            if(regex1.test(name)==false); //返回true或false校验是否成功
+                document.getElementById(&quot;err&quot;).innerHTM=&quot;无效姓名&quot;;
+                return false;
+            &#125;else if(regx2.test*(idno) == false&#123;
+                document.getElementById(&quot;err&quot;).innerHTM=&quot;我i夏普身份证号&quot;;
+            &#125;else&#123;
+                alert(&quot;验证通过准备提交&quot;)
+                return true;
+            &#125;
+    &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<h4 id="Java中web页面信息提取"><a href="#Java中web页面信息提取" class="headerlink" title="Java中web页面信息提取"></a>Java中web页面信息提取</h4><pre><code class="html">sample.html
+&lt;!DOCTYPEhtml&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;国际主要城市&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;国际主要城市&lt;/h1&gt;
+    &lt;ul&gt;
+        &lt;li&gt;纽约NewYork&lt;/li&gt;
+        &lt;li&gt;伦敦London&lt;/li&gt;
+        &lt;li&gt;东京Tokyo&lt;/li&gt;
+        &lt;li&gt;巴黎Paris&lt;/li&gt;
+        &lt;li&gt;香港HongKong&lt;/li&gt;
+        &lt;li&gt;新加坡Singapore&lt;/li&gt;
+        &lt;li&gt;悉尼Sydney&lt;/li&gt;
+        &lt;li&gt;米兰Milano&lt;/li&gt;
+        &lt;li&gt;上海Shanghai&lt;/li&gt;
+        &lt;li&gt;北京Beijing&lt;/li&gt;
+        &lt;li&gt;马德里Madrid&lt;/li&gt;
+        &lt;li&gt;莫斯科Moscow&lt;/li&gt;
+        &lt;li&gt;首尔Seoul&lt;/li&gt;
+        &lt;li&gt;曼谷Bangkok&lt;/li&gt;
+        &lt;li&gt;多伦多Toronto&lt;/li&gt;
+        &lt;li&gt;布鲁塞尔Brussels&lt;/li&gt;
+        &lt;li&gt;芝加哥Chicago&lt;/li&gt;
+        &lt;li&gt;吉隆坡KualaLumpur&lt;/li&gt;
+        &lt;li&gt;孟买Mumbai&lt;/li&gt;
+        &lt;li&gt;华沙Warsaw&lt;/li&gt;
+        &lt;li&gt;圣保罗SaoPaulo&lt;/li&gt;
+        &lt;li&gt;苏黎世Zurich&lt;/li&gt;
+        &lt;li&gt;阿姆斯特丹Amsterdam&lt;/li&gt;
+        &lt;li&gt;墨西哥城MexicoCity&lt;/li&gt;
+        &lt;li&gt;雅加达Jakarta&lt;/li&gt;
+        &lt;li&gt;都柏林Dublin&lt;/li&gt;
+        &lt;li&gt;曼谷Bangkok&lt;/li&gt;
+        &lt;li&gt;台北Taipei&lt;/li&gt;
+        &lt;li&gt;伊斯坦布尔Istanbul&lt;/li&gt;
+        &lt;li&gt;里斯本Lisbon&lt;/li&gt;
+        &lt;li&gt;罗马Rome&lt;/li&gt;
+        &lt;li&gt;法兰克福Frankfurt&lt;/li&gt;
+        &lt;li&gt;斯德哥尔摩Stockholm&lt;/li&gt;
+        &lt;li&gt;布拉格Prague&lt;/li&gt;
+        &lt;li&gt;维也纳Vienna&lt;/li&gt;
+        &lt;li&gt;布达佩斯Budapest&lt;/li&gt;
+        &lt;li&gt;雅典Athens&lt;/li&gt;
+        &lt;li&gt;加拉加斯Caracas&lt;/li&gt;
+        &lt;li&gt;洛杉矶LosAngeles&lt;/li&gt;
+        &lt;li&gt;新西兰NewZealand&lt;/li&gt;
+        &lt;li&gt;圣地亚哥SanDiego&lt;/li&gt;
+        &lt;li&gt;布宜诺斯艾利斯BuenosAires&lt;/li&gt;
+        &lt;li&gt;华盛顿Washington&lt;/li&gt;
+        &lt;li&gt;墨尔本Melbourne&lt;/li&gt;
+        &lt;li&gt;约翰内斯堡Johannesburg&lt;/li&gt;
+        &lt;li&gt;亚特兰大Atlanta&lt;/li&gt;
+        &lt;li&gt;巴塞罗那Barcelona&lt;/li&gt;
+        &lt;li&gt;旧金山SanFrancisco&lt;/li&gt;
+        &lt;li&gt;马尼拉Manila&lt;/li&gt;
+        &lt;li&gt;波哥大Bogota&lt;/li&gt;
+        &lt;li&gt;特拉维夫TelAviv-Yafo&lt;/li&gt;
+        &lt;li&gt;新德里NewDelhi&lt;/li&gt;
+        &lt;li&gt;迪拜Dubai&lt;/li&gt;
+        &lt;li&gt;布加勒斯特Bucharest&lt;/li&gt;
+        &lt;li&gt;奥斯陆Oslo&lt;/li&gt;
+        &lt;li&gt;柏林Berlin&lt;/li&gt;
+        &lt;li&gt;赫尔辛基Helsinki&lt;/li&gt;
+        &lt;li&gt;日内瓦Geneva&lt;/li&gt;
+        &lt;li&gt;利雅得Riyadh&lt;/li&gt;
+        &lt;li&gt;哥本哈根Copenhagen&lt;/li&gt;
+        &lt;li&gt;汉堡Hamburg&lt;/li&gt;
+        &lt;li&gt;开罗Cairo&lt;/li&gt;
+        &lt;li&gt;卢森堡Luxembourg&lt;/li&gt;
+        &lt;li&gt;班加罗尔Bangalore&lt;/li&gt;
+        &lt;li&gt;达拉斯Dallas&lt;/li&gt;
+        &lt;li&gt;科威特城Kuwaitcity&lt;/li&gt;
+        &lt;li&gt;波士顿Boston&lt;/li&gt;
+        &lt;li&gt;慕尼黑Munich&lt;/li&gt;
+        &lt;li&gt;迈阿密Miami&lt;/li&gt;
+        &lt;li&gt;利马Lima&lt;/li&gt;
+        &lt;li&gt;基辅Kiev&lt;/li&gt;
+        &lt;li&gt;休斯顿Houston&lt;/li&gt;
+        &lt;li&gt;广州Guangzhou&lt;/li&gt;
+        &lt;li&gt;贝鲁特Beirut&lt;/li&gt;
+        &lt;li&gt;卡拉奇Karachi&lt;/li&gt;
+        &lt;li&gt;索菲亚Sophia&lt;/li&gt;
+        &lt;li&gt;蒙得维的亚Montevideo&lt;/li&gt;
+        &lt;li&gt;里约热内卢RioDEJaneiro&lt;/li&gt;
+        &lt;li&gt;胡志明市HoChiMinhCity&lt;/li&gt;
+        &lt;li&gt;蒙特利尔Montreal&lt;/li&gt;
+        &lt;li&gt;内罗毕Nairobi&lt;/li&gt;
+        &lt;li&gt;巴拿马城Panamacity&lt;/li&gt;
+        &lt;li&gt;金奈Chennai&lt;/li&gt;
+        &lt;li&gt;布里斯班Brisbane&lt;/li&gt;
+        &lt;li&gt;卡萨布兰卡Casablanca&lt;/li&gt;
+        &lt;li&gt;丹佛Denver&lt;/li&gt;
+        &lt;li&gt;基多Quito&lt;/li&gt;
+        &lt;li&gt;斯图加特Stuttgart&lt;/li&gt;
+        &lt;li&gt;温哥华Vancouver&lt;/li&gt;
+        &lt;li&gt;麦纳麦MaiNaMai&lt;/li&gt;
+        &lt;li&gt;危地马拉市Guatemalacity&lt;/li&gt;
+        &lt;li&gt;开普敦CapeTown&lt;/li&gt;
+        &lt;li&gt;圣何塞SanJose&lt;/li&gt;
+        &lt;li&gt;西雅图Seattle&lt;/li&gt;
+        &lt;li&gt;深圳Shenzhen&lt;/li&gt;
+        &lt;li&gt;珀斯Perth&lt;/li&gt;
+        &lt;li&gt;加尔各答Calcutta&lt;/li&gt;
+        &lt;li&gt;安特卫普Antwerp&lt;/li&gt;
+        &lt;li&gt;费城Philadelphia&lt;/li&gt;
+        &lt;li&gt;鹿特丹Rotterdam&lt;/li&gt;
+        &lt;li&gt;拉各斯Lagos&lt;/li&gt;
+        &lt;li&gt;波特兰Portland&lt;/li&gt;
+        &lt;li&gt;底特律Detroit&lt;/li&gt;
+        &lt;li&gt;曼彻斯特Manchester&lt;/li&gt;
+        &lt;li&gt;惠灵顿Wellington&lt;/li&gt;
+        &lt;li&gt;里加Riga&lt;/li&gt;
+        &lt;li&gt;爱丁堡Edinburgh&lt;/li&gt;
+        &lt;li&gt;圣彼得堡StPetersburg&lt;/li&gt;
+        &lt;li&gt;圣迭戈SanDiego&lt;/li&gt;
+        &lt;li&gt;伊斯兰堡Islamabad&lt;/li&gt;
+        &lt;li&gt;伯明翰Birmingham&lt;/li&gt;
+        &lt;li&gt;多哈Doha&lt;/li&gt;
+        &lt;li&gt;阿拉木图AlmaAtaAlmaty&lt;/li&gt;
+        &lt;li&gt;卡尔加里Calgary&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">RegexSample.java
+package com.imooc.regex;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegexSample &#123;
+    public static void main(String[] args) &#123;
+        StringBuilder content = new StringBuilder();
+        try &#123;//读取文件
+            FileInputStream fis = new FileInputStream(&quot;D:/workspace/regex/WebContent/sample.html&quot;);
+            InputStreamReader isr = new InputStreamReader(fis,&quot;UTF-8&quot;);
+            BufferedReader bufferedReader = new BufferedReader(isr);//缓冲提高读取效率
+            String lineText = &quot;&quot;;//每一行
+            while((lineText = bufferedReader.readLine()) != null) &#123;//读取完成
+//                System.out.println(lineText);
+                content.append(lineText + &quot;\n&quot;);//追加到后面完整字符串
+            &#125;
+            bufferedReader.close();
+            System.out.println(content);
+        
+        &#125; catch (Exception e) &#123;
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        &#125;
+        
+        //1.创建正则表达式对象 用group进行分组提取
+        //[正则表达式字符串] \\两个斜杠是原意输出 +至少出现一次
+        Pattern p = Pattern.compile(&quot;&lt;li&gt;([\\u4e00-\\u9fa5]&#123;2,10&#125;)([a-zA-Z]+)&lt;/li&gt;&quot;);
+        //2.匹配正则表达式
+        Matcher m = p.matcher(content);
+        //3.查找匹配的结果
+        while(m.find()) &#123;//原始字符串中进行查找 有返回true 无返回false
+//            System.out.println(m.group(0)); //完整字符串
+            String chs = m.group(1); //group分组
+            String eng = m.group(2);
+            System.out.println(chs + &quot;-&quot; + eng);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2023 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>
