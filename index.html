@@ -623,6 +623,400 @@ public class RegexSample &#123;
     &#125;
 &#125;
 </code></pre>
+<h1 id="初始过滤器-Filter-机场检查"><a href="#初始过滤器-Filter-机场检查" class="headerlink" title="初始过滤器-Filter [机场检查]"></a>初始过滤器-Filter [机场检查]</h1><ul>
+<li>过滤器(Filter)是J2EE Servlet模块下的组件</li>
+<li>Filter的作用是对URL进行统一的拦截处理</li>
+<li>Filter通常用于应用程序层面进行全局处理</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/d75b8480442f629a7ae682cbcc3c6d6040d674c6/data/%E8%BF%87%E6%BB%A4%E5%99%A8.png"></p>
+<h3 id="开发过滤器三要素"><a href="#开发过滤器三要素" class="headerlink" title="开发过滤器三要素"></a>开发过滤器三要素</h3><ul>
+<li>任何过滤器都要实现 <strong>javax.servlet.Filter</strong> 接口</li>
+<li>在Filter接口的doFIlter()方法中编写过滤器的功能代码</li>
+<li>在web.xml中对过滤器进行配置，说明拦截URL的范围</li>
+</ul>
+<pre><code class="java">MyFirstFilter.java
+public class MyFirstFilter implements Filter&#123;
+    public void destroy()&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+        System.out.println(&quot;过滤器已生效&quot;);
+        chain.doFilter(req, resp);
+    &#125;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.MyFirstFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt; //对所有url进行拦截
+&lt;/filter-mapping&gt;
+
+&lt;!-- 
+    filter-mapping标签用于说明过滤器对URL应用的范围
+    1. filter-name 过滤器名称与filter.filter-name保持一致
+    2. url-pattern 说明过滤器作用范围 &quot;/*&quot;代表对所有url进行过滤
+--&gt;
+</code></pre>
+<pre><code class="html">&lt;body&gt;
+    我是默认首页
+&lt;/body&gt;
+</code></pre>
+<pre><code class="java">HelloServlet.java
+@WebServlet(&quot;/hello&quot;)
+public class HelloServlet extends HttpServlet&#123;
+    public HelloServlet()&#123;&#125;
+    protected void doGet(HttpServletReq req, HttpServletResp resp)&#123;
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        resp.getWriter().println(&quot;Hello World!!!&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h3 id="过滤器的生命周期"><a href="#过滤器的生命周期" class="headerlink" title="过滤器的生命周期"></a>过滤器的生命周期</h3><ul>
+<li>初始化init() - <strong>Filter.init()</strong></li>
+<li>提供服务 - <strong>Filter.doFilter()</strong></li>
+<li>销毁 - <strong>Filter.destroy()</strong></li>
+</ul>
+<h3 id="过滤器特性"><a href="#过滤器特性" class="headerlink" title="过滤器特性"></a>过滤器特性</h3><ul>
+<li>过滤器对象在Web应用启动时被<strong>创建且全局唯一</strong></li>
+<li>唯一的过滤器对象在<strong>并发环境</strong>中采用”<strong>多线程</strong>“提供服务</li>
+</ul>
+<h3 id="过滤器两种开发方式"><a href="#过滤器两种开发方式" class="headerlink" title="过滤器两种开发方式"></a>过滤器两种开发方式</h3><h5 id="过滤器的配置形式"><a href="#过滤器的配置形式" class="headerlink" title="过滤器的配置形式"></a>过滤器的配置形式</h5><pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.MyFirstFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt; //对所有url进行拦截
+&lt;/filter-mapping&gt;
+</code></pre>
+<h5 id="过滤器的注解形式"><a href="#过滤器的注解形式" class="headerlink" title="过滤器的注解形式"></a><span style = "color : red">过滤器的注解形式</span></h5><pre><code class="java">@WebFilter(filterName = &quot;MyAnnoationFilter&quot;, urlPatterns = &quot;/*&quot;)
+public class MyAnnoationFilter implements Filter&#123;
+    
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">MyAnnoationFilter.java      //自定义过滤器名称  设置去过滤哪些url
+@@WebFilter(filterName = &quot;MyAnnoationFilter&quot;, urlPatterns = &quot;/*&quot;)
+public class MyAnnoationFilter implements Filter&#123;
+    public void destroy()&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+        System.out.println(&quot;过滤器已生效&quot;);
+        chain.doFilter(req, resp);
+    &#125;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+&#125;
+</code></pre>
+<h3 id="配置与注解如何选择"><a href="#配置与注解如何选择" class="headerlink" title="配置与注解如何选择"></a>配置与注解如何选择</h3><ul>
+<li><span style = "color :blue"><strong>配置形式</strong>维护性更好，适合应用全局过滤 [<strong>中, 大型项目</strong>]</span></li>
+<li><strong>注解形式</strong>开发体验更好，适合于小型项目敏捷开发</li>
+</ul>
+<h3 id="Web中文乱码的解决-需要强制转换"><a href="#Web中文乱码的解决-需要强制转换" class="headerlink" title="Web中文乱码的解决 [需要强制转换]"></a>Web中文乱码的解决 [需要强制转换]</h3><ul>
+<li>GET请求-server.xml增加URIEncoding &#x3D; “UTF-8”</li>
+<li>POST请求-使用request.setCharacterEncoding(“UTF-8”);</li>
+<li>响应-response.setContentType(“text&#x2F;html; charset &#x3D; UTF-8”)</li>
+</ul>
+<pre><code class="java">CharacterEncodingFilter.java
+public class CharacterEncodingFilter implements Filter&#123;
+    public void destroy()&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       //上面的不是Httpservlet要自己写HttpServlet并导入 解决post请求中的中文乱码
+        HttpServletRequest req = (HttpServletRequest)request;//解决中文乱码问题
+        req.serCharacterEncoding(&quot;UTF-8&quot;);
+        HttpServletResponse res = (HttpServletResponse)response;//解决中文乱码问题
+        res.serContentType(&quot;text/html;charset=UTF-8&quot;);
+        chain.doFilter(req, response);
+    &#125;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+&#125;
+</code></pre>
+<h6 id="ServletRequest-最顶级-和-HTTPServletRequest-需继承最顶级-关系所在"><a href="#ServletRequest-最顶级-和-HTTPServletRequest-需继承最顶级-关系所在" class="headerlink" title="ServletRequest[最顶级] 和 HTTPServletRequest[需继承最顶级]关系所在"></a>ServletRequest[最顶级] 和 HTTPServletRequest[需继承最顶级]关系所在</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/2407935960fe789c39d7ed5dcfd439551b455a97/data/ServletRequest%E6%8E%A5%E5%8F%A3.png"></p>
+<pre><code class="xml">web.xml
+&lt;filter&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.MyFirstFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;MyFirstFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt; //对所有url进行拦截
+&lt;/filter-mapping&gt;
+&lt;filter&gt;
+    &lt;filter-name&gt;CharacterEncodingFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.CharacterEncodingFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;CharacterEncodingFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt; //对所有url进行拦截
+&lt;/filter-mapping&gt;
+
+====================================================================
+
+&lt;!--或者在CharacterEncodingFilter上方进行注解 必须是全局唯一--&gt;
+@WebFilter(filterName=&quot;CharacterEncodingFilter&quot;, urlPatterns=&quot;/*&quot;)
+</code></pre>
+<pre><code class="java">HelloServlet.java
+@WebServlet(&quot;/hello&quot;)
+public class HelloServlet extends HttpServlet&#123;
+    public HelloServlet()&#123;&#125;
+    protected void doGet(HttpServletReq req, HttpServletResp resp)&#123;
+        resp.getWriter().println(&quot;你好！世界！！&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h3 id="过滤器开发技巧"><a href="#过滤器开发技巧" class="headerlink" title="过滤器开发技巧"></a>过滤器开发技巧</h3><h5 id="过滤器参数化"><a href="#过滤器参数化" class="headerlink" title="过滤器参数化"></a>过滤器参数化</h5><ul>
+<li>过滤器为了增强灵活性，允许配置信息放在web.xml</li>
+<li>在web.xml中配置**&lt; init-param &gt;**设置过滤器参数</li>
+</ul>
+<h5 id="优化字符集过滤器-为了不去修改java代码"><a href="#优化字符集过滤器-为了不去修改java代码" class="headerlink" title="优化字符集过滤器 [为了不去修改java代码]"></a>优化字符集过滤器 [为了不去修改java代码]</h5><pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;CharacterEncodingFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.CharacterEncodingFilter&lt;/filter-class&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;encoding&lt;/param-name&gt;
+        &lt;param-value&gt;UTF-8&lt;/param-value&gt; &lt;!--方便参数发生变化--&gt;
+    &lt;/init-param&gt;
+    ......
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;CharacterEncodingFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt; //对所有url进行拦截
+&lt;/filter-mapping&gt;
+-------------------------------------------------------------
+&lt;!--或者在CharacterEncodingFilter上方进行注解 必须是全局唯一--&gt;
+@WebFilter(filterName=&quot;CharacterEncodingFilter&quot;, urlPatterns=&quot;/*&quot;,initParams=&#123;
+    @WebInitParam(name=&quot;encoding&quot;, value=&quot;UTF-8&quot;),
+    @WebInitParam(name=&quot;p1&quot;, value=&quot;v1&quot;)
+&#125;)
+</code></pre>
+<pre><code class="java">-------------------------注意init与doFilter----------------------------
+public class CharacterEncodingFilter implements Filter&#123;
+    private String encoding; //类中的全局私有变量
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;
+        encoding=filterConfig.getInitParameter(&quot;encoding&quot;);
+    &#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       //上面的不是Httpservlet要自己写HttpServlet并导入 解决post请求中的中文乱码
+        HttpServletRequest req = (HttpServletRequest)request;//解决中文乱码问题
+        req.serCharacterEncoding(&quot;encoding&quot;);
+        HttpServletResponse res = (HttpServletResponse)response;//解决中文乱码问题
+        res.serContentType(&quot;text/html;charset=&quot; + encoding);// GBK/UTF-8或者其他
+        chain.doFilter(req, response);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="url-pattern设置过滤范围"><a href="#url-pattern设置过滤范围" class="headerlink" title="url-pattern设置过滤范围"></a>url-pattern设置过滤范围</h3><h5 id="url-pattern常用写法"><a href="#url-pattern常用写法" class="headerlink" title="url-pattern常用写法"></a>url-pattern常用写法</h5><ul>
+<li>&#x2F;index.jsp - 执行资源精准匹配</li>
+<li>&#x2F;servlet&#x2F;* - 以前缀进行模糊匹配</li>
+<li>*.jsp - 以后缀进行模糊匹配</li>
+</ul>
+<pre><code class="java">SampleServlet1.java
+@WebServlet(&quot;/servlet/sample1&quot;)
+public class SampleServlet1 extends HttpServlet&#123;
+    public SampleServlet1()&#123;&#125;
+    protected void doGet(HttpServletRequest req,HttpServletResponse resp)&#123;
+        resp.getWriter().println(&quot;I&#39;m&quot; + this.getClass().getSimpleName());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UrlPatternFilter.java
+public class UrlPatternFilter implements Filter&#123;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+//上面的不是Httpservlet要自己写HttpServlet并导入 解决post请求中的中文乱码
+    HttpServletRequest req = (HttpServletRequest)request;//解决中文乱码问题
+    HttpServletResponse res = (HttpServletResponse)response;//解决中文乱码问题
+&#125;
+</code></pre>
+<pre><code class="xml">
+&lt;filter&gt;
+    &lt;filter-name&gt;UrlPatternFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.UrlPatternFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+    &lt;filter-mapping&gt; &lt;!--  &lt;url-pattern&gt;/test.jsp&lt;/url-pattern&gt; &lt;!--只对其进行过滤 --&gt;
+        &lt;param-name&gt;UrlPatternFilter&lt;/param-name&gt;
+        &lt;url-pattern&gt;/servlet/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    ......
+</code></pre>
+<blockquote>
+<p>在控制台Console显示：拦截到<a target="_blank" rel="noopener" href="http://localhost:8080/url-pattern/test.jsp">http://localhost:8080/url-pattern/test.jsp</a>  因为这是精准匹配 需要换成 <strong>&#x2F;</strong>*</p>
+</blockquote>
+<h3 id="x2F-映射的问题"><a href="#x2F-映射的问题" class="headerlink" title="&#x2F; 映射的问题"></a>&#x2F; 映射的问题</h3><ul>
+<li><strong>&#x2F;</strong> 指映射Web应用根路径, 且只会对Servlet生效</li>
+<li>默认首页index.jsp会让 <strong>&#x2F;</strong> 失效</li>
+<li><strong>&#x2F;</strong> 与 <strong>&#x2F;</strong>* 含义不同, 前者指向根路径, 后者代表所有</li>
+</ul>
+<pre><code class="java">SampleServlet2.java
+@WebServlet(&quot;/&quot;)
+public class SampleServlet2 extends HttpServlet&#123;
+    public SampleServlet1()&#123;&#125;
+    protected void doGet(HttpServletRequest req,HttpServletResponse resp)&#123;
+        resp.getWriter().println(&quot;I&#39;m&quot; + this.getClass().getSimpleName());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;UrlPatternFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.UrlPatternFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;UrlPatternFilter&lt;/param-name&gt;
+        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;UrlPatternFilter&lt;/param-name&gt;
+        &lt;url-pattern&gt;/servlet/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;UrlPatternFilter&lt;/param-name&gt;
+        &lt;url-pattern&gt;*.jsp&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    ......
+-------------------------------------------------------------
+&lt;!--或者在UrlPatternFilter上方进行注解 必须是全局唯一--&gt;
+@WebFilter(filterName=&quot;UrlPatternFilter&quot;, urlPatterns=&#123;
+    &quot;/&quot;,&quot;/servlet/*&quot;,&quot;*.jsp&quot;
+&#125;)
+</code></pre>
+<p>这个url-pattern 中的**&#x2F;** 只会映射到根路径的SampleServlet2</p>
+<blockquote>
+<p>@WebServlet(“&#x2F;“)<br>public class SampleServlet2 extends HttpServlet{</p>
+</blockquote>
+<p>Web.xml中默认配置了首页为<strong>index.jsp</strong> 如果想对默认首页拦截需要写<br>&lt; url-pattern&gt; ***&#x2F;** &lt; &#x2F;url-pattern&gt; 或 &lt; url-pattern&gt; <strong>&#x2F;index.jsp</strong> &lt; &#x2F;url-pattern&gt;<br>默认首页优先级比servlet要高</p>
+<h3 id="过滤链"><a href="#过滤链" class="headerlink" title="过滤链"></a>过滤链</h3><h5 id="过滤链开发注意事项"><a href="#过滤链开发注意事项" class="headerlink" title="过滤链开发注意事项"></a>过滤链开发注意事项</h5><ul>
+<li>每一个过滤器应具有单独职能</li>
+<li>过滤器的执行顺序以**&lt; filter-mapping &gt;**的前后顺序为准</li>
+<li>调用**chain.doFilter()**将请求向后传递</li>
+</ul>
+<pre><code class="java">FilterA.java
+public class FilterA implements Filter&#123;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       System.out.println(&quot;I&#39;m Filter A&quot;);
+       chain.doFilter(req, resp);
+    &#125;
+    public void destroy()&#123;&#125;
+
+FilterB.java
+public class FilterA implements Filter&#123;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       System.out.println(&quot;I&#39;m Filter B&quot;);
+       chain.doFilter(req, resp);
+    &#125;
+    public void destroy()&#123;&#125;
+
+FilterC.java
+public class FilterA implements Filter&#123;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       System.out.println(&quot;I&#39;m Filter C&quot;);
+       chain.doFilter(req, resp);
+    &#125;
+    public void destroy()&#123;&#125;
+</code></pre>
+<pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;FilterA&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.FilterA&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter&gt;
+    &lt;filter-name&gt;FilterB&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.FilterA&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter&gt;
+    &lt;filter-name&gt;FilterC&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.FilterA&lt;/filter-class&gt;
+&lt;/filter&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;FilterA&lt;/param-name&gt;
+        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;FilterB&lt;/param-name&gt;
+        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;FilterC&lt;/param-name&gt;
+        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+---------------------不推荐使用注解--------------------------
+用注解方式需要在每个Filter.java上面添加注解 
+@WebFilter(filterName=&quot;FilterA&quot;, urlPatterns=&quot;/*&quot;)
+public class FilterA implements Filter&#123;
+    //按照字母表升序排序 且不区分大小写
+&#125;
+</code></pre>
+<pre><code class="java">HelloServlet.java
+@WebServlet(&quot;/hello&quot;)
+public class HelloServlet extends HttpServlet&#123;
+    public HelloServlet()&#123;&#125;
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException&#123;
+        response.getWriter().print(&quot;Hello World!&quot;);
+        Sysotem.out.println(&quot;Hello World!&quot;)
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>Console显示：顺序由<filter-mapping>决定<br>I’m Filter A      &#x2F;&#x2F;chain.doFilter(req, resp); 请求顺着过滤链往下走<br>I’m Filter B<br>I’m Filter C      &#x2F;&#x2F;过滤链没有格外的过滤器了 回到HelloServlet.java最终处理<br>Hello World!<br>&#x2F;&#x2F;servlet处理完以后按照原先的顺序 逆向由Hello、C、B、A顺序返回</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/feed3d659f7f61c2ae891d07fb5a43a42672e13b/data/%E8%BF%87%E6%BB%A4%E9%93%BE%E5%8E%9F%E7%90%86%E5%9B%BE.png"></p>
+<blockquote>
+<p>刻意去控制过滤器访问 VPN 仅限中国访问 如果是中国地址就调用<strong>chain.doFilter</strong>进行放行 其本质是防火墙</p>
+</blockquote>
+<h3 id="多端设备自动匹配-Pc端-移动端"><a href="#多端设备自动匹配-Pc端-移动端" class="headerlink" title="多端设备自动匹配(Pc端 移动端)"></a>多端设备自动匹配(Pc端 移动端)</h3><h5 id="设备适配过滤器"><a href="#设备适配过滤器" class="headerlink" title="设备适配过滤器"></a>设备适配过滤器</h5><pre><code class="html">自动脑补绘制两个html首页
+一个是电脑端的图片展示
+一个是手机端的图片展示
+</code></pre>
+<pre><code class="java">DeviceAdapterFilter.java
+public class DeviceAdapterFilter implements Filter&#123;
+    public void init(FilterConfig filterConfig)thorws ServletException&#123;&#125;
+    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+       HttpServletRequest req = (HttpServletRequest)request;//强制类型转换
+          HttpServletResponse res = (HttpServletResponse)response;
+       /*
+       /index.html
+        PC: /desktop/index.html
+        MOBILE: /mobile/index.html
+
+       /test.html
+        PC: /desktop/test.html
+        MOBILE: /mobile/test.html
+       */
+       String uri = req.getRequestURI();
+       System.out.println(&quot;URI: &quot; + uri);
+       if(uri.startsWith(&quot;/desktop&quot;) || uri.startsWith(&quot;/mobile&quot;))&#123;
+           chain.doFilter(req, resp);
+       &#125;else &#123;    //读取客户端请求头 所有字符串转成小写
+           String userAgent = req.getHeader(&quot;user-agent&quot;).toLowerCase(); 
+           String targetURL = &quot;&quot;;
+           if(userAgent.indexOf(&quot;android&quot;)!=-1 || userAgent.indexOf(&quot;iphone&quot;)!=-1)&#123;
+               targetURI = &quot;/mobile&quot; + uri;
+               System.out.println(&quot;移动端设备正在访问, 重新跳转URI: &quot; + targetURI)
+               res.sendRedircet(targetURI); //向/mobile对应页面进行获取
+           &#125;else &#123;
+               targetURI = &quot;/desktop&quot; + uri;
+                System.out.println(&quot;PC端设备正在访问, 重新跳转URI: &quot; + targetURI)
+               res.sendRedircet(targetURI); //向/mobile对应页面进行获取
+           &#125;
+       &#125;
+    &#125;
+    public void destroy()&#123;&#125;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;filter&gt;
+    &lt;filter-name&gt;DeviceAdapterFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;filter.DeviceAdapterFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+    &lt;filter-mapping&gt;
+        &lt;param-name&gt;DeviceAdapterFilter&lt;/param-name&gt;
+        &lt;url-pattern&gt;*.html&lt;/url-pattern&gt; &lt;!--对其进行过滤--&gt;
+    &lt;/filter-mapping&gt;
+</code></pre>
+<blockquote>
+<p>URI: &#x2F;index.html<br>PC端设备正在访问, 重新跳转URI: &#x2F;desktop&#x2F;index.html<br>URI: &#x2F;desktop&#x2F;index.html</p>
+<p>++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>URI: &#x2F;index.html<br>移动端设备正在访问, 重新跳转URI: &#x2F;mobile&#x2F;index.html<br>URI: &#x2F;mobile&#x2F;index.html</p>
+</blockquote>
 
             
         </div>
@@ -637,7 +1031,7 @@ public class RegexSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -1605,7 +1999,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -2279,7 +2673,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -5429,7 +5823,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8811,7 +9205,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -8930,6 +9324,9 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.9.24</span></strong></p>
 <p>今天上午八点多起来啦，很开心 嗖嗖嗖的一下子从床上钻了下来，激动又兴奋，激动是因为今天能看到宝宝，兴奋是因为今天可以和宝宝近距离贴贴~ 真的好想宝宝呀。宝宝六点多就起来了，准备了一下往中堡这边走。宝宝今天要来找我玩啦~~ 9点多噌噌噌的往外走，去地铁站接宝宝，当时到了外面真的一个单车都没有了。真的都这么卷吗，都醒的这么早！！于是走路到前面拐弯的路口那边有单车，扫了一辆单车踏着清风去接中堡四号线接宝宝。宝宝今天很漂亮！好可爱，是一只小甜妹，也是一只仙气飘飘的小仙女噢。随后骑着车车和宝宝去了望城滨水公园玩，当时找了半天停车场。还好停下来了。和宝宝在海滩旁边，哈哈哈 海滩有点小。和宝宝一起绕着海滩走了一圈，边走边聊天，真的很享受这种时光，悠闲、轻松、快乐，享受着微风拂过面颊，好舒服吖~ 后来过马路去扫了一辆单车，骑车的时候，偷偷拍了一张小宝宝带我的照片，好爱呀~ 宝宝说了一句话，跟我在一起，真的很安心，不用担心迷路，也不用担心不会骑车。反正真的很安心。之后带着宝宝去了学校对面吃了鸡公煲，也算半个麻辣香锅吧，当然是香锅鸡啦，当时差点误点了米饭，还好宝宝聪明伶俐误打误撞的取消掉啦！nice！！不小心下意识的点了两碗米饭。味道很不错，鸡肉真的蛮好吃的，其他还行还行。一般般，全部吃完啦，还不错吃的真的很饱，我和宝宝都吃饱啦。呆着宝宝去自习室电子阅览室里面休息了一下，和宝宝一起玩蜘蛛纸牌，之前接触过一直玩不明白，我发现宝宝真的很厉害。差一点就叠满了，和宝宝在自习室里贴贴，胳膊靠着胳膊 趴在桌子上偷偷瞄着宝宝，宝宝也偷偷瞄着我。呆了一会差不多快要去值班咯。回宿舍拿了工作牌还有給宝宝拿了一块冰皮月饼。值班的过程也是比较坎坷，中途还迷路啦，有宝宝陪着我。最后终于找到了献血车，和宝宝的那一个半小时的值班真的很开心，宝宝拿着测了我的血压，看到上面写着血压偏高，当时宝宝真的很担心，我很心疼，宝宝真的很担心我的身体。确实不能再乱吃了 要好好锻炼身体 不能辜负宝宝，不能再让宝宝担心啦。中途跟一个学长聊天，很开心，看宝宝和他聊的很欢，说实话有一点点点的小吃醋，哈哈哈，为了证明自己身份，不断的戳宝宝，哼，宝宝是我的！！值完班后，和宝宝一起去吃鸡蛋炒面。宝宝请我喝了一杯书亦烧仙草，真的那里的料很好吃很好吃，那个炒面也超级好吃。和宝宝一起吃面 一起喝奶茶，一起享受晚饭的时光。到了与宝宝分开的时刻，真的很难受。我其实也很想宝宝一起陪着我开班导的傻逼班会，但是真的因为开会结束的时间太晚，然后离着江科也很远，很晚，也很不放心宝宝一个人回去，真的很不放心。明明可以把宝宝安全送到地铁四号线，又怎么能让宝宝自己一个人独自走夜路，而且离着四号线很远。不放心不放心。骑着小车带着宝宝去了一次非常规路线的四号线，温柔的风吹在我和宝宝的脸上，骑着车亲吻宝宝的脸颊。真的很想把时间定格在那一刻，微风不噪！时光正好，夕阳落在了大地泛成了金黄的路。和宝宝相拥相吻，与宝宝分离。很难受，恨不得真的想重新回到专升本，如果当时真的再高几分，就几分就行了。宝宝…我想你了</p>
+<hr>
+<p><strong><span style = "color : red">2023.9.26</span></strong></p>
+<p>今天能拿8学分噢，中午的时候参加活动，晚上还有2个到时候一起搞，而且晚上还有部门例会，大无语事件来了。。呜呜，宝宝那边发了月饼呀，真的做的很好看，精致的包装，很羡慕。唉，我们的比较简陋，拿不出台面不发朋友圈了qaq</p>
 
             
         </div>
@@ -8944,7 +9341,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#879cff>
+            <a href="/tags/随笔" style=color:#00bcd4>
                 随笔
             </a>
         </span>
@@ -11319,7 +11716,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -11598,7 +11995,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -12239,7 +12636,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -12610,7 +13007,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
