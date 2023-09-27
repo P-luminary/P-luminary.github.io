@@ -133,9 +133,9 @@
 
 <div class="post">
 
-    <a href="/2023/09/25/后端/正则表达式-过滤器/">
+    <a href="/2023/09/25/后端/正则表达式,过滤器,监听器与实践/">
         <h2>
-            正则表达式,过滤器
+            正则表达式,过滤器,监听器与实践
         </h2>
     </a>
 
@@ -156,7 +156,7 @@
         <div class="content" v-pre>
             
             
-            <h3 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h3><ul>
+            <h1 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h1><ul>
 <li>正则表达式是检查、匹配字符串的表达式</li>
 <li>正则表达式是描述规则、主流语言都有良好支持</li>
 <li>字符串校验、查找与替换是正则表达式主要使用场景</li>
@@ -775,6 +775,10 @@ public class HelloServlet extends HttpServlet&#123;
         &lt;param-name&gt;encoding&lt;/param-name&gt;
         &lt;param-value&gt;UTF-8&lt;/param-value&gt; &lt;!--方便参数发生变化--&gt;
     &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;v1&lt;/param-name&gt;
+        &lt;param-value&gt;GBK&lt;/param-value&gt;
+    &lt;/init-param&gt;
     ......
 &lt;/filter&gt;
 &lt;filter-mapping&gt;
@@ -793,13 +797,14 @@ public class CharacterEncodingFilter implements Filter&#123;
     private String encoding; //类中的全局私有变量
     public void init(FilterConfig filterConfig)thorws ServletException&#123;
         encoding=filterConfig.getInitParameter(&quot;encoding&quot;);
+        System.out.println(encoding); //用debug打开
     &#125;
-    public void doFilter(ServletRequest req, ServeltResponse resp)throws IOException,ServletException,FilterChain chain&#123;
+    public void doFilter(ServletRequest req, ServeltResponse resp, FilterChain chain)throws IOException,ServletException&#123;
        //上面的不是Httpservlet要自己写HttpServlet并导入 解决post请求中的中文乱码
         HttpServletRequest req = (HttpServletRequest)request;//解决中文乱码问题
-        req.serCharacterEncoding(&quot;encoding&quot;);
+        req.setCharacterEncoding(&quot;encoding&quot;);
         HttpServletResponse res = (HttpServletResponse)response;//解决中文乱码问题
-        res.serContentType(&quot;text/html;charset=&quot; + encoding);// GBK/UTF-8或者其他
+        res.setContentType(&quot;text/html;charset=&quot; + encoding);// GBK/UTF-8或者其他
         chain.doFilter(req, response);
     &#125;
 &#125;
@@ -827,8 +832,7 @@ public class UrlPatternFilter implements Filter&#123;
     HttpServletResponse res = (HttpServletResponse)response;//解决中文乱码问题
 &#125;
 </code></pre>
-<pre><code class="xml">
-&lt;filter&gt;
+<pre><code class="xml">&lt;filter&gt;
     &lt;filter-name&gt;UrlPatternFilter&lt;/filter-name&gt;
     &lt;filter-class&gt;filter.UrlPatternFilter&lt;/filter-class&gt;
 &lt;/filter&gt;
@@ -841,6 +845,7 @@ public class UrlPatternFilter implements Filter&#123;
 <blockquote>
 <p>在控制台Console显示：拦截到<a target="_blank" rel="noopener" href="http://localhost:8080/url-pattern/test.jsp">http://localhost:8080/url-pattern/test.jsp</a>  因为这是精准匹配 需要换成 <strong>&#x2F;</strong>*</p>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/3921d7a4ad3d1c7e96c980109c605e1e7568de73/data/%E8%BF%87%E6%BB%A4%E5%99%A8%E5%AE%9E%E4%BE%8B.png"></p>
 <h3 id="x2F-映射的问题"><a href="#x2F-映射的问题" class="headerlink" title="&#x2F; 映射的问题"></a>&#x2F; 映射的问题</h3><ul>
 <li><strong>&#x2F;</strong> 指映射Web应用根路径, 且只会对Servlet生效</li>
 <li>默认首页index.jsp会让 <strong>&#x2F;</strong> 失效</li>
@@ -963,7 +968,8 @@ public class HelloServlet extends HttpServlet&#123;
 <blockquote>
 <p>刻意去控制过滤器访问 VPN 仅限中国访问 如果是中国地址就调用<strong>chain.doFilter</strong>进行放行 其本质是防火墙</p>
 </blockquote>
-<h3 id="多端设备自动匹配-Pc端-移动端"><a href="#多端设备自动匹配-Pc端-移动端" class="headerlink" title="多端设备自动匹配(Pc端 移动端)"></a>多端设备自动匹配(Pc端 移动端)</h3><h5 id="设备适配过滤器"><a href="#设备适配过滤器" class="headerlink" title="设备适配过滤器"></a>设备适配过滤器</h5><pre><code class="html">自动脑补绘制两个html首页
+<h3 id="多端设备自动匹配-Pc端-移动端"><a href="#多端设备自动匹配-Pc端-移动端" class="headerlink" title="多端设备自动匹配(Pc端 移动端)"></a>多端设备自动匹配(Pc端 移动端)</h3><h5 id="设备适配过滤器"><a href="#设备适配过滤器" class="headerlink" title="设备适配过滤器"></a>设备适配过滤器</h5><pre><code class="html">index.html
+自动脑补绘制两个html首页
 一个是电脑端的图片展示
 一个是手机端的图片展示
 </code></pre>
@@ -1017,6 +1023,44 @@ public class DeviceAdapterFilter implements Filter&#123;
 <p>++++++++++++++++++++++++++++++++++++++++++++</p>
 <p>URI: &#x2F;index.html<br>移动端设备正在访问, 重新跳转URI: &#x2F;mobile&#x2F;index.html<br>URI: &#x2F;mobile&#x2F;index.html</p>
 </blockquote>
+<h1 id="监听器、Freemarker"><a href="#监听器、Freemarker" class="headerlink" title="监听器、Freemarker"></a>监听器、Freemarker</h1><h6 id="监听器：对Web应用对象的行为进行监控-触发事件后进行捕获-★★★"><a href="#监听器：对Web应用对象的行为进行监控-触发事件后进行捕获-★★★" class="headerlink" title="监听器：对Web应用对象的行为进行监控 [触发事件后进行捕获] ★★★"></a>监听器：对Web应用对象的行为进行监控 [触发事件后进行捕获] ★★★</h6><h6 id="Freemarker-模板引擎-：模板脚本-数据来实现最终数据的产生-★★★★★"><a href="#Freemarker-模板引擎-：模板脚本-数据来实现最终数据的产生-★★★★★" class="headerlink" title="Freemarker[模板引擎]：模板脚本+数据来实现最终数据的产生 ★★★★★"></a>Freemarker[模板引擎]：模板脚本+数据来实现最终数据的产生 ★★★★★</h6><h3 id="监听器"><a href="#监听器" class="headerlink" title="监听器"></a>监听器</h3><p><strong>生活中的”监听器”<strong>：汽车自动刹车系统 自动检测前方障碍物触发自动刹车；实时监控</strong>电表</strong>水表 钱不足直接断电</p>
+<h6 id="监听器-Listener"><a href="#监听器-Listener" class="headerlink" title="监听器 - Listener"></a>监听器 - Listener</h6><ul>
+<li>监听器(Listener)是J2EE Servlet模块下的组件</li>
+<li>Listener的作用对Web应用对象的行为进行监控</li>
+<li>通过Listener监听自动触发指定的功能代码</li>
+</ul>
+<h3 id="三种监听对象"><a href="#三种监听对象" class="headerlink" title="三种监听对象"></a>三种监听对象</h3><ul>
+<li><strong>ServletContext</strong> - 对全局ServletContext及其属性进行监听</li>
+<li><strong>HttpSession</strong> - 对用户会话及其属性操作进行监听</li>
+<li><strong>ServletRequest</strong> - 对请求及属性操作进行监听</li>
+</ul>
+<h6 id="过滤器与监听器的区别"><a href="#过滤器与监听器的区别" class="headerlink" title="过滤器与监听器的区别"></a>过滤器与监听器的区别</h6><ul>
+<li><strong>过滤器</strong>(Filter)的职责是对**<u>URL进行过滤拦截</u>**, 是主动的执行</li>
+<li><strong>监听器</strong>(Listener)的职责是对**<u>Web对象进行监听</u>**, 是被动触发</li>
+</ul>
+<h3 id="开发监听器三要素"><a href="#开发监听器三要素" class="headerlink" title="开发监听器三要素"></a>开发监听器三要素</h3><ul>
+<li>实现XxxListener接口, 不同接口对应不同监听对象</li>
+<li>实现每个接口中独有的方法, 实现触发监听的后续操作</li>
+<li>在web.xml中配置**&lt; listener &gt;**使监听器生效</li>
+</ul>
+<p>&#96;&#96;</p>
+<h3 id="第一个监听器-全局推荐使用配置形式"><a href="#第一个监听器-全局推荐使用配置形式" class="headerlink" title="第一个监听器 [全局推荐使用配置形式]"></a>第一个监听器 [全局推荐使用<u>配置形式</u>]</h3><pre><code class="java">FirstListener.java //Debug启动
+@WebListener //启动时tomcat会自动扫描
+public class FirstListener implements ServletContextListener&#123;
+    //项目初始化所触发
+    public void contextInitialized(ServletContextEvent sce)&#123;
+        System.out.println(&quot;ServletContext已初始化&quot;);
+    &#125;
+    //上下文被销毁时所触发 关闭时自动销毁
+    public void contextDestoryed(ServletContextEvent sce)&#123;
+       System.out.println(&quot;ServletContext已销毁&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;listener&gt;
+    &lt;listener-class&gt;com.imooc.listener.FirstListener&lt;/listener-class&gt;
+&lt;/listener&gt;
+</code></pre>
 
             
         </div>
@@ -1038,7 +1082,7 @@ public class DeviceAdapterFilter implements Filter&#123;
         
     </div>
 
-    <a href="/2023/09/25/后端/正则表达式-过滤器/ " class="go-post">
+    <a href="/2023/09/25/后端/正则表达式,过滤器,监听器与实践/ " class="go-post">
         阅读全文
     </a>
 </div>
@@ -1999,7 +2043,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -2673,7 +2717,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -5823,7 +5867,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -9205,7 +9249,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -9327,6 +9371,9 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.9.26</span></strong></p>
 <p>今天能拿8学分噢，中午的时候参加活动，晚上还有2个到时候一起搞，而且晚上还有部门例会，大无语事件来了。。呜呜，宝宝那边发了月饼呀，真的做的很好看，精致的包装，很羡慕。唉，我们的比较简陋，拿不出台面不发朋友圈了qaq</p>
+<hr>
+<p><strong><span style = "color : red">2023.9.27</span></strong></p>
+<p>晚上和宝宝打视频，宝宝今晚好美，刚洗完澡的宝宝宛如一朵出水芙蓉。和宝宝打电话，虽然没有说什么，但是和宝宝面对面互相望着彼此，很想宝宝了，真的很想。我们都哭了，是幸福的眼泪，是想念的泪水，小潘学长一定要好好努力不能让宝宝受委屈了</p>
 
             
         </div>
@@ -9341,7 +9388,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#00bcd4>
+            <a href="/tags/随笔" style=color:#879cff>
                 随笔
             </a>
         </span>
@@ -11716,7 +11763,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ffa2c4>
+            <a href="/tags/软考" style=color:#879cff>
                 软考
             </a>
         </span>
@@ -11995,7 +12042,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#1bccbc>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -12636,7 +12683,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -13007,7 +13054,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
