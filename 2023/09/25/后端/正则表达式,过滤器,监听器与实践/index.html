@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1040,6 +1040,299 @@ public class FirstListener implements ServletContextListener&#123;
 <pre><code class="xml">&lt;listener&gt;
     &lt;listener-class&gt;com.imooc.listener.FirstListener&lt;/listener-class&gt;
 &lt;/listener&gt;
+</code></pre>
+<h3 id="内置对象监听接口"><a href="#内置对象监听接口" class="headerlink" title="内置对象监听接口"></a>内置对象监听接口</h3><ul>
+<li><strong>ServletContextListener</strong> - 监听ServletContext对象创建、销毁等操作</li>
+<li><strong>HttpSessionListener</strong> - 监听HttpSession对象创建、销毁等操作</li>
+<li><strong>ServletRequestListener</strong> - 监听HttpServletRequest对象创建、销毁等操作</li>
+</ul>
+<pre><code class="xml">&lt;listener&gt;
+    &lt;listener-class&gt;com.example.json.WebListener&lt;/listener-class&gt;
+&lt;/listener&gt;
+</code></pre>
+<pre><code class="java">HelloServlet.java //设置属性的时候会触发WebListener
+WebServlet(&quot;/hello&quot;)
+public class HelloServlet extends HttpServlet&#123;
+    public HelloServlet()&#123;&#125;
+    protected void doGet(HttpServletRequest req,HttpServletResponse resp)&#123;
+        resp.getWriter().println(&quot;Hello World&quot;);
+        req.getServletContext().setAttribute(&quot;sc-attr1&quot;,&quot;sc-attr-value1&quot;);
+        req.getSession().setAttribute(&quot;session-attr1&quot;,&quot;session-attr-value1&quot;);
+        req.setAttribute(&quot;request-attr1&quot;,&quot;request-attr-value1&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">WebListener.java
+package com.example.json;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
+
+public class WebListener implements ServletContextListener, HttpSessionListener, ServletRequestListener &#123;
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) &#123;
+        System.out.println(&quot;ServletContext已初始化&quot;);
+    &#125;
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) &#123;
+        System.out.println(&quot;ServletContext已被销毁&quot;);
+    &#125;
+
+    @Override
+    public void sessionCreated(HttpSessionEvent httpSessionEvent) &#123;
+        HttpSession session = httpSessionEvent.getSession();
+        System.out.println(&quot;Session已被创建, SessionId:&quot; + session);
+    &#125;
+
+    @Override
+    public void sessionDestroyed(HttpSessionEvent httpSessionEvent) &#123;
+        System.out.println(&quot;Session已被销毁&quot;);
+    &#125;
+
+    @Override
+    public void requestDestroyed(ServletRequestEvent servletRequestEvent) &#123;
+        System.out.println(&quot;HttpServletRequest已被销毁&quot;);
+    &#125;
+
+    @Override
+    public void requestInitialized(ServletRequestEvent servletRequestEvent) &#123;
+        HttpServletRequest request = (HttpServletRequest)servletRequestEvent.getServletRequest();
+        //请求初始化完毕
+        System.out.println(&quot;HttpServletRequest已被创建, URI&quot; + request.getRequestURI());
+    &#125;
+&#125;
+
+//session被创建了以后 第二次从同样的浏览器发出的请求覆盖了sessionid(3min后过期可人为而改变) 隐藏且可用
+HttpServletRequest已被创建, URI/json_war_exploded/
+Session已被创建, SessionId:org.apache.catalina.session.StandardSessionFacade@71ed02bc
+HttpServletRequest已被销毁
+HttpServletRequest已被创建, URI/json_war_exploded/
+Session已被创建, SessionId:org.apache.catalina.session.StandardSessionFacade@194a08e0
+HttpServletRequest已被销毁
+</code></pre>
+<h3 id="属性监听接口-了解"><a href="#属性监听接口-了解" class="headerlink" title="属性监听接口 [了解]"></a>属性监听接口 [了解]</h3><ul>
+<li><strong>ServletContextAttributeListener</strong> - 监听全局属性操作</li>
+<li><strong>HttpSessionAttributeListener</strong> - 监听用户会话属性操作</li>
+<li><strong>ServletRequestAttributeListener</strong> - 监听请求属性操作</li>
+</ul>
+<pre><code class="java">web.xml 和 helloServlet.java的代码都一样
+</code></pre>
+<pre><code class="java">WebAttributeListener.java
+package com.example.json;
+
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletRequestAttributeEvent;
+import javax.servlet.ServletRequestAttributeListener;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionBindingEvent;
+
+public class WebAttributeListener implements ServletContextAttributeListener, HttpSessionAttributeListener, ServletRequestAttributeListener &#123;
+    @Override
+    public void attributeAdded(ServletContextAttributeEvent servletContextAttributeEvent) &#123;
+        System.out.println(&quot;ServletContext新增属性：&quot; + servletContextAttributeEvent.getName() + &quot;-&gt;&quot; + servletContextAttributeEvent.getValue());
+    &#125;
+
+    @Override
+    public void attributeRemoved(ServletContextAttributeEvent servletContextAttributeEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void attributeReplaced(ServletContextAttributeEvent servletContextAttributeEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void attributeAdded(ServletRequestAttributeEvent servletRequestAttributeEvent) &#123;
+        System.out.println(&quot;ServletRequestAttributeEvent新增属性：&quot; + servletRequestAttributeEvent.getName() + &quot;-&gt;&quot; + servletRequestAttributeEvent.getValue());
+
+    &#125;
+
+    @Override
+    public void attributeRemoved(ServletRequestAttributeEvent servletRequestAttributeEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void attributeReplaced(ServletRequestAttributeEvent servletRequestAttributeEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void attributeAdded(HttpSessionBindingEvent httpSessionBindingEvent) &#123;
+        System.out.println(&quot;HttpSessionBindingEvent新增属性：&quot; + httpSessionBindingEvent.getName() + &quot;-&gt;&quot; + httpSessionBindingEvent.getValue());
+    &#125;
+
+    @Override
+    public void attributeRemoved(HttpSessionBindingEvent httpSessionBindingEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void attributeReplaced(HttpSessionBindingEvent httpSessionBindingEvent) &#123;
+
+    &#125;
+&#125;
+
+ServletContext已初始化
+[2023-09-28 04:44:52,590] Artifact json:war exploded: Artifact is deployed successfully
+[2023-09-28 04:44:52,590] Artifact json:war exploded: Deploy took 394 milliseconds
+HttpServletRequest已被创建, URI/json_war_exploded/
+ServletContext新增属性：org.apache.jasper.runtime.JspApplicationContextImpl-&gt;org.apache.jasper.runtime.JspApplicationContextImpl@7753fcd4
+ServletContext新增属性：org.apache.jasper.compiler.ELInterpreter-&gt;org.apache.jasper.compiler.ELInterpreterFactory$DefaultELInterpreter@3b424c58
+ServletContext新增属性：org.apache.jasper.compiler.StringInterpreter-&gt;org.apache.jasper.compiler.StringInterpreterFactory$DefaultStringInterpreter@15bdbfaf
+Session已被创建, SessionId:org.apache.catalina.session.StandardSessionFacade@6baa8579
+HttpServletRequest已被销毁
+HttpServletRequest已被创建, URI/json_war_exploded/
+Session已被创建, SessionId:org.apache.catalina.session.StandardSessionFacade@2843a202
+HttpServletRequest已被销毁
+HttpServletRequest已被创建, URI/json_war_exploded/hello
+ServletContext新增属性：sc-attr1-&gt;sc-attr-value1
+HttpSessionBindingEvent新增属性：session-attr1-&gt;session-attr-value1
+ServletRequestAttributeEvent新增属性：request-attr1-&gt;request-attr-value1
+HttpServletRequest已被销毁
+</code></pre>
+<h3 id="监听器的应用场景"><a href="#监听器的应用场景" class="headerlink" title="监听器的应用场景"></a>监听器的应用场景</h3><p><strong>请求流量分析 [以图表形式展现]</strong></p>
+<blockquote>
+<p>流程：在应用启动的时候将两个List初始化 一个保存时间一个保存数值 分情况 若时间不存在初始化1 若存在则在原始＋1进行更新操作</p>
+</blockquote>
+<pre><code class="xml">web.xml
+&lt;listener&gt;
+  &lt;listener-class&gt;com.example.json.RequestTotalListener&lt;/listener-class&gt;
+&lt;/listener&gt;
+</code></pre>
+<pre><code class="java">RequestTotalListener.java
+package com.example.json;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class RequestTotalListener implements ServletContextListener, ServletRequestListener &#123;
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) &#123;
+        List timeList = new ArrayList(); //时间数据
+        List valueList = new ArrayList(); //具体时间访问量数据
+        servletContextEvent.getServletContext().setAttribute(&quot;timeList&quot;, timeList);//得到最原始的context
+        servletContextEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);//启动ServletContext时自动启动倆请求
+    &#125;
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void requestDestroyed(ServletRequestEvent servletRequestEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void requestInitialized(ServletRequestEvent servletRequestEvent) &#123;
+        //请求初始化 每来一个新的请求监听器都会执行此方法 记录某一时间点的访问量
+        //TimeList：10:02  10:03  10:04  10:05
+        //ValueList: 5       7     10    1+1=2
+        List&lt;String&gt; timeList = (List)servletRequestEvent.getServletContext().getAttribute(&quot;timeList&quot;);
+        List&lt;Integer&gt; valueList = (List)servletRequestEvent.getServletContext().getAttribute(&quot;valueList&quot;);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;HH:mm&quot;); //按照小时分钟来取
+        String time = sdf.format(date); //date对象传入
+        if (timeList.indexOf(time) == -1) &#123; //查找对应的数据在集合中是否存在
+            //若时间不存在 则追加时间
+            timeList.add(time);
+            valueList.add(1);//当前有1个请求被创建
+            servletRequestEvent.getServletContext().setAttribute(&quot;timeList&quot;, timeList);
+            servletRequestEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);
+        &#125;else &#123; //假设时间存在 不增加新数据 在原有数据加1
+            int index = timeList.indexOf(time); //10:05返回索引值3
+            int value = valueList.get(index);
+            valueList.set(index, value+1);
+            servletRequestEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">RequestTotalServlet.java
+package com.imooc.total;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+
+/**
+ * Servlet implementation class RequestTotalServlet
+ */
+@WebServlet(&quot;/rt&quot;)
+public class RequestTotalServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public RequestTotalServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        ServletContext context = request.getServletContext();//得到全局context对象
+        List&lt;String&gt; timeList = (List)context.getAttribute(&quot;timeList&quot;);//提取之前创建的
+        List&lt;Integer&gt; valueList = (List)context.getAttribute(&quot;valueList&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        /*response.getWriter().println(timeList.toString()); //打印输出时间数值数据
+        response.getWriter().println(&quot;&lt;br/&gt;&quot;);
+        response.getWriter().println(valueList.toString());*/
+        
+        Map result = new HashMap();
+        result.put(&quot;timeList&quot;, timeList);
+        result.put(&quot;valueList&quot;, valueList);
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+
+    /**
+     * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        doGet(request, response);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">text3.html
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;Test Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;I&#39;m test page 3&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
 
     </div>
