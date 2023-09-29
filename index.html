@@ -1354,6 +1354,285 @@ public class RequestTotalServlet extends HttpServlet &#123;
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<hr>
+<pre><code class="html">&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;js/echarts.min.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.1.1.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+   &lt;div id=&quot;main&quot; style=&quot;width: 600px; height: 400px;&quot;&gt;&lt;/div&gt;
+   &lt;script type = &quot;text/javascript&quot;&gt;
+     //基于准备好的dom, 初始化echarts实例
+    var myChart = echarts.init(document.getElementById(&#39;main&#39;));
+     //指定图表的配置项和数据
+    var option = &#123;
+        title:&#123;
+            text:&#39;Echarts 入门示例&#39;
+        &#125;,
+        tooltip: &#123;&#125;,
+        legend: &#123;
+            data: [&#39;销量&#39;]
+        &#125;,
+        xAxis: &#123;
+            data: [&quot;衬衫&quot;,&quot;羊毛衫&quot;,&quot;雪纺衫&quot;,&quot;裤子&quot;,&quot;高跟鞋&quot;,&quot;袜子&quot;]
+        &#125;,
+        yAxis: &#123;&#125;,
+        series:[&#123;
+            name: &#39;销量&#39;,
+            type: &#39;bar&#39;,
+            data: [5,20,36,10,10,20]
+        &#125;]
+    &#125;;
+       //使用刚指定的配置项和数据显示图表
+       myChart.setOption(option);
+    &lt;/script&gt;
+&lt;/body&gt;
+</code></pre>
+<h3 id="入门百度Echarts组件"><a href="#入门百度Echarts组件" class="headerlink" title="入门百度Echarts组件"></a>入门百度Echarts组件</h3><h6 id="利用Ajax和Jquery进行前后端通信"><a href="#利用Ajax和Jquery进行前后端通信" class="headerlink" title="利用Ajax和Jquery进行前后端通信"></a>利用Ajax和Jquery进行前后端通信</h6><p><a target="_blank" rel="noopener" href="https://echarts.apache.org/zh/index.html">Apache ECharts</a></p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Insert title here&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/echarts.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.1.1.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;main&quot; style=&quot;width: 600px; height: 400px;&quot;&gt;&lt;/div&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    //每一秒钟向服务器查询一次数据把变化数据重新写入图表
+//需要Javascript定时器完成
+    function showChat()&#123;//显示图表
+        //基础的通讯部分
+    $.ajax(&#123;
+        url:&quot;./rt&quot;,
+        type:&quot;get&quot;,
+        dataType:&quot;json&quot;,
+        success:function(json)&#123;
+            console.log(json.timeList);
+            console.log(json.valueList);
+    //基于准备好的dom, 初始化echarts实例
+    var myChart = echarts.init(document.getElementById(&#39;main&#39;));
+    //指定图表的配置项和数据
+    var option = &#123;
+        title: &#123;
+            text: &#39;请求流量分析统计&#39;
+        &#125;,
+        tooltip: &#123;&#125;,
+        legend: &#123;
+            data: [&#39;访问量&#39;]
+        &#125;,
+        xAxis: &#123;
+           // data: [&quot;衬衫&quot;, &quot;羊毛衫&quot;, &quot;雪纺衫&quot;, &quot;裤子&quot;, &quot;高跟鞋&quot;, &quot;袜子&quot;]
+            data: json.timeList
+        &#125;,
+        yAxis: &#123;&#125;,
+        series: [&#123;
+            name: &#39;访问量&#39;,
+            type: &#39;line&#39;, //柱状图  line是折线图
+           // data: [5, 20, 36, 10, 10, 20] //图中展示的数值 与商法data对应
+            data: json.valueList
+        &#125;]
+    &#125;;
+    //激活使用刚指定的配置项和数据显示图表
+    myChart.setOption(option);
+        &#125;
+    &#125;)
+&#125;
+       window.setInterval(&quot;shwoChart()&quot;, 1000);//间隔某时长去执行指定代码
+    //每秒钟通过shwoChart()向服务器&quot;./rt&quot;发送请求 对此请求进行排除用RequestTotalListener去改写
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">RequestTotalListener.java
+package com.example.json;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
+import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class RequestTotalListener implements ServletContextListener, ServletRequestListener &#123;
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) &#123;
+        List timeList = new ArrayList(); //时间数据
+        List valueList = new ArrayList(); //具体时间访问量数据
+        servletContextEvent.getServletContext().setAttribute(&quot;timeList&quot;, timeList);//得到最原始的context
+        servletContextEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);//启动ServletContext时自动启动倆请求
+    &#125;
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void requestDestroyed(ServletRequestEvent servletRequestEvent) &#123;
+
+    &#125;
+
+    @Override
+    public void requestInitialized(ServletRequestEvent servletRequestEvent) &#123;
+        HttpServletRequest request = (HttpServletRequest)servletRequestEvent.getServletRequest();
+        String url = request.getRequestURL().toString();
+        if (url.endsWith(&quot;/rt&quot;) == true)&#123;
+            return; //将rt的url排除之外
+        &#125;
+        //请求初始化 每来一个新的请求监听器都会执行此方法 记录某一时间点的访问量
+        //TimeList：10:02  10:03  10:04  10:05
+        //ValueList: 5       7     10    1+1=2
+        List&lt;String&gt; timeList = (List)servletRequestEvent.getServletContext().getAttribute(&quot;timeList&quot;);
+        List&lt;Integer&gt; valueList = (List)servletRequestEvent.getServletContext().getAttribute(&quot;valueList&quot;);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;HH:mm&quot;); //按照小时分钟来取
+        String time = sdf.format(date); //date对象传入
+        if (timeList.indexOf(time) == -1) &#123; //查找对应的数据在集合中是否存在
+            //若时间不存在 则追加时间
+            timeList.add(time);
+            valueList.add(1);//当前有1个请求被创建
+            servletRequestEvent.getServletContext().setAttribute(&quot;timeList&quot;, timeList);
+            servletRequestEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);
+        &#125;else &#123; //假设时间存在 不增加新数据 在原有数据加1
+            int index = timeList.indexOf(time); //10:05返回索引值3
+            int value = valueList.get(index);
+            valueList.set(index, value+1);
+            servletRequestEvent.getServletContext().setAttribute(&quot;valueList&quot;, valueList);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">RequestTotalServlet.java
+package com.example.json;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.fastjson.JSON;
+
+/**
+ * Servlet implementation class RequestTotalServlet
+ */
+@WebServlet(&quot;/rt&quot;)
+public class RequestTotalServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public RequestTotalServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        ServletContext context = request.getServletContext();
+        List&lt;String&gt; timeList = (List)context.getAttribute(&quot;timeList&quot;);
+        List&lt;Integer&gt; valueList = (List)context.getAttribute(&quot;valueList&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        /*response.getWriter().println(timeList.toString());
+        response.getWriter().println(&quot;&lt;br/&gt;&quot;);
+        response.getWriter().println(valueList.toString());*/ //将对象进行封装
+        
+        Map result = new HashMap();
+        result.put(&quot;timeList&quot;, timeList);
+        result.put(&quot;valueList&quot;, valueList);
+        String json = JSON.toJSONString(result); //将java对象转换为json字符串
+        response.getWriter().println(json);
+    &#125;
+
+    /**
+     * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        // TODO Auto-generated method stub
+        doGet(request, response);
+    &#125;
+
+&#125;
+</code></pre>
+<h3 id="静态数据预加载"><a href="#静态数据预加载" class="headerlink" title="静态数据预加载"></a>静态数据预加载</h3><p>通过监听器在上下文初始化的时候放在系统的全局属性中</p>
+<pre><code class="java">Channel.java
+public class Channel&#123;
+    private String channelName;
+    private String url;
+    ......
+&#125;
+</code></pre>
+<pre><code class="java">StaticDataListener.java
+package com.imooc.listener;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import com.imooc.listener.entity.Channel;
+
+public class StaticDataListener implements ServletContextListener&#123;
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) &#123;
+        // TODO Auto-generated method stub
+        List list  = new ArrayList();
+        list.add(new Channel(&quot;免费课程&quot; , &quot;http://www.imooc.com/1&quot;));
+        list.add(new Channel(&quot;实战课程&quot; , &quot;http://www.imooc.com/2&quot;));
+        list.add(new Channel(&quot;就业班&quot; , &quot;http://www.imooc.com/3&quot;));
+        sce.getServletContext().setAttribute(&quot;channelList&quot;, list);
+        //一次性写入到全局属性种
+    &#125;
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) &#123;
+        // TODO Auto-generated method stub
+        
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="xml">web.xml
+&lt;listener&gt;
+    &lt;listener-class&gt;listener.StaticDataListener&lt;/listener-class&gt;
+&lt;/listener&gt;
+</code></pre>
+<pre><code class="jsp">index.jsp
+&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=UTF-8&quot;
+    pageEncoding=&quot;UTF-8&quot;%&gt;
+&lt;%@ taglib prefix=&quot;c&quot; uri=&quot;http://java.sun.com/jsp/jstl/core&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;Insert title here&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;c:forEach items=&quot;$&#123;applicationScope.channelList &#125;&quot; var=&quot;c&quot;&gt; &lt;!--有效数据提取--&gt;
+    &lt;a href=&quot;$&#123;c.url &#125;&quot;&gt;$&#123;c.channelName &#125;&lt;/a&gt; | 
+&lt;/c:forEach&gt;
+&lt;hr/&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
 
             
         </div>
@@ -2336,7 +2615,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -3010,7 +3289,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -6160,7 +6439,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -9542,7 +9821,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -12056,7 +12335,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -12335,7 +12614,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -12976,7 +13255,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -13347,7 +13626,7 @@ with[80%]具体的有东西、有实物
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
