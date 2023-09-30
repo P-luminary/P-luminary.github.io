@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || 正则表达式,过滤器,监听器与实践</title>
+    <title>P-luminary || 正则表达式,过滤器,监听器与实践,freemarker</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>正则表达式,过滤器,监听器与实践 </h1>
+        <h1>正则表达式,过滤器,监听器与实践,freemarker </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1547,7 +1547,6 @@ public class RequestTotalServlet extends HttpServlet &#123;
         // TODO Auto-generated method stub
         doGet(request, response);
     &#125;
-
 &#125;
 </code></pre>
 <h3 id="静态数据预加载"><a href="#静态数据预加载" class="headerlink" title="静态数据预加载"></a>静态数据预加载</h3><p>通过监听器在上下文初始化的时候放在系统的全局属性中</p>
@@ -1612,6 +1611,579 @@ public class StaticDataListener implements ServletContextListener&#123;
 &lt;hr/&gt;
 &lt;/body&gt;
 &lt;/html&gt;
+</code></pre>
+<h3 id="FreeMarker模板引擎-可以替代jsp"><a href="#FreeMarker模板引擎-可以替代jsp" class="headerlink" title="FreeMarker模板引擎[可以替代jsp]"></a>FreeMarker模板引擎[可以替代jsp]</h3><h6 id="数据-模板-x3D-结果"><a href="#数据-模板-x3D-结果" class="headerlink" title="数据 + 模板 &#x3D; 结果"></a>数据 + 模板 &#x3D; 结果</h6><blockquote>
+<p>数据 <u>[Java代码]</u><br>User user &#x3D; new User();<br>user.setName(“张三”)；</p>
+</blockquote>
+<blockquote>
+<p>模板 <u>[HTML简化]</u><br>&lt; span &gt;<br>    ${user.name}<br>&lt; &#x2F;span &gt;</p>
+</blockquote>
+<blockquote>
+<p>结果<br>&lt; span &gt;<br>    张三<br>&lt; &#x2F;span &gt;</p>
+</blockquote>
+<ul>
+<li>Freemarker是免费开源的模板引擎技术</li>
+<li>Freemarker脚本为(Freemarker Template Language)</li>
+<li>Freemarker提供了大量内建函数来简化开发</li>
+</ul>
+<h3 id="JSP与Freemarker"><a href="#JSP与Freemarker" class="headerlink" title="JSP与Freemarker"></a>JSP与Freemarker</h3><table>
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">JSP</th>
+<th align="center">Freemarker</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">官方标准</td>
+<td align="center">是</td>
+<td align="center">否</td>
+</tr>
+<tr>
+<td align="center">执行方式</td>
+<td align="center">编译型</td>
+<td align="center">解释型</td>
+</tr>
+<tr>
+<td align="center">执行效率</td>
+<td align="center">高</td>
+<td align="center">低</td>
+</tr>
+<tr>
+<td align="center">开发效率</td>
+<td align="center">低</td>
+<td align="center">高</td>
+</tr>
+<tr>
+<td align="center">扩展能力</td>
+<td align="center">弱</td>
+<td align="center">强</td>
+</tr>
+<tr>
+<td align="center">数据提取</td>
+<td align="center">JSTL + EL</td>
+<td align="center">内置标签</td>
+</tr>
+</tbody></table>
+<p>前端工程师把数据写在ftl 然后后端工程师拿着名称去添加后台数据 &#96;</p>
+<pre><code class="java">package com.example.json;
+
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+public class FreemarkerSample1 &#123;
+    public static void main(String[] args) throws IOException, TemplateException &#123;
+        //1. 加载模板
+        Configuration confige = new Configuration(Configuration.VERSION_2_3_32);
+                     // FreemarkerSample1类所在包中加载ftl所在文件
+        confige.setClassForTemplateLoading(FreemarkerSample1.class, &quot;&quot;);
+        Template t = confige.getTemplate(&quot;sample1.ftl&quot;);
+        //2. 创建数据
+        Map&lt;String,Object&gt; data = new HashMap&lt;String, Object&gt;();
+        data.put(&quot;site&quot;,&quot;百度&quot;);
+        data.put(&quot;url&quot;,&quot;https://www.abc.com&quot;);
+        data.put(&quot;data&quot;,new Date());
+        data.put(&quot;number&quot;,83719.88321);
+        Map info = new HashMap();
+        info.put(&quot;cpu&quot;,&quot;i5&quot;);
+        Computer c1 = new Computer(&quot;123456&quot;,&quot;ALIENWARE&quot;,1,&quot;李四&quot;,new Date(), 12900f)
+        data.put(&quot;computer&quot;,c1);
+        //3. 产生输出    向目标输出
+        t.process(data, new OutputStreamWriter(System.out));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="ftl">$&#123;site&#125;
+$&#123;url&#125;
+&lt;#--类似于EL表达式--&gt;
+</code></pre>
+<pre><code class="java">Computer.java
+public class Computer&#123;
+    private String sn; //序列号
+    private String mode1; //型号
+    private int state; //状态 1-在用 2-闲置 3-报废
+    private String user; //使用人
+    private Date dog; //采购日期
+    private Float price; //购买价格
+    private Map info; //电脑配置信息
+    ......
+&#125;
+</code></pre>
+<pre><code class="html">sample1.ftl
+&lt;#-- Freemarker取值 --&gt;
+$&#123;site&#125;
+$&#123;url&#125;
+
+&lt;#-- !默认值 --&gt;
+$&#123;author!&quot;不存在的属性&quot;&#125;
+
+&lt;#-- ？string格式化输出 --&gt;
+$&#123;date?string(&quot;yyyy年MM月dd日 HH:mm:ss SSS&quot;)&#125;
+$&#123;number?string(&quot;0.00&quot;)&#125;
+
+SN:$&#123;computer.sn&#125;
+型号:$&#123;computer.mode1&#125;
+状态:$&#123;computer.state&#125;
+用户:$&#123;computer.user&#125;
+采购时间:$&#123;computer.dop?string(&quot;yyyy年MM月dd日&quot;)&#125;
+采购价格:$&#123;computer.price?string(&quot;0.00&quot;)&#125;
+
+//对map的提取
+CPU:$&#123;computer.info[&quot;cpu&quot;]&#125;
+内存:$&#123;computer.info[&quot;memory&quot;]!&quot;无内存信息&quot;&#125;
+</code></pre>
+<h3 id="FTL取值"><a href="#FTL取值" class="headerlink" title="FTL取值"></a>FTL取值</h3><ul>
+<li><p><strong>${属性名}</strong> 取值，可对属性进行计算</p>
+</li>
+<li><p><strong>${属性名!默认值}</strong> 使用默认值[解决空值异常]<br>${author!”不存在的属性”} &#x3D;&gt; 不存在的属性</p>
+</li>
+<li><p><strong>${属性名?string}</strong> 格式化输出<br>${data?string(“yyyy年MM月dd日 HH:mm:ss SSS”)}</p>
+<blockquote>
+<p>${number?string(“0.00”)} 小数部位保留两位</p>
+</blockquote>
+</li>
+</ul>
+<h6 id="if分支判断"><a href="#if分支判断" class="headerlink" title="if分支判断"></a>if分支判断</h6><pre><code class="java">&lt;#if 条件1&gt;
+  条件1成立执行代码
+&lt;#if 条件2&gt;
+  条件2成立执行代码
+&lt;#if 条件3&gt;
+  条件3成立执行代码
+&lt;#else&gt;
+  其他情况下执行代码
+</code></pre>
+<h6 id="switch分支判断"><a href="#switch分支判断" class="headerlink" title="switch分支判断"></a>switch分支判断</h6><pre><code class="java">&lt;#switch value&gt;
+  &lt;#case refValue1&gt;
+    ...
+    &lt;#break&gt;
+  &lt;#case refValue2&gt;
+    ...
+    &lt;#break&gt;
+  &lt;#case refValueN&gt;
+    ...
+    &lt;#break&gt;
+&lt;#default&gt;
+...
+&lt;/#switch&gt;
+</code></pre>
+<hr>
+<pre><code class="java">sample1.ftl
+&lt;#-- Freemarker取值 --&gt;
+$&#123;site&#125;
+$&#123;url&#125;
+
+&lt;#-- !默认值 --&gt;
+$&#123;author!&quot;不存在的属性&quot;&#125;
+
+&lt;#-- ？string格式化输出 --&gt;
+$&#123;date?string(&quot;yyyy年MM月dd日 HH:mm:ss SSS&quot;)&#125;
+$&#123;number?string(&quot;0.00&quot;)&#125;
+&lt;#if computer.sn == &quot;1234567&quot;&gt;
+重要设备
+&lt;/#if&gt;
+
+SN:$&#123;computer.sn&#125;
+型号:$&#123;computer.mode1&#125;
+状态:$&#123;computer.state&#125;
+
+&lt;#if computer.state == 1&gt;
+状态:正在使用
+&lt;#elseif computer.state == 2&gt;
+状态:闲置
+&lt;#elseif computer.state == 3&gt;
+状态:已作废
+&lt;/#if&gt;
+
+&lt;#if computer.user??&gt; //??代表判断对象是否为空,true不为空,false为空
+用户:$&#123;computer.user&#125;
+&lt;/#if&gt;
+--------------------------------------------------------
+&lt;#switch computer.state&gt;  //同一个属性的不同值进行判断
+    &lt;#case1&gt;
+        状态：正在使用
+        &lt;#break&gt;
+    &lt;#case2&gt;
+        状态：闲置
+        &lt;#break&gt;
+    &lt;#case3&gt;
+        状态：已作废
+        &lt;#break&gt;
+    &lt;#default&gt;
+        状态：无效状态
+--------------------------------------------------------
+采购时间:$&#123;computer.dop?string(&quot;yyyy年MM月dd日&quot;)&#125;
+采购价格:$&#123;computer.price?string(&quot;0.00&quot;)&#125;
+
+//对map的提取
+CPU:$&#123;computer.info[&quot;cpu&quot;]&#125;
+内存:$&#123;computer.info[&quot;memory&quot;]!&quot;无内存信息&quot;&#125;
+</code></pre>
+<h3 id="list迭代列表"><a href="#list迭代列表" class="headerlink" title="list迭代列表"></a>list迭代列表</h3><pre><code class="JAVA">&lt;#list students as stu&gt;
+  &lt;li&gt;$&#123;stu_index&#125;-$&#123;stu.name&#125;&lt;/li&gt;
+&lt;/#list&gt;
+</code></pre>
+<h6 id="list迭代Map"><a href="#list迭代Map" class="headerlink" title="list迭代Map"></a>list迭代Map</h6><pre><code class="java">&lt;#list map?keys as key&gt;
+  $&#123;key&#125;:$&#123;map[key]&#125;
+&lt;/#list&gt;
+</code></pre>
+<pre><code class="java">FreemarkerSample2.java
+package com.example.json;
+
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+public class FreemarkerSample1 &#123;
+    public static void main(String[] args) throws IOException, TemplateException &#123;
+        //1. 加载模板
+        Configuration confige = new Configuration(Configuration.VERSION_2_3_32);
+          // FreemarkerSample1类所在包中加载ftl所在文件
+        confige.setClassForTemplateLoading(FreemarkerSample2.class, &quot;&quot;);
+        Template t = confige.getTemplate(&quot;sample1.ftl&quot;); //得到模板对象
+        //2. 创建数据
+        Map&lt;String,Object&gt; data = new HashMap&lt;String,object&gt;();
+        List&lt;Computer&gt; computers = new ArrayList();
+        computers.add(new Computer(&quot;123456&quot;,&quot;ALIENWARE&quot;,2,null,new Date(), 12900f, new HashMap()));
+        computers.add(new Computer(&quot;123456&quot;,&quot;HP XXX&quot;,1,&quot;张三&quot;,new Date(), 12900f, new HashMap()));
+        computers.add(new Computer(&quot;1233145&quot;,&quot;DELL XXX&quot;,3,&quot;李四&quot;,new Date(), 12900f, new HashMap()));
+        computers.add(new Computer(&quot;1234536&quot;,&quot;ACER XXX&quot;,1,&quot;王五&quot;,new Date(), 12900f, new HashMap()));
+        computers.add(new Computer(&quot;12344456&quot;,&quot;MSI XXX&quot;,1,&quot;赵六&quot;,new Date(), 12900f, new HashMap()));
+        data.put(&quot;computers&quot;, computers);
+        //LinkedHashMap可以保证数据按存放顺序进行提取
+        Map computerMap = new LinkedHashMap();
+        for(Computer c : computers)&#123;
+            computerMap.put(c.getSn(), c);
+        &#125; //下方新增
+        //3. 产生输出    向目标输出
+        t.process(data, new OutputStreamWriter(System.out));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sample2.ftl
+&lt;#list computers as c&gt; //迭代循环 用变量c
+序号:$&#123;c_index&#125; //迭代变量 index保存了循环的索引,从0开始 +1则从1开始
+SN:$&#123;c.sn&#125;
+型号:$&#123;c.mode1&#125;
+&lt;#switch c.state&gt;  //同一个属性的不同值进行判断
+    &lt;#case1&gt;
+        状态：正在使用
+        &lt;#break&gt;
+    &lt;#case2&gt;
+        状态：闲置
+        &lt;#break&gt;
+    &lt;#case3&gt;
+        状态：已作废
+        &lt;#break&gt;
+    &lt;#default&gt;
+        状态：无效状态
+&lt;/#switch&gt;
+&lt;#if c.user??&gt;
+状态:$&#123;c.state&#125;
+&lt;/#if&gt;
+用户:$&#123;c.user&#125;
+采购时间:$&#123;c.dop?string(&quot;yyyy-MM-dd&quot;)&#125;
+采购价格:$&#123;c.price?string(&quot;0.00&quot;)&#125;
+&lt;/#list&gt;
+-------------------------------------------------------------
+&lt;#list computer_map?keys as k &gt;
+$&#123;k&#125;-$&#123;computer_map[k].model&#125;
+$&#123;computer_map[k].price?string(&quot;0.00&quot;)&#125;
+&lt;/#list&gt;
+</code></pre>
+<h3 id="Freemarker内建函数-看成java代码-就是点”-”换成了问号”-”"><a href="#Freemarker内建函数-看成java代码-就是点”-”换成了问号”-”" class="headerlink" title="Freemarker内建函数[看成java代码 就是点”.”换成了问号”?”]"></a>Freemarker内建函数[看成java代码 就是点”.”换成了问号”?”]</h3><p><strong>freemarker.foofun.cn</strong> 在线学习</p>
+<table>
+<thead>
+<tr>
+<th align="center">函数名</th>
+<th align="center">说明</th>
+<th align="center">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">lower_case&#x2F;upper_case</td>
+<td align="center">大小写转换</td>
+<td align="center">“abcde”?upper_case</td>
+</tr>
+<tr>
+<td align="center">cap_first</td>
+<td align="center">首字母大写</td>
+<td align="center">“”abcde””?cap_first</td>
+</tr>
+<tr>
+<td align="center">index_of</td>
+<td align="center">查找字符索引</td>
+<td align="center">“abcde”?index_of(“b”)</td>
+</tr>
+<tr>
+<td align="center">length</td>
+<td align="center">返回字符串长度</td>
+<td align="center">“abcde”?length</td>
+</tr>
+<tr>
+<td align="center">round&#x2F;floor&#x2F;ceiling</td>
+<td align="center">四舍五入&#x2F;下取整&#x2F;上取整</td>
+<td align="center">pi?floor</td>
+</tr>
+<tr>
+<td align="center">size</td>
+<td align="center">得到集合元素总数</td>
+<td align="center">students?size</td>
+</tr>
+<tr>
+<td align="center">first&#x2F;last</td>
+<td align="center">获取第一个&#x2F;最后一个元素</td>
+<td align="center">students?first</td>
+</tr>
+<tr>
+<td align="center">sort_by</td>
+<td align="center">按某个属性对集合排序</td>
+<td align="center">list?sort_by(“time”)</td>
+</tr>
+</tbody></table>
+<pre><code class="java">example:
+Map&lt;String,Object&gt; data = new HashMap&lt;String,Object&gt;();
+data.put(&quot;name&quot;, &quot;jackson&quot;);
+----------------------------
+$&#123;name?cap_first&#125;
+//违禁字母屏蔽
+$&#123;words?replace(&quot;blood&quot;, &quot;******&quot;)&#125;
+$&#123;words?index_of(&quot;blood&quot;)&#125;
+//三目运算 
+$&#123;(words?index_of(&quot;blood&quot;) != -1)?string(&quot;包含敏感词汇&quot;,&quot;不包含敏感词汇&quot;)&#125;
+
+公司共有$&#123;computers?size&#125;台电脑
+//集合排序 返回一个新的集合
+&lt;#list computers?sort_by(&quot;price&quot;) as c &gt;
+    $&#123;c.sn&#125;-$&#123;c.price&#125;
+&lt;/#list&gt;
+//集合排序&#123;降序&#125;
+&lt;#list computers?sort_by(&quot;price&quot;)?reverse as c &gt;
+    $&#123;c.sn&#125;-$&#123;c.price&#125;
+&lt;/#list&gt;
+</code></pre>
+<h3 id="Freemarker与Servlet整合"><a href="#Freemarker与Servlet整合" class="headerlink" title="Freemarker与Servlet整合"></a>Freemarker与Servlet整合</h3><pre><code class="xml">web.xml
+&lt;servlet&gt;
+  &lt;servlet-name&gt;freemarker&lt;/servlet-name&gt;
+  &lt;servlet-class&gt;freemarkerServlet&lt;/servlet-class&gt;
+  &lt;init-param&gt;
+      &lt;param-name&gt;TemplatePath&lt;/param-name&gt;
+    &lt;param-value&gt;/WEB-INF/ftl&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+  &lt;servlet-name&gt;freemarker&lt;/servlet-name&gt;
+  &lt;url-pattern&gt;*.ftl&lt;/url-pattern&gt; //地址映射 输入这样的后缀时自动去/WEB-INF/ftl查找
+&lt;/servlet-mapping&gt;
+</code></pre>
+<pre><code class="java">test.ftl
+这是一个测试FTL文件
+
+localhost:8080/fm-web/test.ftl
+</code></pre>
+<pre><code class="java">employee.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+    &lt;title&gt;员工列表&lt;/title&gt;
+    &lt;link href=&quot;./css/bootstrap.css&quot; type=&quot;text/css&quot; rel=&quot;stylesheet&quot;/&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;./js/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;./js/bootstrap.js&quot;&gt;&lt;/script&gt;
+
+    &lt;style type=&quot;text/css&quot;&gt;
+        .pagination &#123;
+            margin: 0px
+        &#125;
+
+        .pagination &gt; li &gt; a, .pagination &gt; li &gt; span &#123;
+            margin: 0 5px;
+            border: 1px solid #dddddd;
+        &#125;
+
+        .glyphicon &#123;
+            margin-right: 3px;
+        &#125;
+
+        .form-control[readonly] &#123;
+            cursor: pointer;
+            background-color: white;
+        &#125;
+        #dlgPhoto .modal-body&#123;
+            text-align: center;
+        &#125;
+        .preview&#123;
+
+            max-width: 500px;
+        &#125;
+    &lt;/style&gt;
+    &lt;script&gt;
+        $(function () &#123;
+            
+            $(&quot;#btnAdd&quot;).click(function () &#123;
+                $(&#39;#dlgForm&#39;).modal()
+            &#125;);
+        &#125;)
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+        &lt;h1 style=&quot;text-align: center&quot;&gt;IMOOC员工信息表&lt;/h1&gt;
+        &lt;div class=&quot;panel panel-default&quot;&gt;
+            &lt;div class=&quot;clearfix panel-heading &quot;&gt;
+                &lt;div class=&quot;input-group&quot; style=&quot;width: 500px;&quot;&gt;
+                    &lt;button class=&quot;btn btn-primary&quot; id=&quot;btnAdd&quot;&gt;&lt;span class=&quot;glyphicon glyphicon-zoom-in&quot;&gt;&lt;/span&gt;新增
+                    &lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;table class=&quot;table table-bordered table-hover&quot;&gt;
+                &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;序号&lt;/th&gt;
+                    &lt;th&gt;员工编号&lt;/th&gt;
+                    &lt;th&gt;姓名&lt;/th&gt;
+                    &lt;th&gt;部门&lt;/th&gt;
+                    &lt;th&gt;职务&lt;/th&gt;
+                    &lt;th&gt;工资&lt;/th&gt;
+                    &lt;th&gt;&amp;nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+                &lt;/thead&gt;
+                &lt;tbody&gt;
+//&lt;c:forEach items=&quot;$&#123;applicationScope.employees&#125;&quot; var=&quot;emp&quot; varStatus=&quot;idx&quot;&gt;
+                &lt;#list employee_list as emp&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;$&#123;emp_index + 1&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.empno?string(&quot;0&quot;)&#125;&lt;/td&gt; //整数输出用0初始化
+                    &lt;td&gt;$&#123;emp.ename&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.department&#125;&lt;/td&gt;
+                    &lt;td&gt;$&#123;emp.job&#125;&lt;/td&gt;
+//&lt;td style=&quot;color: red;font-weight: bold&quot;&gt;￥&lt;fmt:formatNumber value=&quot;$&#123;emp.salary&#125;&quot; pattern=&quot;0,000.00&quot;&gt;&lt;/fmt:formatNumber&gt;&lt;/td&gt;
+                    &lt;td style=&quot;color: red;font-weight: bold&quot;&gt;￥$&#123;emp.salary?string(&quot;0.00&quot;)&#125;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;/c:forEach&gt;
+            &lt;/table&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 表单 --&gt;
+&lt;div class=&quot;modal fade&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; id=&quot;dlgForm&quot;&gt;
+    &lt;div class=&quot;modal-dialog&quot; role=&quot;document&quot;&gt;
+        &lt;div class=&quot;modal-content&quot;&gt;
+            &lt;div class=&quot;modal-header&quot;&gt;
+                &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;&lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
+                &lt;/button&gt;
+                &lt;h4 class=&quot;modal-title&quot;&gt;新增员工&lt;/h4&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-body&quot;&gt;
+                &lt;form action=&quot;/untitled_war_exploded/create&quot; method=&quot;post&quot; &gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;empno&quot;&gt;员工编号&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;empno&quot; class=&quot;form-control&quot; id=&quot;empno&quot; placeholder=&quot;请输入员工编号&quot;&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;ename&quot;&gt;员工姓名&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;ename&quot; class=&quot;form-control&quot; id=&quot;ename&quot; placeholder=&quot;请输入员工姓名&quot;&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label&gt;部门&lt;/label&gt;
+                        &lt;select id=&quot;dname&quot; name=&quot;department&quot; class=&quot;form-control&quot;&gt;
+                            &lt;option selected=&quot;selected&quot;&gt;请选择部门&lt;/option&gt;
+                            &lt;option value=&quot;市场部&quot;&gt;市场部&lt;/option&gt;
+                            &lt;option value=&quot;研发部&quot;&gt;研发部&lt;/option&gt;
+                            &lt;option value=&quot;后勤部&quot;&gt;后勤部&lt;/option&gt;
+                        &lt;/select&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label&gt;职务&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;job&quot; class=&quot;form-control&quot; id=&quot;sal&quot; placeholder=&quot;请输入职务&quot;&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot;&gt;
+                        &lt;label for=&quot;sal&quot;&gt;工资&lt;/label&gt;
+                        &lt;input type=&quot;text&quot; name=&quot;salary&quot; class=&quot;form-control&quot; id=&quot;sal&quot; placeholder=&quot;请输入工资&quot;&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;form-group&quot; style=&quot;text-align: center;&quot;&gt;
+                        &lt;button type=&quot;submit&quot; class=&quot;btn btn-primary&quot;&gt;保存&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/form&gt;
+            &lt;/div&gt;
+
+        &lt;/div&gt;&lt;!-- /.modal-content --&gt;
+    &lt;/div&gt;&lt;!-- /.modal-dialog --&gt;
+&lt;/div&gt;&lt;!-- /.modal --&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">Employee.java
+public class Employee &#123;
+    private Integer empno;
+    private String ename;
+    private String department;
+    private String job;
+    private Float salary;
+    ...
+&#125;
+</code></pre>
+<pre><code class="java">ListServlet.java
+package com.imooc.freemarker.servlet;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * Servlet implementation class ListServlet
+ */
+@WebServlet(&quot;/list&quot;)
+public class ListServlet extends HttpServlet &#123;
+    private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public ListServlet() &#123;
+        super();
+        // TODO Auto-generated constructor stub
+    &#125;
+
+    /**
+     * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        List list = new ArrayList();
+        list.add(new Employee(7731,&quot;张三&quot; , &quot;市场部&quot; , &quot;客户代表&quot; , 8000f));
+        list.add(new Employee(8871,&quot;李四&quot; , &quot;研发部&quot; , &quot;运维工程师&quot; , 7000f));
+        request.getServletContext().setAttribute(&quot;employee_list&quot;, list);
+        request.getRequestDispatcher(&quot;/employee.ftl&quot;).forward(request, response);
+    &#125;
+&#125;
 </code></pre>
 
     </div>
