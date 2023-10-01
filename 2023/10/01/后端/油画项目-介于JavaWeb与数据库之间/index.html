@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || 油画项目(介于JavaWeb与数据库之间)</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>油画项目(介于JavaWeb与数据库之间) </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2023/10/1
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#00bcd4>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h1 id="企业门户网站项目实战"><a href="#企业门户网站项目实战" class="headerlink" title="企业门户网站项目实战"></a><span style = "color:red">企业门户网站项目实战</span></h1><ul>
+<li>需求说明与环境准备</li>
+<li>实现前端展示模块</li>
+<li>实现后台数据管理模块</li>
+</ul>
+<h4 id="MVC架构模型-数据显示与数据处理分开"><a href="#MVC架构模型-数据显示与数据处理分开" class="headerlink" title="(MVC架构模型) 数据显示与数据处理分开"></a>(MVC架构模型) 数据显示与数据处理分开</h4><p><span style = "color:blue"><strong>M</strong>odel模型 <strong>V</strong>iew试图 <strong>C</strong>ontroller控制器</span> [是一种设计理念]</p>
+<h6 id="Model-模型"><a href="#Model-模型" class="headerlink" title="Model - 模型"></a>Model - 模型</h6><ul>
+<li><p>模型(Model)负责生产业务需要的数据 <u><strong>Service</strong>[结尾]实现业务逻辑</u></p>
+<pre><code class="java">public class MathService&#123;
+    public List square(int max)&#123;
+        List list = new ArrayList();
+        for(int i = 0; i &lt;= max; i++)&#123;
+            long result = i * i;
+            list.add(result);
+        &#125;
+        return list;
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h6 id="Controller-控制器-Java-Web领域是WebServlet"><a href="#Controller-控制器-Java-Web领域是WebServlet" class="headerlink" title="Controller - 控制器  (Java Web领域是WebServlet)"></a>Controller - 控制器  (Java Web领域是WebServlet)</h6><ul>
+<li>控制器(Controller)是界面(View)与模型(Model)的粘合剂</li>
+</ul>
+<pre><code class="java">@WebServlet(&quot;/square&quot;)
+public class HelloWord extends HttpServlet&#123;
+    public void doGet(HttpServletRequest req, HttpServletResponse res)&#123;
+        //1.接收数据 接收web的http请求参数
+        int max = Integer.parselnt(request.getParameter(&quot;max&quot;));
+        //2.调用处理类(模型)进行处理 
+        MathService ms = new MathService();
+        List list = ms.square(max);//前台调用的参数传入square方法中
+        req.setAttribute(&quot;squareList&quot;, list);//执行结果放到请求属性中
+        //3.跳转界面(View)
+        request.getRequestDispatcher(&quot;/result.jsp&quot;).forward(req,res);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="View-视图"><a href="#View-视图" class="headerlink" title="View - 视图"></a>View - 视图</h6><ul>
+<li>试图(View)用于展示最终结果</li>
+</ul>
+<pre><code class="java">URL:http://localhost:8080/square?max=100
+----------------------------------------
+&lt;ul&gt;
+&lt;c:foreach items = &quot;$&#123;squareList&#125;&quot; var = &quot;r&quot; varStatus = &quot;idx&quot;&gt;
+   &lt;li&gt;$&#123;idx.index&#125;的平方是$&#123;r&#125;&lt;/li&gt;
+&lt;/&lt;c:foreach&gt;
+&lt;/ul&gt;
+</code></pre>
+<h3 id="MVC架构模式优点"><a href="#MVC架构模式优点" class="headerlink" title="MVC架构模式优点"></a>MVC架构模式优点</h3><ul>
+<li><p>保证了软件层面的解耦，同时保障了团队合作的组织架构</p>
+</li>
+<li><p>软件团队分工合作，成员各司其职 通过controller联合</p>
+</li>
+<li><p>组件可灵活替代，互不影响</p>
+</li>
+</ul>
+<p>通过<strong>控制器</strong>将前端传入的参数进行接收调用后台的<strong>模型</strong>产生结果，结果通过控制器保存在当前的属性中在<strong>视图</strong>中进行展现</p>
+<h3 id="工程结构与开发规约"><a href="#工程结构与开发规约" class="headerlink" title="工程结构与开发规约"></a>工程结构与开发规约</h3><h5 id="工程结构"><a href="#工程结构" class="headerlink" title="工程结构"></a>工程结构</h5><pre><code class="java">mgallery - eclipse工程项目
+ /src - java源代码目录
+ /WebContent - Web资源目录
+ /css - css文件目录
+ /js - js文件目录
+ /image - 图片资源目录
+ /upload - 上传文件目录
+ /WEB-INF   //jsp数据来自controller 不允许在web中直接访问 要从控制器跳转
+   /jsp - jsp页面目录
+   /lib - jar文件目录
+   /classes - 编译后的class目录
+   /web.xml web描述符文件
+</code></pre>
+<h5 id="包结构"><a href="#包结构" class="headerlink" title="包结构"></a>包结构</h5><pre><code class="java">com.imooc.mgallery //逆命名法
+    /controller - 存放Servlet控制器类
+    /service - 存放处理逻辑类model
+    /dao - Data Access Object 数据访问对象类 数据读写的java类 数据来自xml文件
+    /entity - 存放实体类 JavaBean java中的简单对象
+    /utils - 通用工具类 底层通用的工具类或方法
+</code></pre>
+<h3 id="Dao类-Data-Access-Object"><a href="#Dao类-Data-Access-Object" class="headerlink" title="Dao类[Data Access Object]"></a>Dao类[Data Access Object]</h3><ul>
+<li>XxxDao类只负责对数据进行读取、写入操作</li>
+<li>只负责对数据 <strong>增、删、改、查</strong></li>
+</ul>
+<pre><code class="java">示例：PaintingDao //针对油画数据进行增删改查
+public class PaintingDao&#123;
+    public void append()&#123;...&#125; //新增数据
+    public void update()&#123;...&#125; //修改数据
+    public void delete()&#123;...&#125; //删除数据
+    public void findAll()&#123;...&#125; //查询数据
+&#125;
+</code></pre>
+<h3 id="Service与Dao的关系"><a href="#Service与Dao的关系" class="headerlink" title="Service与Dao的关系"></a>Service与Dao的关系</h3><ul>
+<li>Service负责进行流程处理，需**持久化[java处理在内存中 存储在数据库防止丢失]**时调用Dao</li>
+<li>Dao只负责单纯对数据进行<strong>增删改查</strong>操作</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2a55433ae2d4814ee86fd799f7fd9f9279280c84/data/MVC%E4%BC%A0%E8%BE%93%E6%A8%A1%E5%BC%8F.jpg"></p>
+<h3 id="JavaBean"><a href="#JavaBean" class="headerlink" title="JavaBean"></a>JavaBean</h3><ul>
+<li><p>对一种类的使用形式的统称</p>
+</li>
+<li><p>JavaBean是一种Java中可重用组件</p>
+</li>
+<li><p>JavaBean不是技术，而是一种Java类的格式要求</p>
+</li>
+<li><p>JavaBean在Java领域非常常见，通常用于存储数据</p>
+</li>
+</ul>
+<h3 id="JavaBean格式要求"><a href="#JavaBean格式要求" class="headerlink" title="JavaBean格式要求"></a>JavaBean格式要求</h3><ul>
+<li>类必须是pubilc并提供默认构造函数</li>
+<li>所有属性private私有化</li>
+<li>属性通过getter与setter方法进行读写</li>
+</ul>
+<pre><code class="java">public class Painting&#123;//类公有化
+    public Painting()&#123;...&#125;; //提供默认构造函数，可不写
+    private Integer id; //属性私有
+    private String pname;
+    public Integer getId()&#123;return id;&#125; //getter获取属性值
+    public void setId(Integer id)&#123;this.id = id;&#125; //setter设置属性值
+    public String getPname()&#123;return pname;&#125;
+    public void setPname(String pname)&#123;this.pname = pname;&#125;
+&#125;
+</code></pre>
+<h3 id="创建mgallery工程"><a href="#创建mgallery工程" class="headerlink" title="创建mgallery工程"></a>创建mgallery工程</h3><ul>
+<li>开发PaintingDao读取XML数据，实现分页操作</li>
+<li>开发PaintingService服务类，对PaintingDao进行调用</li>
+<li>开发PaintingController控制器，调用PaintingService</li>
+<li>重写index.html，利用JSP技术读取分页数据</li>
+</ul>
+<h3 id="关键类与方法"><a href="#关键类与方法" class="headerlink" title="关键类与方法"></a>关键类与方法</h3><ul>
+<li><strong>XmlDataSource</strong>类 - XML数据源工具类，简化Dao提取操作</li>
+<li><strong>PaintingDao.pagination()</strong> - 数据分页查询方法</li>
+<li><strong>PageModel</strong>类 - 分页结果的包装类</li>
+</ul>
+<h4 id="Dom4j"><a href="#Dom4j" class="headerlink" title="Dom4j"></a>Dom4j</h4><ul>
+<li>Dom4j是一个易用的、开源的库，用于解析XML。它应用于Java平台</li>
+<li>Dom4j将<strong>XML</strong>视为<strong>Document</strong>对象</li>
+<li>XML标签被Dom4j定义为Element对象</li>
+</ul>
+<h6 id="Dom4j开发流程回顾"><a href="#Dom4j开发流程回顾" class="headerlink" title="Dom4j开发流程回顾"></a>Dom4j开发流程回顾</h6><ul>
+<li>SAXReader.read()读取XML文件，得到Document对象</li>
+<li>document.selectNodes()利用Xpath得到XML节点集合</li>
+<li>遍历XML节点，包装成JavaBean或者集合对象返回</li>
+</ul>
+<h3 id="开发XmlDataSource"><a href="#开发XmlDataSource" class="headerlink" title="开发XmlDataSource"></a>开发XmlDataSource</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/5e39cc02ef84b0ba617ad43f8f6b0e3462a002a5/data/XmlDataSource%E5%8E%9F%E7%90%86.jpg"></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_37218227/article/details/109095112">【详细】IntelliJ IDEA: 无法创建Java Class文件_idea 不能新建java class-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45965432/article/details/111316470">IDEA部署Tomcat提示：Warning no artifacts configured-CSDN博客</a></p>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2023 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>
