@@ -1404,18 +1404,586 @@ public class ManagementController extends HttpServlet &#123;
             &lt;/table&gt;
             &lt;!-- 分页组件 --&gt;
             &lt;ul class=&quot;page&quot;&gt;
-                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;首页&lt;/a&gt;&lt;/li&gt;
-                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;上页&lt;/a&gt;&lt;/li&gt;
-                &lt;li class=&#39;active&#39;&gt;&lt;a href=&quot;#&quot;&gt;1&lt;/a&gt;&lt;/li&gt;
-                &lt;li &gt;&lt;a href=&quot;#&quot;&gt;2&lt;/a&gt;&lt;/li&gt;
-                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;下页&lt;/a&gt;&lt;/li&gt;
-                &lt;li&gt;&lt;a href=&quot;#&quot;&gt;尾页&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=1&quot;&gt;首页&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.hasPreviousPage?pageModel.page-1:1&#125;&quot;&gt;上页&lt;/a&gt;&lt;/li&gt;
+                &lt;c:forEach begin=&quot;1&quot; end=&quot;$&#123;pageModel.totalPages &#125;&quot; step=&quot;1&quot; var=&quot;pno&quot;&gt;
+                    &lt;li $&#123;pno==pageModel.page?&quot;class=&#39;active&#39;&quot;:&quot;&quot;&#125;&gt;
+                        &lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pno &#125;&quot;&gt;$&#123;pno &#125;&lt;/a&gt;
+                    &lt;/li&gt;
+                &lt;/c:forEach&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.hasNextPage?pageModel.page+1:pageModel.totalPages&#125;&quot;&gt;下页&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.totalPages&#125;&quot;&gt;尾页&lt;/a&gt;&lt;/li&gt;
             &lt;/ul&gt;
         &lt;/fieldset&gt;
     &lt;/div&gt;
 
 &lt;/body&gt;
 &lt;/html&gt;
+</code></pre>
+<h3 id="处理文件上传页面-表单校验-文件上传-处理XML文件"><a href="#处理文件上传页面-表单校验-文件上传-处理XML文件" class="headerlink" title="处理文件上传页面 [表单校验 文件上传 处理XML文件]"></a>处理文件上传页面 [<u>表单校验 文件上传 处理XML文件</u>]</h3><ul>
+<li>利用Apache Commons FileUpload组件实现上传功能</li>
+<li>封装可重用的js脚本解决表单校验问题</li>
+<li>基于Dom4j对XML文件进行追加操作</li>
+</ul>
+<pre><code class="jsp">create.jsp
+&lt;!-- 新增油画页面 --&gt;
+&lt;%@page contentType = &quot;text/html;charset=utf-8&quot;%&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/core&quot; prefix=&quot;c&quot;%&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/fmt&quot; prefix=&quot;fmt&quot;%&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;新增油画&lt;/title&gt;
+&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css\create.css&quot;&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.4.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;container&quot;&gt;
+        &lt;fieldset&gt;
+            &lt;legend&gt;新增油画&lt;/legend&gt;
+            &lt;form action=&quot;&quot; method=&quot;post&quot;
+                autocomplete=&quot;off&quot; enctype=&quot;multipart/form-data&quot;&gt;
+                &lt;ul class=&quot;ulform&quot;&gt;
+                    &lt;li&gt;
+                        &lt;span&gt;油画名称&lt;/span&gt;
+                        &lt;span id=&quot;errPname&quot;&gt;&lt;/span&gt;
+                        &lt;input id=&quot;pname&quot; name=&quot;pname&quot; /&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span&gt;油画类型&lt;/span&gt;
+                        &lt;span id=&quot;errCategory&quot;&gt;&lt;/span&gt;
+                        &lt;select id=&quot;category&quot; name=&quot;category&quot;&gt;
+                            &lt;option value=&quot;-1&quot;&gt;请选择油画类型&lt;/option&gt;
+                            &lt;option value=&quot;1&quot;&gt;现实主义&lt;/option&gt;
+                            &lt;option value=&quot;2&quot;&gt;抽象主义&lt;/option&gt;
+                        &lt;/select&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span&gt;油画价格&lt;/span&gt;
+                        &lt;span id=&quot;errPrice&quot;&gt;&lt;/span&gt;
+                        &lt;input id=&quot;price&quot; name=&quot;price&quot;/&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span&gt;作品预览&lt;/span&gt;
+                        &lt;span id=&quot;errPainting&quot;&gt;&lt;/span&gt;
+                        &lt;input id=&quot;painting&quot; name=&quot;painting&quot; type=&quot;file&quot; 
+                            style=&quot;padding-left: 0px;&quot; accept=&quot;image/*&quot; /&gt;
+                    &lt;/li&gt;
+
+                    &lt;li&gt;
+                        &lt;span&gt;详细描述&lt;/span&gt;
+                        &lt;span id=&quot;errDescription&quot;&gt;&lt;/span&gt;
+                        &lt;textarea
+                            id=&quot;description&quot; name=&quot;description&quot;&gt;&lt;/textarea&gt;
+                    &lt;/li&gt;
+                    &lt;li style=&quot;text-align: center;&quot;&gt;
+                        &lt;button type=&quot;submit&quot; class=&quot;btn-button&quot;&gt;提交表单&lt;/button&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/form&gt;
+        &lt;/fieldset&gt;
+    &lt;/div&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">package com.example.mgallery.controller;
+
+import com.example.mgallery.service.PaintingService;
+import com.example.mgallery.utils.PageModel;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Objects;
+
+//实现增删改查
+@WebServlet(&quot;/management&quot;)
+public class ManagementController extends HttpServlet &#123;
+    private PaintingService paintingService = new PaintingService();
+
+    public ManagementController() &#123;
+        super();
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setCharacterEncoding(&quot;UTF-8&quot;);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //通过method参数区分不同的操作
+        String method = req.getParameter(&quot;method&quot;);
+        if(Objects.equals(method,&quot;list&quot;)) &#123;//分页查询列表
+            this.list(req,resp);
+            //正确使用 equals 方法避免产生空指针异常https://www.jianshu.com/p/306de20dd228
+        &#125; else if (Objects.equals(method,&quot;delete&quot;)) &#123;
+            //
+        &#125; else if (Objects.equals(method,&quot;show_create&quot;)) &#123;
+            this.showCreatePage(req,resp); //带show的一定是跳转页面
+        &#125;
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        doGet(req,resp);
+    &#125;
+
+    // 控制器代码的实现
+    private void list(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String p = req.getParameter(&quot;p&quot;);
+        String r = req.getParameter(&quot;r&quot;);
+        if (p == null) &#123;
+            p = &quot;1&quot;;
+        &#125;
+        if (r == null) &#123;
+            r = &quot;6&quot;;
+        &#125;
+        //2.调用Service方法,得到处理结果      增加了按类型筛选category
+        PageModel pageModel = paintingService.pagination(Integer.parseInt(p), Integer.parseInt(r));
+        req.setAttribute(&quot;pageModel&quot;,pageModel);//数据解耦最关键的一步
+        //3.请求转发至对应JSP(view)进行数据展现
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/list.jsp&quot;).forward(req,resp); //跳转jsp
+    &#125;
+    private void showCreatePage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); //请求转发
+    &#125;
+&#125;
+</code></pre>
+<h3 id="文件上传必要前提条件"><a href="#文件上传必要前提条件" class="headerlink" title="文件上传必要前提条件"></a>文件上传必要前提条件</h3><ul>
+<li>form表单<span style = "color : red">method &#x3D; “<strong>post</strong>“</span> 因为二进制文件不可以放在url中传递</li>
+<li>form表单<span style = "color : red">enctype &#x3D; “<strong>multipart&#x2F;form-data</strong>“</span> 允许保存二进制数据存放在请求体中发送到服务端<br><span style = "color : red">enctype&#x3D;”<strong>application&#x2F;x-www-form-urlencoded</strong>“</span> 采用url编码的方式以字符串的形式将数据保存在请求体中发送到服务器</li>
+<li>form表单持有<strong>file</strong>类型input进行文件选择</li>
+</ul>
+<h3 id="Apache-Commons-FileUpload-简化文件上传"><a href="#Apache-Commons-FileUpload-简化文件上传" class="headerlink" title="Apache Commons FileUpload [简化文件上传]"></a>Apache Commons FileUpload [简化文件上传]</h3><h6 id="在java服务器端完成上传文件的处理"><a href="#在java服务器端完成上传文件的处理" class="headerlink" title="在java服务器端完成上传文件的处理"></a>在java服务器端完成上传文件的处理</h6><ul>
+<li>FileUpload组件提供了java文件上传底层支持</li>
+</ul>
+<p>FileItem其本质就是对前台数据进行封装</p>
+<pre><code class="java">ManagementController.java
+package com.example.mgallery.controller;
+
+import com.example.mgallery.service.PaintingService;
+import com.example.mgallery.utils.PageModel;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+//实现增删改查
+@WebServlet(&quot;/management&quot;)
+public class ManagementController extends HttpServlet &#123;
+    private PaintingService paintingService = new PaintingService();
+
+    public ManagementController() &#123;
+        super();
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setCharacterEncoding(&quot;UTF-8&quot;);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //通过method参数区分不同的操作
+        String method = req.getParameter(&quot;method&quot;);
+        if(Objects.equals(method,&quot;list&quot;)) &#123;//分页查询列表
+            this.list(req,resp);
+            //正确使用 equals 方法避免产生空指针异常https://www.jianshu.com/p/306de20dd228
+        &#125; else if (Objects.equals(method,&quot;delete&quot;)) &#123;
+            //
+        &#125; else if (Objects.equals(method,&quot;show_create&quot;)) &#123;
+            this.showCreatePage(req,resp); //带show的一定是跳转页面
+        &#125; else if (Objects.equals(method, &quot;create&quot;)) &#123;
+            this.create(req, resp);
+        &#125;
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        doGet(req,resp);
+    &#125;
+
+    // 控制器代码的实现
+    private void list(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String p = req.getParameter(&quot;p&quot;);
+        String r = req.getParameter(&quot;r&quot;);
+        if (p == null) &#123;
+            p = &quot;1&quot;;
+        &#125;
+        if (r == null) &#123;
+            r = &quot;6&quot;;
+        &#125;
+        //2.调用Service方法,得到处理结果      增加了按类型筛选category
+        PageModel pageModel = paintingService.pagination(Integer.parseInt(p), Integer.parseInt(r));
+        req.setAttribute(&quot;pageModel&quot;,pageModel);//数据解耦最关键的一步
+        //3.请求转发至对应JSP(view)进行数据展现
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/list.jsp&quot;).forward(req,resp); //跳转jsp
+    &#125;
+    //显示新增页面
+    private void showCreatePage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); //请求转发
+    &#125;
+    //新增油画方法
+    private void create(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        /*文件上传时的数据处理与标准表单完全不同
+        String pname = req.getParameter(&quot;pname&quot;); form表单enctype = &quot;multipart/form-data&quot;运用后 无法得到字符串格式的数据
+        System.out.println(pname);
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); 请求转发*/
+        //1.初始化FileUpload组件 包含表单项的数据对象
+        FileItemFactory factory = new DiskFileItemFactory();
+        /**
+         * FileItemFactory 用于将前端表单的数据转换为一个个FileItem对象
+         * ServletFileUpload 是为FileUpload组件提供Java web的Http请求解析
+         */
+        ServletFileUpload sf = new ServletFileUpload(factory);
+        //2.遍历所有FileItem
+        try &#123;
+            List&lt;FileItem&gt; formData = sf.parseRequest(req);//将表单数据转换为FileItem对象 和前台输入项一一对应
+            //区分哪个是普通对象 哪个是文件对象
+            for (FileItem fi : formData)&#123;
+                if (fi.isFormField() == true)&#123;//普通输入框
+                    System.out.println(&quot;普通输入项:&quot; + fi.getFieldName() + &quot;:&quot; + fi.getString(&quot;UTF-8&quot;));
+                &#125;else &#123; //文件上传框
+                    System.out.println(&quot;文件上传项:&quot; + fi.getFieldName()); //没有文本数值不用输出
+                    //3.文件保存到服务器目录 已经确定了文件上传项
+                    String path = req.getServletContext().getRealPath(&quot;/upload&quot;);
+                    System.out.println(&quot;上传文件目录:&quot; + path);
+//                    String fileName = &quot;test.jpg&quot;;
+                    String fileName = UUID.randomUUID().toString();//随机生成文件名 根据计算机的特性 生成随机唯一字符串
+                    //fi.getName()得到原始文件名, 截取最后一个&quot;.&quot;后所有字符串，例如:wxml.jpg -&gt; .jpg
+                    String suffix = fi.getName().substring(fi.getName().lastIndexOf(&quot;.&quot;));
+                    fi.write(new File(path, fileName + suffix)); //传入文件对象会自动的帮我们把客户端上传的文件传到服务器某个文件中
+                &#125;
+            &#125;
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Dom4j写操作开发流程"><a href="#Dom4j写操作开发流程" class="headerlink" title="Dom4j写操作开发流程"></a>Dom4j写操作开发流程</h3><ul>
+<li>**SAXReader.read()**读取XML文件，得到Document对象</li>
+<li><strong>p&#x3D;root,addElement(“painting”)</strong> - 创建新的节点</li>
+<li><strong>p.addElement(“pname”)</strong> - 创建新的子节点</li>
+<li><strong>document.write(writer)</strong> - 向XML写入新的节点</li>
+</ul>
+<pre><code class="java">请求转发
+请求转发是一种服务器端的行为，通过request对象来完成操作。当客户端发送请求以后，对应的Servlet会做出业务逻辑处理，然后调用forward()方法，将请求发送到服务器中另外的Servlet中去。
+
+实现方法：
+request.getRequestDispatcher(&quot;URL地址&quot;).forward(request,response);
+响应重定向
+响应重定向是一种客户端的行为，通过response对象来完成操作。当客户端第一次发出请求后，服务器中Servlet接收请求以后，通过调用sendRedirect()方法指定另一个Servlet，此时客户端会根据路径再次发出请求访问下一个Servlet，服务器再次接收请求后做出响应返回给客户端。
+
+实现方法：
+response.sendRedirect(&quot;URL地址&quot;)
+请求转发与响应重定向的区别
+1、请求转发以后浏览器URL地址栏不变，响应重定向以后浏览器URL地址栏发生改变
+2、请求转发是服务器端行为，响应重定向是客户端行为
+3、请求转发只做了一次访问请求，得到一次响应；响应重定向是做了两次请求，得到两次响应
+4、请求转发是在服务器内部进行的，所以不可以跨域访问；响应重定向可以做到跨域访问
+5、请求转发可以使用request作用域共享数据；响应重定向不可以使用request作用域，但是可以使用session域共享资源
+</code></pre>
+<pre><code class="java">XmlDataSource.java[新增了append追加操作]
+package com.example.mgallery.utils;
+
+import com.example.mgallery.entity.Painting;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.Node;
+import org.dom4j.io.SAXReader;
+
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+
+//用于将XML文件解析为Java对象
+public class XmlDataSource &#123;
+    //通过static静态关键字保证数据全局唯一
+    private static List data = new ArrayList(); //油画集合
+    private static String dataFile;
+
+    static &#123; //程序运行以后去得到类路径目录下的/painting.xml的路径地址
+        dataFile = XmlDataSource.class.getResource(&quot;/painting.xml&quot;).getPath();
+        reload(); //在所有的写入操作以后都要写入
+    &#125;
+    private static void reload()&#123;
+        //若得到特殊字符进行编码转换 空格 c:\new style\painting.xml
+        try &#123;
+            URLDecoder.decode(dataFile, &quot;UTF-8&quot;);
+            System.out.println(dataFile);
+            //利用Dom4j对XML进行解析 读取XML
+            SAXReader reader = new SAXReader();
+            //1.获取Document文档对象
+            Document document = reader.read(dataFile);
+            //2.Xpath得到XML节点集合 获取多个xml节点
+            List&lt;Node&gt; nodes = document.selectNodes(&quot;/root/painting&quot;);
+            data.clear(); //清空 在空的数据基础上重新添加
+            for (Node node : nodes) &#123;
+                Element element = (Element) node;
+                String id = element.attributeValue(&quot;id&quot;);//获得id
+                String pname = element.elementText(&quot;pname&quot;);//获得子节点
+                Painting painting = new Painting();
+                painting.setId(Integer.parseInt(id));
+                painting.setPname(pname);
+                painting.setCategory(Integer.parseInt(element.elementText(&quot;category&quot;)));
+                painting.setPrice(Integer.parseInt(element.elementText(&quot;price&quot;)));
+                painting.setPreview(element.elementText(&quot;preview&quot;));
+                painting.setDescription(element.elementText(&quot;description&quot;));
+                data.add(painting);//将List data 保存油画的完整信息
+
+                System.out.println(id + &quot;;&quot; + pname);
+            &#125;
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+    /**
+     * 获取所有油画Painting对象
+     *
+     * @return Painting List
+     */
+    public static List&lt;Painting&gt; getRawData() &#123;
+        return data;
+    &#125;
+
+    //Dom4j实现XML追加操作
+    public static void append(Painting painting) &#123; //末尾追加新的油画
+        //1.读取XML文档，得到Document对象
+        SAXReader reader = new SAXReader();
+        Writer writer = null;
+        try &#123;
+            Document document = reader.read(dataFile);
+            //2.创建新的painting节点
+            Element root = document.getRootElement();//得到原始文档xml根节点 &lt;root&gt;
+            Element p = root.addElement(&quot;painting&quot;);//创建一个新的子节点
+            //3.创建painting节点的各个子节点
+            p.addAttribute(&quot;id&quot;, String.valueOf(data.size() + 1)); //生成新的id对象
+            p.addElement(&quot;pname&quot;).setText(painting.getPname()); //返回新的节点 设置其文本值
+            p.addElement(&quot;category&quot;).setText(painting.getCategory().toString());
+            p.addElement(&quot;price&quot;).setText(painting.getPrice().toString());
+            p.addElement(&quot;preview&quot;).setText(painting.getPreview());
+            p.addElement(&quot;description&quot;).setText(painting.getDescription());
+            //4.写入XML，完成追加操作
+            writer = new OutputStreamWriter(new FileOutputStream(dataFile), &quot;UTF-8&quot;);
+            document.write(writer); //向目标dataFile原始xml中进行新节点的更新
+            System.out.println(dataFile);
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            if (writer != null) &#123; //write有开就有关 已经被实例化
+                try &#123;
+                    writer.close();
+                &#125; catch (IOException e) &#123;
+                    e.printStackTrace(); //遇到异常 打印堆栈
+                &#125;
+            &#125;
+            //清空 在空的数据基础上重新添加 无论成功与否都会重新加载数据 如果照片没找到 就清空数据
+            reload();
+        &#125;
+
+    &#125;
+
+    public static void main(String[] args) &#123;
+//        new XmlDataSource();
+//        List&lt;Painting&gt; ps = XmlDataSource.getRawData();
+//        System.out.println(ps);
+        Painting p = new Painting();
+        p.setPname(&quot;油画测试&quot;);
+        p.setCategory(1);
+        p.setPrice(4000);
+        p.setPreview(&quot;upload/10.jpg&quot;);
+        p.setDescription(&quot;测试油画描述&quot;);
+        XmlDataSource.append(p);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">ManagementController.java[新增了create方法]
+package com.example.mgallery.controller;
+
+import com.example.mgallery.entity.Painting;
+import com.example.mgallery.service.PaintingService;
+import com.example.mgallery.utils.PageModel;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+//实现增删改查
+@WebServlet(&quot;/management&quot;)
+public class ManagementController extends HttpServlet &#123;
+    private PaintingService paintingService = new PaintingService();
+
+    public ManagementController() &#123;
+        super();
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setCharacterEncoding(&quot;UTF-8&quot;);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //通过method参数区分不同的操作
+        String method = req.getParameter(&quot;method&quot;);
+        if(Objects.equals(method,&quot;list&quot;)) &#123;//分页查询列表
+            this.list(req,resp);
+            //正确使用 equals 方法避免产生空指针异常https://www.jianshu.com/p/306de20dd228
+        &#125; else if (Objects.equals(method,&quot;delete&quot;)) &#123;
+            //
+        &#125; else if (Objects.equals(method,&quot;show_create&quot;)) &#123;
+            this.showCreatePage(req,resp); //带show的一定是跳转页面
+        &#125; else if (Objects.equals(method, &quot;create&quot;)) &#123;
+            this.create(req, resp);
+        &#125;
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        doGet(req,resp);
+    &#125;
+
+    // 控制器代码的实现
+    private void list(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String p = req.getParameter(&quot;p&quot;);
+        String r = req.getParameter(&quot;r&quot;);
+        if (p == null) &#123;
+            p = &quot;1&quot;;
+        &#125;
+        if (r == null) &#123;
+            r = &quot;6&quot;;
+        &#125;
+        //2.调用Service方法,得到处理结果      增加了按类型筛选category
+        PageModel pageModel = paintingService.pagination(Integer.parseInt(p), Integer.parseInt(r));
+        req.setAttribute(&quot;pageModel&quot;,pageModel);//数据解耦最关键的一步
+        //3.请求转发至对应JSP(view)进行数据展现
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/list.jsp&quot;).forward(req,resp); //跳转jsp
+    &#125;
+    //显示新增页面
+    private void showCreatePage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); //请求转发
+    &#125;
+    //新增油画方法
+    private void create(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        /*文件上传时的数据处理与标准表单完全不同
+        String pname = req.getParameter(&quot;pname&quot;); form表单enctype = &quot;multipart/form-data&quot;运用后 无法得到字符串格式的数据
+        System.out.println(pname);
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); 请求转发*/
+        //1.初始化FileUpload组件 包含表单项的数据对象
+        FileItemFactory factory = new DiskFileItemFactory();
+        /**
+         * FileItemFactory 用于将前端表单的数据转换为一个个FileItem对象
+         * ServletFileUpload 是为FileUpload组件提供Java web的Http请求解析
+         */
+        ServletFileUpload sf = new ServletFileUpload(factory);
+        //2.遍历所有FileItem
+        try &#123;
+            List&lt;FileItem&gt; formData = sf.parseRequest(req);//将表单数据转换为FileItem对象 和前台输入项一一对应
+            Painting painting = new Painting();//进行封装
+            //区分哪个是普通对象 哪个是文件对象
+            for (FileItem fi : formData)&#123;
+                if (fi.isFormField() == true)&#123;//普通输入框
+                    System.out.println(&quot;普通输入项:&quot; + fi.getFieldName() + &quot;:&quot; + fi.getString(&quot;UTF-8&quot;));
+                    switch (fi.getFieldName()) &#123; //得到字段名
+                        case &quot;pname&quot;:
+                            painting.setPname(fi.getString(&quot;UTF-8&quot;));
+                            break;
+                        case &quot;category&quot;:
+                            painting.setCategory(Integer.parseInt(fi.getString(&quot;UTF-8&quot;)));
+                            break;
+                        case &quot;price&quot;:
+                            painting.setPrice(Integer.parseInt(fi.getString(&quot;UTF-8&quot;)));
+                            break;
+                        case &quot;description&quot;:
+                            painting.setDescription(fi.getString(&quot;UTF-8&quot;));
+                            break;
+                        default:
+                            break;
+                    &#125;
+                &#125;else &#123; //文件上传框
+                    System.out.println(&quot;文件上传项:&quot; + fi.getFieldName()); //没有文本数值不用输出
+                    //3.文件保存到服务器目录 已经确定了文件上传项
+                    String path = req.getServletContext().getRealPath(&quot;/upload&quot;);
+                    System.out.println(&quot;上传文件目录:&quot; + path);
+//                    String fileName = &quot;test.jpg&quot;;
+                    String fileName = UUID.randomUUID().toString();//随机生成文件名 根据计算机的特性 生成随机唯一字符串
+                    //fi.getName()得到原始文件名, 截取最后一个&quot;.&quot;后所有字符串，例如:wxml.jpg -&gt; .jpg
+                    String suffix = fi.getName().substring(fi.getName().lastIndexOf(&quot;.&quot;));
+                    fi.write(new File(path, fileName + suffix)); //传入文件对象会自动的帮我们把客户端上传的文件传到服务器某个文件中
+                    painting.setPreview(&quot;upload/&quot; + fileName + suffix); //形成一个完整的可以访问的url地址
+                &#125;
+            &#125;
+            paintingService.create(painting); //新增功能
+            //若弹出另一个页面进行另外一个操作 新页面以后的后续操作 和前面的操作紧密联系的 用请求转发 当前请求給下一个功能继续操作
+            resp.sendRedirect(&quot;/mgallery/management?method=list&quot;);//响应重定向跳转列表页继续相应的处理 跟前面的新增功能联系不那么紧密
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="开发表单校验JS脚本-可重用的表单校验"><a href="#开发表单校验JS脚本-可重用的表单校验" class="headerlink" title="开发表单校验JS脚本[可重用的表单校验]"></a>开发表单校验JS脚本[可重用的表单校验]</h3><ul>
+<li>以独立的js脚本文件存储可被不同表单项重用的校验规则</li>
+<li>每一个校验逻辑均独立存储</li>
+<li>可自定义触发时机，例如：失去焦点、选择时、提交前…</li>
+</ul>
+<h5 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h5><pre><code class="html">/*
+检查是否为空 input表单域选择器    errSelector错误提示选择器    true-校验成功 false-校验失败
+*/
+function checkEmpty(input, errSelector)&#123;
+    var val = $(input).val();
+    if($.trim(val)==&quot;&quot;)&#123;
+        switchValid(false, input, errSelector, &quot;请输入内容&quot;)
+        return false;
+    &#125;else&#123;
+        switchValid(true, input, errSelector);
+        return true;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="调用方法1-失去焦点的时候触发onblur"><a href="#调用方法1-失去焦点的时候触发onblur" class="headerlink" title="调用方法1 失去焦点的时候触发onblur"></a>调用方法1 <u>失去焦点的时候触发onblur</u></h6><pre><code class="html">&lt;span&gt;详细描述&lt;/span&gt;
+&lt;span id=&quot;errDescription&quot;&gt;&lt;/span&gt;
+&lt;textarea id=&quot;description&quot; name=&quot;description&quot; onblur=&quot;checkEmpty(&#39;#description&#39;,&#39;#errDescription&#39;)&quot;&gt;&lt;/textarea&gt;
+</code></pre>
+<h6 id="调用方法2-在提交前组合校验"><a href="#调用方法2-在提交前组合校验" class="headerlink" title="调用方法2 在提交前组合校验"></a>调用方法2 <u>在提交前组合校验</u></h6><pre><code class="html">&lt;script type=&quot;text/javascript&quot;&gt;
+    function checkSubmit()&#123; //提交前表单校验
+        var result = true;
+        var r1 = checkPname(&#39;#pname&#39;,&#39;#errPname&#39;,-1); //检查名称
+        var r2 = checkCategory(&#39;#category&#39;,&#39;#errCategory&#39;); //检查分类
+        var r3 = checkPrice(&#39;#price&#39;,&#39;#errPrice&#39;); //检查价格
+        var r4 = checkFile(&#39;#painting&#39;, &#39;#errPainting&#39;); //检查上传文件
+        var r5 = checkEmpty(&#39;#description&#39;, &#39;#errDescription&#39;); //检查描述
+        if(r1 &amp;&amp; r2 &amp;&amp; r3 &amp;&amp; r4 &amp;&amp; r5)&#123;//所有检查通过允许提交表单
+            return true;
+        &#125;else&#123;
+            return false;
+        &#125;
+    &#125;
+&lt;/script&gt;
 </code></pre>
 
             
@@ -1431,7 +1999,7 @@ public class ManagementController extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -3531,7 +4099,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -4499,7 +5067,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5173,7 +5741,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8323,7 +8891,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -11705,7 +12273,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -11846,6 +12414,9 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.10.3</span></strong></p>
 <p>哦耶 中午吃的黄焖鸡米饭 晚上吃的牛肉水饺，不知道为啥连续4天美团拼好饭都是1.6元红包，是不是国庆节点的人少了，美团平台为了留住客流量所以給每个人的概率都变大了呢！！不能这样想，万一明天就不是1.6元了可咋整。宝宝中午乃至下午去和朋友出去玩，怪也只怪那个朋友有点吊儿郎当的样子，让我家宝宝很无奈，我也很无奈，真的是 不喜欢那个人！！晚上的时候宝宝给我发了一些<strong>不可理喻</strong>的照片，经过我的慧眼，哈哈哈 还是发现了破绽，宝宝发给我的是一个男生和女生做着亲密的动作，宝宝想让我认为那个是她！哼！！我那么聪明可不会上当的噢。晚上和宝宝视频，抖音特性的喷火龙真的好好玩。喜欢玩！！呸，喜欢和宝宝视频！！晚上偷偷的敲代码，因为出现了一个很讨厌的bug 改了我一个小时都没改出来，气急败坏发了朋友圈发气！哦吼，宝宝2点的时候突然给我发了消息，卧槽，吓死我了，宝宝突然醒了，看到我没睡觉好生气！！emmm。。。怎么说，还是在宝宝偷偷睡觉之后，我写完了这篇日记，乃至高效率的把逆天bug改完了，宝宝看到这里的时候会不会生气气了。我觉得宝宝一定会截图然后找我来对峙！！怎么办啊，还要不要写上面！！没事 写吧，记录最真实的自己！！勇敢潘潘 不怕困难！！宝宝晚安！！！</p>
+<hr>
+<p><strong><span style = "color : red">2023.10.4</span></strong></p>
+<p>今天和宝宝见面了哇！下午宝宝突然回来了 因为室友lx的情感问题嘛。我好开心，今天能和宝宝见面咯！下午的时候和宝宝一起双向奔放 一起朝着秋水广场进军！我先到的，等了小宝宝一会，当时看到宝宝的时候，哇，我的小可爱好久不见啦，真的好可爱好漂亮的宝宝。我们去了秋水广场前面那一小条商业街，其实也不算是。去那里吃饭饭，宝宝请我喝了古茗，奶茶真的很不错。我带着宝宝去吃黄焖鸡。两家黄焖鸡极限二选一！哈哈哈，味道还算可以，就是那个蔬菜，给我弄懵逼了，头一次见到这种生菜用水煮过后加酱油的。虽然在家都是生吃蘸酱，突然看到这种吃法还是有点懵逼的。随后我们去了两个大超市里转了转，在第一个地方买了小彩票，哈哈，是5块钱的小彩票噢，中了4张吧，忘记了买多少张了。之后又逛到楼上有一个快乐游戏城 好小，去那里看了看抓娃娃的，感觉不好搞。之后路过了外星人专卖店，长见识了。感觉回家了。后来我俩又去那种实体店的彩票站玩了几张。差不多快六点咯，准备和宝宝在地铁站分别啦，宝宝一号线，我二号线。很不舍，想宝宝。坐电梯下去的时候我一直回头想找到宝宝，当时想着宝宝会不会下来啊，一直再回头。qaq，最后到学校啦。晚上宝宝去拿了快递，是给我的礼物噢，虽然宝宝想保留惊喜，我看着是一个长长的快递盒子，真的很期待。宝宝晚上弄了很久，一刻不停，生怕弄错，当时知道宝宝在弄真的很心疼，辛苦啦宝宝。宝宝今天顶着难受的身体和困意以及难以承受的疼痛，在一点一点的给我弄礼物。很感动真的很辛苦宝宝，真的好爱好爱你！</p>
 
             
         </div>
@@ -11860,7 +12431,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#1bccbc>
+            <a href="/tags/随笔" style=color:#ffa2c4>
                 随笔
             </a>
         </span>
@@ -14235,7 +14806,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ffa2c4>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -14514,7 +15085,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#1bccbc>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -15155,7 +15726,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
