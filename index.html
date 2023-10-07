@@ -1985,7 +1985,484 @@ function checkEmpty(input, errSelector)&#123;
     &#125;
 &lt;/script&gt;
 </code></pre>
-<p>4-8   15:43</p>
+<pre><code class="js">validation.js 且在create.jsp中把引用的标签打上js状态 onblur/onchange
+/**
+ * 隐藏、显示错误信息
+ * @param onOff true 验证成功, 隐藏错误     false 校验失败，显示错误
+ * @param input 表单域选择器
+ * @param errSelector 错误提示选择器
+ * @param message 错误信息
+ * @returns
+ */
+function switchValid(onOff, input, errSelector, message) &#123;
+    if (onOff == false) &#123;
+        $(errSelector).text(message);
+        $(input).addClass(&quot;error_input&quot;); //错误标红
+        $(errSelector).addClass(&quot;error_message&quot;);
+    &#125; else &#123;
+        $(errSelector).text(&quot;&quot;);
+        $(input).removeClass(&quot;error_input&quot;); //错误标红
+        $(errSelector).removeClass(&quot;error_message&quot;);
+    &#125;
+&#125;
+
+/**
+ * 检查是否为空
+ * @param input 表单域选择器
+ * @param errSelector 错误提示选择器
+ * @returns true-校验成功 false-校验失败
+ */
+function checkEmpty(input, errSelector) &#123;
+    var val = $(input).val(); //获取当前选择的数值
+    if ($.trim(val) == &quot;&quot;) &#123; //将字符串前后空格删掉
+        switchValid(false, input, errSelector, &quot;请输入内容&quot;); //非空校验失败时显示错误
+        return false;
+    &#125; else &#123;
+        switchValid(true, input, errSelector); //正确情况
+        return true;
+    &#125;
+&#125;
+
+function checkCategory(input, errSelector) &#123;
+    var val = $(input).val(); //获取当前选择的数值
+    if (val == -1) &#123;
+        switchValid(false, input, errSelector, &quot;请选择油画类型&quot;); //非空校验失败时显示错误
+        return false;
+    &#125; else &#123;
+        switchValid(true, input, errSelector); //正确情况
+        return true;
+    &#125;
+&#125;
+
+/**
+ * 价格必须是整数
+ * @param input 表单域选择器
+ * @param errSelector 错误提示选择器
+ * @returns true-校验成功 false-校验失败
+ */
+function checkPrice(input, errSelector) &#123;
+    var val = $(input).val(); //获取当前选择的数值
+    var regex = /^[1-9][0-9]*$/   //利用正则表达式进行校验信息
+    if (!regex.test(val)) &#123;
+        switchValid(false, input, errSelector, &quot;无效的价格&quot;); //非空校验失败时显示错误
+        return false;
+    &#125; else &#123;
+        switchValid(true, input, errSelector); //正确情况
+        return true;
+    &#125;
+&#125;
+
+/**
+ * 上传文件必须是图片
+ * @param input 表单域选择器
+ * @param errSelector 错误提示选择器
+ * @returns true-校验成功 false-校验失败
+ */
+function checkFile(input, errSelector) &#123;
+    if (checkEmpty(input, errSelector) == false) &#123;
+        return false;
+    &#125;
+    var val = $(input).val().toLowerCase()//小写转换 PNG png
+    if (val.length &lt; 4) &#123; //x.xxxx
+        switchValid(false, input, errSelector, &quot;请选择有效的图片&quot;); //非空校验失败时显示错误
+        return false;
+    &#125;
+    suffix = val.substring(val.length - 3); //拿到最后的扩展名
+    if (suffix == &quot;jpg&quot; || suffix == &quot;png&quot; || suffix == &quot;gif&quot;) &#123;
+        switchValid(true.input, errSelector);
+        return true;
+    &#125;else &#123;
+        switchValid(false, input, errSelector, &quot;请选择有效的图片&quot;);
+        return false;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现新增油画功能-表单submit全验证"><a href="#实现新增油画功能-表单submit全验证" class="headerlink" title="实现新增油画功能[表单submit全验证]"></a>实现新增油画功能[表单submit全验证]</h3><pre><code class="jsp">添加一个全局验证
+create.jsp
+&lt;!-- 新增油画页面 --&gt;
+&lt;%@page contentType=&quot;text/html;charset=utf-8&quot; %&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/core&quot; prefix=&quot;c&quot; %&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/fmt&quot; prefix=&quot;fmt&quot; %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;title&gt;新增油画&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css\create.css&quot;&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.4.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/validation.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        function checkSubmit() &#123;
+            var result = true;
+            var r1 = checkEmpty(&quot;#pname&quot;, &quot;#errPname&quot;);
+            var r2 = checkCategory(&#39;#category&#39;, &#39;#errCategory&#39;);
+            var r3 = checkPrice(&#39;#price&#39;, &#39;#errPrice&#39;);
+            var r4 = checkFile(&#39;#painting&#39;, &#39;#errPainting&#39;);
+            var r5 = checkEmpty(&#39;#description&#39;, &#39;#errDescription&#39;);
+            if (r1 &amp;&amp; r2 &amp;&amp; r3 &amp;&amp; r4 &amp;&amp; r5) &#123;
+                return true;
+            &#125;else &#123;
+                return false;
+            &#125;
+        &#125;
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;container&quot;&gt;
+    &lt;fieldset&gt;
+        &lt;legend&gt;新增油画&lt;/legend&gt;
+        &lt;form action=&quot;/mgallery/management?method=create&quot; method=&quot;post&quot;
+              autocomplete=&quot;off&quot; enctype=&quot;multipart/form-data&quot; onsubmit=&quot;return checkSubmit()&quot;&gt;
+            &lt;ul class=&quot;ulform&quot;&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画名称&lt;/span&gt;
+                    &lt;span id=&quot;errPname&quot;&gt;&lt;/span&gt;
+                    &lt;input id=&quot;pname&quot; name=&quot;pname&quot; onblur=&quot;checkEmpty(&#39;#pname&#39;,&#39;#errPname&#39;)&quot;&gt; &lt;!--在失去焦点时触发--&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画类型&lt;/span&gt;
+                    &lt;span id=&quot;errCategory&quot;&gt;&lt;/span&gt;
+                    &lt;select id=&quot;category&quot; name=&quot;category&quot; onchange=&quot;checkCategory(&#39;#category&#39;,&#39;#errCategory&#39;)&quot;&gt;
+                        &lt;option value=&quot;-1&quot;&gt;请选择油画类型&lt;/option&gt;
+                        &lt;option value=&quot;1&quot;&gt;现实主义&lt;/option&gt;
+                        &lt;option value=&quot;2&quot;&gt;抽象主义&lt;/option&gt;
+                    &lt;/select&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画价格&lt;/span&gt;
+                    &lt;span id=&quot;errPrice&quot;&gt;&lt;/span&gt;
+                    &lt;input id=&quot;price&quot; name=&quot;price&quot; onblur=&quot;checkPrice(&#39;#price&#39;,&#39;#errPrice&#39;)&quot;&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;作品预览&lt;/span&gt;
+                    &lt;span id=&quot;errPainting&quot;&gt;&lt;/span&gt;
+                    &lt;input id=&quot;painting&quot; name=&quot;painting&quot; type=&quot;file&quot;
+                           style=&quot;padding-left: 0px;&quot; accept=&quot;image/*&quot;
+                           onchange=&quot;checkFile(&#39;#painting&#39;,&#39;#errPainting&#39;)&quot;/&gt;
+                    &lt;%--    accept=&quot;image/*&quot; 默认保留所有图片格式的文件--%&gt;
+                &lt;/li&gt;
+
+                &lt;li&gt;
+                    &lt;span&gt;详细描述&lt;/span&gt;
+                    &lt;span id=&quot;errDescription&quot;&gt;&lt;/span&gt;
+                    &lt;textarea
+                            id=&quot;description&quot; name=&quot;description&quot;
+                            onblur=&quot;checkEmpty(&#39;#description&#39;,&#39;#errDescription&#39;)&quot;&gt;&lt;/textarea&gt;
+                &lt;/li&gt;
+                &lt;li style=&quot;text-align: center;&quot;&gt;
+                    &lt;button type=&quot;submit&quot; class=&quot;btn-button&quot;&gt;提交表单&lt;/button&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/form&gt;
+    &lt;/fieldset&gt;
+&lt;/div&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="html">management.html  和  list.jsp 添加href超链接 
+客户点击新增的时候可以跳转到新增页面 
+&lt;a href = &quot;/mgallery/management?method=show_create&quot;&gt;&lt;/a&gt;
+</code></pre>
+<h3 id="实现修改页表单数据回填"><a href="#实现修改页表单数据回填" class="headerlink" title="实现修改页表单数据回填"></a>实现修改页表单数据回填</h3><h5 id="修改实现思路"><a href="#修改实现思路" class="headerlink" title="修改实现思路"></a>修改实现思路</h5><ul>
+<li>修改与新增的最大不同是在修改前要加载原有数据</li>
+<li>在修改页面放置hidden隐藏域保存id编号，随表单提交</li>
+<li>对XML更新时，先按id获取原始记录，在此基础上覆盖更新</li>
+</ul>
+<p>Dao service</p>
+<pre><code class="java">PaintingService.java
+package com.example.mgallery.service;
+
+import com.example.mgallery.dao.PaintingDao;
+import com.example.mgallery.entity.Painting;
+import com.example.mgallery.utils.PageModel;
+
+import java.util.List;
+//完成业务逻辑 service与dao进行传递调用
+public class PaintingService &#123;
+    private PaintingDao paintingDao = new PaintingDao();
+    public PageModel pagination(int page, int rows, String...category)&#123;  //最后一个是添加 可选参数(可能/不一定出现一个或多个)
+        if (rows == 0)&#123;
+            throw new RuntimeException(&quot;无效的rows参数&quot;);
+        &#125;
+        if (category.length==0 || category[0] == null)&#123;
+        return paintingDao.pagination(page, rows); //调用并返回
+        &#125;else &#123; //程序进行可选调用 两个不同路径 尽量不要去修改类结构
+            return paintingDao.pagination(Integer.parseInt(category[0]), page, rows);
+        &#125;
+    &#125;
+
+    public void create(Painting painting)&#123;
+        paintingDao.create(painting);
+    &#125;
+    // 按编号查询油画 id油画编号 return油画对象
+    public Painting findById(Integer id)&#123;
+        Painting p = paintingDao.findById(id);
+        if (p==null)&#123;
+            throw new RuntimeException(&quot;[id=]&quot; + id + &quot;]油画不存在&quot;);
+        &#125;
+        return p;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        PaintingService paintingService = new PaintingService();
+        PageModel pageModel = paintingService.pagination(2, 6);//每页显示六条
+        List&lt;Painting&gt; paintingList = pageModel.getPageData();
+        for (Painting painting : paintingList)&#123;
+            System.out.println(painting.getPname());
+        &#125;
+        System.out.println(pageModel.getPageStartRow() + &quot;:&quot; + pageModel.getPageEndRow());
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">update.jsp
+&lt;%@page contentType=&quot;text/html;charset=utf-8&quot; %&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/core&quot; prefix=&quot;c&quot; %&gt;
+&lt;%@taglib uri=&quot;http://java.sun.com/jsp/jstl/fmt&quot; prefix=&quot;fmt&quot; %&gt;
+&lt;!-- 修改油画页面 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;title&gt;作品更新&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css\create.css&quot;&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/jquery-3.4.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;js/validation.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        &lt;!-- 提交前表单校验 --&gt;
+        function checkSubmit() &#123;
+            var result = true;
+            var r1 = checkEmpty(&quot;#pname&quot;, &quot;#errPname&quot;);
+            var r2 = checkCategory(&#39;#category&#39;, &#39;#errCategory&#39;);
+            var r3 = checkPrice(&#39;#price&#39;, &#39;#errPrice&#39;);
+            var r4 = checkFile(&#39;#painting&#39;, &#39;#errPainting&#39;);
+            var r5 = checkEmpty(&#39;#description&#39;, &#39;#errDescription&#39;);
+            if (r1 &amp;&amp; r2 &amp;&amp; r3 &amp;&amp; r4 &amp;&amp; r5) &#123;
+                return true;
+            &#125; else &#123;
+                return false;
+            &#125;
+        &#125;
+        //整个html被解析完后执行代码
+        $(function()&#123;//前面的被html解释完才执行 后面的EL表达式jsp渲染在服务器端产生 油画类型默认产生
+            $(&quot;#category&quot;).val($&#123;painting.category&#125;)
+        &#125;)
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;container&quot;&gt;
+    &lt;fieldset&gt;
+        &lt;legend&gt;作品名称&lt;/legend&gt;
+        &lt;form action=&quot;[这里写更新URL]&quot; method=&quot;post&quot;
+              autocomplete=&quot;off&quot; enctype=&quot;multipart/form-data&quot;
+              onsubmit=&quot;return checkSubmit()&quot;&gt;
+            &lt;ul class=&quot;ulform&quot;&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画名称&lt;/span&gt;
+                    &lt;span id=&quot;errPname&quot;&gt;&lt;/span&gt;
+                    &lt;input id=&quot;pname&quot; name=&quot;pname&quot; onblur=&quot;checkEmpty(&#39;#pname&#39;,&#39;#errPname&#39;)&quot; value=&quot;$&#123;painting.pname&#125;&quot;/&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画类型&lt;/span&gt;
+                    &lt;span id=&quot;errCategory&quot;&gt;&lt;/span&gt;
+                    &lt;select id=&quot;category&quot; name=&quot;category&quot; onchange=&quot;checkCategory(&#39;#category&#39;,&#39;#errCategory&#39;)&quot;
+                            value=&quot;$&#123;painting.category&#125;&quot;&gt;
+                        &lt;option value=&quot;-1&quot;&gt;请选择油画类型&lt;/option&gt;
+                        &lt;option value=&quot;1&quot;&gt;现实主义&lt;/option&gt;
+                        &lt;option value=&quot;2&quot;&gt;抽象主义&lt;/option&gt;
+                    &lt;/select&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;油画价格&lt;/span&gt;
+                    &lt;span id=&quot;errPrice&quot;&gt;&lt;/span&gt;
+                    &lt;input id=&quot;price&quot; name=&quot;price&quot; onblur=&quot;checkPrice(&#39;#price&#39;,&#39;#errPrice&#39;)&quot; value=&quot;$&#123;painting.price&#125;&quot;/&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span&gt;作品预览&lt;/span&gt;
+                        &lt;span id=&quot; errPainting&quot;&gt;&lt;/span&gt;&lt;br/&gt;
+                    &lt;img id=&quot;preview&quot; src=&quot;$&#123;painting.preview&#125;&quot; style=&quot;width:361px;height:240px&quot;/&gt;&lt;br/&gt;
+                    &lt;input id=&quot;painting&quot; name=&quot;painting&quot; type=&quot;file&quot; style=&quot;padding-left:0px;&quot; accept=&quot;image/*&quot;/&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;span&gt;详细描述&lt;/span&gt;
+                    &lt;span id=&quot;errDescription&quot;&gt;&lt;/span&gt;
+                    &lt;textarea
+                            id=&quot;description&quot; name=&quot;description&quot;
+                            onblur=&quot;checkEmpty(&#39;#description&#39;,&#39;#errDescription&#39;)&quot;
+                    &gt;
+                        $&#123;painting.description&#125;
+                    &lt;/textarea&gt;
+                &lt;/li&gt;
+                &lt;li style=&quot;text-align: center;&quot;&gt;
+                    &lt;button type=&quot;submit&quot; class=&quot;btn-button&quot;&gt;提交表单&lt;/button&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/form&gt;
+    &lt;/fieldset&gt;
+&lt;/div&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">ManagmentController.java
+package com.example.mgallery.controller;
+
+import com.example.mgallery.entity.Painting;
+import com.example.mgallery.service.PaintingService;
+import com.example.mgallery.utils.PageModel;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+//实现增删改查
+@WebServlet(&quot;/management&quot;)
+public class ManagementController extends HttpServlet &#123;
+    private PaintingService paintingService = new PaintingService();
+
+    public ManagementController() &#123;
+        super();
+    &#125;
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.setCharacterEncoding(&quot;UTF-8&quot;);
+        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //通过method参数区分不同的操作
+        String method = req.getParameter(&quot;method&quot;);
+        if(Objects.equals(method,&quot;list&quot;)) &#123;//分页查询列表
+            this.list(req,resp);
+            //正确使用 equals 方法避免产生空指针异常https://www.jianshu.com/p/306de20dd228
+        &#125; else if (Objects.equals(method,&quot;delete&quot;)) &#123;
+            //
+        &#125; else if (Objects.equals(method,&quot;show_create&quot;)) &#123;
+            this.showCreatePage(req,resp); //带show的一定是跳转页面
+        &#125; else if (Objects.equals(method, &quot;create&quot;)) &#123;
+            this.create(req, resp);
+        &#125; else if (Objects.equals(method,&quot;show_update&quot;)) &#123;
+            this.showUpdatePage(req, resp);
+        &#125;
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        doGet(req,resp);
+    &#125;
+
+    // 控制器代码的实现
+    private void list(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String p = req.getParameter(&quot;p&quot;);
+        String r = req.getParameter(&quot;r&quot;);
+        if (p == null) &#123;
+            p = &quot;1&quot;;
+        &#125;
+        if (r == null) &#123;
+            r = &quot;6&quot;;
+        &#125;
+        //2.调用Service方法,得到处理结果      增加了按类型筛选category
+        PageModel pageModel = paintingService.pagination(Integer.parseInt(p), Integer.parseInt(r));
+        req.setAttribute(&quot;pageModel&quot;,pageModel);//数据解耦最关键的一步
+        //3.请求转发至对应JSP(view)进行数据展现
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/list.jsp&quot;).forward(req,resp); //跳转jsp
+    &#125;
+    //显示新增页面
+    private void showCreatePage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); //请求转发
+    &#125;
+    //新增油画方法
+    private void create(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        /*文件上传时的数据处理与标准表单完全不同
+        String pname = req.getParameter(&quot;pname&quot;); form表单enctype = &quot;multipart/form-data&quot;运用后 无法得到字符串格式的数据
+        System.out.println(pname);
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/create.jsp&quot;).forward(req, resp); 请求转发*/
+        //1.初始化FileUpload组件 包含表单项的数据对象
+        FileItemFactory factory = new DiskFileItemFactory();
+        /**
+         * FileItemFactory 用于将前端表单的数据转换为一个个FileItem对象
+         * ServletFileUpload 是为FileUpload组件提供Java web的Http请求解析
+         */
+        ServletFileUpload sf = new ServletFileUpload(factory);
+        //2.遍历所有FileItem
+        try &#123;
+            List&lt;FileItem&gt; formData = sf.parseRequest(req);//将表单数据转换为FileItem对象 和前台输入项一一对应
+            Painting painting = new Painting();//进行封装
+            //区分哪个是普通对象 哪个是文件对象
+            for (FileItem fi : formData)&#123;
+                if (fi.isFormField() == true)&#123;//普通输入框
+                    System.out.println(&quot;普通输入项:&quot; + fi.getFieldName() + &quot;:&quot; + fi.getString(&quot;UTF-8&quot;));
+                    switch (fi.getFieldName()) &#123; //得到字段名
+                        case &quot;pname&quot;:
+                            painting.setPname(fi.getString(&quot;UTF-8&quot;));
+                            break;
+                        case &quot;category&quot;:
+                            painting.setCategory(Integer.parseInt(fi.getString(&quot;UTF-8&quot;)));
+                            break;
+                        case &quot;price&quot;:
+                            painting.setPrice(Integer.parseInt(fi.getString(&quot;UTF-8&quot;)));
+                            break;
+                        case &quot;description&quot;:
+                            painting.setDescription(fi.getString(&quot;UTF-8&quot;));
+                            break;
+                        default:
+                            break;
+                    &#125;
+                &#125;else &#123; //文件上传框
+                    System.out.println(&quot;文件上传项:&quot; + fi.getFieldName()); //没有文本数值不用输出
+                    //3.文件保存到服务器目录 已经确定了文件上传项
+                    String path = req.getServletContext().getRealPath(&quot;/upload&quot;);
+                    System.out.println(&quot;上传文件目录:&quot; + path);
+//                    String fileName = &quot;test.jpg&quot;;
+                    String fileName = UUID.randomUUID().toString();//随机生成文件名 根据计算机的特性 生成随机唯一字符串
+                    //fi.getName()得到原始文件名, 截取最后一个&quot;.&quot;后所有字符串，例如:wxml.jpg -&gt; .jpg
+                    String suffix = fi.getName().substring(fi.getName().lastIndexOf(&quot;.&quot;));
+                    fi.write(new File(path, fileName + suffix)); //传入文件对象会自动的帮我们把客户端上传的文件传到服务器某个文件中
+                    painting.setPreview(&quot;upload/&quot; + fileName + suffix); //形成一个完整的可以访问的url地址
+                &#125;
+            &#125;
+            paintingService.create(painting); //新增功能
+            //若弹出另一个页面进行另外一个操作 新页面以后的后续操作 和前面的操作紧密联系的 用请求转发 当前请求給下一个功能继续操作
+            resp.sendRedirect(&quot;/mgallery/management?method=list&quot;);//响应重定向跳转列表页继续相应的处理 跟前面的新增功能联系不那么紧密
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+    //显示更新页面
+    private void showUpdatePage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String id = req.getParameter(&quot;id&quot;);//前台传来的id号
+        Painting painting = paintingService.findById(Integer.parseInt(id));
+        req.setAttribute(&quot;painting&quot;, painting); //将得到的放入其中
+        req.getRequestDispatcher(&quot;/WEB-INF/jsp/update.jsp&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="jsp">list.jsp
+&lt;ul class=&quot;page&quot;&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=1&quot;&gt;首页&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.hasPreviousPage?pageModel.page-1:1&#125;&quot;&gt;上页&lt;/a&gt;&lt;/li&gt;
+                &lt;c:forEach begin=&quot;1&quot; end=&quot;$&#123;pageModel.totalPages &#125;&quot; step=&quot;1&quot; var=&quot;pno&quot;&gt;
+                    &lt;li $&#123;pno==pageModel.page?&quot;class=&#39;active&#39;&quot;:&quot;&quot;&#125;&gt;
+                        &lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pno &#125;&quot;&gt;$&#123;pno &#125;&lt;/a&gt;
+                    &lt;/li&gt;
+                &lt;/c:forEach&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.hasNextPage?pageModel.page+1:pageModel.totalPages&#125;&quot;&gt;下页&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href=&quot;/mgallery/management?method=list&amp;p=$&#123;pageModel.totalPages&#125;&quot;&gt;尾页&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+</code></pre>
+<h3 id="利用Dom4j对XML进行更新"><a href="#利用Dom4j对XML进行更新" class="headerlink" title="利用Dom4j对XML进行更新"></a>利用Dom4j对XML进行更新</h3><pre><code class="java">XmlDataSource.java
+</code></pre>
 
             
         </div>
@@ -2000,7 +2477,7 @@ function checkEmpty(input, errSelector)&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -4100,7 +4577,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5068,7 +5545,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5742,7 +6219,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8892,7 +9369,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -12438,7 +12915,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#ffa2c4>
+            <a href="/tags/随笔" style=color:#ff7d73>
                 随笔
             </a>
         </span>
@@ -14813,7 +15290,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -15092,7 +15569,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
@@ -15733,7 +16210,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
