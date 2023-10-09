@@ -372,7 +372,7 @@ DROP TABLE student; #删除数据表
 <tr>
 <td align="center">DATETIME</td>
 <td align="center">8字节</td>
-<td align="center">日期时间</td>
+<td align="center">日期时间[电影开始时间]</td>
 </tr>
 <tr>
 <td align="center">TIMESTAMP</td>
@@ -380,6 +380,375 @@ DROP TABLE student; #删除数据表
 <td align="center">时间戳</td>
 </tr>
 </tbody></table>
+<h3 id="修改表结构"><a href="#修改表结构" class="headerlink" title="修改表结构"></a>修改表结构</h3><h5 id="添加字段"><a href="#添加字段" class="headerlink" title="添加字段"></a>添加字段</h5><pre><code class="sql">ALTER TABLE 表名称
+ADD 列1 数据类型 [约束] [COMMENT 注释],
+ADD 列2 数据类型 [约束] [COMMENT 注释],
+......;
+
+ADD address VARCHAR(200) NOT NULL;
+</code></pre>
+<h5 id="修改字段名称"><a href="#修改字段名称" class="headerlink" title="修改字段名称"></a>修改字段名称</h5><pre><code class="sql">ALTER TABLE 表名称
+CHANGE 列1 新列名1 数据类型 [约束] [COMMENT 注释],
+CHANGE 列2 新列名2 数据类型 [约束] [COMMENT 注释],
+......;
+
+修改字段
+ALTER TABLE student
+MODIFY home_tel VARCHAR(20) NOT NULL;
+</code></pre>
+<h5 id="删除字段"><a href="#删除字段" class="headerlink" title="删除字段"></a>删除字段</h5><pre><code class="sql">ALTER TABLE 表名称
+DROP 列1，
+DROP 列2，
+......;
+</code></pre>
+<h3 id="数据库的范式"><a href="#数据库的范式" class="headerlink" title="数据库的范式"></a>数据库的范式</h3><h4 id="第一范式：原子性"><a href="#第一范式：原子性" class="headerlink" title="第一范式：原子性"></a>第一范式：原子性</h4><ul>
+<li>第一范式是数据库的基本要求，不满足组这一点就不是关系数据库</li>
+<li>数据库的每一列都是<strong>不可分割</strong>的基本数据项，同一列中不能有多个值，也不能存在重复的属性</li>
+</ul>
+<h6 id="不符合第一范式"><a href="#不符合第一范式" class="headerlink" title="不符合第一范式"></a>不符合第一范式</h6><table>
+<thead>
+<tr>
+<th align="center">学号</th>
+<th align="center">姓名</th>
+<th align="center">班级</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1000</td>
+<td align="center">刘娜</td>
+<td align="center">高三年级1班</td>
+</tr>
+</tbody></table>
+<h6 id="符合第一范式"><a href="#符合第一范式" class="headerlink" title="符合第一范式"></a>符合第一范式</h6><table>
+<thead>
+<tr>
+<th align="center">学号</th>
+<th align="center">姓名</th>
+<th align="center">年纪</th>
+<th align="center">班级</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1000</td>
+<td align="center">刘娜</td>
+<td align="center">高三</td>
+<td align="center">1班</td>
+</tr>
+</tbody></table>
+<h4 id="第二范式：唯一性"><a href="#第二范式：唯一性" class="headerlink" title="第二范式：唯一性"></a>第二范式：唯一性</h4><ul>
+<li>数据表中的<strong>每条记录必须是唯一的</strong>。为了实现区分，通常要为表加上一列用来存储唯一标识，这个唯一属性列被称为主键列</li>
+</ul>
+<h6 id="无法区分重复的数据"><a href="#无法区分重复的数据" class="headerlink" title="无法区分重复的数据"></a>无法区分重复的数据</h6><table>
+<thead>
+<tr>
+<th align="center">学号</th>
+<th align="center">考试成绩</th>
+<th align="center">日期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">230</td>
+<td align="center">58</td>
+<td align="center">2018-07-15</td>
+</tr>
+<tr>
+<td align="center">230</td>
+<td align="center">58</td>
+<td align="center">2018-07-15</td>
+</tr>
+</tbody></table>
+<h6 id="数据具有唯一性"><a href="#数据具有唯一性" class="headerlink" title="数据具有唯一性"></a>数据具有唯一性</h6><table>
+<thead>
+<tr>
+<th align="center">流水号</th>
+<th align="center">学号</th>
+<th align="center">考试成绩</th>
+<th align="center">日期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">201807152687</td>
+<td align="center">230</td>
+<td align="center">58</td>
+<td align="center">2018-07-15</td>
+</tr>
+<tr>
+<td align="center">201807152694</td>
+<td align="center">230</td>
+<td align="center">58</td>
+<td align="center">2018-07-15</td>
+</tr>
+</tbody></table>
+<h4 id="第三范式：关联性"><a href="#第三范式：关联性" class="headerlink" title="第三范式：关联性"></a>第三范式：关联性</h4><ul>
+<li>每列都与主键有直接关系，<strong>不存在传递依赖</strong></li>
+</ul>
+<h6 id="违反第三范式"><a href="#违反第三范式" class="headerlink" title="违反第三范式"></a>违反第三范式</h6><table>
+<thead>
+<tr>
+<th align="center">爸爸</th>
+<th align="center">儿子</th>
+<th align="center">女儿</th>
+<th align="center">女儿的玩具</th>
+<th align="center">女儿的衣服</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">陈华</td>
+<td align="center">陈浩</td>
+<td align="center">陈婷婷</td>
+<td align="center">海绵宝宝</td>
+<td align="center">校服</td>
+</tr>
+</tbody></table>
+<p>拿爸爸作为主键 儿子和女儿字段都是依赖于爸爸字段 但是后面的字段<strong>违反了第三范式</strong> <u>女儿的玩具和女儿的衣服是依赖于女儿这个字段的并不依赖于爸爸这个字段</u><br>数据表关系都非常松散 在检索的时候非常慢 因为爸爸主键字段查询非常快 但是查女儿的玩具和女儿的衣服找不到一样的主键</p>
+<h6 id="遵守第三范式"><a href="#遵守第三范式" class="headerlink" title="遵守第三范式"></a>遵守第三范式</h6><table>
+<thead>
+<tr>
+<th align="center">爸爸</th>
+<th align="center">儿子</th>
+<th align="center">女儿</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">陈华</td>
+<td align="center">陈浩</td>
+<td align="center">陈婷婷</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">女儿</th>
+<th align="center">女儿的玩具</th>
+<th align="center">女儿的衣服</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">陈婷婷</td>
+<td align="center">海绵宝宝</td>
+<td align="center">校服</td>
+</tr>
+</tbody></table>
+<ul>
+<li>依照第三范式，数据可以拆分保存到不同的数据表，彼此保持关联</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">部门</th>
+<th align="center">电话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">10</td>
+<td align="center">财务部</td>
+<td align="center">1001</td>
+</tr>
+<tr>
+<td align="center">20</td>
+<td align="center">技术部</td>
+<td align="center">1002</td>
+</tr>
+<tr>
+<td align="center">30</td>
+<td align="center">销售部</td>
+<td align="center">1003</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">姓名</th>
+<th align="center">性别</th>
+<th align="center">部门</th>
+<th align="center">入职日期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">陈浩</td>
+<td align="center">男</td>
+<td align="center"><strong>10</strong></td>
+<td align="center">2018-05-10</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">李婷婷</td>
+<td align="center">女</td>
+<td align="center"><strong>30</strong></td>
+<td align="center">2018-03-22</td>
+</tr>
+</tbody></table>
+<p>部门字段也是依赖于编号的 两张表没有违反第三范式</p>
+<h3 id="字段约束"><a href="#字段约束" class="headerlink" title="字段约束"></a>字段约束</h3><ul>
+<li>MySQL中的字段约束共有四种：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">约束名称</th>
+<th align="center">关键字</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">主键约束</td>
+<td align="center">PRIMARY KEY</td>
+<td align="center">字段值唯一，且不能为NULL</td>
+</tr>
+<tr>
+<td align="center">非空约束</td>
+<td align="center">NOT NULL</td>
+<td align="center">字段值不能为NULL</td>
+</tr>
+<tr>
+<td align="center">唯一约束</td>
+<td align="center">UNIQUE</td>
+<td align="center">字段值唯一，且可以为NULL</td>
+</tr>
+<tr>
+<td align="center">外键约束</td>
+<td align="center">FOREIGN KEY</td>
+<td align="center">保持关联数据的逻辑性</td>
+</tr>
+</tbody></table>
+<h3 id="主键约束"><a href="#主键约束" class="headerlink" title="主键约束"></a>主键约束</h3><ul>
+<li>主键约束要求字段的值在全表必须唯一，而且不能为NULL值</li>
+<li>建议主键一定要使用数字类型，因为数字的检索速度会非常快</li>
+<li>如果主键是数字类型，还可也设置自动增长</li>
+</ul>
+<pre><code class="sql">CREATE TABLE t_teacher(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    ......
+);
+</code></pre>
+<h3 id="非空约束"><a href="#非空约束" class="headerlink" title="非空约束"></a>非空约束</h3><ul>
+<li>非空约束要求字段的值不能为NULL值</li>
+<li>NULL值以为没有值，而不是 “” 空字符串</li>
+</ul>
+<pre><code class="sql">CREATE TABLE t_teacher(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    married BOOLEAN NOT NULL DEFAULT FALSE #若不写则是默认值false
+)
+</code></pre>
+<h3 id="唯一约束"><a href="#唯一约束" class="headerlink" title="唯一约束"></a>唯一约束</h3><ul>
+<li>唯一约束要求字段值如果不为NULL，那么在全表必须唯一</li>
+</ul>
+<pre><code class="sql">CREATE TABLE t_tracher(
+    ......
+    tel CHAR(11) NOT NULL UNIQUE
+);
+</code></pre>
+<pre><code class="sql">t_  tb_  一般是真实的表  
+v_ vw_   一般是视图虚拟表的意思
+</code></pre>
+<h6 id="总结代码"><a href="#总结代码" class="headerlink" title="总结代码"></a>总结代码</h6><pre><code class="sql">CREATE TABLE t_teacher(
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    tel CHAR(11) NOT NULL UNIQUE, #唯一约束 UNIQUE 字段值唯一，且可以为NULL
+    married BOOLEAN NOT NULL DEFAULT FALSE
+);
+-------------------------------------------------------------------------
+CREATE TABLE student(
+    id INT UNSIGNED PRIMARY KEY,
+    name VARCHAR(20) NOT NULL,
+    sex CHAR(1) NOT NULL,
+    birthday DATE NOT NULL,
+    tel CHAR(11) NOT NULL,
+    remark VARCHAR(200)
+);
+INSERT INTO student VALUES (1,&quot;李强&quot;,&quot;男&quot;,&quot;1995-05-15&quot;,&quot;13312345678&quot;,NULL);
+DESC student; 
+SHOW CREATE TABLE student;
+
+ALTER TABLE student
+ADD address VARCHAR(200) NOT NULL, #添加字段信息
+ADD home_tel CHAR(11) NOT NULL;
+
+ALTER TABLE student
+MODIFY home_tel VARCHAR(20) NOT NULL; #改字段类型信息
+
+ALTER TABLE student
+CHANGE address home_address VARCHAR(200) NOT NULL; #改变字段名
+
+ALTER TABLE student
+DROP address; #删除字段
+</code></pre>
+<h3 id="外键约束"><a href="#外键约束" class="headerlink" title="外键约束"></a>外键约束</h3><ul>
+<li>外键约束用来保证关联数据的逻辑关系</li>
+<li>外键约束的定义是写在子表上的</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">部门</th>
+<th align="center">电话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">10</td>
+<td align="center">财务部</td>
+<td align="center">1001</td>
+</tr>
+<tr>
+<td align="center">20</td>
+<td align="center">技术部</td>
+<td align="center">1002</td>
+</tr>
+<tr>
+<td align="center">30</td>
+<td align="center">销售部</td>
+<td align="center">1003</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">编号</th>
+<th align="center">姓名</th>
+<th align="center">性别</th>
+<th align="center">部门</th>
+<th align="center">入职日期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">陈浩</td>
+<td align="center">男</td>
+<td align="center"><strong>10</strong></td>
+<td align="center">2018-05-10</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">李婷婷</td>
+<td align="center">女</td>
+<td align="center"><strong>30</strong></td>
+<td align="center">2018-03-22</td>
+</tr>
+</tbody></table>
+<pre><code class="sql">CREATE TABLE t_dept(
+    deptno INT UNSIGNED PRIMARY KEY,
+    dname VARCHAR(20) NOT NULL UNIQUE,
+    tel CHAR(4) UNIQUE #写了电话必须唯一
+);
+</code></pre>
+<pre><code class="sql">CREATE TABLE t_emp(
+    empno INT UNSIGNED PRIMARY KEY,
+    ename VARCHAR(20) NOT NULL,
+    sex EUNM(&quot;男&quot;,&quot;女&quot;) NOT NULL, #枚举 选择其中一个
+    deptno INT UNSIGNED,
+    hiredate DATE NOT NULL,
+    FOREIGN KEY (deptno) REFERENCES t_dept(deptno) #和父表进行外键约束关联
+);
+</code></pre>
+<p>不允许删除第一个编号 需要先删除第二个表的记录 再删除第一个表记录 逻辑关系有保证</p>
+<h3 id="外键约束的闭环问题-【因此开发中放弃外键约束】"><a href="#外键约束的闭环问题-【因此开发中放弃外键约束】" class="headerlink" title="外键约束的闭环问题 【因此开发中放弃外键约束】"></a>外键约束的闭环问题 【因此开发中放弃外键约束】</h3><ul>
+<li>如果形成外键闭环，我们将无法删除任何一张表的记录</li>
+</ul>
 
     </div>
 
