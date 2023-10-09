@@ -251,7 +251,7 @@ max_connections=151
 /* 这是另一段注释文字 */
 </code></pre>
 <h3 id="创建逻辑库"><a href="#创建逻辑库" class="headerlink" title="创建逻辑库"></a>创建逻辑库</h3><pre><code class="sql">CREATE DATABASE 逻辑库名称; #创建
-SHOW DATABASES;
+SHOW DATABASES; #展现逻辑库
 DROP DATABASE 逻辑库名称; #删除
 </code></pre>
 <h3 id="创建数据表"><a href="#创建数据表" class="headerlink" title="创建数据表"></a>创建数据表</h3><pre><code class="sql">CREATE TABLE 数据表(
@@ -415,6 +415,7 @@ CHANGE 列2 新列名2 数据类型 [约束] [COMMENT 注释],
 修改字段
 ALTER TABLE student
 MODIFY home_tel VARCHAR(20) NOT NULL;
+CHANGE address home_address VARCHAR(200) NOT NULL; #改变字段名
 </code></pre>
 <h5 id="删除字段"><a href="#删除字段" class="headerlink" title="删除字段"></a>删除字段</h5><pre><code class="sql">ALTER TABLE 表名称
 DROP 列1，
@@ -640,7 +641,7 @@ DROP 列2，
 <li>如果主键是数字类型，还可也设置自动增长</li>
 </ul>
 <pre><code class="sql">CREATE TABLE t_teacher(
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT, #自带索引功能 自带排序
     ......
 );
 </code></pre>
@@ -652,7 +653,7 @@ DROP 列2，
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(200) NOT NULL,
     married BOOLEAN NOT NULL DEFAULT FALSE #若不写则是默认值false
-)
+);
 </code></pre>
 <h3 id="唯一约束"><a href="#唯一约束" class="headerlink" title="唯一约束"></a>唯一约束</h3><ul>
 <li>唯一约束要求字段值如果不为NULL，那么在全表必须唯一</li>
@@ -768,6 +769,34 @@ DROP address; #删除字段
 <p>不允许删除第一个编号 需要先删除第二个表的记录 再删除第一个表记录 逻辑关系有保证</p>
 <h3 id="外键约束的闭环问题-【因此开发中放弃外键约束】"><a href="#外键约束的闭环问题-【因此开发中放弃外键约束】" class="headerlink" title="外键约束的闭环问题 【因此开发中放弃外键约束】"></a>外键约束的闭环问题 【因此开发中放弃外键约束】</h3><ul>
 <li>如果形成外键闭环，我们将无法删除任何一张表的记录</li>
+</ul>
+<h3 id="数据排序的好处"><a href="#数据排序的好处" class="headerlink" title="数据排序的好处"></a>数据排序的好处</h3><ul>
+<li>一旦数据排序后，查找的速度就会翻倍，现实世界跟程序世界都是如此</li>
+</ul>
+<h3 id="如何创建索引"><a href="#如何创建索引" class="headerlink" title="如何创建索引"></a>如何创建索引</h3><pre><code class="sql">CREATE TABLE 表名称(
+    ......,
+    INDEX [索引名称] (字段),
+    ......
+);
+
+#数据库对这个索引字段排序生成二叉树 每个字段都是有索引名称的
+CREATE TABLE t_message(
+    id INT UNSIGNED PRIMARY KEY,
+    content VARCHAR(200) NOT NULL,
+    type ENUM(&quot;公告&quot;,&quot;通报&quot;,&quot;个人通知&quot;) NOT NULL,
+    create_time TIMESTAMP NOT NULL,
+    INDEX idx_type (type)
+); #利用二叉树的二分查找去查找索引字段就会非常快
+</code></pre>
+<h3 id="如何添加与删除索引"><a href="#如何添加与删除索引" class="headerlink" title="如何添加与删除索引"></a>如何添加与删除索引</h3><pre><code class="sql">CREATE INDEX 索引名称 ON 表名(字段); #添加索引
+ALTER TABLE 表名称 ADD INDEX [索引名](字段); #添加索引
+SHOW INDEX FORM 表名; #展示索引表  PRIMARY KEY AUTO_INCREMENT, #自带索引功能 自带排序
+DROP INDEX 索引名称 ON 表名; #删除索引
+</code></pre>
+<h3 id="索引的使用原则"><a href="#索引的使用原则" class="headerlink" title="索引的使用原则"></a>索引的使用原则</h3><ul>
+<li>数据量很大，而且经常被查询的数据表可以设置索引 (日志表很少查询 无需设置 因为数据库要维护二叉树)</li>
+<li>索引只添加在<strong>经常被用作检索</strong>条件的字段上面</li>
+<li>不要在<strong>大字段</strong>上创建索引</li>
 </ul>
 
             
@@ -3476,7 +3505,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -5576,7 +5605,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -6544,7 +6573,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -7218,7 +7247,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -10368,7 +10397,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13750,7 +13779,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -13900,6 +13929,9 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.10.6</span></strong></p>
 <p>今天晚上和室友出去吃的，本来一开始打算直接在学校对面吃，但是人太多了。于是骑车前往2.8km的地方去吃了大排档，还行味道不错，3个人aa50左右，吃了烤鱼，卤鸡爪还有很多别的菜，还有螺丝。宝宝晚上没有吃，胃还是有些难受，然后今天好像饭前的药也有两顿没有吃！！宝宝你要记得吃药 饭前饭后都要按时吃，知道了不！真的蛮担心你的。小可爱你要听话 你要乖~ 快快好起来吖。真的很想带着你吃香的喝辣的，即使宝宝吃不完 只要有我在，宝宝就会很放心。真的很想你了 宝宝，还没有亲亲，好久没亲亲了。晚上回来的时候室友都到齐了。终于不是孤独的守宿人了。</p>
+<hr>
+<p><strong><span style = "color : red">2023.10.9</span></strong></p>
+<p>凌晨的时候1点多 突然醒来 感觉浑身发热 头晕脑胀 浑身无力，发烧了发烧了，头一回感觉到很无助，于是我去接了点热水 喝了一下感觉好了一点点，爬上床暗示自己赶紧睡觉 睡着了就没那么难受了。还好睡着了，早上六点多起来了，准备参加2分的升旗仪式，好困 头晕晕的，感觉早上浑浑噩噩的 想宝宝了。真的我能理解宝宝 当时在我昨晚的时候真的很想宝宝出现在我的身边。中午放学了，没有点外卖本想去食堂吃一下，但是好多好多人。无奈只能去买了一张手抓饼 和 一个油炸糕，下午是补课 补的数据库的课程。讲的真的好慢啊，上完课突然肚子不舒服于是就去厕所蹲了好长时间之后买了一杯猫和老鼠的联名瑞辛，说实话这个马斯卡彭生酪拿铁真没有生椰拿铁好喝。今天一天都食欲不佳，不太想吃什么东西。宝宝知道我的情况以后，点了外卖(江南小碗菜) 啊哈！！超级好吃，当时去的北门拿的外卖，真的很多量很充足，有梅菜扣肉，酸辣土豆丝，蒸蛋，西红柿鸡蛋汤。真的连吃了好几天的拼好饭，感觉突然一下子出现了一餐饕餮盛宴。真的很好吃！梅菜扣肉肉质紧嫩弹口，酸辣土豆丝比食堂的好吃，蒸蛋蒸出了家的味道。甚至西红柿鸡蛋汤都要比食堂送的汤好喝100倍。嘿嘿，开心！！晚上的时候开了部门例会感觉也没多大事就开会开会！开个球球！！找个机会到时候迎新晚会过完吃完那个1000元左右的大蛋糕之后！！差不多找个机会走啦，宝宝今天玩了瞎子摸人噢，听规则真的很有创意。不愧是我家宝宝，思路清晰 想法多多~~ 晚上宝宝给我发了图片真的很委屈 我看着好心疼！！我想把宝宝介绍给我爸爸认识一下，让宝宝在我爸爸心里有个名分，我想和宝宝一直一直在一起！</p>
 
             
         </div>
@@ -13914,7 +13946,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#00bcd4>
+            <a href="/tags/随笔" style=color:#ff7d73>
                 随笔
             </a>
         </span>
@@ -16289,7 +16321,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -16568,7 +16600,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
