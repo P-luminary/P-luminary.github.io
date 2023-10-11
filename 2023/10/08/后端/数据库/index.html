@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -136,7 +136,7 @@
     </div>
 
     <div class="content" v-pre>
-        <h3 id="数据库系统-DBMS"><a href="#数据库系统-DBMS" class="headerlink" title="数据库系统(DBMS)"></a>数据库系统(DBMS)</h3><ul>
+        <h1 id="数据库基础内容"><a href="#数据库基础内容" class="headerlink" title="数据库基础内容"></a>数据库基础内容</h1><h3 id="数据库系统-DBMS"><a href="#数据库系统-DBMS" class="headerlink" title="数据库系统(DBMS)"></a>数据库系统(DBMS)</h3><ul>
 <li>关系型数据库系统(RDBMS)是指使用了关系模型的数据库</li>
 <li>关系模型中，数据是分类存放的，数据之间可以有联系</li>
 <li>淘宝网背后是3000多个数据库并发的<strong>集群</strong></li>
@@ -777,6 +777,409 @@ DROP INDEX 索引名称 ON 表名; #删除索引
 <li>数据量很大，而且经常被查询的数据表可以设置索引 (日志表很少查询 无需设置 因为数据库要维护二叉树)</li>
 <li>索引只添加在<strong>经常被用作检索</strong>条件的字段上面</li>
 <li>不要在<strong>大字段</strong>上创建索引</li>
+</ul>
+<p>(<u>以上均为DDL语句</u>)</p>
+<h6 id="DML语句"><a href="#DML语句" class="headerlink" title="DML语句"></a>DML语句</h6><h3 id="数据操作语句：普通查询"><a href="#数据操作语句：普通查询" class="headerlink" title="数据操作语句：普通查询"></a>数据操作语句：普通查询</h3><h5 id="记录查询"><a href="#记录查询" class="headerlink" title="记录查询"></a>记录查询</h5><ul>
+<li>最基本的查询语句是由<strong>SELECT</strong> 和 <strong>FROM</strong>关键字组成</li>
+</ul>
+<pre><code class="sql">USE demo;
+SELECT * FROM t_emp; #FROM是从员工表查数据 *是在结果集里显示员工表所有字段
+SELECT empno,ename,sal FROM t_emp; #不查询所有 单独查询想要的
+</code></pre>
+<ul>
+<li>SELECT语句屏蔽了物理层的操作，用户不必关心数据的真实存储，交给数据库高效查找数据</li>
+<li>通常情况下 ，SELECT子句中使用了表达式，那么这列的名字就默认为表达式，因此需要一种对列明重命名的机制 [<strong>起别名</strong>：只是对查询的结果集字段改名称]</li>
+</ul>
+<pre><code class="sql">SELECT
+  empno,
+  sal*12 AS &quot;income&quot;
+FROM t_emp;
+</code></pre>
+<ul>
+<li>上述sql 查询语句的子句执行顺序</li>
+</ul>
+<p>① <strong>词法分析与优化</strong>：读取SQL语句<br>② <strong>FROM</strong>：选择数据来源<br>③ <strong>SELECT</strong>：选择输出内容</p>
+<h3 id="数据操作语言：数据分页"><a href="#数据操作语言：数据分页" class="headerlink" title="数据操作语言：数据分页"></a>数据操作语言：数据分页</h3><ul>
+<li>朋友圈只会加载少量部分信息，不用一次性加载全部朋友圈，那样只会浪费CPU时间、内存和网络带宽</li>
+<li>如果结果集的记录很多，则可以使用LIMIT关键字限定结果集数量</li>
+</ul>
+<pre><code class="sql">SELECT ... FROM ... LIMIT 起始位置,偏移量; 
+SELECT empno,ename FROM t_emp LIMIT 0,20; #从0往后取20条数据
+</code></pre>
+<h6 id="数据分页简写"><a href="#数据分页简写" class="headerlink" title="数据分页简写"></a>数据分页简写</h6><ul>
+<li>如果LIMIT子句只有一个参数，它表示的是偏移量，起始值默认为0</li>
+</ul>
+<pre><code class="sql">SELECT empno,ename FROM t_emp LIMIT 10;
+SELECT empno,ename FROM t_emp LIMIT 0,10;
+FROM → SELECT → LIMIT
+</code></pre>
+<h3 id="结果集排序"><a href="#结果集排序" class="headerlink" title="结果集排序"></a>结果集排序</h3><ul>
+<li>如果没有设置，查询语句不会对结果集进行排序。也就是说，如果想让结果集按照某种顺序排序，就必须使用ORDER BY子句 【<strong>默认升序</strong>】</li>
+</ul>
+<pre><code class="sql">SELECT ... FROM ... ORDER BY 列名 [ASC|DESC];
+SELECT ename,sal FROM t_emp ORDER BY sal;
+</code></pre>
+<h3 id="排序关键字"><a href="#排序关键字" class="headerlink" title="排序关键字"></a>排序关键字</h3><ul>
+<li>ASC代表升序(默认)，DESC代表降序</li>
+<li>如果排序列是数字类型，数据库就按照数字大小排序，如果是日期类型就按照日期大小排序，如果是字符串就暗战字符集序号排序。</li>
+</ul>
+<pre><code class="sql">SELECT ename,sal FROM t_emp ORDER BY hiredate DESC;
+</code></pre>
+<h6 id="排序字段内容相同的情况"><a href="#排序字段内容相同的情况" class="headerlink" title="排序字段内容相同的情况"></a>排序字段内容相同的情况</h6><ul>
+<li>如果两条数据排序字段内容相同 <strong>sal 都是3000</strong><br>默认情况下是按照主键升序</li>
+</ul>
+<h6 id="多个排序字段"><a href="#多个排序字段" class="headerlink" title="多个排序字段"></a>多个排序字段</h6><ul>
+<li>使用ORDER BY规定首要排序顺序条件和次要排序条件。数据库会先按照要排序条件排序，如果遇到首要排序内容相同的记录，那么就会启动次要排序条件接着排序</li>
+</ul>
+<pre><code class="sql">SELECT ename,sal,hiredate 
+FROM t_emp 
+ORDER BY hiredate DESC,sal ASC;
+#先按照首要排序hiredate降序 再启动次要排序sal降序
+
+SELECT ename,sal,hiredate
+FROM t_emp
+ORDER BY sal DESC 
+LIMIT 0,5  #工资排在前五位进行降序
+</code></pre>
+<h6 id="排序-分页"><a href="#排序-分页" class="headerlink" title="排序+分页"></a>排序+分页</h6><ul>
+<li>ODER BY 子句书写的时候放在LIMIT子句的前面<br><strong>FROM → SELECT → ORDER BY → LIMIT</strong></li>
+</ul>
+<h3 id="结果集中的重复数据"><a href="#结果集中的重复数据" class="headerlink" title="结果集中的重复数据"></a>结果集中的重复数据</h3><ul>
+<li><p>假如我们要查询员工表有多种职业，写出来的sql语句</p>
+<pre><code class="sql">SELECT job FROM t_emp; #结果集内可能会出现重复记录
+</code></pre>
+</li>
+<li><p>如果去除重复的数据，可以使用 <strong>DISTINCT</strong> 关键字来实现</p>
+<pre><code class="sql">SELECT DISTINCT 字段 FROM ...;
+SELECT DISTINCT job FROM t_emp;
+</code></pre>
+</li>
+</ul>
+<h6 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h6><ul>
+<li><p>使用<strong>DISTINCT</strong>的<strong>SELECT</strong>子句中只能查询一列数据，如果查询多列，去除重复记录就会失效</p>
+<pre><code class="sql">SELECT DISTINCT job,ename FROM t_emp; #有job相同但是ename不相同 不能查询
+</code></pre>
+</li>
+<li><p><strong>DISTINCT</strong>关键字只能再SELECT子句中使用一次 [必须放在第一个字段前面]</p>
+</li>
+</ul>
+<h3 id="数据操作语言：条件查询-一"><a href="#数据操作语言：条件查询-一" class="headerlink" title="数据操作语言：条件查询(一)"></a>数据操作语言：条件查询(一)</h3><ul>
+<li><p>满足某一种或几种条件的记录。这类条件要用<strong>WHERE</strong>子句来实现数据的筛选</p>
+<pre><code class="sql">SELECT ... FROM ... WHERE 条件 [AND|OR] 条件 ...;
+
+SELECT empno,ename,sal FROM t_emp
+WHERE deptno=10 AND sal&gt;=2000;
+
+SELECT empno,ename,sal
+FROM t_emp
+WHERE(deptno=10 OR deptno=20) AND sal&gt;=2000;
+</code></pre>
+</li>
+</ul>
+<h6 id="四类运算符"><a href="#四类运算符" class="headerlink" title="四类运算符"></a>四类运算符</h6><ul>
+<li><p>WHERE语句中的条件运算会用到以下四种运算符</p>
+<table>
+<thead>
+<tr>
+<th align="center">序号</th>
+<th align="center">运算符</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">数学运算符</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">比较运算符</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">逻辑运算符</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">按位运算符</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h6 id="算数运算符-加-减-乘-x2F-除-模"><a href="#算数运算符-加-减-乘-x2F-除-模" class="headerlink" title="算数运算符 [+加  -减  *乘  &#x2F;除  %模]"></a>算数运算符 [+加  -减  *乘  &#x2F;除  %模]</h6><p>NULL值与任何数字加减乘除都是NULL值 如果想要运算 必须加入 <strong>IFNULL</strong>(null,0); 意思是遇到NULL值就用0来计算 10+IFNULL(null,0) &#x3D; 10<br><strong>DATEDIFF</strong>(入职日期-现在的日期)&#x2F;365</p>
+<pre><code class="sql">从t_emp表中找出 号位是10 和 总工资≥15000 的并且 计算工龄超过20年的人
+SELECT empno,ename,sal,hiredate
+FROM t_emp
+WHERE deptno=10 AND (sal+IFNULL(NULL,0))*12&gt;=15000
+AND DATEDIFF(NOW(),hiredate)/365&gt;=20;
+</code></pre>
+<h6 id="比较运算符-gt-大于-gt-x3D-大于等于-lt-小于-lt-x3D-小于等于-x3D-等于-x3D-不等于-IN包含deptno-IN-10-30-40"><a href="#比较运算符-gt-大于-gt-x3D-大于等于-lt-小于-lt-x3D-小于等于-x3D-等于-x3D-不等于-IN包含deptno-IN-10-30-40" class="headerlink" title="比较运算符 [&gt;大于 &gt;&#x3D;大于等于 &lt;小于 &lt;&#x3D;小于等于 &#x3D;等于 !&#x3D;不等于 IN包含deptno IN(10,30,40)]"></a>比较运算符 [&gt;大于 &gt;&#x3D;大于等于 &lt;小于 &lt;&#x3D;小于等于 &#x3D;等于 !&#x3D;不等于 IN包含deptno IN(10,30,40)]</h6><pre><code class="sql">查询10 20 30部门里面在1980年以前入职的员工而且不能是SALESMAN职位
+SELECT
+  empno,ename,sal,deptno,hiredate
+FROM t_emp;
+WHERE deptno IN(10,20,30) AND job!=&quot;SALESMAN&quot;
+AND hiredate&lt;&quot;1985-01-01&quot;;
+</code></pre>
+<h6 id="续比较运算符"><a href="#续比较运算符" class="headerlink" title="+续比较运算符"></a>+续比较运算符</h6><table>
+<thead>
+<tr>
+<th align="center">序号</th>
+<th align="center">表达式</th>
+<th align="center">意义</th>
+<th align="center">例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">8</td>
+<td align="center">IS NULL</td>
+<td align="center">为空</td>
+<td align="center">comm IS NULL</td>
+</tr>
+<tr>
+<td align="center">9</td>
+<td align="center">IS NOT NULL</td>
+<td align="center">不为空</td>
+<td align="center">comm IS NOT NULL</td>
+</tr>
+<tr>
+<td align="center">10</td>
+<td align="center">BETWEEN AND</td>
+<td align="center">范围</td>
+<td align="center">sal BETWEEN 2000 AND 3000</td>
+</tr>
+<tr>
+<td align="center">11</td>
+<td align="center">LIKE</td>
+<td align="center">模糊查询</td>
+<td align="center">ename LIKE “A%”</td>
+</tr>
+<tr>
+<td align="center">12</td>
+<td align="center"><span style = "color : red"><strong>REGEXP</strong></span></td>
+<td align="center"><span style = "color : red"><strong>正则表达式</strong></span></td>
+<td align="center"><strong>ename REGEXP “[a-zA-Z]{4}”</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>__代表前方一个未知    %代表前方N个未知</p>
+</blockquote>
+<pre><code class="sql">SELECT 
+ename,comm,sal
+FROM t_emp WHERE comm IS NULL
+AND sal BETWEEN 2000 AND 3000;
+AND ename LIKE &quot;_LAKE&quot;;
+
+SELECT 
+ename,comm,sal
+FROM t_emp WHERE comm IS NULL
+AND sal BETWEEN 2000 AND 3000;
+AND ename REGEXP &quot;^[\\u4e00-\\u9fa5]&#123;2,4&#125;$&quot;; #正则表达汉字范围寻找两到四个中文字符
+</code></pre>
+<h6 id="按位运算符-amp-位与-位或-位取反-位异或-lt-lt-左移-gt-gt-右移"><a href="#按位运算符-amp-位与-位或-位取反-位异或-lt-lt-左移-gt-gt-右移" class="headerlink" title="按位运算符 [&amp;位与  |位或  ~位取反  ^位异或  &lt;&lt;左移  &gt;&gt;右移]"></a>按位运算符 [&amp;位与  |位或  ~位取反  ^位异或  &lt;&lt;左移  &gt;&gt;右移]</h6><p>&lt;&lt; 左移  10&lt;&lt;1 把10转换成二进制位 在最右面补上一个0 整体向左移动了一个单位<br>》》左移  10&lt;&lt;1 把10转换成二进制位 在最右面抹去一个0 整体向右移动了一个单位</p>
+<h3 id="二进制按位运算"><a href="#二进制按位运算" class="headerlink" title="二进制按位运算"></a>二进制按位运算</h3><ul>
+<li>二进制运算的实质是将参与运算的两个操作数，按对应的二进制数逐位进行逻辑运算<br>SELECT 3 &amp; 7;    0011 &amp; 0111 &#x3D; 0011 &#x3D; 3</li>
+</ul>
+<h3 id="数据操作语言：条件查询-二-AND与-OR或-NOT非-XOR异或"><a href="#数据操作语言：条件查询-二-AND与-OR或-NOT非-XOR异或" class="headerlink" title="数据操作语言：条件查询(二) [AND与 OR或 NOT非 XOR异或]"></a>数据操作语言：条件查询(二) [AND与 OR或 NOT非 XOR异或]</h3><pre><code class="sql">查询10和20之外部门的信息
+SELECT
+  ename,deptno,sal
+FROM t_emp
+WHERE NOT deptno IN(10,20) XOR sal&gt;=2000;
+</code></pre>
+<h3 id="WHERE子句的注意事项"><a href="#WHERE子句的注意事项" class="headerlink" title="WHERE子句的注意事项"></a>WHERE子句的注意事项</h3><ul>
+<li>WHERE子句中，条件执行的顺序是从左到右的。所以我们应该把<strong>索引条件，或者筛选掉记录最多的条件</strong>写在最左侧<pre><code class="sql">SELECT empno,ename FROM t_emp
+WHERE ename = &quot;FORD&quot; AND sal &gt;= 2000;
+
+SELECT empno,ename FROM t_emp
+WHERE deptno = 10 AND sal &gt;= 2000;
+</code></pre>
+</li>
+</ul>
+<h3 id="各种子句的执行排序"><a href="#各种子句的执行排序" class="headerlink" title="各种子句的执行排序"></a>各种子句的执行排序</h3><h5 id="FROM-→-WHERE-→-SELECT-→-ORDER-BY-→-LIMIT"><a href="#FROM-→-WHERE-→-SELECT-→-ORDER-BY-→-LIMIT" class="headerlink" title="FROM → WHERE → SELECT → ORDER BY → LIMIT"></a>FROM → WHERE → SELECT → ORDER BY → LIMIT</h5><p>先表 再查出符合条件的记录 才能从中挑选出符合的字段 先排序后限制</p>
+<hr>
+<h1 id="数据库高级内容"><a href="#数据库高级内容" class="headerlink" title="数据库高级内容"></a>数据库高级内容</h1><h3 id="数据操作语言：聚合函数"><a href="#数据操作语言：聚合函数" class="headerlink" title="数据操作语言：聚合函数"></a>数据操作语言：聚合函数</h3><ul>
+<li><p>聚合函数在数据的查询分析中，应用十分广泛。聚合函数可以对<strong>数据求和</strong>、求<strong>最大值</strong>和<strong>最小值</strong>、求<strong>平均值</strong>等等</p>
+</li>
+<li><p>求公司员工的平均月收入是多少？</p>
+<pre><code class="sql">底薪+佣金(不是null)
+SELECT AVG(sal+IFNULL(comm,0)) FROM t_emp;
+</code></pre>
+</li>
+</ul>
+<h5 id="SUM函数"><a href="#SUM函数" class="headerlink" title="SUM函数"></a>SUM函数</h5><ul>
+<li><p>SUM函数用于求和，只能用于数字类型，字符类型的统计结果为0，日期类型统计结果是毫秒数相加</p>
+<pre><code class="sql">SELECT SUM(ename) FROM t_emp
+
+SELECT SUM(sal) FROM t_emp
+WHERE deptno IN (10,20);
+</code></pre>
+</li>
+</ul>
+<h5 id="MAX函数"><a href="#MAX函数" class="headerlink" title="MAX函数"></a>MAX函数</h5><ul>
+<li><p>MAX函数用于获得非空值的最大值</p>
+<pre><code class="sql">SELECT MAX(comm) FORM t_emp;
+
+①查询10和20部门中,月收入最高的员工？
+SELECT 
+MAX(sal+IFNULL(comm,0)) FROM t_temp
+FROM t_emp
+WHERE deptno IN (10,20);
+
+②查询员工名字最长的是几个字符？
+SELECT MAX(LENGTH(ename)) FROM t_emp;
+
+SELECT
+SUM(sal),MAX(sal+IFNULL(comm,0)) 
+FROM t_emp
+WHERE deptno IN(10,20); 
+</code></pre>
+</li>
+</ul>
+<h5 id="MIN函数"><a href="#MIN函数" class="headerlink" title="MIN函数"></a>MIN函数</h5><ul>
+<li><p>MIN函数用于获得非空值的最小值</p>
+<pre><code class="sql">SELECT MIN(empno) FROM t_emp;
+</code></pre>
+</li>
+</ul>
+<h5 id="AVG函数"><a href="#AVG函数" class="headerlink" title="AVG函数"></a>AVG函数</h5><ul>
+<li><p>AVG函数用于获得非空值的平均值，非数字数据统计结果为0</p>
+<pre><code class="sql">SELECT AVG(sal+IFNULL(comm,0)) FROM t_emp;
+</code></pre>
+</li>
+</ul>
+<h5 id="COUNT函数"><a href="#COUNT函数" class="headerlink" title="COUNT函数"></a>COUNT函数</h5><ul>
+<li><p>COUNT(*) [<u>找所有</u>]用于获得包含空值的记录数，COUNT(列名)用于获得包含非空值的记录数</p>
+<pre><code class="sql">SELECT COUNT(*) FROM t_emp; #统计所有   15 
+SELECT COUNT(comm) FROM t_emp; #统计数量是非空   5
+</code></pre>
+</li>
+<li><p>查询10和20部门中，底薪超过2000元并且工龄超过15年的员工人数</p>
+<pre><code class="sql">SELECT COUNT(*) 
+FROM t_emp
+WHERE deptno IN(10,20) 
+AND sal&gt;=2000
+AND DATEDIFF(NOW(),hiredate)/365&gt;=15;
+</code></pre>
+</li>
+<li><p>查询1985年以后入职的员工，底薪超过公司平均底薪的员工数量？</p>
+<pre><code class="sql">×××××××××错误示范×××××××××
+SELECT COUNT(*) FROM t_emp
+WHERE hiredate&gt;=&quot;1985-01-01&quot;
+AND sal&gt;AVG(sal); #AVG无法运行 聚合函数不能出现在WHERE里面
+</code></pre>
+</li>
+</ul>
+<h3 id="数据操作语言：分组查询"><a href="#数据操作语言：分组查询" class="headerlink" title="数据操作语言：分组查询"></a>数据操作语言：分组查询</h3><h6 id="为什么要分组？"><a href="#为什么要分组？" class="headerlink" title="为什么要分组？"></a>为什么要分组？</h6><ul>
+<li>默认情况下汇总函数是对全表范围内的数据做统计</li>
+<li>GROUP BY子句的作用是通过一定的规则将一个数据集划分成若干个小的区域，然后针对每个小区域分别进行数据汇总处理</li>
+</ul>
+<pre><code class="sql">SELECT deptno,ROUND(AVG(sal))
+FROM t_emp
+GROUP BY deptno; #分组来计算AVG
+</code></pre>
+<h3 id="逐级分组"><a href="#逐级分组" class="headerlink" title="逐级分组"></a>逐级分组</h3><ul>
+<li>数据库支持多列分组条件，执行的时候逐级分组</li>
+<li>查询每个部门里，每种职位的人员数量和平均底薪</li>
+</ul>
+<pre><code class="sql">#按照部门和工作分组 ↓这种职位人数 ↓这种职位底薪平均值
+SELECT deptno,job,COUNT(*),AVG(sal)
+FROM t_emp 
+GROUP BY deptno,job
+ORDER BY deptno; #按照deptno去排序
+</code></pre>
+<h3 id="对SELECT子句的要求"><a href="#对SELECT子句的要求" class="headerlink" title="对SELECT子句的要求"></a>对SELECT子句的要求</h3><ul>
+<li>查询语句中如果含有<strong>GROUP BY</strong>子句，那么SELECT子句中的内容就必须要遵守规定：SELECT子句中可以包括聚合函数，或者GROUP BY子句的分组列，其余内容均不可以出现在<strong>SELECT</strong>子句中</li>
+</ul>
+<pre><code class="sql">#正确示范
+SELECT deptno,COUNT(*),AVG(sal)
+FROM t_emp GROUP BY deptno;
+
+#错误示范
+SELECT deptno,COUNT(*),AVG(sal),sal
+FROM t_emp GROUP BY deptno;
+</code></pre>
+<h3 id="对分组结果集再次做汇总计算"><a href="#对分组结果集再次做汇总计算" class="headerlink" title="对分组结果集再次做汇总计算"></a>对分组结果集再次做汇总计算</h3><pre><code class="sql">SELECT 
+deptno,COUNT(*),AVG(sal),MAX(sal),MIN(sal)
+FROM t_emp 
+GROUP BY deptno WITH ROLLUP; #WITH ROLLUP对汇总函数再次进行汇总运算
+</code></pre>
+<h3 id="GROUP-CONCAT函数"><a href="#GROUP-CONCAT函数" class="headerlink" title="GROUP_CONCAT函数"></a>GROUP_CONCAT函数</h3><ul>
+<li><p><strong>GROUP_CONCAT</strong>函数可以把分组查询中的<strong>某个字段拼接成一个字符串</strong></p>
+</li>
+<li><p>查询每个部门内底薪超过2000元的人数和员工姓名</p>
+<pre><code class="sql">SELECT deptno,GROUP_CONCAT(ename),COUNT(*)
+FROM t_emp 
+WHERE sal&gt;=2000
+GROUP BY deptno;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="center">deptno</th>
+<th align="center">COUNT(*)</th>
+<th align="center">GROUP_CONCAT(ename)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">10</td>
+<td align="center">2</td>
+<td align="center">CLARK,KING</td>
+</tr>
+<tr>
+<td align="center">20</td>
+<td align="center">3</td>
+<td align="center">JONES,SCOTT,FORD</td>
+</tr>
+<tr>
+<td align="center">30</td>
+<td align="center">1</td>
+<td align="center">BLAKE</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h3 id="各种子句的执行顺序"><a href="#各种子句的执行顺序" class="headerlink" title="各种子句的执行顺序"></a>各种子句的执行顺序</h3><h5 id="FROM-→-WHERE-→-GROUP-BY-→-SELECT-→-ORDER-BY-→-LIMIT"><a href="#FROM-→-WHERE-→-GROUP-BY-→-SELECT-→-ORDER-BY-→-LIMIT" class="headerlink" title="FROM → WHERE → GROUP BY → SELECT → ORDER BY  → LIMIT"></a>FROM → WHERE → GROUP BY → SELECT → ORDER BY  → LIMIT</h5><p><strong>WHERE</strong>符合的留下来交给<strong>GROUP BY</strong>去分组之后调用<strong>SELECT</strong>中的聚合函数计算 <strong>ORDER BY</strong>子句对结果排序交给<strong>LIMIT</strong>子句来挑选返回哪些数据</p>
+<h3 id="分组查询遇到的困难？"><a href="#分组查询遇到的困难？" class="headerlink" title="分组查询遇到的困难？"></a>分组查询遇到的困难？</h3><ul>
+<li><p>查询部门平均底薪超过2000元的部门编号</p>
+<pre><code class="sql">#错误演示[因为WHERE语句出现了聚合函数]
+SELECT deptno FROM t_emp
+WHERE AVG(sal)&gt;=2000
+GROUP BY deptno;
+</code></pre>
+</li>
+<li><p><strong>HAVING</strong>语句是紧紧跟着<strong>GROUP BY</strong>语句的 <u>HAVING子句可以写聚合函数作为判断条件</u></p>
+<pre><code class="sql">SELECT deptno
+FROM t_emp
+GROUP BY deptno HAVING AVG(sal)&gt;=2000;
+</code></pre>
+</li>
+</ul>
+<h3 id="HAVING子句的用途"><a href="#HAVING子句的用途" class="headerlink" title="HAVING子句的用途"></a>HAVING子句的用途</h3><ul>
+<li><p>查询每个部门中，<u>1982年以后入职的员工$<em>{普通条件可以写在WHERE里}$</u><u>超过2个人</u>$</em>{COUNT(*)&gt;&#x3D;2}$的部门编号<br>不能拿<strong>聚合函数</strong>和<strong>某一个字段</strong>做判断</p>
+<pre><code class="sql">SELECT deptno 
+FROM t_emp
+WHERE hiredate&gt;=&quot;1982-01-01&quot;
+GROUP BY deptno HAVING COUNT(*)&gt;=2;
+ORDER BY deptno ASC;
+
+SELECT deptno 
+FROM t_emp
+WHERE hiredate&gt;=&quot;1982-01-01&quot;
+GROUP BY deptno HAVING COUNT(*)&gt;=2 AND AVG(sal)&gt;=2000;
+</code></pre>
+</li>
+</ul>
+<h3 id="HAVING子句的特殊用法-作用类似于WHERE"><a href="#HAVING子句的特殊用法-作用类似于WHERE" class="headerlink" title="HAVING子句的特殊用法 [作用类似于WHERE]"></a>HAVING子句的特殊用法 [作用类似于WHERE]</h3><ul>
+<li><p>按照数字1分组，MySQL会根据SELECT子句中的列进行分组，HAVING子句也可以正常使用<br>能用WHERE就不要先用HAVING 它的作用是給聚合函数做判断</p>
+<pre><code class="sql">#不推荐写法
+SELECT deptno,COUNT(*) 
+FROM t_emp
+GROUP BY 1 HAVING deptno IN (10,20);
+
+#推荐写法
+SELECT deptno,COUNT(*) 
+FROM t_emp
+WHERE deptno IN(10,20)
+GROUP BY 1;
+</code></pre>
+</li>
 </ul>
 
     </div>
