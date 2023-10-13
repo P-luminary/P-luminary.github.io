@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1262,8 +1262,232 @@ SELECT FLOOR(28.9); #变成28 向上取整
 SELECT CEIL(1.1);   #变成1  向上取整
 </code></pre>
 <h5 id="内连接查询练习2"><a href="#内连接查询练习2" class="headerlink" title="内连接查询练习2"></a>内连接查询练习2</h5><ul>
-<li>查询每种职业的最高工资、最低工资、平均工资、最高工资等级和最低工资等级？<pre><code class="sql">SELECT 
-FROM
+<li><p>查询每种职业的最高工资、最低工资、平均工资、最高工资等级和最低工资等级？</p>
+<pre><code class="sql">SELECT 
+e.job,MAX(e.sal+IFNULL(e,comm,0)),
+MIN(e.sal+IFNULL(e,comm,0)),AVG(e.sal+IFNULL(e,comm,0)),
+MAX(s.grade),MIN(s.grade)
+FROM t_emp e JOIN t_salgrade s
+ON (e.sal+IFNULL(e,comm,0)) BETWEEN s.losal AND s.hisal
+GROUP BY e.job;
+</code></pre>
+</li>
+<li><p>查询每个底薪超过部门平均底薪的员工信息 [<strong>用表连接 而不是子查询</strong>]</p>
+<pre><code class="sql">SELECT e.empno,e.ename,e.sal
+FROM t_emp e JOIN
+(SELECT deptno,AVG(sal) AS avg FROM t_emp GROUP BY dptno) t #别名t
+ON e.deptno=t.deptno AND e.sal&gt;=t.avg;
+</code></pre>
+</li>
+</ul>
+<h3 id="数据操作语言：表链接查询-三"><a href="#数据操作语言：表链接查询-三" class="headerlink" title="数据操作语言：表链接查询(三)"></a>数据操作语言：表链接查询(三)</h3><h5 id="为什么要使用外连接"><a href="#为什么要使用外连接" class="headerlink" title="为什么要使用外连接"></a>为什么要使用外连接</h5><ul>
+<li>如果说陈浩是一名临时人员，没有固定的部门编制(NULL)，那么我们想查询每名员工和他的部门名称，用内连接就会遗漏掉陈浩，所以要引用外连接的语法才能解决这个问题</li>
+</ul>
+<h5 id="外连接简介"><a href="#外连接简介" class="headerlink" title="外连接简介"></a>外连接简介</h5><ul>
+<li><p>外连接与内连接的区别在于，除了符合条件的记录之外，结果集中还会保留不符合条件的记录</p>
+<pre><code class="sql">SELECT e.empno,e.ename,d.dname
+FROM t_emp e  #因为陈浩部门编制是NULL 不能直接JOIN 只能LEFT JOIN
+LEFT JOIN t_dept d ON e.deptno=d.deptno; 
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>7902</th>
+<th>FORD</th>
+<th>RESEARCH</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7934</td>
+<td>MILLER</td>
+<td>ACCOUNTING</td>
+</tr>
+<tr>
+<td>8000</td>
+<td>陈浩</td>
+<td>(<strong>NULL</strong>)</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h3 id="左连接和右连接"><a href="#左连接和右连接" class="headerlink" title="左连接和右连接"></a>左连接和右连接</h3><ul>
+<li><p>左外连接就是保留左表所有的记录，与右表做连接。如果右表有符合条件的记录就与左表连接。如果右表没有符合条件的记录，就用NULL与左表连接。右外连接也是如此。</p>
+<pre><code class="sql">SELECT e.empno,e.ename,d.dname
+FORM t_dept d RIGHT JOIN t_emp e #要保留所有的t_emp e
+ON e.deptno=d.deptno;
+</code></pre>
+</li>
+</ul>
+<h3 id="外连接练习1"><a href="#外连接练习1" class="headerlink" title="外连接练习1"></a>外连接练习1</h3><ul>
+<li><p>查询每个部门的名称和部门的人数？ [40有部门没员工 要保存空值]<br><u>左外连接把部门表写在左侧    右外连接把部门表写在右侧</u></p>
+<pre><code class="sql">SELECT d.dname,COUNT(*)
+FROM t_dept d LEFT JOIN t_emp e #保留左表的所有记录 右表有空
+ON d.deptno=e.deptno
+GROUP BY d.deptno; #因为保留了左表所有记录 所以分组按照部门号分
+#最终有一条t_dept与t_emp中的NULL做连接 所以 COUNT算上此记录
+#若要将右表的NULL值忽略掉 要在COUNT(d.deptno)这样写
+
+SELECT d.dname,COUNT(d.deptno)
+FROM t_dept d LEFT JOIN t_emp e #保留左表的所有记录
+ON d.deptno=e.deptno
+GROUP BY d.deptno;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>dname</th>
+<th>COUNT(d.deptno)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACCOUNTING</td>
+<td>3</td>
+</tr>
+<tr>
+<td>RESEARCH</td>
+<td>5</td>
+</tr>
+<tr>
+<td>SALES</td>
+<td>6</td>
+</tr>
+<tr>
+<td><strong>OPERATIONS</strong></td>
+<td><strong>0</strong></td>
+</tr>
+</tbody></table>
+</li>
+<li><p>查询每个部门的名称和部门的人数？如果没有部门的员工，部门名称用NULL代替</p>
+</li>
+<li><p><strong>UNION关键字</strong>可以将多个查询语句的结果集进行合并</p>
+<pre><code class="sql">(查询语句) UNION (查询语句) UNION (查询语句)...
+（SELECT d.name,COUNT(e.deptno)
+FROM t_dept d LEFT JOIN t_emp e
+ON d.deptno=e.deptno
+GROUP BY d.deptno
+）UNION
+(SELECT d.dname,COUNT(*)
+FROM t_dept d RIGHT JOIN t_emp e
+ON d.deptno=e.deptno
+GROUP BY d.deptno
+);
+</code></pre>
+</li>
+</ul>
+<h3 id="数据库操作语言：表连接查询-四"><a href="#数据库操作语言：表连接查询-四" class="headerlink" title="数据库操作语言：表连接查询(四)"></a>数据库操作语言：表连接查询(四)</h3><ul>
+<li><p>查询每名员工的编号、姓名、部门、月薪、工资等级、工龄、上司编号、上司姓名、上司部门？<br>[不知道：员工信息 员工的上司信息    两个不知道信息是不能使用子查询的  <u>员工表 部门表 公司等级表</u>]</p>
+<pre><code class="sql">#陈浩要保存下来 用外连接
+SELECT
+e.empno,e.ename,d.dname,
+e.sal+IFNULL(e.comm,0),s.grade,
+FLOOR(DATEDIFF(NOW(),e.hiredate)/365),
+t.empno AS mgrno,t.ename AS mname,t.dname AS mdname #定义上司的数据
+FROM t_emp e 
+LEFT JOIN t_dept d ON e.deptno=d.deptno #结果集所有记录保存下来跟工资等级表做连接
+LEFT JOIN t_salgrade s ON e.sal BETWEEN s.losal AND s.hisal
+LEFT JOIN
+(SELECT e1.empno,e1.ename,d1.dname
+FROM t_emp e1 JOIN t_dept d1
+ON e1.deptno=d1.deptno
+)t ON e.mgr=t.empno;
+</code></pre>
+</li>
+</ul>
+<h3 id="外连接的注意事项"><a href="#外连接的注意事项" class="headerlink" title="外连接的注意事项"></a>外连接的注意事项</h3><ul>
+<li><strong>内连接</strong>值保留符合条件的记录，所以查询条件写在ON子句和WHERE子句中的效果是相同的。但是<strong>外连接</strong>里，条件写在WHERE子句里，不符合条件的记录是会被过滤掉的，而不是保留下来的。</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2af31e5baf5f6fc6e517ef9c13f689a8ab3db3a0/data/%E5%86%85%E5%A4%96%E8%BF%9E%E6%8E%A5WHEWE%E5%92%8CON%E7%9A%84%E5%8C%BA%E5%88%AB.png"></p>
+<h3 id="数据操作语言：子查询-一"><a href="#数据操作语言：子查询-一" class="headerlink" title="数据操作语言：子查询(一)"></a>数据操作语言：子查询(一)</h3><p>WHERE中的子查询是需要反复查询的 不推荐使用，但是把它所得的结果集作为一张表跟其他表做连接是推荐的</p>
+<ul>
+<li><p>子查询是一种查询中嵌套查询的语句</p>
+</li>
+<li><p>查询底薪超过公司平均底薪的员工信息</p>
+<pre><code class="sql">SELECT empno,ename,sal
+FORM t_emp
+WHERE sal&gt;=(SELECT AVG(sal) FROM t_emp); #不推荐使用 最好用表连接
+</code></pre>
+</li>
+</ul>
+<h6 id="子查询的分类"><a href="#子查询的分类" class="headerlink" title="子查询的分类"></a>子查询的分类</h6><ul>
+<li>子查询可以写在三个地方：<strong>WHERE子句、FROM子句、SELECT子句</strong>，但是只有FROM子句子查询是最可取的</li>
+</ul>
+<h6 id="WHERE子查询"><a href="#WHERE子查询" class="headerlink" title="WHERE子查询"></a>WHERE子查询</h6><ul>
+<li><p>这种子查询最简单，最容易理解，但是确实<strong>效率很低</strong>的子查询</p>
+</li>
+<li><p>查询底薪超过公司平均底薪的员工信息</p>
+<pre><code class="sql">SELECT empno,ename,sal
+FORM t_emp #↓↓↓↓ 比较每条记录都要重写执行子查询 ↓↓↓↓
+WHERE sal&gt;=(SELECT AVG(sal) FROM t_emp); #不推荐使用 最好用表连接
+</code></pre>
+</li>
+</ul>
+<h6 id="FROM子查询"><a href="#FROM子查询" class="headerlink" title="FROM子查询"></a>FROM子查询</h6><ul>
+<li><p>这种子查询只会执行一次，所以<strong>查询效率很高</strong></p>
+</li>
+<li><p>查询底薪超过公司平均底薪的员工信息</p>
+<pre><code class="sql">SELECT
+e.empno,e.ename,e.sal,t.avg
+FROM t_emp e JOIN
+(SELECT deptno,AVG(sal) AS avg
+FORM t_emp 
+GROUP BY deptno) t #按照部门编号去分组 起别名
+ON e.deptno=t.deptno 
+AND e.sal&gt;=t.avg;
+</code></pre>
+</li>
+</ul>
+<h6 id="SELECT子查询"><a href="#SELECT子查询" class="headerlink" title="SELECT子查询"></a>SELECT子查询</h6><ul>
+<li><p>这种子查询每输出一条记录的时候都要执行一次，<strong>查询效率很低</strong></p>
+<pre><code class="sql">SELECT
+e.empno,
+e.ename,
+(SELECT dname FROM t_dept WHERE deptno=e.deptno)
+FROM t_emp e;
+</code></pre>
+</li>
+</ul>
+<h3 id="数据操作语言：子查询-二"><a href="#数据操作语言：子查询-二" class="headerlink" title="数据操作语言：子查询(二)"></a>数据操作语言：子查询(二)</h3><h5 id="单行子查询和多行子查询-结果集可以作为新表连接"><a href="#单行子查询和多行子查询-结果集可以作为新表连接" class="headerlink" title="单行子查询和多行子查询 [结果集可以作为新表连接]"></a>单行子查询和多行子查询 [结果集可以作为新表连接]</h5><ul>
+<li><p>单行子查询的结果集只有一条记录，多行子查询结果集有多行记录</p>
+</li>
+<li><p>多行子查询只能出现在WHERE子句和FROM子句中</p>
+</li>
+<li><p>如何用子查询查找FORD和MARTIN两个人的同事</p>
+<pre><code class="sql">SELECT ename #排除那俩人之外
+FROM t_emp 
+WHERE
+deptno IN    # deptno = 不行因为后面返回了两条记录
+(SELECT deptno FROM t_emp WHERE ename IN(&quot;FORD&quot;,&quot;MARTIN&quot;)); #返回两条记录
+AND ename NOT IN(&quot;FORD&quot;,&quot;MARTIN&quot;);
+</code></pre>
+</li>
+</ul>
+<h3 id="WHERE子句中的多行子查询"><a href="#WHERE子句中的多行子查询" class="headerlink" title="WHERE子句中的多行子查询"></a>WHERE子句中的多行子查询</h3><ul>
+<li><p>WHERE子句中，可以使用<strong>IN、ALL、ANY、EXISTS</strong>关键字来处理多行表达式结果集的条件判断</p>
+</li>
+<li><p>调查”FORD”和”MARTIN”底薪都高的员工信息</p>
+<pre><code class="sql">SELECT ename 
+FROM t_emp 
+WHERE sal &gt; ALL #ALL是sal里的数比结果集里的所有值都大  ANY则是比任何一个人大
+(SELECT sal FROM t_emp #结果集里返回了多条记录
+WHERE ename IN(&quot;FORD&quot;,&quot;MARTIN&quot;))
+AND ename NOT IN(&quot;FORD&quot;,&quot;MARTIN&quot;); #不包含这俩人
+</code></pre>
+</li>
+</ul>
+<h3 id="EXISTS关键字"><a href="#EXISTS关键字" class="headerlink" title="EXISTS关键字"></a>EXISTS关键字</h3><ul>
+<li><p><strong>EXISTS关键字</strong>是把原来在子查询之外的条件判断，写到了子查询的里面<br>EXISTS用上之后WHERE就不写任何语句了</p>
+<pre><code class="sql">SELECT ... FROM 表名 WHERE [NOT] EXISTS(子查询);
+</code></pre>
+</li>
+<li><p>查询工资等级是3级或者4级的员工信息</p>
+<pre><code class="sql">#排斥此方法 效率低下
+SELECT
+FROM t_emp
+WHERE EXISTS(
+SELECT * FROM t_salgrade
+WHERE sal BETWEEN losal AND hisal 
+AND grade IN(3,4)
+);
 </code></pre>
 </li>
 </ul>
