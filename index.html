@@ -1511,6 +1511,197 @@ AND grade IN(3,4)
 </code></pre>
 </li>
 </ul>
+<h1 id="MySQL对数据的基本操作"><a href="#MySQL对数据的基本操作" class="headerlink" title="MySQL对数据的基本操作"></a>MySQL对数据的基本操作</h1><h3 id="数据操作语言：INSERT语句"><a href="#数据操作语言：INSERT语句" class="headerlink" title="数据操作语言：INSERT语句"></a>数据操作语言：INSERT语句</h3><ul>
+<li><p><strong>INSERT</strong>语句可以向数据表写入记录，可以是一条记录，也可以是多条记录</p>
+<pre><code class="sql">INSERT INTO 表名(字段1,字段2,......) #添加字段可以快速写入 
+VALUES(值1,值2,......);
+
+INSERT INTO 表名(字段1,字段2,......) 
+VALUES(值1,值2,......),(值1,值2,......); #多条记录
+
+INSERT INTO t_dept(deptno,dname,loc)
+VALUES(520,&quot;研发部&quot;,&quot;河北&quot;),(250,&quot;销售部&quot;,&quot;江西&quot;);
+
+#向技术部添加一条员工记录 
+#[技术部编号不知道 子查询技术部的编号 结果 写到VALUES子句里面通过INSERT插入员工表里面]
+INSERT INTO t_emp
+(empno,ename,job,mgr,hiredate,sal,comm,deptno)
+VALUES(8001,&quot;潘春尧&quot;,&quot;SALESMAN&quot;,8000,&quot;2023-10-15&quot;,2000,NULL,
+(SELECT deptno FROM t_dept WHERE dname=&quot;技术部&quot;)); #子查询单个结果返回
+</code></pre>
+</li>
+</ul>
+<h3 id="INSERT语法方言"><a href="#INSERT语法方言" class="headerlink" title="INSERT语法方言"></a>INSERT语法方言</h3><ul>
+<li><p>MySQL的INSERT语句有一种方言语法</p>
+<pre><code class="sql">INSERT INTO 表名 SET 字段1=值1,字段2=值2,......; #只适合Mysql数据库
+
+(INSERT) INTO t_emp
+SET empno=8002,ename=&quot;JACK&quot;,job=&quot;SLAESMAN&quot;,mgr=8000,
+hiredate=&quot;1985-01-01&quot;,sal=2500,comm=NULL,deptno=50;
+
+DELETE FROM t_emp WHERE empno=8002;
+</code></pre>
+</li>
+</ul>
+<h3 id="IGNORE关键字"><a href="#IGNORE关键字" class="headerlink" title="IGNORE关键字"></a>IGNORE关键字</h3><ul>
+<li><p><strong>IGNORE</strong>关键字会让<strong>INSERT</strong>只插入数据库不存在的记录</p>
+<pre><code class="sql">INSERT [IGNORE] INTO 表名...;
+INSERT IGNORE INTO t_dept(deptno,dname,loc)
+VALUES(40,&quot;技术部&quot;,&quot;北京&quot;); #40编号是主键被占用了 和已经现存的记录有冲突
+
+#运用方言写
+INSERT IGNORE INTO t_dept
+SET deptno=40,dname=&quot;技术部&quot;,loc=&quot;北京&quot;;
+
+#多重数据忽略不正确的数据
+INSERT IGNORE INTO t_dept(deptno,dname,loc)
+VALUES(40,&quot;A&quot;,&quot;北京&quot;),(80,&quot;B&quot;,&quot;上海&quot;);
+
+#VALUES(40,&quot;A&quot;,&quot;北京&quot;),(80,&quot;B&quot;,&quot;上海&quot;)
+#&gt; Affected rows: 1
+#&gt; 时间: 0.002s
+</code></pre>
+</li>
+</ul>
+<h3 id="数据操作语言：UPDATE语句-一"><a href="#数据操作语言：UPDATE语句-一" class="headerlink" title="数据操作语言：UPDATE语句(一)"></a>数据操作语言：UPDATE语句(一)</h3><ul>
+<li><p>UPDATE语句用于修改表的记录<br><strong>UPDATE</strong>中的<strong>NIGNORE</strong>直接忽略冲突的语句</p>
+<pre><code class="sql">UPDATE [IGNORE] 表名
+SET 字段1=值1，字段2=值2,......
+[WHERE 条件1...] #有条件的修改记录
+[ORDER BY...] #对数据先排序 后修改员工编号＋1 
+[LIMIT...]; #取分页数据
+
+#把每个员工的编号和上司的编号+1，用ORDER BY子句完成
+UPDATE t_emp 
+SET empno=empno+1,mgr=mgr+1
+ORDER BY empno DESC;
+
+#把用收入前三名的员工底薪减100元，用LIMIT子句完成
+UPDATE t_emp
+SET sal=sal-100 
+ORDER BY sal+IFNULL(comm,0) DESC #降序 
+LIMIT 3; #取前三条记录
+</code></pre>
+</li>
+</ul>
+<h3 id="UPDATE语句的表连接-一"><a href="#UPDATE语句的表连接-一" class="headerlink" title="UPDATE语句的表连接(一)"></a>UPDATE语句的表连接(一)</h3><ul>
+<li><p>因为相关子查询效率非常低，所以我们可以利用表连接的方式来改造UPDATE语句</p>
+<pre><code class="sql">UPDATE 表1 JOIN 表2 ON 条件
+SET 字段1=值1,字段2=值2,......;
+</code></pre>
+</li>
+<li><p>表连接的UPDATE语句可以修改多张表的记录[<strong>进化</strong>]</p>
+<pre><code class="sql">UPDATE 表1,表2
+SET 字段1=值1,字段2=值2,......
+WHERE 连接条件;
+
+#把ALLEN调往RESEARCH部门，职务调整为ANALYST
+[员工表+部门表]
+UPDATE t_emp e JOIN t_dept d
+SET e.deptno=d.deptno
+WHERE e.ename=&quot;ALLEN&quot; AND d.dname=&quot;RESEARCH&quot;
+#//在t_emp表中找到ALLEN + 在t_dept表中找到RESEARCH 
+#//然后把d.deptno赋值給e.deptno
+
+UPDATE t_emp e JOIN t_dept d
+SET e.deptno=d.deptno,e.job=&quot;ANALYST&quot;,d.loc=&quot;北京&quot;
+WHERE e.ename=&quot;ALLEN&quot; AND d.dname=&quot;RESEARCH&quot;
+</code></pre>
+</li>
+<li><p>把底薪低于公司平均底薪的员工，底薪增加150元<br>[运用<strong>表连接</strong>的方法比<strong>WHERE语句</strong>的效率高]</p>
+<pre><code class="sql">UPDATE t_emp e JOIN
+(SELECT AVG(sal) AS avg FROM t_emp) t
+ON e.sal&lt;t.avg
+SET e.sal=e.sal+150;
+</code></pre>
+</li>
+</ul>
+<h3 id="UPDATE语句的表连接-二"><a href="#UPDATE语句的表连接-二" class="headerlink" title="UPDATE语句的表连接(二)"></a>UPDATE语句的表连接(二)</h3><ul>
+<li><p>UPDATE语句的表连接既可以是内连接，又可以是外连接</p>
+<pre><code class="sql">UPDATE 表1[LEFT|RIGHT] JOIN 表2 ON 条件 
+SET 字段1=值1,字段2=值2,...;
+</code></pre>
+</li>
+<li><p>把没有部门的员工，或者SALES部门低于2000元底薪的员工，都调往20部门<br>[把所有员工保留下来 但是陈浩没有部门 用内连接的话会把陈浩忽略掉 要用<strong>左外连接</strong>把左表所有数据保留下来再去跟部门表作连接]</p>
+<pre><code class="sql">#把没有部门的员工，或者SALES部门低于2000元底薪的员工，都调往20部门
+UPDATE t_emp e LEFT JOIN t_dept d ON e.deptno=d.deptno #连接条件 不符合的也保留
+SET e.deptno=202
+WHERE e.deptno IS NULL OR (d.dname=&quot;SALES&quot; AND e.sal&lt;2000);
+</code></pre>
+</li>
+</ul>
+<h3 id="数据操作语言：-DELETE语句-一"><a href="#数据操作语言：-DELETE语句-一" class="headerlink" title="数据操作语言： DELETE语句(一)"></a>数据操作语言： DELETE语句(一)</h3><ul>
+<li>DELETE语句用于删除记录<pre><code class="sql">DELETE [IGNORE] FROM 表名
+[WHERE 条件1,条件2,...] #按照条件删除记录
+[ORDER BY...] #排序后删除
+[LIMIT...]; #分页 工资降序排序 排在前五名的删掉
+#顺序依次向下 最后一个是DELETE
+</code></pre>
+</li>
+</ul>
+<h6 id="练习1"><a href="#练习1" class="headerlink" title="练习1"></a>练习1</h6><ul>
+<li><p>删除10部门中，工龄超过20年的员工记录</p>
+<pre><code class="sql">DELETE FROM t_emp
+WHERE deptno=10 AND DATEDIFF(NOW(),hiredate)/365&gt;=20;
+</code></pre>
+</li>
+<li><p>删除20部门中工资最高的员工记录</p>
+<pre><code class="sql">DELETE FROM t_emp
+WHERE deptno=20
+ORDER BY sal+IFNULL(comm,0) DESC
+LIMIT 1;
+</code></pre>
+</li>
+</ul>
+<h3 id="DELETE语句的表连接-一"><a href="#DELETE语句的表连接-一" class="headerlink" title="DELETE语句的表连接(一)"></a>DELETE语句的表连接(一)</h3><ul>
+<li><p>因为相关子查询效率非常低，所有我们可以利用表连接的方法来改造<strong>DELETE</strong>语句</p>
+<pre><code class="sql">DELETE 表1,...FROM 表1 JOIN 表2 ON 条件 #删除哪张表记录的操作
+[WHERE 条件1,条件2,...]
+[ORDER BY...]
+[LIMIT...];
+
+#删除SALES部门和该部门的全部员工记录
+#无需外连接 因为没有部门需要不删除的
+DELETE e,d
+FROM t_emp e JOIN t_dept d NO e.deptno=d.deptno #部门名称
+WHERE d.dname=&quot;SALES&quot;;
+</code></pre>
+</li>
+<li><p>删除<strong>SALES部门</strong>和该部门的全部员工记录[<strong>表连接</strong>]</p>
+<pre><code class="sql">DELETE e
+FROM t_emp e JOIN
+(SELECT deptno,AVG(sal) AS sal FROM t_emp GOURP BY deptno)
+ON e.deptno=t.deptno AND e.sal&lt;t.sal
+</code></pre>
+</li>
+<li><p>删除员工KING和他的直接下属的员工记录，用表连接实现</p>
+<pre><code class="sql">DELETE e
+FROM t_emp e JOIN
+(SELECT empno FROM t_emp WHERE ename=&quot;KING&quot;) t
+ON e.mgr=t.empno OR e.empno=t.empno; #KING的下属 OR KING这个人
+</code></pre>
+</li>
+</ul>
+<h3 id="DELETE语句的表连接-二"><a href="#DELETE语句的表连接-二" class="headerlink" title="DELETE语句的表连接(二)"></a>DELETE语句的表连接(二)</h3><ul>
+<li><p>DELETE语句的表连接既可以是内连接，又可以是外连接</p>
+<pre><code class="sql">DELETE 表1,... FROM 表1 [LEFT|RIGHT] JOIN 表2 ON 条件...;
+</code></pre>
+</li>
+<li><p>删除SALES部门的员工，以及没有部门的员工 [左外 因为陈浩没部门要保留 外连接(不可用内连接)]</p>
+<pre><code class="sql">DELETE e
+FROM t_emp e LEFT JOIN t_dept d ON e.deptno=d.deptno
+WHERE d.dname=&quot;SALES&quot; OR e.deptno IS NULL
+</code></pre>
+</li>
+</ul>
+<h3 id="快速删除数据表全部记录"><a href="#快速删除数据表全部记录" class="headerlink" title="快速删除数据表全部记录"></a>快速删除数据表全部记录</h3><ul>
+<li><p>DELETE语句实在事务机制下删除记录，删除记录之前，先把将要删除的记录保存到日志文件里面，然后删除记录</p>
+</li>
+<li><p>TRUNCATE语句再事务机制之外删除记录，速度大于DELETE语句</p>
+<pre><code class="sql">TRUNCATE TABLE 表名;
+</code></pre>
+</li>
+</ul>
 
             
         </div>
@@ -1525,7 +1716,7 @@ AND grade IN(3,4)
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -4218,7 +4409,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -6318,7 +6509,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -7286,7 +7477,7 @@ public class ChannelServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -7960,7 +8151,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -11110,7 +11301,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -14492,7 +14683,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -14654,6 +14845,12 @@ public interface ArrayBuilder &#123;
 <hr>
 <p><strong><span style = "color : red">2023.10.12</span></strong></p>
 <p>早饭吃了倆包子+一个煎饺 蛮好吃，宝宝不知道吃了什么不知名的东东还有个茶叶大蛋，宝宝买票票了，去武功山的票票，10月15日的反票，中午点了一份拼好饭 还不错耶，加了一根烤肠。今天宝宝给我买的披萨饼干到了噢，真的超级着急直接出了快递站就立刻打开了包装，在外面吃了一个，好好吃耶！里面有20块，香香甜甜的小饼干。大坚果好大一颗镶在饼干上，真的很好看，嘿嘿 没给室友要自己偷偷的吃！晚上宝宝已经开始准备爬山的东西了，充电宝要带大款的噢，水尽量多带一点点。宝宝的干粮买来都差不多吃完了，再去进一点，但是好担心宝宝的书包好重┭┮﹏┭┮ 好想陪着宝宝去帮着宝宝背着包裹。犯人该死的学校啊啊啊啊啊啊啊啊</p>
+<hr>
+<p><strong><span style = "color : red">2023.10.13</span></strong></p>
+<p>哦耶，今天终于周五咯，熬到头了。下午庆祝的睡了俩小时 做了一个梦，醒来后去跟室友吃了张亮麻辣烫。很舒服 很喜欢放假！！晚上和宝宝打电话咯，也打视频咯，好久没见到可爱的宝宝了，真的很想，一开始宝宝没有好好的理我，┭┮﹏┭┮好委屈，后来宝宝开心的理我啦。我也很开心，之后抖音打视频咯！宝宝明天粗去丸，好羡慕，我室友好像明天早上5点起床5：30准备去工作，因为学校6点开门嘛，然后去和宿管商量，因为就早了半个小时嘛，但是宿管不让，不给开门，说要家长给班导请假后截图发过来给宿管然后宿管确认后才可以。再一次体验到学校的极度傻逼！！！我真的是醉了！！宝宝准备写贫困档案了，看起来好多，宝宝加油！</p>
+<hr>
+<p><strong><span style = "color : red">2023.10.15</span></strong></p>
+<p>昨天晚上陪着宝宝到了一点多，还是不小心睡着了。宝宝她们夜爬武功山，第二天醒来的时候，看到宝宝给我发了很多条信息很开心，看到了云海，还有其他很多很多，听宝宝描述了许多事情，也同时看清楚了一些人，qaq 听完之后不太敢去了。宝宝她们昨天晚上一整晚都在地上坐着，而且山上很冷很冷，就硬生生坐了几个小时。我靠，我真的很佩服她们能夜爬成功登顶武功山，把武功山踩在了脚下。后来下山的时候，下了一半，坐了一半索道。好家伙，听宝宝说排了3-4个小时，感觉宝宝这次之旅带了两个”拖油瓶”，哼，我说的，真的是，如果不是那两个人 宝宝也不至于那么身心疲惫，气死我了，我真的想去，和宝宝一起啊啊啊啊啊啊啊啊啊啊。和心爱的宝宝一起看云海那该是一件多么浪漫的事情啊。宝宝发烧了。头有些热，最后宝宝和lx回来了。正好回来的时候红心柚子也到了，宝宝拖着疲惫的身体去拿了一下水果 感觉好沉，然后宝宝回宿舍了。可能一天累到了 宝宝也没怎么理我 呜呜呜，水果也没吃，去睡觉惹。我们晚上打比赛，居然赢了。啊嘞，对面可是好多高段位的人，皮肤都非常炫酷，我中路争取不給队友捣乱 在塔下苟活。最终还能赢是真没想到的。好想宝宝。宝宝想你了！</p>
 
             
         </div>
@@ -17322,7 +17519,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#ff7d73>
+            <a href="/tags/政治" style=color:#00bcd4>
                 政治
             </a>
         </span>
