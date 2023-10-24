@@ -304,7 +304,7 @@
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -807,7 +807,50 @@ conn.setAutoCommit(true)
 conn.setAutoCommit(false)
 </code></pre>
 <p>​        手动提交事务可保证多数据一致性，但必须手动调用提交&#x2F;回滚方法</p>
-<h3 id="实现批量增加员工"><a href="#实现批量增加员工" class="headerlink" title="实现批量增加员工"></a>实现批量增加员工</h3>
+<h3 id="实现批量增加员工"><a href="#实现批量增加员工" class="headerlink" title="实现批量增加员工"></a>实现批量增加员工</h3><pre><code class="sql">package test;
+
+import common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class TransactionSample &#123;
+    public static void main(String[] args) &#123;
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123; //JDBC默认使用自动提交模式
+            conn = DbUtils.getConnection();
+            conn.setAutoCommit(false); //关闭自动提交
+            String sql = &quot;insert ignore into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            for (int i = 1000; i &lt; 2000; i++) &#123;
+                if (i==1005)&#123;
+//                    throw new RuntimeException(&quot;插入失败&quot;);
+                &#125;
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1,i);
+                pstmt.setString(2,&quot;员工&quot; + i);
+                pstmt.setFloat(3,4000f);
+                pstmt.setString(4,&quot;市场部&quot;);
+                pstmt.executeUpdate();
+            &#125;
+            conn.commit(); //提交数据
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback(); //回滚数据
+                &#125;
+            &#125; catch (SQLException ex) &#123;
+                throw new RuntimeException(ex);
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+
             
         </div>
     </div>
@@ -821,7 +864,7 @@ conn.setAutoCommit(false)
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -3188,7 +3231,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5883,7 +5926,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -9964,7 +10007,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13114,7 +13157,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -16705,7 +16748,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#ffa2c4>
+            <a href="/tags/随笔" style=color:#00bcd4>
                 随笔
             </a>
         </span>
