@@ -1185,12 +1185,347 @@ public class PaginationCommand implements Command&#123;
     &#125;
 &#125;
 </code></pre>
+<h6 id="DbUtils【通用】"><a href="#DbUtils【通用】" class="headerlink" title="DbUtils【通用】"></a>DbUtils【通用】</h6><pre><code class="sql">DbUtils.java
+package common;
+
+import kotlin.Result;
+
+import java.sql.*;
+
+public class DbUtils &#123;
+    /**
+     * 创建新的数据库连接
+     * @return 新的Connection对象
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
+    public static Connection getConnection() throws ClassNotFoundException, SQLException &#123;
+        //1. 加载并注册JDBC驱动
+        Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+        //2. 创建数据库连接
+        Connection conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&quot;, &quot;root&quot;, &quot;root&quot;);
+        return conn;
+    &#125;
+
+    /**
+     * 关闭连接，释放资源
+     * @param rs 结果集对象
+     * @param stmt Statement对象
+     * @param conn Connection对象
+     */
+    public static void closeConnection(ResultSet rs, Statement stmt, Connection conn)&#123;
+        try &#123;
+            if(rs != null)&#123;
+                rs.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(stmt != null)&#123;
+                stmt.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(conn != null &amp;&amp; !conn.isClosed() ) &#123;
+                conn.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="Employee（entity）"><a href="#Employee（entity）" class="headerlink" title="Employee（entity）"></a>Employee（entity）</h6><pre><code class="sql">package common.entity;
+
+import java.util.Date;
+
+/**
+ * 员工实体类
+ */
+public class Employee &#123;
+    /**
+     * 1. 具备默认构造函数
+     * 2. 属性私有
+     * 3. 存在getter与setter
+     */
+    public Employee()&#123;
+
+    &#125;
+    //通常和数据库数据一一对应
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+    private Date hiredate;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+
+    public Date getHiredate() &#123;
+        return hiredate;
+    &#125;
+
+    public void setHiredate(Date hiredate) &#123;
+        this.hiredate = hiredate;
+    &#125;
+&#125;
+</code></pre>
 <h3 id="阿里巴巴Druid连接池-类似于施工仓库-在启动应用时创建连接池"><a href="#阿里巴巴Druid连接池-类似于施工仓库-在启动应用时创建连接池" class="headerlink" title="阿里巴巴Druid连接池[类似于施工仓库 在启动应用时创建连接池]"></a>阿里巴巴Druid连接池[类似于施工仓库 在启动应用时创建连接池]</h3><p>JDBC先去创建与数据库的连接 比较浪费资源和时间</p>
 <ul>
 <li>Druid是阿里巴巴开源连接池组件，是最好的连接池之一</li>
 <li>Druid对数据库连接进行有效管理与重用，最大化程序执行效率</li>
 <li>连接池负责创建管理连接，程序只负责取用和归还</li>
 </ul>
+<p>&#x2F;druid-config.properties要放到resources文件夹内</p>
+<pre><code class="sql">druid-config.properties
+
+driverClassName=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true
+username=root
+password=root
+initialSize=10 #初始数量
+maxActive=20 #数据库最大连接数量
+#最好初始数量=最大数量 一开始j
+</code></pre>
+<pre><code class="sql">DruidSample.java
+package test;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import common.DbUtils;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Properties;
+
+public class DruidSample &#123;
+    public static void main(String[] args) &#123;
+        //1.加载属性文件
+        Properties properties = new Properties();
+        String propertyFile = DruidSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        //空格-&gt;%20 会被转换
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile,&quot;UTF-8&quot;); //%20还原回去
+            properties.load(new FileInputStream(propertyFile));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //2.获取DataSource数据源对象
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            //3.创建数据库连接
+            conn = dataSource.getConnection();
+            pstmt = conn.prepareStatement(&quot;select * from employee limit 0,100&quot;);
+            rs = pstmt.executeQuery();
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(eno + &quot;-&quot; + ename + &quot;-&quot; + salary + &quot;-&quot; + dname);
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="扩展知识：C3P0连接池"><a href="#扩展知识：C3P0连接池" class="headerlink" title="扩展知识：C3P0连接池"></a>扩展知识：C3P0连接池</h3><p>不用属性文件，改用<strong>c3p0-config.xml</strong>保存文件</p>
+<blockquote>
+<p>在里面&amp;无法转义 要写成  ‘ <u>&amp; amp;</u> ‘</p>
+</blockquote>
+<h6 id="idea-C3P0时出现java-sql-SQLException-No-suitable-driver的几种解决办法"><a href="#idea-C3P0时出现java-sql-SQLException-No-suitable-driver的几种解决办法" class="headerlink" title="idea C3P0时出现java.sql.SQLException: No suitable driver的几种解决办法"></a>idea C3P0时出现java.sql.SQLException: No suitable driver的几种解决办法</h6><blockquote>
+<p>1、对lib包Add as library<br>2、<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=c3p0&spm=1001.2101.3001.7020">c3p0</a>-config.xml<strong>必须放在source目录下</strong>，在此目录会被自动读取<br>3、c3p0命名必须是c3p0-config.xml（至少<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=xml%E6%A0%BC%E5%BC%8F&spm=1001.2101.3001.7020">xml格式</a>是这样）<br>4、c3p0-config.xml文件配置错误、书写错误</p>
+</blockquote>
+<pre><code class="sql">c3p0-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;c3p0-config&gt;
+    &lt;default-config&gt;
+        &lt;property name=&quot;driverClass&quot;&gt;com.mysql.cj.jdbc.Driver&lt;/property&gt;
+        &lt;property name=&quot;jdbcUrl&quot;&gt;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&lt;/property&gt;
+        &lt;property name=&quot;user&quot;&gt;root&lt;/property&gt;
+        &lt;property name=&quot;password&quot;&gt;root&lt;/property&gt;
+        &lt;!-- 连接池初始连接数量 --&gt;
+        &lt;property name=&quot;initialPoolSize&quot;&gt;10&lt;/property&gt;
+        &lt;!--最大连接数量--&gt;
+        &lt;property name=&quot;maxPoolSize&quot;&gt;20&lt;/property&gt;
+    &lt;/default-config&gt;
+&lt;/c3p0-config&gt;
+</code></pre>
+<pre><code class="sql">C3P0Sample.java
+package test;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import common.DbUtils;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class C3P0Sample &#123;
+    public static void main(String[] args) &#123;
+        //1.加载配置文件
+        //2.创建DataSource
+        DataSource dataSource = new ComboPooledDataSource();
+        //3.得到数据库连接
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            conn = dataSource.getConnection();
+            pstmt = conn.prepareStatement(&quot;select * from employee limit 0,10&quot;);
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(eno + &quot;-&quot; + ename + &quot;-&quot; + salary + &quot;-&quot; + dname);
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn); //将数据库连接回收到连接池中而不是真正关闭
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Apache-Commos-DBUtils"><a href="#Apache-Commos-DBUtils" class="headerlink" title="Apache Commos DBUtils"></a>Apache Commos DBUtils</h3><ul>
+<li>commons-dbutils是Apache提供的开源JDBC工具类库</li>
+<li>它是对JDBC的简单封装，学习成本极低</li>
+<li>使用commons-dbutils可以极大简化JDBC编码工作量</li>
+</ul>
+<pre><code class="sql">DbUtilsSample.java 【对数据的查询与更新】
+package test;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import common.DbUtils;
+import common.entity.Employee;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * Apache DBUtils + Druid 联合使用演示
+ */
+public class DbUtilsSample &#123;
+    private static void query()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile, &quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile));
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            //利用Apache DbUtils大幅简化了数据的提取过程
+            QueryRunner qr = new QueryRunner(dataSource); //查询执行者  ↓连接自动关闭 不用手动写代码
+            List&lt;Employee&gt; list = qr.query(&quot;select * from employee limit ?,10&quot;,
+                    new BeanListHandler&lt;&gt;(Employee.class),
+                    new Object[]&#123;10&#125;);//没有结果集只能new 结果自动转换成List实体类 后面的是问号赋值
+            for (Employee emp : list)&#123;
+                System.out.println(emp.getEname());
+            &#125;
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+    private static void update()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        Connection conn = null;
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile,&quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile)); //文件加载
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);//利用工厂类对properties信息进行载入创建对应的datasource对象
+            conn = dataSource.getConnection();//获取数据库连接
+            conn.setAutoCommit(false);
+            String sql1 = &quot;update employee set salary=salary+1000 where eno=?&quot;;
+            String sql2 = &quot;update employee set salary=salary-599 where eno=?&quot;;
+            QueryRunner qr = new QueryRunner();
+            qr.update(conn, sql1, new Object[]&#123;1000&#125;);//写入表操作都用update
+            qr.update(conn, sql2, new Object[]&#123;1001&#125;);//分别完成加工资和减工资的操作
+            conn.commit();//如果都执行成功 就提交 否则回滚
+        &#125; catch (Exception e) &#123;
+           e.printStackTrace();
+            try &#123;
+                if (conn!=null &amp;&amp; !conn.isClosed())&#123;
+                    conn.rollback();
+                &#125;
+            &#125; catch (SQLException e1) &#123;
+                e1.printStackTrace();
+            &#125;
+        &#125;finally &#123;
+            try &#123;
+                if (conn!=null &amp;&amp; !conn.isClosed())&#123;
+                    conn.close(); //对数据库进行回收
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                throw new RuntimeException(e);
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+//        query();
+        update();
+    &#125;
+
+&#125;
+</code></pre>
 
             
         </div>
@@ -1205,7 +1540,7 @@ public class PaginationCommand implements Command&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -3572,7 +3907,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -6267,7 +6602,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -9674,7 +10009,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -10348,7 +10683,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -16880,7 +17215,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -17092,7 +17427,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/随笔" style=color:#00bcd4>
+            <a href="/tags/随笔" style=color:#ff7d73>
                 随笔
             </a>
         </span>
@@ -19467,7 +19802,7 @@ class SqlServerFactory implements IFactory
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#879cff>
                 软考
             </a>
         </span>
