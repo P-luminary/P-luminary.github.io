@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -389,7 +389,7 @@ Packaging: jar
         int b = scanner.nextInt();
         MathOperation mathOperation = null;
         try &#123;
-            mathOperation = (MathOperation) Class.forName(&quot;com.imooc.reflect.&quot; + op).newInstance(); //class.forName加载指定的类 ****
+            mathOperation = (MathOperation) Class.forName(&quot;com.imooc.reflect.&quot; + op).newInstance(); //class.forName加载指定的类 实例化对象 运行时动态决定op创建哪些对象 访问哪些属性****
         &#125;catch(Exception e)&#123;
             System.out.println(&quot;无效的计算类&quot;);
             return;
@@ -397,6 +397,639 @@ Packaging: jar
         float result = mathOperation.operate(a, b);
         System.out.println(result); 
     &#125;
+</code></pre>
+<h3 id="反射的核心类"><a href="#反射的核心类" class="headerlink" title="反射的核心类"></a>反射的核心类</h3><h5 id="Class类"><a href="#Class类" class="headerlink" title="Class类"></a><strong>Class类</strong></h5><p>Class是JVM中代表”类和接口”的类<br>Class对象具体包含了某个特定类的结构信息<br>通过Class对象可获取对应类的构造方法&#x2F;方法&#x2F;成员变量</p>
+<h6 id="Class核心方法"><a href="#Class核心方法" class="headerlink" title="Class核心方法"></a><span style = "color : red">Class核心方法</span></h6><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Class.forName() [传入完整类名包括包]</td>
+<td>静态方法,用于获取指定Class对象</td>
+</tr>
+<tr>
+<td>classObj.newInstance()</td>
+<td>通过<strong>默认构造方法创建新的对象</strong></td>
+</tr>
+<tr>
+<td>classObj.getConstructor()</td>
+<td>获得指定的public修饰构造方法Constructor对象</td>
+</tr>
+<tr>
+<td>classObj.getMethod()</td>
+<td>获取指定的public修饰方法Method对象</td>
+</tr>
+<tr>
+<td>classObj.getField()</td>
+<td>获取指定的public修饰成员变量Field对象</td>
+</tr>
+</tbody></table>
+<pre><code class="java">Employee.java
+package com.imooc.reflect.entity;
+
+public class Employee &#123;
+    static &#123;//静态块初始化
+        System.out.println(&quot;Employee类已被加载到jvm,并已初始化&quot;);
+    &#125;
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+
+    public Employee() &#123;
+        System.out.println(&quot;Employee默认构造方法已被执行&quot;);
+    &#125;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">ClassSample.java
+package com.imooc.reflect;
+
+import com.imooc.reflect.entity.Employee;
+
+public class ClassSample &#123;
+    public static void main(String[] args) &#123;
+        try &#123;
+            //Class.forName()方法将指定的类加载到jvm,并返回对应Class对象
+            Class employeeClass = Class.forName(&quot;com.imooc.reflect.entity.Employee&quot;);
+            System.out.println(&quot;Employee已被加载到jvm&quot;);
+            //newInstance通过默认构造方法创建新的对象
+            Employee emp = (Employee)employeeClass.newInstance();
+            System.out.println(emp);
+        &#125; catch (ClassNotFoundException e) &#123;
+            //类名与类路径书写错误时抛出&quot;类无法找到&quot;异常
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            //对象无法被实例化，抛出&quot;实例化异常&quot;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            //非法访问异常 在程序外或作用域外访问对象或成员变量时抛出
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+</code></pre>
+<h5 id="Constructor构造方法类"><a href="#Constructor构造方法类" class="headerlink" title="Constructor构造方法类"></a><strong>Constructor构造方法类</strong></h5><ul>
+<li>Constructor类是对Java类中的构造方法的抽象</li>
+<li>Contructor对象包括了具体类的某个具体构造方法的声明</li>
+<li>通过Constructor对象调用带参构造方法创建对象</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>classObj.getConstructor()</td>
+<td>获取指定public修饰的构造方法对象</td>
+</tr>
+<tr>
+<td>constructorObj.newInstance()</td>
+<td>通过对应的构造方法创建对象</td>
+</tr>
+</tbody></table>
+<pre><code class="java">Employee.java
+package com.imooc.reflect.entity;
+
+public class Employee &#123;
+    static &#123;//静态块初始化
+        System.out.println(&quot;Employee类已被加载到jvm,并已初始化&quot;);
+    &#125;
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+
+    public Employee() &#123;
+        System.out.println(&quot;Employee默认构造方法已被执行&quot;);
+    &#125;
+
+    public Employee(Integer eno, String ename, Float salary, String dname) &#123;
+        this.eno = eno;
+        this.ename = ename;
+        this.salary = salary;
+        this.dname = dname;
+        System.out.println(&quot;Employee带参构造方法已被执行&quot;);
+    &#125;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;eno=&quot; + eno +
+                &quot;, ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
+                &quot;, salary=&quot; + salary +
+                &quot;, dname=&#39;&quot; + dname + &#39;\&#39;&#39; +
+                &#39;&#125;&#39;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">ConstructorSample.java
+package com.imooc.reflect;
+
+import com.imooc.reflect.entity.Employee;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
+public class ConstructorSample &#123;
+    public static void main(String[] args) &#123;
+        try &#123;
+            Class employeeClass = Class.forName(&quot;com.imooc.reflect.entity.Employee&quot;);
+            Constructor constructor = employeeClass.getConstructor(new Class[]&#123; //得到对应的class对象
+                    Integer.class, String.class, Float.class, String.class
+            &#125;);
+            Employee employee = (Employee) constructor.newInstance(new Object[]&#123;
+                    100, &quot;李磊&quot;, 3000f, &quot;研发部&quot;
+            &#125;);
+            System.out.println(employee);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+            //类名与类路径书写错误时抛出&quot;类无法找到&quot;异常
+        &#125; catch (NoSuchMethodException e) &#123;
+            //没有找到与之对应格式的写法
+            throw new RuntimeException(e);
+        &#125; catch (InvocationTargetException e) &#123;
+            //当被调用的方法的内部抛出了异常而没有被捕获时
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            //对象无法被实例化，抛出&quot;实例化异常&quot;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            //非法访问异常 在程序外或作用域外访问对象或成员变量时抛出
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Method类"><a href="#Method类" class="headerlink" title="Method类"></a><strong>Method类</strong></h5><ul>
+<li>Method对象指代某个类中的方法的描述</li>
+<li>Method对象使用classObj.getMethod()方法获取</li>
+<li>通过Method对象调用指定对象的对应方法</li>
+</ul>
+<p><span style = "color : red"><strong>Method核心方法</strong></span></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>classObj.getMethod()</td>
+<td>获取指定public修饰的方法对象</td>
+</tr>
+<tr>
+<td>methodObj.invoke()</td>
+<td>调用指定对象的对应方法</td>
+</tr>
+</tbody></table>
+<pre><code class="java">Employee.java
+package com.imooc.reflect.entity;
+
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
+public class Employee &#123;
+    static &#123;//静态块初始化
+        System.out.println(&quot;Employee类已被加载到jvm,并已初始化&quot;);
+    &#125;
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+
+    public Employee() &#123;
+        System.out.println(&quot;Employee默认构造方法已被执行&quot;);
+    &#125;
+
+    public Employee(Integer eno, String ename, Float salary, String dname) &#123;
+        this.eno = eno;
+        this.ename = ename;
+        this.salary = salary;
+        this.dname = dname;
+        System.out.println(&quot;Employee带参构造方法已被执行&quot;);
+    &#125;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;eno=&quot; + eno +
+                &quot;, ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
+                &quot;, salary=&quot; + salary +
+                &quot;, dname=&#39;&quot; + dname + &#39;\&#39;&#39; +
+                &#39;&#125;&#39;;
+    &#125;
+
+    public Employee updateSalary(Float val)&#123;
+        this.salary = this.salary + val;
+        System.out.println(this.ename + &quot;调薪至&quot; + this.salary + &quot;元&quot;);
+        return this;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">MethodSample.java
+package com.imooc.reflect;
+
+import com.imooc.reflect.entity.Employee;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class MethodSample &#123;
+    public static void main(String[] args) &#123;
+        try &#123;
+            Class employeeClass = Class.forName(&quot;com.imooc.reflect.entity.Employee&quot;);
+            Constructor constructor = employeeClass.getConstructor(new Class[]&#123;
+                    Integer.class, String.class, Float.class, String.class
+            &#125;);
+            Employee employee = (Employee) constructor.newInstance(new Object[]&#123;
+                    100, &quot;李磊&quot;, 3000f, &quot;研发部&quot;
+            &#125;);
+            Method updateSalaryMethod = employeeClass.getMethod(&quot;updateSalary&quot;, new Class[]&#123; //传入参数
+               Float.class
+            &#125;);
+            Employee employee1 = (Employee)updateSalaryMethod.invoke(employee, new Object[]&#123;1000f&#125;); //若有返回值 要强制转换
+            System.out.println(employee1);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InvocationTargetException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (NoSuchMethodException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Field成员变量类"><a href="#Field成员变量类" class="headerlink" title="Field成员变量类"></a><strong>Field成员变量类</strong></h5><ul>
+<li>Field对应某个具体类中的成员变量的声明</li>
+<li>Field对象使用**classObj.getField()**方法获取</li>
+<li>通过Field对象可为某对象成员变量赋值&#x2F;取值</li>
+</ul>
+<p><span style = "color : red"><strong>Field类核心方法</strong></span></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>classObj.getField()</td>
+<td>获取指定publicc修饰的成员变量对象</td>
+</tr>
+<tr>
+<td>fieldObj.set()</td>
+<td>为某对象指定成员变量赋值</td>
+</tr>
+<tr>
+<td>fieldObj.get()</td>
+<td>获取某对象指定成员变量数值</td>
+</tr>
+</tbody></table>
+<p>快速添加包裹try catch → 框上要包裹的 点Code → surround with<br>get()&#x2F;set()都是(在entify中)public共有方法</p>
+<pre><code class="java">Employee.java
+package com.imooc.reflect.entity;
+
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
+public class Employee &#123;
+    static &#123;//静态块初始化
+        System.out.println(&quot;Employee类已被加载到jvm,并已初始化&quot;);
+    &#125;
+    private Integer eno;
+    public String ename;
+    private Float salary;
+    private String dname;
+
+    public Employee() &#123;
+        System.out.println(&quot;Employee默认构造方法已被执行&quot;);
+    &#125;
+
+    public Employee(Integer eno, String ename, Float salary, String dname) &#123;
+        this.eno = eno;
+        this.ename = ename;
+        this.salary = salary;
+        this.dname = dname;
+        System.out.println(&quot;Employee带参构造方法已被执行&quot;);
+    &#125;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;eno=&quot; + eno +
+                &quot;, ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
+                &quot;, salary=&quot; + salary +
+                &quot;, dname=&#39;&quot; + dname + &#39;\&#39;&#39; +
+                &#39;&#125;&#39;;
+    &#125;
+
+    public Employee updateSalary(Float val)&#123;
+        this.salary = this.salary + val;
+        System.out.println(this.ename + &quot;调薪至&quot; + this.salary + &quot;元&quot;);
+        return this;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">FieldSample.java
+package com.imooc.reflect;
+
+import com.imooc.reflect.entity.Employee;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+
+public class FieldSample &#123;
+    public static void main(String[] args) &#123;
+        try &#123;
+            Class employeeClass = Class.forName(&quot;com.imooc.reflect.entity.Employee&quot;);
+            Constructor constructor = employeeClass.getConstructor(new Class[]&#123;
+                    Integer.class, String.class, Float.class, String.class
+            &#125;);
+            Employee employee = (Employee) constructor.newInstance(new Object[]&#123;
+                    100, &quot;李磊&quot;, 3000f, &quot;研发部&quot;
+            &#125;);
+            Field enameField = employeeClass.getField(&quot;ename&quot;);
+            enameField.set(employee,&quot;李雷&quot;);
+            String ename = (String) enameField.get(employee);
+            System.out.println(&quot;ename:&quot; + ename);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (NoSuchMethodException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InvocationTargetException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (NoSuchFieldException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="getDeclared系列方法"><a href="#getDeclared系列方法" class="headerlink" title="getDeclared系列方法"></a>getDeclared系列方法</h3><ul>
+<li><span style = "color:red"><strong>getDeclaredConstructor(s)</strong> | <strong>Method(s)</strong> | <strong>Field(s)</strong></span> 获取对应对象</li>
+<li><strong>getConstructor(s)</strong> | <strong>Method(s)</strong> | <strong>Field(s)</strong> 只能获取public对象</li>
+<li>访问<strong>非作用域内构造方法、方法、成员变量</strong>，会抛出异常</li>
+</ul>
+<p>public可以直接获取 private只能通过get…获取</p>
+<pre><code class="java">Employee.java + getDeclaredSample.java
+package com.imooc.reflect;
+
+import com.imooc.reflect.entity.Employee;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class getDeclaredSample &#123;
+    public static void main(String[] args) &#123;
+        try &#123;
+            Class employeeClass = Class.forName(&quot;com.imooc.reflect.entity.Employee&quot;);
+            Constructor constructor = employeeClass.getConstructor(new Class[]&#123;
+                    Integer.class, String.class, Float.class, String.class
+            &#125;);
+            Employee employee = (Employee) constructor.newInstance(new Object[]&#123;
+                    100, &quot;李磊&quot;, 3000f, &quot;研发部&quot;
+            &#125;);
+            Field[] fields = employeeClass.getDeclaredFields();
+            for (Field field : fields)&#123;
+//                System.out.println(field.getName());
+                if (field.getModifiers() == 1) &#123;//成员变量修饰符 public修饰
+                    Object val = field.get(employee);
+                    System.out.println(field.getName() + &quot;:&quot; + val);
+                &#125; else if (field.getModifiers() == 2) &#123; //private修饰
+                    String methodName = &quot;get&quot; + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);//(0,1)是截取字符串 第一个大写字母
+                    Method getMethod = employeeClass.getMethod(methodName);
+                    Object ret = getMethod.invoke(employee);
+                    System.out.println(field.getName() + &quot;:&quot; + ret);
+                &#125;
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (NoSuchMethodException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InvocationTargetException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="反射在项目中的应用"><a href="#反射在项目中的应用" class="headerlink" title="反射在项目中的应用"></a>反射在项目中的应用</h3><h6 id="反射最重要的就是可以在运行时"><a href="#反射最重要的就是可以在运行时" class="headerlink" title="反射最重要的就是可以在运行时"></a>反射最重要的就是可以在运行时</h6><p><a href="seata.io/en-us/">反射的应用网站</a></p>
+<p>对原始程序无需任何调整，只需要把对应的接口进行实现，放到线上服务器，再调整配置文件。</p>
+<pre><code class="java">Zhcn.java
+package com.imooc.i18n;
+
+public class Zhcn implements I18N&#123;
+    @Override
+    public String say() &#123;
+        return &quot;生命不息奋斗不止&quot;;
+    &#125;
+&#125;
+=========================================================
+En.java
+package com.imooc.i18n;
+
+public class En implements I18N&#123;
+    @Override
+    public String say() &#123;
+        return &quot;Case to the struggle and cease to the life&quot;;
+    &#125;
+&#125;
+========================================================
+接口I18N.java
+package com.imooc.i18n;
+
+public interface I18N &#123;
+    public String say();
+&#125;
+</code></pre>
+<pre><code class="java">package com.imooc.i18n;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Properties;
+
+public class Application &#123;
+    public static void say()&#123;
+        Properties properties = new Properties(); //加载指定的配置文件
+        String configPath = Application.class.getResource(&quot;/config.properties&quot;).getPath();
+        try &#123;
+            configPath = new URLDecoder().decode(configPath,&quot;UTF-8&quot;);//路径中的空格默认得到url编码所以要转换一下
+            properties.load(new FileInputStream(configPath)); //内容来源于文件 文件输入流
+            String language = properties.getProperty(&quot;language&quot;);
+            I18N i18n = (I18N)Class.forName(language).newInstance();
+            System.out.println(i18n.say());
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (FileNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IOException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (InstantiationException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IllegalAccessException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        Application.say();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">language=com.imooc.i18n.En
+或
+language=com.imooc.i18n.Zhcn
 </code></pre>
 
     </div>
