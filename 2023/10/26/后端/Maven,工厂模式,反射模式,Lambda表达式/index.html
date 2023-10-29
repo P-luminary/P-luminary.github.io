@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -1080,6 +1080,166 @@ public class LambdaSample &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><ul>
+<li>函数式编程是基于函数式接口并使用lambda表达的编程方式</li>
+<li>函数式编程理念是将代码作为可重用数据带入到程序运行中</li>
+<li>函数式编程强调”<strong>你想做什么</strong>“，而不是”<strong>你想怎么做</strong>“</li>
+</ul>
+<h3 id="函数式接口"><a href="#函数式接口" class="headerlink" title="函数式接口"></a>函数式接口</h3><ul>
+<li>函数式接口是有且只有一个抽象方法的接口</li>
+<li>Java中拥有大量函数式接口，如<strong>java.lang.Runnable</strong></li>
+<li>JDK8后提供了一系列新的函数式接口，位于<strong>java.util.function</strong></li>
+</ul>
+<h3 id="函数式接口Perdicate"><a href="#函数式接口Perdicate" class="headerlink" title="函数式接口Perdicate"></a>函数式接口Perdicate</h3><ul>
+<li>Perdicate是新增的函数式接口，位于<strong>java.util.function</strong></li>
+<li><u>Perdicate用于测试传入的数据是否满足<strong>判断要求</strong></u></li>
+<li>Perdicate接口需要实现test()方法进行逻辑判断</li>
+</ul>
+<p><span style = "color:red"> 用<strong>lambda表达式</strong>来实现<strong>predicate</strong>的验证</span><br>将已有的代码变成可重复使用的资源放入程序中</p>
+<pre><code class="java">PredicateSample.java
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+
+/*
+    理解函数式编程
+    Perdicate函数式接口的使用方法
+ */
+public class PredicateSample &#123;
+    public static void main(String[] args) &#123;
+        Predicate &lt;Integer&gt; predicate = n-&gt;n&gt;4; //隐藏着return
+        boolean result = predicate.test(10);
+        System.out.println(result);
+        List&lt;Integer&gt; list = Arrays.asList(1,2,3,4,5,6,7,8,9,10);
+        filter(list,n-&gt;n%2==1); //传入函数式接口的实现lambda 取所有奇数
+        filter(list,n-&gt;n%2==0); //取所有偶数
+        filter(list,n-&gt;n&gt;5 &amp;&amp; n%2==0); //取所有大于5的偶数
+    &#125;
+    public static void filter(List&lt;Integer&gt; list, Predicate&lt;Integer&gt; predicate)&#123;
+        for (Integer num:list)&#123;
+            if (predicate.test(num))&#123;
+                System.out.println(num + &quot; &quot;);
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="各种函数接口"><a href="#各种函数接口" class="headerlink" title="各种函数接口"></a>各种函数接口</h3><h5 id="JDK8常用函数式接口"><a href="#JDK8常用函数式接口" class="headerlink" title="JDK8常用函数式接口"></a>JDK8常用函数式接口</h5><h6 id="consumer函数接口"><a href="#consumer函数接口" class="headerlink" title="consumer函数接口"></a>consumer函数接口</h6><table>
+<thead>
+<tr>
+<th><strong>接口</strong></th>
+<th><strong>用途</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Consumer&lt; T &gt;</strong></td>
+<td><strong>对应有一个输入参数无输出的功能代码</strong></td>
+</tr>
+<tr>
+<td><strong>Function&lt; T,R &gt;</strong></td>
+<td>对应有一个输入参数且需要返回参数的功能代码</td>
+</tr>
+<tr>
+<td><strong>Predicate&lt; T &gt;</strong></td>
+<td>用于条件判断，固定返回布尔值</td>
+</tr>
+</tbody></table>
+<pre><code class="java">ConsumerSample.java
+import java.util.function.Consumer;
+
+/*
+    Consumer接口的使用
+ */
+public class ConsumerSample &#123;
+    public static void main(String[] args) &#123;
+        output(s-&gt; System.out.println(&quot;向控制台打印：&quot; + s));
+        //字符串作为网络数据包向某个网站发送
+        output(s-&gt;&#123;
+            System.out.println(&quot;向XXX网络发送数据包:&quot; + s);
+        &#125;);
+    &#125;
+    public static void output(Consumer&lt;String&gt; consumer)&#123;
+        String text = &quot;苦其心志,劳其筋骨&quot;;
+        consumer.accept(text);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="Function接口"><a href="#Function接口" class="headerlink" title="Function接口"></a>Function接口</h6><pre><code class="java">FunctionSample.java
+import java.util.Random;
+import java.util.function.Function;
+
+/*
+    利用Function函数式接口生成定长随机字符串[加密解密会用到]
+ */
+public class FunctionSample &#123;
+    public static void main(String[] args) &#123;
+        Function&lt;Integer,String&gt; randomStringFunction = l-&gt;&#123;
+            String chars = &quot;abcdefghijklmnopqrstuvxwyz0123456789&quot;;
+            StringBuffer stringBuffer = new StringBuffer();
+            Random random = new Random();
+            for (int i = 0; i &lt; l; i++) &#123;
+                int position = random.nextInt(chars.length());
+                stringBuffer.append(chars.charAt(position));//按指定位置将字符提取并追加
+            &#125;
+            return stringBuffer.toString();
+        &#125;;
+        String randowmString = randomStringFunction.apply(16);//生成16位长的字符串
+        System.out.println(randowmString);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="functionalInterface注解"><a href="#functionalInterface注解" class="headerlink" title="@functionalInterface注解"></a>@functionalInterface注解</h6><pre><code class="java">MathOperation.java
+@FunctionalInterface //通知编译器这是函数式接口，进行抽象方法检查
+public interface MathOperation &#123;
+    //四则运算接口
+
+    public Float operate(Integer a, Integer b);
+&#125;
+</code></pre>
+<h3 id="函数式编程与面向对象编程比较"><a href="#函数式编程与面向对象编程比较" class="headerlink" title="函数式编程与面向对象编程比较"></a>函数式编程与面向对象编程比较</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>面向对象编程</th>
+<th>函数式编程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>设计思路</td>
+<td>面向对象</td>
+<td>面向过程</td>
+</tr>
+<tr>
+<td>开发侧重</td>
+<td>侧重过程,重分析,重设计</td>
+<td>侧重结果,快速实现</td>
+</tr>
+<tr>
+<td>可读性</td>
+<td>结构复杂,相对较差</td>
+<td>更适合人眼阅读,可读性更好</td>
+</tr>
+<tr>
+<td>代码量</td>
+<td>多</td>
+<td>少</td>
+</tr>
+<tr>
+<td>并发问题</td>
+<td>设计不当,会出现线程安全问题</td>
+<td>不会出现线程安全问题</td>
+</tr>
+<tr>
+<td>健壮性</td>
+<td>好</td>
+<td>差</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>中大型项目,多人协作工程</td>
+<td>小型应用,要求快速实现</td>
+</tr>
+</tbody></table>
 
     </div>
 
