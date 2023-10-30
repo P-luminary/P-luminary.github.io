@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || Maven,工厂模式,反射模式,Lambda表达式</title>
+    <title>P-luminary || Maven,工厂模式,反射模式,Lambda表达式,stream流式处理</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>Maven,工厂模式,反射模式,Lambda表达式 </h1>
+        <h1>Maven,工厂模式,反射模式,Lambda表达式,stream流式处理 </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1049,7 +1049,7 @@ Collections.sort(names,new Comparator&lt;String&gt;()&#123;
 //通过lambda表达式简化匿名类的编写
 Collections.sort(names,(a,b) -&gt; b.compareTo(a));
 </code></pre>
-<h3 id="Lambda表达式语法"><a href="#Lambda表达式语法" class="headerlink" title="Lambda表达式语法"></a>Lambda表达式语法</h3><p><strong><span style = "color:red">(参数列表) —＞实现语句</span></strong><br>[<u>使用逗号分割参数,参数类型可省略,单参数括号可省略</u>]<br>[<u>单行直接写 多行用{}包括</u>]</p>
+<h3 id="Lambda表达式语法-代码脚手架"><a href="#Lambda表达式语法-代码脚手架" class="headerlink" title="Lambda表达式语法 [代码脚手架]"></a><span style = "color : red">Lambda表达式语法</span> [代码脚手架]</h3><p><strong><span style = "color:red">(参数列表) —＞实现语句</span></strong><br>[<u>使用逗号分割参数,参数类型可省略,单参数括号可省略</u>]<br>[<u>单行直接写 多行用{}包括</u>]</p>
 <pre><code class="java">MathOperation.java
 public interface MathOperation &#123;
     //四则运算接口
@@ -1240,6 +1240,145 @@ public interface MathOperation &#123;
 <td>小型应用,要求快速实现</td>
 </tr>
 </tbody></table>
+<h3 id="Stream流式处理"><a href="#Stream流式处理" class="headerlink" title="Stream流式处理"></a>Stream流式处理</h3><ul>
+<li>Stream流式处理式建立在Lambda基础上的多数据处理技术 </li>
+<li>Stream对集合数据处理进行高度抽象，极大简化代码量</li>
+<li>Stream可对集合进行迭代,去重,筛选,排序,聚合等一系列处理</li>
+</ul>
+<h3 id="Stream示例"><a href="#Stream示例" class="headerlink" title="Stream示例"></a>Stream示例</h3><pre><code class="java">//获取List集合中最大的偶数
+Optional&lt;Integer&gt; op = Arrays.asList(1,2,3,4,5,6).stream()
+.filter(x-&gt;x%2==0) //处理完得到一个只包含偶数的list流数据
+.sorted((a,b)-&gt;b-a) //大的在前面 小的在后面
+.findFirst(); //获取最大的数据
+System.out.println(op.get());
+</code></pre>
+<h3 id="Stream常用方法"><a href="#Stream常用方法" class="headerlink" title="Stream常用方法"></a><span style = "color : red">Stream常用方法</span></h3><table>
+<thead>
+<tr>
+<th>接口</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>forEach</td>
+<td>循环遍历</td>
+</tr>
+<tr>
+<td>map</td>
+<td>map方法用于映射每个元素到对应的结果</td>
+</tr>
+<tr>
+<td>filter</td>
+<td>filter方法用于通知设置的条件过滤出元素</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>limit方法用于获取指定数量的流</td>
+</tr>
+<tr>
+<td>sorted</td>
+<td>sorted方法用于对流进行排序</td>
+</tr>
+<tr>
+<td>Collectors</td>
+<td>Collectors类实现将流转换成集合和聚合元素</td>
+</tr>
+</tbody></table>
+<pre><code class="java">StreamGenerator.java
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+/*
+Stream流对象的五种创建方式
+ */
+public class StreamGenerator &#123;
+    //1.基于数组进行创建
+    @Test
+    public void generator1()&#123;
+        String[] arr = &#123;&quot;Lily&quot;,&quot;Andy&quot;,&quot;Jackson&quot;,&quot;Smith&quot;&#125;;
+        Stream&lt;String&gt; stream = Stream.of(arr);
+        stream.forEach(s -&gt; System.out.println(s)); //forEach中使用Lambda表达式
+    &#125;
+
+    //2.基于集合进行创建
+    @Test
+    public void generator2()&#123;
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        list.add(&quot;Lily&quot;);
+        list.add(&quot;Andy&quot;);
+        list.add(&quot;Jackson&quot;);
+        list.add(&quot;Smith&quot;);
+        Stream&lt;String&gt; stream = list.stream(); //利用集合获取stream
+        stream.forEach(s -&gt; System.out.println(s));
+    &#125;
+
+    //3.利用generate方法创建无限长度流
+    @Test
+    public void generator3()&#123;
+        Stream&lt;Integer&gt; stream = Stream.generate(() -&gt; new Random().nextInt(100000));//Supplier&lt;T&gt; s 创建新对象
+        stream.limit(10).forEach(i -&gt; System.out.println(i)); //limit限制长度
+    &#125;
+
+    //4.基于迭代器创建流
+    @Test
+    public void generator4()&#123;
+        Stream&lt;Integer&gt; stream = Stream.iterate(1, n -&gt; n + 1);//无限长度自增
+        stream.limit(100).forEach(i -&gt; System.out.println(i));
+    &#125;
+
+    //5.基于字符序列创建流
+    @Test
+    public void genetator5()&#123;
+        String str = &quot;abcdefg我&quot;;
+        IntStream stream = str.chars();
+        stream.forEach(c -&gt; System.out.println((char)c));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">StreamMethod.java
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StreamMethod &#123;
+    @Test //提取集合中所有偶数并求和
+    public void case1()&#123;
+        List&lt;String&gt; list = Arrays.asList(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;);
+        int sum = list.stream() //获取stream对象
+                .mapToInt(s -&gt; Integer.parseInt(s)) //对每个元素字符串转为整数
+                .filter(n -&gt; n%2==0) //filter对流数据进行过滤
+                .sum();//求和
+        System.out.println(sum);
+    &#125;
+
+    @Test //所有名字首字母大写
+    public void case2()&#123;
+        List&lt;String&gt; list = Arrays.asList(&quot;lily&quot;,&quot;smith&quot;,&quot;jackson&quot;);
+        List newList = list.stream()
+                .map(s -&gt; s.substring(0, 1).toUpperCase() + s.substring(1)) //首字母大写转换
+//                .forEach(s -&gt; System.out.println(s));
+                .collect(Collectors.toList()); //collect对流数据进行收集,生成新的List/Set(将重复数据自动清除)
+        System.out.println(newList);
+    &#125;
+
+    @Test //将所有奇数从大到小进行排序，且不允许出现重复
+    public void case3()&#123;
+        List&lt;Integer&gt; list = Arrays.asList(1, 60, 38, 21, 51, 60, 51, 73);
+        List newList = list.stream().distinct() //去除重复的流数据
+                .filter(n -&gt; n%2==1)
+                .sorted((a,b) -&gt; b-a) //从大到小的数据排列
+                .collect(Collectors.toList());
+        System.out.println(newList);
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 

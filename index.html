@@ -133,9 +133,308 @@
 
 <div class="post">
 
-    <a href="/2023/10/26/后端/Maven,工厂模式,反射模式,Lambda表达式/">
+    <a href="/2023/10/30/后端/MyBatis基础与进阶/">
         <h2>
-            Maven,工厂模式,反射模式,Lambda表达式
+            MyBatis基础与进阶
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2023/10/30
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h1 id="MyBatis-ORM-框架基础"><a href="#MyBatis-ORM-框架基础" class="headerlink" title="MyBatis[ORM]框架基础"></a>MyBatis[ORM]框架基础</h1><h3 id="软件开发中框架"><a href="#软件开发中框架" class="headerlink" title="软件开发中框架"></a>软件开发中框架</h3><ul>
+<li>框架式可被应用开发者定制的应用骨架</li>
+<li>框架是一种规则，保证开发者遵循相同的方式开发程序</li>
+<li>框架提倡”不要重复造轮子”,对基础功能进行封装</li>
+</ul>
+<h3 id="框架的优点"><a href="#框架的优点" class="headerlink" title="框架的优点"></a>框架的优点</h3><ul>
+<li>极大提高了开发效率</li>
+<li>统一的编码规则，利于团队管理</li>
+<li>灵活配置的应用，拥有更好的维护性</li>
+</ul>
+<h3 id="SSM开发框架"><a href="#SSM开发框架" class="headerlink" title="SSM开发框架"></a>SSM开发框架</h3><ul>
+<li><strong>Spring</strong>对象容器框架(框架的框架) [提供底层对象的管理]</li>
+<li><strong>SpringMVC</strong>替代servlet更有效的开发 [提供Web界面的交互]</li>
+<li><strong>MyBatis</strong>简化数据库的开发 [数据库增删改查便捷操作]</li>
+</ul>
+<h3 id="MyBatis"><a href="#MyBatis" class="headerlink" title="MyBatis"></a>MyBatis</h3><ul>
+<li>MyBatis是优秀的<strong>持久</strong>层框架(将内存中的数据保存到数据库中 以防止重启后数据丢失)</li>
+<li>MyBatis使用XML将SQL与程序解耦，便于维护[改代码 改xml更方便]</li>
+<li>MyBatis是JDBC的延伸</li>
+</ul>
+<h3 id="MyBatis开发流程【推荐使用Maven】"><a href="#MyBatis开发流程【推荐使用Maven】" class="headerlink" title="MyBatis开发流程【推荐使用Maven】"></a>MyBatis开发流程【推荐使用Maven】</h3><ul>
+<li>引入MyBatis依赖</li>
+<li>创建核心配置文件</li>
+<li>创建实体(<strong>Entity</strong>)类</li>
+<li>创建<strong>Mapper</strong>映射文件</li>
+<li>初始化SessionFactory(绘画工厂 读取配置文件 加载Mapper映射)</li>
+<li>利用SqlSession对象操作数据</li>
+</ul>
+<h3 id="单元测试与JUnit4"><a href="#单元测试与JUnit4" class="headerlink" title="单元测试与JUnit4"></a>单元测试与JUnit4</h3><h5 id="单元测试-用于测试方法的方法"><a href="#单元测试-用于测试方法的方法" class="headerlink" title="单元测试(用于测试方法的方法)"></a>单元测试(用于测试方法的方法)</h5><ul>
+<li>单元测试是指对软件中的最小可测试单元进行检查和验证</li>
+<li>测试用例是指写一段代码对已有功能(方法)进行校验</li>
+<li>JUnit4是Java中最著名的单元测试工具，主流IDE内置支持</li>
+</ul>
+<h3 id="JUnit4使用方法"><a href="#JUnit4使用方法" class="headerlink" title="JUnit4使用方法"></a>JUnit4使用方法</h3><ul>
+<li>引入JUnit Jar包或增加Maven依赖</li>
+<li>编写测试用例验证目标方法是否正确运行</li>
+<li>在测试用例上增加**@Test**注解开始单元测试</li>
+</ul>
+<p>如果插件plug报错 点settings 找到 Build,Execution,Deployment → Build Tools → Maven 修改下面的三个地址到Maven</p>
+<blockquote>
+<p><strong>Maven home path</strong>:  D:&#x2F;apache-maven-3.9.5<br><strong>User settings files</strong>:  D:\apache-maven-3.9.5\conf\settings.xml<br><strong>Local repository</strong>:  D:\apache-maven-3.9.5\repository</p>
+</blockquote>
+<p><u>Maven工程有专门测试用例的 test包</u><br><strong>方法命名：在原方法前增加test前缀</strong>    <strong>Class命名：在原有命名后增加Test</strong></p>
+<p><strong><span style = "color : red">快速生成类的测试用例</span></strong> &#x3D;&gt; 选中类 → Code → Generate → Test<br>按住Ctrl可以多选执行多个测试用例类<br>如果想运行所有测试用例类 工程上点右键 → Run ‘All Test’</p>
+<pre><code class="java">Calculator.java
+package org.example;
+
+public class Calculator &#123;
+    public int add(int a, int b)&#123;
+        return a + b;
+    &#125;
+    public int substract(int a, int b)&#123;
+        return a - b;
+    &#125;
+    public int multiply(int a, int b)&#123;
+        return a * b;
+    &#125;
+    public float divide(int a, int b)&#123;
+        if (b==0)&#123;
+            throw new ArithmeticException(&quot;除数不能为0&quot;);
+        &#125;
+        return (a*1f) / b;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">CalculatorTest.java
+import org.example.Calculator;
+import org.junit.Test;
+
+public class CalculatorTest &#123;
+    private Calculator cal = new Calculator();
+    @Test
+    public void testAdd()&#123;
+        int result = cal.add(1,2);
+        System.out.println(result);
+    &#125;
+    @Test
+    public void testSubstract()&#123;
+        int result = cal.substract(1,2);
+        System.out.println(result);
+    &#125;
+    @Test
+    public void testMultiply()&#123;
+        int result = cal.multiply(1,2);
+        System.out.println(result);
+    &#125;
+    @Test
+    public void testDivide()&#123;
+        float result = cal.divide(1,2);
+        System.out.println(result);
+    &#125;
+    @Test
+    public void testDivide1()&#123;
+        float result = cal.divide(1,0);
+        System.out.println(result);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="MyBatis环境配置"><a href="#MyBatis环境配置" class="headerlink" title="MyBatis环境配置"></a>MyBatis环境配置</h3><h5 id="mybatis-config-xml"><a href="#mybatis-config-xml" class="headerlink" title="mybatis-config.xml"></a>mybatis-config.xml</h5><ul>
+<li>MyBatis采用XML格式配置数据库环境信息</li>
+<li>MyBatis环境配置标签**&lt; environment &gt;**</li>
+<li>environment包含数据库驱动、URL、用户名与密码</li>
+</ul>
+<pre><code class="xml">mybatis-config.xml
+&lt;!--配置环境,不同的环境不同的id名字--&gt;
+&lt;enviroment id=&quot;dev&quot;&gt;
+    &lt;!--采用JDBC方式对数据库事务进行commit/rollback--&gt;
+    &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+    &lt;!--采用连接池方式管理数据库连接--&gt;
+    &lt;dataSource type=&quot;POOLED&quot;&gt;
+        &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+        &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/db&quot;/&gt;
+        &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+        &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+    &lt;/dataSource&gt;
+&lt;/enviroment&gt;
+</code></pre>
+<pre><code class="xml">&lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;JUnit4_Maven&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;http://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+            &lt;version&gt;3.5.1&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<p>可以在右侧加载内置<strong>Database数据库</strong></p>
+<pre><code class="xml">&lt;configuration&gt;
+    &lt;environments default=&quot;&quot;&gt; 
+        &lt;environment id=&quot;&quot;&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt; 
+            &lt;dataSource type=&quot;&quot;&gt;&lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;   &lt;!--环境配置标签--&gt;
+    &lt;environments default=&quot;dev&quot;&gt; &lt;!--当环境默认数据源为dev时候使用运行的代码[不同id来切换]--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;  &lt;!--唯一标识--&gt;
+            &lt;!--采用JDBC方式对数据库事务进行管理--&gt;
+            &lt;transactionManager type=&quot;&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTFF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+&lt;/configuration&gt;
+</code></pre>
+<h3 id="SqlSessionFactory"><a href="#SqlSessionFactory" class="headerlink" title="SqlSessionFactory"></a>SqlSessionFactory</h3><ul>
+<li>SqlSessionFactory是MyBatis的核心对象</li>
+<li>用于初始化MyBatis, 创建SqlSession对象</li>
+<li>SqlSession对象提供了数据表CRUD对应方法</li>
+</ul>
+<pre><code class="xml">mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;   &lt;!--环境配置标签--&gt;
+    &lt;environments default=&quot;prd&quot;&gt; &lt;!--当环境默认数据源为dev时候使用运行的代码[不同id来切换]--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;  &lt;!--唯一标识--&gt;
+            &lt;!--采用JDBC方式对数据库事务进行管理--&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+        &lt;environment id=&quot;prd&quot;&gt;
+            &lt;!-- 采用JDBC方式对数据库事务进行commit/rollback --&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://192.168.1.155:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">test-MyBatisTestor.java
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.sql.Connection;
+
+//JUNIT单元测试类
+public class MyBatisTestor &#123;
+    @Test
+    public void testSqlSessionFactory() throws IOException &#123;
+        //利用Reader加载classpath下的mybatis-config.xml核心配置文件
+        Reader reader = Resources.getResourceAsReader(&quot;mybatis-config.xml&quot;);//按照字符流读取
+        //初始化SqlSessionFactory对象,同时解析mybatis-config.xml文件
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);//read解析上面的对象
+        System.out.println(&quot;SessionFactory加载成功&quot;);
+        SqlSession sqlSession = null;
+        try&#123;
+            //创建SqlSession对象,SqlSession是JDBC的扩展类,用于数据库交互
+            sqlSession = sqlSessionFactory.openSession();
+            //创建数据库连接(测试用)
+            Connection connection = sqlSession.getConnection();
+            System.out.println(connection);
+        &#125;catch (Exception e)&#123;
+            e.printStackTrace();
+        &#125;finally &#123;
+            if (sqlSession != null)&#123;
+                //如果type=&quot;POOLED&quot;,代表使用连接池,close则是将连接回收到连接池中
+                //如果type=&quot;UNPOOLED&quot;,代表直连,close则会调用Connection.close()方法关闭连接
+                sqlSession.close();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#ff7d73>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2023/10/30/后端/MyBatis基础与进阶/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
+    <a href="/2023/10/26/后端/Maven,工厂模式,反射模式,Lambda表达式,stream流式处理/">
+        <h2>
+            Maven,工厂模式,反射模式,Lambda表达式,stream流式处理
         </h2>
     </a>
 
@@ -1069,7 +1368,7 @@ Collections.sort(names,new Comparator&lt;String&gt;()&#123;
 //通过lambda表达式简化匿名类的编写
 Collections.sort(names,(a,b) -&gt; b.compareTo(a));
 </code></pre>
-<h3 id="Lambda表达式语法"><a href="#Lambda表达式语法" class="headerlink" title="Lambda表达式语法"></a>Lambda表达式语法</h3><p><strong><span style = "color:red">(参数列表) —＞实现语句</span></strong><br>[<u>使用逗号分割参数,参数类型可省略,单参数括号可省略</u>]<br>[<u>单行直接写 多行用{}包括</u>]</p>
+<h3 id="Lambda表达式语法-代码脚手架"><a href="#Lambda表达式语法-代码脚手架" class="headerlink" title="Lambda表达式语法 [代码脚手架]"></a><span style = "color : red">Lambda表达式语法</span> [代码脚手架]</h3><p><strong><span style = "color:red">(参数列表) —＞实现语句</span></strong><br>[<u>使用逗号分割参数,参数类型可省略,单参数括号可省略</u>]<br>[<u>单行直接写 多行用{}包括</u>]</p>
 <pre><code class="java">MathOperation.java
 public interface MathOperation &#123;
     //四则运算接口
@@ -1260,6 +1559,145 @@ public interface MathOperation &#123;
 <td>小型应用,要求快速实现</td>
 </tr>
 </tbody></table>
+<h3 id="Stream流式处理"><a href="#Stream流式处理" class="headerlink" title="Stream流式处理"></a>Stream流式处理</h3><ul>
+<li>Stream流式处理式建立在Lambda基础上的多数据处理技术 </li>
+<li>Stream对集合数据处理进行高度抽象，极大简化代码量</li>
+<li>Stream可对集合进行迭代,去重,筛选,排序,聚合等一系列处理</li>
+</ul>
+<h3 id="Stream示例"><a href="#Stream示例" class="headerlink" title="Stream示例"></a>Stream示例</h3><pre><code class="java">//获取List集合中最大的偶数
+Optional&lt;Integer&gt; op = Arrays.asList(1,2,3,4,5,6).stream()
+.filter(x-&gt;x%2==0) //处理完得到一个只包含偶数的list流数据
+.sorted((a,b)-&gt;b-a) //大的在前面 小的在后面
+.findFirst(); //获取最大的数据
+System.out.println(op.get());
+</code></pre>
+<h3 id="Stream常用方法"><a href="#Stream常用方法" class="headerlink" title="Stream常用方法"></a><span style = "color : red">Stream常用方法</span></h3><table>
+<thead>
+<tr>
+<th>接口</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>forEach</td>
+<td>循环遍历</td>
+</tr>
+<tr>
+<td>map</td>
+<td>map方法用于映射每个元素到对应的结果</td>
+</tr>
+<tr>
+<td>filter</td>
+<td>filter方法用于通知设置的条件过滤出元素</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>limit方法用于获取指定数量的流</td>
+</tr>
+<tr>
+<td>sorted</td>
+<td>sorted方法用于对流进行排序</td>
+</tr>
+<tr>
+<td>Collectors</td>
+<td>Collectors类实现将流转换成集合和聚合元素</td>
+</tr>
+</tbody></table>
+<pre><code class="java">StreamGenerator.java
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+/*
+Stream流对象的五种创建方式
+ */
+public class StreamGenerator &#123;
+    //1.基于数组进行创建
+    @Test
+    public void generator1()&#123;
+        String[] arr = &#123;&quot;Lily&quot;,&quot;Andy&quot;,&quot;Jackson&quot;,&quot;Smith&quot;&#125;;
+        Stream&lt;String&gt; stream = Stream.of(arr);
+        stream.forEach(s -&gt; System.out.println(s)); //forEach中使用Lambda表达式
+    &#125;
+
+    //2.基于集合进行创建
+    @Test
+    public void generator2()&#123;
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        list.add(&quot;Lily&quot;);
+        list.add(&quot;Andy&quot;);
+        list.add(&quot;Jackson&quot;);
+        list.add(&quot;Smith&quot;);
+        Stream&lt;String&gt; stream = list.stream(); //利用集合获取stream
+        stream.forEach(s -&gt; System.out.println(s));
+    &#125;
+
+    //3.利用generate方法创建无限长度流
+    @Test
+    public void generator3()&#123;
+        Stream&lt;Integer&gt; stream = Stream.generate(() -&gt; new Random().nextInt(100000));//Supplier&lt;T&gt; s 创建新对象
+        stream.limit(10).forEach(i -&gt; System.out.println(i)); //limit限制长度
+    &#125;
+
+    //4.基于迭代器创建流
+    @Test
+    public void generator4()&#123;
+        Stream&lt;Integer&gt; stream = Stream.iterate(1, n -&gt; n + 1);//无限长度自增
+        stream.limit(100).forEach(i -&gt; System.out.println(i));
+    &#125;
+
+    //5.基于字符序列创建流
+    @Test
+    public void genetator5()&#123;
+        String str = &quot;abcdefg我&quot;;
+        IntStream stream = str.chars();
+        stream.forEach(c -&gt; System.out.println((char)c));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">StreamMethod.java
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StreamMethod &#123;
+    @Test //提取集合中所有偶数并求和
+    public void case1()&#123;
+        List&lt;String&gt; list = Arrays.asList(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;);
+        int sum = list.stream() //获取stream对象
+                .mapToInt(s -&gt; Integer.parseInt(s)) //对每个元素字符串转为整数
+                .filter(n -&gt; n%2==0) //filter对流数据进行过滤
+                .sum();//求和
+        System.out.println(sum);
+    &#125;
+
+    @Test //所有名字首字母大写
+    public void case2()&#123;
+        List&lt;String&gt; list = Arrays.asList(&quot;lily&quot;,&quot;smith&quot;,&quot;jackson&quot;);
+        List newList = list.stream()
+                .map(s -&gt; s.substring(0, 1).toUpperCase() + s.substring(1)) //首字母大写转换
+//                .forEach(s -&gt; System.out.println(s));
+                .collect(Collectors.toList()); //collect对流数据进行收集,生成新的List/Set(将重复数据自动清除)
+        System.out.println(newList);
+    &#125;
+
+    @Test //将所有奇数从大到小进行排序，且不允许出现重复
+    public void case3()&#123;
+        List&lt;Integer&gt; list = Arrays.asList(1, 60, 38, 21, 51, 60, 51, 73);
+        List newList = list.stream().distinct() //去除重复的流数据
+                .filter(n -&gt; n%2==1)
+                .sorted((a,b) -&gt; b-a) //从大到小的数据排列
+                .collect(Collectors.toList());
+        System.out.println(newList);
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -1274,14 +1712,14 @@ public interface MathOperation &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
         
     </div>
 
-    <a href="/2023/10/26/后端/Maven,工厂模式,反射模式,Lambda表达式/ " class="go-post">
+    <a href="/2023/10/26/后端/Maven,工厂模式,反射模式,Lambda表达式,stream流式处理/ " class="go-post">
         阅读全文
     </a>
 </div>
@@ -2695,7 +3133,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -5062,7 +5500,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -7757,7 +8195,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -11164,7 +11602,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -14988,7 +15426,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -18370,7 +18808,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -18378,236 +18816,6 @@ public interface ArrayBuilder &#123;
     </div>
 
     <a href="/2023/08/13/后端/java复习款/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2023/08/02/随笔/3333023-8-XXX/">
-        <h2>
-            2023.8-XXX
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2023/8/2
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <p><strong><span style = "color : red">2023.8.1</span></strong></p>
-<p>上午的时候通知书到了吖，在楼下等了半天没来，哈哈哈，我一回来它就到了，是一个绿色衣服邮政叔叔，骑着摩托车，我记得上次见到是三年前了。好怀念！拿到之后第一件事就是去爷爷奶奶家分享，哈哈 他们很开心，说家里出了个本科大学生咯！！很开心！我也很开心。随后出去理发了，途中买了蜜雪冰城3个冰激凌，给我俩小弟。晚上的时候本以为宝宝去染发 棕色头发，但是宝宝没有去染 qaq，蓝瘦香菇了属实！宝宝晚上没怎么聊天，呜呜，宝宝下午的时候很激动，看到了带的班里有个小网红，真的是太神奇了！我靠！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.8.2</span></strong></p>
-<p>晚上的时候宝宝和金女士去了那个叫什么…完了又忘记了，哈哈哈 就叫他劳斯莱斯吧，去那个专卖店买衣服，金女士买了件2000多的正装，确实经常出入场合的职场女性应该在衣服上面多下点功夫，这也体现了一个人的精神面貌，哈哈 ，然后给宝宝买了几件，宝宝也给金女士买了，好羡慕她们吖。晚上的时候宝宝说最近食欲不振，精神不佳，很想让宝宝早点去医院看一看，但是最近有课，说是要等两周后！！！啊啊啊啊啊啊啊 这可不能等啊。宝宝你要听话，乖乖的等哪天下午没课，就和金女士一起去医院看看嘛，总不吃多少东西对身体也不好，实在不行去医院输点葡萄糖缓冲一下，补充一下营养。真的挺担心的宝宝。</p>
-<hr>
-<p><strong><span style = "color : red">2023.8.3</span></strong></p>
-<p>今天可能是要成仙的第一天，早上没吃饭，中午奶奶家吃了点，晚上胃口不好没吃 而且想吐，晚上的时候还出去跑步了，呜呜，然后感觉时间差都要颠倒了，晚上6点多睡觉 然后9点多醒了 没吃饭去跑步，┭┮﹏┭┮ 让宝宝担心了，而且还让宝宝等了我那么长时间，晚上刘铮约我周日中午去吃烤肉，哈哈哈，我现在就想吃！明天一定要好好吃饭，绷不住了</p>
-<hr>
-<p><strong><span style = "color : red">2023.8.4</span></strong></p>
-<p>哦耶，晚上宝宝给我发了性感的辣妹装，好好看！！喜欢！希望能现实中看到。哈哈 跑完步回家的时候 正逢凌老板 和 田女士 都在说宝宝和我，真的很巧，哈哈说都一起说。和刘铮约了周日去吃烤肉，他休假一天，周日中午去吃。</p>
-<hr>
-<p><strong><span style = "color : red">2023.8.5</span></strong></p>
-<p>晚上和宝宝打电话啦，宝宝特地出去散步，才能跟我接的电话。宝宝最近吃饭胃口还是不怎么好，依旧是不想吃，吃一点点就饱了，真的很担心，呜呜，一开始劝宝宝，宝宝说我，有点不敢劝了。但是为了宝宝身体，为了小潘学长不再那么担心，宝宝一定要尽早去看一看嘛。我去北购的路上和宝宝聊了一路，宝宝跟我分享她在新东方的事情。哈哈哈 小朋友真的很可爱，尤其是拿着蜘蛛侠头套的那个，也让我看到了小蜘蛛宝宝！很喜欢耶！不过那个小朋友很调皮耶。听宝宝描述，真的感觉人与人就是从小拉开差距的。那边好多有钱人吖，小时候就到处旅游，听了很是羡慕。晚上吃了烤冷面，吃了一个鸡腿腿。喝了杯奶茶，和刘铮刮了50元的彩票，当然我全程看他刮，哈哈哈我感觉我已经接戒掉赌了，成功把他带入沟里了0.0，到家后和宝宝聊着以后的生活。宝宝想带着小宝宝去看看世界！我说我也要去。哈哈哈 当然少不了我吖，好向往！！要加油吖小潘学长！！</p>
-<hr>
-<p><strong><span style = "color : orange">2023.9.5</span></strong></p>
-<p>今天劳累了一天，从早上6：30到的南昌工学院 本应从南门进的我 拖着行李哒哒哒的从北门进到南门报道，然后又要回北门那边的寝室！！哦吼，真的是累的行李箱咕噜都掉下来了。然后没有拿床单被罩，就又复工去补交了330去拿了一套。早上拿了15个快递！简直佩服我自己，然后洗了床单被罩，晒好且套上了，把窗帘的架子搭好了，宿舍的东西都准备好了。都归纳完毕，一转眼就到了下午16：30。真的很想宝宝，在这中途很想去找她，下意识的问了一下，但是宝宝很想学习还有很担心我跑来跑去，呜呜，在这个鸟不拉屎的地方，很失望的就是厕所。唉，其余也就那样吧。真的跟jk比不了。快到晚上的时候，去跟ck秋水广场那随便吃了个饭，聊了聊天，他辞职了，准备回家待几天，然后继续找工作。今天宝宝不开心，因为没有去找她，┭┮﹏┭┮ 我赶在门禁前回了宿舍。晚上和宝宝视频，真的很想宝宝，宝宝真的很可爱，一举一动真的触动了我的心心~ 好爱宝宝！宝宝这几天都在努力学习 加油呀!</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.6</span></strong></p>
-<p>今天早上被那个破床的味道熏醒了，嗓子痛死我辽，一醒来就七点多了，今天效率是真的高，比暑假在家3天都要高，早上学完了单词，下午就学了一下午四级 听了听力 刷了阅读，晚上还敲了代码。早上吃的五谷鱼粉，晚上給宝宝点了酸菜鱼~ 嘿嘿 吃了同样的菜吖~ 中午和宝宝视频了，宝宝有点不开心。呜呜，见一面就好了，任何事情都会解决了。中午我吃的小鸡炖蘑菇(哈哈 当然是方便面啦) 晚上宝宝给我点了鱼香肉丝~ 蛮好吃，宝宝下午还给我点了杯奶茶，头一次喝那种奶茶 分开放的奥利奥！奶盖！！还有醇香四溢的奶茶！好好喝！晚上的时候室友来了，突然给我整不会了当时正在洗澡。不过还好挺好相处的，算半个逗比吧！晚上xyq在群里艾特我宝宝，真的很生气，很吃醋！！开始慢慢讨厌他了</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.7</span></strong></p>
-<p>还有两天就是我们的一周年了耶，但是由于学校的傻逼操作，导致不能去宝宝那边找宝宝了。宝宝也从百忙之中抽出时间明天来见我，真的很开心，我好想宝宝，真的好想。我们要入学教育七天 我真的是很无语，学校b事真的很多很多。主要最重要的是 夜不归宿卡的死死的，完全找不到空子。。这几天从学校宿舍踩点，全是跟缅北地区那种铁栏封死的，根本也没有树！！┭┮﹏┭┮ 有个天台但是太高了。好烦啊！今天晚上铭升的一个朋友来请教我情感问题，哈哈哈我说了以后直接回了我一个表情包。-。-我当时也没在意，跟宝宝说了这件事以后，哈哈哈 我才发现，原来我说了那么多废话，怪不得回我一个表情包嗷，宝宝接下来的做法我真的很感动，因为一个素未谋面的陌生人 宝宝花费自己的时间去一点点的帮我去解决这个问题”<strong>如何更好的处理异地恋的情感淡化问题</strong>“ 这也可能是她想问我的问题。但是 哈哈哈 我不行 我语言能力不太行，哈哈 不过有宝宝给我直接一个超常发挥！真的是很棒，我也从中受益匪浅。她直接发给了他对象看，哈哈哈哈哈，八成那个男的有点木鱼脑袋吧，祝他好运！晚上和宝宝聊天的时候，宝宝说她们宿舍超级超级卷，真的，我感觉我们宿舍也是 超级超级卷。两个人以为去兼职了 没想到在图书馆呆了一天。不过还好我在宿舍卷的也挺开心的！！宝宝最近胃口不好，很担心。吃不下饭而且都一直处于饱腹的状态。宝宝有时间一定要去正规的医院好好做一次检查噢，真的很担心。</p>
-<img src="https://raw.githubusercontent.com/P-luminary/images/a4e481d34b4c1dae1097d4b22caafc98caac3e80/data/%E5%BC%82%E5%9C%B0%E5%B0%8F%E5%AE%9D%E5%AE%9D.jpg" style="zoom: 33%;" />
-
-<hr>
-<p><strong><span style = "color : red">2023.9.8</span></strong></p>
-<p>哦耶 今天和小宝宝见面了，宝宝来找我，在中堡地铁站4号线等了宝宝。提前订了小蛋糕，骑着车带着宝宝去了我学校，我们明天一周年纪念日啦。我们拿着小羊蛋糕去了第二食堂 二楼，一起吃了最好吃的午饭是和宝宝一起吃的。莫小南和竹筒小饭！还有蛋糕，还有給宝宝准备的小惊喜(365蜡烛+唇釉)；真的今天超级开心，在食堂的时候就想狂亲宝宝！哈哈哈，但是有人，就老实了一点点，給宝宝剥虾，宝宝喂我吃水饺。宝宝夸我蛋糕选的很好吃，很开心得到了宝宝的认可！！我们拍了很多很多照片。吃完饭我们一起逛校园，和宝宝第一次逛这个陌生的校园。我也是第一次看耶。由于今天有点热，就和宝宝一起去了南工图书馆，哇塞宝宝的脸竟然可以直接进去，我都进不去！！！宝宝能直接刷进去。第一次带宝宝来图书馆呀。莫名的缘分让宝宝能直接进图书馆，还是借了小宝宝的脸嘞。随后我们去了可爱的小屋子，做了一些可爱的动作。哈哈哈，宝宝今天蛮有成就感。真的我也很享受很舒服。好喜欢宝宝，好爱好爱。晚上的时候本来不想回学校，让室友帮我签到，但是还好听了宝宝的话，不然就翻车了。宝宝也还好听了我的话，当时的教室人都是满的，后面都挤满了人，因为又多了三个班的人一起看那个什么钩八视频。呜呜呜 不然就和宝宝一起罚站了。宝宝晚上的时候给我点了一杯古茗的什么都有，真的什么都有，真的很好喝。宝宝发工资啦。1w多，哇靠还要交个人所得税，真的好厉害呀！！<br><img src="https://raw.githubusercontent.com/P-luminary/images/da6ae52e9355d975bcc58ffa3af360f9fed2a345/data/365.jpg"></p>
-<p><strong><span style = "color : red">2023.9.9</span></strong></p>
-<p>今天是和宝宝的一周年呀，我们爱情已经一岁啦，想要岁岁年年！！今天的课堂真的是一波三折，教室还被占用了，在那里等了好长时间，然后换了个教室继续看无聊的讲座，据说还会以闭卷考试的形式来考，考不过还要重修，真的是大无语事件啦。中午去吃了自助餐，第二食堂的，还蛮好吃，15元无限吃，宝宝中午吃的齁咸的豆干+芹菜+蒸蛋；喝的是齁甜的黑糖奶茶！！(⊙﹏⊙)！！！下午的时候13:14 发了朋友圈~ 我们的第一年！宝宝晚上21：21发，正好是我们相遇的日子9.9；接近晚上的时候，我和倆室友去了志愿者协会好像也是校级组织，去那里面试，一切仅仅为了学分。唉，不然真的一点社团都不想加。面试完后去了体育馆二楼的操场跑了会步，真的老了。跑不动了，呜呜呜。晚上的时候宝宝因为一些事情触动了哭了，很担心宝宝。看到宝宝在21:21的时候发了朋友圈和微博 真的很开心，看了宝宝的很多微博 哈哈哈 真的好可爱呀！！朋友圈的时候一开始我差点乱生气 哈哈哈 原来是宝宝在逗我开心。晚上宝宝没有怎么回我消息，┭┮﹏┭┮ 难过</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.10</span></strong></p>
-<p>0.0 这几天都有老老实实的吃饭，今天花了30元 在吃喝上，感觉，还行，蛮舒服的。今天的课早上真的是讲政治听得我困死了，学了会单词，看着别人都在睡觉，打游戏。qaq 今天学了网页技术。好像又忘记刷四级卷子了，，啊啊啊啊好烦。下午的课，哦对下午没课，整理内务，当然是学习了。晚上的时候去教室看大国工匠。前面点名的那个b声音小的要死，根本听不到。无语子。晚上和宝宝聊天真的很想宝宝，宝宝明天教资地点就出来啦，真的很期待，我好想陪着她一起去考试，但是宝宝会紧张。希望宝宝离着江科近一点 不要太远啦</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.11</span></strong></p>
-<p>宝宝今天考教资的地方出来啦，是在南昌职业大学，是侯松林所在的学校，0.0 地理位置有点偏。还只能坐班车过去，不过还好宝宝宿舍四个人都是在那里，这样我就放心了，不然很是担心宝宝一个人过去哇。今天效率还不错早上背了单词刷了四级书(当然是宝宝送我的那个啦) 正确率不错，蛮高，写了2篇长篇阅读，和一篇仔细阅读(全对耶) 很开心。正在慢慢熟悉语感，真的好想下一次就直接过四级呀。下午的时候敲了代码，嘿嘿，学习并行很开心，晚上跑了1km。今天从宝宝那得知了lx和她男朋友好像都不知如何说爱，嘿嘿，我和宝宝非常知道，这也使得lx很羡慕宝宝！好想宝宝！晚上买了点零食 也没买多少，感觉没有买的兴致了，qaq，没有宝宝陪我买！ ~晚上的时候惹宝宝生气了，呜呜，我真笨，又不小心让宝宝生气不开心了，而且我还不知道是哪里不小心惹到了宝宝┭┮﹏┭┮ 宝宝对不起。宝宝说我态度不好，呜呜，我努力回想着，真的肯定是不小心哪句话说错了，态度不好。</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.12</span></strong></p>
-<p>哼哼 今天跟宝宝生气了，起因是cc，很讨厌，我有理由怀疑宝宝也对我生了本不太属于我的气！上午是一个极其难熬的讲座。中午的时候宝宝生气了，然后换头像了，我当时也很生气。看着她第一个头像那么开心，我真的很讨厌第一个头像。第二个头像我才发现 宝宝也是在等着我去找宝宝！我好多次尝试着給宝宝转账看看宝宝有没有把我删掉，很欣慰，宝宝没有一生气直接把我删掉了。但是换了头像 我也挺难受的。下午自我介绍+竞选班干部，好无奈，整用不着的一套一套的，果断带上电脑去敲代码！当不了一点班干部。没那个闲情雅致了已经。晚上宝宝跟我聊了聊关于她朋友的事情，真的很想听宝宝的一切事情。能让我更进一步的了解了宝宝。晚上的时候呜呜敲代码入迷了，然后没有及时看到宝宝的信息。宝宝的晚安没有看到，然后差不多40多分钟后，我才发现。回了宝宝，宝宝秒回我了 “等到你咯 晚安” 呜呜呜，怪我没有及时找宝宝。宝宝应该带着不开心的情绪入眠了吧。真的真的很想宝宝</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.13</span></strong></p>
-<p>晚上宝宝给我点了一份梅菜扣肉(擂椒+土豆丝)，哇塞，那个真的好好吃啊。我在第一食堂看到过 当时就觉得很贵然后没有吃。今天尝一口宝宝给我点的，真的感觉是我在来南工之后最好吃最美味最满足的一餐啦。超级开心。室友都羡慕嫉妒了呢。吃过饭以后和室友集合去外面的超市买点东西。我买了一个坐垫，还有一点零食。不得不说那里真的很便宜。以后常去。晚上的时候宝宝不开心。┭┮﹏┭┮ 我也不开心  宝宝晚上没理我。。。不开心。。。。晚上找不到宝宝。。。不开心。。。找了任何方式都找不到。</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.14</span></strong></p>
-<p>宝宝早上回我了，不过今天状态一直都不是很好，感觉不太像跟我说话的样子。早上本来去上课都下课了，然后都走到校门口准备吃饭了。结果在群里发了通知说让我们回去教室，教务处的在查课。真的是被无语住了。中午我们去外面吃了舌尖大师。虽然说人均25，但是怎么说呢 不太好吃，真的没有麻辣香锅一半好吃呢。。。烦死了。下午的时候一直在敲代码，今天学会了很多。idea自动部署tomcat服务器，以及去完成代码的实现。晚上的时候和宝宝吵架了，第一次是情绪上的对峙。很难受，是我的问题。找到自己的问题并努力去解决！！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.15</span></strong></p>
-<p>中午去外面吃的黄焖鸡，今天本来可以报四级的，但是我们专升本的没有照片，不可以报，但是后面说可以提交信息，那边录入，也就是说我这次也可以报了，我要开始努力刷题了，加油！！。宝宝今天下午16:30准备出发出发<strong>南昌职业大学</strong>，宝宝明天在那里考教资。宝宝加油吖！！遇到了一个很可恶的滴滴司机，到了地方不取消订单，还在一直扣费，这样就会增加很多钱。让宝宝去投诉它们，一个工作日后有结果。宝宝明天考教资！！加油呀！</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.16</span></strong></p>
-<p>哦耶，宝宝今天考完教资啦，终于可以轻松一点了。哈哈 晚上的时候和ck去了绳金塔顺便吃了一家东北菜 还不错。回来的时候坐的公交车专线回来的。宝宝她们晚上也费尽千辛万苦才打到车回了学校；宝宝跟我抱怨了很多关于南昌职业大学(侯总的学校)，确实，好拉跨。qaq 不知道他在那里过的怎么样。哈哈哈。宝宝晚上的时候胃疼，去美团上看美团买药不知道为什么不配送到北校区。晚上和宝宝语音+视频啦。当时宝宝躺在床上看到了嫩嫩的睡衣，软绵绵的声音，好想rua一下，宝宝这几天折腾肯定累啦。好好休息一下啦 晚安宝宝！~</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.17</span></strong></p>
-<p>今天真的超级开心！！见到了突然的宝宝。当时宝宝在跟我视频准备说跟室友吃饭了。而且当时问我有没有吃饭，我说吃啦~ 当时感觉宝宝有点不开心。<strong>准备给我点外卖的</strong>，但是呜呜呜 我却提前吃了。当第二次跟宝宝视频的时候，一开始画面还是黑乎乎的，但是突然一下子！！挖槽我直接震惊了！！妈耶！宝宝就在我宿舍楼下。真的是完全没有想到。真的很开心，现在回想起那个画面就是宝宝视频后直接是我宿舍楼的画面，真的！！超感动。宝宝抱着六盒子一大大盒菜狗，真的好喜欢。我们去了第五食堂买了一份素炒米粉+年糕，哈哈哈一开始上错了后来换了。我们一起拍了很多张照片。我们一起拆开了每一个菜狗，真的做工好精致真的很喜欢，已经买好了展架，到时候放在里面 真的很美~~ 吃完回宿舍放东西給宝宝拿了个充电宝然后一起去小超市买东西。真的很享受和宝宝在一起购物的时光，像极了之后在一起晚上的时候吃饱喝足 出来遛弯然后去超市买好吃的。真美好吖~ 买完之后 宝宝订了一个钟点房的酒店，骑着单车和宝宝一起去~ 嘿嘿！我们今天在床上聊了很多呀，抱着宝宝睡觉，真的很开心聊了很多很多 好享受那段时光。差不多四点半的时候，就带着宝宝 骑着小车车~ 送宝宝去了地铁站，宝宝回去啦。真的很不舍，到上面后 由于逆光真的很刺眼 但是还是找到了宝宝！跟宝宝挥手直到宝宝上了地铁。我也就回去啦。晚上的时候宝宝给我点了一大份水果捞。真的很好吃，好像是第一次吃这么正规的水果捞吧，平时都不怎么买，今天吃到了。嘿嘿，芒果，木瓜，哈密瓜，火龙果，苹果，黄桃，红心火龙果，好像还有个无花果吧 吃的好像那个。真的超级满足，真的！！很开心。宝宝到那边后又被拉着去买零食了，呜呜呜，当时宝宝拖着不舒服的身体还是去了，真的很担心，可恶的xyq！！哦对了，还有我回来的时候理发了终于。今天很开心很开心~~</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.18</span></strong></p>
-<p>今天中午吃了黄焖鸡排饭，蛮好吃的。今天是第一次上专业课。怎么说呢都是一些我学过好几遍的东西。呜呜呜，只能自己拿着电脑去学些。宝宝中午和她室友去洪城大市场去买衣服啦，我也很羡慕，哈哈哈 其实我也想陪宝宝去，但是我不会砍价 ┭┮﹏┭┮，她们几个和cc lx zr，真的很会砍价，听了宝宝的叙述，我真的边听边张着大下巴，真的触及到了我未知的领域咧。太厉害了。宝宝今天例假来了，肚子不舒服。回去的时候吃了饭饭，宝宝都吃完啦，好想摸摸宝宝肚肚。晚上的时候去校青协开会了，还行给了AD钙和一堆小零食。怎么说呢，当时坐在中间，仿佛回到了当初在红绿蓝的时候給他们大一开会的场景。身为一个大三人，跟那么多大一的混在一起 只是为了那64学分，真的很难加。没办法，为了一年修满 为了明年的更好找工作实习。只能先牺牲一下了。晚上开完会跑了步，现在累得半死也就只能跑1km，想起当初随随便便5km，呜呜呜，我感觉再也很难跑出来当初13.14km了，很佩服当时的自己。宝宝安慰我了 真的文字会有吸引力。晚上的时候凶了宝宝，┭┮﹏┭┮ 因为宝宝的话我听了就很着急，很怕宝宝多想这么多。让宝宝伤心难过了。宝宝对不起，我的问题。</p>
-<blockquote>
-<p>小乖～你换个角度去想想，你的体重是你专升本经历的一种痕迹，痕迹是什么意思 不强化就会消退，它以这种方式表现在你身上，现在的你轻舟已过万重山，这是你努力上岸的一种表现，它和你的努力成正比，现在已经成功上岸啦，这种痕迹会慢慢消退，所以这不叫代价，这叫荣誉，况且我觉得这样的你也好可爱，我好喜欢，但是我更喜欢健康的潘潘，所以希望你减肥，这样可以避免很多疾病，所以你完全不用去着急，慢慢来，减肥是一个持久的过程，加油呀。我们是人呀，吃了东西没有时间运动，当然会长胖，这证明潘潘努力学习的时候也有好好吃饭哟，专升本压力大，也会产生压力肥，其实减肥最重要的是减心，慢慢减重，一点一点加油，量变是会达成质变的，专升本都过来了，这个不是简简单单</p>
-</blockquote>
-<hr>
-<p><strong><span style = "color : red">2023.9.19</span></strong></p>
-<p>今天晚上宝宝给我点了一份黄焖鸡，┭┮﹏┭┮ 然后我那时候睡着了，消失了两个小时。宝宝着急的找了我两个小时一开始以为是我生气了。呜呜，宝宝睡得太死了 我们宿舍三个人 一起睡着了。之后我去拿了宝宝点的外卖，还热乎的嘞，真的很好吃，很爱吃黄焖鸡！好香，一下子全吃完了。</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.20</span></strong></p>
-<p>今天发生了一个很离谱的事情，宝宝跟我讲述了lx在宿舍的恶心操作，真的我好生气啊。没想到一个女人竟然如此的心机，也算不上心机吧，只是说这种行为真的很看不上眼，我在想为什么世界上会有这样的人呢。害的我家宝宝每天想学习内心都会很烦躁，会受到影响，最后宝宝的做法我还是很支持的，宝宝也买了一个帘子，用来规避外界的不良影响。我支持宝宝！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.21</span></strong></p>
-<p>宝宝下午的时候去药店开药了，还是脸部过敏。呜呜，我感觉是我的问题，我的口腔问题让宝宝过敏了。晚上的时候风很大 很冷 宝宝的话温暖了我整个四季</p>
-<blockquote>
-<p>两个人在一起应该越来越好，不管是为自己还是为家人，我们也在为对方，我们现在放弃了一点见面相处的时间，却可以为以后长久在一起创造更多的时间，其实这个社会很现实，爱情是俩个人在一起的基础，但是还需要有很多额外的条件才能促成一个家庭，所以不管我是考研，还是你专升本扎实学好技术为以后就业做准备其实我们两个都是想要未来更好，想要我们两个人的未来更好，所以我不觉得一段时间的不能相见会如何，我会很开心你没有因为这短暂的相见去放弃一个个机会，这对于我来说是一件很欣慰的事情，两个相爱的人，彼此应该是彼此的动力和后盾，为了彼此更努力，在疲惫时想到对方就会动力满满，累了就来找我哟，只要你需要我就在.我陪伴你专升本，你陪伴我本升研，其实我们都在对方最艰难的时候陪伴，我想不管是我对于你，还是你对于我，我始终觉得虽然我没帮助你去吸收知识，但是也给予了你很多精神上的动力和支持，我想你同样会是，我们都在对方最艰难的时候都能一直陪伴了对方，我们都应该去珍惜那一个愿意陪你走过来的那个人，这是这段特殊时光里我和你最特别和珍贵的回忆</p>
-</blockquote>
-<p>真的很温暖，很感动，晚上的时候宝宝一直在问我一个问题，问我爱不爱她。我真的很爱，真的很想跟她一直走下去，畅想了很多很多未来在一起的生活。想和宝宝一起努力。一起努力为了未来，宝宝，我还是以前很爱你的小潘学长。我的宝宝，真的很想你。真的很想很想。</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.22</span></strong></p>
-<p>今天依旧是好好吃饭且自律跑步的一天呀。晚上的时候班里有会议，唉，因为一个国庆节请假的流程麻烦死了，还要开一场点名的会议才能解决。我真的会无语，然后呢，我去那边请假，准备请一下国庆回家的假，跟我妈去商量了一下，说我先请个假 但是我人还在学校，我想在这个时间里可能会出去玩一下。一下子请假就很方便，到时候如果我出去了请假就很麻烦。结果我妈来了一句话”我不管、随便你” 直接给我整无语了。。唉</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.23</span></strong></p>
-<p>早上的时候为了2学分去献血车献了400cc的血，也是才知道我是O型血。献完血后送了一把伞 绿茶 还有饼干，还不错 嘿嘿。今天晚上和宝宝聊了好长时间的视频通话，用的是抖音噢~ 宝宝真的很美很可爱很好看，明天就可以见到宝宝啦，开心！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.24</span></strong></p>
-<p>今天上午八点多起来啦，很开心 嗖嗖嗖的一下子从床上钻了下来，激动又兴奋，激动是因为今天能看到宝宝，兴奋是因为今天可以和宝宝近距离贴贴~ 真的好想宝宝呀。宝宝六点多就起来了，准备了一下往中堡这边走。宝宝今天要来找我玩啦~~ 9点多噌噌噌的往外走，去地铁站接宝宝，当时到了外面真的一个单车都没有了。真的都这么卷吗，都醒的这么早！！于是走路到前面拐弯的路口那边有单车，扫了一辆单车踏着清风去接中堡四号线接宝宝。宝宝今天很漂亮！好可爱，是一只小甜妹，也是一只仙气飘飘的小仙女噢。随后骑着车车和宝宝去了望城滨水公园玩，当时找了半天停车场。还好停下来了。和宝宝在海滩旁边，哈哈哈 海滩有点小。和宝宝一起绕着海滩走了一圈，边走边聊天，真的很享受这种时光，悠闲、轻松、快乐，享受着微风拂过面颊，好舒服吖~ 后来过马路去扫了一辆单车，骑车的时候，偷偷拍了一张小宝宝带我的照片，好爱呀~ 宝宝说了一句话，跟我在一起，真的很安心，不用担心迷路，也不用担心不会骑车。反正真的很安心。之后带着宝宝去了学校对面吃了鸡公煲，也算半个麻辣香锅吧，当然是香锅鸡啦，当时差点误点了米饭，还好宝宝聪明伶俐误打误撞的取消掉啦！nice！！不小心下意识的点了两碗米饭。味道很不错，鸡肉真的蛮好吃的，其他还行还行。一般般，全部吃完啦，还不错吃的真的很饱，我和宝宝都吃饱啦。呆着宝宝去自习室电子阅览室里面休息了一下，和宝宝一起玩蜘蛛纸牌，之前接触过一直玩不明白，我发现宝宝真的很厉害。差一点就叠满了，和宝宝在自习室里贴贴，胳膊靠着胳膊 趴在桌子上偷偷瞄着宝宝，宝宝也偷偷瞄着我。呆了一会差不多快要去值班咯。回宿舍拿了工作牌还有給宝宝拿了一块冰皮月饼。值班的过程也是比较坎坷，中途还迷路啦，有宝宝陪着我。最后终于找到了献血车，和宝宝的那一个半小时的值班真的很开心，宝宝拿着测了我的血压，看到上面写着血压偏高，当时宝宝真的很担心，我很心疼，宝宝真的很担心我的身体。确实不能再乱吃了 要好好锻炼身体 不能辜负宝宝，不能再让宝宝担心啦。中途跟一个学长聊天，很开心，看宝宝和他聊的很欢，说实话有一点点点的小吃醋，哈哈哈，为了证明自己身份，不断的戳宝宝，哼，宝宝是我的！！值完班后，和宝宝一起去吃鸡蛋炒面。宝宝请我喝了一杯书亦烧仙草，真的那里的料很好吃很好吃，那个炒面也超级好吃。和宝宝一起吃面 一起喝奶茶，一起享受晚饭的时光。到了与宝宝分开的时刻，真的很难受。我其实也很想宝宝一起陪着我开班导的傻逼班会，但是真的因为开会结束的时间太晚，然后离着江科也很远，很晚，也很不放心宝宝一个人回去，真的很不放心。明明可以把宝宝安全送到地铁四号线，又怎么能让宝宝自己一个人独自走夜路，而且离着四号线很远。不放心不放心。骑着小车带着宝宝去了一次非常规路线的四号线，温柔的风吹在我和宝宝的脸上，骑着车亲吻宝宝的脸颊。真的很想把时间定格在那一刻，微风不噪！时光正好，夕阳落在了大地泛成了金黄的路。和宝宝相拥相吻，与宝宝分离。很难受，恨不得真的想重新回到专升本，如果当时真的再高几分，就几分就行了。宝宝…我想你了</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.26</span></strong></p>
-<p>今天能拿8学分噢，中午的时候参加活动，晚上还有2个到时候一起搞，而且晚上还有部门例会，大无语事件来了。。呜呜，宝宝那边发了月饼呀，真的做的很好看，精致的包装，很羡慕。唉，我们的比较简陋，拿不出台面不发朋友圈了qaq</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.27</span></strong></p>
-<p>晚上和宝宝打视频，宝宝今晚好美，刚洗完澡的宝宝宛如一朵出水芙蓉。和宝宝打电话，虽然没有说什么，但是和宝宝面对面互相望着彼此，很想宝宝了，真的很想。我们都哭了，是幸福的眼泪，是想念的泪水，小潘学长一定要好好努力不能让宝宝受委屈了</p>
-<hr>
-<p><strong><span style = "color : red">2023.9.30</span></strong></p>
-<pre><code class="java">看一看吧，跟 fs 无关
-潘春尧，好像我俩矛盾越来越大了，记得上一次的国庆期间吗？好像也发生了不好的事情，我俩因为矛盾分开了，还好努力挽回了，这一次为什么一放假我就想回家，因为想避免矛盾，害怕上一次的事情重演，好像还是避免不了，我是不是很没用，又找事情了，28号的下午，是我们在一起最最最需要你的时刻，你未经历我未经历的，可能不知道我的感觉，我一次次的希望你能来，你总说为什么我想让你来却不直说，就像你一样，我能懂你所想，所以你反复拒绝我还是觉得你希望我这样去做，我一次次的跟你打了电话又挂断，今天这个电话打完快把我压垮了，在此之前我想见面解决问题，去找你，因为我知道我俩都开心不起来，可能见面会化解所有问题，我上午看车票看到下午，但发现只能坐大巴，我们可能只有半小时的相处时间就要赶回来，但是我却愿意去一趟，可能聊的会很激动，矛盾也会越来越大，但是我觉得你在坏也不会忍心看着我哭还说气话，对吗？你总说我情绪稳定，但是也是人呀，也会伤心难过，不竭斯底里是我最大的努力，我昨晚问你，为什么你想到了回过来，你却没来，你回答不知道，我记得每次闹了矛盾，把你哄好后，你会想着跟我打电话，会好好说话，跟我道歉，你说你知道很大的原因在你，你说我慢慢改变了你，只是你的性格里还残存着，你说你罪不至死，为什么要做出行动才能等我赦免，你还说为什么因为这么一件事情我的态度要这么大，潘春尧，你知道吗，这件事情不小，你不知道那时我多无助，我想着你明明能来，你却不愿来，以后无数个我需要你的瞬间，你都不在，你总跟我说你以后会在我身边，可以未来无法预料，如果你不是潘春尧，你只是我微信里的好友，即使你是我最好的朋友，你没出现我都不会去怪你，但是你是，这样说当男朋友是不是很累呀，你说你跟我说了对不起，但是道歉不应该是这个样子的，你只是希望这件事情立马解决立马过去，我们还跟以前一样，但是我的内心告诉我没办法当做什么事情都没发生，你总觉得是聚会的问题，如果你不去聚会什么都不会发生，但是不是，你不去，我依然不会明说，我们386天啦，这段感情分分合合了2次，如果是去年的这时候，我想我还是会说出分手两个字，但是这已经是1年后了，即使很生气，我好像也会去担心你，会心软，害怕你抽烟，不好好吃饭，害怕你会不会心情也很不好，我现在脑子很乱，我也不知道怎么去解决，你一个劲问我我想干嘛，我要你怎么去做，我好像也说不出来，但为什么你不愿意为了我去想一想应该如何去做呢，潘春尧你不能只接受我对你撒娇，开开心心奔向你的那一面，我会难过，会委屈，会质问你，这才是完整的我，我也不知道写着写着就写了这么多，逻辑好像乱七八糟，你头像真丑，开心点吧，不开心真的伤身体，我胸口已经疼了一天了，注意你的高血压，好好吃饭，好好休息。
-
-宝宝，当你说你下午想跟我见一面的时候，其实我真的很开心的，但是我又很害怕，我不知道怎么面对你，因为我知道这件事已经在你心里形成了不可逆转的伤害。同时我也害怕你这次的突然见面是想跟我分开。我不敢见你。我并没有觉得这件事是一件很小很小的事情，我知道对你伤害很大，我心里会产生一种趋避的想法来试图麻痹自己。但没有用。昨天晚上我的那些全都是内心的话，我真的不想失去你。但是我每一次的做法都感觉自己在背道而驰，真的会被我搞砸。我知道宝宝你想让我有所作为 让我表态，我也很想解决问题，却不知道怎么去面对你 怎么去面对这件事，因为已经发生了，我感觉我做再多也无济于事，甚至会产生之前所说的趋避心理。我不知道为什么我会这样。接下来我将会回答宝宝想知道我当时为什么没有去的原因(可能有些话宝宝不爱听 但是我还是想将我内心的想法表达出来)；我知道你生气不是因为我聚餐，而是因为我面对宝宝发生的事情之后没有作为。这次聚餐我其实好像也跟你说过不是很想去。因为我不知道为什么会感觉发生什么。其次我也说过 在剩下的两年也不太想交过多的朋友，自己当一个小透明就好了。聚餐这件事 我应该和宝宝重复说了三四遍。首先我并不是去强调这次聚餐的重要性。我只是想跟宝宝不断的重复 我有这件事 且 在这件事发生的那一段时间内我可能会没有很多时间去回宝宝消息。当时你说你没赶上火车的前后那一段时间，我和他们已经见面了且已经在餐厅里坐下点完菜已经上了，他们在聊天自我介绍的时候，我都在回宝宝消息，你说你因为班导发的那个东西没赶上车，我当时也很着急，但是我不知道为什么我在着急的情况下所作出的事情或者一些决定就比较偏激。当时我并没有不理你 我也在一直和你对话，然后那一瞬间 就感觉到你很不开心，都不想跟我讲话了。甚至能感觉的到你很生气。我当时真的很恨你们班导的。然后不知道为什么就总感觉宝宝因为班导那件事而把所有的怨气都发在我身上。我也没有做什么事情啊，我变成了受害者。但是我知道 我是你很重要的人，但是你对我当时的态度真的很不好。后来你说晚点了没赶上车，我问你在哪里，你说在车站，然后你跟我说了好多次让我好好吃饭 我当时真的认为你是因为怕我误了与他们聚餐 怕我拉不下台 你才不想让我去，后来我提了两个建议，回学校或者在附近找个酒店先住下等我完事后再想办法回宿舍刷个脸之后再去找你。但是感觉当时宝宝的反应不是很想理我 感觉这件事的起因是我 这件事也怪我 就瞬间感觉自己蛮委屈的。因为我当时真的感觉到了你把所有怨气都给了我。我不知道你能不能理解我，应该不能，因为我也不理解我自己当时怎么在那一瞬间会有这种想法，然后真的有过去找你的念想，我可以直接离开餐桌并且跟他们说 临时有点急事需要离开 人头算上我的 到时候AA的时候把我算上，但是再加上刚刚我的那些想法，还有感觉你想让我好好吃饭。我不知道当时为什么有这些想法，说不清但是这些就是我当时一瞬间心里所想的。至于后来第二天早上去找你的时候，我是担心你，同时也真的有一点点愧疚，但是我感觉已经产生了创伤，确实无法弥补，但是如果什么都不做 会不会造成第二次伤害。然后今天下午的时候在图书馆跟你对话，我说我感觉自己并没有很大错误(这里包括之前提到的趋避心理)为什么你给我的感觉就相当于我触犯了天条一样。其实是因为 当初感觉你把这件事的前因后果都给了我 起因是因为班导发通知晚了，而导致的一系列，我确实有不对的地方。还有包括下午我说不想见面，是因为，我知道自己错误很大。我不敢面对你，我不忍心你哭泣。就像你说的 一年多了 我又怎么可能在你伤心难过的时候火上浇油，我不知道为什么当时的做法想法以及所说出来的话出自我的嘴中。我知道说再多也无法弥补自己的过错。我只是想希望 宝宝你能理解我这样做的原因还有一些我自己都无法理解的思维。你说过有时候我很陌生，确实我也感觉自己有时候真的很不像我自己，就像另一个人，我不知道我有没有人格分裂，我只能跟宝宝说出我当时的想法。
-</code></pre>
-<hr>
-<p><strong><span style = "color : red">2023.10.1</span></strong></p>
-<p>呜呜 今天本来是可以去永修找宝宝的。难过。今天晚上去看了10.1的一场烟花展 蛮不错的，走路走到脚丫子麻，它为了限流封了铁门，不让进的那种，真的很讨厌，然后绕了一大圈才进去的，差不多20:00开始 我看了15分钟就赶紧去往地铁站跑，怕赶不上回去。烦死了这个学校。最终安全到达，还买了一份炒河粉蛮好吃的。晚上的时候宝宝和小胡还有一个某某在一起，也就是说宝宝在朋友家睡觉觉，宝宝视频打来了 是他们骑小嘟嘟车，宝宝坐在后面，哼 誰抢了我的驾驶位！！不行了好困好困，真的这几天都是早起晚睡。蒙圈了已经，小宝宝晚安辣。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.2</span></strong></p>
-<p>宝宝今天中午有喜酒吃噢，真的一大桌子菜好丰盛，好喜欢那里面宝宝给我拍的梅菜扣肉，哈哈 那才叫真正的梅菜扣肉嘛，看着很好吃耶，还有烤羊排，木耳炒猪头肉把，看着那个肉不是猪肉，像猪头肉。不过好多好多肉肉，宝宝好像只吃了点粉粉，还是爷爷給宝宝夹了肉肉呢。从宝宝嘴里也了解了一些关于升学宴，吃席 的一些要求和注意事项。不错，长知识了！哈哈哈哈，下午的时候和宝宝一起睡了一下午。真的这几天好困。晚上的时候和宝宝视频 宝宝家里也有绿色的橘子噢，还有苹果。下次教宝宝怎么吃橘子。宝宝开视频都不给我看宝宝吃东西的画面，哼，想看。宝宝最后忍不住了，睡觉觉了，哈哈哈哈 困困的宝宝声音软绵绵的好想rua她！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.3</span></strong></p>
-<p>哦耶 中午吃的黄焖鸡米饭 晚上吃的牛肉水饺，不知道为啥连续4天美团拼好饭都是1.6元红包，是不是国庆节点的人少了，美团平台为了留住客流量所以給每个人的概率都变大了呢！！不能这样想，万一明天就不是1.6元了可咋整。宝宝中午乃至下午去和朋友出去玩，怪也只怪那个朋友有点吊儿郎当的样子，让我家宝宝很无奈，我也很无奈，真的是 不喜欢那个人！！晚上的时候宝宝给我发了一些<strong>不可理喻</strong>的照片，经过我的慧眼，哈哈哈 还是发现了破绽，宝宝发给我的是一个男生和女生做着亲密的动作，宝宝想让我认为那个是她！哼！！我那么聪明可不会上当的噢。晚上和宝宝视频，抖音特性的喷火龙真的好好玩。喜欢玩！！呸，喜欢和宝宝视频！！晚上偷偷的敲代码，因为出现了一个很讨厌的bug 改了我一个小时都没改出来，气急败坏发了朋友圈发气！哦吼，宝宝2点的时候突然给我发了消息，卧槽，吓死我了，宝宝突然醒了，看到我没睡觉好生气！！emmm。。。怎么说，还是在宝宝偷偷睡觉之后，我写完了这篇日记，乃至高效率的把逆天bug改完了，宝宝看到这里的时候会不会生气气了。我觉得宝宝一定会截图然后找我来对峙！！怎么办啊，还要不要写上面！！没事 写吧，记录最真实的自己！！勇敢潘潘 不怕困难！！宝宝晚安！！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.4</span></strong></p>
-<p>今天和宝宝见面了哇！下午宝宝突然回来了 因为室友lx的情感问题嘛。我好开心，今天能和宝宝见面咯！下午的时候和宝宝一起双向奔放 一起朝着秋水广场进军！我先到的，等了小宝宝一会，当时看到宝宝的时候，哇，我的小可爱好久不见啦，真的好可爱好漂亮的宝宝。我们去了秋水广场前面那一小条商业街，其实也不算是。去那里吃饭饭，宝宝请我喝了古茗，奶茶真的很不错。我带着宝宝去吃黄焖鸡。两家黄焖鸡极限二选一！哈哈哈，味道还算可以，就是那个蔬菜，给我弄懵逼了，头一次见到这种生菜用水煮过后加酱油的。虽然在家都是生吃蘸酱，突然看到这种吃法还是有点懵逼的。随后我们去了两个大超市里转了转，在第一个地方买了小彩票，哈哈，是5块钱的小彩票噢，中了4张吧，忘记了买多少张了。之后又逛到楼上有一个快乐游戏城 好小，去那里看了看抓娃娃的，感觉不好搞。之后路过了外星人专卖店，长见识了。感觉回家了。后来我俩又去那种实体店的彩票站玩了几张。差不多快六点咯，准备和宝宝在地铁站分别啦，宝宝一号线，我二号线。很不舍，想宝宝。坐电梯下去的时候我一直回头想找到宝宝，当时想着宝宝会不会下来啊，一直再回头。qaq，最后到学校啦。晚上宝宝去拿了快递，是给我的礼物噢，虽然宝宝想保留惊喜，我看着是一个长长的快递盒子，真的很期待。宝宝晚上弄了很久，一刻不停，生怕弄错，当时知道宝宝在弄真的很心疼，辛苦啦宝宝。宝宝今天顶着难受的身体和困意以及难以承受的疼痛，在一点一点的给我弄礼物。很感动真的很辛苦宝宝，真的好爱好爱你！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.5</span></strong></p>
-<p>早上订了好多个闹钟还有手表的闹钟，准确无误的六点起床了，然后骑小绿车去地铁站终于赶上了第一辆地铁，去江科找宝宝，带宝宝去医院。很想让地铁车快一点再快一点，在车上我就在想宝宝在干嘛，是不是很不舒服，宝宝是不是还在给我弄礼物。真的感觉这辆列车真的好慢好慢。终于到了太子殿，宝宝已经在那等我了。骑个小车车和宝宝相遇，宝宝今天依旧很美很可爱，是天蓝色的裙子，之后我们就一路飙车到了南昌大学第一附属医院，真的第一次来医院，我好像没咋在医院呆过，可能从小就比较野，也可能是老天的眷顾。第一次到这么大的医院，第一次陪爱人来这里。真的感觉自己突然肩膀上就有了担子，有了责任感。第一次到医院，真的很神奇，对各种事物都很好奇。来回来的看看这看看那，哈哈哈 宝宝都觉得我好可爱的样子。然后我们就挂号-专家号-签到-等候-问诊-彩超-签到-等候-就诊-签到-问诊-C14呼吸-等候-吹管子-等候。整个流程我都陪在宝宝身边，宝宝依偎在我的身边，中间发生了一点点不愉快，还有宝宝爸爸妈妈不放心宝宝自己一个人在南昌这里做胃镜，于是开了一点药，最终的步骤定格在了C14的吹气。差不多到了11点多，和宝宝回去咯，宝宝带着我去吃了壹碗面，宝宝吃了肉丝炒面，宝宝给我点了一份竹笋回锅肉，蛮不错 还是宝宝选的面面好吃，中午也是第一次去了无人自助营业小卖铺，差点没出来。后来点了份皮蛋肉饼汤，那味道绝了！吃完后送宝宝回了寝室，宝宝胃痛多休息一下，还有下午要交材料。由于中途之前红绿蓝的干部跟我说晚上要请我吃饭。于是乎下午就在外面自己转了好长时间，去各种地方抓娃娃。说实话很无聊但是时间过得也蛮快的。晚上的时候说实话真的很担心宝宝，宝宝好像有点不信，后来手机还有30%左右的电怕到时候上不了地铁，然后和宝宝说了一声就关闭了流量。说实话过了一年红绿蓝发生了翻天覆地的变化，一切都物是人非了，很多事情也真的让我不可思议。边吃边聊那一瞬间还是挺开心的，就仿佛回到了一年前，我当部长的时候带他们一届一步步走来，现在想想真的感觉每个人都有了不一样的成就，还是很开心的。喝了两罐啤酒，其实我喝酒只是上脸但是根本不会醉，有个人跟我说你这样的上脸但不醉的 是最能喝的 哈哈哈，但是呢 不是很想喝酒啦。吃完后回学校回宿舍了。还是很担心宝宝，晚上的时候宝宝很不开心，确实因为我的问题，但是我想说 宝宝你可以完全信任我，我不会做对不起你的事情，我也不会跟别人搞暧昧。宝宝你放心真的 我在感情方面是完全不会骗宝宝的</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.6</span></strong></p>
-<p>今天晚上和室友出去吃的，本来一开始打算直接在学校对面吃，但是人太多了。于是骑车前往2.8km的地方去吃了大排档，还行味道不错，3个人aa50左右，吃了烤鱼，卤鸡爪还有很多别的菜，还有螺丝。宝宝晚上没有吃，胃还是有些难受，然后今天好像饭前的药也有两顿没有吃！！宝宝你要记得吃药 饭前饭后都要按时吃，知道了不！真的蛮担心你的。小可爱你要听话 你要乖~ 快快好起来吖。真的很想带着你吃香的喝辣的，即使宝宝吃不完 只要有我在，宝宝就会很放心。真的很想你了 宝宝，还没有亲亲，好久没亲亲了。晚上回来的时候室友都到齐了。终于不是孤独的守宿人了。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.9</span></strong></p>
-<p>凌晨的时候1点多 突然醒来 感觉浑身发热 头晕脑胀 浑身无力，发烧了发烧了，头一回感觉到很无助，于是我去接了点热水 喝了一下感觉好了一点点，爬上床暗示自己赶紧睡觉 睡着了就没那么难受了。还好睡着了，早上六点多起来了，准备参加2分的升旗仪式，好困 头晕晕的，感觉早上浑浑噩噩的 想宝宝了。真的我能理解宝宝 当时在我昨晚的时候真的很想宝宝出现在我的身边。中午放学了，没有点外卖本想去食堂吃一下，但是好多好多人。无奈只能去买了一张手抓饼 和 一个油炸糕，下午是补课 补的数据库的课程。讲的真的好慢啊，上完课突然肚子不舒服于是就去厕所蹲了好长时间之后买了一杯猫和老鼠的联名瑞辛，说实话这个马斯卡彭生酪拿铁真没有生椰拿铁好喝。今天一天都食欲不佳，不太想吃什么东西。宝宝知道我的情况以后，点了外卖(江南小碗菜) 啊哈！！超级好吃，当时去的北门拿的外卖，真的很多量很充足，有梅菜扣肉，酸辣土豆丝，蒸蛋，西红柿鸡蛋汤。真的连吃了好几天的拼好饭，感觉突然一下子出现了一餐饕餮盛宴。真的很好吃！梅菜扣肉肉质紧嫩弹口，酸辣土豆丝比食堂的好吃，蒸蛋蒸出了家的味道。甚至西红柿鸡蛋汤都要比食堂送的汤好喝100倍。嘿嘿，开心！！晚上的时候开了部门例会感觉也没多大事就开会开会！开个球球！！找个机会到时候迎新晚会过完吃完那个1000元左右的大蛋糕之后！！差不多找个机会走啦，宝宝今天玩了瞎子摸人噢，听规则真的很有创意。不愧是我家宝宝，思路清晰 想法多多~~ 晚上宝宝给我发了图片真的很委屈 我看着好心疼！！我想把宝宝介绍给我爸爸认识一下，让宝宝在我爸爸心里有个名分，我想和宝宝一直一直在一起！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.10</span></strong></p>
-<p>宝宝今天早上喝的粥粥噢，因为起晚了没赶上吃饭，所以买了点饼饼凑合的吃了点就飞快的溜去上课了，今天胃口十分打开噢，是宝宝充满爱意的小碗菜功劳，哼，宝宝今天一上午 下课了都没理我一下子！！不听解释！！都十一点多了才理我，中午宝宝吃的土豆丝，而聪明机智的我已经提前点好了外卖，直接到宿舍就开吃，今天下午是公休没有课，但是有集体参观博物馆，中午在宿舍小憩了一下，赶到了博物馆门口准备进去。进去之后真的蛮壮观的，真的连学校都没出就可以参观那么多好看的真迹珍品，那边还真的有24k纯金打造的观音菩萨还有很多很多。看到了非常好看的象牙雕刻的美丽雕刻品。中途有一段不让拍照 不让说话 不让用手指。因为那些贡品都是菩萨 佛类的 而且都是在很多地方供奉了很多年的，要怀着崇高的尊敬去看。果然好东西都在里面。包括那个24k纯金打造的很多物品，真的好壮观。看完之后出来回宿舍换了一套装备然后去校门口准备吃烤鱼，别说还真挺便宜19.9元两条烤黄花鱼，于是又点了点别的，嘿嘿我点了一串烤大肠 6元一串，有点小，原来烤的没炒的香。不过还好。蛮好吃，还有烤茄子。3个人吃完了人均差不多21元，很不错。吃完后去逛了逛超市。买了一袋黑芝麻糊，还有一袋荧光笔。晚上的时候宝宝给我分享了一个披萨坚果饼干，听宝宝描述真的很好吃，宝宝给我买了一份噢！！哦耶 好开心！！真的宝宝很会买，物美价廉，嘿嘿，以后非常持家 我会超级幸福！！超级期待宝宝的小饼干噢~ 本来这周六想去见宝宝的 因为17号之后可能一直到学期末 每周二 和 周六 就有那个阿里培训，表现好的话可以免费考含金量很高的阿里认证，还有机会获得实习机会！要好好加油！好好表现。可是宝宝这周六要去夜爬武功山，蛮担心的，主要是大黑天，那么远，真的很的担心。都怪这个傻逼学校不然我就直接去陪宝宝了，┭┮﹏┭┮</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.11</span></strong></p>
-<p>这几天宝宝都在乖乖吃饭饭，我决定要奖励宝宝一个大大的么么哒！！哈哈 宝宝给我分享了一个截屏 聪明机智的我一下子就看懂了里面的含义，一只双标下头男 哼哼哼。中午宝宝也乖乖的把饭吃完咯，虽然跑着去的食堂很不容易 哈哈，我中午吃了辣子鸡+包菜还有一碗免费冰凉的冰粉。下午的时候电脑好不容易连上了机房的电脑，但是宝宝不鸟我！！qaq 今天得到了一个新的名称 蛮喜欢的！！<strong>粘人蛋</strong> 哈哈哈哈  之后就是枯燥乏味的数据库课程了，然后就是苦苦坐牢2个小时换来的3积分，真的要了老命！晚上的时候吃了面条。回来继续学习数据库敲代码。帮宝宝搞了一下Word文档，哈哈 还是很小心翼翼的 生怕弄错什么。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.12</span></strong></p>
-<p>早饭吃了倆包子+一个煎饺 蛮好吃，宝宝不知道吃了什么不知名的东东还有个茶叶大蛋，宝宝买票票了，去武功山的票票，10月15日的反票，中午点了一份拼好饭 还不错耶，加了一根烤肠。今天宝宝给我买的披萨饼干到了噢，真的超级着急直接出了快递站就立刻打开了包装，在外面吃了一个，好好吃耶！里面有20块，香香甜甜的小饼干。大坚果好大一颗镶在饼干上，真的很好看，嘿嘿 没给室友要自己偷偷的吃！晚上宝宝已经开始准备爬山的东西了，充电宝要带大款的噢，水尽量多带一点点。宝宝的干粮买来都差不多吃完了，再去进一点，但是好担心宝宝的书包好重┭┮﹏┭┮ 好想陪着宝宝去帮着宝宝背着包裹。犯人该死的学校啊啊啊啊啊啊啊啊</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.13</span></strong></p>
-<p>哦耶，今天终于周五咯，熬到头了。下午庆祝的睡了俩小时 做了一个梦，醒来后去跟室友吃了张亮麻辣烫。很舒服 很喜欢放假！！晚上和宝宝打电话咯，也打视频咯，好久没见到可爱的宝宝了，真的很想，一开始宝宝没有好好的理我，┭┮﹏┭┮好委屈，后来宝宝开心的理我啦。我也很开心，之后抖音打视频咯！宝宝明天粗去丸，好羡慕，我室友好像明天早上5点起床5：30准备去工作，因为学校6点开门嘛，然后去和宿管商量，因为就早了半个小时嘛，但是宿管不让，不给开门，说要家长给班导请假后截图发过来给宿管然后宿管确认后才可以。再一次体验到学校的极度傻逼！！！我真的是醉了！！宝宝准备写贫困档案了，看起来好多，宝宝加油！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.15</span></strong></p>
-<p>昨天晚上陪着宝宝到了一点多，还是不小心睡着了。宝宝她们夜爬武功山，第二天醒来的时候，看到宝宝给我发了很多条信息很开心，看到了云海，还有其他很多很多，听宝宝描述了许多事情，也同时看清楚了一些人，qaq 听完之后不太敢去了。宝宝她们昨天晚上一整晚都在地上坐着，而且山上很冷很冷，就硬生生坐了几个小时。我靠，我真的很佩服她们能夜爬成功登顶武功山，把武功山踩在了脚下。后来下山的时候，下了一半，坐了一半索道。好家伙，听宝宝说排了3-4个小时，感觉宝宝这次之旅带了两个”拖油瓶”，哼，我说的，真的是，如果不是那两个人 宝宝也不至于那么身心疲惫，气死我了，我真的想去，和宝宝一起啊啊啊啊啊啊啊啊啊啊。和心爱的宝宝一起看云海那该是一件多么浪漫的事情啊。宝宝发烧了。头有些热，最后宝宝和lx回来了。正好回来的时候红心柚子也到了，宝宝拖着疲惫的身体去拿了一下水果 感觉好沉，然后宝宝回宿舍了。可能一天累到了 宝宝也没怎么理我 呜呜呜，水果也没吃，去睡觉惹。我们晚上打比赛，居然赢了。啊嘞，对面可是好多高段位的人，皮肤都非常炫酷，我中路争取不給队友捣乱 在塔下苟活。最终还能赢是真没想到的。好想宝宝。宝宝想你了！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.16</span></strong></p>
-<p>今天上了一天的课，晚上还要补课。qaq 明天还有培训 晚上补课+部门例会。OMG！<br>晚上的时候得到了宝宝的一个好消息，宝宝励志奖学金上榜了，学院公示了已经！我好开心啊，我激动的都跳起来了，啊啊啊啊啊啊啊啊已经无法用言语表达了。宝宝几年的努力终于得到了本应去年获得的奖学金，真的好开心，好激动！！！！！！！！！啊啊啊啊啊。等了一年终于等到了开心的结果！超级棒啊宝宝，我替你开心，宝宝是最优秀的！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.17</span></strong></p>
-<p>不开心，我的宝宝今天睡得好早，洗完就睡了，还在等宝宝洗完澡回来呢，结果等来了一句晚安！！！！！！！！啊。早上宝宝蛮乖的有好好吃饭。早上咕嘟咕嘟的吃完一碗清汤小面，唉，今天又是一场全天课+下午培训+晚自习课+晚上开会的硬战。今天晚上爷爷奶奶他们出发回老家了，回老家看一看，由于晚上在上课就忘记打电话了才想起来，现在可能在火车上已经睡了吧。下午的课程还行，虽然是全栈知识，跟我学的稍微有一点点出入，晚上开会 感觉那些部长样子小小的 说话吊吊的，跟个2b一样。啊啊啊真看不惯，可能真的应了宝宝那句话，层次阶级的转变 地位的转变 让我一下子就很不爽！下课后跟宝宝打电话啦，今天宝宝很开心噢，然后不小心踩到了一个人，卧槽 直接完全一脚踩上去了，该有多疼 笑死我了。哦草！宝宝回我消息了！！回了个晚安！！不行 跟宝宝聊天去惹！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.18</span></strong></p>
-<p>今天早上一节英语课，中午回来的时候买了点蛋糕，中午就没吃多少东西。然后下午还有一节课，宝宝给我说了一件关于三个人的事情，当时在上课的路上嘛，也没听清处具体状况是什么。导致宝宝错误理解了我的思维逻辑。呜呜于是宝宝就难受了一下午，直到晚上。下午的时候参观图书馆，然后去四楼玩了健身手环和一些放松的东西，有一说一这个图书馆确实是数一数二的牛逼，怪不得那么强感觉运用了很多高科技，都对本校学生免费开放欸。。去四楼转了转，有好多很高级的图书馆座位，旁边全是充电的地方。还不错，但是对于我来说可能有拓展屏的地方才是最方便的地方吧。有机会去图书馆沉浸式学一下。嘿嘿。晚上的时候去了外面吃了点东西，但是碰到了城管，直接把它们赶跑了，小摊贩也蛮聪明的，直接躲到了一个角落里，然后关着灯在那偷偷卖。买了点吃的。回来的时候和宝宝打了电话了解了详情，才知道原来有着么shabby的一个人。宝宝你放心胆敢有人欺负你，你直接告诉我，我去教训他一顿！晚上和宝宝聊天，再一次羡慕了金女士和凌老板，真的很让人羡慕耶，当我开始畅想我和宝宝的时候，宝宝给我发了一个粑粑。OMG！！！怎么会这样 突然收到了一个粑粑，直接打破了我的畅想。晚上的时候宿舍外面说进宿舍要吹管子，就是那种酒精检测的管子，好煞笔啊。不进的话就算晚归也是寄，进来的话有酒精喝酒了也是寄，这个学校属实有点⑥啊。然后十点多的时候突然发了个消息，tmd周五下午又要补课，啊啊啊啊没完了是不。这补课到底什么时候才是个头啊。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.19</span></strong></p>
-<p>宝宝早上喝到粥咯~ 然后发了一张WMH抖音的一张图片！yue~~ 想直接远程把他抖音卸载。今天下雨了，还好买了雨鞋套子，带着伞嘀嘀嘀的去上课。中午的外卖迟到了20分钟，呜呜，当时好饿，等了好长时间呢。中午向人工智障问了一点宝宝的问题。小宝宝中午吃的面条，我看着都吃完了，真棒，再一次夸赞一下！宝宝最近要来生理期了，一定要注意一点噢，别吃凉的也别乱吃东西。宝宝中午给我点了一杯古茗的芋泥奶茶耶，真的好好喝，宝宝知道今天下雨特地给我点了一杯温的暖暖胃。今天一天的疲劳真的会被一杯奶茶缓解。下午是难熬的党史课。qaq 宝宝晚上吃的蛋炒饭。本来我晚上想回宿舍泡面面的，被蛋炒饭搞馋了！想吃！！！吃了鸡蛋火腿炒饭 还不错很好吃耶。晚上和宝宝商量 宝宝说周五想来找我，呜呜 因为周五下午有补课而且晚上还有讲座，只能陪宝宝一个小时，我想陪宝宝时间长一点，和宝宝商量，最终确定周日就能见到宝宝啦。超级开心！！！哦耶！见一天噢~ 我们可以腻歪一天!想想就开心激动！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.20</span></strong></p>
-<p>哦吼！又到周五了，愉快的放假了。今天下午补了一节课，嘿嘿 我仅仅用了一节课就写完了三次份的作业，之后又可以摆烂好长时间了噢，下课后去了四楼图书馆学习了会，发现那边学习氛围蛮不错的捏，下次直接去那边学一天。18:00-21:00有讲座，哇的一下好长时间。讲完看视频就看了快两个小时，宝宝跟我聊了一些关于自己和宿舍之间的事情，听完之后，真的很生气啊。真的是越来越讨厌那个人了。你说非要这样恶心别人干嘛，真的很神经兮兮欸，欺软怕硬。真的很想过去給ta一巴掌。气死我了。周日就可以和宝宝见面啦 好开心！！又可以看到可爱的宝宝了。晚上回来洗完澡后宝宝睡着了，呜呜，回来晚了，哦不对，洗澡慢了。还没有和宝宝愉快的聊天呢，有点子小失落qaq，不开心。都怪lx 可恶的人！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.21</span></strong></p>
-<p>气死了，晚会没有蛋糕，结果后面走了留给工作人员和演员自己吃，在那坐了2个多小时 加了2分，简单看了看表演。今天宝宝在图书馆学了很多。我也学了些东西。宝宝早上吃了很多东西耶 好可爱 当时还没醒，宝宝发了很多消息 嘿嘿 好喜欢看宝宝跟我分享东西，宝宝去图书馆的时候没有带防护用具，qaq当时就差点去給宝宝买了。我们真的还有两周补课，烦死我了。好多好多好多课！！！今天早上学了会英语 还不错很满意 下午敲了会代码 现在宝宝一直不理我，呜呜，应该是突然睡着了吧，还是不理我了，还是不开心不想跟我说活了，真的好爱多想啊。明天就能见到宝宝了，很开心。今天能睡个美美的觉咯~</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.22</span></strong></p>
-<p>今天是见宝宝的一天，超级兴奋，导致我早上起晚了，宝宝六点多就起来啦！呜呜呜，我们八点多出发的。宝宝起很早化妆，我提前了一会到了地铁口，等宝宝。我们今天准备去那个红谷滩万达！去做陶瓷噢！过了一会宝宝来啦。穿的米蓝色衣服，背着我給宝宝做的包包，我給宝宝带了杯面和宝宝之前很喜欢的白色Love泰迪熊，宝宝给我带了做的<strong>PCY揽月</strong>，好喜欢！！宝宝今天很美，一见到宝宝就抱着啃！哈哈哈哈 亲了好几口，来了个大大的抱抱。宝宝早上没吃饭，中午的时候我们就去了万达准备转一转吃午饭。我们中午吃了蓝边碗，有梅菜扣肉，酸菜鱼，外婆菜炒蛋。还有中琬米饭，哈哈哈 当时宝宝去问的时候没有煎饺差点就错过了那家店，后来我们还是去了。那边除了酸菜鱼不太好吃，其他的还不错哟！吃完我们就出发去准备去做陶瓷咯，兜兜转转找了好长时间最终在一个隐蔽的角落，找到了它的藏身之地。在七楼，当时差不多一点多到那里的。当时人不是很多，有师傅在好好的教我们，当时看到有两坨泥土，好高级啊，之前只是在电视里看过这个亲自制作陶瓷。没想到今天竟然实现了。下面一个圆圆转盘，双手需要湿润沾水去转那个泥土。看着很简单但是转的时候很难，很大的阻力。嘿嘿，先給宝宝拍照，自己再去做。我们两个都做的差不多。差不多做完了成型了，就要拿火焰喷枪去給它固化。然后去旁边拿画笔涂色，我做的粉红色的星之卡比，宝宝做的是可爱的小熊维尼，涂色的时候真的很考验耐心，我们互相拍照，宝宝涂的很可爱啊。我们一共做了四个多小时，成品真的很好看很好看。回头一看，我的妈呀好多人，一群人在那等，我就坐在了小宝宝旁边离近宝宝~ 真的很幸福很开心。</p>
-<img src="https://raw.githubusercontent.com/P-luminary/images/259298f47c4e7d6f570e648f4827aded112afb22/data/%E6%89%8B%E5%B7%A5%E9%99%B6%E8%89%BA.jpg" style="zoom: 33%;" />
-
-<p>快看我们做的，是不是超级好看。后面我们拿着半成品拍了很多好看好看的照片，后来我们拍照打卡，交给师傅让他们给我们烧制，40天以后过来拿成品。到时候和小宝宝一起来拿吖。之后我们去抓娃娃，在卫东站路过了很多小吃街，但是宝宝没有吃，饱饱的，当时我好像也很饱，我们就没有买吃的。去夹到了娃娃，是一个冰激凌的小兔子。随后在卫东站与宝宝分开啦，宝宝本来是想去南昌西住一晚多陪陪我，很担心，很担心，我不想让宝宝独自独守空房，我不想让她体验那种孤独的感觉，我很着急，我很害怕，我也真的很想去，我不想回去。最后，我回南工的路上和宝宝语音，待到宝宝安全到宿舍后我才放心的挂下了电话。宝宝，很想你。很爱你…</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.23</span></strong></p>
-<p>今天不开心。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.24</span></strong></p>
-<p>哼，早上还是有些不开心，不过到下午就好了，今天一天的课，晚上还有开会。好累啊。今天跟李昊合作做了一个小项目，当然我是负责ui美工的 也就是用ps做一些图片，然后这个小项目差不多我到时候练练手，没准还可以用来当毕业设计。舒服了。下周运动会噢 会跟室友出去聚一下，宝宝你放心我会调节好，以后有什么事都会提前跟你说的，你放心啦~ , 绝不会让你失望的！我用我的方式尝试着出来。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.25</span></strong></p>
-<p>今天的课不是很多很轻松，但是明天就啊啊啊啊啊啊啊啊啊啊，大无语的多，而且这周六还要补课。bbq了，下午下课后去吃了许久没吃到的火腿炒蛋蛋炒饭。真的好香啊，好好吃，是我吃过最好吃的蛋炒饭啦。有机会一定要带着宝宝来尝一尝。那边的紫菜蛋汤真的全是蛋花和满满的鸡蛋！开心，一下子喝了三琬，嘿嘿 今天学信网数据出来啦。清清楚楚看到了自己现实 本科—软件工程，真的泪目了家人们，很开心，努力了那么久有了一个好结果，在此要特别感谢宝宝给我鼓励还有曾经努力的自己，有机会再去看一看博雅，再去临摹一下当时努力过的地方。再去看一看改变我命运的地方。晚上宝宝的姐姐来找宝宝了，突如其来的惊喜吓得宝宝手足无措，能理解。她们一起去刮彩票，抓娃娃。宝宝跟姐姐提起我啦，今天也与姐姐打了个招呼，真的很激动，啊啊啊啊啊啊啊啊啊，当时真的脑子一片空白！很开心，宝宝她们去吃了季季红，边吃边提起我，超级高兴。吃完后打电话送宝宝回寝室，路上的时候宝宝突然不说话也不支声，打了两个电话也不接，很担心当时，真的脑子里脑补了很多。好在后来宝宝跟我打来了电话，当时肚子不舒服，就没有注意手机。呜呜呜 当时好害怕宝宝出了什么事情，呸呸呸，没有没有的事！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.26</span></strong></p>
-<p>本来今天早上能睡到天亮 没有早八的，呜呜呜，今天星期四是最难熬的一天，到了教室今天上午是四节连坐！！然后发现！啊啊啊老师竟然早上没在，我们又回去了。今天我的keep手表丢啦，算啦破财免灾，那就开始减肥 让我亲自完成手表未完成的使命吧。下午的课也是难熬，党史 ┭┮﹏┭┮，晚上也有课。不过还好现在已经度过了。明天就是周五了。卧槽想起周五我就来气，后天周六竟然要补课，啊啊啊啊啊啊啊啊啊 还是四节连坐的课，妈的烦死了。宝宝今天给我买的饼干到了噢，足足40包，超级浓郁奶香的腰果小饼干，里面还附带奶油，咬一口非常浓郁，如果泡上牛奶那就真的非常nice了。今天中午抢到了明天晚上的电影加分课，nice。学了一个学期 让自己好好的休息一下看个电影。还有分加，马上我的分就满啦，现在差不多快集齐了。晚上跑了2km，好累呀，被宝宝狠狠的夸了一顿，瞬间动力来啦，浑身有劲。哦耶！！</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.27</span></strong></p>
-<p>今天周五咯，不过好像开心不起来，唉，明天早上补课，烦死了。这周日要跟朋友出去玩，当时铭升一起上过学的。晚上的时候区看电影了，不过宝宝比电影重要，没看电影，陪宝宝。过的好快，这次电影属实看的一脸懵逼，不过背景蛮好看的，突如其来的签到让我意识到结束了。今天下午买了2t的笔记本固态硬盘，800多再加上手柄200左右，好家伙 双十一也投了快小一千了。很可恶，那些钟点房都是早上的时间，可是我明天早上要补课，到12点多，收拾一下最快12:30出发，呜呜呜，好难啊，只想和宝宝安静的呆着怎么就这么难。</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.28</span></strong></p>
-<p>今天是超级开心的一天，早上的时候虽然补了四节课，呜呜枯燥无味，但是还是自学了蛮多东西的。中午哒哒哒的飞快跑到宿舍，收拾好了东西准备出发，宝宝那边临时出了些情况，于是往后推迟了半个小时，14:00到18:00 在南昌西~ 我差不多13:00的时候才出发。差不多坐到南昌西站的时候13:30了，依旧校门口没有任何单车走过去滴。当时到了南昌西，我竟然迷路了，哇靠，我人生中第一次迷路且绕远到达酒店，天呐，我以为从南昌西站地下可以横穿过去没想到穿到一半竟然写着只出不进！直接懵逼了，然后我就从旁边走，上来的时候发现四处都没有路，然后往回走找路。结果转了半天我都在横向移动 ┭┮﹏┭┮，兜兜转转了好长时间，终于找到了一条远路但是能通过去的道路，真的好绕吖。最终到酒店啦。打开门一看真的很温馨，这边的房卡还是包装的很不错的。在酒店洗了个澡 下午蛮热的，等宝宝。嘿嘿 宝宝拿着外卖来找我啦，5013号我还记得，哈哈，宝宝一开始没找到我一开始也没找到，好隐蔽的地方。不错不错！宝宝到啦，宝宝今天很漂亮(当然每天都很漂亮)，宝宝今天是马尾辫，真的很清纯活力。好想宝宝啊，第一步首先把宝宝推上床。第二步就是关窗帘。第三步就是上床聊天。哦耶，完事后吃饭都是香香的，宝宝给我买了猪脚饭，宝宝吃了蜜汁叉烧，真的好好吃，我好久没吃猪脚饭了，nice！差一点都吃完(把宝宝的也吃完)，吃饱喝足！！当然是继续！啊不对当然是躺床上睡觉啦，美滋滋过了一会，好累呀，好想睡觉觉。呜呜，然而我睡觉竟然打呼噜，在宿舍不打的呜呜，可能看到宝宝很开心 然后累到了，就…就…对不起小宝宝，打扰你的舒适睡眠了 ┭┮﹏┭┮，抱着宝宝睡觉真的很舒服，很享受那四个小时。真的很美好，我想和宝宝每天都可以这样躺在一起，聊天，嘿嘿，抱抱。晚上的时候准备退房啦，发现这个酒店就在上次定的旁边欸。离得很近，感觉仿佛回到了之前。之后宝宝陪着我拿快递，中途宝宝还藏起来了，当时真的很担心，打了电话发现没接，嘿嘿，但是发现可爱的宝宝在垃圾桶前面蹲着就真的好可爱。，吃饭，我们去了食堂吃饭。给宝宝点了一份素炒面+瓦罐汤 我自己来了一份清汤小面。真的舒适。哈哈哈，当时买了个汽水西瓜味的 好怀念 ，真的很好喝。浅浅的帮宝宝吃了一下下。好吃！！随后带着宝宝去买零食，嘿嘿 宝宝喜欢喝旺仔，喜欢吃小面包。喜欢喝小饮料。宝宝喜欢我。我超爱宝宝！！嘿嘿 宝宝要给我准备小惊喜啦，真的很期待很期待。哦耶！！(今天十分有成就感噢！第二次！！！！哦耶)</p>
-<hr>
-<p><strong><span style = "color : red">2023.10.29</span></strong></p>
-<p>今天跟鑫哥出去玩了，下午夹娃娃，还不错夹了一共20多个，然后他手机爆了，修了一下午手机，&#x3D; &#x3D; 绷不住了。今天給了一家电脑维修店打电话问了问 給笔记本装固态要多少钱 那边说要80 卧槽了。然后晚上的晚点的时候我給了一家戴尔专卖店的打电话 之前打过两次都没接，最后的时候居然接了，问了一下说只要20，然后那边让我加了微信 聊了聊 那小哥，感觉活得很舒服 说边旅游边找班上，下半年就去大连了，很厉害！准备下周二去看一下 去把电脑升级3Tb！候，那边说 啊？土木工程那边没有收到运动会放假的通知啊，当时心瞬间凉了，不要这样子啊。感觉好傻逼。突然感觉很对不起宝宝，┭┮﹏┭┮ 啥也不知道就在跟宝宝乱七八糟的说。哈哈今天宝宝给我通报了 真的好可爱，当时看这个 边看边傻笑 差点电梯踩空 哈哈 当时已经在地铁站了准备去二号线，中午吃饭的时候那个人真的总跟我说话，还看着我的眼睛，我有好几次想回宝宝消息，但是又感觉他对着我分享事情又津津有味，我就有点不好意思。哎呀，不过还是偷偷的回了宝宝消息，中午吃的肉蟹煲。点了一份蒸饺，这边万达的好难吃，没有和宝宝在一起吃的好吃。想下一次跟宝宝再去天虹吃一顿。</p>
-<blockquote>
-<p>关于批评学生潘春尧对女朋友态度不好的通报<br>     潘春尧，男，学号438……，南昌工学院20本软件工程学生，在2023年10月29日上午，对女朋友忽冷忽热，情节严重，扰乱了女朋友学习效率，差点害国家损失一名优秀的研究生，给女朋友的身体和精神造成了严重的威胁，为严肃男德，对他应给予警告处分，情节严重者，分手处理。希望全体南工男同胞引以为戒<br>                信息工程学院（章）<br>                   2023年10月29日</p>
-</blockquote>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/随笔" style=color:#879cff>
-                随笔
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2023/08/02/随笔/3333023-8-XXX/ " class="go-post">
         阅读全文
     </a>
 </div>
