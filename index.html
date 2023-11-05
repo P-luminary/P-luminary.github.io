@@ -920,7 +920,260 @@ public class Category &#123; //标准的Java Bean 换DTO的  private Category ca
         &#125;
     &#125;
 </code></pre>
-<p>6-1</p>
+<h3 id="MyBatis数据插入操作"><a href="#MyBatis数据插入操作" class="headerlink" title="MyBatis数据插入操作"></a>MyBatis数据插入操作</h3><h5 id="数据库事务"><a href="#数据库事务" class="headerlink" title="数据库事务"></a>数据库事务</h5><ul>
+<li>数据库事务是保证数据操作完整性的基础</li>
+</ul>
+<p>客户端[Java] → 事务日志[增删改查数据] → 向MySQL写入<strong>commit</strong> → 数据表作为更新数据 【若执行roll back后事务日志和数据表的数据都会被清除】</p>
+<h5 id="MyBatis写操作包含三种"><a href="#MyBatis写操作包含三种" class="headerlink" title="MyBatis写操作包含三种"></a>MyBatis写操作包含三种</h5><ul>
+<li><h6 id="插入-lt-insert-gt"><a href="#插入-lt-insert-gt" class="headerlink" title="插入&lt; insert &gt;"></a>插入&lt; insert &gt;</h6></li>
+</ul>
+<pre><code class="xml">goods.xml 新增操作
+ &lt;!--flushCache=&quot;true&quot;在sql执行后强制清空缓存--&gt;
+&lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot;flushCache=&quot;true&quot;&gt;
+ INSERT INTO t_goods(title, sub_title, original_cost, current_price, discount, is_free_delivery, category_id)
+ VALUES (#&#123;title&#125; , #&#123;subTitle&#125; , #&#123;originalCost&#125;, #&#123;currentPrice&#125;, #&#123;discount&#125;, #&#123;isFreeDelivery&#125;, #&#123;categoryId&#125;)
+  &lt;selectKey resultType=&quot;Integer&quot; keyProperty=&quot;goodsId&quot; order=&quot;AFTER&quot;&gt; &lt;!--主键自动生成--&gt;
+    select last_insert_id()
+  &lt;/selectKey&gt;
+&lt;/insert&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+@Test
+    public void selectInsert() throws Exception&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = new Goods();
+            goods.setTitle(&quot;测试商品&quot;);
+            goods.setSubTitle(&quot;测试子标题&quot;);
+            goods.setOriginalCost(200f);
+            goods.setCurrentPrice(100f);
+            goods.setDiscount(0.5f);
+            goods.setIsFreeDelivery(1);
+            goods.setCategoryId(43);
+            //insert()方法返回值代表本次成功插入的记录总数
+            int num = session.insert(&quot;goods.insert&quot;, goods);
+            session.commit();
+            System.out.println(goods.getGoodsId());
+        &#125;catch (Exception e)&#123;
+            if (session != null)&#123;
+                session.rollback();
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<ul>
+<li><h6 id="更新-lt-update-gt"><a href="#更新-lt-update-gt" class="headerlink" title="更新 &lt; update&gt;"></a>更新 &lt; update&gt;</h6>不推荐goods.set…来插入，而是推荐使用获取到原始的商品信息<code>Goods goods = session.selectOne(&quot;goods.selectById&quot;, 739);</code>再在原始信息上做出调整和更新。对数据影响最小</li>
+</ul>
+<pre><code class="xml">goods.xml
+ &lt;update id=&quot;update&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        UPDATE t_goods
+        SET
+          title = #&#123;title&#125;,
+          sub_title = #&#123;subTitle&#125;,
+          original_cost = #&#123;originalCost&#125;,
+          current_price = #&#123;currentPrice&#125;,
+          discount = #&#123;discount&#125;,
+          is_free_delivery = #&#123;isFreeDelivery&#125;,
+          category_id = #&#123;categoryId&#125;
+        WHERE
+          good_id = #&#123;goodsId&#125; &lt;!--对主键进行筛选--&gt;
+    &lt;/update&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+ @Test
+    public void testUpdate() throws Exception&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = session.selectOne(&quot;goods.selectById&quot;, 739);//得到指定编号的对象
+            goods.setTitle(&quot;更新测试商品&quot;);
+            int num = session.update(&quot;goods.update&quot;, goods);
+            session.commit();
+        &#125;catch (Exception e)&#123;
+            if (session!=null)
+                session.rollback();
+        &#125;
+    &#125;
+</code></pre>
+<ul>
+<li><h6 id="删除-lt-delete-gt"><a href="#删除-lt-delete-gt" class="headerlink" title="删除 &lt; delete &gt;"></a>删除 &lt; delete &gt;</h6>大多数删除操作都是根据主键来运行的</li>
+</ul>
+<pre><code class="xml">good.xml
+&lt;delete id=&quot;delete&quot; parameterType=&quot;integer&quot;&gt;
+    delete from t_goods where goods_id = #&#123;value&#125;
+&lt;/delete&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+ @Test
+    public void Delete()&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            int num = session.delete(&quot;goods.delete&quot;, 739);
+            session.commit();
+        &#125;catch (Exception e)&#123;
+            if (session!=null)&#123;
+                session.rollback();
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="SelectKey与UserGeneratedKeys的区别"><a href="#SelectKey与UserGeneratedKeys的区别" class="headerlink" title="SelectKey与UserGeneratedKeys的区别"></a><span style = "color:red">SelectKey</span>与<span style = "color:red">UserGeneratedKeys</span>的区别</h3><pre><code class="xml">SelectKey属性用法
+&lt;insert id=&quot;insert&quot; parameterType=&quot;com.itlaoqi.mybatis.entity.Goods&quot;&gt;
+  INSERT INTO SQL语句
+============================获取主键值===============================(↑案例)
+ &lt;selectKey resultType=&quot;Integer&quot; keyProperty=&quot;goodsId&quot; order=&quot;AFTER&quot;&gt;
+   select last_insert_id()
+ &lt;/selectKey&gt;
+&lt;/insert&gt;
+
+★ selectKey标签需要明确编写获取最新主键的SQL语句  获取主键 ★
+★ selectKey适用于所有的关系型数据库 ★
+★ selectKey标签是通用方案,适用于所有数据库,但编写麻烦 ★
+</code></pre>
+<pre><code class="html">UserGeneratedKeys属性用法
+&lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+   userGeneratedKeys=&quot;true&quot;
+   keyProperty=&quot;goodsId&quot; &lt;!--主键值--&gt;
+   keyColumn=&quot;goods_id&quot;&gt; &lt;!--字段名--&gt;
+  INSERT INTO SQL语句
+&lt;/insert&gt;
+★ useGeneratedKeys属性会自动根据驱动生成对应SQL语句 自动获取主键 ★
+★ useGeneratedKeys只支持&quot;自增主键&quot;类型的数据库 ★
+★ useGeneratedKeys属性只支持&quot;自增主键&quot;数据库,使用简单
+</code></pre>
+<h6 id="在Oracle中selectKey的用法"><a href="#在Oracle中selectKey的用法" class="headerlink" title="在Oracle中selectKey的用法"></a>在Oracle中selectKey的用法</h6><pre><code class="xml">&lt;insert id=&quot;insert&quot; parameterType=&quot;com.itlaoqi.mybatis.entity.Goods&quot;&gt;
+  InSERT INTO SQL语句
+  &lt;selectKey resultType=&quot;Integer&quot; order=“BEFORE” keyProperty=&quot;goodsId&quot;&gt;
+      SELECT seq_goods.nextval as id from dual  
+  &lt;/selectKey&gt;
+&lt;/insert&gt;
+</code></pre>
+<h3 id="SQL注入攻击-缺少转义操作"><a href="#SQL注入攻击-缺少转义操作" class="headerlink" title="SQL注入攻击[缺少转义操作]"></a>SQL注入攻击[缺少转义操作]</h3><ul>
+<li>SQL注入是指攻击者利用SQL漏洞，绕过系统约束，越权获取数据的攻击方式</li>
+</ul>
+<pre><code class="sql">SQLd代码:
+&quot;select * from a where name =&#39;&quot; + name + &quot; &#39;&quot;;
+
+正常情况下:
+name:张三 → select * from a where name = &#39;张三&#39;;
+
+SQL注入攻击:
+name:&#39; or 1=1 or 1=&#39;
+select * from a whrer name = &quot; or 1=1 or 1=&quot;
+</code></pre>
+<h5 id="MyBatis两种传值方式"><a href="#MyBatis两种传值方式" class="headerlink" title="MyBatis两种传值方式"></a>MyBatis两种传值方式</h5><ul>
+<li><p><strong>${}</strong><u>文本替换</u>(原文传值)(<u>产生的sql语句绝不能是外界输入的</u>), 未经过任何处理对SQL文本替换 {<em>根据前台输入的条件不同来选择不同的字段排序 没有对输入的数据进行预编译处理 导致输入的内容变成了sql的一部分</em>}</p>
+<p><code>$&#123;order&#125;</code><br><code>param.put(&quot;order&quot;,&quot; order by title desc&quot;);</code></p>
+<blockquote>
+<p>用${}原传值：select * from t_goods where title &#x3D; ‘ ‘ or 1 &#x3D;1 or title &#x3D; ‘【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版’”); 成为sql的一部分</p>
+</blockquote>
+</li>
+<li><p><span style = "color:red"><strong>#{}</strong></span><u>预编译传值</u>, 使用预编译传值可以预防SQL注入</p>
+<blockquote>
+<p>用#{}预编译：select * from t_goods where title &#x3D; “ ‘ ‘ or 1 &#x3D;1 or title &#x3D; ‘【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版’”);  #输入的会变成字符串</p>
+</blockquote>
+</li>
+</ul>
+<pre><code class="xml">goods.xml
+&lt;select id=&quot;selectByTitle&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+  select * from t_goods where title = $&#123;title&#125;
+&lt;/select&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+ @Test
+    public void testSelectByTitle()&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Map param = new HashMap();
+            pparam.put(&quot;title&quot;,&quot;&#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+            param.put(&quot;order&quot;, &quot; order by title desc&quot;);
+//param.put(&quot;titile&quot;,&quot;&#39;&#39; or 1=1 or title=&#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+//用$&#123;&#125;原传值：select * from t_goods where title = &#39;&#39; or 1 =1 or title = &#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;); 成为sql的一部分
+//用#&#123;&#125;预编译：select * from t_goods where title = &quot;&#39;&#39; or 1 =1 or title = &#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+            List&lt;Goods&gt; list = session.selectList(&quot;goods.selectByTitle&quot;, param);
+            for(Goods g:list)&#123;
+                System.out.println(g.getTitle() + &quot;:&quot; + g.getCurrentPrice());
+            &#125;
+        &#125;catch (Exception e)&#123;
+            if (session!=null)&#123;
+                session.rollback();
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<p><img src="https://github.com/P-luminary/images/blob/master/data/MyBatis%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B.jpg?raw=true" alt="使用上传照片"></p>
+<h1 id="MyBatis进阶教程"><a href="#MyBatis进阶教程" class="headerlink" title="MyBatis进阶教程"></a>MyBatis进阶教程</h1><h3 id="MyBatis日志管理"><a href="#MyBatis日志管理" class="headerlink" title="MyBatis日志管理"></a>MyBatis日志管理</h3><h6 id="什么是日志"><a href="#什么是日志" class="headerlink" title="什么是日志"></a>什么是日志</h6><ul>
+<li>日志文件是用于记录系统操作事件的记录文件或文件集合</li>
+<li>日志保存历史数据, 是诊断问题以及理解系列活动的重要依据</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/012b30f438d154d94993533f729816ae155eff3a/data/MyBatis%E4%B8%A4%E5%A4%A7%E6%97%A5%E5%BF%97.png" alt="上传照片"></p>
+<pre><code class="xml">goods.xml
+&lt;select id=&quot;selectByTitle&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods where title = #&#123;title&#125;
+            $&#123;order&#125;
+    &lt;/select&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+@Test
+    public void testSelectByTitle()&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Map param = new HashMap();
+            param.put(&quot;title&quot;,&quot;&#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+            param.put(&quot;order&quot;, &quot; order by title desc&quot;);
+//param.put(&quot;titile&quot;,&quot;&#39;&#39; or 1=1 or title=&#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+//用$&#123;&#125;原传值：select * from t_goods where title = &#39;&#39; or 1 =1 or title = &#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;); 成为sql的一部分
+//用#&#123;&#125;预编译：select * from t_goods where title = &quot;&#39;&#39; or 1 =1 or title = &#39;【德国】爱他美婴幼儿配方奶粉1段800g*2罐 铂金版&#39;&quot;);
+            List&lt;Goods&gt; list = session.selectList(&quot;goods.selectByTitle&quot;, param);
+            for(Goods g:list)&#123;
+                System.out.println(g.getTitle() + &quot;:&quot; + g.getCurrentPrice());
+            &#125;
+        &#125;catch (Exception e)&#123;
+            if (session!=null)&#123;
+                session.rollback();
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+   &#125;
+</code></pre>
+<pre><code class="xml">logback.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+    &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;[%thread] %d&#123;HH:mm:ss.SSS&#125; %-5level %logger&#123;36&#125; - %msg%n&lt;/pattern&gt;
+&lt;!--            23:39:16.761 [main] DEBUG org.apache.ibatis.datasource.pooled.PooledDataSource - PooledDataSource forcefully closed/removed all connections.--&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    &lt;!--
+        日志输出级别(优先级高到低):
+        error: 错误 - 系统的故障日志
+        warn: 警告 - 存在风险或使用不当的日志
+        info: 一般性消息
+        debug: 程序内部用于调试信息
+        trace: 程序运行的跟踪信息
+     --&gt;
+&lt;!--生产环境最低级别设置info以上 开发环境最低级别设置debug以上方便调试--&gt;
+    &lt;root level=&quot;debug&quot;&gt;
+        &lt;appender-ref ref=&quot;console&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
 
             
         </div>
@@ -935,7 +1188,7 @@ public class Category &#123; //标准的Java Bean 换DTO的  private Category ca
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -3650,7 +3903,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -6017,7 +6270,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -8712,7 +8965,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -12119,7 +12372,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -12793,7 +13046,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -15943,7 +16196,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -19325,7 +19578,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
