@@ -1118,6 +1118,13 @@ select * from a whrer name = &quot; or 1=1 or 1=&quot;
 <li>日志文件是用于记录系统操作事件的记录文件或文件集合</li>
 <li>日志保存历史数据, 是诊断问题以及理解系列活动的重要依据</li>
 </ul>
+<blockquote>
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.3</version>
+</dependency>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/012b30f438d154d94993533f729816ae155eff3a/data/MyBatis%E4%B8%A4%E5%A4%A7%E6%97%A5%E5%BF%97.png" alt="上传照片"></p>
 <pre><code class="xml">goods.xml
 &lt;select id=&quot;selectByTitle&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
@@ -1174,6 +1181,899 @@ select * from a whrer name = &quot; or 1=1 or 1=&quot;
     &lt;/root&gt;
 &lt;/configuration&gt;
 </code></pre>
+<h3 id="MyBatis动态SQL"><a href="#MyBatis动态SQL" class="headerlink" title="MyBatis动态SQL"></a>MyBatis动态SQL</h3><h5 id="动态SQL"><a href="#动态SQL" class="headerlink" title="动态SQL"></a>动态SQL</h5><ul>
+<li>动态SQL是指根据参数数据动态组织SQL的技术</li>
+</ul>
+<pre><code class="html">&lt;select id=&quot;dynamicSQL&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com...Goods&quot;&gt;
+    select * from t_goods
+    where     &lt;!--动态增加SQL的数据--&gt;
+        &lt;if test=&quot;categoryId != null&quot;&gt;
+            and category_id=#&#123;categoryId&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;currentPrice != null&quot;&gt;
+            and current_price &amp;lt; #&#123;currentPrice&#125;
+        &lt;/if&gt;
+&lt;/select&gt;
+</code></pre>
+<pre><code class="xml">goods.xml
+&lt;select id=&quot;dynamicSQL&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods
+        &lt;where&gt;    &lt;!--根据查询条件动态增加SQL的数据--&gt;
+        &lt;if test=&quot;categoryId != null&quot;&gt;
+            and category_id=#&#123;categoryId&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;currentPrice != null&quot;&gt;
+            and current_price &amp;lt; #&#123;currentPrice&#125;
+        &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;where&gt;&lt;/where&gt;  where标签会动态的对子sql进行判断
+</code></pre>
+<h3 id="MyBatis二级缓存-可共享对象"><a href="#MyBatis二级缓存-可共享对象" class="headerlink" title="MyBatis二级缓存 (可共享对象)"></a>MyBatis二级缓存 (可共享对象)</h3><p>sql语句第一次查询 sql存储在硬盘上<br>优化：第一次查询的时候放在某个内存 再次访问就很快 (缓存)</p>
+<ul>
+<li>一级缓存默认开启，缓存范围SqlSession会话</li>
+<li>二级缓存手动开启，属于范围Mapper Namespace</li>
+</ul>
+<h3 id="二级缓存运行规则"><a href="#二级缓存运行规则" class="headerlink" title="二级缓存运行规则"></a>二级缓存运行规则</h3><ul>
+<li>二级开启后默认所有查询操作均使用缓存</li>
+<li>写操作<u>commit提交时对该namespace缓存<strong>强制清空</strong></u></li>
+<li>配置<strong>useCache&#x3D;false</strong>可以不用缓存</li>
+<li>配置<strong>flushCache&#x3D;true</strong>代表强制清空缓存</li>
+</ul>
+<pre><code class="java">@Test
+public void testLv1Cache()&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = session.selectOne(&quot;goods.selectById&quot;, 1603);
+            session.commit();//commit提交时对该namespace缓存强制清空
+            Goods goods1 = session.selectOne(&quot;goods.selectById&quot;, 1603);
+            System.out.println(goods.hashCode() + &quot;:&quot; + goods1.hashCode());
+        &#125;catch (Exception e)&#123;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<blockquote>
+<p>Goods goods &#x3D; session.selectOne(“goods.selectById”, 1603);<br>session.commit();&#x2F;&#x2F;commit提交时对该namespace缓存强制清空<br>缓存和语句距离太短 资源浪费 使用率不高哦</p>
+</blockquote>
+<p><code>&lt;cache eviction=&quot;LRU&quot; flushInterval=&quot;600000&quot; size=&quot;512&quot; readOnly=&quot;true&quot;/&gt;</code></p>
+<h6 id="运行结果只出现一条sql语句-结果的goods-hasCode的结果来自同一块内存区域"><a href="#运行结果只出现一条sql语句-结果的goods-hasCode的结果来自同一块内存区域" class="headerlink" title="运行结果只出现一条sql语句 结果的goods.hasCode的结果来自同一块内存区域"></a>运行结果只出现一条sql语句 结果的goods.hasCode的结果来自同一块内存区域</h6><pre><code class="java">MyBatisTestor.java
+ @Test
+    public void testLv2Cache()&#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = session.selectOne(&quot;goods.selectById&quot;, 1603);
+            System.out.println(goods.hashCode());
+        &#125;catch (Exception e)&#123;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = session.selectOne(&quot;goods.selectById&quot;, 1603);
+            System.out.println(goods.hashCode());
+        &#125;catch (Exception e)&#123;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+
+08:59:50.304 [main] DEBUG goods - Cache Hit Ratio [goods]: 0.5
+缓存命中率越高 证明优化越好
+</code></pre>
+<pre><code class="xml">goods.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;goods&quot;&gt; &lt;!--区分不同的工作空间--&gt;
+    &lt;!--开启了二级缓存
+        eviction是缓存的清除策略，当缓存对象数量达到上限后，自动触发对应算法对缓存对象清除
+        1. LRU - 最近最久未使用：移除最长随时间不被使用的对象&#123;893&#125;
+           LFU - 最近时间内方位最少的移除&#123;1&#125;
+        【LRU + LFU 增强缓存速度】
+        01 02 03 04 .. 0512
+        14 99 83 1        893
+        2. FIFO - 先进先出：按对象进入缓存的顺序来移除它们
+        3. SOFT - 软引用：移除基于垃圾收集器状态和软引用规则的对象
+        4. WEAK - 弱引用：更积极的移除基于垃圾收集器状态和弱引用规则的对象
+        flushInterval 代表间隔多长时间自动清空缓存,单位毫秒,600000毫秒=10分钟
+        size 缓存存储上限,用于保存对象或集合(1个结婚算1个对象)的数据上限
+        readOnly 设置为true,代表返回只读缓存,每次从缓存取出的是缓存对象本身,这种执行效率较高
+                 设置为false,代表每次取出的是缓存对象的&quot;副本&quot;,每一次取出的对象都是不同的，这种安全性较高
+    --&gt;
+    &lt;cache eviction=&quot;LRU&quot; flushInterval=&quot;600000&quot; size=&quot;512&quot; readOnly=&quot;true&quot;/&gt;
+    &lt;!--useCache=&quot;false&quot;代表查询结果不放入缓存--&gt;
+    &lt;select id=&quot;selectAll&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot; useCache=&quot;false&quot;&gt;
+        select * from t_goods order by goods_id desc limit 10&lt;!--将每一条记录包装成↑的goods对象--&gt;
+    &lt;/select&gt;
+    &lt;select id=&quot;selectById&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods where goods_id = #&#123;value&#125;
+    &lt;/select&gt;
+
+    &lt;select id=&quot;selectByPriceRange&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+            select * from t_goods
+            where
+                current_price between #&#123;min&#125; and #&#123;max&#125;
+            order by current_price
+            limit 0,#&#123;limit&#125;
+    &lt;/select&gt;
+&lt;!--flushCache=&quot;true&quot;在sql执行后强制清空缓存 效果和commit相同--&gt; 
+    &lt;select id=&quot;selectGoodsMap&quot; resultType=&quot;java.util.LinkedHashMap&quot; flushCache=&quot;true&quot;&gt;
+        select g.* , c.category_name from t_goods g , t_category c
+        where g.category_id = c.category_id
+    &lt;/select&gt;
+
+    &lt;resultMap id=&quot;rmGoods&quot; type=&quot;com.imooc.mybatis.dto.GoodsDTO&quot;&gt;
+        &lt;id property=&quot;goods.goodsId&quot; column=&quot;goods_id&quot;&gt;&lt;/id&gt;
+        &lt;result property=&quot;goods.title&quot; column=&quot;title&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;goods.originalCost&quot; column=&quot;original_cost&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;goods.currentPrice&quot; column=&quot;current_price&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;goods.discount&quot; column=&quot;discount&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;goods.isFreeDelivery&quot; column=&quot;is_free_delivery&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;goods.categoryId&quot; column=&quot;category_id&quot;&gt;&lt;/result&gt;
+        &lt;result property=&quot;category.categoryId&quot; column=&quot;category_id&quot;/&gt;
+        &lt;result property=&quot;category.categoryName&quot; column=&quot;category_name&quot;/&gt;
+        &lt;result property=&quot;category.parentId&quot; column=&quot;parent_id&quot;/&gt;
+        &lt;result property=&quot;category.categoryLevel&quot; column=&quot;category_level&quot;/&gt;
+        &lt;result property=&quot;category.categoryOrder&quot; column=&quot;category_order&quot;/&gt;
+        &lt;result property=&quot;test&quot; column=&quot;test&quot;/&gt;
+    &lt;/resultMap&gt;
+    &lt;select id=&quot;selectGoodsDTO&quot; resultMap=&quot;rmGoods&quot;&gt;
+        select g.* , c.*,&#39;1&#39; from t_goods g , t_category c
+        where g.category_id = c.category_id
+    &lt;/select&gt;
+
+    &lt;!--flushCache=&quot;true&quot;在sql执行后强制清空缓存 效果和commit相同--&gt; 
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot; flushCache=&quot;true&quot;&gt;
+        INSERT INTO t_goods(title, sub_title, original_cost, current_price, discount, is_free_delivery, category_id)
+        VALUES (#&#123;title&#125; , #&#123;subTitle&#125; , #&#123;originalCost&#125;, #&#123;currentPrice&#125;, #&#123;discount&#125;, #&#123;isFreeDelivery&#125;, #&#123;categoryId&#125;)
+        &lt;selectKey resultType=&quot;Integer&quot; keyProperty=&quot;goodsId&quot; order=&quot;AFTER&quot;&gt; &lt;!--主键自动生成--&gt;
+        select last_insert_id()
+        &lt;/selectKey&gt;
+    &lt;/insert&gt;
+
+    &lt;update id=&quot;update&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        UPDATE t_goods
+        SET
+          title = #&#123;title&#125;,
+          sub_title = #&#123;subTitle&#125;,
+          original_cost = #&#123;originalCost&#125;,
+          current_price = #&#123;currentPrice&#125;,
+          discount = #&#123;discount&#125;,
+          is_free_delivery = #&#123;isFreeDelivery&#125;,
+          category_id = #&#123;categoryId&#125;
+        WHERE
+          good_id = #&#123;goodsId&#125; &lt;!--对主键进行筛选--&gt;
+    &lt;/update&gt;
+
+    &lt;delete id=&quot;delete&quot; parameterType=&quot;integer&quot;&gt;
+        delete from t_goods where goods_id = #&#123;value&#125;
+    &lt;/delete&gt;
+
+    &lt;select id=&quot;selectByTitle&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods where title = #&#123;title&#125;
+            $&#123;order&#125;
+    &lt;/select&gt;
+
+    &lt;select id=&quot;dynamicSQL&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods
+        &lt;where&gt;    &lt;!--根据查询条件动态增加SQL的数据--&gt;
+        &lt;if test=&quot;categoryId != null&quot;&gt;
+            and category_id=#&#123;categoryId&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;currentPrice != null&quot;&gt;
+            and current_price &amp;lt; #&#123;currentPrice&#125;
+        &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h6 id="一级缓存被默认开启的随着sql开-随着sql关"><a href="#一级缓存被默认开启的随着sql开-随着sql关" class="headerlink" title="一级缓存被默认开启的随着sql开 随着sql关"></a>一级缓存被默认开启的随着sql开 随着sql关</h6><p>复习<code>&lt;cache eviction=&quot;LRU&quot; flushInterval=&quot;600000&quot; size=&quot;512&quot; readOnly=&quot;true&quot;/&gt;</code> 当中的各种</p>
+<blockquote>
+<cache eviction="LRU" flushInterval="600000" size="512" readOnly="true"/>
+<!--开启了二级缓存
+        eviction是缓存的清除策略，当缓存对象数量达到上限后，自动触发对应算法对缓存对象清除
+
+<pre><code>    1. LRU - 最近最久未使用：移除最长随时间不被使用的对象&#123;893&#125;
+       LFU - 最近时间内方位最少的移除&#123;1&#125;
+    【LRU + LFU 增强缓存速度】
+    01 02 03 04 .. 0512
+    14 99 83 1        893
+    2. FIFO - 先进先出：按对象进入缓存的顺序来移除它们
+    3. SOFT - 软引用：移除基于垃圾收集器状态和软引用规则的对象
+    4. WEAK - 弱引用：更积极的移除基于垃圾收集器状态和弱引用规则的对象
+   flushInterval - 代表间隔多长时间自动清空缓存,单位毫秒,600000毫秒=10分钟
+   size - 缓存存储上限,用于保存对象或集合(1个结婚算1个对象)的数据上限
+   readOnly - 设置为true,代表返回只读缓存,每次从缓存取出的是缓存对象本身,这种执行效率较高
+        设置为false,代表每次取出的是缓存对象的&quot;副本&quot;,每一次取出的对象都是不同的，这种安全性较高
+</code></pre>
+<p>–&gt;</p>
+ <!--flushCache="true"在sql执行后强制清空缓存 效果和commit相同--> 
+<pre><code>&lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.mybatis.entity.Goods&quot; flushCache=&quot;true&quot;&gt;
+</code></pre>
+</blockquote>
+<h3 id="MyBatis多表级联查询-通过一个对象获得另外一个对象"><a href="#MyBatis多表级联查询-通过一个对象获得另外一个对象" class="headerlink" title="MyBatis多表级联查询 (通过一个对象获得另外一个对象)"></a>MyBatis多表级联查询 (通过一个对象获得另外一个对象)</h3><p>一个比较有多个学生 而 一个学生在同一时间只能隶属于一个班级</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f2a315e37664fff7d79598eb4220fe3e413005cf/data/%E5%AE%9E%E4%BD%93%E5%85%B3%E7%B3%BB%E5%88%86%E6%9E%90.png" alt="实体关系分析"></p>
+<h6 id="商品和详情对象关联查询-商品是1-详情是多-详情那方要持有商品的主键"><a href="#商品和详情对象关联查询-商品是1-详情是多-详情那方要持有商品的主键" class="headerlink" title="商品和详情对象关联查询 [商品是1 详情是多 详情那方要持有商品的主键]"></a>商品和详情对象关联查询 [<u>商品是1 详情是多 详情那方要持有商品的主键</u>]</h6><h3 id="ManyToOne对象关联查询-collection"><a href="#ManyToOne对象关联查询-collection" class="headerlink" title="ManyToOne对象关联查询 [collection]"></a>ManyToOne对象关联查询 [collection]</h3><pre><code class="xml">mybatis-config.xml 最底下加一层
+&lt;mappers&gt;
+   &lt;mapper resource=&quot;mappers/goods.xml&quot;/&gt;
+   &lt;mapper resource=&quot;mappers/goods_detail.xml&quot;/&gt;
+&lt;/mappers&gt;
+
+
+good.xml
+ &lt;!--
+        resultMap可以用于说明一对多或者多对一的映射逻辑
+        id 是 resultMap属性引用标志
+        type 指向One的实体(Goods)
+    --&gt;
+    &lt;resultMap id=&quot;rmGoods1&quot; type=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        &lt;!-- 映射goods对象的主键到goods_id字段 --&gt;
+        &lt;id column=&quot;goods_id&quot; property=&quot;goodsId&quot;&gt;&lt;/id&gt;
+        &lt;!--
+            collection的含义是,在
+            select * from t_goods limit 0,1 得到结果后,对所有Goods对象遍历得到goods_id字段值,
+            并代入到goodsDetail命名空间的findByGoodsId的SQL中执行查询,
+            将得到的&quot;商品详情&quot;集合赋值给goodsDetails List对象.
+        --&gt;
+        &lt;collection property=&quot;goodsDetails&quot; select=&quot;goodsDetail.selectByGoodsId&quot;
+                    column=&quot;goods_id&quot;/&gt;
+    &lt;/resultMap&gt;
+    &lt;select id=&quot;selectOneToMany&quot; resultMap=&quot;rmGoods1&quot;&gt;
+        select * from t_goods limit 0,10
+    &lt;/select&gt;
+
+
+goods_details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;goodsDetail&quot;&gt;
+    &lt;select id=&quot;selectByGoodsId&quot; parameterType=&quot;Integer&quot;
+            resultType=&quot;com.imooc.mybatis.entity.GoodsDetail&quot;&gt;
+        select * from t_goods_detail where goods_id = #&#123;value&#125;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">Goods.java 再加一个
+public class Goods &#123;
+    private Integer goodsId;//商品编号
+    private String title;//标题
+    private String subTitle;//子标题
+    private Float originalCost;//原始价格
+    private Float currentPrice;//当前价格
+    private Float discount;//折扣率
+    private Integer isFreeDelivery;//是否包邮 ,1-包邮 0-不包邮
+    private Integer categoryId;//分类编号
+    private List&lt;GoodsDetail&gt; goodsDetails;
+    Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">MaBatisTestor.java 
+/**
+     * 测试多对一对象关联映射
+     */
+    @Test
+    public void testOneToMany() throws Exception &#123;
+        SqlSession session = null;
+        try &#123;
+            session = MyBatisUtils.openSession();
+            List&lt;Goods&gt; list = session.selectList(&quot;goods.selectOneToMany&quot;);
+            for(Goods goods:list) &#123;
+                System.out.println(goods.getTitle() + &quot;:&quot; + goods.getGoodsDetails().size());
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="ManyToOne对象关联查询-association"><a href="#ManyToOne对象关联查询-association" class="headerlink" title="ManyToOne对象关联查询 [association]"></a>ManyToOne对象关联查询 [association]</h3><h5 id="商品和详情对象关联查询"><a href="#商品和详情对象关联查询" class="headerlink" title="商品和详情对象关联查询"></a>商品和详情对象关联查询</h5><pre><code class="xml">goods_detail.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;goodsDetail&quot;&gt;
+    &lt;select id=&quot;selectByGoodsId&quot; parameterType=&quot;Integer&quot;
+            resultType=&quot;com.imooc.mybatis.entity.GoodsDetail&quot;&gt;
+        select * from t_goods_detail where goods_id = #&#123;value&#125;
+    &lt;/select&gt;
+
+    &lt;resultMap id=&quot;rmGoodsDetail&quot; type=&quot;com.imooc.mybatis.entity.GoodsDetail&quot;&gt;
+        &lt;id column=&quot;gd_id&quot; property=&quot;gdId&quot;/&gt;
+        &lt;!--字段映射--&gt;
+        &lt;result column=&quot;goods_id&quot; property=&quot;goodsId&quot;/&gt;
+        &lt;!--从多的一方关联单的一方     在goods.xml中的goods空间 根据查询结果id带入到这个语句赋值到goods语句--&gt;
+        &lt;association property=&quot;goods&quot; select=&quot;goods.selectById&quot; column=&quot;goods_id&quot;&gt;&lt;/association&gt;
+    &lt;/resultMap&gt;
+    &lt;select id=&quot;selectManyToOne&quot; resultMap=&quot;rmGoodsDetail&quot;&gt;
+        select * from t_goods_detail limit 0,20
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+ @Test
+    public void testManyToOne() throws Exception &#123;
+        SqlSession session = null;
+        try &#123;
+            session = MyBatisUtils.openSession();
+            List&lt;GoodsDetail&gt; list = session.selectList(&quot;goodsDetail.selectManyToOne&quot;);
+            for(GoodsDetail gd:list) &#123;
+                System.out.println(gd.getGdPicUrl() + &quot;:&quot; + gd.getGoods().getTitle());
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">GoodsDetail.java
+public class GoodsDetail &#123;
+    private Integer gdId;
+    private Integer goodsId;
+    private String gdPicUrl;
+    private Integer gdOrder;
+    private Goods goods;
+    Getter + Setter
+&#125;
+</code></pre>
+<h3 id="分页查询的麻烦事"><a href="#分页查询的麻烦事" class="headerlink" title="分页查询的麻烦事"></a>分页查询的麻烦事</h3><ul>
+<li>当前页数据查询 - select * from tab limit 0,10</li>
+<li>总记录数查询 - select count(*) from tab</li>
+<li>程序计算总页数、上一页页码、下一页页码</li>
+</ul>
+<h5 id="分页插件PageHelper"><a href="#分页插件PageHelper" class="headerlink" title="分页插件PageHelper"></a><span style = "color:red"><strong>分页插件PageHelper</strong></span></h5><h3 id="PageHelper使用流程"><a href="#PageHelper使用流程" class="headerlink" title="PageHelper使用流程"></a>PageHelper使用流程</h3><ul>
+<li>maven引入PageHelper与jsqlparser</li>
+<li>mybatis-config.xml增加Plugin配置</li>
+<li>代码中使用PageHelper.startPage()自动分页</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;dependency&gt;
+    &lt;groupId&gt;com.github.pagehelper&lt;/groupId&gt;
+    &lt;artifactId&gt;pagehelper&lt;/artifactId&gt;
+    &lt;version&gt;5.1.10&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;com.github.jsqlparser&lt;/groupId&gt;
+    &lt;artifactId&gt;jsqlparser&lt;/artifactId&gt; &lt;!--最核心处理的sql语句--&gt;
+    &lt;version&gt;2.0&lt;/version&gt;
+&lt;/dependency&gt;
+
+
+goods.xml
+&lt;select id=&quot;selectPage&quot; resultType=&quot;com.imooc.mybatis.entity.Goods&quot;&gt;
+        select * from t_goods where current_price &amp;lt; 1000
+&lt;/select&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;   &lt;!--环境配置标签--&gt;
+    &lt;settings&gt;&lt;!--开启驼峰命名转换 goods_id → goodsId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+    &lt;!--启动Pagehelper分页插件--&gt;
+    &lt;plugins&gt;
+        &lt;plugin interceptor=&quot;com.github.pagehelper.PageInterceptor&quot;&gt;
+            &lt;!--设置数据库类型--&gt;
+            &lt;property name=&quot;helperDialect&quot; value=&quot;mysql&quot;/&gt;
+            &lt;!--分页合理化--&gt;
+            &lt;property name=&quot;reasonable&quot; value=&quot;true&quot;/&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+    &lt;environments default=&quot;dev&quot;&gt; &lt;!--当环境默认数据源为dev时候使用运行的代码[不同id来切换]--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;  &lt;!--唯一标识--&gt;
+            &lt;!--采用JDBC方式对数据库事务进行管理--&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+        &lt;environment id=&quot;prd&quot;&gt;
+            &lt;!-- 采用JDBC方式对数据库事务进行commit/rollback --&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://192.168.1.155:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;mappers&gt;
+        &lt;mapper resource=&quot;mappers/goods.xml&quot;/&gt;
+        &lt;mapper resource=&quot;mappers/goods_detail.xml&quot;/&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+@Test
+    public void testSelectPage() throws Exception &#123;
+        SqlSession session = null;
+        try &#123;
+            session = MyBatisUtils.openSession();
+            /*startPage方法自动将下一次查询进行分页*/
+            PageHelper.startPage(2,10);
+            Page&lt;Goods&gt; page = (Page)session.selectList(&quot;goods.selectPage&quot;);
+            System.out.println(&quot;总页数:&quot; + page.getPages());
+            System.out.println(&quot;总记录数:&quot; + page.getTotal());
+            System.out.println(&quot;开始行号:&quot; + page.getStartRow());
+            System.out.println(&quot;结束行号:&quot; + page.getEndRow());
+            System.out.println(&quot;当前页码:&quot; + page.getPageNum());
+            List&lt;Goods&gt; data = page.getResult();//当前页数据
+            for (Goods g : data) &#123;
+                System.out.println(g.getTitle());
+            &#125;
+            System.out.println(&quot;&quot;);
+        &#125; catch (Exception e) &#123;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="不同数据库分页的实现原理-面试-x2F-笔试"><a href="#不同数据库分页的实现原理-面试-x2F-笔试" class="headerlink" title="不同数据库分页的实现原理 [面试&#x2F;笔试]"></a><span style = "color : red">不同数据库分页的实现原理</span> [面试&#x2F;笔试]</h3><p><strong>MySQL分页</strong> <code>select * from table limit 10,20;</code> <u>起始行号 向后取多少值</u><br><strong>Oracle分页(三层嵌套)</strong></p>
+<pre><code class="sql">Oracle分页(三层嵌套)
+select t3.* from(
+    select t2.*,rownum as row_num from(
+        select * from table order by id asc
+    ) t2 where rownum &lt;= 20
+)t3
+where t2.row_num&gt;11
+</code></pre>
+<p><strong>SQL Server 2000</strong></p>
+<pre><code class="sql">select top 3 * from table
+where
+  id not in
+  (select top 15 id from table)
+</code></pre>
+<p><strong>SQL Server 2012+</strong></p>
+<pre><code class="sql">select * from table order by id 
+   offset 4 rows fetch next 5 rows only
+</code></pre>
+<h3 id="MyBatis配置C3P0连接池"><a href="#MyBatis配置C3P0连接池" class="headerlink" title="MyBatis配置C3P0连接池"></a>MyBatis配置C3P0连接池</h3><pre><code class="xml">pom.xml
+&lt;dependency&gt;
+     &lt;groupId&gt;com.mchange&lt;/groupId&gt;
+    &lt;artifactId&gt;c3p0&lt;/artifactId&gt;
+    &lt;version&gt;0.9.5.4&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;environment id=&quot;dev&quot;&gt;  &lt;!--唯一标识--&gt;
+            &lt;!--采用JDBC方式对数据库事务进行管理--&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+&lt;!--            &lt;dataSource type=&quot;POOLED&quot;&gt;--&gt;
+            &lt;dataSource type=&quot;com.imooc.mybatis.datasource.C3P0DataSourceFactory&quot;&gt;
+                &lt;property name=&quot;driverClass&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;jdbcUrl&quot; value=&quot;jdbc:mysql://localhost:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;user&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;initialPoolSize&quot; value=&quot;5&quot;/&gt;
+                &lt;property name=&quot;maxPoolSize&quot; value=&quot;20&quot;/&gt;
+                &lt;property name=&quot;minPoolSize&quot; value=&quot;5&quot;/&gt;
+                &lt;!--...--&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+</code></pre>
+<pre><code class="java">C3P0DataSourceFactory.java
+package com.imooc.mybatis.datasource;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.apache.ibatis.datasource.unpooled.UnpooledDataSourceFactory;
+
+/**
+ * C3P0与MyBatis兼容使用的数据源工厂类
+ */
+public class C3P0DataSourceFactory extends UnpooledDataSourceFactory&#123;
+    public C3P0DataSourceFactory()&#123;
+        this.dataSource = new ComboPooledDataSource();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="MyBatis批处理-利用集合保存批处理数据-海量数据导入"><a href="#MyBatis批处理-利用集合保存批处理数据-海量数据导入" class="headerlink" title="MyBatis批处理 [利用集合保存批处理数据] [海量数据导入]"></a>MyBatis批处理 [利用集合保存批处理数据] [海量数据导入]</h3><pre><code class="xml">goods.xml
+&lt;!--    INSERT INTO table--&gt;
+&lt;!--    VALUES(&quot;a&quot;,&quot;a1&quot;,&quot;a2&quot;),(&quot;b&quot;,&quot;b1&quot;,&quot;b2&quot;),(...)--&gt;
+&lt;insert id=&quot;batchInsert&quot; parameterType=&quot;java.util.List&quot;&gt;
+     INSERT INTO t_goods(title, sub_title, original_cost, current_price, discount, is_free_delivery, category_id)
+     VALUES
+    &lt;foreach collection=&quot;list&quot; item=&quot;item&quot; index=&quot;index&quot; separator=&quot;,&quot;&gt;
+      (#&#123;item.title&#125;,#&#123;item.subTitle&#125;, #&#123;item.originalCost&#125;, #&#123;item.currentPrice&#125;, #&#123;item.discount&#125;, #&#123;item.isFreeDelivery&#125;, #&#123;item.categoryId&#125;)
+    &lt;/foreach&gt;
+&lt;!--批量插入数据的局限：1.无法获得插入数据的id  2.批量生成的SQL太长，可能会被服务器拒绝(可以分段2次for循环)--&gt;
+&lt;/insert&gt;
+</code></pre>
+<pre><code class="java">MyBatisTestor.java
+/**
+     * 批量插入测试
+     * @throws Exception
+     */
+    @Test
+    public void testBatchInsert() throws Exception &#123;
+        SqlSession session = null;
+        try &#123;
+            long st = new Date().getTime();
+            session = MyBatisUtils.openSession();
+            List list = new ArrayList();
+            for (int i = 0; i &lt; 10000; i++) &#123;
+                Goods goods = new Goods();
+                goods.setTitle(&quot;测试商品&quot;);
+                goods.setSubTitle(&quot;测试子标题&quot;);
+                goods.setOriginalCost(200f);
+                goods.setCurrentPrice(100f);
+                goods.setDiscount(0.5f);
+                goods.setIsFreeDelivery(1);
+                goods.setCategoryId(43);
+                //insert()方法返回值代表本次成功插入的记录总数
+
+                list.add(goods);
+            &#125;
+            session.insert(&quot;goods.batchInsert&quot;, list);
+            session.commit();//提交事务数据
+            long et = new Date().getTime();
+            System.out.println(&quot;执行时间:&quot; + (et - st) + &quot;毫秒&quot;);
+//            System.out.println(goods.getGoodsId());
+        &#125; catch (Exception e) &#123;
+            if (session != null) &#123;
+                session.rollback();//回滚事务
+            &#125;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+
+====================================================================
+ /**
+     * 10000次数据插入对比测试用例
+     * @throws Exception
+     */
+    @Test
+    public void testInsert1() throws Exception &#123;
+        SqlSession session = null;
+        try&#123;
+            long st = new Date().getTime();
+            session = MyBatisUtils.openSession();
+            List list = new ArrayList();
+            for(int i = 0 ; i &lt; 10000 ; i++) &#123;
+                Goods goods = new Goods();
+                goods.setTitle(&quot;测试商品&quot;);
+                goods.setSubTitle(&quot;测试子标题&quot;);
+                goods.setOriginalCost(200f);
+                goods.setCurrentPrice(100f);
+                goods.setDiscount(0.5f);
+                goods.setIsFreeDelivery(1);
+                goods.setCategoryId(43);
+                //insert()方法返回值代表本次成功插入的记录总数
+                //每循环一次 插入一次
+                session.insert(&quot;goods.insert&quot; , goods);
+            &#125;
+
+            session.commit();//提交事务数据
+            long et = new Date().getTime();
+            System.out.println(&quot;执行时间:&quot; + (et-st) + &quot;毫秒&quot;);
+//            System.out.println(goods.getGoodsId());
+        &#125;catch (Exception e)&#123;
+            if(session != null)&#123;
+                session.rollback();//回滚事务
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="MyBatis常用注解-注解适合小型敏捷项目-XML适合大型协作项目"><a href="#MyBatis常用注解-注解适合小型敏捷项目-XML适合大型协作项目" class="headerlink" title="MyBatis常用注解 (注解适合小型敏捷项目 XML适合大型协作项目)"></a>MyBatis常用注解 (<u>注解适合小型敏捷项目 XML适合大型协作项目</u>)</h3><table>
+<thead>
+<tr>
+<th align="center">注解</th>
+<th align="center">对应XML</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">@Insert</td>
+<td align="center">&lt; insert &gt;</td>
+<td align="center">更新SQL</td>
+</tr>
+<tr>
+<td align="center">@Update</td>
+<td align="center">&lt; update &gt;</td>
+<td align="center">更新SQL</td>
+</tr>
+<tr>
+<td align="center">@Delete</td>
+<td align="center">&lt; delete &gt;</td>
+<td align="center">删除SQL</td>
+</tr>
+<tr>
+<td align="center">@Select</td>
+<td align="center">&lt; select &gt;</td>
+<td align="center">查询SQL</td>
+</tr>
+<tr>
+<td align="center">@Param</td>
+<td align="center">–</td>
+<td align="center">参数映射</td>
+</tr>
+<tr>
+<td align="center">@Results</td>
+<td align="center">&lt; resultMap &gt;</td>
+<td align="center">结果映射</td>
+</tr>
+<tr>
+<td align="center">@Result</td>
+<td align="center">&lt; id &gt; &lt; result &gt;</td>
+<td align="center">字段映射</td>
+</tr>
+</tbody></table>
+<h6 id="把XML中的写入代码中"><a href="#把XML中的写入代码中" class="headerlink" title="把XML中的写入代码中"></a>把XML中的写入代码中</h6><pre><code class="java">dao.GoodsDAO.java
+package com.imooc.mybatis.dao;
+
+import com.imooc.mybatis.dto.GoodsDTO;
+import com.imooc.mybatis.entity.Goods;
+import org.apache.ibatis.annotations.*;
+
+import java.util.List;
+
+public interface GoodsDAO &#123;
+    @Select(&quot;select * from t_goods where current_price between #&#123;min&#125; and #&#123;max&#125; order by current_price limit 0,#&#123;limit&#125;&quot;)
+    public List&lt;Goods&gt; selectByPriceRange(@Param(&quot;min&quot;) Float min, @Param(&quot;max&quot;) Float max, @Param(&quot;limit&quot;) Integer limit);
+
+    @Insert(&quot;INSERT INTO t_goods(title, sub_title, original_cost, current_price, discount, is_free_delivery, category_id) VALUES (#&#123;title&#125; , #&#123;subTitle&#125; , #&#123;originalCost&#125;, #&#123;currentPrice&#125;, #&#123;discount&#125;, #&#123;isFreeDelivery&#125;, #&#123;categoryId&#125;)&quot;)
+    //&lt;selectKey&gt; befor是true则在这之前执行 keyProperty主键 resultType返回主键类型
+    @SelectKey(statement = &quot;select last_insert_id()&quot; , before = false , keyProperty = &quot;goodsId&quot; , resultType = Integer.class)
+    public int insert(Goods goods);
+
+    @Select(&#123;&quot;select * from t_goods&quot;&#125;)
+    //&lt;resultMap&gt;
+    @Results(&#123; //select实行完以下结果 按照以下规则并赋值給GoodsDTO对象
+            //&lt;id&gt;
+            @Result(column = &quot;goods_id&quot;, property = &quot;goodsId&quot;, id = true),
+            //&lt;result&gt;
+            @Result(column = &quot;title&quot;, property = &quot;title&quot;),
+            @Result(column = &quot;current_price&quot;, property = &quot;currentPrice&quot;),
+    &#125;)
+    public List&lt;GoodsDTO&gt; selectAll();
+
+&#125;
+</code></pre>
+<pre><code class="java">dto.GoodsDTO
+package com.imooc.mybatis.dto;
+
+public class GoodsDTO &#123;
+    private Integer goodsId;//商品编号
+    private String title;//标题
+    private Float currentPrice;//当前价格
+
+    public Integer getGoodsId() &#123;
+        return goodsId;
+    &#125;
+
+    public void setGoodsId(Integer goodsId) &#123;
+        this.goodsId = goodsId;
+    &#125;
+
+    public String getTitle() &#123;
+        return title;
+    &#125;
+
+    public void setTitle(String title) &#123;
+        this.title = title;
+    &#125;
+
+    public Float getCurrentPrice() &#123;
+        return currentPrice;
+    &#125;
+
+    public void setCurrentPrice(Float currentPrice) &#123;
+        this.currentPrice = currentPrice;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">entity.Goods.java
+public class Goods &#123;
+    private Integer goodsId;//商品编号
+    private String title;//标题
+    private String subTitle;//子标题
+    private Float originalCost;//原始价格
+    private Float currentPrice;//当前价格
+    private Float discount;//折扣率
+    private Integer isFreeDelivery;//是否包邮 ,1-包邮 0-不包邮
+    private Integer categoryId;//分类编号
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="xml">resources.logback.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+   &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+       &lt;encoder&gt;
+           &lt;pattern&gt;[%thread] %d&#123;HH:mm:ss.SSS&#125; %-5level %logger&#123;36&#125; - %msg%n&lt;/pattern&gt;
+       &lt;/encoder&gt;
+   &lt;/appender&gt;
+
+    &lt;!--
+        日志输出级别(优先级高到低):
+        error: 错误 - 系统的故障日志
+        warn: 警告 - 存在风险或使用不当的日志
+        info: 一般性消息
+        debug: 程序内部用于调试信息
+        trace: 程序运行的跟踪信息
+     --&gt;
+    &lt;root level=&quot;debug&quot;&gt;
+        &lt;appender-ref ref=&quot;console&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="xml">resources.mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+    &lt;settings&gt;
+        &lt;!-- goods_id ==&gt; goodsId 驼峰命名转换 --&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+
+    &lt;!--设置默认指向的数据库--&gt;
+    &lt;environments default=&quot;dev&quot;&gt;
+        &lt;!--配置环境，不同的环境不同的id名字--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;
+            &lt;!-- 采用JDBC方式对数据库事务进行commit/rollback --&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--采用连接池方式管理数据库连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/babytun?useUnicode=true&amp;amp;characterEncoding=UTF-8&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;mappers&gt;
+&lt;!--        &lt;mapper class=&quot;com.imooc.mybatis.dao.GoodsDAO&quot;/&gt;--&gt;
+        &lt;package name=&quot;com.imooc.mybatis.dao&quot;/&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">test.java.com.imooc.mybatis.MyBatisTestor
+package com.imooc.mybatis;
+
+import com.imooc.mybatis.dao.GoodsDAO;
+import com.imooc.mybatis.dto.GoodsDTO;
+import com.imooc.mybatis.entity.Goods;
+import com.imooc.mybatis.utils.MyBatisUtils;
+import org.apache.ibatis.session.SqlSession;
+import org.junit.Test;
+
+import java.util.List;
+
+//JUNIT单元测试类
+public class MyBatisTestor &#123;
+
+    @Test
+    public void testSelectByPriceRange() throws Exception &#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            GoodsDAO goodsDAO = session.getMapper(GoodsDAO.class); //包含注解的接口
+            List&lt;Goods&gt; list = goodsDAO.selectByPriceRange(100f, 500f, 20);
+            System.out.println(list.size());
+        &#125;catch (Exception e)&#123;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+
+    /**
+     * 新增数据
+     * @throws Exception
+     */
+    @Test
+    public void testInsert() throws Exception &#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            Goods goods = new Goods();
+            goods.setTitle(&quot;测试商品&quot;);
+            goods.setSubTitle(&quot;测试子标题&quot;);
+            goods.setOriginalCost(200f);
+            goods.setCurrentPrice(100f);
+            goods.setDiscount(0.5f);
+            goods.setIsFreeDelivery(1);
+            goods.setCategoryId(43);
+            GoodsDAO goodsDAO = session.getMapper(GoodsDAO.class);
+            //insert()方法返回值代表本次成功插入的记录总数
+            int num = goodsDAO.insert(goods);
+            session.commit();//提交事务数据
+            System.out.println(goods.getGoodsId()); //最新的数据回填給goodsId
+        &#125;catch (Exception e)&#123;
+            if(session != null)&#123;
+                session.rollback();//回滚事务
+            &#125;
+            throw e;
+        &#125;finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+
+    @Test
+    public void testSelectAll() throws Exception &#123;
+        SqlSession session = null;
+        try&#123;
+            session = MyBatisUtils.openSession();
+            GoodsDAO goodsDAO = session.getMapper(GoodsDAO.class);
+            List&lt;GoodsDTO&gt; list = goodsDAO.selectAll();
+            System.out.println(list.size());
+        &#125;catch (Exception e)&#123;
+            throw e;
+        &#125; finally &#123;
+            MyBatisUtils.closeSession(session);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-annotation&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+            &lt;version&gt;3.5.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;5.1.47&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
 
             
         </div>
@@ -1188,7 +2088,7 @@ select * from a whrer name = &quot; or 1=1 or 1=&quot;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -2482,7 +3382,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -6270,7 +7170,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -8965,7 +9865,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -12372,7 +13272,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13046,7 +13946,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -16196,7 +17096,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -19578,7 +20478,7 @@ public interface ArrayBuilder &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
