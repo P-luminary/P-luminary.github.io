@@ -556,7 +556,338 @@ public class TestServlet extends HttpServlet &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="RBAC-Role-Based-Access-Control-介绍"><a href="#RBAC-Role-Based-Access-Control-介绍" class="headerlink" title="RBAC(Role-Based Access Control)介绍"></a>RBAC(Role-Based Access Control)介绍</h3><ul>
+<li><p>基于**<u>角色权限控制</u>**(<strong>RBAC</strong>)是面向企业安全策略的访问控制方式</p>
+</li>
+<li><p>RBAC核心思想是将控制访问的资源与角色(Role)进行绑定</p>
+</li>
+<li><p>系统的用户(User)与角色(Role)再进行绑定, 用户便拥有对应权限</p>
+</li>
+</ul>
+<h6 id="一般主键cno或id都要设定字段类型为-BigInt"><a href="#一般主键cno或id都要设定字段类型为-BigInt" class="headerlink" title="一般主键cno或id都要设定字段类型为 BigInt"></a>一般主键cno或id都要设定字段类型为 BigInt</h6><h5 id="imooc-oa-sql"><a href="#imooc-oa-sql" class="headerlink" title="imooc-oa.sql"></a>imooc-oa.sql</h5><h2 id="实现用户登录"><a href="#实现用户登录" class="headerlink" title="实现用户登录"></a>实现用户登录</h2><h4 id="基于LayUI开发登录页"><a href="#基于LayUI开发登录页" class="headerlink" title="基于LayUI开发登录页"></a>基于LayUI开发登录页</h4><h4 id="LayUI前端框架"><a href="#LayUI前端框架" class="headerlink" title="LayUI前端框架"></a>LayUI前端框架</h4><p><a target="_blank" rel="noopener" href="https://www.layuiweb.com/">Layui - 经典开源模块化前端 UI 框架（官网文档镜像站） (layuiweb.com)</a></p>
+<pre><code class="html">login.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui-main/src/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        body &#123;
+            background-color: #f2f2f2;
+        &#125;
 
+        .oa-container &#123;
+            /*background-color: white;*/
+            position: absolute;
+            width: 400px;
+            height: 350px;
+            top: 50%;
+            left: 50%;
+            padding: 20px;
+            margin-left: -200px;
+            margin-top: -175px;
+        &#125;
+        #username,#password&#123;
+            /*text-align: center;*/
+            /*font-size: 24px;*/
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;oa-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center; margin-bottom: 20px&quot;&gt;办公OA系统&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; placeholder=&quot;请输入用户名&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; placeholder=&quot;请输入密码&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid&quot; lay-submit lay-filter=&quot;login&quot;&gt;登录&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现用户登录-1"><a href="#实现用户登录-1" class="headerlink" title="实现用户登录-1"></a>实现用户登录-1</h3><pre><code class="java">com.imooc.oa.entity.User
+package com.imooc.oa.entity;
+
+public class User &#123;
+    /*
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+     */
+    private Long userId;
+    private String username;
+    private String password;
+    private Long employeeId;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">com.imooc.oa.dao.UserDao
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.User;
+import com.imooc.oa.util.MybatisUtils;
+
+/**
+ * 用户表
+ */
+public class UserDao &#123;
+    /**
+     * 按照用户名查询用户表
+     * @param username 用户名
+     * @return User对象包含对应的用户信息，null则代表对象不存在
+     */
+    public User selectByUsername(String username)&#123;
+        User user = (User)MybatisUtils.executeQuery(sqlSession -&gt; sqlSession.selectOne(&quot;usermapper.selectByUsername&quot;,username));
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">user.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;usermapper&quot;&gt;
+    &lt;select id=&quot;selectByUsername&quot; parameterType=&quot;String&quot; resultType=&quot;com.imooc.oa.entity.User&quot;&gt;
+        select * from sys_user where username = #&#123;value&#125;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mappers&gt;
+    &lt;mapper resource=&quot;mappers/test.xml&quot;/&gt;
+    &lt;mapper resource=&quot;mappers/user.xml&quot;/&gt;
+&lt;/mappers&gt;
+</code></pre>
+<p><strong>Dao → Service</strong></p>
+<h6 id="创建测试用例快捷键-Ctrl-Shift-T"><a href="#创建测试用例快捷键-Ctrl-Shift-T" class="headerlink" title="创建测试用例快捷键 Ctrl+Shift+T"></a>创建测试用例快捷键 Ctrl+Shift+T</h6><pre><code class="java">UserSerive.java
+package com.imooc.oa.serive;
+
+import com.imooc.oa.dao.UserDao;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.serive.exception.BussinessException;
+
+public class UserService &#123; //创建测试用例快捷键 Ctrl+Shift+T
+    private UserDao userDao = new UserDao(); //实例化
+
+    /**
+     * 根据前台输入进行登录校验
+     * @param username 前台输入的用户名
+     * @param password 前台输入的密码
+     * @return 校验通过后，包含对应用户数据的User实体类
+     * @throws BussinessException L001-用户名不存在,L002-密码错误
+     */ 
+    public User checkLogin(String username, String password)&#123;
+        User user = userDao.selectByUsername(username);
+        if (user == null)&#123;
+            //抛出用户不存在异常
+            throw new BussinessException(&quot;L001&quot;, &quot;用户名不存在&quot;);
+        &#125;
+        if(!password.equals(user.getPassword()))&#123;
+            throw new BussinessException(&quot;L002&quot;, &quot;密码错误&quot;);
+        &#125;
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">test/serive.UserServiceTest.java
+package com.imooc.oa.serive;
+
+import junit.framework.TestCase;
+import org.junit.Test;
+
+public class UserServiceTest extends TestCase &#123;
+    private UserService userService = new UserService();
+
+    @Test
+    public void testCheckLogin1() &#123;
+        userService.checkLogin(&quot;uu&quot;,&quot;1234&quot;);
+    &#125;
+    @Test
+    public void testCheckLogin2() &#123;
+        userService.checkLogin(&quot;m8&quot;,&quot;1234&quot;);
+    &#125;
+    @Test
+    public void testCheckLogin3() &#123;
+        userService.checkLogin(&quot;uu&quot;,&quot;test&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">serive.exception.BussinessException.java
+package com.imooc.oa.serive.exception;
+
+/**
+ * 业务逻辑异常
+ */
+public class BussinessException extends RuntimeException&#123;
+    private String code; //异常编码,异常的以为标识
+    private String message; //异常的具体文本消息
+    public BussinessException(String code, String msg)&#123;
+        super(code + &quot;:&quot; + msg);
+        this.code = code;
+        this.message = msg;
+    &#125;
+
+    public String getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(String code) &#123;
+        this.code = code;
+    &#125;
+
+    @Override
+    public String getMessage() &#123;
+        return message;
+    &#125;
+
+    public void setMessage(String message) &#123;
+        this.message = message;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现用户登录-2"><a href="#实现用户登录-2" class="headerlink" title="实现用户登录-2"></a>实现用户登录-2</h3><pre><code class="java">com.imooc.oa.controller.LoginServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.UserService;
+import com.imooc.oa.service.exception.BussinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet(name = &quot;LoginServlet&quot; ,urlPatterns = &quot;/check_login&quot;)
+public class LoginServlet extends HttpServlet &#123;
+    Logger logger = LoggerFactory.getLogger(LoginServlet.class);
+    private UserService userService = new UserService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //接收用户输入
+        String username = request.getParameter(&quot;username&quot;);
+        String password = request.getParameter(&quot;password&quot;);
+        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+        try &#123;
+            //调用业务逻辑
+            User user = userService.checkLogin(username, password);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;message&quot;, &quot;success&quot;);
+        &#125;catch (BussinessException ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;catch (Exception ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getClass().getSimpleName());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;
+        //返回对应结果
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<h4 id="实现用户登录-3"><a href="#实现用户登录-3" class="headerlink" title="实现用户登录-3"></a>实现用户登录-3</h4><pre><code class="xml">pom.xml
+&lt;dependency&gt;
+   &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+   &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+   &lt;version&gt;1.2.62&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="html">login.xml实现增添表单校验
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;慕课网办公OA系统&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        body&#123;
+            background-color: #F2F2F2;
+        &#125;
+        .oa-container&#123;
+            /*background-color: white;*/
+            position: absolute;
+            width: 400px;
+            height: 350px;
+            top: 50%;
+            left: 50%;
+            padding: 20px;
+            margin-left: -200px;
+            margin-top: -175px;
+        &#125;
+        #username,#password&#123;
+            /*text-align: center;*/
+            /*font-size: 24px;*/
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;oa-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center;margin-bottom: 20px&quot;&gt;办公OA系统&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;username&quot; lay-verify=&quot;required&quot; name=&quot;username&quot; placeholder=&quot;请输入用户名&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot; &gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;password&quot; id=&quot;password&quot; lay-verify=&quot;required&quot; name=&quot;password&quot; placeholder=&quot;请输入密码&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot; &gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid&quot; lay-submit lay-filter=&quot;login&quot;&gt;登录&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    // 表单提交事件 表单输入校验 在上面加 lay-verify=&quot;requrired&quot;
+    layui.form.on(&quot;submit(login)&quot; , function(formdata)&#123;//data参数包含了当前表单的数据
+        console.log(formdata);
+        //发送ajax请求进行登录校验
+        layui.$.ajax(&#123;
+            url : &quot;/check_login&quot;,
+            data : formdata.field, //提交表单数据
+            type : &quot;post&quot;,
+            dataType : &quot;json&quot; ,
+            success : function(json)&#123;
+                console.log(json);
+                if(json.code == &quot;0&quot;)&#123; //登录校验成功 内置弹出层
+                    layui.layer.msg(&quot;登录成功&quot;);
+                &#125;else&#123;
+                    layui.layer.msg(json.message);
+                &#125;
+            &#125;
+        &#125;)
+        return false;//submit提交事件返回true则表单提交,false则阻止表单提交
+    &#125;)
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+&lt;/html&gt;
+</code></pre>
+<h6 id="后面通过Ajax-浏览器后台-上面return-false-请求向服务器发起异步通信获取校验是否通过"><a href="#后面通过Ajax-浏览器后台-上面return-false-请求向服务器发起异步通信获取校验是否通过" class="headerlink" title="后面通过Ajax[浏览器后台(上面return false)]请求向服务器发起异步通信获取校验是否通过"></a>后面通过Ajax[浏览器后台(上面return false)]请求向服务器发起异步通信获取校验是否通过</h6>
             
         </div>
     </div>
@@ -570,7 +901,7 @@ public class TestServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -2539,7 +2870,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -3833,7 +4164,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -5254,7 +5585,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -7621,7 +7952,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -10316,7 +10647,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -13723,7 +14054,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -14397,7 +14728,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
