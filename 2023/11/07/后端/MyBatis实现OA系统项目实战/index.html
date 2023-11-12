@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1486,6 +1486,351 @@ public class IndexServlet extends HttpServlet &#123;
 &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
+</code></pre>
+<h3 id="基于MD5算法对密码加密"><a href="#基于MD5算法对密码加密" class="headerlink" title="基于MD5算法对密码加密"></a>基于MD5算法对密码加密</h3><h5 id="MD5摘要算法"><a href="#MD5摘要算法" class="headerlink" title="MD5摘要算法"></a>MD5摘要算法</h5><ul>
+<li>MD5信息摘要算法广泛使用的密码散列函数</li>
+<li>MD5可以产生出一个128位的散列值用于唯一标识源数据</li>
+<li>项目中通常使用MD5作为敏感数据的加密算法</li>
+</ul>
+<h5 id="MD5特点"><a href="#MD5特点" class="headerlink" title="MD5特点"></a>MD5特点</h5><ul>
+<li>压缩性, MD5生成的摘要长度固定</li>
+<li>抗修改, 源数据哪怕有一个字节变化, MD5也会有巨大差异</li>
+<li>不可逆, 无法通过MD5反向推算源数据</li>
+</ul>
+<h5 id="Apache-Commons-Codec"><a href="#Apache-Commons-Codec" class="headerlink" title="Apache Commons Codec"></a>Apache Commons Codec</h5><ul>
+<li>Commons-Codec是Apache提供的编码&#x2F;解码组件</li>
+<li>通过Commons-Codec可以轻易生成源数据的MD5摘要</li>
+<li>MD5摘要方法: <strong>String md5 &#x3D; DigestUtils.md5Hex</strong> (源数据)</li>
+</ul>
+<pre><code class="java">util.MD5Utils.java
+package com.imooc.oa.util;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+public class MD5Utils &#123;
+    public static String md5Digest(String source)&#123;
+        return DigestUtils.md5Hex(source);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="敏感数据加盐混淆"><a href="#敏感数据加盐混淆" class="headerlink" title="敏感数据加盐混淆"></a>敏感数据加盐混淆</h3><p> md5utilstest  userservice user</p>
+<pre><code class="java">public class User &#123;
+    /*
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+     */
+    private Long userId;
+    private String username;
+    private String password;
+    private Long employeeId;
+    private Integer salt;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">util.MD5Utils.java
+package com.imooc.oa.util;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+public class MD5Utils &#123;
+    /**
+     * 对数据源加盐混淆后生成MD5摘要
+     * @param source 源数据
+     * @return MD5摘要
+     */
+    public static String md5Digest(String source)&#123;
+        return DigestUtils.md5Hex(source);
+    &#125;
+    public static String md5Digest(String source, Integer salt)&#123;
+        char[] ca = source.toCharArray(); //字符数组
+        for (int i = 0; i &lt; ca.length; i++) &#123;
+            ca[i] = (char)(ca[i] + salt);
+        &#125;
+        String target = new String(ca);
+//        System.out.println(target);
+        String md5 = DigestUtils.md5Hex(target);
+        return md5;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        System.out.println(MD5Utils.md5Digest(&quot;test&quot;, 188));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">修改UserService.java 中的密码校验
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.RbacDao;
+import com.imooc.oa.dao.UserDao;
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.exception.BussinessException;
+import com.imooc.oa.util.MD5Utils;
+
+import java.util.List;
+
+public class UserService &#123; //创建测试用例快捷键 Ctrl+Shift+T
+    private UserDao userDao = new UserDao(); //实例化
+    private RbacDao rbacDao = new RbacDao();
+
+    /**
+     * 根据前台输入进行登录校验
+     * @param username 前台输入的用户名
+     * @param password 前台输入的密码
+     * @return 校验通过后,包含对应用户数据的User实体类
+     * @throws BussinessException L001-用户名不存在,L002-密码错误
+     */
+    public User checkLogin(String username, String password)&#123;
+        User user = userDao.selectByUsername(username);
+        if (user == null)&#123;
+            //抛出用户不存在异常
+            throw new BussinessException(&quot;L001&quot;, &quot;用户名不存在&quot;);
+        &#125;
+        //对前台输入的密码加盐混淆后生成MD5,与保存在数据库中的MD5密码进行对比
+        String md5 = MD5Utils.md5Digest(password, user.getSalt());
+        if(!md5.equals(user.getPassword()))&#123;
+            throw new BussinessException(&quot;L002&quot;, &quot;密码错误&quot;);
+        &#125;
+        return user;
+    &#125;
+    public List&lt;Node&gt; selectNodeByUserId(Long userId)&#123;
+        List&lt;Node&gt; nodeList = rbacDao.selectNodeByUserId(userId);
+        return nodeList;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现注销功能"><a href="#实现注销功能" class="headerlink" title="实现注销功能"></a>实现注销功能</h3><p>loginServlet保存着数据 indexservlet中的session保存着数据<br>清除session</p>
+<pre><code class="java">oa.controller.LogoutServlet.java
+package com.imooc.oa.controller;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(name = &quot;LogoutServlet&quot;, urlPatterns = &quot;/logout&quot;)
+public class LogoutServlet extends HttpServlet &#123;
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        request.getSession().invalidate(); //会话注销
+        response.sendRedirect(&quot;/login.html&quot;); //跳转回去
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">index.ftl
+&lt;!--注销按钮--&gt;
+&lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;/logout&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+</code></pre>
+<h3 id="请假流程数据库设计"><a href="#请假流程数据库设计" class="headerlink" title="请假流程数据库设计"></a>请假流程数据库设计</h3><h6 id="开发多级审批流程"><a href="#开发多级审批流程" class="headerlink" title="开发多级审批流程"></a>开发多级审批流程</h6><ul>
+<li>公司所有员工都可以使用”请假申请”功能申请休假</li>
+<li>请假时间少于72小时，部门经理审批后直接通过</li>
+<li>请假时间大于72小时，部门经理审批后还需总经理进行审批</li>
+<li>部门经理只允许批准本部门员工申请</li>
+<li>部门经理请假需直接由总经理审批</li>
+<li>总经理提起请假申请，系统自动批准通过</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/87fb5232c47e90f94a7580b26bd204150433faf5/data/OA%E7%B3%BB%E7%BB%9F%E8%AF%B7%E5%81%87%E6%B5%81%E7%A8%8B.jpg"></p>
+<h5 id="工作流程表设计"><a href="#工作流程表设计" class="headerlink" title="工作流程表设计"></a>工作流程表设计</h5><p><span style = "color:red"><strong>请假单表</strong>LeaveForm → <strong>审批任务流程表</strong>ProcessFlow → <strong>消息通知表</strong>Notice</span></p>
+<h5 id="设计约束"><a href="#设计约束" class="headerlink" title="设计约束"></a>设计约束</h5><ul>
+<li><p>每一个请假单对应一个审批流程</p>
+</li>
+<li><p>请假单创建后, 按业务规则生成部门经理、总经理审批任务</p>
+</li>
+<li><p>审批任务的经办人只能审批自己辖区内的请假申请(总裁办可以审批所有 软件只能审批软件)</p>
+</li>
+<li><p>所有审批任务”通过”, 代表请假已经批准</p>
+</li>
+<li><p>任意审批任务”驳回”操作, 其余审批任务取消, 请假申请驳回</p>
+</li>
+<li><p>请假流程中注意节点产生的操作都要生成对应的系统通知</p>
+</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/324ce1f7aa2d127ed415e216b61742f0b1550c7d/data/OA%E7%B3%BB%E7%BB%9F%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E8%A1%A8.jpg" style="zoom: 150%;" />
+
+
+
+<h3 id="实现Dao与数据交互"><a href="#实现Dao与数据交互" class="headerlink" title="实现Dao与数据交互"></a>实现Dao与数据交互</h3><p>entity  数据新增接口dao(依靠Mybatis) 增加mapper 创造LeaveFormDaoTest<br>                                    ProcessFlowDao + Test mapper<br>                                    NoticeDao</p>
+<pre><code class="java">entity.LeaveForm.java
+public class LeaveForm &#123;
+    private Long formId;
+    private Long employeeId;
+    private Integer formType;
+    private Date startTime;
+    private Date endTime;
+    private String reason;
+    private Date createTime;
+    private String state;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.LeaveForm.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+
+public interface LeaveFormDao &#123;
+    public void insert(LeaveForm form);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/leave_form.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.LeaveFormDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class LeaveFormDaoTest extends TestCase &#123;
+    @Test
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = new LeaveForm();
+            form.setEmployeeId(4L);//员工编号
+            form.setFormType(1); //事假
+            SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            Date startTime = null; //起始时间
+            Date endTime = null; //结束时间
+            try &#123;
+                startTime = sdf.parse(&quot;2020-03-25 08:00:00&quot;);
+                endTime = sdf.parse(&quot;2020-04-01 18:00:00&quot;);
+            &#125; catch (ParseException e) &#123;
+                throw new RuntimeException(e);
+            &#125;
+            form.setStartTime(startTime);
+            form.setEndTime(endTime);
+            form.setReason(&quot;回家探亲&quot;); //请假事由
+            form.setCreateTime(new Date()); //创建时间
+            form.setState(&quot;processing&quot;); //当前状态
+            dao.insert(form);
+            return null;
+        &#125;);
+    &#125;
+
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">entity.ProcessFlow.java
+package com.imooc.oa.entity;
+
+import java.util.Date;
+
+public class ProcessFlow &#123;
+    private Long processId;
+    private Long formId;
+    private Long operatorId;
+    private String action;
+    private String result;
+    private String reason;
+    private Date createTime;
+    private Date auditTime;
+    private Integer orderNo;
+    private String state;
+    private Integer isLast;
+    Setter + Getter
+&#125;
+</code></pre>
+<pre><code class="java">dao.ProcessFlowDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.ProcessFlow;
+
+public interface ProcessFlowDao &#123;
+    public void insert(ProcessFlow processFlow);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/process_flow.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.ProcessFlowDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+
+import java.util.Date;
+
+public class ProcessFlowDaoTest extends TestCase &#123;
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            ProcessFlowDao dao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow = new ProcessFlow();
+            flow.setFormId(31L);
+            flow.setOperatorId(21L);
+            flow.setAction(&quot;audit&quot;);
+            flow.setReason(&quot;approved&quot;);
+            flow.setReason(&quot;同意&quot;);
+            flow.setCreateTime(new Date());
+            flow.setAuditTime(new Date());
+            flow.setOrderNo(1);
+            flow.setState(&quot;ready&quot;);
+            flow.setIsLast(1);
+            dao.insert(flow);
+            return null;
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">entity.Notice.java
+public class Notice &#123;
+    private Long noticeId;
+    private Long receiverId;
+    private String content;
+    private Date createTime;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.NoticeDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+
+public interface NoticeDao &#123;
+    public void insert(Notice notice);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/notice.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.NoticeDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.util.Date;
+
+public class NoticeDaoTest extends TestCase &#123;
+    @Test
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            NoticeDao dao = sqlSession.getMapper(NoticeDao.class);
+            Notice notice = new Notice();
+            notice.setReceiverId(21L);
+            notice.setContent(&quot;测试消息&quot;);
+            notice.setCreateTime(new Date());
+            dao.insert(notice);
+            return null;
+        &#125;);
+    &#125;
+&#125;
 </code></pre>
 
     </div>
