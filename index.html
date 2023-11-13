@@ -1852,6 +1852,498 @@ public class NoticeDaoTest extends TestCase &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="实现请假申请业务逻辑-1"><a href="#实现请假申请业务逻辑-1" class="headerlink" title="实现请假申请业务逻辑-1"></a>实现请假申请业务逻辑-1</h3><p>LeaveFormService employee.xml{动态审批sql}</p>
+<pre><code class="xml">employee.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;!--namespace与包名类名一致--&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.EmployeeDao&quot;&gt;
+    &lt;!--id与方法名对应 parameterType与方法参数类型对应 resultType与方法返回类型对应--&gt;
+    &lt;select id=&quot;selectById&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Employee&quot;&gt;
+        select * from adm_employee where employee_id = #&#123;value&#125;
+    &lt;/select&gt;
+    &lt;select id=&quot;selectLeader&quot; parameterType=&quot;com.imooc.oa.entity.Employee&quot; resultType=&quot;com.imooc.oa.entity.Employee&quot;&gt;
+        select * from adm_employee where
+            &lt;if test=&quot;emp.level &amp;lt; 7&quot;&gt;
+                level = 7 and department_id = #&#123;emp.departmentId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;emp.level == 7&quot;&gt;
+                level = 8;
+            &lt;/if&gt;
+            &lt;if test=&quot;emp.level == 8&quot;&gt;
+                employee_id = #&#123;emp.employeeId&#125;
+            &lt;/if&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service.LeaveFormService.java (重要业务走向代码不放在程序中)
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.EmployeeDao;
+import com.imooc.oa.dao.LeaveFormDao;
+import com.imooc.oa.dao.ProcessFlowDao;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.util.Date;
+
+/**
+ * 请假单流程服务
+ */
+public class LeaveFormService &#123;
+    /**
+     * 创建请假单
+     * @param form 前端输入的请假单数据
+     * @return 持久化后的请假单对象
+     */
+    public LeaveForm createLeaveForm(LeaveForm form)&#123;
+            LeaveForm savedForm = (LeaveForm) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.持久化form表单数据,8级以下员工表单状态位processing,8级(总经理)状态位approved
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());
+            if (employee.getLevel() == 8)&#123;
+                form.setState(&quot;approved&quot;);
+            &#125;else &#123;
+                form.setState(&quot;processing&quot;);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            leaveFormDao.insert(form);
+            //2.增加第一条流程数据,说明表单已提交,状态位complete 初始化数据↓
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow1 = new ProcessFlow();
+            flow1.setFormId(form.getFormId());
+            flow1.setOperatorId(employee.getEmployeeId());
+            flow1.setAction(&quot;apply&quot;);
+            flow1.setCreateTime(new Date());
+            flow1.setOrderNo(1);
+            flow1.setState(&quot;complete&quot;);
+            flow1.setIsLast(0);
+            processFlowDao.insert(flow1);
+            //3.分情况创建其余流程数据 employee.xml(动态sql语句)
+              //3.1 7级以下员工,生成部门经理审批任务,请假时间大于36小时(后期单独处理),还需生成总经理审批任务
+            if (employee.getLevel() &lt; 7)&#123;
+                //动态sql EmployeeDao
+                Employee dmanage = employeeDao.selectLeader(employee);
+                ProcessFlow flow2 = new ProcessFlow();
+                flow2.setFormId(form.getFormId());
+                flow2.setOperatorId(dmanage.getEmployeeId());
+                flow2.setAction(&quot;audit&quot;);//审批任务
+                flow2.setCreateTime(new Date());
+                flow2.setOrderNo(2);
+                flow2.setState(&quot;process&quot;);
+                long diff = form.getEndTime().getTime() - form.getStartTime().getTime(); //毫秒数
+                float hours = diff/(1000*60*60) * 1f;
+                if (hours &gt;= BussinessConstants.MANAGER_AUDIT_HOURS)&#123;
+                    flow2.setIsLast(0); //最后节点
+                    processFlowDao.insert(flow2);
+                    Employee manager = employeeDao.selectLeader(dmanage);//总经理
+                    ProcessFlow flow3 = new ProcessFlow();
+                    flow3.setFormId(form.getFormId());
+                    flow3.setOperatorId(manager.getEmployeeId());
+                    flow3.setAction(&quot;audit&quot;);
+                    flow3.setCreateTime(new Date());
+                    flow3.setState(&quot;ready&quot;);
+                    flow3.setOrderNo(3);
+                    flow3.setIsLast(1);
+                    processFlowDao.insert(flow3);
+                &#125;else &#123;//小于3天&#123;
+                    flow2.setIsLast(1);
+                    processFlowDao.insert(flow2);
+                &#125;
+            &#125; else if (employee.getLevel() == 7) &#123;//部门经理
+                //3.2 7级员工,生成总经理审批任务
+                Employee manager = employeeDao.selectLeader(employee);
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(manager.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setCreateTime(new Date());
+                flow.setState(&quot;process&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+            &#125;else if (employee.getLevel() == 8)&#123;
+                //3.3 8级员工,生成总经理审批任务,系统自动通过
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(employee.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setResult(&quot;自动通过&quot;);
+                flow.setCreateTime(new Date());
+                flow.setAuditTime(new Date());
+                flow.setState(&quot;complete&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+            &#125;
+            return form;
+        &#125;);
+        return savedForm;
+    &#125;
+&#125; 
+</code></pre>
+<pre><code class="java">service.BussinessConstants.java
+package com.imooc.oa.service;
+
+public class BussinessConstants &#123;
+    public static final int MANAGER_AUDIT_HOURS = 36; //总经理请假审批时间阈值
+&#125;
+</code></pre>
+<p>ctrl+shift+t 生成测试用例</p>
+<pre><code class="java">Test.service.LeaveFormServiceTest.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.entity.LeaveForm;
+import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static org.junit.Assert.*;
+
+public class LeaveFormServiceTest &#123;
+    LeaveFormService leaveFormService = new LeaveFormService();
+
+    /**
+     * 市场部员工请假单(72小时以上)测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm1() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(8l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1); //事假
+        form.setReason(&quot;市场部员工请假单(72小时以上)&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 市场部员工请假单(72小时内)测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm2() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(8l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020032718&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;市场部员工请假单(72小时内)&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 研发部部门经理请假单测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm3() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(2l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;研发部部门经理请假单&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 总经理请假单测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm4() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(1l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;总经理请假单&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现请假申请控制"><a href="#实现请假申请控制" class="headerlink" title="实现请假申请控制"></a>实现请假申请控制</h3><h5 id="Servlet-前后端整体交互-底层"><a href="#Servlet-前后端整体交互-底层" class="headerlink" title="Servlet 前后端整体交互(底层)"></a>Servlet 前后端整体交互(底层)</h5><p>leaveformservlet</p>
+<pre><code class="java">controller.LeaveFormServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.LeaveFormService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet(name = &quot;LeaveFormServlet&quot;, urlPatterns = &quot;/leave/*&quot;)
+public class LeaveFormServlet extends HttpServlet &#123;
+    private LeaveFormService leaveFormService = new LeaveFormService();
+    private Logger logger = LoggerFactory.getLogger(LoggerFactory.class);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException &#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        // http://localhost/leave/create
+        String uri = request.getRequestURI();
+        String methodName = uri.substring(uri.lastIndexOf(&quot;/&quot;) + 1); //截取本身就包含斜杠
+        if (methodName.equals(&quot;create&quot;))&#123;
+
+        &#125;
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException &#123;
+        this.doPost(request,response);
+    &#125;
+
+    /**
+     * 创建请假单
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void create(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute(&quot;login_user&quot;);
+        String formType = request.getParameter(&quot;formType&quot;);
+        String strStartTime = request.getParameter(&quot;startTime&quot;);
+        String strEndTime = request.getParameter(&quot;endTime&quot;);
+        String reason = request.getParameter(&quot;reason&quot;);
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH&quot;);
+        Map result = new HashMap();
+        try &#123;
+            LeaveForm form = new LeaveForm();
+            form.setEmployeeId(user.getEmployeeId());
+            form.setStartTime(sdf.parse(strStartTime));
+            form.setEndTime(sdf.parse(strEndTime));
+            form.setFormType(Integer.parseInt(formType));
+            form.setReason(reason);
+            form.setCreateTime(new Date());
+            //2.调用业务逻辑方法
+            leaveFormService.createLeaveForm(form);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;message&quot;, &quot;success&quot;);
+        &#125; catch (Exception e)&#123;
+            logger.error(&quot;请假申请异常&quot;,e);
+            result.put(&quot;code&quot;, e.getClass().getSimpleName());
+            result.put(&quot;message&quot;, e.getMessage());
+        &#125;
+        //3.组织相应数据
+        String json = JSON.toJSONString(result); //将result转换为字符串
+        response.getWriter().println(json);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="完整实现请假申请功能"><a href="#完整实现请假申请功能" class="headerlink" title="完整实现请假申请功能"></a>完整实现请假申请功能</h3><pre><code class="java">controller.ForwardServlet.java
+package com.imooc.oa.controller;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * 页面跳转Servlet
+ */
+@WebServlet(name=&quot;ForwardServlet&quot;, urlPatterns = &quot;/forward/*&quot;)
+public class ForwardServlet extends HttpServlet &#123;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        String uri = request.getRequestURI();
+        /** 动态提取 把第一个/抛出外 再去寻找第一个‘/’
+         * /forward/form
+         * /forward/a/b/c/form
+         */
+        String subUri = uri.substring(1);
+        String page = subUri.substring(subUri.indexOf(&quot;/&quot;));
+        request.getRequestDispatcher(page + &quot;.ftl&quot;).forward(request,response); //扩展名 + web.xml映射路径
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">form.html 变换为 form.ftl 放在ftl内
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;请假申请&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        /*表单容器*/
+        .ns-container &#123;
+            position: absolute;
+            width: 500px;
+            height: 450px;
+            top: 150px;
+            left: 50%;
+            margin-left: -250px;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid #cccccc;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h2&gt;请假申请&lt;/h2&gt;
+    &lt;/blockquote&gt;
+    &lt;table id=&quot;grdNoticeList&quot; lay-filter=&quot;grdNoticeList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ns-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center;margin-bottom: 20px&quot;&gt;请假申请单&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;!--基本信息--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;部门&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block&quot;&gt;
+                &lt;div class=&quot;layui-col-md12&quot; style=&quot;padding-top: 10px;&quot;&gt;
+                    研发部
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;申请人&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block&quot;&gt;
+                &lt;div class=&quot;layui-col-md12&quot; style=&quot;padding-top: 10px;&quot;&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_employee.title&#125;]
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;!--请假类型下拉框--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假类别&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;select name=&quot;formType&quot; lay-verify=&quot;required&quot; lay-filter=&quot;cityCode&quot;&gt;
+                        &lt;option value=&quot;1&quot;&gt;事假&lt;/option&gt;
+                        &lt;option value=&quot;2&quot;&gt;病假&lt;/option&gt;
+                        &lt;option value=&quot;3&quot;&gt;工伤假&lt;/option&gt;
+                        &lt;option value=&quot;4&quot;&gt;婚嫁&lt;/option&gt;
+                        &lt;option value=&quot;5&quot;&gt;产假&lt;/option&gt;
+                        &lt;option value=&quot;6&quot;&gt;丧假&lt;/option&gt;
+                    &lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;!--请假时长日期选择框--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假时长&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;input name=&quot;leaveRange&quot; type=&quot;text&quot; class=&quot;layui-input&quot; id=&quot;daterange&quot; placeholder=&quot; - &quot;&gt;
+                    &lt;input id=&quot;startTime&quot; name=&quot;startTime&quot; type=&quot;hidden&quot;&gt;
+                    &lt;input id=&quot;endTime&quot; name=&quot;endTime&quot; type=&quot;hidden&quot;&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!--请假事由--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假事由&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;input name=&quot;reason&quot; type=&quot;text&quot;  lay-verify=&quot;required|mobile&quot; placeholder=&quot;&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!--提交按钮--&gt;
+        &lt;div class=&quot;layui-form-item &quot; style=&quot;text-align: center&quot;&gt;
+                &lt;button class=&quot;layui-btn&quot; type=&quot;button&quot; lay-submit lay-filter=&quot;sub&quot;&gt;立即申请&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;!--Sweetalert2对话框--&gt;
+&lt;script src=&quot;/resources/sweetalert2.all.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+        var layDate = layui.laydate; //Layui日期选择框JS对象
+        var layForm = layui.form; //layui表单对象
+        var $ = layui.$; //jQuery对象
+        //日期时间范围
+        layDate.render(&#123;
+            elem: &#39;#daterange&#39;  //daterange渲染成日期选择框
+            ,type: &#39;datetime&#39;
+            ,range: true
+            ,format: &#39;yyyy年M月d日H时&#39;
+            ,done: function(value, start, end)&#123;
+                //选择日期后出发的时间,设置startTime与endTime隐藏域
+                var startTime = start.year + &quot;-&quot; + start.month + &quot;-&quot; + start.date + &quot;-&quot; + start.hours;
+                var endTime = end.year + &quot;-&quot; + end.month + &quot;-&quot; + end.date + &quot;-&quot; + end.hours;
+                console.info(&quot;请假开始时间&quot;,startTime);
+                $(&quot;#startTime&quot;).val(startTime);
+                console.info(&quot;请假结束时间&quot;,endTime);
+                $(&quot;#endTime&quot;).val(endTime);
+            &#125;
+        &#125;);
+
+        //表单提交时间
+        layForm.on(&#39;submit(sub)&#39;, function(data)&#123;
+            console.info(&quot;向服务器提交的表单数据&quot;,data.field);
+            $.post(&quot;/leave/create&quot;,data.field,function (json) &#123;
+                console.info(&quot;服务器返回数值&quot;,json);
+                if(json.code == &quot;0&quot;)&#123;
+                    /*SweetAlert2确定对话框*/
+                    swal(&#123;
+                        type: &#39;success&#39;,
+                        html: &quot;&lt;h2&gt;请假单已提交,等待上级审批&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;).then(function (result) &#123;
+                        window.location.href=&quot;/forward/notice&quot;;
+                    &#125;);
+                &#125;else&#123;
+                    swal(&#123;
+                        type: &#39;warning&#39;,
+                        html: &quot;&lt;h2&gt;&quot; + json.message + &quot;&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;);
+                &#125;
+            &#125;,&quot;json&quot;);
+            return false;
+        &#125;);
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h5 id="把localhost-x2F-index-主页添加数据"><a href="#把localhost-x2F-index-主页添加数据" class="headerlink" title="把localhost&#x2F;index 主页添加数据"></a>把localhost&#x2F;index 主页添加数据</h5><pre><code class="html">index.ftl中的47行到50行
+ &lt;!--子节点--&gt;
+&lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+ &lt;a href=&quot;#&#123;node.url&#125;&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+&lt;/dd&gt;
+</code></pre>
+<p>8-1</p>
 
             
         </div>
@@ -1866,7 +2358,7 @@ public class NoticeDaoTest extends TestCase &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -3835,7 +4327,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -5129,7 +5621,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -6550,7 +7042,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8917,7 +9409,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -11612,7 +12104,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -15019,7 +15511,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -15693,7 +16185,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -18843,7 +19335,7 @@ public class Test9 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
