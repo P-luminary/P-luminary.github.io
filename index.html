@@ -2343,7 +2343,853 @@ public class ForwardServlet extends HttpServlet &#123;
  &lt;a href=&quot;#&#123;node.url&#125;&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
 &lt;/dd&gt;
 </code></pre>
-<p>8-1</p>
+<h3 id="请假审批功能"><a href="#请假审批功能" class="headerlink" title="请假审批功能"></a>请假审批功能</h3><pre><code class="java">leave_form.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.LeaveFormDao&quot;&gt;
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.oa.entity.LeaveForm&quot;
+        useGeneratedKeys=&quot;true&quot; keyProperty=&quot;formId&quot; keyColumn=&quot;form_id&quot;&gt;
+        INSERT INTO adm_leave_form( employee_id, form_type, start_time, end_time, reason, create_time, state)
+        VALUES ( #&#123;employeeId&#125;, #&#123;formType&#125;, #&#123;startTime&#125;, #&#123;endTime&#125;, #&#123;reason&#125;, #&#123;createTime&#125;, #&#123;state&#125;)
+    &lt;/insert&gt;
+    &lt;select id=&quot;selectByParams&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;java.util.Map&quot;&gt;
+        select f.* ,e.name , d.*
+        from
+          adm_leave_form f,adm_process_flow pf , adm_employee e , adm_department d
+        where
+          f.form_id = pf.form_id
+          and f.employee_id = e.employee_id
+          and e.department_id = d.department_id
+          and pf.state = #&#123;pf_state&#125; and pf.operator_id = #&#123;pf_operator_id&#125;
+    &lt;/select&gt;
+&lt;!--    &lt;select id=&quot;selectById&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.LeaveForm&quot;&gt;--&gt;
+&lt;!--        select * from adm_leave_form where form_id = #&#123;value&#125;--&gt;
+&lt;!--    &lt;/select&gt;--&gt;
+
+&lt;!--    &lt;update id=&quot;update&quot; parameterType=&quot;com.imooc.oa.entity.LeaveForm&quot;&gt;--&gt;
+&lt;!--        UPDATE adm_leave_form SET employee_id = #&#123;employeeId&#125; , form_type = #&#123;formType&#125;, start_time = #&#123;startTime&#125;, end_time = #&#123;endTime&#125;, reason = #&#123;reason&#125;, state = #&#123;state&#125; ,create_time = #&#123;createTime&#125; WHERE form_id = #&#123;formId&#125;--&gt;
+&lt;!--    &lt;/update&gt;--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">dao.LeaveFormDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Map;
+
+public interface LeaveFormDao &#123;
+    public void insert(LeaveForm form);
+    public List&lt;Map&gt; selectByParams(@Param(&quot;pf_state&quot;) String pfState , @Param(&quot;pf_operator_id&quot;) Long operatorId);
+&#125; 
+</code></pre>
+<pre><code class="java">Test
+  @Test
+    public void testSelectByParams()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            List&lt;Map&gt; list = dao.selectByParams(&quot;process&quot;, 21L);
+            System.out.println(list);
+            return list;
+        &#125;);
+    &#125;
+</code></pre>
+<pre><code class="java">controller.LeaveFormServlet.java
+   /**
+     * 查询需要审核的请假单列表
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void getLeaveFormList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        User user = (User) request.getSession().getAttribute(&quot;login_user&quot;);
+        List&lt;Map&gt; formList = leaveFormService.getLeaveFormList(&quot;process&quot;, user.getEmployeeId());
+        Map result = new HashMap();
+        result.put(&quot;code&quot;,&quot;0&quot;); //服务器处理成功
+        result.put(&quot;msg&quot;,&quot;&quot;); //服务器返回具体处理消息
+        result.put(&quot;count&quot;, formList.size()); //数据总数
+        result.put(&quot;data&quot;, formList); //当前显示的对象页表
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+</code></pre>
+<h3 id="实现待审批请假列表"><a href="#实现待审批请假列表" class="headerlink" title="实现待审批请假列表"></a>实现待审批请假列表</h3><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;
+    &lt;title&gt;请假审批&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        .form-item&#123;
+            padding: 10px;
+        &#125;
+        .form-item-value&#123;
+            padding: 10px;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h1&gt;请假审批&lt;/h1&gt;
+    &lt;/blockquote&gt;
+    &lt;!--待审批列表--&gt;
+    &lt;table id=&quot;grdFormList&quot; lay-filter=&quot;grdFormList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;!--请假详情对话框--&gt;
+&lt;div id=&quot;divDialog&quot; style=&quot;display: none;padding: 10px&quot;&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;部门&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;dname&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;姓名&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;name&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;起始时间&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;startTime&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;结束时间&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;endTime&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;请假原因&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs10 form-item-value&quot; id=&quot;reason&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;!--表单Id--&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;formId&quot; id=&quot;formId&quot;&gt;
+            &lt;!--审批结果--&gt;
+            &lt;select name=&quot;result&quot; lay-verfity=&quot;required&quot;&gt;
+                &lt;option value=&quot;approved&quot;&gt;同意&lt;/option&gt;
+                &lt;option value=&quot;refused&quot;&gt;驳回&lt;/option&gt;
+            &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!--审批意见--&gt;
+            &lt;input type=&quot;text&quot; name=&quot;reason&quot; placeholder=&quot;请输入审批意见&quot;
+                   autocomplete=&quot;off&quot; class=&quot;layui-input&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid &quot; lay-submit lay-filter=&quot;audit&quot;&gt;确认提交&lt;/button&gt;
+
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;/resources/sweetalert2.all.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    var $ = layui.$;
+    //将毫秒数转换为&quot;yyyy-MM-dd HH时&quot;字符串格式
+    function formatDate(time)&#123;
+        var newDate = new Date(time);
+        return newDate.getFullYear() + &quot;-&quot; +
+            (newDate.getMonth() + 1) + &quot;-&quot; + newDate.getDate()
+            + &quot; &quot; + newDate.getHours() + &quot;时&quot;;
+    &#125;
+    // 将table渲染为数据表格
+    layui.table.render(&#123;
+        elem : &quot;#grdFormList&quot; , //选择器
+        id : &quot;grdFormList&quot; , //id
+        url : &quot;/leave/list&quot; , //ajax请求url
+        page : false , //是否分页 true-是 false-否
+        cols :[[ //列描述
+            &#123;title : &quot;&quot; , width:70 , style : &quot;height:60px&quot; , type:&quot;numbers&quot;&#125;, // numbers代表序号列
+            &#123;field : &quot;create_time&quot; , title : &quot;申请时间&quot; , width : 150 , templet: function (d) &#123;
+                //templet代表对数据进行加工后再显示
+                return formatDate(d.create_time)
+            &#125;&#125;,
+            &#123;field : &quot;form_type&quot; , title : &quot;类型&quot; , width : 100 , templet: function(d)&#123;
+                switch (d.form_type) &#123;
+                    case 1:
+                        return &quot;事假&quot;;
+                    case 2:
+                        return &quot;病假&quot;;
+                    case 3:
+                        return &quot;工伤假&quot;;
+                    case 4:
+                        return &quot;婚假&quot;;
+                    case 5:
+                        return &quot;产假&quot;;
+                    case 6:
+                        return &quot;丧假&quot;;
+                &#125;
+            &#125;&#125;,
+            &#123;field : &quot;department_name&quot; , title : &quot;部门&quot; , width : 100&#125;,
+            &#123;field : &quot;name&quot; , title : &quot;员工&quot; , width : 100&#125;,
+            &#123;field : &quot;start_time&quot; , title : &quot;起始时间&quot; , width : 150, templet: function (d) &#123;
+                    return formatDate(d.start_time)
+                &#125;&#125;,
+            &#123;field : &quot;end_time&quot; , title : &quot;结束时间&quot; , width : 150 , templet: function (d) &#123;
+                    return formatDate(d.end_time)
+                &#125;&#125;,
+            &#123;field : &quot;reason&quot; , title : &quot;请假原因&quot; , width : 350 &#125;,
+            &#123;title : &quot;&quot; , width:150 ,type:&quot;space&quot; , templet : function(d)&#123;
+                var strRec = JSON.stringify(d);
+                console.info(&quot;请假单数据&quot;, d);
+                console.info(&quot;请假单数据&quot;, strRec);
+                //将请假单数据存放至data-laf属性中
+                return &quot;&lt;button class=&#39;layui-btn layui-btn-danger layui-btn-sm btn-audit&#39; data-laf=&quot; + strRec + &quot; &gt;审批&lt;/button&gt;&quot;;
+            &#125;&#125;
+        ]]
+    &#125;)
+
+    // 绑定每一行的审批按钮
+    $(document).on(&quot;click&quot; , &quot;.btn-audit&quot; , function()&#123;
+        //初始化表单
+        $(&quot;#divDialog form&quot;)[0].reset();
+        $(&quot;#divDialog form form-item-value&quot;).text(&quot;&quot;);
+        //获取当前点击按钮的请假单数据,回填至显示项 json对象 内置数据显示页面
+        var laf = $(this).data(&quot;laf&quot;);
+        $(&quot;#dname&quot;).text(laf.department_name);
+        $(&quot;#name&quot;).text(laf.name);
+        $(&quot;#startTime&quot;).text(formatDate(laf.start_time));
+        $(&quot;#endTime&quot;).text(formatDate(laf.end_time));
+        $(&quot;#reason&quot;).text(laf.reason);
+        $(&quot;#formId&quot;).val(laf.form_id);
+        //弹出layui对话框
+        layui.layer.open(&#123;
+            type : &quot;1&quot; , //页面层
+            title : &quot;请假审批&quot; , //标题
+            content : $(&quot;#divDialog&quot;) , //指定对话框容器对象
+            area : [&quot;500px&quot; , &quot;400px&quot;] , //尺寸
+            end : function()&#123; //销毁后触发事件
+                $(&quot;#divDialog&quot;).hide();
+            &#125;
+        &#125;)
+    &#125;)
+    /**
+     * 提交审批数据 本质:发送Ajax请求
+     */
+    layui.form.on(&quot;submit(audit)&quot; , function(data)&#123;
+        $.ajax(&#123;
+            url : &quot;/leave/audit&quot;, //审核URL
+            data : data.field ,
+            type : &quot;post&quot; ,
+            dataType : &quot;json&quot; ,
+            success: function (json) &#123;
+                //关闭所有layui对话框
+                layui.layer.closeAll();
+                //显示处理结果
+                if(json.code == &quot;0&quot;)&#123;
+                    swal(&#123;
+                        type: &#39;success&#39;,
+                        html: &quot;&lt;h2&gt;请假已审批完毕&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;).then(function (result) &#123;
+                        window.location.href=&quot;/forward/notice&quot;;
+                    &#125;);
+                &#125;else&#123;
+                    swal(&#123;
+                        type: &#39;warning&#39;,
+                        html: &quot;&lt;h2&gt;&quot; + json.message + &quot;&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;);
+                &#125;
+            &#125;
+        &#125;)
+        return false;
+    &#125;)
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现审批业务逻辑"><a href="#实现审批业务逻辑" class="headerlink" title="实现审批业务逻辑"></a>实现审批业务逻辑</h3><pre><code class="java">service.LeaveFormService.java
+ public void audit(Long formId, Long operatorId, String result, String reason)&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.无论同意/驳回, 当前任务状态变更为complete
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            List&lt;ProcessFlow&gt; flowList = processFlowDao.selectByFormId(formId);
+            if (flowList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF001&quot;, &quot;无效的审批流程&quot;);//自定义错误抛出
+            &#125;
+            //获取当前任务ProcessFlow对象
+            List&lt;ProcessFlow&gt; processList = flowList.stream().filter(p-&gt;p.getOperatorId() == operatorId &amp;&amp; p.getState().equals(&quot;process&quot;)).collect(Collectors.toList());
+            ProcessFlow process = null;
+            if (processList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF002&quot;, &quot;未找到待处理任务&quot;);
+            &#125;else&#123;
+                process = processList.get(0);
+                process.setState(&quot;complete&quot;);
+                process.setResult(result);
+                process.setReason(reason);
+                process.setAuditTime(new Date());
+                processFlowDao.update(process);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = leaveFormDao.selectById(formId);
+            //2.如果当前任务是最后一个节点,代表流程结束,更新请假单状态对应的approved/refused
+            if (process.getIsLast() == 1)&#123;
+                form.setState(result); // approved\refused
+                leaveFormDao.update(form);
+            &#125;else &#123;
+                //readyList包含所有后续任务节点
+                List&lt;ProcessFlow&gt; readyList = flowList.stream().filter(p-&gt;p.getState().equals(&quot;ready&quot;)).collect(Collectors.toList());
+                //3.如果当前任务不是最后一个节点且审批通过,那下一个节点的状态从ready变为process
+                if (result.equals(&quot;approved&quot;))&#123;
+                    ProcessFlow readyProcess = readyList.get(0);
+                    readyProcess.setState(&quot;process&quot;);
+                    processFlowDao.update(readyProcess);
+                &#125; else if (result.equals(&quot;refused&quot;)) &#123;
+                    //4.如果当前任务不是最后一个切点且审核驳回,则后续所有任务状态变为cancel,请假单状态变为refused
+                    for (ProcessFlow p : readyList)&#123;
+                        p.setState(&quot;cancel&quot;);
+                        processFlowDao.update(p);
+                    &#125;
+                    form.setState(&quot;refused&quot;);
+                    leaveFormDao.update(form);
+                &#125;
+            &#125;
+            return null;
+        &#125;);
+    &#125;
+</code></pre>
+<pre><code class="java">test.LeaveFormServiceTest.java (在数据库中增加新建查询 导入训练素材的 请假单审核测试数据.sql)
+   /**
+     * 请假3天以上,部门经理审批通过
+     */
+    @Test
+    public void audit1()&#123;
+        leaveFormService.audit(31l,2l,&quot;approved&quot;,&quot;祝早日康复&quot;);
+    &#125;
+
+    /**
+     * 请假3天以上,部门经理审批驳回
+     */
+    @Test
+    public void audit2()&#123;
+        leaveFormService.audit(32l,2l,&quot;refused&quot;,&quot;工期紧张,请勿拖延&quot;);
+    &#125;
+
+    /**
+     * 部门经理请假,总经理审批通过
+     */
+    @Test
+    public void audit3()&#123;
+        leaveFormService.audit(33l,1l,&quot;approved&quot;,&quot;同意&quot;);
+    &#125;
+</code></pre>
+<h3 id="完整实现请假审批"><a href="#完整实现请假审批" class="headerlink" title="完整实现请假审批"></a>完整实现请假审批</h3><pre><code class="java">controller.LeaveFormServlet.java
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException&#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        // http://localhost/leave/create
+        String uri = request.getRequestURI();
+        String methodName = uri.substring(uri.lastIndexOf(&quot;/&quot;) + 1); //截取本身就包含斜杠
+        if (methodName.equals(&quot;create&quot;))&#123;
+            this.create(request,response);
+        &#125;else if (methodName.equals(&quot;list&quot;))&#123;
+            this.getLeaveFormList(request,response);
+        &#125; else if (methodName.equals(&quot;audit&quot;)) &#123;
+            this.audit(request,response);
+        &#125;
+    &#125;
+...
+...
+...
+  /**
+     * 处理审批操作
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void audit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        String formId = request.getParameter(&quot;formId&quot;);
+        String result = request.getParameter(&quot;result&quot;);
+        String reason = request.getParameter(&quot;reason&quot;);
+        User user = (User) request.getSession().getAttribute(&quot;login_user&quot;);
+        Map mpResult = new HashMap();
+        try &#123;
+            leaveFormService.audit(Long.parseLong(formId), user.getEmployeeId(), result,reason);
+            mpResult.put(&quot;code&quot;, &quot;0&quot;);
+            mpResult.put(&quot;message&quot;, &quot;success&quot;);
+
+        &#125; catch (Exception e) &#123;
+            logger.error(&quot;请假单审核失败&quot;, e);
+            mpResult.put(&quot;code&quot;, e.getClass().getSimpleName());
+            mpResult.put(&quot;message&quot;, e.getMessage());
+        &#125;
+        String json = JSON.toJSONString(mpResult);
+        response.getWriter().println(json);
+    &#125;
+</code></pre>
+<h3 id="实现系统消息业务逻辑"><a href="#实现系统消息业务逻辑" class="headerlink" title="实现系统消息业务逻辑"></a>实现系统消息业务逻辑</h3><pre><code class="java">entity.Notice.java
+    private Long noticeId;
+    private Long receiverId;
+    private String content;
+    private Date createTime;
+    public Notice()&#123;
+
+    &#125;
+    public Notice(Long receiverId, String content)&#123;
+        this.receiverId = receiverId;
+        this.content = content;
+        this.createTime = new Date();
+    &#125;
+    Getter + Setter
+</code></pre>
+<pre><code class="java">service.LeaveFormService.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.EmployeeDao;
+import com.imooc.oa.dao.LeaveFormDao;
+import com.imooc.oa.dao.NoticeDao;
+import com.imooc.oa.dao.ProcessFlowDao;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.service.exception.BussinessException;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * 请假单流程服务
+ */
+public class LeaveFormService &#123;
+    /**
+     * 创建请假单
+     * @param form 前端输入的请假单数据
+     * @return 持久化后的请假单对象
+     */
+    public LeaveForm createLeaveForm(LeaveForm form)&#123;
+            LeaveForm savedForm = (LeaveForm) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.持久化form表单数据,8级以下员工表单状态位processing,8级(总经理)状态位approved
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());
+            if (employee.getLevel() == 8)&#123;
+                form.setState(&quot;approved&quot;);
+            &#125;else &#123;
+                form.setState(&quot;processing&quot;);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            leaveFormDao.insert(form);
+            //2.增加第一条流程数据,说明表单已提交,状态位complete 初始化数据↓
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow1 = new ProcessFlow();
+            flow1.setFormId(form.getFormId());
+            flow1.setOperatorId(employee.getEmployeeId());
+            flow1.setAction(&quot;apply&quot;);
+            flow1.setCreateTime(new Date());
+            flow1.setOrderNo(1);
+            flow1.setState(&quot;complete&quot;);
+            flow1.setIsLast(0);
+            processFlowDao.insert(flow1);
+            //3.分情况创建其余流程数据 employee.xml(动态sql语句)
+                // 3.1 7级以下员工,生成部门经理审批任务,请假时间大于36小时(后期单独处理),还需生成总经理审批任务
+                SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH时&quot;);
+                NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            if (employee.getLevel() &lt; 7)&#123;
+                //动态sql EmployeeDao
+                Employee dmanager = employeeDao.selectLeader(employee);
+                ProcessFlow flow2 = new ProcessFlow();
+                flow2.setFormId(form.getFormId());
+                flow2.setOperatorId(dmanager.getEmployeeId());
+                flow2.setAction(&quot;audit&quot;);//审批任务
+                flow2.setCreateTime(new Date());
+                flow2.setOrderNo(2);
+                flow2.setState(&quot;process&quot;);
+                long diff = form.getEndTime().getTime() - form.getStartTime().getTime(); //毫秒数
+                float hours = diff/(1000*60*60) * 1f;
+                if (hours &gt;= BussinessConstants.MANAGER_AUDIT_HOURS)&#123;
+                    flow2.setIsLast(0); //最后节点
+                    processFlowDao.insert(flow2);
+                    Employee manager = employeeDao.selectLeader(dmanager);//总经理
+                    ProcessFlow flow3 = new ProcessFlow();
+                    flow3.setFormId(form.getFormId());
+                    flow3.setOperatorId(manager.getEmployeeId());
+                    flow3.setAction(&quot;audit&quot;);
+                    flow3.setCreateTime(new Date());
+                    flow3.setState(&quot;ready&quot;);
+                    flow3.setOrderNo(3);
+                    flow3.setIsLast(1);
+                    processFlowDao.insert(flow3);
+                &#125;else &#123;//小于3天&#123;
+                    flow2.setIsLast(1);
+                    processFlowDao.insert(flow2);
+                &#125;
+                //请假单已提交消息
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]已提交,请等待上级审批.&quot;
+                        , sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+                //通知部门经理审批消息
+                noticeContent = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot;,
+                        employee.getTitle() , employee.getName() ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(dmanager.getEmployeeId(),noticeContent));
+            &#125; else if (employee.getLevel() == 7) &#123;//部门经理
+                //3.2 7级员工,生成总经理审批任务
+                Employee manager = employeeDao.selectLeader(employee);
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(manager.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setCreateTime(new Date());
+                flow.setState(&quot;process&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+                //请假单已提交消息
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]已提交,请等待上级审批.&quot;
+                        , sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+                //通知总经理审批消息
+                noticeContent = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot;,
+                        employee.getTitle() , employee.getName() ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(manager.getEmployeeId(),noticeContent));
+            &#125;else if (employee.getLevel() == 8)&#123;
+                //3.3 8级员工,生成总经理审批任务,系统自动通过
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(employee.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setResult(&quot;自动通过&quot;);
+                flow.setCreateTime(new Date());
+                flow.setAuditTime(new Date());
+                flow.setState(&quot;complete&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]系统已自动批准通过.&quot; ,
+                        sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+            &#125;
+            return form;
+        &#125;);
+        return savedForm;
+    &#125;
+    /**
+     * 获取指定任务状态及指定经办人对应的请假单列表
+     * @param pfState ProcessFlow任务状态
+     * @param operatorId 经办人编号
+     * @return 请假单及相关数据列表
+     */
+    public List&lt;Map&gt; getLeaveFormList(String pfState, Long operatorId)&#123;
+        return (List&lt;Map&gt;)MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            List&lt;Map&gt; formList = dao.selectByParams(pfState, operatorId);
+            return formList;
+        &#125;);
+    &#125;
+    /**
+     * 审核请假单
+     * @param formId 表单编号
+     * @param operatorId 经办人(当前登录员工)
+     * @param result 审批结果
+     * @param reason 审批意见
+     */
+    public void audit(Long formId, Long operatorId, String result, String reason)&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.无论同意/驳回, 当前任务状态变更为complete
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            List&lt;ProcessFlow&gt; flowList = processFlowDao.selectByFormId(formId);
+            if (flowList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF001&quot;, &quot;无效的审批流程&quot;);//自定义错误抛出
+            &#125;
+            //获取当前任务ProcessFlow对象
+            List&lt;ProcessFlow&gt; processList = flowList.stream().filter(p-&gt;p.getOperatorId() == operatorId &amp;&amp; p.getState().equals(&quot;process&quot;)).collect(Collectors.toList());
+            ProcessFlow process = null;
+            if (processList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF002&quot;, &quot;未找到待处理任务&quot;);
+            &#125;else&#123;
+                process = processList.get(0);
+                process.setState(&quot;complete&quot;);
+                process.setResult(result);
+                process.setReason(reason);
+                process.setAuditTime(new Date());
+                processFlowDao.update(process);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = leaveFormDao.selectById(formId);
+            SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH时&quot;);
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());//表单提交人信息
+            Employee operator = employeeDao.selectById(operatorId);//任务经办人信息
+            NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            //2.如果当前任务是最后一个节点,代表流程结束,更新请假单状态对应的approved/refused
+            if (process.getIsLast() == 1)&#123;
+                form.setState(result); // approved\refused
+                leaveFormDao.update(form);
+                String strResult = null;
+                if (result.equals(&quot;aproved&quot;))&#123;
+                    strResult = &quot;批准&quot;;
+                &#125; else if (result.equals(&quot;refused&quot;)) &#123;
+                    strResult = &quot;驳回&quot;;
+                &#125;
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]%s%s已%s,审批意见:%s,审批流程已结束&quot;
+                        sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                        operator.getTitle(),operator.getName(), //批准\驳回
+                        strResult,reason);//发给表单提交人的通知
+                noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent));
+            &#125;else &#123;
+                //readyList包含所有后续任务节点
+                List&lt;ProcessFlow&gt; readyList = flowList.stream().filter(p-&gt;p.getState().equals(&quot;ready&quot;)).collect(Collectors.toList());
+                //3.如果当前任务不是最后一个节点且审批通过,那下一个节点的状态从ready变为process
+                if (result.equals(&quot;approved&quot;))&#123;
+                    ProcessFlow readyProcess = readyList.get(0);
+                    readyProcess.setState(&quot;process&quot;);
+                    processFlowDao.update(readyProcess);
+                    //消息1: 通知表单提交人,部门经理已经审批通过,交由上级继续审批
+                    String noticeContent1 = String.format(&quot;您的请假申请[%s-%s]%s%s已批准,审批意见:%s ,请继续等待上级审批&quot; ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent1));
+
+                    //消息2: 通知总经理有新的审批任务
+                    String noticeContent2 = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()));
+                    noticeDao.insert(new Notice(readyProcess.getOperatorId(),noticeContent2));
+
+                    //消息3: 通知部门经理(当前经办人),员工的申请单你已批准,交由上级继续审批
+                    String noticeContent3 = String.format(&quot;%s-%s提起请假申请[%s-%s]您已批准,审批意见:%s,申请转至上级领导继续审批&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeDao.insert(new Notice(operator.getEmployeeId(),noticeContent3));
+                &#125; else if(result.equals(&quot;refused&quot;)) &#123;
+                    //4.如果当前任务不是最后一个节点且审批驳回,则后续所有任务状态变为cancel,请假单状态变为refused
+                    for(ProcessFlow p:readyList)&#123;
+                        p.setState(&quot;cancel&quot;);
+                        processFlowDao.update(p);
+                    &#125;
+                    form.setState(&quot;refused&quot;);
+                    leaveFormDao.update(form);
+                    //消息1: 通知申请人表单已被驳回
+                    String noticeContent1 = String.format(&quot;您的请假申请[%s-%s]%s%s已驳回,审批意见:%s,审批流程已结束&quot; ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent1));
+
+                    //消息2: 通知经办人表单&quot;您已驳回&quot;
+                    String noticeContent2 = String.format(&quot;%s-%s提起请假申请[%s-%s]您已驳回,审批意见:%s,审批流程已结束&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeDao.insert(new Notice(operator.getEmployeeId(),noticeContent2));
+                &#125;
+            &#125;
+            return null;
+        &#125;);
+</code></pre>
+<h3 id="完整实现系统消息功能"><a href="#完整实现系统消息功能" class="headerlink" title="完整实现系统消息功能"></a>完整实现系统消息功能</h3><pre><code class="java">dao.NoticeDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+
+import java.util.List;
+
+public interface NoticeDao &#123;
+    public void insert(Notice notice);
+    public List&lt;Notice&gt; selectByReceiverId(Long receiverId);
+&#125;
+</code></pre>
+<pre><code class="java">service.NoticeService.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.NoticeDao;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.util.List;
+
+/**
+ * 消息服务
+ */
+public class NoticeService &#123;
+    /**
+     * 查询指定员工的系统消息
+     * @param receiverId
+     * @return 最近100条消息列表
+     */
+    public List&lt;Notice&gt; getNoticeList(Long receiverId)&#123;
+        return (List) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            return noticeDao.selectByReceiverId(receiverId);
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">controller.NoticeServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.NoticeService;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@WebServlet(name = &quot;NoticeServlet&quot; , urlPatterns = &quot;/notice/list&quot;)
+public class NoticeServlet extends HttpServlet &#123;
+    private NoticeService noticeService = new NoticeService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        User user = (User)request.getSession().getAttribute(&quot;login_user&quot;);
+        List&lt;Notice&gt; noticeList = noticeService.getNoticeList(user.getEmployeeId());
+        Map result = new HashMap&lt;&gt;();
+        result.put(&quot;code&quot;, &quot;0&quot;);
+        result.put(&quot;msg&quot;, &quot;&quot;);
+        result.put(&quot;count&quot;, noticeList.size());
+        result.put(&quot;data&quot;, noticeList);
+        String json = JSON.toJSONString(result);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().println(json);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">resources.mappers.notice.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.NoticeDao&quot;&gt;
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.oa.entity.Notice&quot;
+            useGeneratedKeys=&quot;true&quot; keyProperty=&quot;noticeId&quot; keyColumn=&quot;notice_id&quot;&gt;
+        INSERT INTO sys_notice( receiver_id, content, create_time) VALUES (#&#123;receiverId&#125;, #&#123;content&#125;, #&#123;createTime&#125;)
+    &lt;/insert&gt;
+
+    &lt;select id=&quot;selectByReceiverId&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Notice&quot;&gt;
+        select * from sys_notice where receiver_id = #&#123;value&#125; order by create_time desc limit 0,100
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="html">index.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课网办公OA系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_department.departmentName&#125;-$&#123;current_employee.title&#125;]
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;/logout&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+                &lt;#list node_list as node&gt;
+                &lt;!--父节点--&gt;
+                    &lt;#if node.nodeType == 1&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;$&#123;node.nodeId&#125;&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                    &lt;/#if&gt;
+                    &lt;#if node.nodeType == 2&gt;
+                &lt;!--子节点--&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+                    &lt;a href=&quot;$&#123;node.url&#125;&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                &lt;/dd&gt;
+                    &lt;/#if&gt;
+                &lt;/#list&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; src=&quot;/forward/notice&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下 一开始先dl与dd对齐[程序维护方便]
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;)
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="html">notice.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;系统通知&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h2&gt;系统通知&lt;/h2&gt;
+    &lt;/blockquote&gt;
+    &lt;table id=&quot;grdNoticeList&quot; lay-filter=&quot;grdNoticeList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    layui.table.render(&#123;
+        elem : &quot;#grdNoticeList&quot; ,
+        id : &quot;grdNoticeList&quot; ,
+        url : &quot;/notice/list&quot; ,
+        page : false ,
+        cols :[[
+            &#123;field : &quot;&quot; , title : &quot;序号&quot; , width:&quot;10%&quot; , style : &quot;height:60px&quot; , type:&quot;numbers&quot;&#125;,
+            &#123;field : &quot;create_time&quot; , title : &quot;通知时间&quot; , width : &quot;20%&quot; , templet: function (d) &#123;
+                    var newDate = new Date(d.createTime);
+                    return newDate.getFullYear() + &quot;-&quot; +
+                        (newDate.getMonth() + 1) + &quot;-&quot; + newDate.getDate()
+                        + &quot; &quot; + newDate.getHours() + &quot;:&quot; + newDate.getMinutes() + &quot;:&quot; + newDate.getSeconds();
+                &#125;&#125;,
+            &#123;field : &quot;content&quot; , title : &quot;通知内容&quot; , width : &quot;60%&quot;&#125;
+        ]]
+    &#125;)
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
 
             
         </div>
@@ -2358,7 +3204,7 @@ public class ForwardServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -4327,7 +5173,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -5621,7 +6467,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -7042,7 +7888,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -9409,7 +10255,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -16185,7 +17031,7 @@ public class XPathTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
