@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -780,6 +780,88 @@ d1: developer testor
 d1：testor developer
 </code></pre>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/2ee7e298b43a3cdebf4f9be2ae0e3f72592adee2/data/%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90%E4%BB%A3%E7%A0%81%E8%A1%A8.png"></p>
+<h3 id="sudo获取超级管理员权限"><a href="#sudo获取超级管理员权限" class="headerlink" title="sudo获取超级管理员权限"></a>sudo获取超级管理员权限</h3><ul>
+<li>sudo可以让普通用户拥有超级管理员的执行权限</li>
+<li>普通用户要经过超级管理员授权才能使用</li>
+<li>授权命令：visudo</li>
+</ul>
+<pre><code class="java">在root端输入 visudo 并且输入100gg 快速定位到100行
+[root@imooc ~]#visudo
+## The COMMANDS section may have other options added to it.
+##
+## Allow root to run any commands anywhere
+root    ALL=(ALL)       ALL
+d1        ALL=(ALL)        ALL     #按i进入编辑模式且增加此行
+        ↑：ALL任意电脑可以连接    后ALL可以切换其他用户执行命令   后后ALL允许哪些命令
+ESC退出模式后输入
+[root@imooc imooc]# visudo -c
+/etc/sudoers：解析正确
+
+
+[d1@imooc ~]$ useradd d3    #目前还没有权限
+useradd: Permission denied.
+useradd：无法锁定 /etc/passwd，请稍后再试。
+[d1@imooc ~]$ sudo useradd d3     #以d1的身份給d3一个超级管理员的权限
+我们信任您已经从系统管理员那里了解了日常注意事项。
+总结起来无外乎这三点：
+
+    #1) 尊重别人的隐私。
+    #2) 输入前要先考虑(后果和风险)。
+    #3) 权力越大，责任越大。
+
+[sudo] d1 的密码：=》 shuangyu1
+[d1@imooc ~]$ sudo passwd d3 
+更改用户 d3 的密码 。=》 shuangyu33
+
+回到主Centos 7
+[root@imooc ~]#visudo
+## Allow root to run any commands anywhere
+root    ALL=(ALL)       ALL
+d1      ALL=(ALL)       NOPASSWD:ALL
+NOPASSWD:ALL意味着做任何命令之前不用输入密码
+
+[d1@imooc ~]$ sudo useradd d4
+[d1@imooc ~]$                     #直接不需要输入密码了
+</code></pre>
+<h3 id="CentOS7防火墙firewall"><a href="#CentOS7防火墙firewall" class="headerlink" title="CentOS7防火墙firewall"></a>CentOS7防火墙firewall</h3><h5 id="防火墙"><a href="#防火墙" class="headerlink" title="防火墙"></a>防火墙</h5><ul>
+<li>防火墙是借助硬件和软件对内外部网络环境的保护措施</li>
+<li>CentOS 7基于firewall实现应用层防火墙，CentOS6基于iptables</li>
+<li>firewall-cmd是firewall的核心命令</li>
+</ul>
+<h5 id="对外开放Tomcat"><a href="#对外开放Tomcat" class="headerlink" title="对外开放Tomcat"></a>对外开放Tomcat</h5><pre><code class="java">把apache-tomcat.tar.gz放入/usr/local中 
+[root@imooc local]# tar zxvf apache-tomcat-9.0.34.tar.gz
+[root@imooc local]# ll
+[root@imooc local]# cd apache-tomcat-9.0.34/
+[root@imooc apache-tomcat-9.0.34]# cd bin
+[root@imooc bin]# ./startup.sh
+[root@imooc bin]# ./startup.sh
+Using CATALINA_BASE:   /usr/local/apache-tomcat-9.0.34
+Using CATALINA_HOME:   /usr/local/apache-tomcat-9.0.34
+Using CATALINA_TMPDIR: /usr/local/apache-tomcat-9.0.34/temp
+Using JRE_HOME:        /usr
+Using CLASSPATH:       /usr/local/apache-tomcat-9.0.34/bin/bootstrap.jar:/usr/local/apache-tomcat-9.0.34/bin/tomcat-juli.jar
+Tomcat started.
+[root@imooc bin]# netstat -tulpn|grep 8080  #查看端口是否开启
+tcp6    0    0 :::8080        :::*         LISTEN      4302/java  
+在虚拟机内部去fox浏览器搜索 localhost:8080  就会看到可爱的绿色小猫咪
+    
+若想在计算机中访问端口 192.168.170.129:8080 则需要关闭虚拟机的防火墙
+[root@imooc bin]# firewall-cmd --state   #查看防火墙状态
+running
+[root@imooc bin]# firewall-cmd --list-ports #查看防火墙放行的端口(空代表无任何放行端口)
+[root@imooc bin]# firewall-cmd --zone=public --permanent --add-port=8080/tcp
+#### zone防火墙定义的规则区域、产生永久变更、增加端口8080、tcp形式
+[root@imooc bin]# firewall-cmd --reload  #进行配置重载
+
+若不需要开放8080端口则需要
+[root@imooc bin]# firewall-cmd --zone=public --permanent --remove-port=8080/tcp
+[root@imooc bin]# firewall-cmd --reload  #进行配置重载
+
+[root@imooc bin]# firewall-cmd --zone=public --permanent --add-port=8000-9000/tcp 
+###放行区域端口
+[root@imooc bin]# firewall-cmd --reload  #进行配置重载
+</code></pre>
+<p>4-12</p>
 
     </div>
 
