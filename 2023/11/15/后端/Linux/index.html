@@ -658,6 +658,128 @@ https://www.cnblogs.com/niway/p/15346572.html
 
 [root@imooc system]#shutdown -r now   #断开连接
 </code></pre>
+<h3 id="Linux用户与权限"><a href="#Linux用户与权限" class="headerlink" title="Linux用户与权限"></a>Linux用户与权限</h3><h5 id="用户"><a href="#用户" class="headerlink" title="用户"></a>用户</h5><ul>
+<li>Linux是多用户多任务系统，包含两个概念：<strong>用户</strong>与<strong>用户组</strong></li>
+<li>用户与账户是同一概念，用于登录系统与区分资源权限</li>
+<li>用户让系统变的更安全，同时也保护了用户的个人数字资产</li>
+</ul>
+<h5 id="用户组"><a href="#用户组" class="headerlink" title="用户组"></a>用户组</h5><ul>
+<li>用户组就是将用户分组，隶属用户自动拥有组权限</li>
+<li>一个用户可隶属于多个组，用户可任意切换当前组</li>
+<li>用户组的出现让用户权限管理变更轻松</li>
+</ul>
+<h5 id="用户与用户组的常用命令"><a href="#用户与用户组的常用命令" class="headerlink" title="用户与用户组的常用命令"></a>用户与用户组的常用命令</h5><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>useradd</td>
+<td>创建新用户</td>
+</tr>
+<tr>
+<td>passwd</td>
+<td>修改密码</td>
+</tr>
+<tr>
+<td>usermod</td>
+<td>修改用户信息&#x2F;分配组 (覆盖原组)</td>
+</tr>
+<tr>
+<td>groupadd</td>
+<td>创建新的用户组</td>
+</tr>
+<tr>
+<td><strong>chown</strong></td>
+<td>更改文件的属主或属组</td>
+</tr>
+<tr>
+<td><strong>chmod</strong></td>
+<td>更改文件的访问权限</td>
+</tr>
+<tr>
+<td>newgrp</td>
+<td>切换用户当前组</td>
+</tr>
+</tbody></table>
+<h3 id="项目内部文件权限管理实践"><a href="#项目内部文件权限管理实践" class="headerlink" title="项目内部文件权限管理实践"></a>项目内部文件权限管理实践</h3><pre><code class="java">3员工(2个程序员 1个测试员)
+[root@imooc imooc]# adduser d1
+[root@imooc imooc]# adduser d2
+[root@imooc imooc]# adduser t1
+[root@imooc imooc]# passwd d1 =&gt; shuangyu1
+[root@imooc imooc]# passwd d2 =&gt; shuangyu2
+[root@imooc imooc]# passwd t1 =&gt; shuangyu3
+[root@imooc imooc]# groupadd developer
+[root@imooc imooc]# groupadd testor
+[root@imooc imooc]# usermod -g developer d1
+[root@imooc imooc]# usermod -g developer d2
+[root@imooc imooc]# usermod -g testor t1
+在上方点击打开 并且复制3个Centos7 分别改用户名(d1 d2 t1)和密码(shuangyu1/2/3) 
+[root@imooc imooc]# cd
+[root@imooc ~]# cd /usr/local/share
+[root@imooc share]# mkdir dev-document
+[root@imooc share]# ll
+drwxr-xr-x.  2 root root  28 11月 15 18:37 applications
+drwxr-xr-x.  2 root root   6 12月  3 20:36 dev-document
+drwxr-xr-x.  2 root root   6 4月  11 2018 info
+drwxr-xr-x. 21 root root 243 11月 15 18:25 man
+【前方的drwxr-xr-x 含义见图】
+
+[root@imooc share]# chown d1:developer dev-document  更改对应目录文件的属主(由超级管理员交給研发组) d1可以对developer拥有完整的操作权限 developer以外的用户有读取执行权 其他用户 只有执行权
+drwxr-xr-x.  2 root root       28 11月 15 18:37 applications
+drwxr-xr-x.  2 d1   developer   6 12月  3 20:36 dev-document
+drwxr-xr-x.  2 root root        6 4月  11 2018 info
+drwxr-xr-x. 21 root root      243 11月 15 18:25 man
+
+[root@imooc share]# chmod 750 dev-document/ 其他用户不允许任何权限
+[root@imooc share]# ll
+总用量 0
+drwxr-xr-x.  2 root root       28 11月 15 18:37 applications
+drwxr-x---.  2 d1   developer   6 12月  3 20:36 dev-document
+drwxr-xr-x.  2 root root        6 4月  11 2018 info
+drwxr-xr-x. 21 root root      243 11月 15 18:25 man
+
+返回到Centos 7 - t1
+[t1@imooc ~]$ cd /usr/local/share/dev-document/
+-bash: cd: /usr/local/share/dev-document/: 权限不够
+返回到Centos 7 - d2
+[d2@imooc ~]$ cd /usr/local/share
+[d2@imooc share]$ mv dev-document/ doc
+mv: 无法将&quot;dev-document/&quot; 移动至&quot;doc&quot;: 权限不够
+
+
+上方的chmod 750 的意思是 对应下方的表 第一个7是第一个rwx相加之和4+2+1
+====================chmod命令====================
+★ chmod 750：组用户可读写，其他用户不允许访问 ★        
+★ chmod 777：所有用户拥有完整权限 ★
+★ chmod 700：只有属主拥有完整权限 ★
+====================++++++++====================
+d1弄个文档整个公司的所有人都可以使用
+[d1@imooc ~]$ cd /usr/local/share/dev-document/
+[d1@imooc dev-document]$ vim code.md
+[d1@imooc dev-document]$ ll
+-rw-r--r--. 1 d1 developer 13 12月  3 20:59 code.md
+第一个是d则是文件夹 -则是文件 属主可以对文件读写。组仅仅可以读取。其他人仅仅可以读取
+[d1@imooc dev-document]$ chmod 770 code.md
+[d1@imooc dev-document]$ ll
+总用量 4
+-rwxrwx---. 1 d1 developer 13 12月  3 20:59 code.md
+d2即可读写
+[d2@imooc dev-document]$ vim code.md
+
+如何让d1同时拥有两个组
+[root@imooc share]# usermod -G developer,testor d1
+[root@imooc share]# groups d1
+d1: developer testor
+
+将当前组切换到新的用户组上
+[d1@imooc ~]$ newgrp testor
+[d1@imooc ~]$ groups
+d1：testor developer
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2ee7e298b43a3cdebf4f9be2ae0e3f72592adee2/data/%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90%E4%BB%A3%E7%A0%81%E8%A1%A8.png"></p>
 
     </div>
 
