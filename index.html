@@ -327,7 +327,7 @@
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -791,7 +791,7 @@ yum remove tree.x86_64  卸载程序
 </ul>
 <h4 id="查看进程-amp-杀掉进程"><a href="#查看进程-amp-杀掉进程" class="headerlink" title="查看进程 &amp; 杀掉进程"></a>查看进程 &amp; 杀掉进程</h4><ul>
 <li><strong>ps -ef</strong><br><code># ps -ef | grep vim</code>     ‘|’代表通道</li>
-<li>**kill -9 PID ** 专门按照pid杀死指定进程</li>
+<li>**kill -9 PID ** 专门按照pid杀死指定进程(强制删除)</li>
 </ul>
 <pre><code class="java">#ps -ef | grep redis
 #netstart -tulpn | grep 6379
@@ -1039,7 +1039,7 @@ useradd：无法锁定 /etc/passwd，请稍后再试。
 
 [sudo] d1 的密码：=》 shuangyu1
 [d1@imooc ~]$ sudo passwd d3 
-更改用户 d3 的密码 。=》 shuangyu33
+更改用户 d3 的密码 =》 shuangyu33
 
 回到主Centos 7
 [root@imooc ~]#visudo
@@ -1089,7 +1089,174 @@ running
 ###放行区域端口
 [root@imooc bin]# firewall-cmd --reload  #进行配置重载
 </code></pre>
-<p>4-12</p>
+<h3 id="Bash-Shell"><a href="#Bash-Shell" class="headerlink" title="Bash Shell"></a>Bash Shell</h3><ul>
+<li>Shell是一个用c语言编写的脚本解释器，是用户通过代码操作Linux的桥梁</li>
+<li>Shell脚本描述要执行的任务，完成系列复杂操作，文件通常以**.sh**后缀</li>
+<li>Shell脚本通过Shell解释器执行，按解释器分类分为多种类型</li>
+</ul>
+<h3 id="Linux-Shell分类"><a href="#Linux-Shell分类" class="headerlink" title="Linux Shell分类"></a>Linux Shell分类</h3><table>
+<thead>
+<tr>
+<th>Shell种类</th>
+<th>Shell解释器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bourne Shell</td>
+<td>&#x2F;usr&#x2F;bin&#x2F;sh 或 &#x2F;bin&#x2F;sh</td>
+</tr>
+<tr>
+<td><strong>Boourne Again Shell</strong></td>
+<td><strong>&#x2F;bin&#x2F;bash(默认)</strong></td>
+</tr>
+<tr>
+<td>C Shell</td>
+<td>&#x2F;usr&#x2F;bin&#x2F;csh</td>
+</tr>
+<tr>
+<td>K Shell</td>
+<td>&#x2F;usr&#x2F;bin&#x2F;ksh</td>
+</tr>
+<tr>
+<td>Shell for Root</td>
+<td>&#x2F;sbin&#x2F;sh</td>
+</tr>
+</tbody></table>
+<h5 id="一键发布Tomcat应用程序"><a href="#一键发布Tomcat应用程序" class="headerlink" title="一键发布Tomcat应用程序"></a>一键发布Tomcat应用程序</h5><pre><code class="java">编写shall脚本
+[root@imooc local]# vim deploy_tomcat.sh
+======================================================================
+echo &quot;准备下载Tomcat9&quot;
+wget https://mirror.bit.edu.cn/apache/tomcat/tomcat-9/v9.0.34/bin/apache-tomcat-9.0.34.tar.gz
+echo &quot;正在解压缩Tomcat9&quot;
+tar zxf apache-tomcat-9.0.34.tar,gz
+echo &quot;防火墙开放8080端口&quot;
+firewall-cmd --zone=public --permanent --add-port=8080/tcp
+firewall-cmd --reload
+echo &quot;启动Tomcat&quot;
+cd ./apache-tomcat-9.0.34/bin
+./startup.sh
+======================================================================
+[root@imooc local]# ./deploy_tomcat.sh        开启文件
+</code></pre>
+<h3 id="综合训练：Linux部署慕课网办公OA"><a href="#综合训练：Linux部署慕课网办公OA" class="headerlink" title="综合训练：Linux部署慕课网办公OA"></a>综合训练：Linux部署慕课网办公OA</h3><h5 id="部署架构：Chrome-Tomcat-Web服务器-MySQL服务器-【中间通过网络通信】"><a href="#部署架构：Chrome-Tomcat-Web服务器-MySQL服务器-【中间通过网络通信】" class="headerlink" title="部署架构：Chrome + Tomcat Web服务器 + MySQL服务器 【中间通过网络通信】"></a>部署架构：Chrome + Tomcat Web服务器 + MySQL服务器 【中间通过网络通信】</h5><pre><code class="java">重新安装CentOS 7-DB【最小值安装】
+[root@localhost ~]# yum install -y net-tools
+CentOS 7-DB        ifconfig ==》 192.168.170.131    账户：centos-db 密码：panchunyao123
+CentOS 7-WEB    ifconfig ==》 192.168.170.133    账户：centos-web 密码：panchunyao123
+DB按照MySQL
+WEB按照Tomcat
+</code></pre>
+<h3 id="CentOS安装MySQL-8"><a href="#CentOS安装MySQL-8" class="headerlink" title="CentOS安装MySQL 8"></a>CentOS安装MySQL 8</h3><pre><code class="java">查找有没有mysql安装包
+[centos-db@localhost ~]$ yum search mysql-community
+去官网找到Linux版的 右键复制链接地址
+[root@localhost ~]# wget https://dev.mysql.com/get/mysql80-community-release-el7-11.noarch.rpm
+bash: wget: command not found
+卧槽 wegt不存在，那就按装wget
+[root@localhost ~]# yum install -y wget
+[root@localhost mysql]# ll
+total 16
+-rw-r--r--. 1 root root 14064 Oct 24 07:44 mysql80-community-release-el7-11.noarch.rpm
+
+[root@localhost mysql]# yum localinstall -y mysql80-community-release-el7- 11.noarch.rpm     #自动安装mysql源
+[root@localhost mysql]# yum search mysql-comm #此时查找一下就会出现大量mysql组件
+[root@localhost mysql]# yum install -y mysql-community-server #安装mysql&#123;在欧美很慢&#125;
+ctrl+c 停止安装
+[root@localhost mysql]# cd /var/cache/yum/x86_64/7/mysql80-community/packages/
+#yum下载的缓存路径 在网上下载好后Linux版的MySQL后 进入
+
+[root@localhost mysql80-community]  /var/cache/yum/x86_64/7/mysql80-community
+用命令更改文件夹权限：chmod 777 test01（需要赋予权限的文件夹）
+之后将解压缩的MySQL拖进去
+
+注意：如果直接下载 yum localinstall mysql80-community-release-el7- 11.noarch.rpm  的话会有很多依赖不会被自动下载，最保准的就是去网上下载Linux版本的MySQL再利用Xftp拖进去
+
+[root@localhost package]# yum install -y mysql-community-server 【最快最省事 自动下载&amp;安装依赖】
+[root@localhost package]# systemctl start mysqld
+[root@localhost package]# netstat -tulpn
+tcp6    0    0    :::3306        :::*        LISTEM        21850/mysqld
+[root@localhost package]# systemctl status mysqld     #查看myql启动状态
+[root@localhost package]# systemctl enable mysqld     #设置开机自启动
+</code></pre>
+<h3 id="初始化MySQL-CentOS-7-DB"><a href="#初始化MySQL-CentOS-7-DB" class="headerlink" title="初始化MySQL[CentOS 7-DB]"></a>初始化MySQL[CentOS 7-DB]</h3><pre><code class="java">查看mysql日志寻找mysql密码
+[root@localhost package]# vi /var/log/mysqld.log
+root@localhost: Y,#)foTQ,7js
+[root@localhost package]# mysql -uroot -p
+修改密码！
+mysql&gt; alter user &#39;root&#39;@&#39;localhost&#39; identified with mysql_native_password by &#39;Panchunyao123!&#39;
+mysql&gt; use mysql
+mysql&gt; select host,user from user;
+mysql&gt; update user set host=&#39;%&#39; where user=&#39;root&#39;; #任意设备都可使用%连接到mysql服务器
+host: %            user: root
+mysql&gt; flush privileges; #使修改的权限数据生效
+mysql&gt; exit
+
+下一步是放行防火墙3306端口
+[root@localhost package]# firewall-cmd --zone=public --permanent --add-port=3306/tcp
+[root@localhost package]# firewall-cmd --reload
+
+去电脑端的Navicat Premium 连接新数据库
+MySQL-新建连接
+连接名：centos-db
+主机：192.168.170.131
+端口：3306
+用户名：root
+密码：Panchunyao123！
+
+新建数据库 imooc-oa  utf8mb4 执行sql文件 imooc-oa.sql
+</code></pre>
+<h3 id="部署配置Web应用服务器"><a href="#部署配置Web应用服务器" class="headerlink" title="部署配置Web应用服务器"></a>部署配置Web应用服务器</h3><pre><code class="java">CentOS 7-DB        ifconfig ==》 192.168.170.131    账户：centos-db 密码：panchunyao123
+CentOS 7-WEB    ifconfig ==》 192.168.170.133    账户：centos-web 密码：panchunyao123
+</code></pre>
+<pre><code class="java">[root@localhost ~]# yum search jdk  #查看仓库中包含哪些jdk
+[root@localhost ~]# yum install -y java-1.8.0-openjdk    #安装jdk以及所有依赖
+[root@localhost ~]# java -version
+[root@localhost ~]# which java      #查看安装到哪个地方
+/bin/java
+安装tomcat
+[root@localhost ~]# cd /usr
+用命令更改文件夹权限：chmod 777 local
+[root@localhost usr]# cd local
+打开Xftp将apache-tomcat-9.0.34.tar.gz 传入到local内
+[root@localhost local]# tar zxf apache-tomcat-9.0.34.tar.gz     #对压缩包进行解压
+将素材资料里的imooc_oa.war拖入Xftp的local中 之后进行解压
+[root@localhost local]# tar zxf imooc_oa.war 
+需要将imooc_oa复制到tomcat9的webapps下才可生效
+[root@localhost local]# mv imooc_oa ./apache-tomcat-9.0.34/webapps/
+[root@localhost local]# cd apache-tomcat-9.0.34/webapps/
+[root@localhost webapps]# vim ./imooc_oa/WEB-INF/classes/mybatis-config.xml
+#远程对服务器配置连接数据库服务器
+-bash: vim: 未找到命令 需要先安装vim
+[root@localhost webapps]# yum install -y vim-common
+[root@localhost webapps]# yum install -y vim-enhanced  #再安装一个增强的vim包
+[root@localhost webapps]# vim ./imooc_oa/WEB-INF/classes/mybatis-config.xml
+输入/root 进行全文查找 修改&lt;property 中的value=&quot;jdbc:mysql:...&quot; loacalhost改为自己网络ip：192.168.170.131
+再修改一下下面的password：  Panchunyao123！
+:wq
+[root@localhost webapps]# cd ..
+[root@localhost apache-tomcat-9.0.34]# vim ./conf/server.xml
+/8080 搜索 &lt;Connector port=&quot;80&quot; 只保留80端口
+/Host&gt; 找到最下面 在上面一行加入
+&lt;Context path=&quot;/&quot; docaBacs=&quot;imooc_oa&quot;/&gt; #将imooc_oa目录映射到根路径&quot;/&quot;
+:wq
+
+之后启动tomcat
+[root@localhost apache-tomcat-9.0.34]# ./bin/startup.sh
+[root@localhost apache-tomcat-9.0.34]# netstat -tulpn  #查看进程
+tcp6        0        0 :::80        :::*        LISTEN        20303/java
+
+用防火墙将80端口对外进行暴露
+[root@localhost apache-tomcat-9.0.34]# firewall-cmd --zone=public --permanent --add-port=80/tcp
+[root@localhost apache-tomcat-9.0.34]# firewall-cmd --reload  #重载
+
+回到电脑浏览器输入：http://192.168.170.133/login.html
+
+数据库安全【根据3306端口可以查到数据库根源】：对指定IP端口进行放行
+[root@localhost ~]# firewall-cmd --zone=public --permanent --remove-port=3306/tcp
+[root@localhost ~]# firewall-cmd --reload  #重载
+[root@localhost ~]# firewall-cmd --permanent --zone=public --add-rich-rule=&quot;rule family=&quot;ipv4&quot; source address=&quot;192.168.170.133&quot; port protocol=&quot;tcp&quot; port=&quot;3306&quot; accept &quot;    #-rich-rule防火墙内部规则强大的定义表达式
+[root@localhost ~]# firewall-cmd --reload  #重载
+[root@localhost apache-tomcat-9.0.34]# ./bin/shutdown.sh
+[root@localhost apache-tomcat-9.0.34]# ./bin/startup.sh
+</code></pre>
 
             
         </div>
@@ -1104,7 +1271,7 @@ running
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -4209,7 +4376,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -6178,7 +6345,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -7472,7 +7639,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -8893,7 +9060,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -10957,7 +11124,7 @@ END
 <pre><code class="sql">SELECT 
   e.empno,e.ename,
   CASE 
-    WHEN d,dname=&quot;SALES&quot; THEN &quot;p1&quot;
+    WHEN d.dname=&quot;SALES&quot; THEN &quot;p1&quot;
     WHEN d.dname=&quot;ACCOUNTING&quot; THEN &quot;p2&quot;
     WHEN d.dname=&quot;RESEARCH&quot; THEN &quot;P3&quot;
 FROM t_emp e JOIN t_dept d ON e.deptno=d.deptno;
@@ -11260,7 +11427,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
