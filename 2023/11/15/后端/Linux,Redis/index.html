@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || Linux</title>
+    <title>P-luminary || Linux,Redis</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>Linux </h1>
+        <h1>Linux,Redis </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1028,6 +1028,182 @@ tcp6        0        0 :::80        :::*        LISTEN        20303/java
 [root@localhost ~]# firewall-cmd --reload  #重载
 [root@localhost apache-tomcat-9.0.34]# ./bin/shutdown.sh
 [root@localhost apache-tomcat-9.0.34]# ./bin/startup.sh
+</code></pre>
+<hr>
+<hr>
+<h1 id="Redis-内存-非常快-数据库、非关系型数据库"><a href="#Redis-内存-非常快-数据库、非关系型数据库" class="headerlink" title="Redis (内存[非常快]数据库、非关系型数据库)"></a>Redis (内存<del>[非常快]</del>数据库、非关系型数据库)</h1><ul>
+<li>Redis是<strong>Key-Value型</strong>NoSQL数据库</li>
+<li><strong>Redis</strong>将数据<strong>存储在内存(RAM)中</strong>，同时也能<strong>持久化到磁盘</strong></li>
+<li>Redis常用于缓存，利用内存的高效提高程序的处理速度</li>
+</ul>
+<h5 id="Redis特点"><a href="#Redis特点" class="headerlink" title="Redis特点"></a>Redis特点</h5><ul>
+<li>速度快</li>
+<li>广泛的语言支持</li>
+<li>持久化</li>
+<li>多种数据结构</li>
+<li>主从复制(多台Redis可以保持数据同步)</li>
+<li>分布式与高可用(7×24小时服务 淘宝&#x2F;京东) 全国各地多个主机 降低网络传输时间</li>
+</ul>
+<h3 id="Redis的安装与启动"><a href="#Redis的安装与启动" class="headerlink" title="Redis的安装与启动"></a>Redis的安装与启动</h3><ul>
+<li>在Linux系统中安装redis (<a target="_blank" rel="noopener" href="http://redis.io/download">http://redis.io/download</a>)</li>
+</ul>
+<pre><code class="java">$ wegt http://download.redis.io/releases/redis-5.0.2.tar.gz
+$ tar xzf redis-5.0.2.tar.gz
+$ cd redis-5.0.2
+$ make
+</code></pre>
+<pre><code class="java">[root@imooc imooc]# cd /usr/local
+[root@imooc local]# ll
+[root@imooc local]# mkdir redis
+[root@imooc local]# ll
+[root@imooc local]# cd redic
+[root@imooc redic]# yum install gcc
+[root@imooc redic]# wegt http://download.redis.io/releases/redis-5.0.2.tar.gz
+[root@imooc redis]# tar xzf redis-5.0.2.tar.gz
+[root@imooc redis]# cd redis-5.0.2
+[root@imooc redis-5.0.2]# make
+Hint: It&#39;s a good idea to run &#39;make test&#39; ;)   安装成功
+[root@imooc redis-5.0.2]# ll  #找redis.conf
+总用量 240
+-rw-rw-r--.  1 root root 85327 11月 22 2018 00-RELEASENOTES
+-rw-rw-r--.  1 root root    53 11月 22 2018 BUGS
+-rw-rw-r--.  1 root root  1894 11月 22 2018 CONTRIBUTING
+-rw-rw-r--.  1 root root  1487 11月 22 2018 COPYING
+drwxrwxr-x.  6 root root   192 12月  5 11:47 deps
+-rw-rw-r--.  1 root root    11 11月 22 2018 INSTALL
+-rw-rw-r--.  1 root root   151 11月 22 2018 Makefile
+-rw-rw-r--.  1 root root  4223 11月 22 2018 MANIFESTO
+-rw-rw-r--.  1 root root 20555 11月 22 2018 README.md
+-rw-rw-r--.  1 root root 62155 11月 22 2018 redis.conf
+-rwxrwxr-x.  1 root root   275 11月 22 2018 runtest
+-rwxrwxr-x.  1 root root   280 11月 22 2018 runtest-cluster
+-rwxrwxr-x.  1 root root   281 11月 22 2018 runtest-sentinel
+-rw-rw-r--.  1 root root  9710 11月 22 2018 sentinel.conf
+drwxrwxr-x.  3 root root  8192 12月  5 11:49 src
+drwxrwxr-x. 10 root root   167 11月 22 2018 tests
+drwxrwxr-x.  8 root root  4096 11月 22 2018 utils
+[root@imooc redis-5.0.2]# cd src
+[root@imooc src]# ll     #找redis- server启动目录
+
+[root@imooc src]#cd ..
+[root@imooc redis-5.0.2]# ./src/redis-server redis.conf
+</code></pre>
+<pre><code class="java">若端口被占用
+
+找到redis-server的进程，然后杀死对应的进程，然后重新启动redis
+
+&gt;&gt;&gt; ps -ef | grep -i redis
+root      3585 19590  0 10:36 pts/20   00:00:00 redis-server *:6379
+user      3684  3663  0 10:38 pts/21   00:00:00 grep --color=auto -i redis
+进程3585是redis的服务，
+
+kill -9 3585
+</code></pre>
+<ul>
+<li>在Windows系统安装Redis</li>
+</ul>
+<pre><code class="java">https://github.com/microsoftarchive/redis/releases 下载后解压
+打开cmd
+C:\Users\Pluminary&gt;d:
+D:\&gt;cd Redis-x64-3.0.504
+D:\Redis-x64-3.0.504&gt;dir
+D:\Redis-x64-3.0.504&gt;redis-server redis.windows.conf
+                _._
+           _.-``__ &#39;&#39;-._
+      _.-``    `.  `_.  &#39;&#39;-._           Redis 3.0.504 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ &#39;&#39;-._
+ (    &#39;      ,       .-`  | `,    )     Running in standalone mode
+ |`-._`-...-` __...-.``-._|&#39;` _.-&#39;|     Port: 6379
+ |    `-._   `._    /     _.-&#39;    |     PID: 22828
+  `-._    `-._  `-./  _.-&#39;    _.-&#39;
+ |`-._`-._    `-.__.-&#39;    _.-&#39;_.-&#39;|
+ |    `-._`-._        _.-&#39;_.-&#39;    |           http://redis.io
+  `-._    `-._`-.__.-&#39;_.-&#39;    _.-&#39;
+ |`-._`-._    `-.__.-&#39;    _.-&#39;_.-&#39;|
+ |    `-._`-._        _.-&#39;_.-&#39;    |
+  `-._    `-._`-.__.-&#39;_.-&#39;    _.-&#39;
+      `-._    `-.__.-&#39;    _.-&#39;
+          `-._        _.-&#39;
+              `-.__.-&#39;
+</code></pre>
+<h3 id="Redis的常用基本配置"><a href="#Redis的常用基本配置" class="headerlink" title="Redis的常用基本配置"></a>Redis的常用基本配置</h3><table>
+<thead>
+<tr>
+<th align="center">配置项</th>
+<th align="center">示例</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">daemonize</td>
+<td align="center">daemonize yes</td>
+<td align="center">是否启用后台运行, 默认no</td>
+</tr>
+<tr>
+<td align="center">port</td>
+<td align="center">port 6379</td>
+<td align="center">设置端口号, 默认6379</td>
+</tr>
+<tr>
+<td align="center">logfile</td>
+<td align="center">logfile 日志文件</td>
+<td align="center">设置日志文件</td>
+</tr>
+<tr>
+<td align="center">databases</td>
+<td align="center">databases 255</td>
+<td align="center">设置redis数据库总量</td>
+</tr>
+<tr>
+<td align="center">dir</td>
+<td align="center">dir 数据文件目录</td>
+<td align="center">设置数据文件存储目录</td>
+</tr>
+<tr>
+<td align="center">requirepass</td>
+<td align="center">requirepass 12345</td>
+<td align="center">设置使用密码</td>
+</tr>
+</tbody></table>
+<h5 id="守护进程方式启动Redis"><a href="#守护进程方式启动Redis" class="headerlink" title="守护进程方式启动Redis"></a>守护进程方式启动Redis</h5><pre><code class="java">[root@imooc ~]# cd /usr/local/redis/redis-5.0.2/
+[root@imooc redis-5.0.2]# vim redis.conf    #打开后台启动
+136行 daemonize no 改成 daemonize yes
+[root@imooc redis-5.0.2]# ./src/redis-server redis.conf
+关闭终端打开全新终端
+[root@imooc ~]# netstat -tulpn
+tcp        0        0        127.0.0.1:6379 ...     6338/./src/redis-se
+
+如果关闭
+kill -9 6338
+</code></pre>
+<h5 id="redis使用"><a href="#redis使用" class="headerlink" title="redis使用"></a>redis使用</h5><pre><code class="java">[root@imooc redis-5.0.2]# ./src/redis-cli    #执行redis内置指令
+127.0.0.1:6379&gt; ping        #启动成功
+PONG
+127.0.0.1:6379&gt; exit        #退出
+[root@imooc redis-5.0.2]# ./src/redis-cli shutdown  #更加安全的关闭redis
+
+报错(添加log文件 将redis命令行的结果打印到log中)
+https://blog.csdn.net/qq_46127735/article/details/113933690
+
+
+为了保护安全将port从6379改为6380
+[root@imooc redis-5.0.2]# vim redis.conf
+/port 寻找92行
+port 6380
+[root@imooc redis-5.0.2]# ./src/redis-cli -p 6380
+127.0.0.1:6380&gt; select 0        #当前使用第几号数据库
+127.0.0.1:6380&gt; select 15
+[root@imooc redis-5.0.2]# vim redis.conf
+在186行 可以改变数据连接数量
+databases 15→255
+    
+[root@imooc redis-5.0.2]# vim redis.conf
+507行注释去掉 此行是输入密码
+requirepass panchunyao123
+再次登录就 
+127.0.0.1:6380&gt; auth panchunyao123
+
+redis中有一个dump.rdb 全量备份 同时备份到磁盘中
 </code></pre>
 
     </div>
