@@ -1688,9 +1688,138 @@ redis中有一个dump.rdb 全量备份 同时备份到磁盘中
 127.0.0.1:6380[1]&gt; lpop list =&gt; &quot;b&quot; &quot;f&quot; &quot;c&quot; &quot;b&quot;
 </code></pre>
 <ul>
-<li><h5 id="Set-集合类型"><a href="#Set-集合类型" class="headerlink" title="Set - 集合类型"></a>Set - 集合类型</h5></li>
-<li><h5 id="Zset-有序集合类型"><a href="#Zset-有序集合类型" class="headerlink" title="Zset - 有序集合类型"></a>Zset - 有序集合类型</h5></li>
+<li><h5 id="Set-集合类型-Zset-有序集合类型"><a href="#Set-集合类型-Zset-有序集合类型" class="headerlink" title="Set - 集合类型      Zset - 有序集合类型"></a>Set - 集合类型      Zset - 有序集合类型</h5><ul>
+<li>Set集合是字符串的无序集合, 集合成员是唯一的</li>
+<li>Zset集合是字符串的有序集合, 集合成员是唯一的</li>
 </ul>
+</li>
+</ul>
+<pre><code class="java">Set集合
+127.0.0.1:6380[1]&gt; sadd set1 a =&gt; 1
+127.0.0.1:6380[1]&gt; keys * =&gt; &quot;set1&quot; &quot;emp:1&quot; &quot;list&quot;
+127.0.0.1:6380[1]&gt; sadd set1 b =&gt; &quot;b&quot;
+127.0.0.1:6380[1]&gt; sadd set1 c =&gt; &quot;c&quot;
+127.0.0.1:6380[1]&gt; sadd set1 d =&gt; &quot;d&quot;
+127.0.0.1:6380[1]&gt; sadd set1 e =&gt; &quot;e&quot;
+127.0.0.1:6380[1]&gt; sadd set1 f =&gt; &quot;f&quot;
+127.0.0.1:6380[1]&gt; smembers set1 =&gt; &quot;a&quot; &quot;b&quot; &quot;c&quot; &quot;d&quot; &quot;e&quot; &quot;f&quot; &quot;e&quot;  #字母顺序打乱 乱序
+
+127.0.0.1:6380[1]&gt; sadd set2 d     #创建一个set2与set1有重叠
+127.0.0.1:6380[1]&gt; sadd set2 e
+127.0.0.1:6380[1]&gt; sadd set2 f
+127.0.0.1:6380[1]&gt; sadd set2 h
+127.0.0.1:6380[1]&gt; sadd set2 g
+127.0.0.1:6380[1]&gt; smembers set2 =&gt; &quot;d&quot; &quot;h&quot; &quot;e&quot; &quot;f&quot; &quot;g&quot;
+127.0.0.1:6380[1]&gt; sinter set1 set2 =&gt;     &quot;d&quot; &quot;f&quot; &quot;e&quot;     #取其中的交集
+127.0.0.1:6380[1]&gt; sunion set1 set2 =&gt;     &quot;d&quot; &quot;g&quot; &quot;b&quot; &quot;c&quot; &quot;h&quot; &quot;f&quot; &quot;e&quot; &quot;a&quot;    #取其中的并集[取并集并去除重复元素]
+127.0.0.1:6380[1]&gt; sdiff set1 set2 #寻找叉集(在set1有 在set2中没有[两个部分交集排除在外])
+=&gt; &quot;a&quot; &quot;c&quot; &quot;b&quot;
+127.0.0.1:6380[1]&gt; sdiff set2 set1 =&gt; &quot;h&quot; &quot;g&quot;
+</code></pre>
+<pre><code class="java">Zset集合
+127.0.0.1:6380[1]&gt; zadd zset1 100 a =&gt;1
+127.0.0.1:6380[1]&gt; zadd zset1 101 b =&gt; 1
+127.0.0.1:6380[1]&gt; zrange zset1 0 -1 =&gt; &quot;a&quot; &quot;b&quot; #按照顺序排序
+127.0.0.1:6380[1]&gt; zadd zset1 99 c =&gt; 1  
+127.0.0.1:6380[1]&gt; zrange zset1 0 -1 =&gt; &quot;c&quot; &quot;a&quot; &quot;b&quot; #按照分数升序排列
+127.0.0.1:6380[1]&gt; zadd zset1 102 d
+127.0.0.1:6380[1]&gt; zadd zset1 103 e
+127.0.0.1:6380[1]&gt; zadd zset1 104 f
+127.0.0.1:6380[1]&gt; zrange zset1 0 -1 withscores #升序打印分数
+127.0.0.1:6380[1]&gt; zrangebyscore zset1 100 103 #符合score从100-103的名字
+</code></pre>
+<h3 id="Java客户端-Jedis"><a href="#Java客户端-Jedis" class="headerlink" title="Java客户端-Jedis"></a>Java客户端-Jedis</h3><ul>
+<li>Jedis是Java语言开发的Redis客户端工具包</li>
+<li>Jedis只是对Redis命令的封装, 掌握Redis命令便可轻易上手</li>
+</ul>
+<h6 id="允许远程访问需要改文件"><a href="#允许远程访问需要改文件" class="headerlink" title="允许远程访问需要改文件"></a>允许远程访问需要改文件</h6><pre><code class="java">[root@imooc ~]# cd /usr/local/redis/redis-5.0.2/
+[root@imooc redis-5.0.2]# vim redis.conf
+第88行 protected-mode yes 将yes设置为no
+第69行 bind 127.0.0.1 改为 bind 0.0.0.0     #四个0代表所有ip主机都可以访问进来【真正开发时要用特定的ip号】
+[root@imooc redis-5.0.2]# ./src/redis-server redis.conf
+[root@imooc redis-5.0.2]# netstat -tulpn | grep redis
+[root@imooc redis-5.0.2]# firewall-cmd --zone=public --add-port=6379/tcp --permanent
+[root@imooc redis-5.0.2]# firewall-cmd --reload
+[root@imooc redis-5.0.2]# ifconfig =&gt; IP地址: 192.168.170.135
+
+[root@imooc redis-5.0.2]# ./src/redis-cli -p 6379
+</code></pre>
+<p>报错连接超时：<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41830655/article/details/106114663">Java远程连接Redis时出现: java.net.SocketTimeoutException: connect timed out的解决办法-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/zinbin/article/details/109336852">Java连接Redis connection timed out 报错的解决方法_caused by: io.netty.channel.abstractchannel$annota-CSDN博客</a></p>
+<pre><code class="java">systemctl start firewalld  #开启防火墙
+systemctl enable firewalld.service  #开机自启动防火墙
+
+systemctl stop firewalld.service #关闭防火墙
+</code></pre>
+<pre><code class="java">package com.imooc.jedis;
+
+import redis.clients.jedis.Jedis;
+
+import java.util.List;
+
+public class JedisTestor &#123;
+    public static void main(String[] args) &#123;
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;, 6379);
+        try &#123;
+            jedis.auth(&quot;root&quot;);
+            jedis.select(2);
+            System.out.println(&quot;Redis连接成功&quot;);
+            //字符串
+            jedis.set(&quot;sn&quot;, &quot;7781-9938&quot;);
+            String sn = jedis.get(&quot;sn&quot;);
+            System.out.println(sn);
+            jedis.mset(new String[]&#123;&quot;title&quot;, &quot;婴幼儿奶粉&quot;, &quot;num&quot;, &quot;20&quot;&#125;);
+            List&lt;String&gt; goods = jedis.mget(new String[]&#123;&quot;sn&quot;, &quot;title&quot;, &quot;num&quot;&#125;);
+            System.out.println(goods);
+            Long num = jedis.incr(&quot;num&quot;);
+            System.out.println(num);
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            jedis.close();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;Jedis_test&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+            &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+            &lt;version&gt;2.9.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">[root@imooc redis-5.0.2]# ./src/redis-cli
+127.0.0.1:6379&gt; auth root
+127.0.0.1:6379&gt; select 2
+127.0.0.1:6379[2]&gt; keys * =&gt; &quot;sn&quot;
+127.0.0.1:6379[2]&gt; get sn =&gt; &quot;7781-9938&quot;
+【此处更换新的java代码再次插入 奶粉...】
+------------------------------------------------------------------
+jedis.mset(new String[]&#123;&quot;title&quot;, &quot;婴幼儿奶粉&quot;, &quot;num&quot;, &quot;20&quot;&#125;);
+List&lt;String&gt; goods = jedis.mget(new String[]&#123;&quot;sn&quot;, &quot;title&quot;, &quot;num&quot;&#125;);
+------------------------------------------------------------------
+127.0.0.1:6379[2]&gt; keys * =&gt; &quot;sn&quot; &quot;num&quot; &quot;title&quot;
+127.0.0.1:6379[2]&gt; get num =&gt; 21
+127.0.0.1:6379[2]&gt; get title =&gt; \xe5\xa9\xb4\xe5\xb9
+</code></pre>
 
             
         </div>
@@ -1705,7 +1834,7 @@ redis中有一个dump.rdb 全量备份 同时备份到磁盘中
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -4810,7 +4939,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -6779,7 +6908,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -8073,7 +8202,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -9494,7 +9623,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -11861,7 +11990,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -17963,7 +18092,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
