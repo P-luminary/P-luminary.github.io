@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1205,6 +1205,264 @@ requirepass panchunyao123
 
 redis中有一个dump.rdb 全量备份 同时备份到磁盘中
 </code></pre>
+<h3 id="Redis通用命令"><a href="#Redis通用命令" class="headerlink" title="Redis通用命令"></a>Redis通用命令</h3><table>
+<thead>
+<tr>
+<th align="center">命令</th>
+<th align="center">示例</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">select</td>
+<td align="center">select 0</td>
+<td align="center">选择0号数据库</td>
+</tr>
+<tr>
+<td align="center">set</td>
+<td align="center">set name lily</td>
+<td align="center">设置key&#x3D;name, value&#x3D;lily</td>
+</tr>
+<tr>
+<td align="center">get</td>
+<td align="center">get hello</td>
+<td align="center">获得key&#x3D;hello结果</td>
+</tr>
+<tr>
+<td align="center">keys</td>
+<td align="center">keys he*</td>
+<td align="center">根据Pattern表达查询符合条件的key</td>
+</tr>
+<tr>
+<td align="center">dbsize</td>
+<td align="center">dbsize</td>
+<td align="center">返回key的总数</td>
+</tr>
+<tr>
+<td align="center">exists</td>
+<td align="center">exists a</td>
+<td align="center">检查key&#x3D;a是否存在</td>
+</tr>
+<tr>
+<td align="center">del</td>
+<td align="center">del a</td>
+<td align="center">删除key&#x3D;a的数据</td>
+</tr>
+<tr>
+<td align="center">expire</td>
+<td align="center">expire hello 20</td>
+<td align="center">设置key&#x3D;hello 20秒后过期</td>
+</tr>
+<tr>
+<td align="center">ttl</td>
+<td align="center">ttl hello</td>
+<td align="center">查看key&#x3D;a的过期剩余时间</td>
+</tr>
+</tbody></table>
+<pre><code class="java">[root@imooc redis-5.0.2]# ./src/redids-cli -p 6380   #重新连接到端口
+127.0.0.1:6380&gt; select 10
+127.0.0.1:6380[10]&gt; set name lily   #十号数据库中增加key=name value=lily
+127.0.0.1:6380[10]&gt; get name  =&gt; &quot;lily&quot;
+127.0.0.1:6380[10]&gt; select 9
+127.0.0.1:6380[9]&gt; get name =&gt;(nil)
+127.0.0.1:6380[9]&gt; set name kitty
+127.0.0.1:6380[9]&gt; get name =&gt;&quot;kitty&quot;
+127.0.0.1:6380[9]&gt; keys *  #列举表达式能匹配的所有key
+127.0.0.1:6380[9]&gt; set sex male
+127.0.0.1:6380[9]&gt; keys *
+127.0.0.1:6380[9]&gt; keys n* #模糊匹配表达式
+127.0.0.1:6380[9]&gt; dbsize  #显示当前数据库的总量 =&gt; 2个 =&gt; &quot;name&quot;  &quot;sex&quot;
+127.0.0.1:6380[9]&gt; del sex #删除 =&gt; 1 返回0则不存在
+127.0.0.1:6380[9]&gt; expire name 30   #生效开始之后30秒存活时间
+127.0.0.1:6380[9]&gt; ttl name #查看存活时间 时间一到自动清除     keys*中无name数据
+</code></pre>
+<h3 id="Redis数据类型"><a href="#Redis数据类型" class="headerlink" title="Redis数据类型"></a><span style = "color:red">Redis数据类型</span></h3><ul>
+<li><h5 id="String-字符串类型-String最大512mb-建议单个kv不超过100kb"><a href="#String-字符串类型-String最大512mb-建议单个kv不超过100kb" class="headerlink" title="String - 字符串类型 (String最大512mb 建议单个kv不超过100kb)"></a>String - 字符串类型 (<u>String最大512mb 建议单个kv不超过100kb</u>)</h5></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">键</th>
+<th align="center">值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">name</td>
+<td align="center">Lily</td>
+</tr>
+<tr>
+<td align="center">counter</td>
+<td align="center">3321</td>
+</tr>
+<tr>
+<td align="center">sn</td>
+<td align="center">7361-7749</td>
+</tr>
+</tbody></table>
+<h6 id="字符串命令"><a href="#字符串命令" class="headerlink" title="字符串命令"></a>字符串命令</h6><table>
+<thead>
+<tr>
+<th align="center">命令</th>
+<th align="center">示例</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">get</td>
+<td align="center">get hello</td>
+<td align="center">获取key&#x3D;hello结果</td>
+</tr>
+<tr>
+<td align="center">set</td>
+<td align="center">set hello world</td>
+<td align="center">设置key&#x3D;hello, value&#x3D;hello</td>
+</tr>
+<tr>
+<td align="center">mset mget</td>
+<td align="center">mset hello world java best<br />mget hello java</td>
+<td align="center">一次性设置或者获取多个值</td>
+</tr>
+<tr>
+<td align="center">del</td>
+<td align="center">del hello</td>
+<td align="center">删除key&#x3D;hello</td>
+</tr>
+<tr>
+<td align="center">incr&#x2F;decr</td>
+<td align="center">incr count<br/>decr count</td>
+<td align="center">key值自增&#x2F;自减1</td>
+</tr>
+<tr>
+<td align="center">incrby&#x2F;decrby</td>
+<td align="center">incrby count 99<br/>decrby count 99</td>
+<td align="center">自增自减指定步长</td>
+</tr>
+</tbody></table>
+<pre><code class="java">127.0.0.1:6380[9]&gt; select 10 
+127.0.0.1:6380[10]&gt; set name lily
+127.0.0.1:6380[10]&gt; set sex 18
+127.0.0.1:6380[10]&gt; set birthday 1998-03-11
+127.0.0.1:6380[10]&gt; keys *
+1) &quot;birthday&quot;  2)&quot;name&quot;  3)&quot;sex&quot;
+127.0.0.1:6380[10]&gt; mset name1 kitty sex1 20 birthday1 2001-03-02 #一次性设置多个键值对
+127.0.0.1:6380[10]&gt; mget name sex birthday  #一次性提取多个
+127.0.0.1:6380[10]&gt; clear  #当前屏幕清空
+127.0.0.1:6380[10]&gt; incr age  #将指定的数字自增+1
+127.0.0.1:6380[10]&gt; set age 20
+127.0.0.1:6380[10]&gt; keys age =&gt; &quot;age&quot;
+127.0.0.1:6380[10]&gt; get age =&gt; &quot;20&quot;
+127.0.0.1:6380[10]&gt; incr age =&gt; (integer) 22 #不可以自增字符串噢
+127.0.0.1:6380[10]&gt; decrby age 3 #对指定的key自减 =&gt; 20-3=17
+127.0.0.1:6380[10]&gt; del age #删除某个key
+</code></pre>
+<ul>
+<li><h5 id="Hash-Hash类型"><a href="#Hash-Hash类型" class="headerlink" title="Hash - Hash类型"></a>Hash - Hash类型</h5></li>
+</ul>
+<h5 id="Hash类型用于存储结构化数据"><a href="#Hash类型用于存储结构化数据" class="headerlink" title="Hash类型用于存储结构化数据"></a>Hash类型用于存储结构化数据</h5><p>↓↓↓ ↓↓↓ key &#x3D; <strong>emp:1</strong> ↓↓↓ ↓↓↓ 在value中又产生一个键值对[下面全是单个的emp:1的key值]</p>
+<table>
+<thead>
+<tr>
+<th align="center">name</th>
+<th align="center">smith</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>age</strong></td>
+<td align="center">35</td>
+</tr>
+<tr>
+<td align="center"><strong>birthday</strong></td>
+<td align="center">2001-02-02</td>
+</tr>
+<tr>
+<td align="center"><strong>height</strong></td>
+<td align="center">178</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">命令</th>
+<th align="center">示例</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">hget</td>
+<td align="center">hget emp:1 age</td>
+<td align="center">获取hash中key&#x3D;age的值</td>
+</tr>
+<tr>
+<td align="center">hset</td>
+<td align="center">hset emp:1 age 23</td>
+<td align="center">设置hash中age&#x3D;23</td>
+</tr>
+<tr>
+<td align="center">hmset<br />hmget<br />hgetall<br /></td>
+<td align="center">hmset emp:1 age 30 name kaka<br />hmget emp:1 age name<br />hgetall emp:1<br /></td>
+<td align="center">设置hash多个值<br />获取hash多个值<br />获取hash所有值<br /></td>
+</tr>
+<tr>
+<td align="center">hdel</td>
+<td align="center">hdel emp:1 age</td>
+<td align="center">删除emp:1的age</td>
+</tr>
+<tr>
+<td align="center">hexists</td>
+<td align="center">hexists emp:1 name</td>
+<td align="center">检查是否存在</td>
+</tr>
+<tr>
+<td align="center">hlen</td>
+<td align="center">hlen emp:1</td>
+<td align="center">获取指定长度</td>
+</tr>
+</tbody></table>
+<pre><code class="java">127.0.0.1:6380[1]&gt; hset emp:1 name zhangsan       #设置某个hash值
+127.0.0.1:6380[1]&gt; hset emp:1 age 35
+127.0.0.1:6380[1]&gt; hset emp:1 birthday 2001-02-02
+127.0.0.1:6380[1]&gt; hset emp:1 height 178
+127.0.0.1:6380[1]&gt; keys * =&gt; &quot;emp:1&quot;
+127.0.0.1:6380[1]&gt; hget emp:1 name    #获取指定hash值 =&gt;&quot;zhangsan&quot;
+127.0.0.1:6380[1]&gt; hget emp:1 age =&gt; &quot;35&quot;
+127.0.0.1:6380[1]&gt; hgetall emp:1 #提取所有的数据 
+
+127.0.0.1:6380[1]&gt; hmset emp:2 name lisa age 23 birthday 1990-05-03 height 165
+127.0.0.1:6380[1]&gt; hgetall emp:2
+127.0.0.1:6380[1]&gt; del emp:2     #删除整个对象
+127.0.0.1:6380[1]&gt; hlen emp:1 =&gt; (integer) 4     #代表在emp:1中有4个属性
+127.0.0.1:6380[1]&gt; hgetall emp:1 
+127.0.0.1:6380[1]&gt; hexists emp:1 name  #判断属性是否存在 是则返回1
+</code></pre>
+<ul>
+<li><h5 id="List-列表类型"><a href="#List-列表类型" class="headerlink" title="List - 列表类型"></a>List - 列表类型</h5><ul>
+<li>List列表就是一系列字符串的”数组”, 按插入顺序排序</li>
+<li>List列表最大长度为2的32次方-1, 可以包含40亿个元素</li>
+</ul>
+<h6 id="List命令"><a href="#List命令" class="headerlink" title="List命令"></a>List命令</h6><ul>
+<li><strong>rpush listkey c b a</strong> - 右侧插入 <u>先c后b最后a</u></li>
+<li><strong>lpush listkey f e d</strong> - 左侧插入 <u>先f后e最后d</u>         <em>d e f c b a</em></li>
+<li><strong>rpop listkey</strong> - 右侧弹出          <em>d e f c b</em></li>
+<li><strong>lpop listkey</strong> -左侧弹出             <em>e f c b</em></li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">127.0.0.1:6380[1]&gt; rpush list c =&gt;(integer) 1
+127.0.0.1:6380[1]&gt; lrange list 0 -1  #输出指定列表起始到结束范围内的所有元素 [开始 末尾]
+127.0.0.1:6380[1]&gt; rpush list b a =&gt;(integer) 3
+127.0.0.1:6380[1]&gt; lrange list 0 -1 =&gt; &quot;c&quot; &quot;b&quot; &quot;a&quot;
+127.0.0.1:6380[1]&gt; lpush list f      #在左侧插入
+127.0.0.1:6380[1]&gt; lrange list 0 -1 =&gt; &quot;f&quot; &quot;c&quot; &quot;b&quot; &quot;a&quot;
+127.0.0.1:6380[1]&gt; lpush list b a
+127.0.0.1:6380[1]&gt; lrange list 0 -1 =&gt; &quot;a&quot; &quot;b&quot; &quot;f&quot; &quot;c&quot; &quot;b&quot; &quot;a&quot;
+127.0.0.1:6380[1]&gt; rpop list =&gt; &quot;a&quot;
+127.0.0.1:6380[1]&gt; lrange list 0 -1 =&gt; &quot;a&quot; &quot;b&quot; &quot;f&quot; &quot;c&quot; &quot;b&quot;
+127.0.0.1:6380[1]&gt; lpop list =&gt; &quot;b&quot; &quot;f&quot; &quot;c&quot; &quot;b&quot;
+</code></pre>
+<ul>
+<li><h5 id="Set-集合类型"><a href="#Set-集合类型" class="headerlink" title="Set - 集合类型"></a>Set - 集合类型</h5></li>
+<li><h5 id="Zset-有序集合类型"><a href="#Zset-有序集合类型" class="headerlink" title="Zset - 有序集合类型"></a>Zset - 有序集合类型</h5></li>
+</ul>
 
     </div>
 
