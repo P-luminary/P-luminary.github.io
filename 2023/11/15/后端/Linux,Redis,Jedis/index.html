@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || Linux,Redis</title>
+    <title>P-luminary || Linux,Redis,Jedis</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>Linux,Redis </h1>
+        <h1>Linux,Redis,Jedis </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -1521,6 +1521,10 @@ redis中有一个dump.rdb 全量备份 同时备份到磁盘中
 systemctl enable firewalld.service  #开机自启动防火墙
 
 systemctl stop firewalld.service #关闭防火墙
+重启 Redis 服务端
+ps -ef|grep redis    #查看 Redis 进程 
+kill -s 9 进程号      #杀死 Redis 进程
+[root@imooc redis-5.0.2]# ./src/redis-server redis.conf 
 </code></pre>
 <pre><code class="java">package com.imooc.jedis;
 
@@ -1552,7 +1556,7 @@ public class JedisTestor &#123;
     &#125;
 &#125;
 </code></pre>
-<pre><code class="java">pom.xml
+<pre><code class="java">pom.xml【两个jar:    jedis-2.9.0.jar        fastjson-1.2.62.jar】
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
          xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
@@ -1590,7 +1594,203 @@ List&lt;String&gt; goods = jedis.mget(new String[]&#123;&quot;sn&quot;, &quot;ti
 ------------------------------------------------------------------
 127.0.0.1:6379[2]&gt; keys * =&gt; &quot;sn&quot; &quot;num&quot; &quot;title&quot;
 127.0.0.1:6379[2]&gt; get num =&gt; 21
-127.0.0.1:6379[2]&gt; get title =&gt; \xe5\xa9\xb4\xe5\xb9
+127.0.0.1:6379[2]&gt; get title =&gt; \xe5\xa9\xb4\xe5\xb9\xbc\xe5...
+</code></pre>
+<h3 id="Jedis操作Hash类型"><a href="#Jedis操作Hash类型" class="headerlink" title="Jedis操作Hash类型"></a>Jedis操作Hash类型</h3><pre><code class="java">package com.imooc.jedis;
+
+import redis.clients.jedis.Jedis;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class JedisTestor &#123;
+    public static void main(String[] args) &#123;
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;, 6379);
+        try &#123;
+            jedis.auth(&quot;root&quot;);
+            jedis.select(2);
+            System.out.println(&quot;Redis连接成功&quot;);
+            //字符串
+            jedis.set(&quot;sn&quot;, &quot;7781-9938&quot;);
+            String sn = jedis.get(&quot;sn&quot;);
+            System.out.println(sn);
+            jedis.mset(new String[]&#123;&quot;title&quot;, &quot;婴幼儿奶粉&quot;, &quot;num&quot;, &quot;20&quot;&#125;);
+            List&lt;String&gt; goods = jedis.mget(new String[]&#123;&quot;sn&quot;, &quot;title&quot;, &quot;num&quot;&#125;);
+            System.out.println(goods);
+            Long num = jedis.incr(&quot;num&quot;);
+            System.out.println(num);
+
+            //Hash
+            jedis.hset(&quot;student:3312&quot;, &quot;name&quot;, &quot;张晓明&quot;);
+            String name = jedis.hget(&quot;student:3312&quot;, &quot;name&quot;);
+            System.out.println(name);
+
+            Map&lt;String,String&gt; studentMap = new HashMap();
+            studentMap.put(&quot;name&quot;, &quot;李兰&quot;);
+            studentMap.put(&quot;age&quot;, &quot;18&quot;); //所有数据类型都是String
+            studentMap.put(&quot;id&quot;, &quot;3313&quot;);
+            jedis.hmset(&quot;student:3313&quot;, studentMap);
+            Map&lt;String,String&gt; smap = jedis.hgetAll(&quot;student:3313&quot;);
+            System.out.println(smap);
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            jedis.close();
+        &#125;
+    &#125;
+&#125;
+
+---------------------------------------------------------------
+Redis连接成功
+7781-9938
+[7781-9938, 婴幼儿奶粉, 20]
+21
+张晓明
+&#123;name=李兰, age=18, id=3313&#125;
+</code></pre>
+<pre><code class="java">127.0.0.1:6380[2]&gt; hgetall student:3313
+</code></pre>
+<h3 id="Jedis操作List类型"><a href="#Jedis操作List类型" class="headerlink" title="Jedis操作List类型"></a>Jedis操作List类型</h3><pre><code class="java">package com.imooc.jedis;
+
+import redis.clients.jedis.Jedis;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class JedisTestor &#123;
+    public static void main(String[] args) &#123;
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;, 6379);
+        try &#123; //List
+            jedis.del(&quot;letter&quot;); //要先删除不然lpop、rpop的时候会追加数据
+            jedis.rpush(&quot;letter&quot;, new String[]&#123;&quot;d&quot;, &quot;e&quot;, &quot;f&quot;&#125;);
+            jedis.lpush(&quot;letter&quot;, new String[]&#123;&quot;c&quot;, &quot;b&quot;, &quot;a&quot;&#125;);
+            List&lt;String&gt; letter = jedis.lrange(&quot;letter&quot;, 0, -1);
+            jedis.lpop(&quot;letter&quot;);
+            jedis.rpop(&quot;letter&quot;);
+            letter = jedis.lrange(&quot;letter&quot;, 0, -1);
+            System.out.println(letter);
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            jedis.close();
+        &#125;
+    &#125;
+&#125;
+----————--——----------------------------------------------------
+[a, b, c, d, e, f] =&gt; [b, c, d, e]
+</code></pre>
+<h3 id="利用Jedis缓存数据-放在内存处理-速度快"><a href="#利用Jedis缓存数据-放在内存处理-速度快" class="headerlink" title="利用Jedis缓存数据 [放在内存处理 速度快]"></a>利用Jedis缓存数据 [放在内存处理 速度快]</h3><h6 id="缓存数据：资料不要太大-信息比较稳定更新次数较低"><a href="#缓存数据：资料不要太大-信息比较稳定更新次数较低" class="headerlink" title="缓存数据：资料不要太大 信息比较稳定更新次数较低"></a>缓存数据：资料不要太大 信息比较稳定更新次数较低</h6><pre><code class="java">Goods.java
+public class Goods &#123;
+    private Integer goodsId;
+    private String goodsName;
+    private String description;
+    private Float price;
+    Getter + Setter + Constructor[空+全]
+&#125;
+</code></pre>
+<pre><code class="java">CacheSample.java
+package com.imooc.jedis;
+
+import com.alibaba.fastjson.JSON;
+import redis.clients.jedis.Jedis;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class CacheSample &#123;
+    public CacheSample()&#123; //数据初始化
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;, 6379);
+        try &#123;
+            List&lt;Goods&gt; goodsList = new ArrayList();
+            goodsList.add(new Goods(8818,&quot;红富士苹果&quot;,&quot;&quot;,3.5f));
+            goodsList.add(new Goods(8819,&quot;赣南脐橙&quot;,&quot;&quot;,5f));
+            goodsList.add(new Goods(8820,&quot;进口香蕉&quot;,&quot;&quot;,2f));
+            //javabean序列化为json字符串保存到java里
+            jedis.auth(&quot;root&quot;);
+            jedis.select(3);
+            for (Goods goods : goodsList)&#123;
+                String json = JSON.toJSONString(goods);
+                System.out.println(json);
+                String key = &quot;goods:&quot; + goods.getGoodsId();
+                jedis.set(key, json); //key + value[序列化为json]
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            jedis.close();
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        new CacheSample();
+    &#125;
+&#125;
+________________________________________________________________
+&#123;&quot;description&quot;:&quot;&quot;,&quot;goodsId&quot;:8818,&quot;goodsName&quot;:&quot;红富士苹果&quot;,&quot;price&quot;:3.5&#125;
+&#123;&quot;description&quot;:&quot;&quot;,&quot;goodsId&quot;:8819,&quot;goodsName&quot;:&quot;赣南脐橙&quot;,&quot;price&quot;:5.0&#125;
+&#123;&quot;description&quot;:&quot;&quot;,&quot;goodsId&quot;:8820,&quot;goodsName&quot;:&quot;进口香蕉&quot;,&quot;price&quot;:2.0&#125;
+________________________________________________________________
+127.0.0.1:6379[3]&gt; keys *
+127.0.0.1:6379[3]&gt; &quot;goods:8820&quot; &quot;goods:8819&quot; &quot;goods:8818&quot;
+127.0.0.1:6379[3]&gt; get goods:8820
+</code></pre>
+<hr>
+<h6 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h6><pre><code class="java">CacheSample.java
+package com.imooc.jedis;
+
+import com.alibaba.fastjson.JSON;
+import redis.clients.jedis.Jedis;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class CacheSample &#123;
+    public CacheSample()&#123; //数据初始化
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;, 6379);
+        try &#123;
+            List&lt;Goods&gt; goodsList = new ArrayList();
+            goodsList.add(new Goods(8818,&quot;红富士苹果&quot;,&quot;&quot;,3.5f));
+            goodsList.add(new Goods(8819,&quot;赣南脐橙&quot;,&quot;&quot;,5f));
+            goodsList.add(new Goods(8820,&quot;进口香蕉&quot;,&quot;&quot;,2f));
+            //javabean序列化为json字符串保存到java里
+            jedis.auth(&quot;root&quot;);
+            jedis.select(3);
+            for (Goods goods : goodsList)&#123;
+                String json = JSON.toJSONString(goods);
+                System.out.println(json);
+                String key = &quot;goods:&quot; + goods.getGoodsId();
+                jedis.set(key, json); //key + value[序列化为json]
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            jedis.close();
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        new CacheSample();
+        System.out.println(&quot;请输入要查询的商品编号:&quot;);
+        String goodsId = new Scanner(System.in).next();
+        Jedis jedis = new Jedis(&quot;192.168.170.135&quot;);
+        jedis.auth(&quot;root&quot;);
+        jedis.select(3);
+        String key = &quot;goods:&quot; + goodsId;
+        if (jedis.exists(key))&#123;
+            String json = jedis.get(key);
+            System.out.println(json);
+            //由json转回到java对象
+            Goods g = JSON.parseObject(json, Goods.class);
+            System.out.println(g.getGoodsName());
+            System.out.println(g.getPrice());
+        &#125;else&#123;
+            System.out.println(&quot;您输入的商品编号不存在，请重新输入!&quot;);
+        &#125;
+    &#125;
+&#125;
 </code></pre>
 
     </div>
