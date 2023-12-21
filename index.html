@@ -471,11 +471,266 @@ public class SpringApplication &#123;
 ApplicationContext context = new 
 ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
 </code></pre>
-<h5 id="实例化Bean的三种方式"><a href="#实例化Bean的三种方式" class="headerlink" title="实例化Bean的三种方式"></a>实例化Bean的三种方式</h5><ul>
-<li>基于构造方法对象实例化</li>
-<li>基于静态工厂实例化</li>
-<li>基于工厂实例方法实例化</li>
+<h3 id="实例化Bean的三种方式"><a href="#实例化Bean的三种方式" class="headerlink" title="实例化Bean的三种方式"></a>实例化Bean的三种方式</h3><ul>
+<li><span style = "color:red">基于构造方法对象实例化</span> (90%以上)</li>
 </ul>
+<h6 id="利用构造方法参数名实例化-推荐"><a href="#利用构造方法参数名实例化-推荐" class="headerlink" title="利用构造方法参数名实例化 [推荐]"></a>利用构造方法<span style = "color:red">参数名</span>实例化 [推荐]</h6><pre><code class="java">&lt;bean id=&quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+&lt;!-- 没有constructor-arg则代表调用默认构造方法实例化 --&gt;
+  &lt;constructor-arg name=&quot;title&quot; value=&quot;红富士&quot;/&gt;
+  &lt;constructor-arg name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;           
+  &lt;constructor-arg name=&quot;color&quot; value=&quot;红色&quot;/&gt;     
+&lt;/bean&gt;
+</code></pre>
+<p>Apple.java</p>
+<pre><code class="java">public class Apple &#123;
+    private String title;
+    private String color;
+    private String origin;
+
+    public Apple() &#123;
+        System.out.println(&quot;Apple对象已创建,&quot; + this);
+    &#125;
+
+    public Apple(String title, String color, String origin) &#123;
+        System.out.println(&quot;通过带参构造方法创建对象&quot; + this);
+        this.title = title;
+        this.color = color;
+        this.origin = origin;
+    &#125;
+    ......
+</code></pre>
+<p>SpringApplication.java</p>
+<pre><code class="java">package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Apple;
+import com.imooc.spring.ioc.entity.Child;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //创建Spring IoC容器，并根据配置文件在容器中实例化对象
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+    &#125;
+&#125;
+___________________________________________________________________________
+Apple对象已创建,com.imooc.spring.ioc.entity.Apple@39fb3ab6
+通过带参构造方法创建对象com.imooc.spring.ioc.entity.Apple@1a968a59
+</code></pre>
+<h6 id="利用构造方法参数位置实例化"><a href="#利用构造方法参数位置实例化" class="headerlink" title="利用构造方法参数位置实例化"></a>利用构造方法<span style = "color:red">参数位置</span>实例化</h6><pre><code class="java">&lt;bean id=&quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+&lt;!-- 利用构造方法参数位置实现对象实例化 --&gt;
+  &lt;constructor-arg index=&quot;0&quot; value=&quot;红富士&quot;/&gt;
+  &lt;constructor-arg index=&quot;1&quot; value=&quot;欧洲&quot;/&gt;
+  &lt;constructor-arg index=&quot;2&quot; value=&quot;红色&quot;/&gt;
+&lt;/bean&gt;
+</code></pre>
+<ul>
+<li><h3 id="基于静态工厂实例化-在IoC容器之外通过程序组织对象"><a href="#基于静态工厂实例化-在IoC容器之外通过程序组织对象" class="headerlink" title="基于静态工厂实例化 (在IoC容器之外通过程序组织对象)"></a>基于静态工厂实例化 (在IoC容器之外通过程序组织对象)</h3></li>
+</ul>
+<pre><code class="java">AppleStaticFactory.java
+package com.imooc.spring.ioc.factory;
+
+import com.imooc.spring.ioc.entity.Apple;
+
+public class AppleStaticFactory &#123;
+    public static Apple createSweetApple()&#123; //静态工厂 用于创建对象的方法是静态的
+        Apple apple = new Apple();
+        apple.setTitle(&quot;红富士&quot;);
+        apple.setOrigin(&quot;欧洲&quot;);
+        apple.setColor(&quot;红色&quot;);
+        return apple;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.java
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;!--利用静态工厂获取对象--&gt;
+    &lt;bean id=&quot;apple4&quot; class=&quot;com.imooc.spring.ioc.factory.AppleStaticFactory&quot;
+          factory-method=&quot;createSweetApple&quot;/&gt;
+&lt;/beans&gt;
+</code></pre>
+<ul>
+<li><h3 id="基于工厂实例方法实例化"><a href="#基于工厂实例方法实例化" class="headerlink" title="基于工厂实例方法实例化"></a>基于工厂实例方法实例化</h3></li>
+</ul>
+<pre><code class="java">AppleFactoryInstance.java
+package com.imooc.spring.ioc.factory;
+
+import com.imooc.spring.ioc.entity.Apple;
+
+/**
+ * 工厂实例方法创建对象是指IoC容器对工厂类进行实例化并调用对应的实例方法创建对象的过程
+ */
+public class AppleFactoryInstance &#123;
+    public Apple createSweetApple()&#123; //静态工厂 用于创建对象的方法是静态的
+        Apple apple = new Apple();
+        apple.setTitle(&quot;红富士&quot;);
+        apple.setOrigin(&quot;欧洲&quot;);
+        apple.setColor(&quot;红色&quot;);
+        return apple;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.java
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;!--利用工厂实例方法获取对象--&gt;
+    &lt;bean id=&quot;factoryInstance&quot; class=&quot;com.imooc.spring.ioc.factory.AppleFactoryInstance&quot;/&gt;
+    &lt;bean id=&quot;apple5&quot; factory-bean=&quot;factoryInstance&quot; factory-method=&quot;createSweetApple&quot;/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //创建Spring IoC容器，并根据配置文件在容器中实例化对象
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="从IoC容器获取bean"><a href="#从IoC容器获取bean" class="headerlink" title="从IoC容器获取bean"></a>从IoC容器获取bean</h3><pre><code class="java">Apple sweetApple = context.getBean(&quot;sweetApple&quot;,Apple.class); 【推荐】
+                    或者
+Apple sweetApple = (Apple)context.getBean(&quot;sweetApple&quot;);
+-------------------------------------------------------------
+System.out.println(sweetApple.getTitle());
+</code></pre>
+<pre><code class="java">public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //创建Spring IoC容器，并根据配置文件在容器中实例化对象
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        Apple apple4 = context.getBean(&quot;apple4&quot;, Apple.class); 【推荐】
+        System.out.println(apple4.getTitle());
+        
+        Apple apple3 = (Apple)context.getBean(&quot;apple3&quot;);
+        System.out.println(apple3.getTitle());
+    &#125;
+&#125;
+</code></pre>
+<h5 id="id与name属性相同点"><a href="#id与name属性相同点" class="headerlink" title="id与name属性相同点"></a>id与name属性相同点</h5><ul>
+<li>bean id 与 name 都是设置对象在IoC容器中唯一标识</li>
+</ul>
+<pre><code class="java">&lt;bean id=&quot;apple3&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+&lt;bean name=&quot;apple3&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+</code></pre>
+<ul>
+<li>两者在同一个配置文件中都不允许出现重复</li>
+<li>两者允许在多个配置文件中出现重复，新对象覆盖旧对象</li>
+<li><span style = "color:red"><strong>id要求更为严格，一次只能定义一个对象标识</strong></span> 【推荐】</li>
+<li><span style = "color:red"><strong>name更为宽松，一次允许定义多个对象标识</strong></span> </li>
+<li>tips: id与name的命名要求有意义，按驼峰命名书写</li>
+</ul>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+&lt;bean id=&quot;apple3&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+        &lt;!-- 利用构造方法参数位置实现对象实例化 --&gt;
+        &lt;constructor-arg index=&quot;0&quot; value=&quot;红富士&quot;/&gt;
+        &lt;constructor-arg index=&quot;1&quot; value=&quot;欧洲&quot;/&gt;
+        &lt;constructor-arg index=&quot;2&quot; value=&quot;红色&quot;/&gt;
+        &lt;constructor-arg index=&quot;3&quot; value=&quot;19.8&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">applicationContext-1.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+ &lt;bean id=&quot;apple2&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+        &lt;!-- 利用构造方法参数位置实现对象实例化 --&gt;
+        &lt;constructor-arg name=&quot;title&quot; value=&quot;红富士2号&quot;/&gt;
+        &lt;constructor-arg name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;
+        &lt;constructor-arg name=&quot;color&quot; value=&quot;红色&quot;/&gt;
+        &lt;constructor-arg name=&quot;price&quot; value=&quot;19.8&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //创建Spring IoC容器，并根据配置文件在容器中实例化对象
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;,&quot;classpath:applicationContext-1.xml&quot;);
+        Apple apple2 = context.getBean(&quot;apple2&quot;,Apple.class);
+        System.out.println(apple2.getTitle());
+        Apple apple3 = context.getBean(&quot;apple3&quot;,Apple.class);
+        System.out.println(apple3.getTitle());
+    &#125;
+&#125;
+______________________________________________________________________
+红富士2号
+红富士
+</code></pre>
+<blockquote>
+<p>&lt; bean name &#x3D; “apple2, apple7”  class&#x3D;”com.imooc.spring.ioc.entity.Apple” &gt;<br>如果使用name(不使用id)可以在后面增加标识名<br>在没有id与name的bean默认使用类名全称作为bean标识<br>&lt; bean class&#x3D;”com.imooc.spring.ioc.entity.Apple” &gt; </p>
+</blockquote>
+<h3 id="路径匹配表达式"><a href="#路径匹配表达式" class="headerlink" title="路径匹配表达式"></a>路径匹配表达式</h3><h5 id="加载单个配置文件"><a href="#加载单个配置文件" class="headerlink" title="加载单个配置文件"></a>加载单个配置文件</h5><pre><code class="java">//创建IoC容器并根据配置文件创建对象
+ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+</code></pre>
+<h5 id="加载多配置文件"><a href="#加载多配置文件" class="headerlink" title="加载多配置文件"></a>加载多配置文件</h5><pre><code class="java">String[] configLocations = new String[]&#123;&quot;classpath:applicationContext.xml&quot;,&quot;classpath:applicationContext-1.xml&quot;&#125;;
+ApplicationContext context = new ClassPathXmlApplicationContext(configLocations);
+</code></pre>
+<h5 id="路径表达式-config-xml-x3D-ApplicationContext-xml"><a href="#路径表达式-config-xml-x3D-ApplicationContext-xml" class="headerlink" title="路径表达式 (config.xml &#x3D; ApplicationContext.xml)"></a>路径表达式 (config.xml &#x3D; ApplicationContext.xml)</h5><table>
+<thead>
+<tr>
+<th>表达式实例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>classpath:config.xml</td>
+<td>扫描classpath根路径(不包含jar)的config.xml</td>
+</tr>
+<tr>
+<td>classpath:com&#x2F;imooc&#x2F;config.xml</td>
+<td>扫描classpath下(不包含jar)com.imooc包中的config.xml</td>
+</tr>
+<tr>
+<td>classpath*:com&#x2F;imooc&#x2F;config.xml</td>
+<td>扫描classpath下(<strong>包含jar</strong>)com.imooc包中的config.xml</td>
+</tr>
+<tr>
+<td>classpath:config-*.xml</td>
+<td>扫描classpath根路径下所有以config-开头的XML文件</td>
+</tr>
+<tr>
+<td>classpath:com&#x2F;**&#x2F;config.xml</td>
+<td>扫描com包下(包含任何子包)的config.xml</td>
+</tr>
+<tr>
+<td>file:c:&#x2F;config.xml</td>
+<td>扫描c盘根路径config.xml</td>
+</tr>
+</tbody></table>
+<h3 id="对象依赖注入"><a href="#对象依赖注入" class="headerlink" title="对象依赖注入"></a>对象依赖注入</h3><ul>
+<li>依赖注入是指运行时将容器内对象利用<strong>反射</strong>赋給其他对象的操作</li>
+<li><span style = "color:red"><strong>基于setter方法注入对象</strong></span></li>
+</ul>
+<h6 id="利用setter实现静态数值注入"><a href="#利用setter实现静态数值注入" class="headerlink" title="利用setter实现静态数值注入"></a>利用setter实现静态数值注入</h6><pre><code class="java">&lt;bean id=&quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+&lt;!-- IoC容器自动利用反射机制运行时调用setXXX方法为属性赋值 --&gt;
+    &lt;property name=&quot;title&quot; value=&quot;红富士&quot;/&gt;
+    &lt;property name=&quot;color&quot; value=&quot;红色&quot;/&gt;
+    &lt;property name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;
+&lt;/bean&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //创建Spring IoC容器，并根据配置文件在容器中实例化对象
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;,&quot;classpath:applicationContext-1.xml&quot;);
+        Apple sweetApple = context.getBean(&quot;sweetApple&quot;, Apple.class);
+        System.out.println(sweetApple.getTitle());
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -490,7 +745,7 @@ ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -698,7 +953,7 @@ ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -2405,7 +2660,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5510,7 +5765,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -7479,7 +7734,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -10194,7 +10449,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -12561,7 +12816,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -15256,7 +15511,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
