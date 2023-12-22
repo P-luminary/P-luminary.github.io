@@ -719,7 +719,20 @@ ApplicationContext context = new ClassPathXmlApplicationContext(configLocations)
     &lt;property name=&quot;title&quot; value=&quot;红富士&quot;/&gt;
     &lt;property name=&quot;color&quot; value=&quot;红色&quot;/&gt;
     &lt;property name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;
+    &lt;property name=&quot;price&quot; value=&quot;19.8&quot;/&gt;
 &lt;/bean&gt;
+</code></pre>
+<h6 id="利用setter实现对象注入-【核心操作-ref-x3D-””】"><a href="#利用setter实现对象注入-【核心操作-ref-x3D-””】" class="headerlink" title="利用setter实现对象注入 【核心操作 ref&#x3D;””】"></a>利用setter实现对象注入 【<u>核心操作 ref&#x3D;””</u>】</h6><pre><code class="java">&lt;bean id=&quot;lily&quot; class=&quot;com.imooc.spring.ioc.entity.Child&quot;&gt;
+    &lt;property name=&quot;name&quot; value=&quot;莉莉&quot;/&gt;
+    &lt;!-- 利用ref注入依赖对象 --&gt;
+    &lt;property name=&quot;apple&quot; ref=&quot;sweetApple&quot;/&gt;
+&lt;/bean&gt;
+</code></pre>
+<pre><code class="java">Child.java   #创建好的apple对象赋予給参数进入setApple
+public void setApple(Apple apple) &#123;
+     System.out.println(&quot;注入的Apple对象：&quot; + apple);
+     this.apple = apple;
+&#125;
 </code></pre>
 <pre><code class="java">SpringApplication.java
 public class SpringApplication &#123;
@@ -731,6 +744,86 @@ public class SpringApplication &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="体验依赖注入的优势-高效解耦"><a href="#体验依赖注入的优势-高效解耦" class="headerlink" title="体验依赖注入的优势 (高效解耦)"></a>体验依赖注入的优势 (高效解耦)</h3><pre><code class="xml">applicatioinContext-dao.xml    #用于数据库的增删改查
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;bookDao&quot; class=&quot;com.imooc.spring.ioc.bookshop.dao.BookDaoImpl&quot;&gt;
+//如果更改了数据库类型 只需要重新创建一个java实现接口BookDao的insert 之后只需更改class=&quot;com.imooc.spring.ioc.bookshop.dao.BookDaoOracleImpl&quot;
+
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="xml">applicatioinContext-service.xml 
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;bookService&quot; class=&quot;com.imooc.spring.ioc.bookshop.service.BookService&quot;&gt;
+&lt;!--        id=bookDao     --&gt;
+       &lt;property name=&quot;bookDao&quot; ref=&quot;bookDao&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">BookDao.java
+package com.imooc.spring.ioc.bookshop.dao;
+
+public interface BookDao &#123;
+    public void insert();
+&#125;
+</code></pre>
+<pre><code class="java">BookDaoImpl.java
+package com.imooc.spring.ioc.bookshop.dao;
+
+public class BookDaoImpl implements BookDao&#123;
+    @Override
+    public void insert() &#123;
+        System.out.println(&quot;向mysql book表插入数据&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">BookService.java
+package com.imooc.spring.ioc.bookshop.service;
+
+import com.imooc.spring.ioc.bookshop.dao.BookDao;
+
+public class BookService &#123;
+    private BookDao bookDao; //接口将在ioc启动的时候动态注入
+    public void purchase()&#123;
+        System.out.println(&quot;正在执行图书采购业务方法&quot;);
+        bookDao.insert();
+    &#125;
+    public BookDao getBookDao()&#123;
+        return bookDao;
+    &#125;
+    public void setBookDao(BookDao bookDao)&#123;
+        this.bookDao = bookDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">BookShopApplication.java
+package com.imooc.spring.ioc.bookshop;
+
+import com.imooc.spring.ioc.bookshop.service.BookService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class BookShopApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext-*.xml&quot;);
+        BookService bookService = context.getBean(&quot;bookService&quot;, BookService.class);
+        bookService.purchase();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="利用构造方法实现对象依赖注入"><a href="#利用构造方法实现对象依赖注入" class="headerlink" title="利用构造方法实现对象依赖注入"></a>利用构造方法实现对象依赖注入</h3><h5 id="对象依赖注入-1"><a href="#对象依赖注入-1" class="headerlink" title="对象依赖注入"></a>对象依赖注入</h5><ul>
+<li>依赖注入是指运行时将容器内对象利用<strong>反射</strong>赋給其他对象的操作</li>
+<li><span style="color:red"><strong>基于setter方法注入对象</strong></span></li>
+<li>基于构造方法zhu’ru</li>
+</ul>
 
             
         </div>
@@ -745,7 +838,7 @@ public class SpringApplication &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -2660,7 +2753,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -5765,7 +5858,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -7734,7 +7827,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -9028,7 +9121,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -10449,7 +10542,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -12816,7 +12909,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -15511,7 +15604,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
