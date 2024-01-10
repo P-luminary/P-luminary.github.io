@@ -1240,6 +1240,283 @@ UserDao已创建: com.imooc.spring.ioc.dao.UserDao@5649fd9b
 Process finished with exit code 0
 </code></pre>
 <p><span style = "color : red">一般来说dao类 service类 control类都是单例 因为单例安全根源是运行时发生不断的变化 如果在真正环境中一般不会重新设置那些类，在运行中都是恒定不变的。所以推荐用单例默认<code>singleton</code></span></p>
+<h3 id="对象生命周期"><a href="#对象生命周期" class="headerlink" title="对象生命周期"></a>对象生命周期</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/cbffd1149ca0b5b1b860325d72941880b7ca7fc4/data/bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.jpg"></p>
+<pre><code class="java">Order.java
+package com.imooc.spring.ioc.entity;
+
+public class Order &#123;
+    private Float price;
+    private Integer quantity;
+    private Float total;
+
+    public Order() &#123;
+        System.out.println(&quot;创建Order对象&quot; + this);
+    &#125;
+
+    public void init()&#123;
+        System.out.println(&quot;执行init()方法&quot;);
+        total = price * quantity;
+    &#125;
+    public void pay()&#123;
+        System.out.println(&quot;订单金额为：&quot; + total);
+    &#125;
+
+    public Float getPrice() &#123;
+        return price;
+    &#125;
+
+    public void setPrice(Float price) &#123;
+        System.out.println(&quot;设置price：&quot; + price);
+        this.price = price;
+    &#125;
+
+    public Integer getQuantity() &#123;
+        return quantity;
+    &#125;
+
+    public void setQuantity(Integer quantity) &#123;
+        System.out.println(&quot;设置quantity：&quot; + quantity);
+        this.quantity = quantity;
+    &#125;
+
+    public Float getTotal() &#123;
+        return total;
+    &#125;
+
+    public void setTotal(Float total) &#123;
+        this.total = total;
+    &#125;
+
+    public void destroy()&#123;
+        System.out.println(&quot;释放与订单对象相关的资源&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.ioc.dao.UserDao&quot; scope=&quot;prototype&quot;/&gt;  &lt;!-- 多例 --&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.ioc.service.UserService&quot; scope=&quot;prototype&quot;&gt; &lt;!-- 单例 创建一个对象 --&gt;
+        &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt; &lt;!-- 引用了上面的userDao多例 再创建一个对象 --&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;order1&quot; class=&quot;com.imooc.spring.ioc.entity.Order&quot; init-method=&quot;init&quot; destroy-method=&quot;destroy&quot;&gt;
+        &lt;property name=&quot;price&quot; value=&quot;19.8&quot;/&gt;
+        &lt;property name=&quot;quantity&quot; value=&quot;1000&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Order;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        System.out.println(&quot;======IoC容器已初始化======&quot;);
+        Order order1 = context.getBean(&quot;order1&quot;,Order.class);
+        order1.pay();
+        ((ClassPathXmlApplicationContext)context).registerShutdownHook(); //销毁容器 自动调用bean中设置的destory方法
+    &#125;
+&#125;
+
+==========================================
+创建Order对象com.imooc.spring.ioc.entity.Order@153f5a29
+设置price：19.8
+设置quantity：1000
+执行init()方法
+======IoC容器已初始化======
+订单金额为：19800.0
+释放与订单对象相关的资源
+
+Process finished with exit code 0
+</code></pre>
+<h3 id="实现极简IoC容器-利用反射机制完成对象的创建和注入"><a href="#实现极简IoC容器-利用反射机制完成对象的创建和注入" class="headerlink" title="实现极简IoC容器 [利用反射机制完成对象的创建和注入]"></a>实现极简IoC容器 [利用反射机制完成对象的创建和注入]</h3><pre><code class="java">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;Spring_test&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+&lt;!--        Dom4j是Java的XML解析组件--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.dom4j&lt;/groupId&gt;
+            &lt;artifactId&gt;dom4j&lt;/artifactId&gt;
+            &lt;version&gt;2.1.1&lt;/version&gt;
+        &lt;/dependency&gt;
+&lt;!--        jaxen是Xpath表达式解释器--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;jaxen&lt;/groupId&gt;
+            &lt;artifactId&gt;jaxen&lt;/artifactId&gt;
+            &lt;version&gt;1.1.6&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">Apple.java
+public class Apple &#123;
+    private String title;
+    private String color;
+    private String origin;
+&#125; + Getter Setter
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans&gt;
+    &lt;bean id = &quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.context.Apple&quot;&gt;
+        &lt;property name=&quot;title&quot; value=&quot;红富士&quot;/&gt;
+        &lt;property name=&quot;color&quot; value=&quot;红色&quot;/&gt;
+        &lt;property name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">ApplicationContext.java[接口]
+package com.imooc.spring.ioc.context;
+
+public interface ApplicationContext &#123;
+    public Object getBean(String beanId);
+&#125;
+</code></pre>
+<pre><code class="java">ClassPathXmlApplicationContext.java
+package com.imooc.spring.ioc.context;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.Node;
+import org.dom4j.io.SAXReader;
+
+import java.io.File;
+import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ClassPathXmlApplicationContext implements ApplicationContext&#123;
+    private Map iocContainer = new HashMap();
+    public ClassPathXmlApplicationContext()&#123;
+        try &#123;
+            String filePath = this.getClass().getResource(&quot;/applicationContext.xml&quot;).getPath();
+            filePath = new URLDecoder().decode(filePath,&quot;UTF-8&quot;);
+            SAXReader reader = new SAXReader();
+            Document document = reader.read(new File(filePath));
+            List&lt;Node&gt; beans = document.getRootElement().selectNodes(&quot;bean&quot;);//得到节点的集合
+            for (Node node:beans)&#123;
+                Element ele = (Element) node;
+                String id = ele.attributeValue(&quot;id&quot;);
+                String className = ele.attributeValue(&quot;class&quot;);
+                Class c = Class.forName(className);//加载指定类
+                Object obj = c.newInstance();
+                List&lt;Node&gt; properties = ele.selectNodes(&quot;property&quot;);
+                for (Node p:properties)&#123;
+                    Element property = (Element) p;
+                    String propName = property.attributeValue(&quot;name&quot;);
+                    String propValue= property.attributeValue(&quot;value&quot;);
+//基于property完成注入是通过Setter的set方法，set方法命名的格式为setTitle 属性名第一个字母有个大写
+                    String setMethodName = &quot;set&quot; + propName.substring(0,1).toUpperCase()+propName.substring(1);
+                    System.out.println(&quot;准备执行&quot; + setMethodName + &quot;方法注入数据&quot;);
+                    Method setMethod = c.getMethod(setMethodName, String.class);
+                    setMethod.invoke(obj, propValue); //执行哪个对象的实例方法
+                &#125;
+                iocContainer.put(id,obj); //赋予了bean id
+            &#125;
+            System.out.println(iocContainer);
+            System.out.println(&quot;IoC容器初始化完毕&quot;);
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+    @Override
+    public Object getBean(String beanId) &#123;
+        return iocContainer.get(beanId);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Application.java
+package com.imooc.spring.ioc.context;
+
+public class Application &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext();
+        Apple apple = (Apple) context.getBean(&quot;sweetApple&quot;);
+        System.out.println(apple);
+    &#125;
+&#125;
+
+=================================================
+准备执行setTitle方法注入数据
+准备执行setColor方法注入数据
+准备执行setOrigin方法注入数据
+&#123;sweetApple=com.imooc.spring.ioc.context.Apple@484b61fc&#125;
+IoC容器初始化完毕
+com.imooc.spring.ioc.context.Apple@484b61fc
+
+Process finished with exit code 0
+</code></pre>
+<h3 id="四种组件类型注解"><a href="#四种组件类型注解" class="headerlink" title="四种组件类型注解"></a>四种组件类型注解</h3><h5 id="基于注解配置IoC容器"><a href="#基于注解配置IoC容器" class="headerlink" title="基于注解配置IoC容器"></a>基于注解配置IoC容器</h5><h6 id="基于注解的优势"><a href="#基于注解的优势" class="headerlink" title="基于注解的优势"></a>基于注解的优势</h6><ul>
+<li>摆脱繁琐的XML形式的bean与依赖注入配置</li>
+<li>基于”声明式”的原则,更适合轻量级的现代企业应用</li>
+<li>让代码可读性变得更好,研发人员拥有更好的开发体验</li>
+</ul>
+<h5 id="三类注解"><a href="#三类注解" class="headerlink" title="三类注解"></a><span style = "color:red">三类注解</span></h5><ul>
+<li>四种组件类型注解-声明当前类的功能与职责</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Component</td>
+<td>组件注解,通用注解,被该注解描述的类将被IoC容器管理并实例化</td>
+</tr>
+<tr>
+<td>@Controller</td>
+<td>语义注解,说明当前类是MVC应用中的控制器类</td>
+</tr>
+<tr>
+<td>@Service</td>
+<td>语义注解,说明当前类是Service业务服务类</td>
+</tr>
+<tr>
+<td>@Repository</td>
+<td>语义注解,说明当前类用于业务持久层,通常描述对应Dao类</td>
+</tr>
+</tbody></table>
+<p>   <strong>开启组件扫描</strong></p>
+<pre><code class="xml">XML配置开启组件扫描,才能使用注解
+&lt;context:component-scan base-package=&quot;com.imooc&quot;&gt;
+   &lt;context:exclude-filter type=&quot;regex&quot; expression=&quot;com.imooc.exl.*&quot;/&gt;
+&lt;/context:component-scan&gt;
+</code></pre>
+<ul>
+<li>自动装配注解-根据属性特征自动注入对象</li>
+<li>元数据注解-更细化的辅助IoC容器管理对象的注解</li>
+</ul>
 
     </div>
 
