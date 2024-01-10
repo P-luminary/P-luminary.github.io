@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -803,6 +803,443 @@ public class BookShopApplication &#123;
 <li><span style="color:red"><strong>基于setter方法注入对象</strong></span></li>
 <li>基于构造方法注入对象</li>
 </ul>
+<pre><code class="java">【com.imooc.spring.ioc.entity】
+Child.java + Apple.java 
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;bean id=&quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.entity.Apple&quot;&gt;
+&lt;!-- IoC容器自动利用反射机制运行时调用setXXX方法为属性赋值 --&gt;
+    &lt;property name=&quot;title&quot; value=&quot;青苹果&quot;/&gt;
+    &lt;property name=&quot;color&quot; value=&quot;绿色&quot;/&gt;
+    &lt;property name=&quot;origin&quot; value=&quot;中亚&quot;/&gt;
+    &lt;property name=&quot;price&quot; value=&quot;9.8&quot;/&gt;
+&lt;/bean&gt;
+
+&lt;bean id=&quot;lily&quot; class=&quot;com.imooc.spring.ioc.entity.Child&quot;&gt;
+    &lt;constructor-arg name=&quot;name&quot; value=&quot;安迪&quot;/&gt;
+    &lt;constructor-arg name=&quot;apple&quot; ref=&quot;sourApple&quot;/&gt;
+&lt;/bean&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Apple;
+import com.imooc.spring.ioc.entity.Child;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext*.xml&quot;);
+        Apple sweetApple = context.getBean(&quot;sweetApple&quot;,Apple.class);
+        Child andy = context.getBean(&quot;andy&quot;, Child.class);
+
+        // 添加打印语句，检查属性是否正确注入
+        System.out.println(&quot;Andy&#39;s name: &quot; + andy.getName());
+        System.out.println(&quot;Andy&#39;s apple origin: &quot; + andy.getApple().getOrigin());
+        System.out.println(&quot;Andy&#39;s apple title: &quot; + andy.getApple().getTitle());
+
+        andy.eat();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="注入集合对象-1"><a href="#注入集合对象-1" class="headerlink" title="注入集合对象_1"></a>注入集合对象_1</h3><h5 id="注入List-允许重复数据"><a href="#注入List-允许重复数据" class="headerlink" title="注入List [允许重复数据]"></a>注入List [允许重复数据]</h5><pre><code class="java">&lt;bean id = &quot;...&quot; class = &quot;...&quot;&gt;
+    &lt;property name = &quot;someList&quot;&gt;
+    &lt;list&gt;
+        &lt;value&gt;具体值&lt;/value&gt;
+        &lt;ref bean=&quot;beanId&quot;&gt;&lt;/ref&gt;
+    &lt;/list&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<h5 id="注入Set-不允许重复数据-自动去除重复"><a href="#注入Set-不允许重复数据-自动去除重复" class="headerlink" title="注入Set  [不允许重复数据 自动去除重复]"></a>注入Set  [不允许重复数据 自动去除重复]</h5><pre><code class="java">&lt;bean id = &quot;...&quot; class = &quot;...&quot;&gt;
+    &lt;property name = &quot;someSet&quot;&gt;
+    &lt;set&gt;
+        &lt;value&gt;具体值&lt;/value&gt;
+      &lt;ref bean=&quot;beanId&quot;&gt;&lt;/ref&gt;
+    &lt;/set&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<h5 id="注入Map"><a href="#注入Map" class="headerlink" title="注入Map"></a>注入Map</h5><pre><code class="java">&lt;bean id = &quot;...&quot; class = &quot;...&quot;&gt;
+    &lt;property name = &quot;someMap&quot;&gt;
+    &lt;Map&gt;
+        &lt;entry key=&quot;k1&quot; value=&quot;v1&quot;&gt;&lt;/entry&gt; #静态数值
+      &lt;entry key=&quot;k2&quot; value-ref=&quot;beanId&quot;&gt;&lt;/entry&gt; #对象引用
+    &lt;/Map&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<h5 id="注入Properties"><a href="#注入Properties" class="headerlink" title="注入Properties"></a>注入Properties</h5><pre><code class="java">&lt;bean id = &quot;...&quot; class = &quot;...&quot;&gt;
+    &lt;property name = &quot;someProperties&quot;&gt;
+    &lt;props&gt;
+        &lt;prop key=&quot;k1&quot;&gt;v1&lt;/prop&gt;
+      &lt;prop key=&quot;k2&quot;&gt;v2&lt;/prop&gt;
+    &lt;/props&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<h3 id="公司资产配置清单-小案例"><a href="#公司资产配置清单-小案例" class="headerlink" title="公司资产配置清单[小案例]"></a>公司资产配置清单[小案例]</h3><pre><code class="java">Company.java
+package com.imooc.spring.ioc.entity;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+public class Company &#123;
+    private List&lt;String&gt; rooms;
+    private Map&lt;String,Computer&gt; computers; //每一条数据保存的都是Computer型
+    private Properties info;//键值对的写
+
+    @Override
+    public String toString() &#123;
+        return &quot;Company&#123;&quot; +
+                &quot;rooms=&quot; + rooms +
+                &quot;, computers=&quot; + computers +
+                &quot;, info=&quot; + info +
+                &#39;&#125;&#39;;
+    &#125;
+    + Getter Setter
+&#125;
+</code></pre>
+<pre><code class="java">Computer.java
+public class Computer &#123;
+    private String brand;
+    private String type;
+    private String sn;
+    private Float price;
+    constructor(空+满)+Getter Setter
+&#125;
+</code></pre>
+<p>如何在ioc容器创建后自动的实例化Company对象并且填充信息呢?<br>所有的工作都在<code>applicationContext.xml</code>中进行的</p>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;company&quot; class=&quot;com.imooc.spring.ioc.entity.Company&quot;&gt;
+        &lt;property name=&quot;rooms&quot;&gt;
+            &lt;list&gt; //【允许重复】
+                &lt;value&gt;2001-总裁办&lt;/value&gt;
+                &lt;value&gt;2003-总经理办公室&lt;/value&gt;
+                &lt;value&gt;2010-研发部会议室&lt;/value&gt;
+            &lt;/list&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SptingApplication.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Company;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        Company company = context.getBean(&quot;company&quot;, Company.class);
+        System.out.println(company);
+    &#125;
+&#125;
+------------------------------------------------------------
+Company&#123;rooms=[2001-总裁办, 2003-总经理办公室, 2010-研发部会议室], computers=null, info=null&#125;
+
+Process finished with exit code 0
+------------------------------------------------------------
+下方xml更新后的显示数据：
+Company&#123;rooms=[2001-总裁办, 2003-总经理办公室, 2010-研发部会议室], computers=&#123;dev-88172=Computer&#123;brand=&#39;联想&#39;, type=&#39;台式机&#39;, sn=&#39;8389283012&#39;, price=3085.0&#125;, dev-88173=Computer&#123;brand=&#39;联想&#39;, type=&#39;台式机&#39;, sn=&#39;8389283012&#39;, price=3085.0&#125;&#125;, info=&#123;phone=010-12345678, address=北京市朝阳区XX路XX大厦, website=https://p-luminary.github.io&#125;&#125;
+https://p-luminary.github.io
+
+Process finished with exit code 0
+</code></pre>
+<p>list的底层是ArrayList<br>Set的底层是LinkedHashSet [双向有序列表]<br>Map的底层是LinkedHashMap [双向列表 提取也是存放顺序]</p>
+<pre><code class="xml">applicationContext.xml [更新一次]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;c1&quot; class=&quot;com.imooc.spring.ioc.entity.Computer&quot;&gt;
+        &lt;constructor-arg name=&quot;brand&quot; value=&quot;联想&quot;/&gt;
+        &lt;constructor-arg name=&quot;type&quot; value=&quot;台式机&quot;/&gt;
+        &lt;constructor-arg name=&quot;sn&quot; value=&quot;8389283012&quot;/&gt;
+        &lt;constructor-arg name=&quot;price&quot; value=&quot;3085&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;company&quot; class=&quot;com.imooc.spring.ioc.entity.Company&quot;&gt;
+        &lt;property name=&quot;rooms&quot;&gt;
+            &lt;set&gt;
+                &lt;value&gt;2001-总裁办&lt;/value&gt;
+                &lt;value&gt;2003-总经理办公室&lt;/value&gt;
+                &lt;value&gt;2010-研发部会议室&lt;/value&gt;
+                &lt;value&gt;2010-研发部会议室&lt;/value&gt;
+            &lt;/set&gt;
+        &lt;/property&gt;
+        &lt;property name=&quot;computers&quot;&gt;
+            &lt;map&gt;
+                &lt;entry key=&quot;dev-88172&quot; value-ref=&quot;c1&quot;/&gt; &lt;!-- 对象引用c1在上方 --&gt;
+            &lt;/map&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+
+或者【简便方法】↓
+</code></pre>
+<pre><code class="xml">applicationContext.xml 更新二次【新增简便方法】
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+    &lt;bean id=&quot;c1&quot; class=&quot;com.imooc.spring.ioc.entity.Computer&quot;&gt;【方法一】
+        &lt;constructor-arg name=&quot;brand&quot; value=&quot;联想&quot;/&gt;
+        &lt;constructor-arg name=&quot;type&quot; value=&quot;台式机&quot;/&gt;
+        &lt;constructor-arg name=&quot;sn&quot; value=&quot;8389283012&quot;/&gt;
+        &lt;constructor-arg name=&quot;price&quot; value=&quot;3085&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;company&quot; class=&quot;com.imooc.spring.ioc.entity.Company&quot;&gt;
+        &lt;property name=&quot;rooms&quot;&gt;
+            &lt;set&gt;
+                &lt;value&gt;2001-总裁办&lt;/value&gt;
+                &lt;value&gt;2003-总经理办公室&lt;/value&gt;
+                &lt;value&gt;2010-研发部会议室&lt;/value&gt;
+                &lt;value&gt;2010-研发部会议室&lt;/value&gt;
+            &lt;/set&gt;
+        &lt;/property&gt;
+        
+        &lt;property name=&quot;computers&quot;&gt;
+            &lt;map&gt;
+                &lt;entry key=&quot;dev-88172&quot; value-ref=&quot;c1&quot;/&gt; &lt;!-- 对象引用c1在上方 --&gt;
+                &lt;entry key=&quot;dev-88173&quot;&gt;【方法二 (推荐)】
+                    &lt;bean class=&quot;com.imooc.spring.ioc.entity.Computer&quot;&gt;
+                        &lt;constructor-arg name=&quot;brand&quot; value=&quot;联想&quot;/&gt;
+                        &lt;constructor-arg name=&quot;type&quot; value=&quot;台式机&quot;/&gt;
+                        &lt;constructor-arg name=&quot;sn&quot; value=&quot;8389283012&quot;/&gt;
+                        &lt;constructor-arg name=&quot;price&quot; value=&quot;3085&quot;/&gt;
+                    &lt;/bean&gt;
+                &lt;/entry&gt;
+            &lt;/map&gt;
+        &lt;/property&gt;
+        
+        &lt;property name=&quot;info&quot;&gt;
+            &lt;props&gt;
+                &lt;prop key=&quot;phone&quot;&gt;010-12345678&lt;/prop&gt;
+                &lt;prop key=&quot;address&quot;&gt;北京市朝阳区XX路XX大厦&lt;/prop&gt;
+                &lt;prop key=&quot;website&quot;&gt;https://p-luminary.github.io&lt;/prop&gt;
+            &lt;/props&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<h3 id="查看容器内对象-【-getBeanDefinitionNames-】"><a href="#查看容器内对象-【-getBeanDefinitionNames-】" class="headerlink" title="查看容器内对象 【.getBeanDefinitionNames()】"></a>查看容器内对象 【.getBeanDefinitionNames()】</h3><pre><code class="java">多个同类型的bean会自动增加编号 #1  #2
+    &lt;bean class=&quot;com.imooc.spring.ioc.entity.Computer&quot;&gt;
+        &lt;constructor-arg name=&quot;brand&quot; value=&quot;微星&quot;/&gt;
+        &lt;constructor-arg name=&quot;type&quot; value=&quot;台式机&quot;/&gt;
+        &lt;constructor-arg name=&quot;sn&quot; value=&quot;8389283012&quot;/&gt;
+        &lt;constructor-arg name=&quot;price&quot; value=&quot;3000&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean class=&quot;com.imooc.spring.ioc.entity.Computer&quot;&gt;
+        &lt;constructor-arg name=&quot;brand&quot; value=&quot;华硕&quot;/&gt;
+        &lt;constructor-arg name=&quot;type&quot; value=&quot;台式机&quot;/&gt;
+        &lt;constructor-arg name=&quot;sn&quot; value=&quot;9023283012&quot;/&gt;
+        &lt;constructor-arg name=&quot;price&quot; value=&quot;5600&quot;/&gt;
+    &lt;/bean&gt;
+
+//获取容器内所有beanId数组       
+        String[] beanNames = context.getBeanDefinitionNames();
+        for (String beanName:beanNames)&#123;
+            System.out.println(beanName); //c1 company ...&lt;bean id=&quot;...&quot;&gt;
+             System.out.println(&quot;类型：&quot; + context.getBean(beanName).getClass().getName());
+            System.out.println(&quot;内容：&quot; + context.getBean(beanName).toString());
+        &#125;
+        Computer computer = context.getBean(&quot;com.imooc.spring.ioc.entity.Computer&quot;, Computer.class);
+        System.out.println(computer.getBrand());
+        Computer computer1 = context.getBean(&quot;com.imooc.spring.ioc.entity.Computer#1&quot;, Computer.class);
+        System.out.println(computer1.getBrand());
+</code></pre>
+<h3 id="bean-scope属性"><a href="#bean-scope属性" class="headerlink" title="bean scope属性"></a>bean scope属性</h3><ul>
+<li>bean scope属性用于决定对象何时被创建与作用范围</li>
+<li>bean scope配置将影响容器内对象的数量</li>
+<li>bean scope默认值singleton(单例), 指全局共享同一个对象实例</li>
+</ul>
+<h5 id="scope用法"><a href="#scope用法" class="headerlink" title="scope用法"></a>scope用法</h5><pre><code class="java">&lt;bean id=&quot;bookDao&quot;
+    class=&quot;com.imooc.spring.ioc.bookshop.dao.BookDaoOracleImpl&quot;
+    scope=&quot;prototype&quot;/&gt;
+</code></pre>
+<h5 id="bean-scope属性清单"><a href="#bean-scope属性清单" class="headerlink" title="bean scope属性清单"></a>bean scope属性清单</h5><table>
+<thead>
+<tr>
+<th>scope属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style = "color:red">singleton</span></td>
+<td><span style = "color:red">单例(默认值),每一个容器有且只有唯一的实例,实例被全局共享</span></td>
+</tr>
+<tr>
+<td><span style = "color:red">prototype</span></td>
+<td><span style = "color:red">多例,每次使用时都是创建一个实例</span></td>
+</tr>
+<tr>
+<td>request</td>
+<td>web环境下,每一个独立请求存在唯一实例</td>
+</tr>
+<tr>
+<td>session</td>
+<td>web环境下,每一个session存在有唯一实例</td>
+</tr>
+<tr>
+<td>application</td>
+<td>web环境下,ServletContext存在唯一实例</td>
+</tr>
+<tr>
+<td>websocket</td>
+<td>每一次WebSocket连接中存在唯一实例</td>
+</tr>
+</tbody></table>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/59d168487d0ef9aa2a23cf8057d454e1d3f26fc9/data/singleton%E4%B8%8Eprototype%E6%AF%94%E8%BE%83%E5%9B%BE.png"></p>
+<h5 id="singleton与prototype对比"><a href="#singleton与prototype对比" class="headerlink" title="singleton与prototype对比"></a>singleton与prototype对比</h5><table>
+<thead>
+<tr>
+<th></th>
+<th>singleton</th>
+<th>prototype</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对象数量</td>
+<td>全局唯一</td>
+<td>存在多个</td>
+</tr>
+<tr>
+<td>实例化时机</td>
+<td>IoC容器启动时</td>
+<td>getBean() 或 对象注入时</td>
+</tr>
+<tr>
+<td>线程安全问题</td>
+<td>存在</td>
+<td>不存在</td>
+</tr>
+<tr>
+<td>执行效率</td>
+<td>高</td>
+<td>低</td>
+</tr>
+</tbody></table>
+<pre><code class="java">UserDao.java
+package com.imooc.spring.ioc.dao;
+
+public class UserDao &#123;
+    public UserDao()&#123;
+        System.out.println(&quot;UserDao已创建: &quot; + this);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.UserDao;
+
+public class UserService &#123;
+    public UserDao userDao;
+
+    public UserService() &#123;
+        System.out.println(&quot;UserService已创建: &quot; + this);
+    &#125;
+
+    public UserService(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        System.out.println(&quot;调用setUserDao: &quot; + userDao);
+        this.userDao = userDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd&quot;&gt;
+   &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.ioc.dao.UserDao&quot; scope=&quot;prototype&quot;/&gt;  &lt;!-- 多例 --&gt;
+   &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.ioc.service.UserService&quot; scope=&quot;prototype&quot;&gt; &lt;!-- 单例 创建一个对象 --&gt;
+      &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt; &lt;!-- 引用了上面的userDao多例 再创建一个对象 --&gt;
+   &lt;/bean&gt;
+
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java 【单例】
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserDao userDao = context.getBean(&quot;userDao&quot;, UserDao.class);
+        UserDao userDao1 = context.getBean(&quot;userDao&quot;, UserDao.class);
+        UserDao userDao2 = context.getBean(&quot;userDao&quot;, UserDao.class);
+        UserDao userDao3 = context.getBean(&quot;userDao&quot;, UserDao.class);
+    &#125;
+&#125;
+
+applicationContext.xml
+&lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.ioc.dao.UserDao&quot; scope=&quot;prototype&quot;/&gt;  &lt;!-- 多例 --&gt;
+   &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.ioc.service.UserService&quot; &gt; &lt;!-- 单例 创建一个对象 --&gt;
+      &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt; &lt;!-- 引用了上面的userDao多例 再创建一个对象 --&gt;
+   &lt;/bean&gt;
+
+================================================================
+输出：
+UserService已创建: com.imooc.spring.ioc.service.UserService@3dd3bcd
+UserDao已创建: com.imooc.spring.ioc.dao.UserDao@7c16905e
+调用setUserDao: com.imooc.spring.ioc.dao.UserDao@7c16905e
+    
+Process finished with exit code 0
+</code></pre>
+<pre><code class="java">SpringApplication.java 【多例】
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        System.out.println(&quot;IoC容器已初始化&quot;);
+        UserService userService1 = context.getBean(&quot;userService&quot;, UserService.class);
+        UserService userService2 = context.getBean(&quot;userService&quot;, UserService.class);
+        UserService userService3 = context.getBean(&quot;userService&quot;, UserService.class);
+        UserService userService4 = context.getBean(&quot;userService&quot;, UserService.class);
+    &#125;
+&#125;
+
+applicationContext.xml
+&lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.ioc.dao.UserDao&quot; scope=&quot;prototype&quot;/&gt;  &lt;!-- 多例 --&gt;
+   &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.ioc.service.UserService&quot; scope=&quot;prototype&quot;&gt; &lt;!-- 单例 创建一个对象 --&gt;
+      &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt; &lt;!-- 引用了上面的userDao多例 再创建一个对象 --&gt;
+   &lt;/bean&gt;
+
+================================================================
+输出:
+IoC容器已初始化
+UserService已创建: com.imooc.spring.ioc.service.UserService@5c7fa833
+UserDao已创建: com.imooc.spring.ioc.dao.UserDao@4dfa3a9d
+调用setUserDao: com.imooc.spring.ioc.dao.UserDao@4dfa3a9d
+UserService已创建: com.imooc.spring.ioc.service.UserService@4b952a2d
+UserDao已创建: com.imooc.spring.ioc.dao.UserDao@3159c4b8
+调用setUserDao: com.imooc.spring.ioc.dao.UserDao@3159c4b8
+UserService已创建: com.imooc.spring.ioc.service.UserService@73846619
+UserDao已创建: com.imooc.spring.ioc.dao.UserDao@4bec1f0c
+调用setUserDao: com.imooc.spring.ioc.dao.UserDao@4bec1f0c
+UserService已创建: com.imooc.spring.ioc.service.UserService@29ca901e
+UserDao已创建: com.imooc.spring.ioc.dao.UserDao@5649fd9b
+调用setUserDao: com.imooc.spring.ioc.dao.UserDao@5649fd9b
+
+Process finished with exit code 0
+</code></pre>
+<p><span style = "color : red">一般来说dao类 service类 control类都是单例 因为单例安全根源是运行时发生不断的变化 如果在真正环境中一般不会重新设置那些类，在运行中都是恒定不变的。所以推荐用单例默认<code>singleton</code></span></p>
 
     </div>
 
