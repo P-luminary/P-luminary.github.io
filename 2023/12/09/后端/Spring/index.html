@@ -1495,15 +1495,15 @@ Process finished with exit code 0
 <td>组件注解,通用注解,被该注解描述的类将被IoC容器管理并实例化</td>
 </tr>
 <tr>
-<td>@Controller</td>
+<td><strong>@Controller</strong></td>
 <td>语义注解,说明当前类是MVC应用中的控制器类</td>
 </tr>
 <tr>
-<td>@Service</td>
+<td><strong>@Service</strong></td>
 <td>语义注解,说明当前类是Service业务服务类</td>
 </tr>
 <tr>
-<td>@Repository</td>
+<td><strong>@Repository</strong></td>
 <td>语义注解,说明当前类用于业务持久层,通常描述对应Dao类</td>
 </tr>
 </tbody></table>
@@ -1517,6 +1517,678 @@ Process finished with exit code 0
 <li>自动装配注解-根据属性特征自动注入对象</li>
 <li>元数据注解-更细化的辅助IoC容器管理对象的注解</li>
 </ul>
+<h3 id="基于注解初始化IoC容器"><a href="#基于注解初始化IoC容器" class="headerlink" title="基于注解初始化IoC容器"></a>基于注解初始化IoC容器</h3><p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/5.2.6.RELEASE/spring-framework-reference/core.html#beans-annotation-config">Core Technologies (spring.io)</a></p>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+&lt;!--
+    在IoC容器初始化时自动扫描四种组件类型注解并完成实例化
+    @Repository
+    @Service
+    @Controller
+    @Component
+--&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc&quot;/&gt; //设置基准的包名去扫描
+
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">controller/UserController.java
+package com.imooc.spring.ioc.controller;
+
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class UserController &#123;
+&#125;
+</code></pre>
+<pre><code class="java">dao/UserDao.java
+package com.imooc.spring.ioc.dao;
+
+import org.springframework.stereotype.Repository;
+
+//组件类型解释默认beanId为类名首字母小写
+//组件类型解释默认beanId为类名首字母小写
+//beanId = userDao
+@Repository
+public class UserDao &#123;
+
+&#125;
+</code></pre>
+<pre><code class="java">service/UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.UserDao;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService &#123;
+
+&#125;
+</code></pre>
+<pre><code class="java">utils/StringUtils.java
+package com.imooc.spring.ioc.utils;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class StringUtils &#123;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Order;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        String[] ids = context.getBeanDefinitionNames();
+        for (String id:ids)&#123; //这些bean在容器中是单例，在初始化的时候创建对象
+            System.out.println(id+&quot;:&quot;+context.getBean(id));
+        &#125;
+    &#125;
+&#125;
+==============================================================
+//组件类型解释默认beanId为类名首字母小写
+userController:com.imooc.spring.ioc.controller.UserController@4f51b3e0
+userDao:com.imooc.spring.ioc.dao.UserDao@4b9e255
+userService:com.imooc.spring.ioc.service.UserService@5e57643e
+stringUtils:com.imooc.spring.ioc.utils.StringUtils@133e16fd
+    
+org.springframework.context.annotation.internalConfigurationAnnotationProcessor:org.springframework.context.annotation.ConfigurationClassPostProcessor@51b279c9
+org.springframework.context.annotation.internalAutowiredAnnotationProcessor:org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor@1ad282e0
+org.springframework.context.annotation.internalCommonAnnotationProcessor:org.springframework.context.annotation.CommonAnnotationBeanPostProcessor@7f416310
+org.springframework.context.event.internalEventListenerProcessor:org.springframework.context.event.EventListenerMethodProcessor@1cab0bfb
+org.springframework.context.event.internalEventListenerFactory:org.springframework.context.event.DefaultEventListenerFactory@5e955596
+
+Process finished with exit code 0
+</code></pre>
+<h3 id="自动装配与Autowired注解"><a href="#自动装配与Autowired注解" class="headerlink" title="自动装配与Autowired注解"></a>自动装配与Autowired注解</h3><h5 id="两类自动装配注解-Primary-如果有两个写此注解作为主要"><a href="#两类自动装配注解-Primary-如果有两个写此注解作为主要" class="headerlink" title="两类自动装配注解  [@Primary 如果有两个写此注解作为主要]"></a>两类自动装配注解  [@Primary 如果有两个写此注解作为主要]</h5><table>
+<thead>
+<tr>
+<th>分类</th>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>按类型装配</td>
+<td>@Autowired</td>
+<td>按容器内对象类型动态注入属性,由Spring机构提供</td>
+</tr>
+<tr>
+<td></td>
+<td>@Inject</td>
+<td>基于JSR-330标准,其他同@Autowired,但不支持required属性</td>
+</tr>
+<tr>
+<td>按名称装配</td>
+<td>@Named</td>
+<td>与@Inject配合使用,JSR-330规范,按属性名自动装配属性</td>
+</tr>
+<tr>
+<td></td>
+<td><span style = "color:red">@Resource</span></td>
+<td><span style = "color:red">基于JSR-250规范,优先按名称、再按类型智能匹配</span></td>
+</tr>
+</tbody></table>
+<h5 id="无法确认注入哪个bean-解决方案【UserDao-与-UserOracleDao】"><a href="#无法确认注入哪个bean-解决方案【UserDao-与-UserOracleDao】" class="headerlink" title="无法确认注入哪个bean 解决方案【UserDao 与 UserOracleDao】"></a>无法确认注入哪个bean 解决方案【UserDao 与 UserOracleDao】</h5><pre><code class="java">UserDao.java
+package com.imooc.spring.ioc.dao;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
+
+//组件类型解释默认beanId为类名首字母小写
+//beanId = userDao
+@Repository
+public class UserDao implements IUserDao&#123;
+    public UserDao()&#123;
+        System.out.println(&quot;正在创建UseDao：&quot; + this);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserOracleDao.java
+package com.imooc.spring.ioc.dao;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
+@Repository
+@Primary
+public class UserOracleDao implements IUserDao&#123;
+
+    public UserOracleDao()&#123;
+        System.out.println(&quot;正在创建UserOracleDao：&quot; + this);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">IUserDao.java [接口]
+package com.imooc.spring.ioc.dao;
+
+public interface IUserDao &#123;
+&#125;
+</code></pre>
+<pre><code class="java">DepartmentService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.IUserDao;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+@Service
+public class DepartmentService &#123;
+    /**
+     * 1. @Resource设置name属性,则按name在IoC容器中将bean注入
+     * 2. @Resource未设置name属性
+     *  2.1 以属性名作为bean name在IoC容器中匹配bean，如有匹配则注入
+     *  2.2 按属性名未匹配，则按类型进行匹配，同 @Autowired 需要加入 @Primary解决类型冲突
+     *  使用建议: 在使用 @Resource对象时推荐设置name或保证属性名与bean名称一致
+     */
+    /*方法2.2.1
+    @Resource(name = &quot;userOracleDao&quot;)
+    private IUserDao udao;*/
+
+    //方法2.2.2
+    @Resource
+    private IUserDao userOracleDao;
+    public void joinDepartment()&#123;
+        System.out.println(userOracleDao);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.IUserDao;
+import com.imooc.spring.ioc.dao.UserDao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService &#123;
+    //@Autowired
+    //Spring IoC容器会自动通过反射技术将属性private修饰符自动改为public,直接进行赋值
+    //不再执行set方法
+    private IUserDao udao;
+
+    public UserService() &#123;
+        System.out.println(&quot;正在构建UserService&quot; + this);
+    &#125;
+
+    public IUserDao getUdao() &#123;
+        return udao;
+    &#125;
+
+    @Autowired
+    //如果装配注解放在set方法上,则自动按类型/名称对set方法参数进行注入
+    public void setUdao(UserDao udao) &#123;
+        System.out.println(&quot;setUdao: &quot; + udao);
+        this.udao = udao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java 
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Order;
+import com.imooc.spring.ioc.service.DepartmentService;
+import com.imooc.spring.ioc.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        System.out.println(userService.getUdao());
+        DepartmentService departmentService = context.getBean(&quot;departmentService&quot;, DepartmentService.class);
+        departmentService.joinDepartment();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="元数据注解"><a href="#元数据注解" class="headerlink" title="元数据注解"></a>元数据注解</h3><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Primary</td>
+<td>按类型装配时出现多个相同类型对象,拥有此注解对象优先被注入</td>
+</tr>
+<tr>
+<td>@PostConstruct</td>
+<td>描述方法,相当于XML中init-method配置的注解版本</td>
+</tr>
+<tr>
+<td>@PreDestory</td>
+<td>描述方法,相当于XML中destory-method配置的注解版本</td>
+</tr>
+<tr>
+<td>@Scope</td>
+<td>设置对象的scope属性  &#x2F;&#x2F;@Scope(“prototype”)设置多例</td>
+</tr>
+<tr>
+<td>@Value</td>
+<td>为属性注入静态数据</td>
+</tr>
+</tbody></table>
+<pre><code class="java">applicationContext.xml 【新增第11行】
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+&lt;!--    加载指定路径下的properties文件--&gt;
+    &lt;context:property-placeholder location=&quot;classpath:config.properties&quot;/&gt;
+&lt;!--
+    在IoC容器初始化时自动扫描四种组件类型注解并完成实例化
+    @Repository
+    @Service
+    @Controller
+    @Component
+--&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc&quot;/&gt;
+
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">config.properties [这里属于动态注入噢~]
+  metaData=imooc.com
+</code></pre>
+<pre><code class="java">UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.IUserDao;
+import com.imooc.spring.ioc.dao.UserDao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+
+@Service
+@Scope(&quot;prototype&quot;) //设置多例 与XML中bean scope完全相同
+public class UserService &#123;
+    @Value(&quot;$&#123;metaData&#125;&quot;)
+    private String metaData; //对此数据的动态注入
+
+    //@Autowired
+    //Spring IoC容器会自动通过反射技术将属性private修饰符自动改为public,直接进行赋值
+    //不再执行set方法
+    public UserService() &#123;
+        System.out.println(&quot;正在构建UserService&quot; + this);
+    &#125;
+
+    @PostConstruct //XML中bean init-method完全相同
+    public void init()&#123;
+        System.out.println(&quot;初始化UserService对象,metaData=&quot; + metaData);
+    &#125;
+    private IUserDao udao;
+
+
+    public IUserDao getUdao() &#123;
+        return udao;
+    &#125;
+
+    @Autowired
+    //如果装配注解放在set方法上,则自动按类型/名称对set方法参数进行注入
+    public void setUdao(UserDao udao) &#123;
+        System.out.println(&quot;setUdao: &quot; + udao);
+        this.udao = udao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.entity.Order;
+import com.imooc.spring.ioc.service.DepartmentService;
+import com.imooc.spring.ioc.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        System.out.println(userService.getUdao());
+    &#125;
+&#125;
+</code></pre>
+<h3 id="基于Java-Config配置IoC容器"><a href="#基于Java-Config配置IoC容器" class="headerlink" title="基于Java Config配置IoC容器"></a>基于Java Config配置IoC容器</h3><ul>
+<li>完全摆脱XML的束缚, 使用独立Java类管理对象与依赖</li>
+<li>注解配置相对分散, 利用Java Config可对配置集中管理</li>
+<li>可以在编译时进行依赖检查, 不容易出错</li>
+</ul>
+<h5 id="Java-Config核心注解【敏捷开发-小型项目】-而XML是大型团队项目"><a href="#Java-Config核心注解【敏捷开发-小型项目】-而XML是大型团队项目" class="headerlink" title="Java Config核心注解【敏捷开发 小型项目】 而XML是大型团队项目"></a>Java Config核心注解【敏捷开发 小型项目】 而XML是大型团队项目</h5><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Configuration</td>
+<td>描述类, 说明当前类是Java Config配置类, 完全替代XML文件</td>
+</tr>
+<tr>
+<td>@Bean</td>
+<td>描述方法, 方法返回对象将被IoC容器管理, beanId默认为方法名</td>
+</tr>
+<tr>
+<td>@ImportResource</td>
+<td>描述类, 加载静态文件, 可使用@Value注解获取</td>
+</tr>
+<tr>
+<td>@ComponentScan</td>
+<td>描述类, 同XML的 &lt; context:compoment-scan &gt;标签</td>
+</tr>
+</tbody></table>
+<pre><code class="java">UserController.java
+package com.imooc.spring.ioc.controller;
+
+import com.imooc.spring.ioc.service.UserService;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class UserController &#123;
+    private UserService userService;
+
+    public UserService getUserService() &#123;
+        return userService;
+    &#125;
+
+    public void setUserService(UserService userService) &#123;
+        this.userService = userService;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserDao.java
+package com.imooc.spring.ioc.dao;
+
+public class UserDao &#123;
+&#125;
+
+
+UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.UserDao;
+
+public class UserService &#123;
+    private UserDao userDao;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Config.java [作为配置文件]
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.controller.UserController;
+import com.imooc.spring.ioc.dao.UserDao;
+import com.imooc.spring.ioc.service.UserService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration //当前是个配置类,用于代替applicationContext.xml
+public class Config &#123;
+    @Bean //Java Config利用方法创建对象,将方法返回对象放入容器,beanId=方法名
+    public UserDao userDao()&#123;
+        UserDao userDao = new UserDao();
+        return userDao;
+    &#125;
+    @Bean
+    public UserService userService()&#123;
+        UserService userService = new UserService();
+        return userService;
+    &#125;
+    @Bean
+    public UserController userController()&#123;
+        UserController userController = new UserController();
+        return userController;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //基于Java Config配置IoC容器的初始化
+        ApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
+        String[] ids = context.getBeanDefinitionNames();
+        for (String id:ids)&#123;
+            System.out.println(id+&quot;:&quot;+context.getBean(id));
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="JavaConfig-对象依赖注入"><a href="#JavaConfig-对象依赖注入" class="headerlink" title="JavaConfig-对象依赖注入"></a>JavaConfig-对象依赖注入</h3><p>Config的括号增加参数</p>
+<pre><code class="java">Config.java
+package com.imooc.spring.ioc;
+
+import com.imooc.spring.ioc.controller.UserController;
+import com.imooc.spring.ioc.dao.UserDao;
+import com.imooc.spring.ioc.service.UserService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration //当前是个配置类,用于代替applicationContext.xml
+@ComponentScan(basePackages = &quot;com.imooc&quot;) //扫描其他的组件类 因为其他人也会写
+public class Config &#123;
+    @Bean //Java Config利用方法创建对象,将方法返回对象放入容器,beanId=方法名
+    public UserDao userDao()&#123;
+        UserDao userDao = new UserDao();
+        System.out.println(&quot;已创建&quot;+userDao);
+        return userDao;
+    &#125;
+    @Bean
+    //先按name尝试注入,name不存在则按类型注入 冲突则@Primary
+    public UserService userService(UserDao userDao)&#123;
+        UserService userService = new UserService();
+        System.out.println(&quot;已创建&quot;+userService);
+        userService.setUserDao(userDao);
+        System.out.println(&quot;调用setUserDao:&quot; + userDao);
+        return userService;
+    &#125;
+    @Bean //&lt;bean id=&quot;xxx&quot; class=&quot;xxx&quot;&gt;
+    public UserController userController(UserService userService)&#123;
+        UserController userController = new UserController();
+        System.out.println(&quot;已创建&quot; + userController);
+        userController.setUserService(userService);
+        System.out.println(&quot;调用setUserService:&quot;+userService);
+        return userController;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.ioc;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        //基于Java Config配置IoC容器的初始化
+        ApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
+        System.out.println(&quot;=============================&quot;);
+        String[] ids = context.getBeanDefinitionNames();
+        for (String id:ids)&#123;
+            System.out.println(id+&quot;:&quot;+context.getBean(id));
+        &#125;
+    &#125;
+&#125;
+
+=================================================================
+已创建com.imooc.spring.ioc.dao.UserDao@10b48321
+已创建com.imooc.spring.ioc.service.UserService@473b46c3
+调用setUserDao:com.imooc.spring.ioc.dao.UserDao@10b48321
+已创建com.imooc.spring.ioc.controller.UserController@797badd3
+调用setUserService:com.imooc.spring.ioc.service.UserService@473b46c3
+=============================
+org.springframework.context.annotation.internalConfigurationAnnotationProcessor:org.springframework.context.annotation.ConfigurationClassPostProcessor@44a664f2
+org.springframework.context.annotation.internalAutowiredAnnotationProcessor:org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor@7f9fcf7f
+org.springframework.context.annotation.internalCommonAnnotationProcessor:org.springframework.context.annotation.CommonAnnotationBeanPostProcessor@2357d90a
+org.springframework.context.event.internalEventListenerProcessor:org.springframework.context.event.EventListenerMethodProcessor@6328d34a
+org.springframework.context.event.internalEventListenerFactory:org.springframework.context.event.DefaultEventListenerFactory@145eaa29
+config:com.imooc.spring.ioc.Config$$EnhancerBySpringCGLIB$$8a99aa4c@15bb6bea
+userDao:com.imooc.spring.ioc.dao.UserDao@10b48321
+userService:com.imooc.spring.ioc.service.UserService@473b46c3
+userController:com.imooc.spring.ioc.controller.UserController@797badd3
+
+Process finished with exit code 0
+</code></pre>
+<pre><code class="java">如果突然想增加一个注入employeeDao
+UserService.java 先增加一个私有的名字 再getter+setter
+去Conifg.java 括号里新增
+public UserService userService(UserDao userDao, EmployeeDao employeeDao)&#123;
+        UserService userService = new UserService();
+        System.out.println(&quot;已创建&quot;+userService);
+        userService.setUserDao(userDao);
+        System.out.println(&quot;调用setUserDao:&quot; + userDao);
+        userService.setEmployeeDao(employeeDao);
+        return userService;
+    &#125;
+</code></pre>
+<h3 id="Spring-Test测试模块"><a href="#Spring-Test测试模块" class="headerlink" title="Spring Test测试模块"></a>Spring Test测试模块</h3><ul>
+<li>Spring Test是Spring中用于测试的模块</li>
+<li>Spring Test对JUnit单元测试框架有良好的整合</li>
+<li>通过Spring Test可在Junit单元测试时自动初始化IoC容器</li>
+</ul>
+<h5 id="Spring与JUnit4整合过程"><a href="#Spring与JUnit4整合过程" class="headerlink" title="Spring与JUnit4整合过程"></a>Spring与JUnit4整合过程</h5><ul>
+<li>Maven工程依赖spring-test</li>
+<li>利用 <strong>@RunWith</strong> 与 <strong>@ContextConfiguration</strong>描述测试用例类</li>
+<li>测试用例类从容器获取对象完成测试用例的执行</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;Spring_test&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-test&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+        &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">UserDao.java
+package com.imooc.spring.ioc.dao;
+
+public class UserDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增用户数据&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserService.java
+package com.imooc.spring.ioc.service;
+
+import com.imooc.spring.ioc.dao.UserDao;
+
+public class UserService &#123;
+    private UserDao userDao;
+    public void createUser()&#123;
+        System.out.println(&quot;调用创建用户业务代码&quot;);
+        userDao.insert();
+    &#125;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.ioc.dao.UserDao&quot;&gt;
+
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.ioc.service.UserService&quot;&gt;
+        &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringTestor.java
+import com.imooc.spring.ioc.service.UserService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+//将Junit4的执行权交给Spring Test,在测试用例执行前自动初始化IoC容器
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class SpringTestor &#123;
+    @Resource
+    private UserService userService;
+
+    @Test
+    public void testUserService()&#123;
+        userService.createUser();
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
