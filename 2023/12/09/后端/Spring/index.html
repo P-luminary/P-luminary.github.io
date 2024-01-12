@@ -2189,6 +2189,1045 @@ public class SpringTestor &#123;
     &#125;
 &#125;
 </code></pre>
+<hr>
+<hr>
+<h3 id="介绍AOP"><a href="#介绍AOP" class="headerlink" title="介绍AOP"></a>介绍AOP</h3><h5 id="AOP面向切面编程"><a href="#AOP面向切面编程" class="headerlink" title="AOP面向切面编程"></a>AOP面向切面编程</h5><ul>
+<li>介绍Spring AOP与相关概念名词</li>
+<li>Spring AOP开发与配置流程</li>
+<li>Spring 五种通知类型与应用场景</li>
+</ul>
+<h5 id="Spring中的可插拔组件技术-类似于插件"><a href="#Spring中的可插拔组件技术-类似于插件" class="headerlink" title="Spring中的可插拔组件技术 [类似于插件]"></a>Spring中的可插拔组件技术 [类似于插件]</h5><p>应用程序执行前检测的作用</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/63abc993304f86f346667a404430e2ad28f989cb/data/Spring%E4%B8%AD%E7%9A%84%E5%8F%AF%E6%8F%92%E6%8B%94%E7%BB%84%E4%BB%B6%E6%8A%80%E6%9C%AF.jpg"></p>
+<h5 id="Spring-AOP-在不修改源码的情况下对程序进行扩展"><a href="#Spring-AOP-在不修改源码的情况下对程序进行扩展" class="headerlink" title="Spring AOP [在不修改源码的情况下对程序进行扩展]"></a>Spring AOP [在不修改源码的情况下对程序进行扩展]</h5><ul>
+<li>Spring AOP - Aspect Oriented Programming 面向切面编程</li>
+<li>AOP的做法是将通用、与业务无关的功能抽象封装为切面类</li>
+<li>切面可配置在<strong>目标方法</strong>的执行前、后运行，真正做到即插即用</li>
+</ul>
+<p>运行前进行拦截在运行前打印时间 再运行代码；没有IoC就没有AOP；写完扩展之后要再applicationContext.xml中新增&lt; aop:config &gt;…来认可切面</p>
+<pre><code class="java">aop/dao/EmployeeDao.java
+package com.imooc.spring.aop.dao;
+
+/**
+ * 员工表Dao
+ */
+public class EmployeeDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增员工数据&quot;);
+    &#125;
+&#125;
+---------------------------------------------
+aop/dao/UserDao.java
+package com.imooc.spring.aop.dao;
+
+/**
+ * 用户表Dao
+ */
+public class UserDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增用户数据&quot;);
+    &#125;
+&#125;
+---------------------------------------------
+aop/service/EmployeeService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.EmployeeDao;
+
+import java.util.Date;
+
+/**
+ * 员工服务
+ */
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    public void entry()&#123;
+        System.out.println(&quot;执行员工入职业务逻辑&quot;);
+        employeeDao.insert();
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+---------------------------------------------
+aop/service/UserService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.UserDao;
+
+/**
+ * 用户服务
+ */
+public class UserService &#123;
+    private UserDao userDao;
+
+    public void createUser()&#123;
+        if(1==1)&#123;
+            throw new RuntimeException(&quot;用户已存在&quot;);
+        &#125;
+        System.out.println(&quot;执行创建用户业务逻辑&quot;);
+        userDao.insert();
+    &#125;
+
+    public String generateRandomPassword(String type , Integer length)&#123;
+        System.out.println(&quot;按&quot; + type + &quot;方式生成&quot;+ length  + &quot;位随机密码&quot;);
+        return &quot;Zxcquei1&quot;;
+    &#125;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+&#125;
+---------------------------------------------
+aop/aspect/MethodAspect
+package com.imooc.spring.aop.aspect;
+
+import org.aspectj.lang.JoinPoint;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+//切面类
+public class MethodAspect &#123;
+    //切面方法,用于扩展额外功能
+    //JoinPoint 连接点,通过连接点可以获取目标类/方法的信息
+    public void printExecutionTime(JoinPoint joinPoint)&#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;);
+        String now = sdf.format(new Date());
+        String className = joinPoint.getTarget().getClass().getName();//获取类→获取目标类的名称
+        String methodName = joinPoint.getSignature().getName();//获取目标方法名称
+        System.out.println(&quot;----&gt;&quot; + now + &quot;:&quot; + className + &quot;.&quot; + methodName);
+        Object[] args = joinPoint.getArgs();
+        System.out.println(&quot;----&gt;参数个数:&quot; + args.length);
+        for(Object arg:args)&#123;
+            System.out.println(&quot;----&gt;参数:&quot; + arg);
+        &#125;
+    &#125;
+
+    public void doAfterReturning(JoinPoint joinPoint,Object ret)&#123;
+        System.out.println(&quot;&lt;----返回后通知:&quot; + ret);
+    &#125;
+    public void doAfterThrowing(JoinPoint joinPoint,Throwable th)&#123;
+        System.out.println(&quot;&lt;----异常通知:&quot; + th.getMessage());
+    &#125;
+    public void doAfter(JoinPoint joinPoint)&#123;
+        System.out.println(&quot;&lt;----触发后置通知&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.aop.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        userService.createUser(); //模拟创建新用户过程
+        userService.generateRandomPassword(&quot;MD5&quot;, 16);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.aop.dao.UserDao&quot;/&gt;
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.aop.dao.EmployeeDao&quot;/&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.aop.service.UserService&quot;&gt;
+        &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.aop.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!-- AOP配置 迎接新MethodAspect切面的到来--&gt;
+    &lt;bean id=&quot;methodAspect&quot; class=&quot;com.imooc.spring.aop.aspect.MethodAspect&quot;&gt;&lt;/bean&gt;
+    &lt;aop:config&gt;
+        &lt;!-- PointCut 切点,使用execution表达式描述切面的作用范围 --&gt;
+        &lt;!-- execution(public * com.imooc..*.*(..)) 说明切面作用在com.imooc包下的所有类的所有方法上 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(public * com.imooc..*.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--只对所有Service类生效--&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;
+        &lt;!--只对所有返回值为String类型方法生效--&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(String com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--对方法名进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.create*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 对参数进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(String,*))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 定义切面类 --&gt;
+        &lt;aop:aspect ref=&quot;methodAspect&quot;&gt; &lt;!--关联一下--&gt;
+            &lt;!-- before通知(Advice),代表在目标方法运行前先执行methodAspect.printExecutionTime() --&gt;
+            &lt;aop:before method=&quot;printExecutionTime&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after-returning method=&quot;doAfterReturning&quot; returning=&quot;ret&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after-throwing method=&quot;doAfterThrowing&quot; throwing=&quot;th&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after method=&quot;doAfter&quot; pointcut-ref=&quot;pointcut&quot;&gt;&lt;/aop:after&gt;
+        &lt;/aop:aspect&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc.spring&lt;/groupId&gt;
+    &lt;artifactId&gt;aop&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--aspectjweaver是Spring AOP的底层依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+            &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+            &lt;version&gt;1.9.5&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<h3 id="Spring-AOP-与-AspectJ的关系-实现类与方法的匹配"><a href="#Spring-AOP-与-AspectJ的关系-实现类与方法的匹配" class="headerlink" title="Spring AOP 与 AspectJ的关系 [实现类与方法的匹配]"></a>Spring AOP 与 AspectJ的关系 [实现类与方法的匹配]</h3><ul>
+<li>Eclips AspectJ 是一种基于Java平台的面向切面编程的语言</li>
+<li>Spring AOP使用AspectJWeaver实现类与方法匹配</li>
+<li><strong>Spring AOP利用<u>代理模式</u>实现对象运行时功能扩展</strong></li>
+</ul>
+<h5 id="几个关键概念"><a href="#几个关键概念" class="headerlink" title="几个关键概念"></a>几个关键概念</h5><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Aspect</td>
+<td>切面,具体的可插拔组件功能类,通常一个切面只能实现一个通用功能</td>
+</tr>
+<tr>
+<td>Target Class&#x2F;Method</td>
+<td>目标类、目标方法,指真正要执行与业务相关的方法</td>
+</tr>
+<tr>
+<td>PointCut</td>
+<td>切入点,<strong>使用execution表达式</strong>说明切面要作用再系统的哪些类上</td>
+</tr>
+<tr>
+<td>JoinPoint</td>
+<td>连接点,切面运行过程中是包含了目标类&#x2F;方法元数据的对象</td>
+</tr>
+<tr>
+<td>Advice</td>
+<td>通知,说明具体的切面的执行时机,Spring包含了不中不同类型通知</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>JoinPoint 连接点,通过连接点可以获取目标类&#x2F;方法的信息<br>public void printExecutionTime(JoinPoint joinPoint){}</p>
+</blockquote>
+<h5 id="AOP配置过程"><a href="#AOP配置过程" class="headerlink" title="AOP配置过程"></a>AOP配置过程</h5><ul>
+<li>依赖AspectJ</li>
+<li>实现切面类&#x2F;方法</li>
+<li>配置Aspect Bean</li>
+<li>定义PointCut</li>
+<li>配置Advice  &#x2F;&#x2F;before通知(Advice)</li>
+</ul>
+<h3 id="JoinPoint核心方法"><a href="#JoinPoint核心方法" class="headerlink" title="JoinPoint核心方法"></a>JoinPoint核心方法</h3><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Object getTarget()</td>
+<td>获取IoC容器内目标对象</td>
+</tr>
+<tr>
+<td>Signature getSignature()</td>
+<td>获取目标方法</td>
+</tr>
+<tr>
+<td>Object[] getArgs()</td>
+<td>获取目标方法<strong>参数</strong></td>
+</tr>
+</tbody></table>
+<pre><code class="java">//很多线上的项目需要跟踪调试却不知道输入的参数是什么 就可以增加切片
+public void printExecutionTime(JoinPoint joinPoint)&#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;);
+        String now = sdf.format(new Date());
+        String className = joinPoint.getTarget().getClass().getName();//获取类→获取目标类的名称
+        String methodName = joinPoint.getSignature().getName();//获取目标方法名称
+        System.out.println(&quot;----&gt;&quot; + now + &quot;:&quot; + className + &quot;.&quot; + methodName);
+        Object[] args = joinPoint.getArgs(); //传入目标方法的实际参数
+        System.out.println(&quot;----&gt;参数个数:&quot; + args.length);
+        for(Object arg:args)&#123;
+            System.out.println(&quot;----&gt;参数:&quot; + arg);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="PointCut切点表达式"><a href="#PointCut切点表达式" class="headerlink" title="PointCut切点表达式"></a>PointCut切点表达式</h3><blockquote>
+<p>​                   public void com.imooc.service.UserService.createUser(形参1,形参2,..)<br>                      ↑         ↑             ↑                 ↑                 ↑                   ↑                  ↑</p>
+<p>execution(public   *     com.imooc       ..                 *       .           *       (          ..          ))<br>*通配符                            ..包通配符[包括所有后代查找]                            (..)参数通配符</p>
+<p>第一项public可以默认</p>
+</blockquote>
+<pre><code class="xml">&lt;!-- AOP配置 迎接新MethodAspect切面的到来--&gt;
+    &lt;bean id=&quot;methodAspect&quot; class=&quot;com.imooc.spring.aop.aspect.MethodAspect&quot;&gt;&lt;/bean&gt;
+    &lt;aop:config&gt;
+        &lt;!-- PointCut 切点,使用execution表达式描述切面的作用范围 --&gt;
+        &lt;!-- execution(public * com.imooc..*.*(..)) 说明切面作用在com.imooc包下的所有类的所有方法上 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(public * com.imooc..*.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--只对所有Service类生效--&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;
+    &lt;/aop:config&gt;
+
+---------------------------------------------------------------------------------
+切点表达式训练
+&lt;!--只对所有返回值为String类型方法生效--&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(String com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--对方法名进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.create*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 对参数进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(String,*))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 定义切面类 --&gt;
+</code></pre>
+<h3 id="五种通知类型"><a href="#五种通知类型" class="headerlink" title="五种通知类型"></a>五种通知类型</h3><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Before Advice</td>
+<td>前置通知,目标方法运行前执行</td>
+</tr>
+<tr>
+<td>After Returning Advice</td>
+<td>返回后通知,目标方法返回数值后执行</td>
+</tr>
+<tr>
+<td>After Throwing Advice</td>
+<td>异常通知,目标方法抛出异常后执行</td>
+</tr>
+<tr>
+<td>After Advice</td>
+<td>后置通知,目标方法运行后执行</td>
+</tr>
+<tr>
+<td><span style = " color : red"><strong>Around Advice</strong></span></td>
+<td><span style = "color:red"><strong>最强大通知,自定通知执行时机,可决定目标方法是否运行</strong></span></td>
+</tr>
+</tbody></table>
+<pre><code class="java">@Around(&quot;execution(* com.imooc..*Service.*(..))&quot;) 【通知 切面表达式】
+    // @Before()   @After()   @AfterThrowing   @AfterReturning
+    //ProceedingJoinPoint是JoinPoint的升级版,在原有功能外,还可以控制目标方法是否执行
+</code></pre>
+<h5 id="特殊的“通知”-引介增强"><a href="#特殊的“通知”-引介增强" class="headerlink" title="特殊的“通知” - 引介增强"></a>特殊的“通知” - 引介增强</h5><ul>
+<li>引介增强是对类的增强,而非方法</li>
+<li>引介增强允许再运行时为目标类增加新属性或方法</li>
+<li>引介增强允许再运行时改变类的行为,让类随运行环境动态变更</li>
+</ul>
+<pre><code class="java">MethodAspect.java
+    public void doAfter(JoinPoint joinPoint)&#123;
+        System.out.println(&quot;&lt;----触发后置通知&quot;);
+    &#125;
+-----------------------------------------------
+applicationContext.xml
+&lt;aop:after method=&quot;doAfter&quot; pointcut-ref=&quot;pointcut&quot;&gt;&lt;/aop:after&gt;
+</code></pre>
+<pre><code class="java">MethodAspect.java
+     public void doAfterReturning(JoinPoint joinPoint,Object ret)&#123;
+        System.out.println(&quot;&lt;----返回后通知:&quot; + ret);
+    &#125;
+-----------------------------------------------
+applicationContext.xml
+&lt;aop:after-returning method=&quot;doAfterReturning&quot; returning=&quot;ret&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+    
+</code></pre>
+<pre><code class="java">MethodAspect.java
+public void doAfterThrowing(JoinPoint joinPoint,Throwable th)&#123;
+        System.out.println(&quot;&lt;----异常通知:&quot; + th.getMessage());
+    &#125;
+-----------------------------------------------
+applicationContext.xml
+&lt;aop:after-returning method=&quot;doAfterReturning&quot; returning=&quot;ret&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+
+打印顺序根据applicationContext.xml代码排列顺序一致
+</code></pre>
+<pre><code class="xml">applicationContext.xml [最终]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.aop.dao.UserDao&quot;/&gt;
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.aop.dao.EmployeeDao&quot;/&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.aop.service.UserService&quot;&gt;
+        &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.aop.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!-- AOP配置 迎接新MethodAspect切面的到来--&gt;
+    &lt;bean id=&quot;methodAspect&quot; class=&quot;com.imooc.spring.aop.aspect.MethodAspect&quot;&gt;&lt;/bean&gt;
+    &lt;aop:config&gt;
+        &lt;!-- PointCut 切点,使用execution表达式描述切面的作用范围 --&gt;
+        &lt;!-- execution(public * com.imooc..*.*(..)) 说明切面作用在com.imooc包下的所有类的所有方法上 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(public * com.imooc..*.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--只对所有Service类生效--&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;
+        &lt;!--只对所有返回值为String类型方法生效--&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(String com.imooc..*Service.*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!--对方法名进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.create*(..))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 对参数进行约束 --&gt;
+        &lt;!--&lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(String,*))&quot;&gt;&lt;/aop:pointcut&gt;--&gt;
+        &lt;!-- 定义切面类 --&gt;
+        &lt;aop:aspect ref=&quot;methodAspect&quot;&gt; &lt;!--关联一下--&gt;
+            &lt;!-- before通知(Advice),代表在目标方法运行前先执行methodAspect.printExecutionTime() --&gt;
+            &lt;aop:before method=&quot;printExecutionTime&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after-returning method=&quot;doAfterReturning&quot; returning=&quot;ret&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after-throwing method=&quot;doAfterThrowing&quot; throwing=&quot;th&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+            &lt;aop:after method=&quot;doAfter&quot; pointcut-ref=&quot;pointcut&quot;&gt;&lt;/aop:after&gt;
+        &lt;/aop:aspect&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.aop.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        userService.createUser(); //模拟创建新用户过程
+        userService.generateRandomPassword(&quot;MD5&quot;, 15);
+    &#125;
+&#125;
+===========================================================
+----&gt;2024-01-12 13:40:56 885:com.imooc.spring.aop.service.UserService.createUser
+----&gt;参数个数:0
+&lt;----异常通知:用户已存在
+&lt;----触发后置通知
+Exception in thread &quot;main&quot; java.lang.RuntimeException: 用户已存在
+    
+</code></pre>
+<h3 id="环绕通知-public-Object-check-ProceedingJoinPoint-pjp"><a href="#环绕通知-public-Object-check-ProceedingJoinPoint-pjp" class="headerlink" title="环绕通知 [public Object check(ProceedingJoinPoint pjp)]"></a>环绕通知 [public Object check(ProceedingJoinPoint pjp)]</h3><h5 id="利用AOP进行方法性能筛查-筛查哪个实现时间长-可以进行代码优化"><a href="#利用AOP进行方法性能筛查-筛查哪个实现时间长-可以进行代码优化" class="headerlink" title="利用AOP进行方法性能筛查 [筛查哪个实现时间长 可以进行代码优化]"></a>利用AOP进行方法性能筛查 [筛查哪个实现时间长 可以进行代码优化]</h5><pre><code class="java">dao/UserDao.java
+package com.imooc.spring.aop.dao;
+
+/**
+ * 用户表Dao
+ */
+public class UserDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增用户数据&quot;);
+    &#125;
+&#125;
+
+---------------------------------
+dao/EmployeeDao.java
+package com.imooc.spring.aop.dao;
+
+/**
+ * 员工表Dao
+ */
+public class EmployeeDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增员工数据&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service/EmployeeService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.EmployeeDao;
+
+/**
+ * 员工服务
+ */
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    public void entry()&#123;
+        System.out.println(&quot;执行员工入职业务逻辑&quot;);
+        employeeDao.insert();
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+
+---------------------------------
+service/UserService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.UserDao;
+
+/**
+ * 用户服务
+ */
+public class UserService &#123;
+    private UserDao userDao;
+
+    public void createUser()&#123;
+        try &#123;
+            Thread.sleep(3000); //沉睡 为了触发环绕通知
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125;
+        System.out.println(&quot;执行员工入职业务逻辑&quot;);
+        userDao.insert();
+    &#125;
+
+    public String generateRandomPassword(String type , Integer length)&#123;
+        System.out.println(&quot;按&quot; + type + &quot;方式生成&quot;+ length  + &quot;位随机密码&quot;);
+        return &quot;Zxcquei1&quot;;
+    &#125;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">aspect/MethodChecker.java
+package com.imooc.spring.aop.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class MethodChecker &#123;
+    ////ProceedingJoinPoint是JoinPoint的升级版,在原有功能外,还可以控制目标方法是否执行
+    public Object check(ProceedingJoinPoint pjp) throws Throwable &#123;
+        try &#123;
+            long startTime = new Date().getTime();//方法执行前
+            Object ret = pjp.proceed();//执行目标方法
+            long endTime = new Date().getTime();//
+            long duration = endTime - startTime; //方法执行后 执行时长
+            if(duration &gt;= 1000)&#123;//认为执行太慢了 打印信息
+                String className = pjp.getTarget().getClass().getName();
+                String methodName = pjp.getSignature().getName();
+                SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;);
+                String now = sdf.format(new Date());
+                System.out.println(&quot;=======&quot; + now + &quot;:&quot; + className + &quot;.&quot; + methodName + &quot;(&quot; + duration + &quot;ms)======&quot;);
+            &#125;
+            return ret;//方法返回
+        &#125; catch (Throwable throwable) &#123;
+            System.out.println(&quot;Exception message:&quot; + throwable.getMessage());
+            throw throwable;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;bean id=&quot;userDao&quot; class=&quot;com.imooc.spring.aop.dao.UserDao&quot;/&gt;
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.aop.dao.EmployeeDao&quot;/&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.aop.service.UserService&quot;&gt;
+        &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.aop.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;methodChecker&quot; class=&quot;com.imooc.spring.aop.aspect.MethodChecker&quot;&gt;&lt;/bean&gt;
+    &lt;aop:config&gt; &lt;!--所有类进行拦截--&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*.*(..))&quot;&gt;&lt;/aop:pointcut&gt;
+        &lt;aop:aspect ref=&quot;methodChecker&quot;&gt;
+            &lt;!--环绕通知--&gt;
+            &lt;aop:around method=&quot;check&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+        &lt;/aop:aspect&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+
+pom.xml
+&lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+            &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+            &lt;version&gt;1.9.5&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.aop.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        userService.createUser();
+    &#125;
+&#125;
+
+==============================================================
+执行员工入职业务逻辑
+新增用户数据
+=======2024-01-12 13:52:41 475:com.imooc.spring.aop.service.UserService.createUser(3010ms)======
+
+Process finished with exit code 0
+</code></pre>
+<h3 id="基于注解配置Spring-AOP"><a href="#基于注解配置Spring-AOP" class="headerlink" title="基于注解配置Spring AOP"></a>基于注解配置Spring AOP</h3><pre><code class="java">aspect/MethodChecher.java
+package com.imooc.spring.aop.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+@Component //标记当前类为组件
+@Aspect //说明当前类是切面类
+public class MethodChecker &#123;
+    //环绕通知,参数为PointCut切点表达式
+    @Around(&quot;execution(* com.imooc..*Service.*(..))&quot;)
+    // @Before()   @After()   @AfterThrowing   @AfterReturning
+    //ProceedingJoinPoint是JoinPoint的升级版,在原有功能外,还可以控制目标方法是否执行
+    public Object check(ProceedingJoinPoint pjp) throws Throwable &#123;
+        try &#123;
+            long startTime = new Date().getTime();
+            Object ret = pjp.proceed();//执行目标方法
+            long endTime = new Date().getTime();
+            long duration = endTime - startTime; //执行时长
+            if(duration &gt;= 1000)&#123;
+                String className = pjp.getTarget().getClass().getName();
+                String methodName = pjp.getSignature().getName();
+                SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;);
+                String now = sdf.format(new Date());
+                System.out.println(&quot;=======&quot; + now + &quot;:&quot; + className + &quot;.&quot; + methodName + &quot;(&quot; + duration + &quot;ms)======&quot;);
+            &#125;
+            return ret;
+        &#125; catch (Throwable throwable) &#123;
+            System.out.println(&quot;Exception message:&quot; + throwable.getMessage());
+            throw throwable;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">dao/UserDao
+package com.imooc.spring.aop.dao;
+
+import org.springframework.stereotype.Repository;
+
+/**
+ * 用户表Dao
+ */
+@Repository
+public class UserDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增用户数据&quot;);
+    &#125;
+&#125;
+----------------------------------------------
+dao/EmployeeDao.java
+package com.imooc.spring.aop.dao;
+
+import org.springframework.stereotype.Repository;
+
+/**
+ * 员工表Dao
+ */
+@Repository
+public class EmployeeDao &#123;
+    public void insert()&#123;
+        System.out.println(&quot;新增员工数据&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service/UserService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.UserDao;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * 用户服务
+ */
+@Service
+public class UserService &#123;
+    @Resource
+    private UserDao userDao;
+
+    public void createUser()&#123;
+        try &#123;
+            Thread.sleep(3000);
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125;
+        System.out.println(&quot;执行员工入职业务逻辑&quot;);
+        userDao.insert();
+    &#125;
+
+    public String generateRandomPassword(String type , Integer length)&#123;
+        System.out.println(&quot;按&quot; + type + &quot;方式生成&quot;+ length  + &quot;位随机密码&quot;);
+        return &quot;Zxcquei1&quot;;
+    &#125;
+
+    public UserDao getUserDao() &#123;
+        return userDao;
+    &#125;
+
+    public void setUserDao(UserDao userDao) &#123;
+        this.userDao = userDao;
+    &#125;
+&#125;
+---------------------------------------------------------
+service/EmployeeService.java
+package com.imooc.spring.aop.service;
+
+import com.imooc.spring.aop.dao.EmployeeDao;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * 员工服务
+ */
+@Service
+public class EmployeeService &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    public void entry()&#123;
+        System.out.println(&quot;执行员工入职业务逻辑&quot;);
+        employeeDao.insert();
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.aop.service.UserService;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        UserService userService = context.getBean(&quot;userService&quot;, UserService.class);
+        userService.createUser();
+    &#125;
+&#125;
+========================================================================
+执行员工入职业务逻辑
+新增用户数据
+=======2024-01-12 17:06:18 669:com.imooc.spring.aop.service.UserService.createUser(3015ms)======
+
+Process finished with exit code 0
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;!--初始化IoC容器--&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc&quot;/&gt;
+  ★  &lt;!--启用Spring AOP注解模式--&gt; ★
+    &lt;aop:aspectj-autoproxy/&gt;
+&lt;/beans&gt;
+</code></pre>
+<h6 id="增加了是说明这个类是需要被IoC实例化的"><a href="#增加了是说明这个类是需要被IoC实例化的" class="headerlink" title="增加了是说明这个类是需要被IoC实例化的"></a>增加了是说明这个类是需要被IoC实例化的</h6><ul>
+<li>四种组件类型注解-声明当前类的功能与职责 【回忆上面的知识点】</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Component</td>
+<td>组件注解,通用注解,被该注解描述的类将被IoC容器管理并实例化</td>
+</tr>
+<tr>
+<td><strong>@Controller</strong></td>
+<td>语义注解,说明当前类是MVC应用中的控制器类</td>
+</tr>
+<tr>
+<td><strong>@Service</strong></td>
+<td>语义注解,说明当前类是Service业务服务类</td>
+</tr>
+<tr>
+<td><strong>@Repository</strong></td>
+<td>语义注解,说明当前类用于业务持久层,通常描述对应Dao类</td>
+</tr>
+</tbody></table>
+<h3 id="Spring-AOP实现原理"><a href="#Spring-AOP实现原理" class="headerlink" title="Spring AOP实现原理"></a>Spring AOP实现原理</h3><h6 id="★★★★★-面试-Spring-AOP-底层的实现原理-★★★★★★"><a href="#★★★★★-面试-Spring-AOP-底层的实现原理-★★★★★★" class="headerlink" title="★★★★★ 面试 Spring AOP 底层的实现原理 ★★★★★★"></a><span style = "color:red">★★★★★ 面试 Spring AOP 底层的实现原理 ★★★★★★</span></h6><ul>
+<li><span style = "color:blue">Spring基于<strong>代理模式</strong>实现功能动态扩展，包含两种形式：</span><ul>
+<li><strong><span style = "color:blue">目标类拥有接口，通过JDK动态代理实现功能扩展 来实现目标类的代理从而实现扩展</span></strong></li>
+<li><strong><span style = "color:blue">目标类没有接口，通过CGLib组件实现功能扩展 通过继承的方式实现扩展</span></strong></li>
+</ul>
+</li>
+</ul>
+<h5 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h5><ul>
+<li>代理模式通过代理对象对原对象的实现功能扩展</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/1d5a848e492cf6e991719bfdc5cbbd31ef8a31fb/data/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F.png"></p>
+<p>基于UserService接口实现代理类 同时持有与之对应的具体实现</p>
+<h6 id="静态代理-每一个具体的委托类都要手动创造一个代理类"><a href="#静态代理-每一个具体的委托类都要手动创造一个代理类" class="headerlink" title="静态代理 [每一个具体的委托类都要手动创造一个代理类]"></a>静态代理 [每一个具体的委托类都要手动创造一个代理类]</h6><pre><code class="java">aop/service/UserService [接口]
+package com.imooc.spring.aop.service;
+
+public interface UserService &#123;
+    public void createUser();
+&#125;
+-------------------------------------
+aop/service/UserServiceImpl.java
+package com.imooc.spring.aop.service;
+
+public class UserServiceImpl implements UserService&#123;
+    public void createUser() &#123;
+        System.out.println(&quot;执行创建用户业务逻辑&quot;);
+    &#125;
+&#125;
+-------------------------------------
+aop/service/UserServiceProxy.java [代理]
+package com.imooc.spring.aop.service;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+//静态代理是指必须手动创建代理类的代理模式使用方式
+public class UserServiceProxy implements UserService&#123;
+    //持有委托类的对象
+    private UserService userService;
+    public UserServiceProxy(UserService userService)&#123;
+        this.userService = userService;
+    &#125;
+
+    public void createUser() &#123;
+        System.out.println(&quot;=====&quot; + new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;).format(new Date()) +&quot;=========&quot;);
+        userService.createUser();
+    &#125;
+&#125;
+-------------------------------------
+aop/service/UserServiceProxy1.java [代理1]
+package com.imooc.spring.aop.service;
+
+public class UserServiceProxy1 implements UserService&#123;
+    private UserService userService ;
+    public UserServiceProxy1(UserService userService)&#123;
+        this.userService = userService;
+    &#125;
+
+    public void createUser() &#123;
+        userService.createUser();
+        System.out.println(&quot;========后置扩展功能======&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.imooc.spring.aop;
+
+import com.imooc.spring.aop.service.UserService;
+import com.imooc.spring.aop.service.UserServiceImpl;
+import com.imooc.spring.aop.service.UserServiceProxy;
+import com.imooc.spring.aop.service.UserServiceProxy1;
+
+public class Application &#123;
+    public static void main(String[] args) &#123; //类似于二房东
+        UserService userService = new UserServiceProxy1(new UserServiceProxy(new UserServiceImpl()));
+        userService.createUser();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP底层逻辑—JDK动态代理"><a href="#AOP底层逻辑—JDK动态代理" class="headerlink" title="AOP底层逻辑—JDK动态代理"></a>AOP底层逻辑—JDK动态代理</h3><pre><code class="java">aop/service.UserService.java [接口]
+package com.imooc.spring.aop.service;
+
+public interface UserService &#123;
+    public void createUser();
+&#125;
+
+
+-------------------------------------
+aop/service.EmployeeService.java [接口]
+package com.imooc.spring.aop.service;
+
+public interface EmployeeService &#123;
+    public void createEmployee();
+&#125;
+</code></pre>
+<pre><code class="java">aop/service.EmployeeServiceImpl.java
+package com.imooc.spring.aop.service;
+
+public class EmployeeServiceImpl implements EmployeeService &#123;
+    public void createEmployee() &#123;
+        System.out.println(&quot;执行创建员工业务逻辑&quot;);
+    &#125;
+&#125;
+--------------------------------------
+aop/service.UserServiceImpl.java
+package com.imooc.spring.aop.service;
+
+public class UserServiceImpl implements UserService&#123;
+    public void createUser() &#123;
+        System.out.println(&quot;执行创建用户业务逻辑&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">ProxyInvocationHandler.java
+package com.imooc.spring.aop.service;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+/**
+ * InvocationHandler是JDK提供的反射类,用于在JDK动态代理中对目标方法进行增强
+ * InvocationHandler实现类与切面类的环绕通知类似
+ */
+public class ProxyInvocationHandler implements InvocationHandler &#123;
+    private Object target;//目标对象
+    private ProxyInvocationHandler(Object target)&#123;
+        this.target = target;
+    &#125;
+    /**
+     * 在invoke()方法对目标方法进行增强 反射method方法的时候遇见过invoke
+     * @param proxy 代理类对象
+     * @param method 目标方法对象
+     * @param args 目标方法实参
+     * @return 目标方法运行后返回值
+     * @throws Throwable 目标方法抛出的异常
+     */
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;
+        System.out.println(&quot;=====&quot; + new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss SSS&quot;).format(new Date()) +&quot;=========&quot;);
+        Object ret = method.invoke(target, args);//调用目标方法,ProceedingJoinPoint.proceed()
+        return ret;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        UserService userService = new UserServiceImpl();
+        ProxyInvocationHandler invocationHandler = new ProxyInvocationHandler(userService);
+        //动态创建代理类
+        UserService userServiceProxy = (UserService)Proxy.newProxyInstance(userService.getClass().getClassLoader(),
+                userService.getClass().getInterfaces(),
+                invocationHandler);
+        userServiceProxy.createUser();
+
+        //动态代理,必须实现接口才可以运行
+        EmployeeService employeeService = new EmployeeServiceImpl();
+        EmployeeService employeeServiceProxy = (EmployeeService)Proxy.newProxyInstance(employeeService.getClass().getClassLoader(),
+                employeeService.getClass().getInterfaces(),
+                new ProxyInvocationHandler(employeeService));
+        employeeServiceProxy.createEmployee();
+    &#125;
+&#125;
+
+=======================================================
+
+=====2024-01-12 19:52:34 179=========
+执行创建用户业务逻辑
+=====2024-01-12 19:52:34 181=========
+执行创建员工业务逻辑
+
+Process finished with exit code 0
+</code></pre>
+<img src="https://raw.githubusercontent.com/P-luminary/images/7942f4deaa97d742e38e14b1326c7064e1a28f50/data/AOP%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91%E2%80%94JDK%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86.png"  />
+
+
+
+
+
+<h3 id="AOP底层逻辑—CGLib实现代理类"><a href="#AOP底层逻辑—CGLib实现代理类" class="headerlink" title="AOP底层逻辑—CGLib实现代理类"></a>AOP底层逻辑—CGLib实现代理类</h3><ul>
+<li>CGLib是运行时字节码增强技术</li>
+<li>Spring AOP扩展无接口类使用CGLib</li>
+<li>AOP会运行时生成目标继承类字节码的方式进行行为扩展</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/7aa4a34eb72920c28d071577e2c074f4cf266e1a/data/AOP%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91%E2%80%94CGLib%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E7%B1%BB.jpg"></p>
+<img src="https://raw.githubusercontent.com/P-luminary/images/107a911bbe025f10f9f6629b01583a222956ca9f/data/CGLib%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%90%86%E7%B1%BB%20%E6%95%88%E6%9E%9C%E5%9B%BE.jpg" style="zoom:80%;" />
+
+
+
+
+
+
+
+
+
+
+
 
     </div>
 
