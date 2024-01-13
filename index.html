@@ -3240,14 +3240,339 @@ Process finished with exit code 0
 
 
 
+<h3 id="Spring-JDBC与事务管理"><a href="#Spring-JDBC与事务管理" class="headerlink" title="Spring JDBC与事务管理"></a>Spring JDBC与事务管理</h3><h5 id="Spring-JDBC"><a href="#Spring-JDBC" class="headerlink" title="Spring JDBC"></a>Spring JDBC</h5><ul>
+<li>Spring JDBC是Spring框架用于处理关系型数据库的模块</li>
+<li>Spring JDBC对JDBC API进行封装，极大简化开发工作量</li>
+<li>JdbcTemplate是Spring JDBC核心类, 提供数据CRUD方法</li>
+</ul>
+<h5 id="为什么有了Mybatis还需要Spring-JDBC？"><a href="#为什么有了Mybatis还需要Spring-JDBC？" class="headerlink" title="为什么有了Mybatis还需要Spring JDBC？"></a>为什么有了Mybatis还需要Spring JDBC？</h5><p>因为这两者面向的对象是不一样的<br>mybatis 封装程度高适合中小企业敏捷开发, 快速完成与数据库交互的工作, 封装程度高 执行效率低【慢】<br>Spring JDBC只是对原始的JDBC的API进行了简单封装 大厂使用【轻量级】可二次封装</p>
+<h3 id="Spring-JDBC的使用步骤"><a href="#Spring-JDBC的使用步骤" class="headerlink" title="Spring JDBC的使用步骤"></a>Spring JDBC的使用步骤</h3><ul>
+<li><p>Maven工程引入依赖<code>spring-jdbc</code></p>
+</li>
+<li><p>applicationContext.xml配置<code>DataSource</code>数据源 [<u>用于指向连接哪数据库的哪种服务器 账号密码都是啥</u>]</p>
+</li>
+<li><p>在Dao注入<code>JdbcTemplate</code>对象, 实现数据CRUD</p>
+</li>
+</ul>
+<h3 id="JdbcTemplate实现增删改查"><a href="#JdbcTemplate实现增删改查" class="headerlink" title="JdbcTemplate实现增删改查"></a>JdbcTemplate实现增删改查</h3><pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc.spring&lt;/groupId&gt;
+    &lt;artifactId&gt;jdbc&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-jdbc&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;8.0.16&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml [SpringIoC基础配置文件]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;!-- 数据源设置：使用哪种服务器 哪种数据源 账号密码是什么 --&gt;
+    &lt;bean id=&quot;dataSource&quot; class=&quot;org.springframework.jdbc.datasource.DriverManagerDataSource&quot;&gt;
+        &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+        &lt;property name=&quot;url&quot;
+                  value=&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+        &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+        &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+    &lt;/bean&gt;
+&lt;!--    创建数据库连接 找数据源    JdbcTemplate提供数据CRUD的API 让IoC容器初始化的时候自动实例化jdbcTemplate 实例化的过程中要将设置好的数据源dataSource注入到jdbcTemplate属性中 此时就完成了实例化--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.jdbc.dao.EmployeeDao&quot;&gt;
+&lt;!--    为Dao注入JdbcTemplate对象 --&gt;
+        &lt;property name=&quot;jdbcTemplate&quot; ref=&quot;jdbcTemplate&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/entity/Employee.java
+public class Employee &#123;
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+    private Date hiredate;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;eno=&quot; + eno +
+                &quot;, ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
+                &quot;, salary=&quot; + salary +
+                &quot;, dname=&#39;&quot; + dname + &#39;\&#39;&#39; +
+                &quot;, hiredate=&quot; + hiredate +
+                &#39;&#125;&#39;;
+    &#125;
+&#125; +Setter Getter
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/dao/EmployeeDao.java
+package com.imooc.spring.jdbc.dao;
+
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+public class EmployeeDao &#123;
+/*    依赖与jdbcTemplate 要持有其
+* &lt;!--    创建数据库连接 找数据源    JdbcTemplate提供数据CRUD的API--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+* */
+    private JdbcTemplate jdbcTemplate;
+    public Employee findById(Integer eno)&#123;
+//      //将唯一转换的数据返回对应的对象 jdbcTemplate为了运行时的动态注入
+        String sql = &quot;select * from employee where eno=?&quot;;
+        //将bean属性与每一行的一一对应   数据库记录到实体对象的转换
+        Employee employee = jdbcTemplate.queryForObject(sql, new Object[]&#123;eno&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return employee;
+    &#125;
+
+    public JdbcTemplate getJdbcTemplate() &#123;
+        return jdbcTemplate;
+    &#125;
+
+    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) &#123;
+        this.jdbcTemplate = jdbcTemplate;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">SpringApplication.java
+package com.imooc.spring.jdbc;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SpringApplication &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+        EmployeeDao employeeDao = context.getBean(&quot;employeeDao&quot;, EmployeeDao.class);
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+
+    &#125;
+&#125;
+
+=======================================================
+Employee&#123;eno=3308, ename=&#39;张三&#39;, salary=6000.0, dname=&#39;研发部&#39;, hiredate=2011-05-08 00:00:00.0&#125;
+
+Process finished with exit code 0
+</code></pre>
+<h3 id="JdbcTemplate的数据查询方法"><a href="#JdbcTemplate的数据查询方法" class="headerlink" title="JdbcTemplate的数据查询方法"></a>JdbcTemplate的数据查询方法</h3><pre><code class="java">com/imooc/spring/jdbc/dao/EmployeeDao.java
+package com.imooc.spring.jdbc.dao;
+
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.List;
+
+public class EmployeeDao &#123;
+/*    依赖与jdbcTemplate 要持有其
+* &lt;!--    创建数据库连接 找数据源    JdbcTemplate提供数据CRUD的API--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+* */
+    private JdbcTemplate jdbcTemplate;
+    public Employee findById(Integer eno)&#123;
+//      //将唯一转换的数据返回对应的对象 jdbcTemplate为了运行时的动态注入
+        String sql = &quot;select * from employee where eno=?&quot;;
+        //将bean属性与每一行的一一对应   数据库记录到实体对象的转换
+        //查询单条数据 转换成对象
+        Employee employee = jdbcTemplate.queryForObject(sql, new Object[]&#123;eno&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return employee;
+    &#125;
+    public List&lt;Employee&gt; findByDname(String dname)&#123;
+        String sql = &quot;select * from employee where dname = ?&quot;;
+        //查询复合数据                             sql  对应的参数数组  转换的Mapper对象
+        //多条记录 每一条记录转换为一个实体对象 放入List集合中进行返回
+        List&lt;Employee&gt; list = jdbcTemplate.query(sql, new Object[]&#123;dname&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return list;
+    &#125;
+
+    public JdbcTemplate getJdbcTemplate() &#123;
+        return jdbcTemplate;
+    &#125;
+
+    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) &#123;
+        this.jdbcTemplate = jdbcTemplate;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">JdbcTemplateTestor.java
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class JdbcTemplateTestor &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+
+    @Test
+    public void testFindById()&#123;
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+    &#125;
+
+    @Test
+    public void testFindByDname()&#123;
+        System.out.println(employeeDao.findByDname(&quot;&quot;));
+    &#125;
+&#125;
+================================================================
+[Employee&#123;eno=3308, ename=&#39;张三&#39;, salary=6000.0, dname=&#39;研发部&#39;, hiredate=2011-05-08 00:00:00.0&#125;, Employee&#123;eno=3420, ename=&#39;李四&#39;, salary=8700.0, dname=&#39;研发部&#39;, hiredate=2006-11-11 00:00:00.0&#125;]
 
 
+Process finished with exit code 0
+</code></pre>
+<pre><code class="java">★★ 新增 ★★
+在没有对应的实体类情况下也可以得到相应的结果 结果被封装成为了Map对象
+EmployeeDao.java
+//    按列表返回每一条按Map对象列表返回
+    public List findMapByDname(String dname)&#123;
+        String sql = &quot;select eno as empno, salary as a from employee where dname = ?&quot;;
+        //将查询结果作为Map进行封装
+        List&lt;Map&lt;String, Object&gt;&gt; maps = jdbcTemplate.queryForList(sql, new Object[]&#123;dname&#125;);
+        return maps;
+    &#125;
 
 
+JdbcTemplateTestor.java
+@Test
+    public void testFindMapByDname()&#123;
+        System.out.println(employeeDao.findMapByDname(&quot;研发部&quot;));
+    &#125;
+================================================================
+[&#123;empno=3308, a=6000.0&#125;, &#123;empno=3420, a=8700.0&#125;]
+
+Process finished with exit code 0
+</code></pre>
+<pre><code class="java">总结  [★★★★ queryForObject query queryForList ★★★★]
+ private JdbcTemplate jdbcTemplate;
+    public Employee findById(Integer eno)&#123;
+//      //将唯一转换的数据返回对应的对象 jdbcTemplate为了运行时的动态注入
+        String sql = &quot;select * from employee where eno=?&quot;;
+        //将bean属性与每一行的一一对应   数据库记录到实体对象的转换
+        // ★★查询单条数据 转换成对象 ★★
+        Employee employee = jdbcTemplate.queryForObject(sql, new Object[]&#123;eno&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return employee;
+    &#125;
+
+    public List&lt;Employee&gt; findByDname(String dname)&#123;
+        String sql = &quot;select * from employee where dname = ?&quot;;
+        // ★★查询复合数据★★                      sql  对应的参数数组  转换的Mapper对象
+        // ★★多条记录 每一条记录转换为一个实体对象★★ 放入List集合中进行返回
+        List&lt;Employee&gt; list = jdbcTemplate.query(sql, new Object[]&#123;dname&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return list;
+    &#125;
+
+//    按列表返回每一条按Map对象列表返回
+//特殊情况：无法进行实体类的映射则可用直接用queryForList特殊返回Map 来完成对应数据的封装
+    public List findMapByDname(String dname)&#123;
+        String sql = &quot;select eno as empno, salary as a from employee where dname = ?&quot;;
+        //将查询结果作为Map进行封装
+        List&lt;Map&lt;String, Object&gt;&gt; maps = jdbcTemplate.queryForList(sql, new Object[]&#123;dname&#125;);
+        return maps;
+    &#125;
+
+</code></pre>
+<h3 id="JdbcTemplate实现增删改查-1"><a href="#JdbcTemplate实现增删改查-1" class="headerlink" title="JdbcTemplate实现增删改查"></a>JdbcTemplate实现增删改查</h3><pre><code class="java">★★ 增 ★★
+EmployeeDao.java
+public void insert(Employee employee)&#123;
+        String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)&quot;;
+        jdbcTemplate.update(sql,new Object[]&#123;
+                employee.getEno(), employee.getEname(), employee.getSalary(), employee.getDname(), employee.getHiredate()
+        &#125;);
+    &#125;
+
+JdbcTemplateTestor.java
+@Test
+    public void testinsert()&#123;
+        Employee employee = new Employee();
+        employee.setEno(8888);
+        employee.setEname(&quot;赵六&quot;);
+        employee.setSalary(6666f);
+        employee.setDname(&quot;研发部&quot;);
+        employee.setHiredate(new Date());
+        employeeDao.insert(employee);
+    &#125;
 
 
+★★ 更新 ★★
+EmployeeDao.java
+public int update(Employee employee)&#123;
+        String sql = &quot;UPDATE employee SET ename=?, salary=?, dname=?, hiredate=? WHERE eno=?&quot;;
+        int count = jdbcTemplate.update(sql, new Object[]&#123;employee.getEname(), employee.getSalary(), employee.getDname(), employee.getHiredate(), employee.getEno()&#125;);
+        return count;
+    &#125;
+
+JdbcTemplateTestor.java
+@Test
+    public void testUpdate() &#123;
+        Employee employee = employeeDao.findById(8888);
+        employee.setSalary(employee.getSalary() + 1000);
+        int count = employeeDao.update(employee);
+        System.out.println(&quot;本次更新&quot; + count + &quot;条数据&quot;);
+    &#125;
+=========================================================
+本次更新1条数据
+
+Process finished with exit code 0
 
 
+★★ 删除 ★★
+EmployeeDao.java
+public int delete(Integer eno)&#123;
+        String sql = &quot;delete from employee where eno=?&quot;;
+        int update = jdbcTemplate.update(sql, new Object[]&#123;eno&#125;);
+        return update;
+    &#125;
+
+JdbcTemplateTestor.java
+@Test
+    public void testDelete() &#123;
+        int count = employeeDao.delete(8888);
+        System.out.println(&quot;本次删除&quot; + count + &quot;条数据&quot;);
+    &#125;
+=========================================================
+本次删除1条数据
+</code></pre>
 
             
         </div>
@@ -3262,7 +3587,7 @@ Process finished with exit code 0
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -3470,7 +3795,7 @@ Process finished with exit code 0
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -5177,7 +5502,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8282,7 +8607,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -10251,7 +10576,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -11545,7 +11870,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -15333,7 +15658,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -18028,7 +18353,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
