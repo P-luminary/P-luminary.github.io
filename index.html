@@ -156,7 +156,9 @@
         <div class="content" v-pre>
             
             
-            <h1 id="本周任务点"><a href="#本周任务点" class="headerlink" title="本周任务点"></a>本周任务点</h1><h2 id="Spring-IoC"><a href="#Spring-IoC" class="headerlink" title="Spring IoC"></a>Spring IoC</h2><table>
+            <h1 id="本周任务点"><a href="#本周任务点" class="headerlink" title="本周任务点"></a>本周任务点</h1><img src="https://raw.githubusercontent.com/P-luminary/images/8fdafeebf37a6ccf8de24be3ce4d857524f07204/data/Spring%E6%A8%A1%E5%9D%97.png" style="zoom: 200%;" />
+
+<h2 id="Spring-IoC"><a href="#Spring-IoC" class="headerlink" title="Spring IoC"></a>Spring IoC</h2><table>
 <thead>
 <tr>
 <th>内容</th>
@@ -254,7 +256,18 @@
 <td>★★★★★★</td>
 </tr>
 </tbody></table>
-<h1 id="★★★★★★-Spring-★★★★★★"><a href="#★★★★★★-Spring-★★★★★★" class="headerlink" title="★★★★★★  Spring  ★★★★★★"></a><span style = "color:red">★★★★★★  Spring  ★★★★★★</span></h1><h3 id="IoC控制反转"><a href="#IoC控制反转" class="headerlink" title="IoC控制反转"></a>IoC控制反转</h3><h6 id="对象的控制权交给第三方进行管理-中间人"><a href="#对象的控制权交给第三方进行管理-中间人" class="headerlink" title="对象的控制权交给第三方进行管理(中间人)"></a>对象的控制权交给第三方进行管理(中间人)</h6><ul>
+<h1 id="★★★★★★-Spring-★★★★★★"><a href="#★★★★★★-Spring-★★★★★★" class="headerlink" title="★★★★★★  Spring  ★★★★★★"></a><span style = "color:red">★★★★★★  Spring  ★★★★★★</span></h1><p>IoC容器负责实例化，配置和组装对象。 IoC容器从XML文件获取信息并相应地工作。 IoC容器执行的主要任务是:</p>
+<ul>
+<li>实例化应用程序类</li>
+<li>配置对象</li>
+<li>组装对象之间的依赖关系</li>
+</ul>
+<p>有两种类型的IoC容器</p>
+<ul>
+<li><code>BeanFactory</code></li>
+<li><code>ApplicationContext</code></li>
+</ul>
+<h3 id="IoC控制反转"><a href="#IoC控制反转" class="headerlink" title="IoC控制反转"></a>IoC控制反转</h3><h6 id="对象的控制权交给第三方进行管理-中间人"><a href="#对象的控制权交给第三方进行管理-中间人" class="headerlink" title="对象的控制权交给第三方进行管理(中间人)"></a>对象的控制权交给第三方进行管理(中间人)</h6><ul>
 <li>IoC控制反转，全称Inverse of Control，是一种设计理念</li>
 <li>由代理人来创建与管理对象，消费者通过代理人来获取对象</li>
 <li>IoC的目的是降低对象之间直接耦合[更好适合对象之间的变化]</li>
@@ -361,7 +374,7 @@ public class Application &#123;
 
 &lt;/project&gt;
 </code></pre>
-<p><strong>applicationContext.xml</strong> [静态信息可以放其中]</p>
+<p><strong>applicationContext.xml</strong> [静态信息可以放其中]  **<code>属性</code>**元素的 <strong>ref</strong> 属性用于定义另一个bean的引用。</p>
 <pre><code class="java">SpringIoC核心配置文件 右键resources创建 所有对象的创建以及关联的设置都是在applicationContext.xml这里进行
 Spring.io -&gt; Project -&gt; Spring Framework -&gt; LEARN -&gt; Reference Doc. -&gt;  Core
 
@@ -552,6 +565,50 @@ public class AppleStaticFactory &#123;
     &lt;bean id=&quot;apple4&quot; class=&quot;com.imooc.spring.ioc.factory.AppleStaticFactory&quot;
           factory-method=&quot;createSweetApple&quot;/&gt;
 &lt;/beans&gt;
+</code></pre>
+<hr>
+<pre><code class="java">&lt;bean id=&quot;a&quot; class=&quot;com.nhooo.A&quot; factory-method=&quot;getA&quot;&gt;&lt;/bean&gt;
+</code></pre>
+<pre><code class="java">A.java
+package com.nhooo;
+public class A &#123;
+private static final A obj=new A();
+private A()&#123;System.out.println(&quot;private constructor&quot;);&#125;
+public static A getA()&#123;
+    System.out.println(&quot;factory method &quot;);
+    return obj;
+&#125;
+public void msg()&#123;
+    System.out.println(&quot;hello user&quot;);
+&#125;
+&#125;
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans
+    xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xmlns:p=&quot;http://www.springframework.org/schema/p&quot;
+    xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans 
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd&quot;&gt;
+&lt;bean id=&quot;a&quot; class=&quot;com.nhooo.A&quot; factory-method=&quot;getA&quot;&gt;&lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">Test.java
+package org.sssit;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class Test &#123;
+public static void main(String[] args) &#123;
+    ApplicationContext context=new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);
+    A a=(A)context.getBean(&quot;a&quot;);
+    a.msg();
+&#125;
+&#125;
+=============================================================
+private constructor
+factory method
+hello user
 </code></pre>
 <ul>
 <li><h3 id="基于工厂实例方法实例化"><a href="#基于工厂实例方法实例化" class="headerlink" title="基于工厂实例方法实例化"></a>基于工厂实例方法实例化</h3></li>
@@ -1406,7 +1463,7 @@ public class Apple &#123;
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
 &lt;beans&gt;
     &lt;bean id = &quot;sweetApple&quot; class=&quot;com.imooc.spring.ioc.context.Apple&quot;&gt;
-        &lt;property name=&quot;title&quot; value=&quot;红富士&quot;/&gt;
+        &lt;property name=&quot;title&quot; value=&quot;红富士&quot;/&gt; //这里的title是在setter中 public void setTitle(String title)&#123;this.title=title;&#125;
         &lt;property name=&quot;color&quot; value=&quot;红色&quot;/&gt;
         &lt;property name=&quot;origin&quot; value=&quot;欧洲&quot;/&gt;
     &lt;/bean&gt;
@@ -1658,6 +1715,34 @@ Process finished with exit code 0
 <td></td>
 <td><span style = "color:red">@Resource</span></td>
 <td><span style = "color:red">基于JSR-250规范,优先按名称、再按类型智能匹配</span></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>no</td>
+<td>这是默认的自动装配模式，意味着默认情况下没有自动装配</td>
+</tr>
+<tr>
+<td>byName</td>
+<td>byName模式根据bean的名称注入对象依赖项。在这种情况属性名称和bean名称必须相同，它在内部调用setter方法</td>
+</tr>
+<tr>
+<td>byType</td>
+<td>byType模式根据类型注入对象依赖项，因此属性名称和bean名称可以不同，它在内部调用setter方法</td>
+</tr>
+<tr>
+<td>constructor</td>
+<td>构造函数模式通过调用类的构造函数来注入依赖项。它会调用具有大量参数的构造函数。</td>
+</tr>
+<tr>
+<td>autodetect</td>
+<td>从Spring 3开始不推荐使用</td>
 </tr>
 </tbody></table>
 <h5 id="无法确认注入哪个bean-解决方案【UserDao-与-UserOracleDao】"><a href="#无法确认注入哪个bean-解决方案【UserDao-与-UserOracleDao】" class="headerlink" title="无法确认注入哪个bean 解决方案【UserDao 与 UserOracleDao】"></a>无法确认注入哪个bean 解决方案【UserDao 与 UserOracleDao】</h5><pre><code class="java">UserDao.java
@@ -2211,7 +2296,8 @@ public class SpringTestor &#123;
 </code></pre>
 <hr>
 <hr>
-<h3 id="介绍AOP"><a href="#介绍AOP" class="headerlink" title="介绍AOP"></a>介绍AOP</h3><h5 id="AOP面向切面编程"><a href="#AOP面向切面编程" class="headerlink" title="AOP面向切面编程"></a>AOP面向切面编程</h5><ul>
+<h3 id="介绍AOP"><a href="#介绍AOP" class="headerlink" title="介绍AOP"></a>介绍AOP</h3><p><strong>Aspect Oriented Programming</strong>(AOP)从某种意义上说是对OOP的补充，因为它还提供了模块化的功能。但是模块化的关键单元是方面而不是类。</p>
+<h5 id="AOP面向切面编程"><a href="#AOP面向切面编程" class="headerlink" title="AOP面向切面编程"></a>AOP面向切面编程</h5><ul>
 <li>介绍Spring AOP与相关概念名词</li>
 <li>Spring AOP开发与配置流程</li>
 <li>Spring 五种通知类型与应用场景</li>
@@ -2436,7 +2522,7 @@ public class SpringApplication &#123;
     &lt;/dependencies&gt;
 &lt;/project&gt;
 </code></pre>
-<h3 id="Spring-AOP-与-AspectJ的关系-实现类与方法的匹配"><a href="#Spring-AOP-与-AspectJ的关系-实现类与方法的匹配" class="headerlink" title="Spring AOP 与 AspectJ的关系 [实现类与方法的匹配]"></a>Spring AOP 与 AspectJ的关系 [实现类与方法的匹配]</h3><ul>
+<h3 id="Spring-AOP-与-AspectJ的关系-实现类与方法的匹配"><a href="#Spring-AOP-与-AspectJ的关系-实现类与方法的匹配" class="headerlink" title="Spring AOP 与 AspectJ的关系 [实现类与方法的匹配]"></a>Spring AOP 与 <u>AspectJ</u>的关系 [实现类与方法的匹配]</h3><ul>
 <li>Eclips AspectJ 是一种基于Java平台的面向切面编程的语言</li>
 <li>Spring AOP使用AspectJWeaver实现类与方法匹配</li>
 <li><strong>Spring AOP利用<u>代理模式</u>实现对象运行时功能扩展</strong></li>
@@ -2461,7 +2547,7 @@ public class SpringApplication &#123;
 <td>切入点,<strong>使用execution表达式</strong>说明切面要作用再系统的哪些类上</td>
 </tr>
 <tr>
-<td>JoinPoint</td>
+<td><strong>JoinPoint</strong></td>
 <td>连接点,切面运行过程中是包含了目标类&#x2F;方法元数据的对象</td>
 </tr>
 <tr>
@@ -2472,6 +2558,10 @@ public class SpringApplication &#123;
 <blockquote>
 <p>JoinPoint 连接点,通过连接点可以获取目标类&#x2F;方法的信息<br>public void printExecutionTime(JoinPoint joinPoint){}</p>
 </blockquote>
+<p><span style = "color:red"><strong>Spring AspectJ AOP实现提供了许多注释：</strong></span></p>
+<p><strong>@Aspect</strong> 将该类声明为方面。<br><strong>@Pointcut</strong> 声明切入点表达式。</p>
+<p>用于创建建议的注释如下:</p>
+<p><strong>@Before</strong> 声明before建议。在调用实际方法之前将其应用。<br><strong>@After</strong> 声明after建议。在调用实际方法之后并返回结果之前应用。<br><strong>@AfterReturning</strong> 声明返回建议之后。在调用实际方法之后并返回结果之前应用。但是您可以在建议中获得结果值。<br><strong>@Around</strong> 声明环绕建议。它在调用实际方法之前和之后应用。<br><strong>@AfterThrowing</strong> 声明了throws建议。如果实际方法引发异常，则应用此方法。</p>
 <h5 id="AOP配置过程"><a href="#AOP配置过程" class="headerlink" title="AOP配置过程"></a>AOP配置过程</h5><ul>
 <li>依赖AspectJ</li>
 <li>实现切面类&#x2F;方法</li>
@@ -2513,7 +2603,26 @@ public void printExecutionTime(JoinPoint joinPoint)&#123;
         &#125;
     &#125;
 </code></pre>
-<h3 id="PointCut切点表达式"><a href="#PointCut切点表达式" class="headerlink" title="PointCut切点表达式"></a>PointCut切点表达式</h3><blockquote>
+<h3 id="PointCut切点表达式-pointcut"><a href="#PointCut切点表达式-pointcut" class="headerlink" title="PointCut切点表达式 [@pointcut]"></a>PointCut切点表达式 [@pointcut]</h3><p>注释用于定义切入点。我们也可以通过名称引用切入点表达式</p>
+<pre><code class="java">@Pointcut(&quot;execution(* Operation.*(..))&quot;)
+private void doSomething() &#123;&#125;
+
+//它将应用于所有公共方法
+@Pointcut(&quot;execution(public * * (..))&quot;)
+
+//它将应用于Operation类的所有公共方法
+@Pointcut(&quot;execution(public Operation.*(..))&quot;)
+
+//它将应用于Operation类的所有方法
+@Pointcut(&quot;execution(* Operation.*(..))&quot;)
+
+//它将应用于Employee类的所有公共设置方法
+@Pointcut(&quot;execution(public Employee.set*(..))&quot;)
+
+//它将应用于所有返回int值的Operation类方法
+@Pointcut(&quot;execution(int Operation.*(..))&quot;)
+</code></pre>
+<blockquote>
 <p>​                   public void com.imooc.service.UserService.createUser(形参1,形参2,..)<br>  ​                    ↑         ↑             ↑                 ↑                 ↑                   ↑                  ↑</p>
 <p>execution(public   *     com.imooc       ..                 *       .           *       (          ..          ))<br>*通配符                            ..包通配符[包括所有后代查找]                            (..)参数通配符</p>
 <p>第一项public可以默认</p>
@@ -2570,6 +2679,9 @@ public void printExecutionTime(JoinPoint joinPoint)&#123;
     // @Before()   @After()   @AfterThrowing   @AfterReturning
     //ProceedingJoinPoint是JoinPoint的升级版,在原有功能外,还可以控制目标方法是否执行
 </code></pre>
+<p><span style = " color : red"><strong>用于创建建议的注释如下：</strong></span></p>
+<p><strong>@Before</strong> 声明before建议。在调用实际方法之前将其应用。<br><strong>@After</strong> 声明after建议。在调用实际方法之后并返回结果之前应用。<br><strong>@AfterReturning</strong> 声明返回建议之后。在调用实际方法之后并返回结果之前应用。但是您可以在建议中获得结果值。<br><strong>@Around</strong> 声明环绕建议。它在调用实际方法之前和之后应用。<br><strong>@AfterThrowing</strong> 声明了throws建议。如果实际方法引发异常，则应用此方法。</p>
+<p><span style = " color : red"><strong>让我们看看用于定义建议的xml元素：</strong></span><br><a target="_blank" rel="noopener" href="https://www.cainiaoplus.com/spring/spring-aop-aspectj-xml-configuration-example.html">Spring AOP AspectJ Xml配置示例 - Spring教程 - 菜鸟教程 (cainiaoplus.com)</a><br>**<code>aop: before </code>**在调用实际的业务逻辑方法之前应用。<br>**<code>aop: after </code>**在调用实际的业务逻辑方法之后应用。<br>**<code>aop: 返回后</code>**在调用实际的业务逻辑方法后应用。可用于拦截通知中的返回值。<br>**<code>aop: around </code>**在调用实际的业务逻辑方法之前和之后都将应用。<br>**<code>aop: 投掷后</code>**如果实际的业务逻辑方法抛出异常，则将其应用。</p>
 <h5 id="特殊的“通知”-引介增强"><a href="#特殊的“通知”-引介增强" class="headerlink" title="特殊的“通知” - 引介增强"></a>特殊的“通知” - 引介增强</h5><ul>
 <li>引介增强是对类的增强,而非方法</li>
 <li>引介增强允许再运行时为目标类增加新属性或方法</li>
@@ -2669,6 +2781,287 @@ public class SpringApplication &#123;
 &lt;----触发后置通知
 Exception in thread &quot;main&quot; java.lang.RuntimeException: 用户已存在
     
+</code></pre>
+<hr>
+<hr>
+<h5 id="Before示例"><a href="#Before示例" class="headerlink" title="@Before示例"></a>@Before示例</h5><p>在实际业务逻辑方法之前应用AspectJ Before Advice。您可以在此处执行任何操作，例如转换，身份验证等。</p>
+<p>创建一个包含实际业务逻辑的类</p>
+<pre><code class="java">Operation.java
+package com.nhooo;
+public  class Operation&#123;
+    public void msg()&#123;System.out.println(&quot;msg method invoked&quot;);&#125;
+    public int m()&#123;System.out.println(&quot;m method invoked&quot;);return 2;&#125;
+    public int k()&#123;System.out.println(&quot;k method invoked&quot;);return 3;&#125;
+&#125;
+</code></pre>
+<p>现在，创建包含在建议之前的方面类</p>
+<pre><code class="java">TrackOperation.java
+package com.nhooo;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+@Aspect
+public class TrackOperation&#123;
+    //它将应用于Operation类的所有方法。
+    @Pointcut(&quot;execution(* Operation.*(..))&quot;)
+    public void k()&#123;&#125;//pointcut name
+    
+    @Before(&quot;k()&quot;)//在before通知上应用切入点
+    public void myadvice(JoinPoint jp)//it is advice (before advice)
+    &#123;
+        System.out.println(&quot;additional concern&quot;);
+        //System.out.println(&quot;Method Signature: &quot;  + jp.getSignature());
+    &#125;
+&#125;
+</code></pre>
+<p>现在创建定义bean的applicationContext.xml文件</p>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot; 
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans.xsd 
+       http://www.springframework.org/schema/aop 
+       http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;bean id=&quot;opBean&quot; class=&quot;com.nhooo.Operation&quot;&gt;    &lt;/bean&gt;
+    &lt;bean id=&quot;trackMyBean&quot; class=&quot;com.nhooo.TrackOperation&quot;&gt;&lt;/bean&gt;
+    &lt;bean class=&quot;org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator&quot;&gt;&lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<p>现在，让我们称为实际方法</p>
+<pre><code class="java">Test.java
+package com.nhooo;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class Test&#123;
+    public static void main(String[] args)&#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);
+        Operation e = (Operation) context.getBean(&quot;opBean&quot;);
+        System.out.println(&quot;calling msg...&quot;);
+        e.msg();
+        System.out.println(&quot;calling m...&quot;);
+        e.m();
+        System.out.println(&quot;calling k...&quot;);
+        e.k();
+    &#125;
+&#125;
+
+===========================================================================
+calling msg...
+additional concern
+msg() method invoked
+calling m...
+additional concern
+m() method invoked
+calling k...
+additional concern
+k() method invoked
+</code></pre>
+<h5 id="apo-before示例"><a href="#apo-before示例" class="headerlink" title="apo:before示例"></a>apo:before示例</h5><p>在实际业务逻辑方法之前应用”先行AspectJ建议”。您可以在此处执行任何操作，例如转换，身份验证等。<br>创建一个包含实际业务逻辑的类</p>
+<pre><code class="java">Operation.java
+package com.nhooo;
+public  class Operation&#123;
+    public void msg()&#123;System.out.println(&quot;msg method invoked&quot;);&#125;
+    public int m()&#123;System.out.println(&quot;m method invoked&quot;);return 2;&#125;
+    public int k()&#123;System.out.println(&quot;k method invoked&quot;);return 3;&#125;
+&#125;
+</code></pre>
+<p>现在，创建包含在建议之前的方面类</p>
+<pre><code class="java">TrackOperation.java
+package com.nhooo;
+import org.aspectj.lang.JoinPoint;
+public class TrackOperation&#123;
+    public void myadvice(JoinPoint jp)//it is advice
+    &#123;
+        System.out.println(&quot;additional concern&quot;);
+        //System.out.println(&quot;Method Signature: &quot;  + jp.getSignature());
+    &#125;
+&#125;
+</code></pre>
+<p>现在创建定义bean的applicationContext.xml文件</p>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; 
+    xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+    xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd &quot;&gt;
+&lt;aop:aspectj-autoproxy /&gt;
+&lt;bean id=&quot;opBean&quot; class=&quot;com.nhooo.Operation&quot;&gt;    &lt;/bean&gt;
+&lt;bean id=&quot;trackAspect&quot; class=&quot;com.nhooo.TrackOperation&quot;&gt;&lt;/bean&gt;
+        
+&lt;aop:config&gt;
+  &lt;aop:aspect id=&quot;myaspect&quot; ref=&quot;trackAspect&quot; &gt;
+     &lt;!-- @Before --&gt;
+     &lt;aop:pointcut id=&quot;pointCutBefore&quot;    expression=&quot;execution(* com.nhooo.Operation.*(..))&quot; /&gt;
+     &lt;aop:before method=&quot;myadvice&quot; pointcut-ref=&quot;pointCutBefore&quot; /&gt;
+  &lt;/aop:aspect&gt;
+&lt;/aop:config&gt;
+    
+&lt;/beans&gt;
+</code></pre>
+<p>现在，让我们称为实际方法</p>
+<pre><code class="java">Test.java
+package com.nhooo;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class Test&#123;
+    public static void main(String[] args)&#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);
+        Operation e = (Operation) context.getBean(&quot;opBean&quot;);
+        System.out.println(&quot;calling msg...&quot;);
+        e.msg();
+        System.out.println(&quot;calling m...&quot;);
+        e.m();
+        System.out.println(&quot;calling k...&quot;);
+        e.k();
+    &#125;
+&#125;
+
+===================================================================
+calling msg...
+additional concern
+msg() method invoked
+calling m...
+additional concern
+m() method invoked
+calling k...
+additional concern
+k() method invoked
+</code></pre>
+<p>如您所见，在调用msg()，m()和k()方法之前，还会打印出其他问题。</p>
+<hr>
+<hr>
+<h5 id="After示例"><a href="#After示例" class="headerlink" title="@After示例"></a>@After示例</h5><p>在调用实际的业务逻辑方法之后，应用了after建议之后的AspectJ。它可以用来维护日志，安全性，通知等。<br>在这里，我们假设 <strong>Operation.java</strong> ， <strong>applicationContext.xml</strong> 和 <strong>Test.java</strong> 文件与@Before示例中给出的文件相同。</p>
+<pre><code class="java">TrackOperation.Java
+package com.nhooo;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.Pointcut;
+@Aspect
+public class TrackOperation&#123;
+    @Pointcut(&quot;execution(* Operation.*(..))&quot;)
+    public void k()&#123;&#125;//pointcut name
+    
+    @After(&quot;k()&quot;)//applying pointcut on after advice
+    public void myadvice(JoinPoint jp)//it is advice (after advice)
+    &#123;
+        System.out.println(&quot;additional concern&quot;);
+        //System.out.println(&quot;Method Signature: &quot;  + jp.getSignature());
+    &#125;
+&#125;
+
+===============================================================
+calling msg...
+msg() method invoked
+additional concern
+calling m...
+m() method invoked
+additional concern
+calling k...
+k() method invoked
+additional concern
+</code></pre>
+<h5 id="aop-after示例"><a href="#aop-after示例" class="headerlink" title="aop:after示例"></a>aop:after示例</h5><p>在调用实际的业务逻辑方法之后，应用了通知之后的AspectJ。它可用于维护日志，安全性，通知等。<br>在这里，我们假设 **<code>Operation.java </code>**， **<code>TrackOperation.java </code>**和 **<code>Test.java </code>**文件与aop:before 中的示例相同。<br>现在创建定义bean的applicationContext.xml文件。</p>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; 
+    xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+    xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd &quot;&gt;
+&lt;aop:aspectj-autoproxy /&gt;
+&lt;bean id=&quot;opBean&quot; class=&quot;com.nhooo.Operation&quot;&gt;    &lt;/bean&gt;
+&lt;bean id=&quot;trackAspect&quot; class=&quot;com.nhooo.TrackOperation&quot;&gt;&lt;/bean&gt;
+        
+&lt;aop:config&gt;
+  &lt;aop:aspect id=&quot;myaspect&quot; ref=&quot;trackAspect&quot; &gt;
+     &lt;!-- @After --&gt;
+     &lt;aop:pointcut id=&quot;pointCutAfter&quot;    expression=&quot;execution(* com.nhooo.Operation.*(..))&quot; /&gt;
+     &lt;aop:after method=&quot;myadvice&quot; pointcut-ref=&quot;pointCutAfter&quot; /&gt;
+  &lt;/aop:aspect&gt;
+&lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<blockquote>
+<pre><code class="java">calling msg...
+msg() method invoked
+additional concern
+calling m...
+m() method invoked
+additional concern
+calling k...
+k() method invoked
+additional concern
+</code></pre>
+<p>您可以看到在调用msg()，m()和k()方法之后，还会出现其他问题。</p>
+</blockquote>
+<hr>
+<hr>
+<h5 id="AfterReturning示例"><a href="#AfterReturning示例" class="headerlink" title="@AfterReturning示例"></a>@AfterReturning示例</h5><p>通过在<strong>返回建议后</strong>使用，我们可以在建议中获得结果。创建包含以下内容的类业务逻辑。</p>
+<pre><code class="java">Operation.java
+package com.nhooo;
+public  class Operation&#123;
+    public int m()&#123;System.out.println(&quot;m() method invoked&quot;);return 2;&#125;
+    public int k()&#123;System.out.println(&quot;k() method invoked&quot;);return 3;&#125;
+&#125;
+</code></pre>
+<p>创建返回建议后包含的方面类</p>
+<pre><code class="java">TrackOperation.java
+package com.nhooo;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Aspect;
+@Aspect
+public class TrackOperation&#123;
+    @AfterReturning(pointcut = &quot;execution(* Operation.*(..))&quot;, returning= &quot;result&quot;)
+    
+    public void myadvice(JoinPoint jp,Object result)  //it is advice (after returning advice)
+    &#123;
+        System.out.println(&quot;additional concern&quot;);
+        System.out.println(&quot;Method Signature: &quot;  + jp.getSignature());
+        System.out.println(&quot;Result in advice: &quot;+result);
+        System.out.println(&quot;end of after returning advice...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>文件: applicationContext.xml    与@Before建议示例中给出的</p>
+<p>文件: Test.java   现在创建调用实际方法的Test类。</p>
+<pre><code class="java">Test.java
+package com.nhooo;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class Test&#123;
+    public static void main(String[] args)&#123;
+        ApplicationContext context = new ClassPathXmlApplicationContext(&quot;applicationContext.xml&quot;);
+        Operation e = (Operation) context.getBean(&quot;opBean&quot;);
+        System.out.println(&quot;calling m...&quot;);
+        System.out.println(e.m());
+        System.out.println(&quot;calling k...&quot;);
+        System.out.println(e.k());
+    &#125;
+&#125;
+================================================================
+calling m...
+m() method invoked
+additional concern
+Method Signature: int com.nhooo.Operation.m()
+Result in advice: 2
+end of after returning advice...
+2
+calling k...
+k() method invoked
+additional concern
+Method Signature: int com.nhooo.Operation.k()
+Result in advice: 3
+end of after returning advice...
+3
 </code></pre>
 <h3 id="环绕通知-public-Object-check-ProceedingJoinPoint-pjp"><a href="#环绕通知-public-Object-check-ProceedingJoinPoint-pjp" class="headerlink" title="环绕通知 [public Object check(ProceedingJoinPoint pjp)]"></a>环绕通知 [public Object check(ProceedingJoinPoint pjp)]</h3><h5 id="利用AOP进行方法性能筛查-筛查哪个实现时间长-可以进行代码优化"><a href="#利用AOP进行方法性能筛查-筛查哪个实现时间长-可以进行代码优化" class="headerlink" title="利用AOP进行方法性能筛查 [筛查哪个实现时间长 可以进行代码优化]"></a>利用AOP进行方法性能筛查 [筛查哪个实现时间长 可以进行代码优化]</h5><pre><code class="java">dao/UserDao.java
 package com.imooc.spring.aop.dao;
@@ -2852,6 +3245,61 @@ public class SpringApplication &#123;
 =======2024-01-12 13:52:41 475:com.imooc.spring.aop.service.UserService.createUser(3010ms)======
 
 Process finished with exit code 0
+</code></pre>
+<hr>
+<hr>
+<h3 id="Around示例"><a href="#Around示例" class="headerlink" title="@Around示例"></a>@Around示例</h3><p>围绕通知的AspectJ在调用实际的业务逻辑方法之前和之后都得到应用。在这里，我们是假设  <strong>applicationContext.xml</strong> 文件与@Before示例中给出的文件相同。创建一个包含实际业务逻辑的类。</p>
+<pre><code class="java">Operation.java
+package com.nhooo;
+public class Operation&#123;
+    public void msg()&#123;System.out.println(&quot;msg() is invoked&quot;);&#125;
+    public void display()&#123;System.out.println(&quot;display() is invoked&quot;);&#125;
+&#125;
+</code></pre>
+<p>创建包含围绕建议的方面类。您需要在advice方法中传递  <strong>PreceedingJoinPoint</strong> 引用，以便我们可以通过调用proce来进行请求()方法。文件: TrackOperation.java</p>
+<pre><code class="java">TrackOperation.java
+package com.nhooo;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+@Aspect
+public class TrackOperation
+&#123;
+    @Pointcut(&quot;execution(* Operation.*(..))&quot;)
+    public void abcPointcut()&#123;&#125;
+    
+    @Around(&quot;abcPointcut()&quot;)
+    public Object myadvice(ProceedingJoinPoint pjp) throws Throwable 
+    &#123;
+        System.out.println(&quot;Additional Concern Before calling actual method&quot;);
+        Object obj=pjp.proceed();
+        System.out.println(&quot;Additional Concern After calling actual method&quot;);
+        return obj;
+    &#125;
+&#125;
+</code></pre>
+<p>现在创建调用实际方法的Test类。</p>
+<pre><code class="java">Test.java
+package com.nhooo;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class Test&#123;
+    public static void main(String[] args)&#123;
+        ApplicationContext context = new classPathXmlApplicationContext(&quot;applicationContext.xml&quot;);
+        Operation op = (Operation) context.getBean(&quot;opBean&quot;);
+        op.msg();
+        op.display();
+    &#125;
+&#125;
+
+================================================================
+Additional Concern Before calling actual method
+msg() is invoked
+Additional Concern After calling actual method
+Additional Concern Before calling actual method
+display() is invoked
+Additional Concern After calling actual method
 </code></pre>
 <h3 id="基于注解配置Spring-AOP"><a href="#基于注解配置Spring-AOP" class="headerlink" title="基于注解配置Spring AOP"></a>基于注解配置Spring AOP</h3><pre><code class="java">aspect/MethodChecher.java
 package com.imooc.spring.aop.aspect;
@@ -3254,6 +3702,38 @@ Process finished with exit code 0
 <li><p>在Dao注入<code>JdbcTemplate</code>对象, 实现数据CRUD</p>
 </li>
 </ul>
+<h2 id="JdbcTemplate类"><a href="#JdbcTemplate类" class="headerlink" title="JdbcTemplate类"></a>JdbcTemplate类</h2><h6 id="Spring-JdbcTemplate类的方法"><a href="#Spring-JdbcTemplate类的方法" class="headerlink" title="Spring JdbcTemplate类的方法"></a>Spring JdbcTemplate类的方法</h6><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public int update(String query)</td>
+<td>用于插入，更新和删除记录。</td>
+</tr>
+<tr>
+<td>public int update(String query，Object … args)</td>
+<td>用于通过使用给定参数的PreparedStatement插入，更新和删除记录。</td>
+</tr>
+<tr>
+<td>public void execute(String query)</td>
+<td>用于执行DDL查询。</td>
+</tr>
+<tr>
+<td>public T execute(String sql, PreparedStatementCallback action)</td>
+<td>通过使用PreparedStatement回调执行查询。</td>
+</tr>
+<tr>
+<td>public T query(String sql, ResultSetExtractor rse)</td>
+<td>用于使用ResultSetExtractor获取记录。</td>
+</tr>
+<tr>
+<td>public List query(String sql, RowMapper rse)</td>
+<td>用于使用RowMapper获取记录。</td>
+</tr>
+</tbody></table>
 <h3 id="JdbcTemplate实现增删改查"><a href="#JdbcTemplate实现增删改查" class="headerlink" title="JdbcTemplate实现增删改查"></a>JdbcTemplate实现增删改查</h3><pre><code class="xml">pom.xml
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
@@ -4791,7 +5271,6 @@ public class JdbcTemplateTestor &#123;
     public void testStartImportJob()&#123;
         employeeService.startImportJob();
     &#125;
-
 &#125;
 </code></pre>
 
@@ -4808,7 +5287,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5016,7 +5495,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -6723,7 +7202,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -9828,7 +10307,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -11797,7 +12276,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -14512,7 +14991,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -16879,7 +17358,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -19574,7 +20053,7 @@ public class PaintingDao&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
