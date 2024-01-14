@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -2494,7 +2494,7 @@ public void printExecutionTime(JoinPoint joinPoint)&#123;
     &#125;
 </code></pre>
 <h3 id="PointCut切点表达式"><a href="#PointCut切点表达式" class="headerlink" title="PointCut切点表达式"></a>PointCut切点表达式</h3><blockquote>
-<p>​                   public void com.imooc.service.UserService.createUser(形参1,形参2,..)<br>                      ↑         ↑             ↑                 ↑                 ↑                   ↑                  ↑</p>
+<p>​                   public void com.imooc.service.UserService.createUser(形参1,形参2,..)<br>  ​                    ↑         ↑             ↑                 ↑                 ↑                   ↑                  ↑</p>
 <p>execution(public   *     com.imooc       ..                 *       .           *       (          ..          ))<br>*通配符                            ..包通配符[包括所有后代查找]                            (..)参数通配符</p>
 <p>第一项public可以默认</p>
 </blockquote>
@@ -3552,6 +3552,1227 @@ JdbcTemplateTestor.java
     &#125;
 =========================================================
 本次删除1条数据
+</code></pre>
+<h3 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h3><ul>
+<li>事务式以一种可靠、一致的方法，访问和操作数据库的程序单元</li>
+<li>说人话：要么把事情做完，要么什么都不做，不要做一半</li>
+<li>事务依赖于数据库实现，MySQL通过<strong>事务区</strong>作为数据缓冲地带</li>
+</ul>
+<h3 id="编程式事务-手动控制啥时候提交-啥时候回滚"><a href="#编程式事务-手动控制啥时候提交-啥时候回滚" class="headerlink" title="编程式事务 [手动控制啥时候提交 啥时候回滚]"></a>编程式事务 [手动控制啥时候提交 啥时候回滚]</h3><ul>
+<li>编程式事务是指通过代码手动提交回滚事务的事务控制方法</li>
+<li>SpringJDBC通过TransactionManager事务管理器实现事务控制</li>
+<li>事务管理器提供commit&#x2F;rollback方法进行事务提交与回滚</li>
+</ul>
+<blockquote>
+<p>S1需求：公司来了10名新员工 批量导入员工表中 (要么什么都不做，要么把事情做完) 【类似银行存钱】</p>
+</blockquote>
+<pre><code class="java">com/imooc/spring/jdbc/service/EmployeeService.java
+package com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+
+import java.util.Date;
+
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    public void bathImport()&#123;
+        for (int i = 0; i &lt; 10; i++) &#123;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+
+
+
+applicationContext.xml
+&lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.jdbc.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+    &lt;/bean&gt;
+
+    
+
+JdbcTemplateTestor.java
+@Resource
+    private EmployeeService employeeService;
+@Test
+    public void testBatchImport()&#123;
+        employeeService.bathImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+此方法是一条一条的增加写入sql操作
+09:47:33.565 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - Executing prepared SQL update
+09:47:33.565 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - Executing prepared SQL statement [insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)]
+09:47:33.567 [main] DEBUG org.springframework.jdbc.datasource.DataSourceUtils - Fetching JDBC Connection from DataSource
+09:47:33.567 [main] DEBUG org.springframework.jdbc.datasource.DriverManagerDataSource - Creating new JDBC DriverManager Connection to [jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true]
+09:47:33.684 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - SQLWarning ignored: SQL state &#39;22007&#39;, error code &#39;1292&#39;, message [Incorrect date value: &#39;2024-01-14 09:47:33.564&#39; for column &#39;hiredate&#39; at row 1]
+09:47:33.690 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - Executing prepared SQL update
+09:47:33.690 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - Executing prepared SQL statement [insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)]
+09:47:33.690 [main] DEBUG org.springframework.jdbc.datasource.DataSourceUtils - Fetching JDBC Connection from DataSource
+09:47:33.690 [main] DEBUG org.springframework.jdbc.datasource.DriverManagerDataSource - Creating new JDBC DriverManager Connection to [jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true]
+09:47:33.695 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - SQLWarning ignored: SQL state &#39;22007&#39;, error code &#39;1292&#39;, message [Incorrect date value: &#39;2024-01-14 09:47:33.69&#39; for column &#39;hiredate&#39; at row 1]
+09:47:33.695 [main] DEBUG org.springframework.jdbc.core.JdbcTemplate - Executing prepared SQL update
+</code></pre>
+<hr>
+<hr>
+<h3 id="编程式事务-2-放入事务区统一管理"><a href="#编程式事务-2-放入事务区统一管理" class="headerlink" title="编程式事务-2 [放入事务区统一管理]"></a>编程式事务-2 [放入事务区统一管理]</h3><pre><code class="java">com/imooc/spring/jdbc/service/EmployeeService.java
+package com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
+import java.util.Date;
+
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    private DataSourceTransactionManager transactionManager;
+    public void bathImport()&#123;
+        //定义了事务默认的标准配置
+        TransactionDefinition definition = new DefaultTransactionDefinition();
+        //开始一个事务 放在事务区中统一进行管理
+        TransactionStatus status = transactionManager.getTransaction(definition);
+
+        try &#123;
+            for (int i = 0; i &lt; 10; i++) &#123;
+                if (i==3)&#123;
+                    throw new RuntimeException(&quot;意料之外的异常&quot;);
+                &#125;
+                Employee employee = new Employee();
+                employee.setEno(8010 + i);
+                employee.setEname(&quot;员工&quot; + i);
+                employee.setSalary(4000f);
+                employee.setDname(&quot;市场部&quot;);
+                employee.setHiredate(new Date());
+                employeeDao.insert(employee);
+            &#125;
+            //提交事务
+            transactionManager.commit(status);
+        &#125; catch (Exception e) &#123;
+            //回滚事务
+            transactionManager.rollback(status);
+            e.printStackTrace();
+        &#125;
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+
+    public DataSourceTransactionManager getTransactionManager() &#123;
+        return transactionManager;
+    &#125;
+
+    public void setTransactionManager(DataSourceTransactionManager transactionManager) &#123;
+        this.transactionManager = transactionManager;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;!-- 数据源设置：使用哪种服务器 哪种数据源 账号密码是什么 --&gt;
+    &lt;bean id=&quot;dataSource&quot; class=&quot;org.springframework.jdbc.datasource.DriverManagerDataSource&quot;&gt;
+        &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+        &lt;property name=&quot;url&quot;
+                  value=&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+        &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+        &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!--    创建数据库连接 找数据源    JdbcTemplate提供数据CRUD的API--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.jdbc.dao.EmployeeDao&quot;&gt;
+        &lt;!--    为Dao注入JdbcTemplate对象 --&gt;
+        &lt;property name=&quot;jdbcTemplate&quot; ref=&quot;jdbcTemplate&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.jdbc.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+&lt;!--     将属性进行注入 要添加其getter setter--&gt;
+        &lt;property name=&quot;transactionManager&quot; ref=&quot;transactionManager&quot;/&gt;
+    &lt;/bean&gt;
+
+&lt;!--    事务管理器 数据源  [整体提交以及回滚] 需要控制的类中注入bean id=&quot;transactionManager&quot; --&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;&gt;&lt;/property&gt;
+    &lt;/bean&gt;
+
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">JdbcTemplateTestor.java
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import com.imooc.spring.jdbc.service.EmployeeService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+import java.util.Date;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class JdbcTemplateTestor &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Resource
+    private EmployeeService employeeService;
+
+    @Test
+    public void testFindById() &#123;
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+    &#125;
+
+    @Test
+    public void testFindByDname() &#123;
+        System.out.println(employeeDao.findByDname(&quot;市场部&quot;));
+    &#125;
+
+    @Test
+    public void testFindMapByDname() &#123;
+        System.out.println(employeeDao.findMapByDname(&quot;研发部&quot;));
+    &#125;
+
+    @Test
+    public void testinsert() &#123;
+        Employee employee = new Employee();
+        employee.setEno(8888);
+        employee.setEname(&quot;赵六&quot;);
+        employee.setSalary(6666f);
+        employee.setDname(&quot;研发部&quot;);
+        employee.setHiredate(new Date());
+        employeeDao.insert(employee);
+    &#125;
+
+    @Test
+    public void testUpdate() &#123;
+        Employee employee = employeeDao.findById(8888);
+        employee.setSalary(employee.getSalary() + 1000);
+        int count = employeeDao.update(employee);
+        System.out.println(&quot;本次更新&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void testDelete() &#123;
+        int count = employeeDao.delete(8888);
+        System.out.println(&quot;本次删除&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void testBatchImport()&#123;
+        employeeService.bathImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+&#125;
+
+========================================================
+都是在一个数据库连接里操作的
+10:01:16.165 [main] DEBUG org.springframework.jdbc.datasource.DataSourceTransactionManager - Initiating transaction rollback
+10:01:16.165 [main] DEBUG org.springframework.jdbc.datasource.DataSourceTransactionManager - Rolling back JDBC transaction on Connection [com.mysql.cj.jdbc.ConnectionImpl@c88a337]
+10:01:16.166 [main] DEBUG org.springframework.jdbc.datasource.DataSourceTransactionManager - Releasing JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@c88a337] after transaction
+java.lang.RuntimeException: 意料之外的异常
+    at com.imooc.spring.jdbc.service.EmployeeService.bathImport(EmployeeService.java:24)
+    at JdbcTemplateTestor.testBatchImport(JdbcTemplateTestor.java:63)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:498)
+    at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+    at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+    at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+    at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+</code></pre>
+<p>★★★ 编程式事务 ★★★<br>优点：容易理解 编程快<br>缺点：容易受到人为因素影响 结果致命</p>
+<h3 id="声明式事务"><a href="#声明式事务" class="headerlink" title="声明式事务"></a>声明式事务</h3><ul>
+<li>声明式事务指在<strong>不修改源代码</strong>情况下通过配置形式自动实现事务控制, 声明式事务本质就是AOP环绕通知</li>
+<li>当目标方法执行成功时, 自动提交事务</li>
+<li>当目标方法抛出运行异常时, 自动事务回滚</li>
+</ul>
+<h5 id="配置过程"><a href="#配置过程" class="headerlink" title="配置过程"></a>配置过程</h5><ul>
+<li>配置TransactionManager事务管理器</li>
+<li>配置事务通知与事务属性</li>
+<li>为事务通知绑定PointCut切点</li>
+</ul>
+<blockquote>
+<p>需求：在不修改原始代码的情况下 配置Service里面的声明式事务</p>
+</blockquote>
+<pre><code class="xml">pom.xml
+&lt;!--logback日志组件,Spring框架默认集成--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+            &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+            &lt;version&gt;1.9.5&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;!--    1-3具体含义：当我们目标方法是imooc包下Service 且方法名为batchImport的时候 则认为当前方法需要使用事务--&gt;
+&lt;!--    利用transactionManager来完成对事务的提交以及回滚--&gt;
+
+    &lt;!-- 1.事务管理器,用于创建事务/提交/回滚 --&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;!--2.事务通知配置,决定哪些方法使用事务,哪些方法不使用事务 advice是通知--&gt;
+    &lt;tx:advice id=&quot;txAdvice&quot; transaction-manager=&quot;transactionManager&quot;&gt;
+        &lt;tx:attributes&gt;
+ &lt;!-- ★★★★ 目标方法名为batchImport时,启用声明式事务,成功提交,运行时异常回滚 propagation=&quot;REQUIRED&quot;需要使用  propagation是事务传播行为★★★★--&gt;
+            &lt;tx:method name=&quot;batchImport&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;tx:method name=&quot;batch*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;!-- 设置所有findXXX方法不需要使用事务 不支持事务--&gt;
+            &lt;tx:method name=&quot;find*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+            &lt;tx:method name=&quot;get*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+            &lt;tx:method name=&quot;*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+        &lt;/tx:attributes&gt;
+    &lt;/tx:advice&gt;
+
+    &lt;!--3. 定义声明式事务的作用范围--&gt;
+    &lt;aop:config&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(..))&quot;/&gt;
+        &lt;aop:advisor advice-ref=&quot;txAdvice&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">EmployeeService.java
+vpackage com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+
+import java.util.Date;
+
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    private BatchService batchService;
+
+    public void batchImport() &#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            //注意噢 这里是被注释的
+//            if(i==3)&#123;
+//                throw new RuntimeException(&quot;意料之外的异常&quot;);
+//            &#125;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+
+    public BatchService getBatchService() &#123;
+        return batchService;
+    &#125;
+
+    public void setBatchService(BatchService batchService) &#123;
+        this.batchService = batchService;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">EmployeeDao.java 未改变
+</code></pre>
+<pre><code class="java">JdbcTemplateTestor.java
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import com.imooc.spring.jdbc.service.EmployeeService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+import java.util.Date;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class JdbcTemplateTestor &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Resource
+    private EmployeeService employeeService;
+
+    @Test
+    public void testFindById()&#123;
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+    &#125;
+
+    @Test
+    public void testFindByDname()&#123;
+        System.out.println(employeeDao.findByDname(&quot;市场部&quot;));
+    &#125;
+
+    @Test
+    public void testFindMapByDname()&#123;
+        System.out.println(employeeDao.findMapByDname(&quot;研发部&quot;));
+    &#125;
+
+    @Test
+    public void testInsert()&#123;
+        Employee employee = new Employee();
+        employee.setEno(8888);
+        employee.setEname(&quot;赵六&quot;);
+        employee.setSalary(6666f);
+        employee.setDname(&quot;研发部&quot;);
+        employee.setHiredate(new Date());
+        employeeDao.insert(employee);
+    &#125;
+
+    @Test
+    public void  testUpdate()&#123;
+        Employee employee = employeeDao.findById(8888);
+        employee.setSalary(employee.getSalary() + 1000);
+        int count = employeeDao.update(employee);
+        System.out.println(&quot;本次更新&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void  testDelete()&#123;
+        int count = employeeDao.delete(8888);
+        System.out.println(&quot;本次删除&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void testBatchImport()&#123;
+        employeeService.batchImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+    @Test
+    public void testStartImportJob()&#123;
+        employeeService.startImportJob();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="事务传播行为【面试】"><a href="#事务传播行为【面试】" class="headerlink" title="事务传播行为【面试】"></a>事务传播行为【面试】</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/dfcdce285d42fc77d69cb614b61e298b10a7252a/data/%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E8%A1%8C%E4%B8%BA%E4%B8%83%E7%A7%8D%E7%B1%BB%E5%9E%8B.jpg"></p>
+<ul>
+<li>事务传播行为是指多个拥有事务的方法在嵌套调用时的事务控制方式</li>
+<li><code>XML:&lt;tx:method name=&quot;...&quot; propagation=&quot;REQUIRED&quot;/&gt;</code></li>
+<li>注解: <code>@Transactional(propagation=Propagation.REQUIRED)</code></li>
+</ul>
+<blockquote>
+<p>加个BatchService 然后在EmployeeService加一个private BatchService batchService;(getter + setter)  再次插入一个public void startImportJob()<br>进行applicationContext.xml的bean注入<br><bean id="batchService" class="com.imooc.spring.jdbc.service.BatchService"><br>    <property name="employeeDao" ref="employeeDao"/><br></bean></p>
+<bean id="employeeService" class="com.imooc.spring.jdbc.service.EmployeeService">
+    <property name="employeeDao" ref="employeeDao"/>
+    <property name="batchService" ref="batchService"/>
+</bean>
+
+<p>会被声明式事务范围包裹噢<br>&lt;aop:pointcut id&#x3D;”pointcut” expression&#x3D;”execution(* com.imooc..*Service.*(..))”&#x2F;&gt;</p>
+<pre><code class="java">applicationContext.xml
+加入 importJob1 importJob2
+&lt;tx:advice id=&quot;txAdvice&quot; transaction-manager=&quot;transactionManager&quot;&gt;
+        &lt;tx:attributes&gt;
+            &lt;!-- 目标方法名为batchImport时,启用声明式事务,成功提交,运行时异常回滚 propagation=&quot;REQUIRED&quot;需要使用--&gt;
+            &lt;tx:method name=&quot;batchImport&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;tx:method name=&quot;batch*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;!-- 设置所有findXXX方法不需要使用事务 --&gt;
+            &lt;tx:method name=&quot;find*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+            &lt;tx:method name=&quot;get*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+
+            &lt;tx:method name=&quot;importJob1&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+            &lt;tx:method name=&quot;importJob2&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+            &lt;tx:method name=&quot;*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+        &lt;/tx:attributes&gt;
+    &lt;/tx:advice&gt;
+</code></pre>
+<p>补充public void startImportJob()</p>
+<pre><code class="java">public void startImportJob()&#123;
+    //会有关联行为 若2失败则无法导入 1也会回滚
+        batchService.importJob1();
+        if(1==1)&#123;
+            throw new RuntimeException(&quot;意料之外的异常&quot;);
+        &#125;
+        batchService.importJob2();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+//方法： REQUIRES_NEW 不同方法运行在不同事务中 
+//事务1开始 事务1挂起事务2开始 事务2提交 事务1恢复 事务1挂起事务3开始 事务3提交事务1恢复 事务1提交
+             &lt;tx:method name=&quot;importJob1&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+            &lt;tx:method name=&quot;importJob2&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+上面的分这写
+</code></pre>
+</blockquote>
+<pre><code class="java">com/imooc/spring/jdbc/service/BatchService.java
+package com.imooc.spring.jdbc.service;
+ 
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+
+import java.util.Date;
+public class BatchService &#123;
+
+    private EmployeeDao employeeDao;
+
+    public void importJob1()&#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;研发部员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;研发部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public void importJob2()&#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            Employee employee = new Employee();
+            employee.setEno(9000 + i);
+            employee.setEname(&quot;市场部员工&quot; + i);
+            employee.setSalary(4500f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/service/EmployeeService.java
+package com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+
+import java.util.Date;
+
+public class EmployeeService &#123;
+    private EmployeeDao employeeDao;
+    private BatchService batchService;
+
+    public void batchImport() &#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+//            if(i==3)&#123;
+//                throw new RuntimeException(&quot;意料之外的异常&quot;);
+//            &#125;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public void startImportJob()&#123;
+        batchService.importJob1();
+        if(1==1)&#123;
+            throw new RuntimeException(&quot;意料之外的异常&quot;);
+        &#125;
+        batchService.importJob2();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+
+    public BatchService getBatchService() &#123;
+        return batchService;
+    &#125;
+
+    public void setBatchService(BatchService batchService) &#123;
+        this.batchService = batchService;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/dao/EmployeeDao.java
+package com.imooc.spring.jdbc.dao;
+
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+public class EmployeeDao &#123;
+    private JdbcTemplate jdbcTemplate;
+
+    public Employee findById(Integer eno)&#123;
+        String sql = &quot;select * from employee where eno = ?&quot;;
+        //查询单条数据
+        Employee employee = jdbcTemplate.queryForObject(sql, new Object[]&#123;eno&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return employee;
+    &#125;
+
+    public List&lt;Employee&gt; findByDname(String dname)&#123;
+        String sql = &quot;select * from employee where dname = ?&quot;;
+        //查询复合数据
+        List&lt;Employee&gt; list = jdbcTemplate.query(sql, new Object[]&#123;dname&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return list;
+    &#125;
+
+    public List&lt;Map&lt;String, Object&gt;&gt; findMapByDname(String dname)&#123;
+        String sql = &quot;select eno as empno , salary as s from employee where dname = ?&quot;;
+        //将查询结果作为Map进行封装
+        List&lt;Map&lt;String, Object&gt;&gt; maps = jdbcTemplate.queryForList(sql, new Object[]&#123;dname&#125;);
+        return maps;
+    &#125;
+
+    public void insert(Employee employee)&#123;
+        String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)&quot;;
+        //利用update方法实现数据写入操作
+        jdbcTemplate.update(sql,new Object[]&#123;
+           employee.getEno() , employee.getEname(),employee.getSalary(),employee.getDname() , employee.getHiredate()
+        &#125;);
+    &#125;
+
+    public int update(Employee employee)&#123;
+        String sql = &quot;UPDATE employee SET ename = ?, salary = ?, dname = ?, hiredate = ? WHERE eno = ?&quot;;
+        int count = jdbcTemplate.update(sql, new Object[]&#123;employee.getEname(), employee.getSalary(), employee.getDname(), employee.getHiredate(), employee.getEno()&#125;);
+        return count;
+    &#125;
+
+    public int delete(Integer eno)&#123;
+        String sql = &quot;delete from employee where eno = ?&quot;;
+        return jdbcTemplate.update(sql, new Object[]&#123;eno&#125;);
+    &#125;
+
+
+    public JdbcTemplate getJdbcTemplate() &#123;
+        return jdbcTemplate;
+    &#125;
+
+    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) &#123;
+        this.jdbcTemplate = jdbcTemplate;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:tx=&quot;http://www.springframework.org/schema/tx&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        https://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;!-- 数据源 --&gt;
+    &lt;bean id=&quot;dataSource&quot; class=&quot;org.springframework.jdbc.datasource.DriverManagerDataSource&quot;&gt;
+        &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+        &lt;property name=&quot;url&quot;
+                  value=&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+        &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+        &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!--JdbcTemplate提供数据CRUD的API--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;employeeDao&quot; class=&quot;com.imooc.spring.jdbc.dao.EmployeeDao&quot;&gt;
+        &lt;!--为Dao注入JdbcTemplate对象--&gt;
+        &lt;property name=&quot;jdbcTemplate&quot; ref=&quot;jdbcTemplate&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;employeeService&quot; class=&quot;com.imooc.spring.jdbc.service.EmployeeService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+        &lt;property name=&quot;batchService&quot; ref=&quot;batchService&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id=&quot;batchService&quot; class=&quot;com.imooc.spring.jdbc.service.BatchService&quot;&gt;
+        &lt;property name=&quot;employeeDao&quot; ref=&quot;employeeDao&quot;/&gt;
+    &lt;/bean&gt;
+
+&lt;!--    1-3具体含义：当我们目标方法是imooc包下Service 且方法名为batchImport的时候 则认为当前方法需要使用事务--&gt;
+&lt;!--    利用transactionManager来完成对事务的提交以及回滚--&gt;
+
+    &lt;!-- 1.事务管理器,用于创建事务/提交/回滚 --&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;!--2.事务通知配置,决定哪些方法使用事务,哪些方法不使用事务 advice是通知--&gt;
+    &lt;tx:advice id=&quot;txAdvice&quot; transaction-manager=&quot;transactionManager&quot;&gt;
+        &lt;tx:attributes&gt;
+            &lt;!-- 目标方法名为batchImport时,启用声明式事务,成功提交,运行时异常回滚 propagation=&quot;REQUIRED&quot;需要使用--&gt;
+            &lt;tx:method name=&quot;batchImport&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;tx:method name=&quot;batch*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+            &lt;!-- 设置所有findXXX方法不需要使用事务 --&gt;
+            &lt;tx:method name=&quot;find*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+            &lt;tx:method name=&quot;get*&quot; propagation=&quot;NOT_SUPPORTED&quot; read-only=&quot;true&quot;/&gt;
+
+            &lt;tx:method name=&quot;importJob1&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+            &lt;tx:method name=&quot;importJob2&quot; propagation=&quot;REQUIRES_NEW&quot;/&gt;
+            &lt;tx:method name=&quot;*&quot; propagation=&quot;REQUIRED&quot;/&gt;
+        &lt;/tx:attributes&gt;
+    &lt;/tx:advice&gt;
+
+    &lt;!--3. 定义声明式事务的作用范围--&gt;
+    &lt;aop:config&gt;
+        &lt;aop:pointcut id=&quot;pointcut&quot; expression=&quot;execution(* com.imooc..*Service.*(..))&quot;/&gt;
+        &lt;aop:advisor advice-ref=&quot;txAdvice&quot; pointcut-ref=&quot;pointcut&quot;/&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">jdbcTemplateTestor.java
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import com.imooc.spring.jdbc.service.EmployeeService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+import java.util.Date;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class JdbcTemplateTestor &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Resource
+    private EmployeeService employeeService;
+
+    @Test
+    public void testFindById()&#123;
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+    &#125;
+
+    @Test
+    public void testFindByDname()&#123;
+        System.out.println(employeeDao.findByDname(&quot;市场部&quot;));
+    &#125;
+
+    @Test
+    public void testFindMapByDname()&#123;
+        System.out.println(employeeDao.findMapByDname(&quot;研发部&quot;));
+    &#125;
+
+    @Test
+    public void testInsert()&#123;
+        Employee employee = new Employee();
+        employee.setEno(8888);
+        employee.setEname(&quot;赵六&quot;);
+        employee.setSalary(6666f);
+        employee.setDname(&quot;研发部&quot;);
+        employee.setHiredate(new Date());
+        employeeDao.insert(employee);
+    &#125;
+
+    @Test
+    public void  testUpdate()&#123;
+        Employee employee = employeeDao.findById(8888);
+        employee.setSalary(employee.getSalary() + 1000);
+        int count = employeeDao.update(employee);
+        System.out.println(&quot;本次更新&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void  testDelete()&#123;
+        int count = employeeDao.delete(8888);
+        System.out.println(&quot;本次删除&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void testBatchImport()&#123;
+        employeeService.batchImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+    @Test
+    public void testStartImportJob()&#123;
+        employeeService.startImportJob();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc.spring&lt;/groupId&gt;
+    &lt;artifactId&gt;jdbc&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-jdbc&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;8.0.16&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-test&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--logback日志组件,Spring框架默认集成--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+            &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+            &lt;version&gt;1.9.5&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<h3 id="注解配置声明式事务"><a href="#注解配置声明式事务" class="headerlink" title="注解配置声明式事务"></a>注解配置声明式事务</h3><pre><code class="java">//声明式事务核心注解
+//放在类上,将声明式事务配置应用于当前类所有方法,默认事务传播为 REQUIRED
+@Transactional(propagation = Propagation.REQUIRED) //不写也默认
+写在类上就是所有 
+写在方法就是单独方法运用
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/dao/EmployeeDao.java
+package com.imooc.spring.jdbc.dao;
+
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+@Repository
+public class EmployeeDao &#123;
+    @Resource
+    private JdbcTemplate jdbcTemplate;
+
+    public Employee findById(Integer eno)&#123;
+        String sql = &quot;select * from employee where eno = ?&quot;;
+        //查询单条数据
+        Employee employee = jdbcTemplate.queryForObject(sql, new Object[]&#123;eno&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return employee;
+    &#125;
+
+    public List&lt;Employee&gt; findByDname(String dname)&#123;
+        String sql = &quot;select * from employee where dname = ?&quot;;
+        //查询复合数据
+        List&lt;Employee&gt; list = jdbcTemplate.query(sql, new Object[]&#123;dname&#125;, new BeanPropertyRowMapper&lt;Employee&gt;(Employee.class));
+        return list;
+    &#125;
+
+    public List&lt;Map&lt;String, Object&gt;&gt; findMapByDname(String dname)&#123;
+        String sql = &quot;select eno as empno , salary as s from employee where dname = ?&quot;;
+        //将查询结果作为Map进行封装
+        List&lt;Map&lt;String, Object&gt;&gt; maps = jdbcTemplate.queryForList(sql, new Object[]&#123;dname&#125;);
+        return maps;
+    &#125;
+
+    public void insert(Employee employee)&#123;
+        String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)&quot;;
+        //利用update方法实现数据写入操作
+        jdbcTemplate.update(sql,new Object[]&#123;
+           employee.getEno() , employee.getEname(),employee.getSalary(),employee.getDname() , employee.getHiredate()
+        &#125;);
+    &#125;
+
+    public int update(Employee employee)&#123;
+        String sql = &quot;UPDATE employee SET ename = ?, salary = ?, dname = ?, hiredate = ? WHERE eno = ?&quot;;
+        int count = jdbcTemplate.update(sql, new Object[]&#123;employee.getEname(), employee.getSalary(), employee.getDname(), employee.getHiredate(), employee.getEno()&#125;);
+        return count;
+    &#125;
+
+    public int delete(Integer eno)&#123;
+        String sql = &quot;delete from employee where eno = ?&quot;;
+        return jdbcTemplate.update(sql, new Object[]&#123;eno&#125;);
+    &#125;
+
+
+    public JdbcTemplate getJdbcTemplate() &#123;
+        return jdbcTemplate;
+    &#125;
+
+    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) &#123;
+        this.jdbcTemplate = jdbcTemplate;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/entity/Employee.java
+public class Employee &#123;
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+    private Date hiredate;
+&#125; getter+setter
+     @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;eno=&quot; + eno +
+                &quot;, ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
+                &quot;, salary=&quot; + salary +
+                &quot;, dname=&#39;&quot; + dname + &#39;\&#39;&#39; +
+                &quot;, hiredate=&quot; + hiredate +
+                &#39;&#125;&#39;;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/service/BatchService.java
+package com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import com.sun.xml.internal.ws.developer.Serialization;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+@Service
+//不需要使用事务 只读操作
+@Transactional(propagation = Propagation.NOT_SUPPORTED,readOnly = true)
+public class BatchService &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void importJob1()&#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;研发部员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;研发部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void importJob2()&#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            Employee employee = new Employee();
+            employee.setEno(9000 + i);
+            employee.setEname(&quot;市场部员工&quot; + i);
+            employee.setSalary(4500f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/spring/jdbc/service/EmployeeService.java
+package com.imooc.spring.jdbc.service;
+
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+@Service
+//声明式事务核心注解
+//放在类上,将声明式事务配置应用于当前类所有方法,默认事务传播为 REQUIRED
+@Transactional(propagation = Propagation.REQUIRED) //不写也默认
+public class EmployeeService &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Resource
+    private BatchService batchService;
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED , readOnly = true)
+    public Employee findById(Integer eno)&#123;
+        return employeeDao.findById(eno);
+    &#125;
+
+    public void batchImport() &#123;
+        for (int i = 1; i &lt;= 10; i++) &#123;
+            if(i==3)&#123;
+                throw new RuntimeException(&quot;意料之外的异常&quot;);
+            &#125;
+            Employee employee = new Employee();
+            employee.setEno(8000 + i);
+            employee.setEname(&quot;员工&quot; + i);
+            employee.setSalary(4000f);
+            employee.setDname(&quot;市场部&quot;);
+            employee.setHiredate(new Date());
+            employeeDao.insert(employee);
+        &#125;
+    &#125;
+
+    public void startImportJob()&#123;
+        batchService.importJob1();
+        if(1==1)&#123;
+            throw new RuntimeException(&quot;意料之外的异常&quot;);
+        &#125;
+        batchService.importJob2();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+    public EmployeeDao getEmployeeDao() &#123;
+        return employeeDao;
+    &#125;
+
+    public void setEmployeeDao(EmployeeDao employeeDao) &#123;
+        this.employeeDao = employeeDao;
+    &#125;
+
+    public BatchService getBatchService() &#123;
+        return batchService;
+    &#125;
+
+    public void setBatchService(BatchService batchService) &#123;
+        this.batchService = batchService;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:tx=&quot;http://www.springframework.org/schema/tx&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        https://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc&quot;/&gt;
+    &lt;!--数据源--&gt;
+    &lt;bean id=&quot;dataSource&quot; class=&quot;org.springframework.jdbc.datasource.DriverManagerDataSource&quot;&gt;
+        &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+        &lt;property name=&quot;url&quot;
+                  value=&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+        &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+        &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!--JdbcTemplate--&gt;
+    &lt;bean id=&quot;jdbcTemplate&quot; class=&quot;org.springframework.jdbc.core.JdbcTemplate&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!--事务管理器--&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+    &lt;!-- 启用注解形式声明式事务 --&gt;
+    &lt;tx:annotation-driven transaction-manager=&quot;transactionManager&quot;/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc.spring&lt;/groupId&gt;
+    &lt;artifactId&gt;jdbc&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-jdbc&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;8.0.16&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-test&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--logback日志组件,Spring框架默认集成--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+            &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+            &lt;version&gt;1.9.5&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">test/java/JdbcTemplateTestor.java
+import com.imooc.spring.jdbc.dao.EmployeeDao;
+import com.imooc.spring.jdbc.entity.Employee;
+import com.imooc.spring.jdbc.service.EmployeeService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+import java.util.Date;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class JdbcTemplateTestor &#123;
+    @Resource
+    private EmployeeDao employeeDao;
+    @Resource
+    private EmployeeService employeeService;
+
+    @Test
+    public void testFindById()&#123;
+        Employee employee = employeeDao.findById(3308);
+        System.out.println(employee);
+    &#125;
+
+    @Test
+    public void testFindByDname()&#123;
+        System.out.println(employeeDao.findByDname(&quot;市场部&quot;));
+    &#125;
+
+    @Test
+    public void testFindMapByDname()&#123;
+        System.out.println(employeeDao.findMapByDname(&quot;研发部&quot;));
+    &#125;
+
+    @Test
+    public void testInsert()&#123;
+        Employee employee = new Employee();
+        employee.setEno(8888);
+        employee.setEname(&quot;赵六&quot;);
+        employee.setSalary(6666f);
+        employee.setDname(&quot;研发部&quot;);
+        employee.setHiredate(new Date());
+        employeeDao.insert(employee);
+    &#125;
+
+    @Test
+    public void  testUpdate()&#123;
+        Employee employee = employeeDao.findById(8888);
+        employee.setSalary(employee.getSalary() + 1000);
+        int count = employeeDao.update(employee);
+        System.out.println(&quot;本次更新&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void  testDelete()&#123;
+        int count = employeeDao.delete(8888);
+        System.out.println(&quot;本次删除&quot; + count + &quot;条数据&quot;);
+    &#125;
+
+    @Test
+    public void testBatchImport()&#123;
+        employeeService.batchImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+
+    @Test
+    public void testStartImportJob()&#123;
+        employeeService.startImportJob();
+    &#125;
+
+&#125;
 </code></pre>
 
     </div>
