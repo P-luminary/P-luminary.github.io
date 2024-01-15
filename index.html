@@ -304,6 +304,646 @@
     &lt;/servlet-mapping&gt;
 &lt;/web-app&gt;
 </code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
+&lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
+   及子包中拥有以下注解的对象：
+       @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
+       @Service     ...Service类上 业务逻辑类
+       @Controller 描述SpringMVC的控制器类
+       @Component  无法确定的类型种类
+   --&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
+&lt;!--    启用Spring MVC的注解开发模式--&gt;
+    &lt;mvc:annotation-driven/&gt;
+&lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/controller/TestController.java
+package com.imooc.springmvc.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+public class TestController &#123;
+//  将当前的方法绑定某个get方式请求的url  //localhost/t
+    @GetMapping(&quot;/t&quot;)
+//  直接向响应输出字符串数据,不跳转页面
+    @ResponseBody
+    public String test()&#123;
+        return &quot;SUCCESS&quot;;
+    &#125;
+&#125;
+</code></pre>
+<p>添加依赖jar包进入项目工程 配置tomcat服务<code>Run/Debug Configurations</code> 中的 <code>Deployment</code> 点一下小铅笔修改 将右侧的Avaliable Elements中的依赖包全部put进入<br><code>404bug 配置都正常无误 寻找一下项目工程里的out/artifacts/WEB-INF/web.xml</code></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/4e2dcf96e18f478fddb9049b2544a008edd8f706/data/SpringMVC%E5%A4%84%E7%90%86%E7%A4%BA%E6%84%8F%E5%9B%BE.jpg"></p>
+<h3 id="Spring-MVC数据绑定"><a href="#Spring-MVC数据绑定" class="headerlink" title="Spring MVC数据绑定"></a>Spring MVC数据绑定</h3><h5 id="URL-Mapping-URL映射"><a href="#URL-Mapping-URL映射" class="headerlink" title="URL Mapping(URL映射)"></a>URL Mapping(URL映射)</h5><ul>
+<li>URL Mapping指将URL与Controller方法绑定</li>
+<li>通过将URL与方法绑定，SpringMVC便可通过Tomcat对外暴露服务</li>
+</ul>
+<h5 id="URL-Mapping注解"><a href="#URL-Mapping注解" class="headerlink" title="URL Mapping注解"></a>URL Mapping注解</h5><ul>
+<li>@RequestMapping - 通用绑定  &#x2F;&#x2F;<u>在全局用则是通用请求映射访问前缀 若在方法上则不区分get&#x2F;post请求</u></li>
+<li>@GetMapping - 绑定Get请求</li>
+<li>@PostMapping - 绑定Post请求</li>
+</ul>
+<p><code>@GetMapping(&quot;/g&quot;)   ======   @RequestMapping(value=&quot;/g&quot;,method=RequestMethod.GET)</code></p>
+<pre><code class="java">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;first-springmvc&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
+            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
+            &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
+            &lt;version&gt;2.3.28&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context-support&lt;/artifactId&gt;
+            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">src/main/webapp/WEB-INF/web.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd&quot;
+         version=&quot;3.1&quot;&gt;
+    &lt;!--    DispatchServlet 对所有请求进行拦截  --&gt;
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
+        &lt;!--        DispatcherServlet是Spring MVC是最核心的对象
+                    DispatcherServlet用于拦截http请求
+                    并根据请求的URL调用与之对应的Controller方法,来完成Http请求的处理
+        --&gt;
+        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
+        &lt;!--        在Web应用启动时自动创建Spring IoC容器,并初始化DispatcherServlet --&gt;
+        &lt;!--        applicationContext.xml 初始化参数 启动时候加载--&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
+            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
+    &lt;/servlet&gt;
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
+        &lt;!--        &quot;/&quot; 所有请求都要拦截--&gt;
+        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+&lt;/web-app&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
+    &lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
+       及子包中拥有以下注解的对象：
+           @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
+           @Service     ...Service类上 业务逻辑类
+           @Controller 描述SpringMVC的控制器类
+           @Component  无法确定的类型种类
+       --&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
+    &lt;!--    启用Spring MVC的注解开发模式--&gt;
+    &lt;mvc:annotation-driven/&gt;
+    &lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/controller/TestController.java
+package com.imooc.springmvc.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+public class TestController &#123;
+    @GetMapping(&quot;/t&quot;) //localhost/t
+    @ResponseBody //直接向响应输出字符串数据,不跳转页面
+    public String test()&#123;
+        return &quot;Hello Spring MVC&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
+package com.imooc.springmvc.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+@RequestMapping (&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
+public class URLMappingController &#123;
+    @GetMapping(&quot;/g&quot;)
+    @ResponseBody
+    public String getMapping()&#123;
+        return &quot;This is get method&quot;;
+    &#125;
+//  直接访问会出错 post请求如何访问 用进行html表单提交
+    @PostMapping(&quot;/p&quot;)
+    @ResponseBody
+    public String postMapping()&#123;
+        return &quot;This is post method&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">index.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form action=&quot;/um/p&quot; method=&quot;post&quot;&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="Controller方法参数接收请求参数"><a href="#Controller方法参数接收请求参数" class="headerlink" title="Controller方法参数接收请求参数"></a>Controller方法参数接收请求参数</h3><h5 id="接收请求参数的常用做法"><a href="#接收请求参数的常用做法" class="headerlink" title="接收请求参数的常用做法"></a>接收请求参数的常用做法</h5><ul>
+<li><h6 id="使用Controller方法参数接收"><a href="#使用Controller方法参数接收" class="headerlink" title="使用Controller方法参数接收"></a>使用Controller方法参数接收</h6></li>
+</ul>
+<pre><code class="java">&lt;form action=&quot;/m1&quot; method=&quot;post&quot;&gt;
+    &lt;input name=&quot;username&quot;/&gt;
+    &lt;input name=&quot;password&quot;/&gt;
+&lt;/form&gt;
+----------------------------------------------------
+@PostMapping(&quot;/m1&quot;)
+@ResponseBody
+public String post(String username, Long password)&#123;
+    return username + &quot;:&quot; + password;
+&#125;
+</code></pre>
+<p>特殊的注解<code>@RequestParam(&quot;&quot;)</code> 接收特殊自定义的参数</p>
+<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
+package com.imooc.springmvc.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping(&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
+public class URLMappingController &#123;
+    @GetMapping(&quot;/g&quot;)
+    @ResponseBody
+    public String getMapping(@RequestParam(&quot;manager_name&quot;) String managerName) &#123;
+        System.out.println(&quot;managerName:&quot;+managerName);
+        return &quot;This is get method&quot;;
+    &#125;
+
+    //    直接访问会出错 post请求如何访问 用进行html表单提交
+    @PostMapping(&quot;/p&quot;)
+    @ResponseBody
+    public String postMapping(String username, String password) &#123;
+        System.out.println(username + &quot;:&quot; + password);
+        return &quot;This is post method&quot;;
+    &#125;
+&#125;
+
+=========================
+网页中输入 http://localhost/um/g?manager_name=lily
+控制台返回 managerName:lily
+</code></pre>
+<pre><code class="html">index.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form action=&quot;/um/p&quot; method=&quot;post&quot;&gt;
+        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
+        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<ul>
+<li><h6 id="使用Java-Bean接收数据"><a href="#使用Java-Bean接收数据" class="headerlink" title="使用Java Bean接收数据"></a>使用Java Bean接收数据</h6></li>
+</ul>
+<pre><code class="html">index.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form action=&quot;/um/p1&quot; method=&quot;post&quot;&gt;
+        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
+        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>​         用<strong>实体对象</strong><code>User</code>进行接收多个对象的创建和注入以及类型转换 [一次性完成]</p>
+<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
+@PostMapping(&quot;/p1&quot;)
+    @ResponseBody //只要拥有User属性和参数 就可以一起赋值
+    public String postMapping1(User user, String username)&#123;
+        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
+        return &quot;This is post method&quot;;
+    &#125;
+</code></pre>
+<pre><code class="java">User.java
+//标准的java bean
+public class User &#123;
+    private String username;
+    private Long password;
+&#125; Setter + Getter
+</code></pre>
+<h3 id="综合训练：学员调查问卷"><a href="#综合训练：学员调查问卷" class="headerlink" title="综合训练：学员调查问卷"></a>综合训练：学员调查问卷</h3><h5 id="知识点"><a href="#知识点" class="headerlink" title="知识点"></a>知识点</h5><ul>
+<li>利用数组或者List接收请求中的复合数据</li>
+<li>利用@RequestParam为参数设置默认值</li>
+<li>使用Map对象接收请求参数及注意事项</li>
+</ul>
+<h5 id="URI绝对路径与相对路径"><a href="#URI绝对路径与相对路径" class="headerlink" title="URI绝对路径与相对路径"></a>URI绝对路径与相对路径</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/7faa031203ba69b146426bd6c3fa7431902da258/data/%E7%9B%B8%E5%AF%B9%E8%B7%AF%E5%BE%84%E4%B8%8E%E7%BB%9D%E5%AF%B9%E8%B7%AF%E5%BE%841.jpg"></p>
+<h5 id="相对地址的应用案例"><a href="#相对地址的应用案例" class="headerlink" title="相对地址的应用案例"></a>相对地址的应用案例</h5><ul>
+<li><code>&lt;form action=&quot;./apply&quot; method=&quot;post&quot;</code></li>
+<li>页面地址：<a target="_blank" rel="noopener" href="http://localhost:8080/[%E4%B8%8A%E4%B8%8B%E6%96%87%E8%B7%AF%E5%BE%84]/form.html">http://localhost:8080/[上下文路径]/form.html</a></li>
+<li>提交地址：<a target="_blank" rel="noopener" href="http://localhost:8080/[%E4%B8%8A%E4%B8%8B%E6%96%87%E8%B7%AF%E5%BE%84]/apply">http://localhost:8080/[上下文路径]/apply</a></li>
+</ul>
+<pre><code class="html">src/main/webapp/form.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;学员调查问卷&lt;/title&gt;
+    &lt;style&gt;
+        .container &#123;
+            position: absolute;
+            border: 1px solid #cccccc;
+            left: 50%;
+            top: 50%;
+            width: 400px;
+            height: 300px;
+            margin-left: -200px;
+            margin-top: -150px;
+            box-sizing: border-box;
+            padding: 10px;
+        &#125;
+        h2&#123;
+            margin: 10px 0px;
+            text-align: center;
+        &#125;
+        h3&#123;
+            margin: 10px  0px;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;container&quot;&gt;
+        &lt;h2&gt;学员调查问卷&lt;/h2&gt;
+        &lt;form action=&quot;./apply&quot; method=&quot;post&quot;&gt;
+        &lt;h3&gt;您的姓名&lt;/h3&gt;
+        &lt;input name=&quot;name&quot; class=&quot;text&quot;  style=&quot;width: 150px&quot;&gt;
+        &lt;h3&gt;您正在学习的技术方向&lt;/h3&gt;
+        &lt;select name=&quot;course&quot; style=&quot;width: 150px&quot;&gt;
+            &lt;option value=&quot;java&quot;&gt;Java&lt;/option&gt;
+            &lt;option value=&quot;h5&quot;&gt;HTML5&lt;/option&gt;
+            &lt;option value=&quot;python&quot;&gt;Python&lt;/option&gt;
+            &lt;option value=&quot;php&quot;&gt;PHP&lt;/option&gt;
+        &lt;/select&gt;
+        &lt;div&gt;
+&lt;!--复选框用数组 或 ArrayList接收--&gt;
+            &lt;h3&gt;您的学习目的：&lt;/h3&gt;
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;1&quot;&gt;就业找工作
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;2&quot;&gt;工作要求
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;3&quot;&gt;兴趣爱好
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;4&quot;&gt;其他
+        &lt;/div&gt;
+        &lt;div style=&quot;text-align: center;padding-top:10px&quot; &gt;
+            &lt;input type=&quot;submit&quot; value=&quot;提交&quot; style=&quot;width:100px&quot;&gt;
+        &lt;/div&gt;
+        &lt;/form&gt;
+
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>如果要接收复合数据 直接用数组接收是最简单的 但使用起来并不轻松<br>可以使用List来接收 但是前方记得要有<code>@RequestParam</code><br>更加高级的可以封装成一个对象 用List接收复合数据<br>Map只能接收单个数据 接收复合数据的时候会造成数据丢失</p>
+<pre><code class="java">com/imooc/springmvc/controller/FormController.java
+package com.imooc.springmvc.controller;
+
+import com.imooc.springmvc.entity.Form;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class FormController &#123;
+//    @PostMapping(&quot;/apply&quot;)  ★★★第一次尝试★★★
+    @ResponseBody
+//    如果在请求中不包含默认值 =&gt; 取别名  默认值机制：ANON匿名
+    public String apply(@RequestParam(value = &quot;n&quot;, defaultValue = &quot;ANON&quot;) String name, String course, Integer[] purpose)&#123;
+        System.out.println(name);
+        System.out.println(course);
+        for (Integer p:purpose)&#123;
+            System.out.println(p);
+        &#125;
+        return &quot;SUCCESS&quot;;
+    &#125;
+
+//    @PostMapping(&quot;/apply&quot;)  ★★★第二次尝试★★★
+    // 请求中的复合数据要被转换为List进行存储
+    @ResponseBody
+    public String apply(String name, String course, @RequestParam List&lt;Integer&gt; purpose)&#123;
+        System.out.println(name);
+        System.out.println(course);
+        for (Integer p:purpose)&#123;
+            System.out.println(p);
+        &#125;
+        return &quot;SUCCESS&quot;;
+    &#125;
+
+    @PostMapping(&quot;/apply&quot;)  
+    //★★★★★ 推荐使用 ★★★★★
+    // 实体类+List 极大简化表单工作量  
+    // 请求中的复合数据要被转换为List进行存储
+    @ResponseBody
+    public String apply(Form form)&#123;
+        return &quot;SUCCESS&quot;;
+    &#125;
+    //不推荐直接使用Map导入数据 因为复合数据[数组数据]会丢失
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/entity/Form.java
+public class Form &#123;
+    private String name;
+    private String course;
+    private List&lt;Integer&gt; purpose;
+&#125;Setter + Getter
+</code></pre>
+<h3 id="关联对象赋值"><a href="#关联对象赋值" class="headerlink" title="关联对象赋值"></a>关联对象赋值</h3><h5 id="复杂内容表单"><a href="#复杂内容表单" class="headerlink" title="复杂内容表单"></a>复杂内容表单</h5><pre><code class="html">用户名: &lt;input name=&quot;username&quot;&gt;
+密码：&lt;input name=&quot;password&quot;&gt;
+--------------------------------
+姓名：&lt;input name=&quot;name&quot;&gt;
+身份证号：&lt;input name=&quot;idno&quot;&gt;
+过期时间：&lt;input name=&quot;expire&quot;&gt;
+</code></pre>
+<h6 id="面向对象设计-【关联对象赋值】"><a href="#面向对象设计-【关联对象赋值】" class="headerlink" title="面向对象设计 【关联对象赋值】"></a>面向对象设计 【关联对象赋值】</h6><pre><code class="java">public class User&#123;
+    private String username;
+    private String password;
+    private IDcard idcard = new IDCard();
+    //Getter + Setter
+&#125;
+★★ 关联上IDcard ★★
+public class IDcard&#123;
+    private String name;
+    private String idno;
+    private Date expire;
+    //Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="html">用户名: &lt;input name=&quot;username&quot;&gt;
+密码：&lt;input name=&quot;password&quot;&gt;
+--------------------------------
+姓名：&lt;input name=&quot;idcard.name&quot;&gt;
+身份证号：&lt;input name=&quot;idcard.idno&quot;&gt;
+过期时间：&lt;input name=&quot;idcard.expire&quot;&gt;
+</code></pre>
+<pre><code class="html">src/main/webapp/form.html
+ &lt;div&gt;
+            &lt;h3&gt;您的学习目的：&lt;/h3&gt;
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;1&quot;&gt;就业找工作
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;2&quot;&gt;工作要求
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;3&quot;&gt;兴趣爱好
+            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;4&quot;&gt;其他
+        &lt;/div&gt;
+            &lt;h3&gt;收货人&lt;/h3&gt;
+&lt;!--  private Delivery delivery = new Delivery() --&gt;
+            &lt;input name=&quot;delivery.name&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
+            &lt;h3&gt;联系电话&lt;/h3&gt;
+            &lt;input name=&quot;delivery.mobile&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
+            &lt;h3&gt;收货地址&lt;/h3&gt;
+            &lt;input name=&quot;delivery.address&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
+
+        &lt;div style=&quot;text-align: center;padding-top:10px&quot; &gt;
+            &lt;input type=&quot;submit&quot; value=&quot;提交&quot; style=&quot;width:100px&quot;&gt;
+        &lt;/div&gt;
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/entity/Form.java
+public class Form &#123;
+    private String name;
+    private String course;
+    private List&lt;Integer&gt; purpose;
+    private Delivery delivery = new Delivery();
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/entity/Delivery.java
+public class Delivery &#123;
+    private String name;
+    private String address;
+    private String mobile;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">com/imooc/springmvc/controller/FormController.java
+package com.imooc.springmvc.controller;
+
+import com.imooc.springmvc.entity.Form;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class FormController &#123;
+//    @PostMapping(&quot;/apply&quot;)  第一次尝试
+    @ResponseBody
+//    如果在请求中不包含默认值 =&gt; 取别名  默认值机制：ANON匿名
+    public String apply(@RequestParam(value = &quot;n&quot;, defaultValue = &quot;ANON&quot;) String name, String course, Integer[] purpose)&#123;
+        System.out.println(name);
+        System.out.println(course);
+        for (Integer p:purpose)&#123;
+            System.out.println(p);
+        &#125;
+        return &quot;SUCCESS&quot;;
+    &#125;
+
+//    @PostMapping(&quot;/apply&quot;)  第二次尝试
+    // 请求中的复合数据要被转换为List进行存储
+    @ResponseBody
+    public String apply(String name, String course, @RequestParam List&lt;Integer&gt; purpose)&#123;
+        System.out.println(name);
+        System.out.println(course);
+        for (Integer p:purpose)&#123;
+            System.out.println(p);
+        &#125;
+        return &quot;SUCCESS&quot;;
+    &#125;
+
+//    @PostMapping(&quot;/apply&quot;) 第三次尝试[这个可以 但有更好]
+    // 实体类+List 极大简化表单工作量
+    // 请求中的复合数据要被转换为List进行存储
+    @ResponseBody
+    public String apply(Form form)&#123;
+        return &quot;SUCCESS&quot;;
+    &#125;
+
+    @PostMapping(&quot;/apply&quot;)
+    @ResponseBody
+    public String applyDelivery(Form form)&#123;
+        System.out.println(form.getDelivery().getName());
+        return &quot;SUCCESS&quot;;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="日期类型转换"><a href="#日期类型转换" class="headerlink" title="日期类型转换"></a>日期类型转换</h3><p>①注解方法</p>
+<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
+@Controller
+@RequestMapping(&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
+public class URLMappingController &#123;
+@PostMapping(&quot;/p1&quot;)
+    @ResponseBody
+    public String postMapping1(User user, String username, @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) Date createTime)&#123;
+        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
+        return &quot;This is post method&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">index.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form action=&quot;/um/p1&quot; method=&quot;post&quot;&gt;
+        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
+        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
+        &lt;input name=&quot;createTime&quot;&gt;&lt;br/&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<hr>
+<hr>
+<p>②实体对象接收数据</p>
+<pre><code class="java">com/imooc/springmvc/entity/User.java
+//标准的java bean
+public class User &#123;
+    private String username;
+    private Long password;
+// SpringMVC会自动按照这个类型进行转换
+    @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)
+    private Date createTime;
+&#125; Getter + Setter
+</code></pre>
+<hr>
+<p>③自定义转换器：全局的默认时间转换器</p>
+<pre><code class="java">com/imooc/springmvc/converter/MyDateConverter.java
+package com.imooc.springmvc.converter;
+
+import org.springframework.core.convert.converter.Converter;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class MyDateConverter implements Converter&lt;String, Date&gt; &#123;
+    public Date convert(String s) &#123; //转换工作
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        try &#123;
+            Date d = sdf.parse(s);
+            return d;
+        &#125; catch (ParseException e) &#123;
+            return null;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
+    &lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
+       及子包中拥有以下注解的对象：
+           @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
+           @Service     ...Service类上 业务逻辑类
+           @Controller 描述SpringMVC的控制器类
+           @Component  无法确定的类型种类
+       --&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
+    &lt;!--    启用Spring MVC的注解开发模式 让底下的转换类生效--&gt;
+    &lt;mvc:annotation-driven conversion-service=&quot;conversionService&quot;/&gt;
+    &lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+    &lt;!--    通知SpringMVC有哪些转换类--&gt;
+    &lt;bean id=&quot;conversionService&quot; class=&quot;org.springframework.format.support.FormattingConversionServiceFactoryBean&quot;&gt;
+    &lt;!--    这是转换类定义的地方--&gt;
+        &lt;property name=&quot;converters&quot;&gt;
+            &lt;set&gt;
+                &lt;bean class=&quot;com.imooc.springmvc.converter.MyDateConverter&quot;/&gt;
+            &lt;/set&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
 
             
         </div>
@@ -318,7 +958,7 @@
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -5486,7 +6126,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -5694,7 +6334,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -7401,7 +8041,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -10506,7 +11146,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -12475,7 +13115,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13769,7 +14409,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -17557,7 +18197,7 @@ sql &gt; SOURCE backup.sql;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
