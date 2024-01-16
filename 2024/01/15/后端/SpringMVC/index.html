@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -1318,6 +1318,166 @@ public class FreemarkerController &#123;
 &#125;
 =====================================================
 // http://localhost/fm/test  显示 andy
+</code></pre>
+<h1 id="RESTful开发风格"><a href="#RESTful开发风格" class="headerlink" title="RESTful开发风格"></a>RESTful开发风格</h1><h3 id="REST与RESTful"><a href="#REST与RESTful" class="headerlink" title="REST与RESTful"></a>REST与RESTful</h3><ul>
+<li>REST- 表现层状态转换, 资源在网络中以某种表现形式进行状态转移</li>
+<li>RESTful是基于REST理念的一套开发风格, 是具体的开发规则</li>
+</ul>
+<h3 id="RESTful开发规范"><a href="#RESTful开发规范" class="headerlink" title="RESTful开发规范"></a>RESTful开发规范</h3><p>URL中所有的都是名词 请求都有不同的含义  返回的数据是JSON或者XML格式 </p>
+<ul>
+<li>使用URL作为用户交互入口</li>
+<li>明确的语义规范(GET, POST, PUT, DELETE)</li>
+<li>只返回数据(JSON, XML)不包含任何展现</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/13679a67b4eec21f54b5f30a53b45aafaf3fbebc/data/RESTful%E5%BC%80%E5%8F%91%E9%A3%8E%E6%A0%BC.jpg" style="zoom: 67%;" />
+
+<h3 id="RESTful命名要求"><a href="#RESTful命名要求" class="headerlink" title="RESTful命名要求"></a>RESTful命名要求</h3><table>
+<thead>
+<tr>
+<th>URI</th>
+<th>说明</th>
+<th>修改建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET &#x2F;articles?au&#x3D;lily</td>
+<td><span style = "color:green">正确用法</span></td>
+<td></td>
+</tr>
+<tr>
+<td>GET &#x2F;a&#x2F;1</td>
+<td><span style = "color:red">URI必须具有语义</span></td>
+<td>GET &#x2F;student&#x2F;1</td>
+</tr>
+<tr>
+<td>POST &#x2F;createArticle&#x2F;1</td>
+<td><span style = "color:red">URI必须使用名词</span></td>
+<td>POST &#x2F;article&#x2F;1</td>
+</tr>
+<tr>
+<td>GET &#x2F;articles&#x2F;author&#x2F;1</td>
+<td><span style = "color:red">URI扁平化, 不超两级</span></td>
+<td>GET &#x2F;articles&#x2F;author?id&#x3D;1</td>
+</tr>
+<tr>
+<td>DELETE&#x2F;articles&#x2F;1</td>
+<td><span style = "color:red">URI名词区分单复数</span></td>
+<td>GET &#x2F;articles?au&#x3D;lily<br />DELETE &#x2F;article&#x2F;1</td>
+</tr>
+</tbody></table>
+<h3 id="开发第一个RESTful应用"><a href="#开发第一个RESTful应用" class="headerlink" title="开发第一个RESTful应用"></a>开发第一个RESTful应用</h3><p><strong>404究极报错</strong><br>项目生成文件out&#x2F;artifacts&#x2F;XXX&#x2F;WEB-INF中没有导入lib包<br>没有将下面的web文件里的web.xml手动复制进去</p>
+<pre><code class="xml">pom.xml 
+写完pom.xml后记得在tomcat配置中的Deployment中加入依赖包
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;restful&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
+            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.restful&quot;/&gt;
+    &lt;mvc:annotation-driven&gt;
+        &lt;mvc:message-converters&gt;
+            &lt;bean class=&quot;org.springframework.http.converter.StringHttpMessageConverter&quot;&gt;
+                &lt;property name=&quot;supportedMediaTypes&quot;&gt;
+                    &lt;list&gt;
+                        &lt;!-- response.setContentType(&quot;text/html;charset=utf-8&quot;) --&gt;
+                        &lt;value&gt;text/html;charset=utf-8&lt;/value&gt;
+                        &lt;value&gt;application/json;charset=utf-8&lt;/value&gt;
+                    &lt;/list&gt;
+                &lt;/property&gt;
+            &lt;/bean&gt;
+        &lt;/mvc:message-converters&gt;
+    &lt;/mvc:annotation-driven&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="xml">web/WEB-INF/web.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
+         version=&quot;4.0&quot;&gt;
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
+            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
+    &lt;/servlet&gt;
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+
+    &lt;filter&gt;
+        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
+        &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;encoding&lt;/param-name&gt;
+            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
+        &lt;/init-param&gt;
+    &lt;/filter&gt;
+    &lt;filter-mapping&gt;
+        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
+        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+    &lt;/filter-mapping&gt;
+&lt;/web-app&gt;
+</code></pre>
+<pre><code class="java">com/imooc/restful/controller/RestfulController.java
+package com.imooc.restful.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+@RequestMapping(&quot;/restful&quot;)
+public class RestfulController &#123;
+    @GetMapping(&quot;/request&quot;)
+    @ResponseBody
+    public String doGetRequest()&#123;
+//  双引号中如果包括双引号 要用转义字符 \&quot;
+        return &quot;&#123;\&quot;message\&quot;:\&quot;返回查询结果\&quot;&#125;&quot;;
+    &#125;
+&#125;
+
+=======================================================
+http://localhost/restful/request
+&#123;&quot;message&quot;:&quot;返回查询结果&quot;&#125;
 </code></pre>
 
     </div>
