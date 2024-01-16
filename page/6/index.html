@@ -133,6 +133,308 @@
 
 <div class="post">
 
+    <a href="/2022/09/05/后端/Mysql/">
+        <h2>
+            Mysql
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/9/5
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <p>中：Mysql SqlServer</p>
+<p>大：Oracle DB2</p>
+<p>数据类型：</p>
+<ul>
+<li>数值：int、float</li>
+<li>非数值：char、<strong>varchar</strong><ul>
+<li>char 和 varchar 的区别</li>
+</ul>
+</li>
+</ul>
+<p>(占用空间)(查询效率快) char是定长 char 8是八个字符长度</p>
+<p>(节省空间)(查询效率慢) varchar是变长</p>
+<h2 id="增："><a href="#增：" class="headerlink" title="增："></a>增：</h2><pre><code class="sql">CREATE TABLE a_user(id int,name varchar(100)); //字段名和数据类型用逗号分隔
+INSERT INTO a_user VALUES(1,&#39;小明&#39;);
+INSERT INTO a_user(id,name) VALUES(2,&#39;小红2&#39;);
+INSERT INTO a_user(id) VALUES(3);
+</code></pre>
+<h6 id="快速复制一张表-复制表结构及其所有数据"><a href="#快速复制一张表-复制表结构及其所有数据" class="headerlink" title="快速复制一张表 (复制表结构及其所有数据)"></a>快速复制一张表 (复制表结构及其所有数据)</h6><pre><code class="sql">CREATE TABLE a_user1 AS SELECT * FROM a_user;
+</code></pre>
+<h6 id="复制一张表-不要数据"><a href="#复制一张表-不要数据" class="headerlink" title="复制一张表 (不要数据)"></a>复制一张表 (不要数据)</h6><pre><code class="sql">CREATE TABLE a_user2 AS SELECT * FROM a_user WHERE 1=2;
+</code></pre>
+<h6 id="复制一张表-复制部分表结构及其部分数据"><a href="#复制一张表-复制部分表结构及其部分数据" class="headerlink" title="复制一张表 (复制部分表结构及其部分数据)"></a>复制一张表 (复制部分表结构及其部分数据)</h6><pre><code class="sql">CREATE TABLE a_user3 AS SELECT id FROM a_user;
+</code></pre>
+<h2 id="删："><a href="#删：" class="headerlink" title="删："></a>删：</h2><pre><code class="sql">DELETE FROM a_user1; (可以还原数据)
+删除表中的部分数据(可以通过where子句)
+会造成磁盘高位现象
+让数据不可见(仍占用磁盘空间)-&gt;单纯拖到回车站
+===============================
+TRUNCATE TABLE a_user3; (永远不可以还原数据)
+只能清空表的数据，不能进行删除
+能够清楚磁盘高位现象
+彻底删除-&gt;Shift + Delete
+===============================
+DROP table_user; (永远不可以还原数据)
+DROP COLUMN age, DROP COLUMN password
+</code></pre>
+<p>一张表100万条数据，每天删除100万，每天新增100万，1年后还是100万<br>但查询效率低下，问 为什么？ 如何解决？</p>
+<pre><code class="sql">CREATE TABLE t_userbak AS SELECT * FROM t_user;
+TRUNCATE TABLE t_user;
+INSERT INTO t_user SELECT * FROM t_userbak;
+DROP TABLE t_usebak;
+</code></pre>
+<h2 id="改："><a href="#改：" class="headerlink" title="改："></a>改：</h2><pre><code class="sql">增加表字段：
+ALTER TABLE t_user add(age INT, password VARCHAR(255))
+</code></pre>
+<pre><code class="sql">删除表字段：
+ALTER TABLE t_user
+DROP COLUMN age, DROP COLUMN password
+</code></pre>
+<pre><code class="SQL">修改字段的长度：
+变更表字段name-&gt;name(名字未改变，但是长度改变)
+ALTER TABLE t_user
+CHANGE name NAME VARCHAR(200), 
+CHANGE password PASSWORD VARCHAR(255)
+</code></pre>
+<h6 id="ALTER隐藏报错：已经有了原始数据不允许往回缩小"><a href="#ALTER隐藏报错：已经有了原始数据不允许往回缩小" class="headerlink" title="ALTER隐藏报错：已经有了原始数据不允许往回缩小"></a>ALTER隐藏报错：已经有了原始数据不允许往回缩小</h6><h2 id="查"><a href="#查" class="headerlink" title="查"></a>查</h2><pre><code class="sql">SELECT * FROM t_user 查询表
+</code></pre>
+<h2 id="★★★-数据库六大约束-★★★"><a href="#★★★-数据库六大约束-★★★" class="headerlink" title="★★★ 数据库六大约束 ★★★"></a>★★★ 数据库六大约束 ★★★</h2><p>作用：保证数据的完整性和合理性</p>
+<p>语法：<strong>constraint</strong> 约束类型 约束名 (约束字段名) </p>
+<p><span style = "color : red"><strong>主键约束</strong></span>(主键为外键而生)</p>
+<pre><code class="sql">主键：PRIMARY KEY
+CREATE TABLE t_class(id INT, class VARCHAR(50)),
+CONSTRAINT PRIMARY KRY pk_id(id);
+</code></pre>
+<p>**<span style = "color : red">检查约束</span>**：check</p>
+<pre><code class="sql">CREATE TABLE t_user9(id INT PRIMARY KEY, sex VARCHAR(50),
+CONSTRAINT ck_sex CHECK
+(sex=&#39;男&#39; OR sex=&#39;女&#39;));
+
+CONSTRAINT ck_age1 CHECK (age1&gt;=0 AND age1&lt;=150),
+</code></pre>
+<p><span style = "color : red"><strong>唯一约束</strong></span>：unique 保证该字段不会重复</p>
+<pre><code class="sql">CREATE TABLE t_user4(id INT, name VARCHAR(50)),
+CONSTRAINT unique uq_id(id,z name) //uq_id为约束名称
+------------------------------------------------
+注意复合字段约束的存在
+INSERT INTO t_user4 VALUES(1,&#39;zsf’)
+==================================================
+建立表后发现后期需要约束：(事后补约束) 有重复的局部删掉再约束
+CREATE TABLE t_user5(id int, name varchar(50));
+ALTER TABLE t_user5 ADD CONSTRAINT unique uq_id(id);
+==================================================
+此方法没有约束 名称
+CREATE TABLE t_user6(id INT PRIMARY KEY, name VARCHAR(50));
+</code></pre>
+<p>**<span style = "color : red">外键约束</span>**：foregin key</p>
+<p>学生表的班级外键 指向班级表的id主键，保证学生的班级一定是在班级表中存在的班级</p>
+<pre><code class="sql">CREATE TABLE t_student(id INT PRIMARY KEY, name VARCHAR(50),
+cid INT CONSTRAINT FOREIGN KEY fk_cid(cid) REFERENCES t_class(id));
+</code></pre>
+<p>**<span style = "color : red">非空约束</span>**：not null</p>
+<pre><code class="sql">CREATE TABLE t_user10
+(id INT PRIMARY KEY, sex VARCHAR(50) not null)
+</code></pre>
+<p>**<span style = "color : red">默认约束</span>**：default</p>
+<pre><code class="sql">CREATE TABLE t_user11
+(id INT PRIMARY KEY, sex VARCHAR(50) default&#39;妖&#39;)
+</code></pre>
+<hr>
+<h3 id="一个题目涉及到的50个Sql语句"><a href="#一个题目涉及到的50个Sql语句" class="headerlink" title="一个题目涉及到的50个Sql语句 "></a><span style = "color : green">一个题目涉及到的50个Sql语句 </span></h3><p><strong>sql文件位于：【实训第二次数据库(江西移动)】</strong></p>
+<p>–（下面表的结构以给出,自己在数据库中建立表.并且添加相应的数据,数据要全面些. 其中Student表中,SId为学生的ID）</p>
+<p>————————————表结构————————————–<br>–学生表tblStudent（编号StuId、姓名StuName、年龄StuAge、性别StuSex）<br>–课程表tblCourse（课程编号CourseId、课程名称CourseName、教师编号TeaId）<br>–成绩表tblScore（学生编号StuId、课程编号CourseId、成绩Score）</p>
+<h2 id="–教师表tblTeacher（教师编号TeaId、姓名TeaName）"><a href="#–教师表tblTeacher（教师编号TeaId、姓名TeaName）" class="headerlink" title="–教师表tblTeacher（教师编号TeaId、姓名TeaName）"></a>–教师表tblTeacher（教师编号TeaId、姓名TeaName）</h2><pre><code class="sql">--问题： 
+--1、查询“001”课程比“002”课程成绩高的所有学生的学号；[自链接]
+SELECT * FROM tblscore t1
+WHERE t1.COURSEID = &#39;001&#39;
+AND t2.COURSEID = &#39;002&#39; AND t1.STUID = t2.STUID
+AND t1.SCORE &gt; t2.SCORE
+AND t1.STUID = t3.STUID
+
+--2、查询平均成绩大于60分的同学的学号和平均成绩；[函数+分组查询(条件过滤)]
+SELECT t1.stuid, avg(t1.score) FROM tblscoret1
+GROUP BY t1.stuid
+HAVING avg(t1.score) &gt; 60
+
+--3、查询所有同学的学号、姓名、选课数、总成绩;[unt sum]
+
+
+
+--4、查询姓“李”的老师的个数；[count like]
+
+
+--5、查询没学过“叶平”老师课的同学的学号、姓名；[逆向]
+
+
+
+--6、查询学过“001”并且也学过编号“002”课程的同学的学号、姓名；
+
+
+
+--7、查询学过“叶平”老师所教的所有课的同学的学号、姓名； 
+
+
+--8、查询课程编号“002”的成绩比课程编号“001”课程低的所有同学的学号、姓名； 
+
+--9、查询所有课程成绩小于60分的同学的学号、姓名；
+
+--10、查询没有学全所有课的同学的学号、姓名； 
+
+--11、查询至少有一门课与学号为“1001”的同学所学相同的同学的学号和姓名；
+ ------运用连接查询
+
+ ------嵌套子查询
+
+--12、查询至少学过学号为“1001”同学所有课程的其他同学学号和姓名； 
+
+
+
+
+
+--13、把“SC”表中“叶平”老师教的课的成绩都更改为此课程的平均成绩； (从子查询中获取父查询中的表名，这样也行？？？？)
+ --创建测试表 
+
+
+--14、查询和“1002”号的同学学习的课程完全相同的其他同学学号和姓名；  
+
+
+--15、删除学习“叶平”老师课的SC表记录；
+
+
+--16、向SC表中插入一些记录，这些记录要求符合以下条件：没有上过编号“003”课程的同学学号、&#39;002&#39;号课的平均成绩； 
+
+--17、按平均成绩从高到低显示所有学生的“数据库”、“企业管理”、“英语”三门的课程成绩，按如下形式显示： 学生ID,,数据库,企业管理,英语,有效课程数,有效平均分 
+
+
+--18、查询各科成绩最高和最低的分：以如下形式显示：课程ID，最高分，最低分 
+
+
+--19、按各科平均成绩从低到高和及格率的百分数从高到低顺序 (百分数后如何格式化为两位小数??)
+
+
+--20、查询如下课程平均成绩和及格率的百分数(用&quot;1行&quot;显示): 企业管理（001），马克思
+
+--21、查询不同老师所教不同课程平均分从高到低显示 
+
+
+--22、查询如下课程成绩第 3 名到第 6 名的学生成绩单：企业管理（001），马克思（002），UML （003），数据库（004） 格式：[学生ID],[学生姓名],企业管理,马克思,UML,数据库,平均成绩 
+
+
+--23、统计列印各科成绩,各分数段人数:课程ID,课程名称,[100-85],[85-70],[70-60],[ &lt;60] 
+
+
+--24、查询学生平均成绩及其名次  so
+
+
+--25、查询各科成绩前三名的记录:(不考虑成绩并列情况) so
+
+
+--26、查询每门课程被选修的学生数  so
+
+
+--27、查询出只选修了一门课程的全部学生的学号和姓名 so 
+
+
+--28、查询男生、女生人数  so
+
+--29、查询姓“张”的学生名单  so
+
+--30、查询同名同性学生名单，并统计同名人数  so
+
+--31、1981年出生的学生名单(注：Student表中Sage列的类型是datetime) so 
+
+--32、查询每门课程的平均成绩，结果按平均成绩升序排列，
+平均成绩相同时，按课程号降序排列 
+
+
+--33、查询平均成绩大于85的所有学生的学号、姓名和平均成绩 
+
+--34、查询课程名称为“数据库”，且分数低于60的学生姓名和分数 
+
+
+--35、查询所有学生的选课情况； 
+
+
+--36、查询任何一门课程成绩在70分以上的姓名、课程名称和分数； 
+
+
+--37、查询不及格的课程，并按课程号从大到小排列 
+
+
+--38、查询课程编号为003且课程成绩在80分以上的学生的学号和姓名； 
+
+
+--39、求选了课程的学生人数 
+
+
+--40、查询选修“叶平”老师所授课程的学生中，成绩最高的学生姓名及其成绩 
+
+--41、查询各个课程及相应的选修人数 
+
+--42、查询不同课程成绩相同的学生的学号、课程号、学生成绩 
+
+--43、查询每门功成绩最好的前两名 
+
+--44、统计每门课程的学生选修人数（超过10人的课程才统计）。要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列  
+
+
+--45、检索至少选修两门课程的学生学号 
+
+ --有重复课程时用此方法(如补考)
+
+--46、查询全部学生都选修的课程的课程号和课程名 
+
+--47、查询没学过“叶平”老师讲授的任一门课程的学生姓名 
+
+--48、查询两门以上不及格课程的同学的学号及其平均成绩 
+
+--49、检索“004”课程分数小于60，按分数降序排列的同学学号 (ok)
+
+--50、删除“002”同学的“001”课程的成绩 
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#ffa2c4>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2022/09/05/后端/Mysql/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2022/09/05/后端/Servlet_Jsp基础与进阶+JSTL+EL表达式/">
         <h2>
             Servlet_Jsp基础与进阶+JSTL\EL表达式
@@ -1883,7 +2185,7 @@ public class ListServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -2288,7 +2590,7 @@ namespace HelloWorldApplication
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -2386,7 +2688,7 @@ namespace HelloWorldApplication
         
         <span class="tag">
             
-            <a href="/tags/建模" style=color:#879cff>
+            <a href="/tags/建模" style=color:#1bccbc>
                 建模
             </a>
         </span>
@@ -2814,7 +3116,7 @@ function show_menu1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#1bccbc>
                 前端
             </a>
         </span>
@@ -3326,7 +3628,7 @@ function show_menu1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -3655,7 +3957,7 @@ function isNumber(n)&#123;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#ff7d73>
                 前端
             </a>
         </span>
@@ -4166,7 +4468,7 @@ function checkInterest1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -4674,7 +4976,7 @@ function checkInterest1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -4682,902 +4984,6 @@ function checkInterest1()&#123;
     </div>
 
     <a href="/2022/08/11/政治/(五)邓小平理论/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2022/08/06/前端/CSS基础/">
-        <h2>
-            CSS基础
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2022/8/6
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h1 id="CSS简介"><a href="#CSS简介" class="headerlink" title="CSS简介"></a>CSS简介</h1><p><strong>大名</strong>：<strong>C</strong>ascading(层叠)   <strong>S</strong>tyle(样式)   <strong>S</strong>heets(列表)</p>
-<p><strong>作用</strong>：结构与样式分离的方式,便于后期维护与改版；可以用多套样式,使网页有任意样式切换的效果；使页面载入得更快、降低服务器的成本</p>
-<table>
-<thead>
-<tr>
-<th>CSS语法</th>
-<th>CSS语法。注解、与行标签对比、选择器分类、样式表引用方式、为什么样式表成为“层叠”</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>基础样式</td>
-<td>字体样式、文本样式、背景样式、链接样式</td>
-</tr>
-<tr>
-<td>列表样式</td>
-<td>有序列表、无序列表、列表项设置为图片</td>
-</tr>
-<tr>
-<td>伪类</td>
-<td>各种伪类的作用、用法、使用场合</td>
-</tr>
-</tbody></table>
-<pre><code class="javascript">&lt;head&gt;
-&lt;style type = &quot;text/css&quot;&gt;
-    p&#123;
-        background-color: red;
-        font-size: 40px;
-    &#125;
-&lt;/style&gt;
-&lt;/head&gt;
-
-&lt;body&gt;
-    &lt;p&gt;潘春尧大帅逼&lt;p&gt;
-&lt;/body&gt;
-</code></pre>
-<h1 id="选择器"><a href="#选择器" class="headerlink" title="选择器"></a>选择器</h1><p>作用：用来选择(找到)需要添加样式的位置</p>
-<p>常用选择器：标签选择器、(归)类选择器(<u>class选择器</u>)</p>
-<pre><code class="javascript">&lt;head&gt;
-&lt;style type = &quot;text/css&quot;&gt; 或者 直接&lt;style&gt;&lt;/style&gt;
-     p&#123;
-        background-color: red;
-        font-size: 40px;
-    &#125;
-    .p1&#123;
-    font-family: 隶书;
-    &#125;
-&lt;/head&gt;
-
-&lt;body&gt;
-    &lt;p&gt;我是标签选择器&lt;/p&gt;
-    &lt;p class=&quot;p1&quot;&gt;我是类选择器&lt;/p&gt;
-&lt;/body&gt;
-</code></pre>
-<h1 id="背景样式"><a href="#背景样式" class="headerlink" title="背景样式"></a>背景样式</h1><table>
-<thead>
-<tr>
-<th>属性</th>
-<th>属性值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>background-color</td>
-<td>颜色值</td>
-<td>颜色作为背景颜色</td>
-</tr>
-<tr>
-<td>background-image</td>
-<td>图片位置</td>
-<td>图片作为背景图片</td>
-</tr>
-<tr>
-<td>background-repeat</td>
-<td>repeat、repeat-x、repeat-y、no-repeat</td>
-<td>背景图片的重复方向</td>
-</tr>
-<tr>
-<td>background-attachment</td>
-<td>scroll、<strong>fixed(跟着走)</strong></td>
-<td>背景是否随滚动条滚动</td>
-</tr>
-<tr>
-<td>background-position</td>
-<td><strong>见详细表格</strong></td>
-<td>背景图像的起始位置</td>
-</tr>
-<tr>
-<td><strong>background</strong></td>
-<td>综合：<strong>背景样式的值是重合属性值组合</strong></td>
-<td></td>
-</tr>
-</tbody></table>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/359745e7a920db91da0a7a46d8307a8eb1d3600a/data/css-position.jpg"></p>
-<h1 id="外部样式"><a href="#外部样式" class="headerlink" title="外部样式"></a>外部样式</h1><p>外部样式表就是新建一个文档，里面全写css，然后再通过link插入到html代码中</p>
-<p>作用：使网页的表示层与结构层彻底分离</p>
-<p>实例：将背景设置，修改为外部样式表</p>
-<ul>
-<li><p>link：用于定义文档与外部资源的关系</p>
-</li>
-<li><p>rel：(relationship) 样式的类型</p>
-</li>
-<li><p>type：所加载的文件类型    </p>
-</li>
-<li><p>href：联系的文件</p>
-</li>
-</ul>
-<pre><code class="javascript">&lt;link rel = &quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;index.css&quot;&gt;
-</code></pre>
-<p>小贴士：除了link进行外部样式表的链接，还有其他的方法</p>
-<h1 id="文本样式"><a href="#文本样式" class="headerlink" title="文本样式"></a>文本样式</h1><p>对齐方式、文本修饰、文本转换、文本缩进…</p>
-<p>作用：美化、修饰页面的文字部分相关内容</p>
-<p>示例：.lineHeight{ line-height: 60px } </p>
-<pre><code class="javascript">垂直居中：行高和高度一样
-height: 45px;
-line-height: 45px
-</code></pre>
-<p>小贴士：更重要的是要了解样式实现的效果</p>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>属性值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>color</td>
-<td>表示颜色的内容</td>
-<td>设置文本颜色</td>
-</tr>
-<tr>
-<td>direction</td>
-<td>|tr、rt|</td>
-<td>文本的方向 &#x2F; 书写方向</td>
-</tr>
-<tr>
-<td>letter-spacing</td>
-<td>npx (n可以是负数)</td>
-<td>字符间距</td>
-</tr>
-<tr>
-<td>line-height</td>
-<td>npx</td>
-<td>行高</td>
-</tr>
-<tr>
-<td>text-align</td>
-<td>left、right、center、<strong>justify</strong>(两端对齐)</td>
-<td>文本对齐方式</td>
-</tr>
-</tbody></table>
-<pre><code class="javascript">逆序数字(2em 两个字符距离)
-&lt;p class=&quot;p1&quot;&gt;1 2 3 4 5 6&lt;/p&gt;
--------------------------
-.p1&#123;
-    direction: rtl;
-    &#125;
-</code></pre>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>属性值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>text-decoration</td>
-<td>none、underline、overline、line-through</td>
-<td>文本的修饰：下划线等</td>
-</tr>
-<tr>
-<td>text-shadow</td>
-<td>h-shadow、v-shadow、blur、color</td>
-<td>文本设置阴影</td>
-</tr>
-<tr>
-<td>text-transform</td>
-<td>none、capitalize、uppercase、lowercase</td>
-<td>改变字母大小写</td>
-</tr>
-<tr>
-<td>text-indent</td>
-<td>npx、nem</td>
-<td>首行缩进</td>
-</tr>
-</tbody></table>
-<h1 id="字体样式"><a href="#字体样式" class="headerlink" title="字体样式"></a>字体样式</h1><p>font—系列：font-style、font-family</p>
-<p><strong>作用</strong>：定义文本的字体系列、大小、加粗、风格(<em>斜体</em>) 和 变形(小型大写字母)</p>
-<pre><code class="javascript">.lineHeight&#123;
-    line-height: 30px;
-    font-size: 12px;
-    font-style: italic;
-&#125;
-</code></pre>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>属性值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>font-family</td>
-<td>隶书、仿宋、楷体等字体</td>
-<td>设置字体</td>
-</tr>
-<tr>
-<td>font-style</td>
-<td>normal、<em>italic、oblique</em></td>
-<td>规定斜体文本</td>
-</tr>
-<tr>
-<td>font-weight</td>
-<td>normal、bold、100-900</td>
-<td>文本的粗细</td>
-</tr>
-<tr>
-<td>font-size</td>
-<td>npx</td>
-<td>字体大小</td>
-</tr>
-</tbody></table>
-<h1 id="列表样式"><a href="#列表样式" class="headerlink" title="列表样式"></a>列表样式</h1><table>
-<thead>
-<tr>
-<th>属性</th>
-<th>属性值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>list-style-type</td>
-<td>none、disc、circle、square、decimal…</td>
-<td>设置列表项目的外观</td>
-</tr>
-<tr>
-<td>list-style-position</td>
-<td>inside、outside</td>
-<td>列表符号的位置</td>
-</tr>
-<tr>
-<td>list-style-image</td>
-<td>url、none</td>
-<td>把图像设置为列表项目的标记</td>
-</tr>
-<tr>
-<td>list-style</td>
-<td>同前面三个</td>
-<td>简写属性，涵盖以上三个列表样式属性</td>
-</tr>
-</tbody></table>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/ddd36f2514ed1866607bf7f20089dff0ef02b3aa/data/html%E5%88%97%E8%A1%A8%E6%A0%B7%E5%BC%8Ftype.jpg"></p>
-<h1 id="伪类-状态伪类-结构性伪类-选择整体"><a href="#伪类-状态伪类-结构性伪类-选择整体" class="headerlink" title="伪类(状态伪类 + 结构性伪类)[选择整体]"></a>伪类(状态伪类 + 结构性伪类)[选择整体]</h1><p>通常情况，超级链接上设置的样式，称为伪类</p>
-<p>作用：设置超级链接的4种状态</p>
-<pre><code class="javascript">a:link&#123;
-    font-weight: bold;
-    text-decoration: none;
-    color: red;
-&#125;
-</code></pre>
-<p>小贴士：1、伪类是用在超链接上的效果比较多，但超链接不是伪类。 2、伪类是选择器</p>
-<h5 id="伪类选择器的几种状态-冒号以后的是伪类"><a href="#伪类选择器的几种状态-冒号以后的是伪类" class="headerlink" title="伪类选择器的几种状态(冒号以后的是伪类)"></a>伪类选择器的几种状态(冒号以后的是伪类)</h5><p><strong>a</strong>代表选中了所有的超级链接  <strong>: link</strong>代表了未被访问的情况下</p>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>a : link</td>
-<td>未访问的链接</td>
-</tr>
-<tr>
-<td>a : visited</td>
-<td>已访问的链接</td>
-</tr>
-<tr>
-<td>a : hover</td>
-<td>鼠标移动到链接上(浮动、悬停)</td>
-</tr>
-<tr>
-<td>a : active</td>
-<td>向被激活的元素添加样式</td>
-</tr>
-<tr>
-<td>：focus</td>
-<td>选择拥有键盘输入焦点的元素</td>
-</tr>
-</tbody></table>
-<pre><code class="javascript">&lt;a href=&quot;#&quot;&gt;伪类&lt;/a&gt;
-----------------------------------
-a:link&#123; //未访问的链接
-    color:red; 超级链接字段区默认红色
-&#125;
-a:visited&#123;
-    color: orange;
-&#125;
-a:hover&#123;
-    color: yellow;
-    font-size: 30px;
-&#125;
-a:active&#123;
-    color: blue;
-&#125;
------------------------------------
-注意：实验顺序不能乱！！！
-</code></pre>
-<h3 id="结构性伪类"><a href="#结构性伪类" class="headerlink" title="结构性伪类"></a>结构性伪类</h3><table>
-<thead>
-<tr>
-<th><strong>属性</strong></th>
-<th><strong>作用</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>:first-child</strong></td>
-<td>选择元素的第一个子元素</td>
-</tr>
-<tr>
-<td>:last-child</td>
-<td>选择某个元素的最后一个子元素</td>
-</tr>
-<tr>
-<td>:nth-child()</td>
-<td>选择某个元素的一个或多个特定的子元素</td>
-</tr>
-<tr>
-<td>:nth-last-child()</td>
-<td>选择某个元素的一个或多个特定的子元素，从这个元素的最后一个子元素开始算</td>
-</tr>
-<tr>
-<td><strong>:first-of-type</strong></td>
-<td>选择一个上级元素下的第一个同类子元素</td>
-</tr>
-</tbody></table>
-<pre><code class="javascript">td:nth-child(2)&#123;
-    background-color: red;
-//将表格内的第二列变成红色
-&#125;
-</code></pre>
-<h1 id="伪元素选择器-选择部分"><a href="#伪元素选择器-选择部分" class="headerlink" title="伪元素选择器[选择部分]"></a>伪元素选择器[选择部分]</h1><table>
-<thead>
-<tr>
-<th>属性</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>::selection</td>
-<td>选择指定元素中被用户选中的内容</td>
-</tr>
-<tr>
-<td>::before</td>
-<td>可以在内容之前插入新内容</td>
-</tr>
-<tr>
-<td>::after</td>
-<td>可以在内容之后插入新内容</td>
-</tr>
-<tr>
-<td>::first-line</td>
-<td>选择指定选择器的首行</td>
-</tr>
-<tr>
-<td>::first-letter</td>
-<td>选择文本的第一个字符</td>
-</tr>
-</tbody></table>
-<pre><code class="javascript">&lt;p class=&quot;p1&quot;&gt;1 2 3 4 5 6&lt;/p&gt;
-&lt;p class=&quot;p1&quot;&gt;woainibuweirenhaideyongqi&lt;/p&gt;
-----------------------------
-p::before&#123;
-    content: &quot;$shuangyu$&quot;;
-&#125;
-p::after&#123;
-    content: &quot;%PPP%&quot;;
-    color: greenyellow;
-&#125;
-*::selection&#123; //所有！拖动的鼠标划痕
-    background-color: red;
-&#125;
-</code></pre>
-<h3 id="伪类-x2F-伪元素选择器小结"><a href="#伪类-x2F-伪元素选择器小结" class="headerlink" title="伪类&#x2F;伪元素选择器小结"></a><strong>伪类&#x2F;伪元素选择器小结</strong></h3><ul>
-<li>不论做什么样式设计，除了语法，也要了解效果</li>
-<li>伪类和伪元素的概念要分清</li>
-</ul>
-<h1 id="CSS其他选择器"><a href="#CSS其他选择器" class="headerlink" title="CSS其他选择器"></a>CSS其他选择器</h1><table>
-<thead>
-<tr>
-<th>选择器</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>id，*</td>
-<td>选择指定元素中被用户选中的内容</td>
-</tr>
-<tr>
-<td>逗号选择器</td>
-<td>联合选择器</td>
-</tr>
-<tr>
-<td>空格选择器</td>
-<td>子孙(后代)选择器</td>
-</tr>
-<tr>
-<td>&gt;选择器</td>
-<td>子选择器(不是子孙后代)</td>
-</tr>
-<tr>
-<td>+选择器</td>
-<td>相邻兄弟选择器</td>
-</tr>
-<tr>
-<td>[]</td>
-<td>属性选择器</td>
-</tr>
-</tbody></table>
-<p><strong><u>class允许重复，id不允许重复</u></strong></p>
-<h2 id="id，"><a href="#id，" class="headerlink" title="id，*"></a><em><em><span style = "color : orange">id，</em></span></em>*</h2><p><u>[<strong>id选择器一定要以#开头</strong>]</u></p>
-<pre><code class="javascript">&lt;p class = &quot;p1&quot; id = &quot;name1&quot;&gt; PCY &lt;/p&gt;   【红色】
-&lt;p class = &quot;p1&quot; id = &quot;name2&quot;&gt; PCY &lt;/p&gt;     【蓝色】
----------------------------------------
-#name1&#123;
-    color: red;
-&#125;
-#name2&#123;
-    color: blue;
-&#125;
-*&#123; //对所有的标签进行变化
-    font-size: 60px;
-&#125;
-</code></pre>
-<h2 id="逗号选择器"><a href="#逗号选择器" class="headerlink" title="逗号选择器"></a><strong><span style = "color : orange">逗号选择器</span></strong></h2><p>[逗号两边只要是<strong>选择器</strong>就可]</p>
-<pre><code class="javascript">&lt;p class = &quot;p1&quot; id = &quot;name1&quot;&gt; PCY &lt;/p&gt;   【红字黄底】
-&lt;p class = &quot;p1&quot; id = &quot;name2&quot;&gt; PCY &lt;/p&gt;     【红字黄底】
---------------------------------------
-#name1,#name2&#123;
-    color: red;
-    background-color: yellow;
-&#125;
-</code></pre>
-<h2 id="空格选择器"><a href="#空格选择器" class="headerlink" title="空格选择器"></a><strong><span style = "color : orange">空格选择器</span></strong></h2><pre><code class="javascript">&lt;div id=&quot;div1&quot;&gt;
-&lt;p&gt;潘春尧大帅比&lt;/p&gt;    
-&lt;/div&gt;
---------------------------------------
-#div1 p&#123; //在div1里的p
-    color: red;
-&#125;
-#div1 &gt; p&#123; //直接属于div1的p
-    color: red;
-&#125;
-</code></pre>
-<h2 id="选择器-1"><a href="#选择器-1" class="headerlink" title="+ 选择器"></a><strong><span style = "color : orange">+ 选择器</span></strong></h2><pre><code class="javascript">&lt;div id=&quot;div1&quot;&gt;
-&lt;p&gt;潘春尧大帅比&lt;/p&gt;    
-&lt;/div&gt;
-&lt;p&gt;我作用于&quot;+选择器&quot;&lt;/p&gt;
---------------------------------------
-#div1+p&#123; //在div在同一级的p标签
-    color: red;
-&#125;
-</code></pre>
-<h2 id="属性选择器"><a href="#属性选择器" class="headerlink" title="属性选择器"></a><strong><span style = "color : orange">属性选择器</span></strong></h2><pre><code class="javascript">&lt;p class=&quot;p1&quot; id=&quot;name1&quot;&gt;潘春尧&lt;/p&gt;
---------------------------------------
-p[class=&quot;p1&quot;]&#123;
-    color: red;
-&#125;
-</code></pre>
-<h1 id="选择器特权"><a href="#选择器特权" class="headerlink" title="选择器特权"></a>选择器特权</h1><table>
-<thead>
-<tr>
-<th></th>
-<th>选择器</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td>!important</td>
-</tr>
-<tr>
-<td>2</td>
-<td>行内样式</td>
-</tr>
-<tr>
-<td><strong>3</strong></td>
-<td><strong>ID选择器</strong></td>
-</tr>
-<tr>
-<td><strong>4</strong></td>
-<td><strong>类选择器</strong></td>
-</tr>
-<tr>
-<td><strong>5</strong></td>
-<td><strong>标签</strong></td>
-</tr>
-<tr>
-<td>6</td>
-<td>通配符</td>
-</tr>
-<tr>
-<td>7</td>
-<td>浏览器默认属性</td>
-</tr>
-</tbody></table>
-<p><u><strong>.div</strong>{!important}</u>   &gt;   <u><strong>#div{}</strong></u>   &gt;   <u><strong>.div{类选择器}</strong></u>   &gt;   <u><strong>div{标签选择器}</strong></u>   (结果显示<span style = "color : orange"><strong>黄色</strong></span>)</p>
-<pre><code class="javascript">链接css样式      &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;a.css&quot; /&gt;
-div&#123;
-    width: 200px;
-    height: 200px;
-    background-color: red;
-&#125;
-.div1&#123;
-    background-color: yellow;
-&#125;
-.div1&#123;
-    background-color: orange!important;
-&#125;
-#div2&#123;
-    background-color: blue;
-&#125;
-</code></pre>
-<pre><code class="javascript">&lt;div class=&quot;d1&quot; id=&quot;d2&quot;&gt;
-        &lt;div class=&quot;div1&quot; id=&quot;div2&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
--------------------------------------------
-.d1 .div1&#123;
-    background-color: yellow;
-&#125;
-</code></pre>
-<h1 id="CSS浮动"><a href="#CSS浮动" class="headerlink" title="CSS浮动"></a>CSS浮动</h1><p>课程目的：学习边框、轮廓灯快级元素设置，盒子模型，标准流、文档流、脱标流等技术术语、浮动的设置、浮动的特点、利用浮动技术进行特效制作</p>
-<h3 id="DIV设置大小、位置、背景"><a href="#DIV设置大小、位置、背景" class="headerlink" title="DIV设置大小、位置、背景"></a>DIV设置大小、位置、背景</h3><pre><code class="javascript">div&#123;
-    background-color: yellow;
-    width: 100px;
-    height: 100px;
-    position: absolute; [↓ 定义参照物 ↓] (绝对定位：页面左上角0.0)
-    top: 200px;
-    left: 200px;
-&#125;
-</code></pre>
-<p>Div溢出处理效果</p>
-<ul>
-<li>超齿div宽度高度的文字或图片进行<strong>隐藏处理</strong><ul>
-<li><strong>overflow:</strong> hidden</li>
-</ul>
-</li>
-<li>超出div宽度高度的文字或图片<strong>增加滚动条</strong><ul>
-<li><strong>overflow:</strong> scroll</li>
-</ul>
-</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>visible</td>
-<td>默认值。内容不会被修剪，会呈现在元素框之外</td>
-</tr>
-<tr>
-<td>hidden</td>
-<td>超出的部分被隐藏</td>
-</tr>
-<tr>
-<td>scroll</td>
-<td>不论是否需要，都显示滚动条</td>
-</tr>
-<tr>
-<td>auto</td>
-<td>按需显示滚动条以便查看其余的内容</td>
-</tr>
-</tbody></table>
-<h2 id="CSS轮廓：outline"><a href="#CSS轮廓：outline" class="headerlink" title="CSS轮廓：outline"></a>CSS轮廓：outline</h2><p>作用：绘制于元素周围的一条线，位于边框边缘的外围，可起到突出元素的作用</p>
-<p>示例：outline：dashed； &#x2F;<em>虚线轮廓</em>&#x2F;</p>
-<p>小贴士：dotted(点状轮廓)    solid(实线)    double(双线)等</p>
-<h2 id="CSS边框："><a href="#CSS边框：" class="headerlink" title="CSS边框："></a>CSS边框：</h2><h3 id="border-left、border-right、border-top、border-bottom"><a href="#border-left、border-right、border-top、border-bottom" class="headerlink" title="border-left、border-right、border-top、border-bottom"></a>border-left、border-right、border-top、border-bottom</h3><p><strong>border-radius</strong>: <u>20px</u> &#x2F; <u>30px</u> <u><em>处理对象的角度(水平 &#x2F; 垂直)</em></u></p>
-<p>作用：设置div边框的边线宽度、颜色、虚线、实线等样式css属性</p>
-<p>示例：border-bottom：solid;    &#x2F;<em>设置下边框为实线</em>&#x2F;</p>
-<p>小贴士：none(无边框)    double(双线边框)</p>
-<pre><code class="javascript">只有下边框的文本框
-示例：    姓名：___________
-========== 综合 ==========
-&lt;div id=&quot;div2&quot;&gt;
-&lt;label&gt;姓名：&lt;/label&gt;&lt;input type=&quot;text&quot; /&gt;
-&lt;/div&gt;
--------------------------
-#div2&#123;
-    top: 150px;
-    left: 350px;
-    position: absolute;
-/*     border-bottom: solid; */
-&#125;
-
-input&#123;
-    border: none;
-    outline: none;
-    border-bottom: solid;
-&#125;
-</code></pre>
-<h2 id="盒子模型："><a href="#盒子模型：" class="headerlink" title="盒子模型："></a>盒子模型：</h2><h2 id="width、height、border、margin、padding"><a href="#width、height、border、margin、padding" class="headerlink" title="width、height、border、margin、padding"></a>width、height、border、margin、padding</h2><p>作用：在进行页面布局时，盒子模型非常重要</p>
-<p>示例：</p>
-<ul>
-<li>margin：10px 10px 10px 10px；(**<u>对象与对象</u>**之间的边距) [上右下左(<strong>顺时针</strong>)]</li>
-<li>padding：10px 10px 10px 10px；(文字和边框的距离)</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/54659ce2737f835772a8bfe57d49f0df5decbf5a/data/%E7%9B%92%E5%AD%90%E6%A8%A1%E5%9E%8B.jpg"></p>
-<h4 id="box-sizing-padding的距离是由哪里产生的？"><a href="#box-sizing-padding的距离是由哪里产生的？" class="headerlink" title="box-sizing    padding的距离是由哪里产生的？"></a><u>box-sizing</u>    padding的距离是由哪里产生的？</h4><ul>
-<li>content-box：在宽度和高度之外绘制元素的内边距和边框</li>
-<li>border-box：已设定的宽度和高度分别减去边框和内边距才能得到内容的宽度和高度</li>
-</ul>
-<h2 id="居中：1、文字居中-2、对象居中"><a href="#居中：1、文字居中-2、对象居中" class="headerlink" title="居中：1、文字居中    2、对象居中"></a>居中：1、文字居中    2、对象居中</h2><ul>
-<li>文字居中：让<strong>自己容器中元素</strong>居中，常作用于文本或图片等内联元素</li>
-<li>对象居中：让<strong>容器中自己居中</strong>，长作用于块元素，且需要配合宽度使用</li>
-</ul>
-<pre><code class="javascript">    box-sizing: border-box;
-    text-align: center;
-    line-height: 200px;
-    margin: 0px auto;(auto上方必须要有width 不然无法相对自动居中 )
-</code></pre>
-<h2 id="浮动"><a href="#浮动" class="headerlink" title="浮动"></a>浮动</h2><ul>
-<li><strong>行级元素</strong>：行内元素和其他行内元素都会在一条水平线上排列，都是在同一行的</li>
-</ul>
-<p><strong>a标签、label、img、span</strong>等</p>
-<ul>
-<li><strong>块级元素</strong>：div、h标签、li、table等</li>
-</ul>
-<h2 id="定位机制："><a href="#定位机制：" class="headerlink" title="定位机制："></a>定位机制：</h2><h5 id="标准-文档流、脱标流-float、position：absolute"><a href="#标准-文档流、脱标流-float、position：absolute" class="headerlink" title="(标准)文档流、脱标流(float、position：absolute)"></a>(标准)文档流、脱标流(float、position：absolute)</h5><p><u>文档流特点</u>：空白折叠现象、高矮不齐，底边对齐、自动换行、一行写满，换行写</p>
-<table>
-<thead>
-<tr>
-<th>属性</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>left</td>
-<td>元素向左浮动</td>
-</tr>
-<tr>
-<td>right</td>
-<td>元素向右浮动</td>
-</tr>
-<tr>
-<td>none</td>
-<td>默认值、元素不浮动</td>
-</tr>
-</tbody></table>
-<p><strong>脱标流</strong>[<u>float、position：absolute</u>]设置后就脱离了文档流，位置已经起飞，后面的内容会顶上去显示(如果位置未改变，会有覆盖的效果)</p>
-<pre><code class="javascript">&lt;body&gt;
-    &lt;div id=&quot;div1&quot;&gt;1&lt;/div&gt;
-    &lt;div id=&quot;div2&quot;&gt;2&lt;/div&gt;
-    &lt;div id=&quot;div3&quot;&gt;3&lt;/div&gt;
-&lt;/body&gt;
-------------------------------
-div&#123;
-    width: 200px;
-    height: 200px;
-    font-size: 50px;
-&#125;
-
-#div1&#123;
-    background-color: blue;
-    float: right;
-&#125;
-#div2&#123;
-    background-color: red;
-    width: 300px;
-    float: left;
-&#125;
-#div3&#123;
-    background-color: greenyellow;
-    width: 200px;
-    float: left;
-&#125;
-</code></pre>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/739f5e944aca3af71983827a17a3ed123638895a/data/%E8%84%B1%E6%A0%87%E6%B5%81.jpg"></p>
-<h2 id="float初衷？包裹？崩溃"><a href="#float初衷？包裹？崩溃" class="headerlink" title="float初衷？包裹？崩溃"></a>float初衷？包裹？崩溃</h2><p><u>如果两个div嵌套，子div没有设定宽度的时候，此时的宽度为父div的宽度</u>[<strong>跨级元素特性</strong>]</p>
-<pre><code class="javascript">#div&#123;
-    background-color: yellow;
-    height: 450px;
-&#125;
-#div2&#123;
-    background-color: red;
-    height: 230px
-&#125;
-此时为黄色的盒子高度为450px
-</code></pre>
-<p>崩溃破坏：<strong>float</strong></p>
-<pre><code class="javascript">&lt;body&gt;
-    &lt;div id=&quot;div1&quot;&gt;1
-        &lt;div id=&quot;div2&quot;&gt;&lt;/div&gt;
-        &lt;div id=&quot;div3&quot;&gt;&lt;/div&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-------------------------------
-#div1&#123;
-    border: 1px solid black;
-    background-color: red;
-&#125;
-#div2&#123;
-    background-color: yellow;
-    height: 230px;
-    width: 450px;
-&#125;
-#div3&#123;
-    background-color: blue;
-    height: 160px;
-    width: 550px;
-    float: left;
-    [脱离了父一级的文档流 已经脱离了div1的管辖]
-    [因此红色盒子不再继续包裹着蓝色盒子]
-&#125;
-</code></pre>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/b1924d0d4a9815f2a94e47af4fa172b421f5791b/data/%E8%84%B1%E6%A0%87%E6%B5%81%E5%B4%A9%E6%BA%83.jpg"></p>
-<h4 id="包裹性"><a href="#包裹性" class="headerlink" title="包裹性"></a>包裹性</h4><p>当产生了浮动，div内的宽度自动适应于里面的内容</p>
-<pre><code class="javascript">&lt;body&gt;
-    &lt;div id=&quot;div1&quot;&gt;
-      &lt;img src=&quot;...&quot;/&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
------------------------
-#div1&#123;
-    background-color: red;
-    float:left;
-&#125;
-img&#123;
-    vertical-align: bottom;
-&#125;
-</code></pre>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/0e1bbce6bfe8c73565124f1589e69bc3d50e6915/data/%E7%9B%92%E5%AD%90%E5%8C%85%E8%A3%B9%E6%80%A7%E4%BB%A5%E5%8F%8A%E4%BF%AE%E6%94%B9.jpg"></p>
-<h2 id="浮动清除"><a href="#浮动清除" class="headerlink" title="浮动清除"></a>浮动清除</h2><p>为了父元素不会出现“高度崩塌”；如果强制规定外层容器的尺寸，就显得不灵活，高度不能自动适应；从某个元素开始，不再需要浮动的效果。</p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/a555c4443258a9d867266d3a551f7b6911f496ee/data/%E6%B8%85%E9%99%A4%E6%B5%AE%E5%8A%A8.jpg"></p>
-<pre><code class="javascript">clear: both/left/right; //清除该元素之前的浮动  
-#div2&#123;
-    background-color: yellow;
-    float: left;
-    width: 200px;
-    height: 200px;
-&#125;
-#div3&#123;
-    background-color: blue;
-    float: right;
-    width: 220px;
-    height: 220px;
-&#125;
-#div4&#123;
-    background-color: black;
-    width: 240px;
-    height: 240px;
-    clear: right;
-&#125;
-div4的黑色盒子清除了蓝色盒子右侧的浮动
-所以使蓝色盒子进入文档流，之后盒子就与蓝色盒子底线对齐
-=============================================
-也可以专门加一个div清除的id 
-&lt;div id=&quot;div1&quot;&gt;
-        &lt;div id=&quot;div2&quot;&gt;&lt;/div&gt;
-        &lt;div id=&quot;div3&quot;&gt;&lt;/div&gt;
-        &lt;div id=&quot;clearDiv&quot;&gt;&lt;/div&gt;
-        &lt;div id=&quot;div4&quot;&gt;&lt;/div&gt;
-    &lt;/div&gt;
----------------------------------------------
-#clearDiv&#123;
-    clear: both;
-&#125;
-=============================================
-★★  清除浮动的主流  ★★
-#clearDiv::after&#123; //在clearDiv结束的后面加上内容
-    content: &quot;&quot;; //要有对象 可以为空(不显示内容)
-    visibility: hidden; //以防显示(用来隐藏)
-    height: 0px;
-    //display none的用法：
-    //设置了display: none属性值，则就变成了如下图所示的效果：需要隐藏的区域就被隐藏了
-    display: block; //将36、37行转换为块级元素
-    clear: both;
-&#125;
-#clearDiv&#123; //使页面重新加载、重新计算渲染
-    zoom：1; //解决IE浏览器下的各种bug
-&#125;
-</code></pre>
-<h2 id="相对定位"><a href="#相对定位" class="headerlink" title="相对定位"></a>相对定位</h2><h3 id="定位-position"><a href="#定位-position" class="headerlink" title="定位(position)"></a>定位(position)</h3><p>相对 和 绝对取决于<strong>是否破坏文档流</strong></p>
-<ul>
-<li><p><span style = "color : red"><strong>relative 相对</strong></span>(相对自己<u>以前的位置</u>进行的偏移)</p>
-<p>(配合其他的子元素<strong>当成父元素</strong>来操作)(破坏文档流)(以自己所在的位置进行参照)</p>
-</li>
-</ul>
-<p><strong>相对定位</strong>的偏移参考元素是元素本身，不会使元素脱离文档流。元素的初始位置占据的空间会被保留</p>
-<p>主要代码—&gt; <u>position：relative</u></p>
-<p>示例：<img src="https://raw.githubusercontent.com/P-luminary/images/fc6ea341a58b6f450caa721c005d38eaa9378700/data/%E7%9B%B8%E5%AF%B9%E5%AE%9A%E4%BD%8D.jpg"></p>
-<pre><code class="javascript">&lt;div class=&quot;main&quot;&gt;
-    &lt;div class=&quot;div1&quot;&gt;&lt;/div&gt;
-        在我们这样的国家，社会主义建设具有...
-&lt;/div&gt;
---------------------------------------------
-.main&#123;
-    width: 600px;
-    height: 600px;
-    background-color: aqua;
-&#125;
-.div1&#123;
-    width: 100px;
-    height: 100px;
-    background-color: red;
-    position: relative;
-    top: 20px;
-    left: 30px;
-&#125;
-</code></pre>
-<ul>
-<li><span style = "color : red"><strong>absolute 绝对</strong></span>(不破坏文档流)</li>
-</ul>
-<p><strong>绝对定位</strong>相对于已定位的<span style = "color : orange"><strong>最近的祖先元素</strong></span>，如果没有已定位的最近的祖先元素，那么它的位置就相当于最初的包含块(比如：<strong>body</strong>)</p>
-<p>主要代码—&gt; <u>position：absolute</u></p>
-<p>示例：<img src="https://raw.githubusercontent.com/P-luminary/images/4bcfdac7941a42db93503ba2de374632b7d9ce3e/data/%E7%BB%9D%E5%AF%B9%E5%AE%9A%E4%BD%8D.jpg"></p>
-<h4 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h4><p><strong>相对定位</strong>通常为父一级定位</p>
-<p><strong>绝对定位</strong>通常为子一级定位</p>
-<pre><code class="javascript">☆ 草原三剑客 ☆
-position：absolute / relative
-top/bottom: 20px;
-left/right: 20px;
-
-☆ 组合版本 ☆
-position: relative;
-float: right;
-</code></pre>
-<p><strong>z-index</strong>：决定谁在前面，谁在后面（<u><strong>数值越大 越在前面</strong></u>）(一般用<strong>十位数</strong>、整倍数)</p>
-<ul>
-<li><p><span style = "color : red"><strong>static 无定位</strong></span></p>
-</li>
-<li><p><span style = "color : red"><strong>fixed 固定</strong></span></p>
-</li>
-</ul>
-<p>固定定位：相对于浏览器窗口进行定位(<strong>位置随着移动保持不变</strong>)</p>
-<p>主要代码—&gt; <strong>position：fiexd</strong></p>
-<pre><code class="javascript">.div1&#123;
-    width: 5%; //相对于body宽度的5%
-    height: 100px;
-    position: fixed;
-&#125;
-</code></pre>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/前端" style=color:#00bcd4>
-                前端
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2022/08/06/前端/CSS基础/ " class="go-post">
         阅读全文
     </a>
 </div>
@@ -5648,9 +5054,9 @@ float: right;
 
             
             <span class="page-omit">...</span>
-            <a href="/page/10">
+            <a href="/page/11">
                 <span class="page-num">
-                    10
+                    11
                 </span>
             </a>
             
