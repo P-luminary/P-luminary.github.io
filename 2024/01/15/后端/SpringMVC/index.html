@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2062,7 +2062,119 @@ public class RestfulController &#123;
         max-age=&quot;3600&quot;/&gt;
 &lt;/mvc:cors&gt;
 </code></pre>
+<h3 id="SpringMVC拦截器-高级组件"><a href="#SpringMVC拦截器-高级组件" class="headerlink" title="SpringMVC拦截器 [高级组件]"></a>SpringMVC拦截器 [高级组件]</h3><h5 id="拦截器-Interceptor"><a href="#拦截器-Interceptor" class="headerlink" title="拦截器-Interceptor"></a>拦截器-Interceptor</h5><ul>
+<li>拦截器(Interceptor)用于对URL请求进行前置&#x2F;后置过滤</li>
+<li>Interceptor与Filter用途相似, 但实现方式不同</li>
+<li>Interceptor底层基于Spring AOP面向切面编程实现[类似于<strong>环绕通知</strong>]</li>
+</ul>
+<h5 id="拦截器开发流程"><a href="#拦截器开发流程" class="headerlink" title="拦截器开发流程"></a>拦截器开发流程</h5><ul>
+<li>Maven依赖servlet-api</li>
+<li>实现HandlerInterceptor接口</li>
+<li>applicationContext配置过滤地址</li>
+</ul>
+<h5 id="HandlerInterceptor接口"><a href="#HandlerInterceptor接口" class="headerlink" title="HandlerInterceptor接口"></a>HandlerInterceptor接口</h5><ul>
+<li><strong>preHandle</strong> - 前置执行处理</li>
+<li><strong>postHandle</strong> - 目标资源已被Spring MVC框架处理 没产生响应文本</li>
+<li><strong>afterCompletion</strong> - 相应文本已经产生</li>
+</ul>
+<pre><code class="xml">pom.xml
+     &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.1.0&lt;/version&gt;
+&lt;!-- 只有在开发编译才会引用 打包最终使用的时候会排除在外 因为 servlet-api与tomcat-api冲突  --&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="java">com/imooc/restful/interceptor/MyInterceptor.java
+package com.imooc.restful.interceptor;
 
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class MyInterceptor implements HandlerInterceptor &#123;
+//    Code -&gt; Implement Methods
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(request.getRequestURI()+&quot;准备执行&quot;);
+        return true;
+    &#125;
+
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+        System.out.println(request.getRequestURI()+&quot;目标处理成功&quot;);
+    &#125;
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+        System.out.println(request.getRequestURI()+&quot;响应内容已产生&quot;);
+    &#125;
+//  随后去applicationContext.xml配置
+&#125;
+
+=============================================================
+/准备执行
+/目标处理成功
+/响应内容已产生
+/准备执行
+/目标处理成功
+/响应内容已产生
+/准备执行
+/目标处理成功
+/响应内容已产生
+    
+http://localhost/restful/persons
+/restful/persons准备执行
+/restful/persons目标处理成功
+/restful/persons响应内容已产生
+    
+http://localhost/client.html
+/client.html准备执行
+/client.html目标处理成功
+/client.html响应内容已产生
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;mvc:interceptors&gt;
+        &lt;mvc:interceptor&gt;
+&lt;!--  哪些[所有]地址进行拦截 下面加个bean是哪个类进行处理[送到这个类中处理]--&gt;
+            &lt;mvc:mapping path=&quot;/**&quot;/&gt;
+            &lt;bean class=&quot;com.imooc.restful.interceptor.MyInterceptor&quot;/&gt;
+        &lt;/mvc:interceptor&gt;
+    &lt;/mvc:interceptors&gt;
+</code></pre>
+<h3 id="拦截器使用细则"><a href="#拦截器使用细则" class="headerlink" title="拦截器使用细则"></a>拦截器使用细则</h3><pre><code class="xml">applicationContext.xml
+&lt;mvc:interceptors&gt;
+        &lt;mvc:interceptor&gt;
+&lt;!--            哪些[所有]地址进行拦截 下面加个bean是哪个类进行处理[送到这个java中处理]--&gt;
+       &lt;!-- &lt;mvc:mapping path=&quot;/**&quot;/&gt; --&gt;
+            &lt;mvc:mapping path=&quot;/restful/**&quot;/&gt;
+            &lt;mvc:mapping path=&quot;/webapi/**&quot;/&gt;
+&lt;!--            以下是不需要拦截 排除在外的--&gt;
+            &lt;mvc:exclude-mapping path=&quot;/**.ico&quot;/&gt;
+            &lt;mvc:exclude-mapping path=&quot;/**.jpg&quot;/&gt;
+            &lt;mvc:exclude-mapping path=&quot;/**.gif&quot;/&gt;
+            &lt;mvc:exclude-mapping path=&quot;/**.js&quot;/&gt;
+            &lt;mvc:exclude-mapping path=&quot;/**.css&quot;/&gt;
+&lt;!--   创建一个resources  规范静态文件目录 一次性都排除在外--&gt;
+            &lt;mvc:exclude-mapping path=&quot;/rescources/**&quot;/&gt;
+
+            &lt;bean class=&quot;com.imooc.restful.interceptor.MyInterceptor&quot;/&gt;
+        &lt;/mvc:interceptor&gt;
+    &lt;/mvc:interceptors&gt;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e1dbff67f8b3f8c785e7ca12d62741c295469782/data/%E5%A4%9AInterceptor%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F.jpg"></p>
+<pre><code class="java">  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(request.getRequestURI()+&quot;准备执行&quot;);
+        return true;
+    &#125;
+通过preHandle的返回值可以做很多事情
+对某一个url进行前置检查 对请求放行 如果不符合要求 直接在拦截器中返回相应
+return true; 请求依次向后发送
+return false; 请求被阻挡
+</code></pre>
+<h3 id="开发”用户流量”拦截器"><a href="#开发”用户流量”拦截器" class="headerlink" title="开发”用户流量”拦截器"></a>开发”用户流量”拦截器</h3>
     </div>
 
     
