@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -2174,7 +2174,134 @@ http://localhost/client.html
 return true; 请求依次向后发送
 return false; 请求被阻挡
 </code></pre>
-<h3 id="开发”用户流量”拦截器"><a href="#开发”用户流量”拦截器" class="headerlink" title="开发”用户流量”拦截器"></a>开发”用户流量”拦截器</h3>
+<h3 id="开发”用户流量”拦截器"><a href="#开发”用户流量”拦截器" class="headerlink" title="开发”用户流量”拦截器"></a>开发”用户流量”拦截器</h3><pre><code class="xml">pom.xml [引入新的依赖后一定要去Tomcat导入新的依赖包]
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">logback.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+    &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;[%thread] %d %level %logger&#123;10&#125; - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    &lt;appender name=&quot;accessHistoryLog&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;fileNamePattern&gt;d:/logs/history.%d.log&lt;/fileNamePattern&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;[%thread] %d %level %logger&#123;10&#125; - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    &lt;root level=&quot;debug&quot;&gt;
+        &lt;appender-ref ref=&quot;console&quot;/&gt;
+    &lt;/root&gt;
+    &lt;logger name=&quot;com.imooc.restful.interceptor.AccessHistoryInterceptor&quot;
+            level=&quot;INFO&quot; additivity=&quot;false&quot;&gt;
+        &lt;appender-ref ref=&quot;accessHistoryLog&quot;/&gt;
+    &lt;/logger&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">com/imooc/restful/interceptor/AccessHistoryInterceptor.java
+package com.imooc.restful.interceptor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class AccessHistoryInterceptor implements HandlerInterceptor &#123;
+    private Logger logger = LoggerFactory.getLogger(AccessHistoryInterceptor.class);
+//    前置处理
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        StringBuilder log = new StringBuilder();
+        log.append(request.getRemoteAddr());
+        log.append(&quot;|&quot;);
+        log.append(request.getRequestURL());
+        log.append(&quot;|&quot;);
+        log.append(request.getHeader(&quot;user-agent&quot;));
+        logger.info(log.toString());
+        return true;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/restful/interceptor/MyInterceptor.java
+package com.imooc.restful.interceptor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class MyInterceptor implements HandlerInterceptor &#123;
+//    Code -&gt; Implement Methods
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(request.getRequestURL() + &quot;-准备执行&quot;);
+//        response.getWriter().print(&quot;[]&quot;);
+        return true;
+    &#125;
+
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+        System.out.println(request.getRequestURL() + &quot;-目标处理成功&quot;);
+    &#125;
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+        System.out.println(request.getRequestURL() + &quot;-响应内容已产生&quot;);
+    &#125;
+&#125;
+
+==============================================================
+http://localhost/client.html
+[http-nio-80-exec-1] 2024-01-18 10:43:54,739 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/login.html&quot;, parameters=&#123;&#125;
+[http-nio-80-exec-1] 2024-01-18 10:43:54,750 DEBUG o.s.w.s.h.SimpleUrlHandlerMapping - Mapped to org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler@5c0e8bb9
+[http-nio-80-exec-1] 2024-01-18 10:43:54,758 DEBUG o.s.w.s.DispatcherServlet - Completed 404 NOT_FOUND
+[http-nio-80-exec-2] 2024-01-18 10:44:00,495 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/restful/request&quot;, parameters=&#123;&#125;
+[http-nio-80-exec-2] 2024-01-18 10:44:00,502 DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to public java.lang.String com.imooc.restful.controller.RestfulController.doGetRequest()
+http://localhost/restful/request-准备执行
+[http-nio-80-exec-2] 2024-01-18 10:44:00,539 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using &#39;application/json;charset=utf-8&#39;, given [application/json, text/javascript, */*;q=0.01] and supported [text/html;charset=utf-8, application/json;charset=utf-8, text/plain, */*, application/json, application/*+json]
+[http-nio-80-exec-2] 2024-01-18 10:44:00,539 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [&quot;&#123;&quot;message&quot;:&quot;返回查询结果&quot;&#125;&quot;]
+http://localhost/restful/request-目标处理成功
+http://localhost/restful/request-响应内容已产生
+[http-nio-80-exec-2] 2024-01-18 10:44:00,580 DEBUG o.s.w.s.DispatcherServlet - Completed 200 OK
+[http-nio-80-exec-5] 2024-01-18 10:44:08,194 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/restful/persons&quot;, parameters=&#123;&#125;
+[http-nio-80-exec-5] 2024-01-18 10:44:08,195 DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to public java.util.List&lt;com.imooc.restful.entity.Person&gt; com.imooc.restful.controller.RestfulController.findPersons()
+http://localhost/restful/persons-准备执行
+RestfulController.findPersons() - return list
+[http-nio-80-exec-5] 2024-01-18 10:44:08,211 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using &#39;application/json&#39;, given [application/json, text/javascript, */*;q=0.01] and supported [application/json, application/*+json]
+[http-nio-80-exec-5] 2024-01-18 10:44:08,211 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [[com.imooc.restful.entity.Person@619c4d80, com.imooc.restful.entity.Person@71459fb]]
+http://localhost/restful/persons-目标处理成功
+http://localhost/restful/persons-响应内容已产生
+===================================================================
+D:\logs\history.2024-01-18
+[http-nio-80-exec-1] 2024-01-18 10:43:54,755 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/login.html|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+[http-nio-80-exec-2] 2024-01-18 10:44:00,502 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+[http-nio-80-exec-5] 2024-01-18 10:44:08,195 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/persons|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+[http-nio-80-exec-3] 2024-01-18 10:44:10,137 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request/100|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+[http-nio-80-exec-4] 2024-01-18 10:44:10,935 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+[http-nio-80-exec-6] 2024-01-18 10:44:11,481 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;mvc:interceptors&gt;
+        &lt;mvc:interceptor&gt;
+            &lt;mvc:mapping path=&quot;/**&quot;/&gt;
+            &lt;mvc:exclude-mapping path=&quot;/resources/**&quot;/&gt;
+            &lt;bean class=&quot;com.imooc.restful.interceptor.AccessHistoryInterceptor&quot;/&gt;
+        &lt;/mvc:interceptor&gt;
+    &lt;/mvc:interceptors&gt;
+</code></pre>
+<h3 id="Spring-MVC处理流程"><a href="#Spring-MVC处理流程" class="headerlink" title="Spring MVC处理流程"></a>Spring MVC处理流程</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/42e2897ef9dc2075cb7c71f43c2a2e54e11ffea7/data/SpringMVC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.jpg"></p>
+
     </div>
 
     
