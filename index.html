@@ -490,6 +490,150 @@ public interface TestMapper &#123;
     &lt;/settings&gt;
 &lt;/configuration&gt;
 </code></pre>
+<h3 id="整合其他组件"><a href="#整合其他组件" class="headerlink" title="整合其他组件"></a><span style ="color:purple"><strong>整合其他组件</strong></span></h3><ul>
+<li>配置logback日志输出</li>
+<li>声明式事务配置</li>
+<li>整合JUnit单元测试</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;!--   11. 单元测试依赖 mappers加入test.xml mapper扫描接口后生成对应实现类 12test.xml--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-test&lt;/artifactId&gt;
+            &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+&lt;!--  15导入依赖 scope打包时不会放进去 tomcat自带 但是测试时不用tomcat所以要加--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.1.0&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+&lt;!--   16加入日志依赖 logback日志组件 17创建logback.xml--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="xml">mappers/test.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.reader.mapper.TestMapper&quot;&gt;
+&lt;!--   12. 与接口对应的完整类路径  ↓用于对应数据新增 对应TestMapper.java接口  13TestService --&gt;
+    &lt;insert id=&quot;insert&quot;&gt;
+        insert into test(content) values(&#39;测试内容&#39;)
+    &lt;/insert&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/TestService.java
+package com.imooc.reader.service;
+
+import com.imooc.reader.mapper.TestMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+
+@Service
+public class TestService &#123;
+// 13.运行时注入生成的对象 自动生成Test 选中上面的类 Code generate 14TestServiceTest.java
+    @Resource
+    private TestMapper testMapper;
+//      @Transactional 要么全部完成 要么什么也不做
+    @Transactional
+    public void batchImport()&#123;
+        for (int i = 0; i &lt; 5; i++) &#123;
+//            if (i==3) &#123;
+//                throw new RuntimeException(&quot;预期外异常&quot;);
+//            &#125;
+            testMapper.insert();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/TestServiceTest.java
+package com.imooc.reader.service;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+import static org.junit.Assert.*;
+
+//14. 运行时自动初始IoC容器 + 说明配置文件在什么地方完成初始化 15依赖javaservlet pom.xml
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class TestServiceTest &#123;
+    @Resource
+    private TestService testService;
+
+    @Test
+    public void batchImport() &#123;
+        testService.batchImport();
+        System.out.println(&quot;批量导入成功&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">logback.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;configuration&gt;
+    &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&gt;
+&lt;!--           17.       小时分钟秒   日志级别  线程名   说明何类何方法  对应日志消息+换行--&gt;
+&lt;!--            18转至声明式事务 applicationContext上面的文件头加些配置信息 再去下面写--&gt;
+            &lt;pattern&gt;%d&#123;HH:mm:ss&#125; %-5level [%thread] %logger&#123;30&#125; - %msg%n&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+&lt;!--    输出级别   --&gt;
+    &lt;root level=&quot;debug&quot;&gt;
+        &lt;appender-ref ref=&quot;console&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="xml">applicationContext
+&lt;!--    18.声明式事务配置 控制事务的打开 提交 回滚 ↓--&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+&lt;!--    与之对应的注解模式！ 再去TestService.java添加  @Transactional --&gt;
+    &lt;tx:annotation-driven transaction-manager=&quot;transactionManager&quot;/&gt;
+</code></pre>
 
             
         </div>
@@ -504,7 +648,7 @@ public interface TestMapper &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -555,7 +699,7 @@ public interface TestMapper &#123;
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#879cff>
                 软考
             </a>
         </span>
@@ -2771,7 +2915,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -7939,7 +8083,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8147,7 +8291,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -9854,7 +9998,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -12959,7 +13103,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -14928,7 +15072,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -16222,7 +16366,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
