@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis构成SSM]</title>
+    <title>P-luminary || SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis(Plus)构成SSM]</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis构成SSM] </h1>
+        <h1>SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis(Plus)构成SSM] </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -614,7 +614,180 @@ public class TestServiceTest &#123;
 &lt;!--    与之对应的注解模式！ 再去TestService.java添加  @Transactional --&gt;
     &lt;tx:annotation-driven transaction-manager=&quot;transactionManager&quot;/&gt;
 </code></pre>
+<h3 id="MyBatis-Plus"><a href="#MyBatis-Plus" class="headerlink" title="MyBatis-Plus"></a>MyBatis-Plus</h3><p><a target="_blank" rel="noopener" href="https://baomidou.com/">MyBatis-Plus (baomidou.com)</a></p>
+<ul>
+<li>MyBatis-Plus(简称MP)是一个MyBatis的增强工具</li>
+<li>自动实现Mapper CRUD操作, 极致提高数据库开发效率</li>
+<li>MP在MyBatis的基础上只做增强不做改变</li>
+</ul>
+<h3 id="MyBatis-Plus整合三部曲"><a href="#MyBatis-Plus整合三部曲" class="headerlink" title="MyBatis-Plus整合三部曲"></a>MyBatis-Plus整合三部曲</h3><ul>
+<li>pom引入mybatis-plus依赖</li>
+<li>Spring XML更改配置SqlSessionFactory实现类</li>
+<li>mybatis-config.xml增加MP分页插件</li>
+</ul>
+<h3 id="MyBatis-Plus开发三部曲"><a href="#MyBatis-Plus开发三部曲" class="headerlink" title="MyBatis-Plus开发三部曲"></a>MyBatis-Plus开发三部曲</h3><ul>
+<li><p>创建实体类, <code>@TableName/ @Tableld/ @TableField</code>实现映射</p>
+</li>
+<li><p>创建Mapper接口继承BaseMapper, 创建Mapper XML</p>
+</li>
+<li><p>开发时注入Mapper对象, 通过内置API实现CRUD操作</p>
+</li>
+</ul>
+<h3 id="MyBatis-Plus核心注解"><a href="#MyBatis-Plus核心注解" class="headerlink" title="MyBatis-Plus核心注解"></a>MyBatis-Plus核心注解</h3><ul>
+<li><code>@TableName</code> - 将实体类与表名映射</li>
+<li><code>@Tableld</code> - 说明对应属性是表的主键</li>
+<li><code>@TableField</code> - 设置属性与列名的对应关系</li>
+</ul>
+<h3 id="BaseMapper接口核心API"><a href="#BaseMapper接口核心API" class="headerlink" title="BaseMapper接口核心API"></a>BaseMapper接口核心API</h3><table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>insert(entity)</td>
+<td>数据新增,自动生成insert sql, 根据@Tableld决定注解生成方式</td>
+</tr>
+<tr>
+<td>updateById(entity)</td>
+<td>根据主键更新对应对象, 自动生成update sql</td>
+</tr>
+<tr>
+<td>deleteById(id)</td>
+<td>根据主键删除数据, 自动更新delete sql</td>
+</tr>
+<tr>
+<td>selectById(id)</td>
+<td>按主键查询对应的实体对象</td>
+</tr>
+<tr>
+<td>selectList(queryWrapper)</td>
+<td>根据查询生成器(QueryWrapper)的条件自动生成sql查询返回List集合</td>
+</tr>
+<tr>
+<td>selectPage(page,queryWrapper)</td>
+<td>分页查询方法, 自动生成分页limit子句, 返回IPage分页对象</td>
+</tr>
+</tbody></table>
+<pre><code class="xml">applicationContext.xml
+&lt;!--  19. 原生Mybatis与Spring整合  自动实现接口的增删改查  20增加plus底层的分页查询插件 mybatis-config.xml--&gt;
+&lt;!--    &lt;bean id=&quot;sessionFactory&quot; class=&quot;org.mybatis.spring.SqlSessionFactoryBean&quot;&gt;--&gt;
+    &lt;bean id=&quot;sessionFactory&quot; class=&quot;com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+&lt;!--    存储sql语句的mapper.xml文件 存储在哪个目录中 去创建mapper接口--&gt;
+        &lt;property name=&quot;mapperLocations&quot; value=&quot;classpath:mappers/*.xml&quot;/&gt;
+&lt;!-- 10.  MyBatis配置文件地址 去创建一个xml  第十一步pom加单元测试依赖--&gt;
+        &lt;property name=&quot;configLocation&quot; value=&quot;classpath:mybatis-config.xml&quot;/&gt;
+    &lt;/bean&gt;
+&lt;!--  9. 配置Mapper扫描器  --&gt;
+&lt;bean class=&quot;org.mybatis.spring.mapper.MapperScannerConfigurer&quot;&gt;
+&lt;!--  这样初始化mybatis时 会对所有mapper接口进行扫描 --&gt;
+    &lt;property name=&quot;basePackage&quot; value=&quot;com.imooc.reader.mapper&quot;/&gt;
+&lt;/bean&gt;
+&lt;!--    18.声明式事务配置 控制事务的打开 提交 回滚 ↓--&gt;
+    &lt;bean id=&quot;transactionManager&quot; class=&quot;org.springframework.jdbc.datasource.DataSourceTransactionManager&quot;&gt;
+        &lt;property name=&quot;dataSource&quot; ref=&quot;dataSource&quot;/&gt;
+    &lt;/bean&gt;
+&lt;!--    与之对应的注解模式！ 再去TestService.java添加  @Transactional --&gt;
+    &lt;tx:annotation-driven transaction-manager=&quot;transactionManager&quot;/&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+    &lt;settings&gt;
+&lt;!--        驼峰命名转换 --&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+    &lt;plugins&gt;
+&lt;!--  20.配置Mybatis-Plus分页查询     21创entity/Test.java--&gt;
+        &lt;plugin interceptor=&quot;com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor&quot;&gt;&lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/entity/Test.java
+// 21 Mybatis-plus运用   22mapper中TestMapper
+@TableName(&quot;test&quot;) //说明实体对应哪一张表
+public class Test &#123;
+    @TableId(type = IdType.AUTO) //数据自增
+    @TableField(&quot;id&quot;) //说明属性对应哪个字段
+    private Integer id;
+    //如果字段名与属性名相同或者符合驼峰命名转换规则 则TableField可以省略
+    @TableField(&quot;content&quot;)
+    private String content;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/TestMapper.java
+package com.imooc.reader.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.Test;
+//22.为了和BaseMapper里的insert()区别开 这个改名成insertSample
+//接口作用Mybatis通过接口自动生成实现类 23.MyBatisPlusTest.java
+public interface TestMapper extends BaseMapper&lt;Test&gt; &#123;
+// 系统中接口很多不是所有的都对应mapper 9.application.xml
+    public void insertSample();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/MyBatisPlusTest.java
+package com.imooc.reader;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.imooc.reader.entity.Test;
+import org.junit.runner.RunWith;
+import com.imooc.reader.mapper.TestMapper;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+//23.利用插件调用增删改查
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class MyBatisPlusTest &#123;
+    @Resource
+    private TestMapper testMapper;
+
+    //增
+    @org.junit.Test //直接进行调用 与注解重名 故此加包名
+    public void testInsert() &#123;
+        Test test = new Test();
+        test.setContent(&quot;MyBatis Plus测试&quot;);
+        //在接口中 com/imooc/reader/mapper/TestMapper.java
+        testMapper.insert(test);
+    &#125;
+
+    //改
+    @org.junit.Test
+    public void testUpdate() &#123;
+        Test test = testMapper.selectById(30);//按id号查询
+        test.setContent(&quot;MyBatis Plus测试1&quot;);
+        testMapper.updateById(test);
+    &#125;
+
+    //删
+    @org.junit.Test
+    public void testDelete() &#123;
+        testMapper.deleteById(30);
+    &#125;
+
+    //查
+    @org.junit.Test
+    public void testSelect() &#123;
+        //传入特殊包装对象
+        QueryWrapper&lt;Test&gt; queryWrapper = new QueryWrapper&lt;Test&gt;();
+//        queryWrapper.eq(&quot;id&quot;, 31); //eq是等值比较 若写多行语句则sql语言用and连接
+        queryWrapper.gt(&quot;id&quot;, 5);//选择范围 查询大于5的数据
+        List&lt;Test&gt; list = testMapper.selectList(queryWrapper);//返回获取7号数据的集合
+        System.out.println(list.get(0));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="基于SSM开发慕课书评网"><a href="#基于SSM开发慕课书评网" class="headerlink" title="基于SSM开发慕课书评网"></a>基于SSM开发慕课书评网</h3>
     </div>
 
     
