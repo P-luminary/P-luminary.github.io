@@ -800,15 +800,12 @@ public class MyBatisPlusTest &#123;
 </code></pre>
 <h3 id="基于SSM开发慕课书评网"><a href="#基于SSM开发慕课书评网" class="headerlink" title="基于SSM开发慕课书评网"></a>基于SSM开发慕课书评网</h3><p>导入训练素材的<code>imooc-reader.sql</code></p>
 <h5 id="Bootstrap入门介绍-优秀的前端UI框架"><a href="#Bootstrap入门介绍-优秀的前端UI框架" class="headerlink" title="Bootstrap入门介绍 [优秀的前端UI框架]"></a>Bootstrap入门介绍 [优秀的前端UI框架]</h5><ul>
-<li><p>Bootstrap是全球最受欢迎的前端组件库, 由推特(TWitter)开源</p>
-</li>
-<li><p>Bootstrap用于开发<strong>响应式布局</strong>、移动设备优先的WEB项目</p>
-</li>
-<li><p>Bootstrap提供完整的HTML、CSS和JS开发工具集</p>
-</li>
+<li>Bootstrap是全球最受欢迎的前端组件库, 由推特(TWitter)开源</li>
+<li>Bootstrap用于开发<strong>响应式布局</strong>、移动设备优先的WEB项目</li>
+<li>Bootstrap提供完整的HTML、CSS和JS开发工具集</li>
 </ul>
 <p><a target="_blank" rel="noopener" href="https://www.bootcss.com/">Bootstrap中文网 (bootcss.com)</a></p>
-<h3 id="显示图书类别"><a href="#显示图书类别" class="headerlink" title="显示图书类别"></a>显示图书类别</h3><pre><code class="html">index.ftl [只写入顺序关键信息 在这里插入素材中的index.html并更名]
+<h3 id="显示图书类别-全部-前端-后端-测试-产品"><a href="#显示图书类别-全部-前端-后端-测试-产品" class="headerlink" title="显示图书类别 [全部 | 前端 | 后端 | 测试 | 产品]"></a>显示图书类别 [<strong>全部</strong> | 前端 | 后端 | 测试 | 产品]</h3><pre><code class="html">index.ftl [只写入顺序关键信息 在这里插入素材中的index.html并更名]
 &lt;#--在这块进行动态数据编写 24.创建entity/Category分类实体--&gt;
         &lt;div class=&quot;col-8 mt-2&quot;&gt;
             &lt;span data-category=&quot;-1&quot; style=&quot;cursor: pointer&quot; class=&quot;highlight  font-weight-bold category&quot;&gt;全部&lt;/span&gt;
@@ -960,13 +957,129 @@ public class BookController &#123;
 
 ----------------------------------------------------------
 index.ftl
-&lt;#-- 31.对页面进行动态的数据导入 --&gt;
+&lt;#-- 31.对页面进行动态的数据导入 32创建全新实体类Book --&gt;
             &lt;#list categoryList as category&gt;
                 &lt;a style=&quot;cursor: pointer&quot; data-category=&quot;$&#123;category.categoryId&#125;&quot; class=&quot;text-black-50 font-weight-bold category&quot;&gt;$&#123;category.categoryName&#125;&lt;/a&gt;
 &lt;#--   取消最后一个的竖线 --&gt;
                 &lt;#if category_has_next&gt;|&lt;/#if&gt;
             &lt;/#list&gt;
         &lt;/div&gt;
+</code></pre>
+<h3 id="实现图书分页查询"><a href="#实现图书分页查询" class="headerlink" title="实现图书分页查询"></a>实现图书分页查询</h3><pre><code class="java">com/imooc/reader/entity/Book.java
+// 32.创建完Book实体类  33去创建全新的BookMapper接口[mapper中]
+@TableName(&quot;book&quot;)
+public class Book &#123;
+    @TableId(type = IdType.AUTO)
+    private Long bookId;
+    private String bookName;
+    private String subTitle;
+    private String author;
+    private String cover;
+    private String description;
+    private Long categoryId;
+    private Float evaluationScore;
+    private Integer evaluationQuantity;
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/BookMapper.java
+package com.imooc.reader.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.Book;
+//33.创建完Book接口  34与之对应的创建book.xml文件
+public interface BookMapper extends BaseMapper&lt;Book&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">mappers/book.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.reader.mapper.BookMapper&quot;&gt;
+&lt;!--33.完成底层与数据交互代码 34完成分页处理 是在Service中完成的创建BookService完成分页对象查询--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+package com.imooc.reader.service;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.imooc.reader.entity.Book;
+//图书服务
+public interface BookService &#123;
+    //34.泛型&lt;Book&gt; 说明查询出来的每一行数据都是一个Book对象
+    // 瞄准BookService快速生成实现类Alt+Enter =&gt; Implement interface
+    //35编写com.imooc.reader.service.impl.BookServiceImpl
+    public IPage&lt;Book&gt; paging(Integer page, Integer rows);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.imooc.reader.entity.Book;
+import com.imooc.reader.mapper.BookMapper;
+import com.imooc.reader.service.BookService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+
+//35. 实现分类代码编写  36生成测试用例 Code generate Test =&gt; BookServiceImplTest
+@Service(&quot;bookService&quot;)
+@Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+public class BookServiceImpl implements BookService &#123;
+    @Resource
+    private BookMapper bookMapper;
+    /**
+     * 分页查询图书
+     * @param page 页号
+     * @param rows 每页记录数
+     * @return 分页对象
+     */
+    public IPage&lt;Book&gt; paging(Integer page, Integer rows) &#123;
+        Page&lt;Book&gt; p = new Page&lt;Book&gt;(page,rows);
+        QueryWrapper&lt;Book&gt; queryWrapper = new QueryWrapper&lt;Book&gt;();
+        IPage&lt;Book&gt; pageObject = bookMapper.selectPage(p, queryWrapper);//传入两个参数: page对象哪一页数据  每页记录数[条件构造器]
+        return pageObject;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImplTest.java[T]
+package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.imooc.reader.entity.Book;
+import com.imooc.reader.service.BookService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+//36.测试分页的代码编写
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class BookServiceImplTest &#123;
+    @Resource
+    private BookService bookService;
+    @Test
+    public void paging() &#123;
+        //查询每页十条
+        IPage&lt;Book&gt; pageObject = bookService.paging(1,10);
+        //获取当前页数据
+        List&lt;Book&gt; records = pageObject.getRecords();
+        for (Book b:records)&#123;
+            System.out.println(b.getBookId() + &quot;:&quot; + b.getBookName());
+        &#125;
+        System.out.println(&quot;总页数：&quot; + pageObject.getPages());
+        System.out.println(&quot;总记录数：&quot; + pageObject.getTotal());
+    &#125;
+&#125;
 </code></pre>
 
             
@@ -982,7 +1095,7 @@ index.ftl
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -1033,7 +1146,7 @@ index.ftl
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#879cff>
                 软考
             </a>
         </span>
@@ -3249,7 +3362,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8417,7 +8530,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8625,7 +8738,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -10332,7 +10445,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -13437,7 +13550,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -15406,7 +15519,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -16700,7 +16813,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -18121,7 +18234,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
