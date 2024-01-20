@@ -268,6 +268,8 @@
          xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd&quot;
          version=&quot;3.1&quot;&gt;
 &lt;!--    2.配置DispatcherServlet 第三步applicationContext.xml--&gt;
+ &lt;!--    DispatcherServlet是Spring MVC是最核心的对象
+         DispatcherServlet用于拦截http请求        --&gt;
     &lt;servlet&gt;
         &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
         &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
@@ -284,7 +286,7 @@
         &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
         &lt;url-pattern&gt;/&lt;/url-pattern&gt;
     &lt;/servlet-mapping&gt;
-&lt;!-- 4.解决中文乱码问题  只会对Post请求生效 Get只需要修改tomcat的server.xml 72行增加URIEncoding=&quot;UTF-8&quot; 第五步application--&gt;
+&lt;!-- 4.解决中文乱码问题  只会对Post请求生效 Get只需要修改tomcat的server.xml(8.0以上是自动的) 72行增加URIEncoding=&quot;UTF-8&quot; 第五步application--&gt;
     &lt;filter&gt;
         &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
         &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
@@ -435,7 +437,7 @@ public class TestController &#123;
 &lt;!-- 10.  MyBatis配置文件地址 去创建一个xml  --&gt;
         &lt;property name=&quot;configLocation&quot; value=&quot;classpath:mybatis-config.xml&quot;/&gt;
     &lt;/bean&gt;
-&lt;!--  9. 配置Mapper扫描器  --&gt;
+&lt;!--  9. 配置Mapper扫描器 下一步9TestMapper --&gt;
 &lt;bean class=&quot;org.mybatis.spring.mapper.MapperScannerConfigurer&quot;&gt;
 &lt;!--  这样初始化mybatis时 会对所有mapper接口进行扫描 --&gt;
     &lt;property name=&quot;basePackage&quot; value=&quot;com.imooc.reader.mapper&quot;/&gt;
@@ -501,30 +503,6 @@ public interface TestMapper &#123;
             &lt;groupId&gt;org.springframework&lt;/groupId&gt;
             &lt;artifactId&gt;spring-test&lt;/artifactId&gt;
             &lt;version&gt;5.2.6.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;junit&lt;/groupId&gt;
-            &lt;artifactId&gt;junit&lt;/artifactId&gt;
-            &lt;version&gt;4.12&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;junit&lt;/groupId&gt;
-            &lt;artifactId&gt;junit&lt;/artifactId&gt;
-            &lt;version&gt;4.12&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;junit&lt;/groupId&gt;
-            &lt;artifactId&gt;junit&lt;/artifactId&gt;
-            &lt;version&gt;4.12&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;junit&lt;/groupId&gt;
-            &lt;artifactId&gt;junit&lt;/artifactId&gt;
-            &lt;version&gt;4.12&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;junit&lt;/groupId&gt;
@@ -634,6 +612,19 @@ public class TestServiceTest &#123;
 &lt;!--    与之对应的注解模式！ 再去TestService.java添加  @Transactional --&gt;
     &lt;tx:annotation-driven transaction-manager=&quot;transactionManager&quot;/&gt;
 </code></pre>
+<pre><code class="java">@RunWith作用
+@RunWith 就是一个运行器
+@RunWith(JUnit4.class) 就是指用JUnit4来运行
+@RunWith(SpringJUnit4ClassRunner.class),让测试运行于Spring测试环境
+@RunWith(Suite.class) 的话就是一套测试集合，
+@ContextConfiguration Spring整合JUnit4测试时，使用注解引入多个配置文件
+单个文件
+@ContextConfiguration(Locations=“classpath：applicationContext.xml”)
+@ContextConfiguration(classes = SimpleConfiguration.class)
+
+多个文件时，可用&#123;&#125;
+@ContextConfiguration(locations = &#123; “classpath:spring1.xml”, “classpath:spring2.xml” &#125;)
+</code></pre>
 <h3 id="MyBatis-Plus"><a href="#MyBatis-Plus" class="headerlink" title="MyBatis-Plus"></a>MyBatis-Plus</h3><p><a target="_blank" rel="noopener" href="https://baomidou.com/">MyBatis-Plus (baomidou.com)</a></p>
 <ul>
 <li>MyBatis-Plus(简称MP)是一个MyBatis的增强工具</li>
@@ -666,19 +657,19 @@ public class TestServiceTest &#123;
 </tr>
 </thead>
 <tbody><tr>
-<td>insert(entity)</td>
+<td><strong>insert</strong>(entity)</td>
 <td>数据新增,自动生成insert sql, 根据@Tableld决定注解生成方式</td>
 </tr>
 <tr>
-<td>updateById(entity)</td>
+<td><strong>updateById</strong>(entity)</td>
 <td>根据主键更新对应对象, 自动生成update sql</td>
 </tr>
 <tr>
-<td>deleteById(id)</td>
+<td><strong>deleteById</strong>(id)</td>
 <td>根据主键删除数据, 自动更新delete sql</td>
 </tr>
 <tr>
-<td>selectById(id)</td>
+<td><strong>selectById</strong>(id)</td>
 <td>按主键查询对应的实体对象</td>
 </tr>
 <tr>
@@ -765,7 +756,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.annotation.Resource;
 import java.util.List;
 
-//23.利用插件调用增删改查
+//23.利用插件调用增删改查  24以Bootstrap开发前端index.ftl
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
 public class MyBatisPlusTest &#123;
@@ -807,7 +798,177 @@ public class MyBatisPlusTest &#123;
     &#125;
 &#125;
 </code></pre>
-<h3 id="基于SSM开发慕课书评网"><a href="#基于SSM开发慕课书评网" class="headerlink" title="基于SSM开发慕课书评网"></a>基于SSM开发慕课书评网</h3>
+<h3 id="基于SSM开发慕课书评网"><a href="#基于SSM开发慕课书评网" class="headerlink" title="基于SSM开发慕课书评网"></a>基于SSM开发慕课书评网</h3><p>导入训练素材的<code>imooc-reader.sql</code></p>
+<h5 id="Bootstrap入门介绍-优秀的前端UI框架"><a href="#Bootstrap入门介绍-优秀的前端UI框架" class="headerlink" title="Bootstrap入门介绍 [优秀的前端UI框架]"></a>Bootstrap入门介绍 [优秀的前端UI框架]</h5><ul>
+<li><p>Bootstrap是全球最受欢迎的前端组件库, 由推特(TWitter)开源</p>
+</li>
+<li><p>Bootstrap用于开发<strong>响应式布局</strong>、移动设备优先的WEB项目</p>
+</li>
+<li><p>Bootstrap提供完整的HTML、CSS和JS开发工具集</p>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.bootcss.com/">Bootstrap中文网 (bootcss.com)</a></p>
+<h3 id="显示图书类别"><a href="#显示图书类别" class="headerlink" title="显示图书类别"></a>显示图书类别</h3><pre><code class="html">index.ftl [只写入顺序关键信息 在这里插入素材中的index.html并更名]
+&lt;#--在这块进行动态数据编写 24.创建entity/Category分类实体--&gt;
+        &lt;div class=&quot;col-8 mt-2&quot;&gt;
+            &lt;span data-category=&quot;-1&quot; style=&quot;cursor: pointer&quot; class=&quot;highlight  font-weight-bold category&quot;&gt;全部&lt;/span&gt;
+            |
+&lt;#--     31.对页面进行动态的数据导入       --&gt;
+            &lt;#list categoryList as category&gt;
+                &lt;a style=&quot;cursor: pointer&quot; data-category=&quot;$&#123;category.categoryId&#125;&quot; class=&quot;text-black-50 font-weight-bold category&quot;&gt;$&#123;category.categoryName&#125;&lt;/a&gt;
+&lt;#--                取消最后一个的竖线--&gt;
+                &lt;#if category_has_next&gt;|&lt;/#if&gt;
+            &lt;/#list&gt;
+        &lt;/div&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/entity/Category.java
+// 24.图书分类实体 25mapper创建一个CategoryMapper
+public class Category &#123;
+    @TableId(type = IdType.AUTO)
+    private Long categoryId;
+// 已自动配置好了驼峰命名法 可以忽略
+// @TableField(&quot;category_name&quot;)
+&#125;Getter + Setter + 重写toString
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/CategoryMapper.java
+package com.imooc.reader.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.Category;
+//25.BaseMapper自动提供了增删改查的功能 泛型指向Category
+// 图书分类Mapper接口 26在mappers中创建一个category.xml
+public interface CategoryMapper extends BaseMapper&lt;Category&gt; &#123;
+
+&#125;
+</code></pre>
+<pre><code class="xml">mappers/category.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.reader.mapper.CategoryMapper&quot;&gt;
+&lt;!-- 26.如何使用呢？ 27创建一个service/CategoryService接口--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/CategoryService.java
+package com.imooc.reader.service;
+//27.有了service的接口 28就要有实现实现类存放包CategoryServiceImpl
+
+import com.imooc.reader.entity.Category;
+import java.util.List;
+
+public interface CategoryService &#123;
+    public List&lt;Category&gt; selectAll();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/CategoryServiceImpl.java
+package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.imooc.reader.entity.Category;
+import com.imooc.reader.mapper.CategoryMapper;
+import com.imooc.reader.service.CategoryService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+//28.向接口编程的规则,注入写好的CategoryMapper接口 设置Transactional事务传播
+//默认所有方法是不使用事务的 查询较多的方法不使用事务 写入方法较多下写入事务
+//29生成测试类 code-generate-Test  com/imooc/reader/service/impl/CategoryServiceImplTest.java
+@Service(&quot;categoryService&quot;)
+@Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+public class CategoryServiceImpl implements CategoryService &#123;
+    @Resource
+    private CategoryMapper categoryMapper;
+    /**
+     * 查询所有图书分类
+     * @return 图书分类List
+     */
+    @Override
+    public List&lt;Category&gt; selectAll() &#123;
+        //查询列表 返回多个数据 插入条件构造器[查询所有]
+        List&lt;Category&gt; list = categoryMapper.selectList(new QueryWrapper&lt;Category&gt;());
+        return list;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/CategoryServiceImplTest.java[Test]
+package com.imooc.reader.service.impl;
+
+import com.imooc.reader.entity.Category;
+import com.imooc.reader.mapper.CategoryMapper;
+import com.imooc.reader.service.CategoryService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class CategoryServiceImplTest &#123;
+    @Resource
+    //29.保证属性和刚才的 @Service(&quot;categoryService&quot;)一致 重写Category的tostring方法重新运行selectAll
+    //30进入controller开发环节 新建url与方法绑定的BookController.java
+    private CategoryService categoryService;
+    @Test
+    public void selectAll() &#123;
+        List&lt;Category&gt; list = categoryService.selectAll();
+        System.out.println(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/BookController.java
+package com.imooc.reader.controller;
+
+import com.imooc.reader.entity.Category;
+import com.imooc.reader.service.CategoryService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+//30.显示之前写好的index.ftl
+@Controller
+public class BookController &#123;
+    //传入模板数据 分类信息
+    @Resource
+    private CategoryService categoryService;
+    //showIndex与url绑定  31继续向前推进因为index.ftl所有数据都是静态写死的
+    //31要对每一个分类进行读取 List标签&lt;#list&gt;读取 转至index.ftl 64行
+    /**
+     * 显示首页
+     * @return
+     */
+    @GetMapping(&quot;/&quot;)
+    public ModelAndView showIndex()&#123;
+        ModelAndView mav = new ModelAndView(&quot;index&quot;);
+        List&lt;Category&gt; categoryList = categoryService.selectAll();//拿到列表
+        //结果放入其中 属性名,值
+        mav.addObject(&quot;categoryList&quot;,categoryList);
+        return mav;
+    &#125;
+&#125;
+
+----------------------------------------------------------
+index.ftl
+&lt;#-- 31.对页面进行动态的数据导入 --&gt;
+            &lt;#list categoryList as category&gt;
+                &lt;a style=&quot;cursor: pointer&quot; data-category=&quot;$&#123;category.categoryId&#125;&quot; class=&quot;text-black-50 font-weight-bold category&quot;&gt;$&#123;category.categoryName&#125;&lt;/a&gt;
+&lt;#--   取消最后一个的竖线 --&gt;
+                &lt;#if category_has_next&gt;|&lt;/#if&gt;
+            &lt;/#list&gt;
+        &lt;/div&gt;
+</code></pre>
+
             
         </div>
     </div>
@@ -821,7 +982,7 @@ public class MyBatisPlusTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -872,7 +1033,7 @@ public class MyBatisPlusTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -3088,7 +3249,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8256,7 +8417,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -8464,7 +8625,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -15245,7 +15406,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -16539,7 +16700,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -17960,7 +18121,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
