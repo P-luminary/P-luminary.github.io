@@ -135,7 +135,7 @@
 
     <a href="/2024/01/18/后端/SSM开发社交网站/">
         <h2>
-            SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis(Plus)构成SSM]
+            SSM开发社交网站[Freemarker+Spring+SpringMVC+Mybatis(Plus)构成SSM+Bootstrap+Art-Template]
         </h2>
     </a>
 
@@ -1061,7 +1061,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 import static org.junit.Assert.*;
-//36.测试分页的代码编写
+//36.测试分页的代码编写  37去BookController新加一个方法
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
 public class BookServiceImplTest &#123;
@@ -1081,6 +1081,129 @@ public class BookServiceImplTest &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="Ajax动态加载图书信息"><a href="#Ajax动态加载图书信息" class="headerlink" title="Ajax动态加载图书信息"></a>Ajax动态加载图书信息</h3><pre><code class="java">com/imooc/reader/controller/BookController.java
+//37.编写一个page方法 上面加个@Resource 绑定一个Ajax @GetMapping
+    //http://localhost/books 非常长的JSON序列化结果  38index.ftl 83行
+    /**  
+     * 分页查询图书列表
+     * @param p 页号
+     * @return 分页对象
+     */
+    @GetMapping(&quot;/books&quot;)
+    @ResponseBody
+    public IPage&lt;Book&gt; selectBook(Integer p)&#123;
+        if (p==null)&#123;
+            p = 1;
+        &#125;
+        IPage&lt;Book&gt; pageObject = bookService.paging(p, 10);
+        return pageObject;
+    &#125;
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/gybshen/article/details/79990533">img标签src引用网络图片，响应403的解决方法_img src引用其他网站图片-CSDN博客</a></p>
+<pre><code class="java">index.ftl
+  &lt;#--    38.编写Json序列化格式并追加到当前网页 上方以导入Art-Template模板引擎 39将&lt;div id=&quot;bookList&quot;&gt;下面的代码裁切放到上面 http://localhost/ --&gt;
+    &lt;script&gt;
+        $(function () &#123;
+            $.ajax(&#123;
+                url: &quot;/books&quot;,
+                data : &#123;p:1&#125;,
+                type : &quot;get&quot;,
+                dataType : &quot;json&quot;,
+                success: function(json)&#123;
+                    console.info(json);
+                    var list = json.records;//获取当前分页数据
+                    for (var i = 0; i &lt; list.length; i++) &#123;
+                        var book = json.records[i];
+                        //动态将数据组合成html
+                        var html = &quot;&lt;li&gt;&quot; + book.bookName + &quot;&lt;/li&gt;&quot;;
+                        //jquery的id选择器选中div对象 追加
+                        $(&quot;#bookList&quot;).append(html);
+                    &#125;
+                &#125;
+            &#125;)
+        &#125;)
+    &lt;/script&gt;
+</code></pre>
+<h3 id="Art-Template-腾讯JS模板引擎"><a href="#Art-Template-腾讯JS模板引擎" class="headerlink" title="Art - Template 腾讯JS模板引擎"></a>Art - Template 腾讯JS模板引擎</h3><p><a target="_blank" rel="noopener" href="https://aui.github.io/art-template/zh-cn/index.html">art-template (aui.github.io)</a></p>
+<p>整段HTML模板化 静态文本不变化 动态的数据用响应表达式进行提取</p>
+<p>两组大括号进行数据提取</p>
+<pre><code class="java">index.ftl
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0, maximum-scale=1.0,user-scalable=no&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;./resources/bootstrap/bootstrap.css&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;./resources/raty/lib/jquery.raty.css&quot;&gt;
+    &lt;script src=&quot;./resources/jquery.3.3.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;./resources/bootstrap/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;./resources/art-template.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;./resources/raty/lib/jquery.raty.js&quot;&gt;&lt;/script&gt;
+----------------
+&lt;#--39.type=&quot;text/html&quot;说明当前script块中包含的内容是一段一段的html浏览器不会作为javascript进行解析--&gt;
+&lt;#-- ★ ★ ★ id是模板名字 两组大括号进行提取数据 ★ ★ ★ 使用模板引擎简化产生html过程--&gt;
+&lt;#--    40去修改下方script代码导入的形式--&gt;
+    &lt;script type=&quot;text/html&quot; id=&quot;tpl&quot;&gt;
+        &lt;a href=&quot;/book/&#123;&#123;bookId&#125;&#125;&quot; style=&quot;color: inherit&quot;&gt;
+            &lt;div class=&quot;row mt-2 book&quot;&gt;
+                &lt;div class=&quot;col-4 mb-2 pr-2&quot;&gt;
+                    &lt;img class=&quot;img-fluid&quot; src=&quot;&#123;&#123;cover&#125;&#125;&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-8  mb-2 pl-0&quot;&gt;
+                    &lt;h5 class=&quot;text-truncate&quot;&gt;&#123;&#123;bookName&#125;&#125;&lt;/h5&gt;
+
+                    &lt;div class=&quot;mb-2 bg-light small  p-2 w-100 text-truncate&quot;&gt;&#123;&#123;author&#125;&#125;&lt;/div&gt;
+
+
+                    &lt;div class=&quot;mb-2 w-100&quot;&gt;&#123;&#123;subTitle&#125;&#125;&lt;/div&gt;
+
+                    &lt;p&gt;
+                        &lt;span class=&quot;stars&quot; data-score=&quot;&#123;&#123;evaluationScore&#125;&#125;&quot; title=&quot;gorgeous&quot;&gt;&lt;/span&gt;
+&lt;#--                        &lt;img alt=&quot;1&quot; 加入了星型组件免去这些操作 --&gt;
+&lt;#--                             src=&quot;./resources/raty/lib/images/star-on.png&quot;--&gt;
+&lt;#--                             title=&quot;gorgeous&quot;&gt;&amp;nbsp;&lt;img alt=&quot;2&quot;--&gt;
+&lt;#--                                                         src=&quot;./resources/raty/lib/images/star-on.png&quot;--&gt;
+&lt;#--                                                         title=&quot;gorgeous&quot;&gt;&amp;nbsp;&lt;img--&gt;
+&lt;#--                                alt=&quot;3&quot; src=&quot;./resources/raty/lib/images/star-on.png&quot; title=&quot;gorgeous&quot;&gt;&amp;nbsp;&lt;img--&gt;
+&lt;#--                                alt=&quot;4&quot; src=&quot;./resources/raty/lib/images/star-on.png&quot; title=&quot;gorgeous&quot;&gt;&amp;nbsp;&lt;img--&gt;
+&lt;#--                                alt=&quot;5&quot; src=&quot;./resources/raty/lib/images/star-on.png&quot; title=&quot;gorgeous&quot;&gt;&lt;input--&gt;
+&lt;#--                                name=&quot;score&quot; type=&quot;hidden&quot; value=&quot;&#123;&#123;evaluationScore&#125;&#125;&quot; readonly=&quot;&quot;&gt;&lt;/span&gt;--&gt;
+                        &lt;span class=&quot;mt-2 ml-2&quot;&gt;&#123;&#123;evaluationScore&#125;&#125;&lt;/span&gt;
+                        &lt;span class=&quot;mt-2 ml-2&quot;&gt;&#123;&#123;evaluationQuantity&#125;&#125;人已评&lt;/span&gt;
+                    &lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/a&gt;
+    &lt;/script&gt;
+
+&lt;#--    38.编写Json序列化格式并追加到当前网页 上方以导入Art-Template模板引擎 39将&lt;div id=&quot;bookList&quot;&gt;下面的代码裁切放到上面--&gt;
+        &lt;script&gt;
+&lt;#-- 41.引入星星图片 和 评价方法 上面的script运用简便写法 42下面 $(&quot;.stars&quot;)将星星的span标签选中 raty转换成可视的星星组件--&gt;
+            $.fn.raty.defaults.path = &quot;./resources/raty/lib/images&quot;
+            $(function () &#123;
+                $.ajax(&#123;
+                    url: &quot;/books&quot;,
+                    data : &#123;p:1&#125;,
+                    type : &quot;get&quot;,
+                    dataType : &quot;json&quot;,
+                    success: function(json)&#123;
+                        console.info(json);
+                        var list = json.records;//获取当前分页数据
+                        for (var i = 0; i &lt; list.length; i++) &#123;
+                            var book = json.records[i];
+                            // 动态将数据组合成html
+                            // var html = &quot;&lt;li&gt;&quot; + book.bookName + &quot;&lt;/li&gt;&quot;;
+                            // 40.替换导入数据形式 (传入模板id,传入数据) 将数据结合tpl模板,生成html
+                            // 41当评分降低的时候顺带着星星的亮度降低 raty星型评分组件 上面已准备好raty css js引入
+                            // 41在上面几行引入星型评分的script方法
+                            var html = template(&quot;tpl&quot;, book);
+                            console.info(html);
+                            //jquery的id选择器选中div对象 追加
+                            $(&quot;#bookList&quot;).append(html);
+                        &#125;
+                        //42.显示星型评价组件 只读并不能修改
+                        $(&quot;.stars&quot;).raty(&#123;readonly:true&#125;);
+                    &#125;
+                &#125;)
+            &#125;)
+    &lt;/script&gt;
+</code></pre>
 
             
         </div>
@@ -1095,7 +1218,7 @@ public class BookServiceImplTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -1170,7 +1293,7 @@ public class BookServiceImplTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#1bccbc>
                 软考
             </a>
         </span>
@@ -3386,7 +3509,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -8554,7 +8677,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8762,7 +8885,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -10469,7 +10592,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -15543,7 +15666,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -16837,7 +16960,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -18258,7 +18381,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
