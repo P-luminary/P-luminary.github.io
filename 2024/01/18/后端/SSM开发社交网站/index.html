@@ -1115,7 +1115,7 @@ public class BookServiceImplTest &#123;
     &lt;script src=&quot;./resources/bootstrap/bootstrap.min.js&quot;&gt;&lt;/script&gt;
     &lt;script src=&quot;./resources/art-template.js&quot;&gt;&lt;/script&gt;
     &lt;script src=&quot;./resources/raty/lib/jquery.raty.js&quot;&gt;&lt;/script&gt;
-----------------
+-------------------------------------------------------------------------------------
 &lt;#--39.type=&quot;text/html&quot;说明当前script块中包含的内容是一段一段的html浏览器不会作为javascript进行解析--&gt;
 &lt;#-- ★ ★ ★ id是模板名字 两组大括号进行提取数据 ★ ★ ★ 使用模板引擎简化产生html过程--&gt;
 &lt;#--    40去修改下方script代码导入的形式--&gt;
@@ -1152,7 +1152,7 @@ public class BookServiceImplTest &#123;
         &lt;/a&gt;
     &lt;/script&gt;
 
-&lt;#--    38.编写Json序列化格式并追加到当前网页 上方以导入Art-Template模板引擎 39将&lt;div id=&quot;bookList&quot;&gt;下面的代码裁切放到上面--&gt;
+&lt;#--    38.编写Json序列化格式并追加到当前网页 上方以导入Art-Template[js]模板引擎 39将&lt;div id=&quot;bookList&quot;&gt;下面的代码裁切放到上面--&gt;
         &lt;script&gt;
 &lt;#-- 41.引入星星图片 和 评价方法 上面的script运用简便写法 42下面 $(&quot;.stars&quot;)将星星的span标签选中 raty转换成可视的星星组件--&gt;
             $.fn.raty.defaults.path = &quot;./resources/raty/lib/images&quot;
@@ -1182,6 +1182,71 @@ public class BookServiceImplTest &#123;
                     &#125;
                 &#125;)
             &#125;)
+    &lt;/script&gt;
+</code></pre>
+<h3 id="实现图书列表分页查询"><a href="#实现图书列表分页查询" class="headerlink" title="实现图书列表分页查询"></a>实现图书列表分页查询</h3><pre><code class="java">index.ftl
+// 43.用于绑定加载更多按钮单击事件 44下面的设置页面的逻辑及处理
+        $(function () &#123;
+            $(&quot;#btnMore&quot;).click(function ()&#123;
+                loadMore();
+            &#125;)
+        &#125;)
+</code></pre>
+<pre><code class="java">&lt;script&gt;
+&lt;#-- 41.引入星星图片 和 评价方法 上面的script运用简便写法 42下面 $(&quot;.stars&quot;)将星星的span标签选中 raty转换成可视的星星组件(被注释)--&gt;
+        $.fn.raty.defaults.path = &quot;./resources/raty/lib/images&quot;
+        // 45.对两次Ajax的代码进行重构与梳理(定义一个loadMore()方法将下面的裁切进来底下写进递归)
+        // isReset参数设置true,代表从第一页开始查询,否则按nextPage查询后续页
+        // 对下面那个data: &#123;p: 1&#125;, 进行重构 ↓↓↓↓ isReset 下面代码已经被注释但未完全删除
+        // loadMore()加载更多数据
+        function loadMore(isReset)&#123;
+            if (isReset == true)&#123;
+                $(&quot;#nextPage&quot;).val(1);
+            &#125;
+            var nextPage = $(&quot;#nextPage&quot;).val();
+            $.ajax(&#123;
+                url: &quot;/books&quot;,
+                //nextPage为2可以加载第二页
+                data: &#123;p: nextPage&#125;,
+                type: &quot;get&quot;,
+                dataType: &quot;json&quot;,
+                success: function (json) &#123;
+                    console.info(json);
+                    var list = json.records;//获取当前分页数据
+                    for (var i = 0; i &lt; list.length; i++) &#123;
+                        var book = json.records[i];
+                        var html = template(&quot;tpl&quot;, book);
+                        console.info(html);
+                        //jquery的id选择器选中div对象 追加
+                        $(&quot;#bookList&quot;).append(html);
+                    &#125;
+                    $(&quot;.stars&quot;).raty(&#123;readonly: true&#125;);
+                    // 44.如果当前页小于总页数 下面利用val设置隐藏域的值
+                    // 可能将按照字符串处理 结果是31而不是4 要强制转换
+                    // 若有后续数据的话 最后几行的divNoMore需要隐藏起来
+                    // 45对两次的Ajax代码进行重构与梳理 上面找到第一个script
+                    if (json.current &lt; json.pages)&#123;
+                        $(&quot;#nextPage&quot;).val(parseInt(json.current + 1));
+                        $(&quot;#btnMore&quot;).show();
+                        $(&quot;#divNoMore&quot;).hide();
+                    &#125;else &#123;
+                        $(&quot;#btnMore&quot;).hide();
+                        $(&quot;#divNoMore&quot;).show();
+                    &#125;
+                &#125;
+            &#125;)
+        &#125;
+     
+        $(function () &#123;
+            loadMore(true);
+        &#125;)
+
+        // 43.用于绑定加载更多按钮单击事件 44上面的设置页面的逻辑及处理
+        $(function () &#123;
+            $(&quot;#btnMore&quot;).click(function ()&#123;
+                loadMore();
+            &#125;)
+        &#125;)
     &lt;/script&gt;
 </code></pre>
 
