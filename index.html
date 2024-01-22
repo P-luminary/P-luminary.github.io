@@ -1269,6 +1269,421 @@ public class BookServiceImplTest &#123;
         &#125;)
     &lt;/script&gt;
 </code></pre>
+<h3 id="实现图书多条件动态查询"><a href="#实现图书多条件动态查询" class="headerlink" title="实现图书多条件动态查询"></a>实现图书多条件动态查询</h3><pre><code class="java">index.ftl
+// 43.用于绑定加载更多按钮单击事件 44上面的设置页面的逻辑及处理
+        $(function()&#123;
+            $(&quot;#btnMore&quot;).click(function()&#123;
+                loadMore();
+            &#125;)
+            //46 增加点击的显示控件
+            $(&quot;.category&quot;).click(function () &#123;
+                $(&quot;.category&quot;).removeClass(&quot;highlight&quot;); //移除高亮
+                $(&quot;.category&quot;).addClass(&quot;text-black-50&quot;);//增添灰色
+                $(this).addClass(&quot;highlight&quot;);//增加高亮
+                //49添加数量与热度 ↓点击的超链接 在下面也要添加order
+                var categoryId = $(this).data(&quot;category&quot;); //214行定义了data-category
+                $(&quot;#categoryId&quot;).val(categoryId);
+                loadMore(true); //每次点完要重新查询
+            &#125;)//在排序处显示控件 47点击 全部|前端|后端 产生数据联动BookService上
+
+            $(&quot;.order&quot;).click(function()&#123;
+                $(&quot;.order&quot;).removeClass(&quot;highlight&quot;); //移除高亮
+                $(&quot;.order&quot;).addClass(&quot;text-black-50&quot;);//增添灰色
+                $(this).addClass(&quot;highlight&quot;);//增加高亮
+                //~49.提取设置到隐藏域中 发送请求到Ajax服务器上最上面 50var categoryId
+                var order = $(this).data(&quot;order&quot;);
+                $(&quot;#order&quot;).val(order); //点击不同隐藏域时为其赋值
+                loadMore(true);
+            &#125;)
+        &#125;)
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+package com.imooc.reader.service;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.imooc.reader.entity.Book;
+//图书服务
+public interface BookService &#123;
+    //34.泛型&lt;Book&gt; 说明查询出来的每一行数据都是一个Book对象
+    // 瞄准BookService快速生成实现类Alt+Enter =&gt; Implement interface
+    //35编写com.imooc.reader.service.impl.BookServiceImpl
+
+    /**
+     * 分页查询图书
+     * @param categoryId 分类编号
+     * @param order 排序方式
+     * @param page 页号
+     * @param rows 每页记录数
+     * @return 分页对象
+     */
+//    47增加两个变量且在BookServiceImpl中也对应增加上
+    public IPage&lt;Book&gt; paging(Long categoryId, String order, Integer page, Integer rows);
+&#125;
+</code></pre>
+<pre><code class="java">package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.imooc.reader.entity.Book;
+import com.imooc.reader.mapper.BookMapper;
+import com.imooc.reader.service.BookService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+
+//35. 实现分类代码编写  36生成测试用例 Code generate Test =&gt; BookServiceImplTest
+@Service(&quot;bookService&quot;)
+@Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+public class BookServiceImpl implements BookService &#123;
+    @Resource
+    private BookMapper bookMapper;
+
+    /**
+     * 分页查询图书
+     *
+     * @param categoryId 分类编号
+     * @param order      排序方式
+     * @param page       页号
+     * @param rows       每页记录数
+     * @return 分页对象
+     */
+    public IPage&lt;Book&gt; paging(Long categoryId, String order, Integer page, Integer rows) &#123;
+        Page&lt;Book&gt; p = new Page&lt;Book&gt;(page, rows);
+        QueryWrapper&lt;Book&gt; queryWrapper = new QueryWrapper&lt;Book&gt;();
+        //47.编写匹配条件 48去BookController更改调用参数
+        if (categoryId != null &amp;&amp; categoryId != -1) &#123;//代表传入了有效分类编号
+            queryWrapper.eq(&quot;category_id&quot;, categoryId);//查询的where子句
+        &#125;
+        if (order != null) &#123;
+            if (order.equals(&quot;quantity&quot;)) &#123; //前台必须传入↓ 评价人数排序
+                queryWrapper.orderByDesc(&quot;evaluation_quantity&quot;);//降序排序
+            &#125; else if (order.equals(&quot;score&quot;)) &#123;
+                queryWrapper.orderByDesc(&quot;evaluation_score&quot;);//评分降序
+            &#125;
+        &#125;
+        IPage&lt;Book&gt; pageObject = bookMapper.selectPage(p, queryWrapper);//传入两个参数: page对象哪一页数据  每页记录数[条件构造器]
+        return pageObject;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/BookController.java
+package com.imooc.reader.controller;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.imooc.reader.entity.Book;
+import com.imooc.reader.entity.Category;
+import com.imooc.reader.service.BookService;
+import com.imooc.reader.service.CategoryService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+//30.显示之前写好的index.ftl
+@Controller
+public class BookController &#123;
+    //传入模板数据 分类信息
+    @Resource
+    private CategoryService categoryService;
+    @Resource
+    private BookService bookService;
+    //showIndex与url绑定  31继续向前推进因为index.ftl所有数据都是静态写死的
+    //31要对每一个分类进行读取 List标签&lt;#list&gt;读取 转至index.ftl 64行
+
+    /**
+     * 显示首页
+     *
+     * @return
+     */
+    @GetMapping(&quot;/&quot;)
+    public ModelAndView showIndex() &#123;
+        ModelAndView mav = new ModelAndView(&quot;index&quot;);
+        List&lt;Category&gt; categoryList = categoryService.selectAll();//拿到列表
+        //结果放入其中 属性名,值
+        mav.addObject(&quot;categoryList&quot;, categoryList);
+        return mav;
+    &#125;
+//37.编写一个page方法 上面加个@Resource 绑定一个Ajax @GetMapping
+    //http://localhost/books 非常长的JSON序列化结果  38index.ftl 40行
+
+    /**
+     * 分页查询图书列表
+     *
+     * @param p 页号
+     * @return 分页对象
+     */
+    //48.更改调用参数 更改BookServiceImplTest.java调用参数 49回到index.ftl 增加function第二个
+    @GetMapping(&quot;/books&quot;)
+    @ResponseBody //具体数据来自客户端传入
+    public IPage&lt;Book&gt; selectBook(Long categoryId, String order, Integer p) &#123;
+        if (p == null) &#123;
+            p = 1;
+        &#125;
+        IPage&lt;Book&gt; pageObject = bookService.paging(categoryId, order, p, 10);
+        return pageObject;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">index.ftl
+&lt;script&gt;
+        &lt;#-- 41.引入星星图片 和 评价方法 上面的script运用简便写法 42下面 $(&quot;.stars&quot;)将星星的span标签选中 raty转换成可视的星星组件(被注释)--&gt;
+        $.fn.raty.defaults.path = &quot;./resources/raty/lib/images&quot;
+        // 45.对两次Ajax的代码进行重构与梳理(定义一个loadMore()方法将下面的裁切进来底下写进递归)
+        // isReset参数设置true,代表从第一页开始查询,否则按nextPage查询后续页
+        // 对下面那个data: &#123;p: 1&#125;, 进行重构 ↓↓↓↓ isReset 下面代码已经被注释但未完全删除
+        // loadMore()加载更多数据 46下方整理点击时的高亮显示 [全部]
+        function loadMore(isReset)&#123;
+            if(isReset == true)&#123;
+                $(&quot;#bookList&quot;).html(&quot;&quot;);
+                $(&quot;#nextPage&quot;).val(1);
+            &#125;
+            // 50.让Ajax获取数据在下方data填写 下方$(&quot;.category和.order&quot;)都要重新调用递归
+            // 细节清空再显示 上方$(&quot;#bookList&quot;).html(&quot;&quot;);
+            var nextPage = $(&quot;#nextPage&quot;).val();
+            var categoryId= $(&quot;#categoryId&quot;).val();
+            var order = $(&quot;#order&quot;).val();
+            //接下来就是发送数据时 组织成参数发送服务器
+            $.ajax(&#123;
+                url : &quot;/books&quot; ,
+                //nextPage为2可以加载第二页  ↓字符串：变量
+                data : &#123;p:nextPage,&quot;categoryId&quot;:categoryId , &quot;order&quot;:order&#125;,
+                type : &quot;get&quot; ,
+                dataType : &quot;json&quot; ,
+                success : function(json)&#123;
+                    console.info(json);
+                    var list = json.records;
+                    for(var i = 0 ; i &lt; list.length ; i++)&#123;
+                        var book = json.records[i];
+                        // var html = &quot;&lt;li&gt;&quot; + book.bookName + &quot;&lt;/li&gt;&quot;;
+                        //将数据结合tpl模板,生成html
+                        var html = template(&quot;tpl&quot; , book);
+                        console.info(html);
+                        //jquery的id选择器选中div对象 追加
+                        $(&quot;#bookList&quot;).append(html);
+                    &#125;
+                    $(&quot;.stars&quot;).raty(&#123;readOnly:true&#125;);
+                    // 44.如果当前页小于总页数 下面利用val设置隐藏域的值
+                    // 可能将按照字符串处理 结果是31而不是4 要强制转换
+                    // 若有后续数据的话 最后几行的divNoMore需要隐藏起来
+                    // 45对两次的Ajax代码进行重构与梳理 上面找到第一个script
+                    if(json.current &lt; json.pages)&#123;
+                        $(&quot;#nextPage&quot;).val(parseInt(json.current) + 1);
+                        $(&quot;#btnMore&quot;).show();
+                        $(&quot;#divNoMore&quot;).hide();
+                    &#125;else&#123;
+                        $(&quot;#btnMore&quot;).hide();
+                        $(&quot;#divNoMore&quot;).show();
+                    &#125;
+                &#125;
+            &#125;)
+        &#125;
+</code></pre>
+<h3 id="图书详情页-读取图书信息"><a href="#图书详情页-读取图书信息" class="headerlink" title="图书详情页-读取图书信息"></a>图书详情页-读取图书信息</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/gybshen/article/details/79990533">img标签src引用网络图片，响应403的解决方法_img src引用其他网站图片-CSDN博客</a></p>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+public IPage&lt;Book&gt; paging(Long categoryId, String order, Integer page, Integer rows);
+    /**
+     * 根据图书编号查询图书对象
+     * @param bookId 图书编号
+     * @return 图书对象
+     */
+    //51.增加一个查询书籍的接口 再去BookServiceImpl中实现
+    public Book selectById(Long bookId);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+ //51实现后再向上推进 BookController
+    @Override
+    public Book selectById(Long bookId) &#123;
+        Book book = bookMapper.selectById(bookId);
+        return book;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/BookController.java
+//51.进行页面的绑定 获取读书编号 52把所有ftl相对路径改成绝对路径 ./前面的.删掉
+    //加上了./就是  localhost/book/......   删掉就是 localhost/......
+    //52更改detail.ftl将静态页面改成动态页面
+    @GetMapping(&quot;/book/&#123;id&#125;&quot;) //↓ 路径变量 和 上面的保持一致
+    public ModelAndView showDetail(@PathVariable(&quot;id&quot;) Long id)&#123;
+        Book book = bookService.selectById(id);
+        ModelAndView mav = new ModelAndView(&quot;/detail&quot;);
+        mav.addObject(&quot;book&quot;, book);
+        return mav;
+    &#125;
+</code></pre>
+<pre><code class="java">detail.ftl
+&lt;#-- 52.更改detail.ftl将静态页面改成动态页面 &lt;title&gt; 还有下面图书细节 --&gt;
+&lt;#--  53.来源于数据底层的description描述字段   54显示动态评论列表 数据库有evaluation表 创建一个entity/Evaluation--&gt;
+
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt; &lt;#--防止网页图片加载不出来--&gt;
+    &lt;title&gt;$&#123;book.bookName&#125;&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0, maximum-scale=1.0,user-scalable=no&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/bootstrap/bootstrap.css&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/raty/lib/jquery.raty.css&quot;&gt;
+    &lt;script src=&quot;/resources/jquery.3.3.1.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;/resources/bootstrap/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;/resources/art-template.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;/resources/raty/lib/jquery.raty.js&quot;&gt;&lt;/script&gt;
+
+-------------------------------------------------------------------
+&lt;div class=&quot;row p-2 description&quot;&gt;
+        &lt;#-- 53.来源于数据底层的description描述字段     --&gt;
+        $&#123;book.description&#125;
+    &lt;/div&gt;
+</code></pre>
+<h3 id="图书详情页-显示评论列表"><a href="#图书详情页-显示评论列表" class="headerlink" title="图书详情页-显示评论列表"></a>图书详情页-显示评论列表</h3><pre><code class="java">com/imooc/reader/entity/Evaluation.java
+package com.imooc.reader.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.util.Date;
+//54.创造了评论相关的底层entity 55定义一个EvaluationMapper.java接口
+//再定义一个 evaluation.xml  再service上创建一个新的接口EvaluationService.java
+@TableName(&quot;evaluation&quot;)
+public class Evaluation &#123;
+//  id是主键
+    @TableId(type= IdType.AUTO)
+    private Long evaluationId;
+    private Long bookId;
+    private String content;
+    private Integer score;
+    private Long memberId;
+    private Date createTime;
+    private Integer enjoy;
+    private String state;
+    private String disableReason;
+    private Date disableTime;
+    @TableField(exist = false) //58.说明book属性没有对应字段,不会参与到sql自动生成
+    private Book book; //Book的关联字段 加注解不存在 不会参与sql语句自动生成中 59创建会员entity对象Member实体
+    @TableField(exist = false)
+    private Member member; //59.获取集合后查询每个评论的信息 EvaluationServiceImpl中
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/EvaluationMapper.java
+package com.imooc.reader.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.Evaluation;
+//55
+public interface EvaluationMapper extends BaseMapper&lt;Evaluation&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">mappers/evaluation.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.reader.mapper.EvaluationMapper&quot;&gt;
+&lt;!--55--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/EvaluationService.java
+package com.imooc.reader.service;
+
+import com.imooc.reader.entity.Evaluation;
+
+import java.util.List;
+//55.再创建一个它的实现类 Alt+回车 com/imooc/reader/service/impl/EvaluationServiceImpl.java
+public interface EvaluationService&#123;
+    /**
+     * 按图书编号查询有效短评
+     * @param bookId 图书编号
+     * @return 评论列表
+     */
+    public List&lt;Evaluation&gt; selectByBookId(Long bookId);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/EvaluationServiceImpl.java
+package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.imooc.reader.entity.Book;
+import com.imooc.reader.entity.Evaluation;
+import com.imooc.reader.entity.Member;
+import com.imooc.reader.mapper.BookMapper;
+import com.imooc.reader.mapper.EvaluationMapper;
+import com.imooc.reader.mapper.MemberMapper;
+import com.imooc.reader.service.EvaluationService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.List;
+//55.按图书编号查询有效短评   56BookController得到对应的图书编号以后 基于service查询对应短评信息
+@Service(&quot;evluationService&quot;)
+@Transactional(propagation = Propagation.NOT_SUPPORTED, readOnly = true)
+public class EvaluationServiceImpl implements EvaluationService &#123;
+    @Resource
+    private EvaluationMapper evaluationMapper;
+    //59
+    @Resource
+    private MemberMapper memberMapper;
+    @Resource
+    private BookMapper bookMapper;
+    /**
+     * 按图书编号查询有效短评
+     * @param bookId 图书编号
+     * @return
+     */
+    @Override
+    public List&lt;Evaluation&gt; selectByBookId(Long bookId) &#123;
+        Book book = bookMapper.selectById(bookId); //59根据参数查询book对象
+        QueryWrapper&lt;Evaluation&gt; queryWrapper = new QueryWrapper&lt;Evaluation&gt;();
+        queryWrapper.eq(&quot;book_id&quot;, bookId);
+        queryWrapper.eq(&quot;state&quot;,&quot;enable&quot;);
+        queryWrapper.orderByDesc(&quot;create_time&quot;);
+        List&lt;Evaluation&gt; evaluationList = evaluationMapper.selectList(queryWrapper);
+        //59.查询每个评论的信息
+        for(Evaluation eva:evaluationList)&#123;
+            Member member = memberMapper.selectById(eva.getMemberId());//59获得会员对象要使用接口咯
+            eva.setMember(member);
+            eva.setBook(book);//59循环的时候为每一个Evaluation设置一个book对象 60回到detail.ftl
+        &#125;
+        return evaluationList;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">detail.ftl
+ &lt;div class=&quot;alert alert-primary w-100 mt-2&quot; role=&quot;alert&quot;&gt;短评
+        &lt;button type=&quot;button&quot; id=&quot;btnEvaluation&quot; class=&quot;btn btn-success btn-sm text-white float-right&quot;
+                style=&quot;margin-top: -3px;&quot;&gt;
+            写短评
+        &lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;reply pl-2 pr-2&quot;&gt;
+&lt;#--  57.对短评进行动态页面的整合与梳理 进行循环遍历  58注意下面的慕粉-126对应着数据库的会员表 再重来一遍 Evaluation--&gt;
+        &lt;#list evaluationList as evaluation&gt;
+            &lt;div&gt;
+                &lt;div&gt;
+                    &lt;span class=&quot;pt-1 small text-black-50 mr-2&quot;&gt;$&#123;evaluation.createTime?string(&#39;MM-dd&#39;)&#125;&lt;/span&gt;
+&lt;#--   60.修改 慕粉-126 变为动态的--&gt;
+                    &lt;span class=&quot;mr-2 small pt-1&quot;&gt;$&#123;evaluation.member.nickname&#125;&lt;/span&gt;
+                    &lt;span class=&quot;stars mr-2&quot; data-score=&quot;$&#123;evaluation.score&#125;&quot;&gt;&lt;/span&gt;
+
+                    &lt;button type=&quot;button&quot; data-evaluation-id=&quot;$&#123;evaluation.evaluationId&#125;&quot;
+                            class=&quot;btn btn-success btn-sm text-white float-right&quot; style=&quot;margin-top: -3px;&quot;&gt;
+                        &lt;img style=&quot;width: 24px;margin-top: -5px;&quot; class=&quot;mr-1&quot;
+                             src=&quot;https://img3.doubanio.com/f/talion/7a0756b3b6e67b59ea88653bc0cfa14f61ff219d/pics/card/ic_like_gray.svg&quot;/&gt;
+                        &lt;span&gt;$&#123;evaluation.enjoy&#125;&lt;/span&gt;
+                    &lt;/button&gt;
+                &lt;/div&gt;
+
+                &lt;div class=&quot;row mt-2 small mb-3&quot;&gt;
+                    $&#123;evaluation.content&#125;
+                &lt;/div&gt;
+                &lt;hr/&gt;
+            &lt;/div&gt;
+        &lt;/#list&gt;
+    &lt;/div&gt;
+</code></pre>
 
             
         </div>
@@ -1283,7 +1698,7 @@ public class BookServiceImplTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -1358,7 +1773,7 @@ public class BookServiceImplTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#1bccbc>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -3574,7 +3989,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8742,7 +9157,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -8950,7 +9365,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -10657,7 +11072,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -13762,7 +14177,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -15731,7 +16146,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -17025,7 +17440,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -18446,7 +18861,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
