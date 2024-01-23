@@ -2037,7 +2037,7 @@ public class MemberController &#123;
             result.put(&quot;code&quot;, &quot;VC01&quot;);
             result.put(&quot;msg&quot;, &quot;验证码错误&quot;);
         &#125; else &#123;
-            //72.调用过程
+            //72.调用过程  73将登录页复制进去 74MemberServiceImpl
             try &#123;
                 memberService.createMember(username, password, nickname);
                 result.put(&quot;code&quot;, &quot;0&quot;);
@@ -2053,6 +2053,75 @@ public class MemberController &#123;
 &#125;
 http://localhost/register.html
 </code></pre>
+<h3 id="实现会员登录功能"><a href="#实现会员登录功能" class="headerlink" title="实现会员登录功能"></a>实现会员登录功能</h3><pre><code class="java"> com/imooc/reader/service/impl/MemberServiceImpl.java
+ /**
+     * 登陆检查
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录对象
+     */
+    //74.登录方法的接口实现 校验密码 75再续方法 MemberController.java
+    public Member checkLogin(String username, String password) &#123;
+        QueryWrapper&lt;Member&gt; queryWrapper = new QueryWrapper&lt;Member&gt;();
+        queryWrapper.eq(&quot;username&quot;, username);
+        Member member = memberMapper.selectOne(queryWrapper);
+        if (member == null)&#123;
+            throw new BussinessException(&quot;M02&quot;, &quot;用户不存在&quot;);
+        &#125;//校验密码
+        String md5 = MD5Utils.md5Digest(password, member.getSalt());
+        if (!md5.equals(member.getPassword()))&#123;
+            throw new BussinessException(&quot;M03&quot;, &quot;输入密码有误&quot;);
+        &#125;
+        return member;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+// 75.HttpSession session 登录校验后会将这个会员信息存放到session中
+    // 76登录校验成功以后会返回一个member对象 存放在session中
+    @PostMapping(&quot;/check_login&quot;) //前台url
+    @ResponseBody
+    public Map checkLogin(String username, String password, String vc, HttpSession session)&#123;
+        //正确验证码                     ↓为了得到session对象
+        String verityCode = (String)session.getAttribute(&quot;kaptchaVerifyCode&quot;);
+        //验证码比对  后面的是大小写对比
+        Map result = new HashMap();
+        if (vc == null || verityCode == null || !vc.equalsIgnoreCase(verityCode)) &#123;
+            result.put(&quot;code&quot;, &quot;VC01&quot;);
+            result.put(&quot;msg&quot;, &quot;验证码错误&quot;);
+        &#125;else &#123;
+            try &#123;//处理成功
+                Member member = memberService.checkLogin(username, password);
+                //76.member存放在session中  77去index.ftl下方登录块改造
+                session.setAttribute(&quot;loginMember&quot;,member);
+                result.put(&quot;code&quot;, &quot;0&quot;);
+                result.put(&quot;msg&quot;, &quot;success&quot;);
+            &#125; catch (BussinessException ex) &#123; //处理失败
+                ex.printStackTrace();
+                result.put(&quot;code&quot;, ex.getCode());
+                result.put(&quot;msg&quot;, ex.getMsg());
+            &#125;
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<pre><code class="java">index.ftl 
+&lt;#--   77.将获取到的member的session数据替换成登录右上角的动态数据--&gt;
+  &lt;#--  两个问号代表前面的属性是存在的情况下输出其中的html--&gt;
+        &lt;#if loginMember??&gt;
+            &lt;h6 class=&quot;mt-1&quot;&gt;
+                &lt;img style=&quot;width: 2rem;margin-top: -5px&quot; class=&quot;mr-1&quot; src=&quot;./images/user_icon.png&quot;&gt;$&#123;loginMember.nickname&#125;
+            &lt;/h6&gt;
+            &lt;#else&gt; &lt;#--上面是已登录 下面是未登录--&gt;
+                &lt;a href=&quot;/login.html&quot; class=&quot;btn btn-light btn-sm&quot;&gt;
+                    &lt;img style=&quot;width: 2rem;margin-top: -5px&quot; class=&quot;mr-1&quot; src=&quot;./images/user_icon.png&quot;&gt;登录
+                &lt;/a&gt;
+        &lt;/#if&gt;
+</code></pre>
+<h3 id="获取会员阅读状态"><a href="#获取会员阅读状态" class="headerlink" title="获取会员阅读状态"></a>获取会员阅读状态</h3><h5 id="实现会员交互功能"><a href="#实现会员交互功能" class="headerlink" title="实现会员交互功能"></a>实现会员交互功能</h5><ul>
+<li>想看&#x2F;看过的阅读状态变更</li>
+<li>为图书写短评</li>
+<li>为喜欢的短评点赞</li>
+</ul>
 
             
         </div>
@@ -2067,7 +2136,7 @@ http://localhost/register.html
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -2142,7 +2211,7 @@ http://localhost/register.html
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#1bccbc>
                 软考
             </a>
         </span>
@@ -4358,7 +4427,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -9526,7 +9595,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -11441,7 +11510,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -14546,7 +14615,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -17809,7 +17878,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -19230,7 +19299,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
