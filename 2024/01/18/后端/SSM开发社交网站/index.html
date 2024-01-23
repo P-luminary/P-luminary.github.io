@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -1663,6 +1663,223 @@ public class EvaluationServiceImpl implements EvaluationService &#123;
             &lt;/div&gt;
         &lt;/#list&gt;
     &lt;/div&gt;
+</code></pre>
+<h3 id="会员注册与登录"><a href="#会员注册与登录" class="headerlink" title="会员注册与登录"></a>会员注册与登录</h3><h5 id="Kaptcha验证码的配置与使用"><a href="#Kaptcha验证码的配置与使用" class="headerlink" title="Kaptcha验证码的配置与使用"></a>Kaptcha验证码的配置与使用</h5><ul>
+<li>Kaptcha 是谷歌开源的可高度配置的使用验证码生成工具</li>
+<li>通过 Kaptcha 可阻拦大多数机器人脚本操作</li>
+<li>Kaptcha 典型应用于注册、登录、重要信息提交等用户交互</li>
+</ul>
+<h5 id="Kaptcha-使用步骤"><a href="#Kaptcha-使用步骤" class="headerlink" title="Kaptcha 使用步骤"></a>Kaptcha 使用步骤</h5><ul>
+<li>Kaptcha 配置验证码生成参数</li>
+<li>开发 KaptchaController 生成验证码图片</li>
+<li>将前台输入验证码与session保存的验证码进行比对</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;!--   61.增加Kaptcha验证码组件依赖 applicationContext增加一个bean  --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.penggle&lt;/groupId&gt;
+            &lt;artifactId&gt;kaptcha&lt;/artifactId&gt;
+            &lt;version&gt;2.3.2&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;!--  61.配置Kaptcha 的bean  62创造KaptchaController.java--&gt;
+    &lt;bean id=&quot;KaptchaProducer&quot; class=&quot;com.google.code.kaptcha.impl.DefaultKaptcha&quot;&gt;
+        &lt;property name=&quot;config&quot;&gt;
+            &lt;bean class=&quot;com.google.code.kaptcha.util.Config&quot;&gt;
+                &lt;constructor-arg&gt;
+                    &lt;props&gt;
+                        &lt;!-- 验证码图片不生成边框 --&gt;
+                        &lt;prop key=&quot;kaptcha.border&quot;&gt;no&lt;/prop&gt;
+                        &lt;!-- 验证码图片宽度为120像素  --&gt;
+                        &lt;prop key=&quot;kaptcha.image.width&quot;&gt;120&lt;/prop&gt;
+                        &lt;!-- 验证码图片字体颜色为蓝色  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.font.color&quot;&gt;blue&lt;/prop&gt;
+                        &lt;!-- 每个字符最大占用40像素  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.font.size&quot;&gt;40&lt;/prop&gt;
+                        &lt;!-- 验证码包含4个字符  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.char.length&quot;&gt;4&lt;/prop&gt;
+                    &lt;/props&gt;
+                &lt;/constructor-arg&gt;
+            &lt;/bean&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/KaptchaController.java
+package com.imooc.reader.controller;
+
+import com.google.code.kaptcha.Producer;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import javax.annotation.Resource;
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+//62.完成图片的随机生成与控制台的输出相同 63将原型里的 注册页 复制到项目工程register.ftl
+@Controller
+public class KaptchaController &#123;
+    @Resource
+    private Producer kaptchaProducer;
+//    Ioc动态注入 因为验证码组件设计的时候没有考虑过SpringMVC的集成 要使用原生的请求与响应
+    @GetMapping(&quot;/verify_code&quot;)
+    public void createVerifyCode(HttpServletRequest request, HttpServletResponse response) throws IOException &#123;
+        //响应立即过期
+        response.setDateHeader(&quot;Expires&quot;,0);
+        //不存储 不缓存任何图片数据
+        response.setHeader(&quot;Cache-Control&quot;,&quot;no-store,no-cache,must-revalidate&quot;);
+        response.setHeader(&quot;Cache-Control&quot;,&quot;post-check=0,pre-check=0&quot;);
+        response.setHeader(&quot;Pragma&quot;,&quot;no-cache&quot;);
+        response.setContentType(&quot;image/png&quot;);
+        //生成验证码字符文本
+        String verifyCode = kaptchaProducer.createText();
+        request.getSession().setAttribute(&quot;kaptchaVerifyCode&quot;,verifyCode);
+        System.out.println( request.getSession().getAttribute(&quot;kaptchaVerifyCode&quot;));
+        BufferedImage image = kaptchaProducer.createImage(verifyCode);//创建验证码图片 二进制图片
+        //二进制用getOutputStream() 字符用getWritter()
+        ServletOutputStream out = response.getOutputStream();
+        ImageIO.write(image,&quot;png&quot;,out);//输出图片流
+        out.flush(); //立即输出
+        out.close(); //关闭输出流
+
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Kaptcha验证码的使用与对比-运用到前端"><a href="#Kaptcha验证码的使用与对比-运用到前端" class="headerlink" title="Kaptcha验证码的使用与对比 [运用到前端]"></a>Kaptcha验证码的使用与对比 [运用到前端]</h3><pre><code class="java">register.ftl
+&lt;div class=&quot;col-4 p-0 pl-2 pt-0&quot;&gt;
+   &lt;!-- 63.验证码图片 src要显示从服务器后台动态生成的验证码 KaptchaController生成的url粘贴在这里 64弄一个MemberController--&gt;
+   &lt;img id=&quot;imgVerifyCode&quot; src=&quot;/verify_code&quot;
+   style=&quot;width: 120px;height:50px;cursor: pointer&quot;&gt;
+&lt;/div&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+package com.imooc.reader.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+//64.嵌入验证码 65编写单机验证码刷新register.ftl中的function reloadVerifyCode()
+@Controller
+public class MemberController &#123;
+    @GetMapping(&quot;/register.html&quot;)
+    public ModelAndView showRegister() &#123;
+        return new ModelAndView(&quot;/register&quot;);
+    &#125;
+    //67. 验证码匹配比对 request拿到对象
+    @PostMapping(&quot;/registe&quot;)
+    @ResponseBody
+    public Map registe(String vc, String username, String password, String nickname, HttpServletRequest request)&#123;
+        //接收kaptchaController.java中的request.getSession().setAttribute响应
+        //正确验证码
+        String verityCode  = (String)request.getSession().getAttribute(&quot;kaptchaVerifyCode&quot;);
+        //验证码比对  后面的是大小写对比
+        Map result = new HashMap();
+        if (vc == null || verityCode == null || !vc.equalsIgnoreCase(verityCode))&#123;
+            result.put(&quot;code&quot;,&quot;VC01&quot;);
+            result.put(&quot;msg&quot;,&quot;验证码错误&quot;);
+        &#125;else &#123;
+            result.put(&quot;code&quot;,&quot;0&quot;);
+            result.put(&quot;msg&quot;,&quot;success&quot;);
+        &#125;
+        return result;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">register.ftl
+&lt;script&gt;
+    //控制错误信息的显示与隐藏
+    function showTips(isShow, css, text) &#123;
+        if (isShow) &#123;
+            $(&quot;#tips&quot;).removeClass(&quot;d-none&quot;)
+            $(&quot;#tips&quot;).hide();
+            $(&quot;#tips&quot;).addClass(css);
+            $(&quot;#tips&quot;).text(text);
+            $(&quot;#tips&quot;).fadeIn(200);
+        &#125; else &#123;
+            $(&quot;#tips&quot;).text(&quot;&quot;);
+            $(&quot;#tips&quot;).fadeOut(200);
+            $(&quot;#tips&quot;).removeClass();
+            $(&quot;#tips&quot;).addClass(&quot;alert&quot;)
+        &#125;
+    &#125;
+    //65.重新发送请求,刷新验证码 66验证码与后台绑定[比对校验]
+    function reloadVerifyCode()&#123;
+        //请在这里实现刷新验证码 ts timestamp是时间戳 增加时间戳取消缓存
+        $(&quot;#imgVerifyCode&quot;).attr(&quot;src&quot;,&quot;/verify_code?ts=&quot; + new Date().getTime())
+    &#125;
+    
+    //点击验证码图片刷新验证码
+    $(&quot;#imgVerifyCode&quot;).click(function () &#123;
+        reloadVerifyCode();
+    &#125;);
+    
+    // 66.点击提交按钮,向/registe发起ajax请求
+    //提交请求包含四个参数
+    //vc:前台输入验证码  username:用户名 password:密码 nickname:昵称
+    $(&quot;#btnSubmit&quot;).click(function () &#123;
+        //表单校验
+        var username = $.trim($(&quot;#username&quot;).val());
+        var regex = /^.&#123;6,10&#125;$/;
+        if (!regex.test(username)) &#123;
+            showTips(true, &quot;alert-danger&quot;, &quot;用户名请输入正确格式（6-10位）&quot;);
+            return;
+        &#125; else &#123;
+            showTips(false);
+        &#125;
+
+        var password = $.trim($(&quot;#password&quot;).val());
+
+        if (!regex.test(password)) &#123;
+            showTips(true, &quot;alert-danger&quot;, &quot;密码请输入正确格式（6-10位）&quot;);
+            return;
+        &#125; else &#123;
+            showTips(false);
+        &#125;
+
+        $btnReg = $(this);
+
+        $btnReg.text(&quot;正在处理...&quot;);
+        $btnReg.attr(&quot;disabled&quot;, &quot;disabled&quot;);
+        
+        //66.发送ajax请求 67编写MemberController.java实现url
+        $.ajax(&#123;
+            url: &quot;/registe&quot;,
+            type: &quot;post&quot;,
+            dataType: &quot;json&quot;,
+            data: $(&quot;#frmLogin&quot;).serialize(),
+            success: function (data) &#123;
+                //结果处理,根据服务器返回code判断服务器处理状态
+                //服务器要求返回JSON格式:
+                //&#123;&quot;code&quot;:&quot;0&quot;,&quot;msg&quot;:&quot;处理消息&quot;&#125;
+                console.info(&quot;服务器响应:&quot; , data);
+                if (data.code == &quot;0&quot;) &#123;
+                    //显示注册成功对话框
+                    $(&quot;#exampleModalCenter&quot;).modal(&#123;&#125;);
+                    $(&quot;#exampleModalCenter&quot;).modal(&quot;show&quot;);
+                &#125; else &#123;
+                    //服务器校验异常,提示错误信息
+                    showTips(true, &quot;alert-danger&quot;, data.msg);
+                    reloadVerifyCode();
+                    $btnReg.text(&quot;注    册&quot;);
+                    $btnReg.removeAttr(&quot;disabled&quot;);
+                &#125;
+            &#125;
+        &#125;);
+        return false;
+    &#125;);
+&lt;/script&gt;
+============================
+67在上面MemberController.java
 </code></pre>
 
     </div>
