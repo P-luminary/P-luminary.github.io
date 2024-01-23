@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1775,7 +1775,7 @@ public class MemberController &#123;
     public ModelAndView showRegister() &#123;
         return new ModelAndView(&quot;/register&quot;);
     &#125;
-    //67. 验证码匹配比对 request拿到对象
+    //67. 验证码匹配比对 request拿到对象  68编写会员服务MemberService.java
     @PostMapping(&quot;/registe&quot;)
     @ResponseBody
     public Map registe(String vc, String username, String password, String nickname, HttpServletRequest request)&#123;
@@ -1880,6 +1880,158 @@ public class MemberController &#123;
 &lt;/script&gt;
 ============================
 67在上面MemberController.java
+</code></pre>
+<h3 id="实现会员注册功能"><a href="#实现会员注册功能" class="headerlink" title="实现会员注册功能"></a>实现会员注册功能</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/mask_boys/article/details/118273990">500 (Internal Server Error)_谷歌浏览器 internal server error-CSDN博客</a></p>
+<pre><code class="java">com/imooc/reader/service/MemberService.java
+package com.imooc.reader.service;
+
+import com.imooc.reader.entity.Member;
+//68.创建一个实现类MemberServiceImpl.java[Alt + Enter]
+public interface MemberService &#123;
+    /**
+     * 会员注册,创建新会员
+     * @param username
+     * @param password
+     * @param nickname
+     * @return
+     */
+    public Member createMember(String username, String password, String nickname);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
+package com.imooc.reader.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.imooc.reader.entity.Member;
+import com.imooc.reader.mapper.MemberMapper;
+import com.imooc.reader.service.exception.BussinessException;
+import com.imooc.reader.service.MemberService;
+import com.imooc.reader.utils.MD5Utils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+
+//68.完成与会员的交互[写操作居多] 完成运行异常service/BussinessException.java
+@Service(&quot;memberService&quot;)
+@Transactional
+public class MemberServiceImpl implements MemberService &#123;
+    @Resource
+    private MemberMapper memberMapper;
+
+    /**
+     * 会员注册,创建新会员
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @param nickname 昵称
+     * @return 新会员对象
+     */
+    public Member createMember(String username, String password, String nickname) &#123;
+        QueryWrapper&lt;Member&gt; queryWrapper = new QueryWrapper&lt;Member&gt;();
+        queryWrapper.eq(&quot;username&quot;, username);
+        List&lt;Member&gt; memberList = memberMapper.selectList(queryWrapper);
+        //判断用户名是否已存在 68定义一个异常BussinessException.java
+        //69.续写异常  70增加加密组件pom.xml
+        if (memberList.size() &gt; 0) &#123;
+            throw new BussinessException(&quot;M01&quot;, &quot;用户名已存在&quot;);
+        &#125;
+        Member member = new Member();
+        member.setUsername(username);
+        member.setNickname(nickname);
+        //70. 随机数md5  71生成测试用例MemberServiceImplTest
+        int salt = new Random().nextInt(1000)+1000; //盐值
+        String md5 = MD5Utils.md5Digest(password, salt);
+        member.setPassword(md5);
+        member.setSalt(salt);
+        member.setCreateTime(new Date()); //创建时间
+        memberMapper.insert(member);
+        return member;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImplTest.java
+package com.imooc.reader.service.impl;
+
+import com.imooc.reader.service.MemberService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.Resource;
+
+//71.生成测试用例 72MemberController后续的工作
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = &#123;&quot;classpath:applicationContext.xml&quot;&#125;)
+public class MemberServiceImplTest &#123;
+    @Resource
+    private MemberService memberService;
+    @Test
+    public void createMember() &#123;
+        memberService.createMember(&quot;s123457&quot;, &quot;123456&quot;, &quot;测试&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+package com.imooc.reader.controller;
+
+import com.imooc.reader.service.exception.BussinessException;
+import com.imooc.reader.service.MemberService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+//64.嵌入验证码 65编写单机验证码刷新register.ftl中的function reloadVerifyCode()
+@Controller
+public class MemberController &#123;
+    //72后续工作 进行注入
+    @Resource
+    private MemberService memberService;
+
+    @GetMapping(&quot;/register.html&quot;)
+    public ModelAndView showRegister() &#123;
+        return new ModelAndView(&quot;/register&quot;);
+    &#125;
+
+    //67. 验证码匹配比对 request拿到对象  68编写会员服务MemberService.java
+    @PostMapping(&quot;/registe&quot;)
+    @ResponseBody
+    public Map registe(String vc, String username, String password, String nickname, HttpServletRequest request) &#123;
+        //接收kaptchaController.java中的request.getSession().setAttribute响应
+        //正确验证码
+        String verityCode = (String) request.getSession().getAttribute(&quot;kaptchaVerifyCode&quot;);
+        //验证码比对  后面的是大小写对比
+        Map result = new HashMap();
+        if (vc == null || verityCode == null || !vc.equalsIgnoreCase(verityCode)) &#123;
+            result.put(&quot;code&quot;, &quot;VC01&quot;);
+            result.put(&quot;msg&quot;, &quot;验证码错误&quot;);
+        &#125; else &#123;
+            //72.调用过程
+            try &#123;
+                memberService.createMember(username, password, nickname);
+                result.put(&quot;code&quot;, &quot;0&quot;);
+                result.put(&quot;msg&quot;, &quot;success&quot;);
+            &#125; catch (BussinessException ex) &#123;
+                ex.printStackTrace();
+                result.put(&quot;code&quot;, ex.getCode());
+                result.put(&quot;msg&quot;, ex.getMsg());
+            &#125;
+        &#125;
+        return result;
+    &#125;
+&#125;
+http://localhost/register.html
 </code></pre>
 
     </div>
