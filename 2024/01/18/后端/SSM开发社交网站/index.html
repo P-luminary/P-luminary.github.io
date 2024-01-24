@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -2199,7 +2199,7 @@ public interface MemberReadStateMapper extends BaseMapper&lt;MemberReadState&gt;
         $(function () &#123;
             $(&quot;.stars&quot;).raty(&#123;readOnly: true&#125;);
         &#125;)
-       // 80 想看与看过 freemark脚本 如果它存在(想看/看过)
+       // 80 想看与看过 freemark脚本 如果它存在(想看/看过) 81产生对应的状态数据 MemberService
         $(function () &#123;
             &lt;#if memberReadState ??&gt;
             // 重选阅读状态回填
@@ -2213,6 +2213,88 @@ public interface MemberReadStateMapper extends BaseMapper&lt;MemberReadState&gt;
             &lt;/#if&gt;
         &#125;)
     &lt;/script&gt;
+</code></pre>
+<h3 id="更新会员阅读状态"><a href="#更新会员阅读状态" class="headerlink" title="更新会员阅读状态"></a>更新会员阅读状态</h3><pre><code class="java">com/imooc/reader/service/MemberService.java
+ /**
+     * 更新阅读状态
+     * @param memberId 会员编号
+     * @param bookId 图书编号
+     * @param readState 阅读状态
+     * @return 阅读对象状态
+     */         //81定义方法 MemberServiceImpl实现状态
+    public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer readState);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
+/**
+ * 更新阅读状态
+ * @param memberId 会员编号
+ * @param bookId 图书编号
+ * @param readState 阅读状态
+ * @return 阅读对象状态
+ */
+//81.编写阅读状态代码 编写完打开MemberController
+public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer readState)&#123;
+    QueryWrapper&lt;MemberReadState&gt; queryWrapper = new QueryWrapper&lt;MemberReadState&gt;();
+    queryWrapper.eq(&quot;book_id&quot;, bookId);
+    queryWrapper.eq(&quot;member_id&quot;, memberId);
+    MemberReadState memberReadState = memberReadStateMapper.selectOne(queryWrapper);
+    //空的代表没有点过按钮 数据是空的
+        //无则新增,有则更新
+        if(memberReadState == null)&#123;
+            memberReadState = new MemberReadState();
+            memberReadState.setMemberId(memberId);
+            memberReadState.setBookId(bookId);
+            memberReadState.setReadState(readState);
+            memberReadState.setCreateTime(new Date());
+            memberReadStateMapper.insert(memberReadState);
+        &#125;else&#123;
+            memberReadState.setReadState(readState);
+            memberReadStateMapper.updateById(memberReadState);
+        &#125;
+
+        return memberReadState;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+//81. 完成更新状态的事务  82去完成detail.ftl后面的loginMember存在的代码
+    @PostMapping(&quot;/update_read_state&quot;)
+    @ResponseBody
+    public Map updateReadState(Long memberId, Long bookId, Integer readState)&#123;
+        Map result = new HashMap();
+        try &#123;
+            memberService.updateMemberReadState(memberId, bookId, readState);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;msg&quot;, ex.getMsg());
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<pre><code class="java">detail.ftl
+//82 完成登录状态
+            &lt;#if loginMember ??&gt;
+            /**
+             * 更新会员阅读状态
+             */
+            $(&quot;*[data-read-state]&quot;).click(function () &#123;
+                //会员阅读状态
+                var readState = $(this).data(&quot;read-state&quot;);
+                //发送请求
+                $.post(&quot;/update_read_state&quot;, &#123;
+                    memberId: $&#123;loginMember.memberId&#125;,
+                    bookId: $&#123;book.bookId&#125;,
+                    readState: readState
+                &#125;, function (json) &#123;
+                    if (json.code == &quot;0&quot;) &#123; //服务器处理成功
+                        $(&quot;*[data-read-state]&quot;).removeClass(&quot;highlight&quot;);//高亮的清除
+                        $(&quot;*[data-read-state=&#39;&quot; + readState + &quot;&#39;]&quot;).addClass(&quot;highlight&quot;);//状态值放入其中
+                    &#125;
+                &#125;, &quot;json&quot;)
+            &#125;);
+            &lt;/#if&gt;
 </code></pre>
 
     </div>
