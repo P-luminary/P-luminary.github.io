@@ -2316,6 +2316,80 @@ public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer
             &#125;);
             &lt;/#if&gt;
 </code></pre>
+<h3 id="实现写短评功能"><a href="#实现写短评功能" class="headerlink" title="实现写短评功能"></a>实现写短评功能</h3><pre><code class="java">detail.ftl
+ //83.短评功能  下面短评联动现象
+            $(&quot;#btnEvaluation&quot;).click(function () &#123;
+                // 选中id＝score的标签 转换为星型组件
+                $(&quot;#score&quot;).raty(&#123;&#125;);
+                $(&quot;#dlgEvaluation&quot;).modal(&quot;show&quot;);//显示短评对话框
+            &#125;)
+---------------------------------------------------------------
+&lt;!-- Modal --&gt;
+&lt;div class=&quot;modal-content&quot;&gt;
+            &lt;div class=&quot;modal-body&quot;&gt;
+&lt;#-- 83. 短评联动   84 MemberService.java 短评实现代码 --&gt;
+                &lt;h6&gt;为$&#123;book.bookName&#125;写短评&lt;/h6&gt;
+                &lt;form id=&quot;frmEvaluation&quot;&gt;
+                    &lt;div class=&quot;input-group  mt-2 &quot;&gt;
+                        &lt;span id=&quot;score&quot;&gt;&lt;/span&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;input-group  mt-2 &quot;&gt;
+                        &lt;input type=&quot;text&quot; id=&quot;content&quot; name=&quot;content&quot; class=&quot;form-control p-4&quot;
+                               placeholder=&quot;这里输入短评&quot;&gt;
+                    &lt;/div&gt;
+                &lt;/form&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-footer&quot;&gt;
+                &lt;button type=&quot;button&quot; id=&quot;btnSubmit&quot; class=&quot;btn btn-primary&quot;&gt;提交&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/MemberService.java
+//84.短评代码!  MemberServiceImpl 组一个全新的对象
+    public Evaluation evaluate(Long memberId, Long bookId, Integer score, String content);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
+/**
+     * 发布新的短评
+     * @param memberId 会员编号
+     * @param bookId 图书编号
+     * @param score 评分
+     * @param content 短评内容
+     * @return
+     */ // 84 完成评论信息的更新 85在MemberController编写与web交互功能
+    public Evaluation evaluate(Long memberId, Long bookId, Integer score, String content) &#123;
+        Evaluation evaluation = new Evaluation();
+        evaluation.setMemberId(memberId);
+        evaluation.setBookId(bookId);
+        evaluation.setScore(score);
+        evaluation.setContent(content);
+        evaluation.setCreateTime(new Date());
+        evaluation.setState(&quot;enable&quot;);
+        evaluation.setEnjoy(0); //注入evaluationMapper 完成数据新增
+        evaluationMapper.insert(evaluation);
+        return evaluation;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+//85.与web交互功能 前台请求传入数据 86回到detail.ftl写
+    @PostMapping(&quot;/evaluate&quot;)
+    @ResponseBody
+    public Map evaluate(Long memberId, Long bookId, Integer score, String content)&#123;
+        Map result = new HashMap();
+        try &#123;
+//    Evaluation eva = memberService.evaluate(memberId, bookId, score, content);
+            memberService.evaluate(memberId, bookId, score, content);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+//          result.put(&quot;evaluation&quot;, eva);
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;msg&quot;, ex.getMsg());
+        &#125;
+        return result;
+    &#125;
+</code></pre>
 
             
         </div>
@@ -2405,7 +2479,7 @@ public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -4621,7 +4695,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -9789,7 +9863,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -9997,7 +10071,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -11704,7 +11778,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -14809,7 +14883,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -16778,7 +16852,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -18072,7 +18146,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -19493,7 +19567,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
