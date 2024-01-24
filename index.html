@@ -2106,7 +2106,8 @@ http://localhost/register.html
 </code></pre>
 <pre><code class="java">index.ftl 
 &lt;#--   77.将获取到的member的session数据替换成登录右上角的动态数据--&gt;
-  &lt;#--  两个问号代表前面的属性是存在的情况下输出其中的html--&gt;
+  &lt;#--  两个问号代表前面的属性是存在的情况下输出其中的html --&gt;
+&lt;#-- 78新增entity/MemberReadState.java会员阅读状态 --&gt;
         &lt;#if loginMember??&gt;
             &lt;h6 class=&quot;mt-1&quot;&gt;
                 &lt;img style=&quot;width: 2rem;margin-top: -5px&quot; class=&quot;mr-1&quot; src=&quot;./images/user_icon.png&quot;&gt;$&#123;loginMember.nickname&#125;
@@ -2122,6 +2123,117 @@ http://localhost/register.html
 <li>为图书写短评</li>
 <li>为喜欢的短评点赞</li>
 </ul>
+<pre><code class="java">com/imooc/reader/entity/MemberReadState.java
+package com.imooc.reader.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+
+import java.util.Date;
+
+/**
+ * 会员阅读状态实体
+ */
+//78.搞实体 再去创MemberReadStateMapper.java接口
+public class MemberReadState &#123;
+    @TableId(type = IdType.AUTO)
+    private Long rsId;
+    private Long bookId;
+    private Long memberId;
+    private Integer readState;
+    private Date createTime;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/MemberReadStateMapper.java
+package com.imooc.reader.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.MemberReadState;
+
+//78接口创完 再去搞个Member_Read_State.xml
+public interface MemberReadStateMapper extends BaseMapper&lt;MemberReadState&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">mappers/member_read_state.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.reader.mapper.MemberReadStateMapper&quot;&gt;
+&lt;!--  78. 去MemberService 阅读状态--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/MemberService.java 
+//78.获取阅读状态 再去实现这个方法
+
+    /**
+     * 获取阅读状态
+     *
+     * @param memberId 会员编号
+     * @param bookId   图书编号
+     * @return 阅读状态对象
+     */
+    public MemberReadState selectMemberReadState(Long memberId, Long bookId);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
+ //78.新增方法实现那个方法 再去上方进行方法注入 79根据会员编号进行查询BookController
+
+    /**
+     * 获取阅读状态
+     * @param memberId 会员编号
+     * @param bookId 图书编号
+     * @return 阅读状态对象
+     */
+    public MemberReadState selectMemberReadState(Long memberId, Long bookId)&#123;
+        QueryWrapper&lt;MemberReadState&gt; queryWrapper = new QueryWrapper();
+        queryWrapper.eq(&quot;book_id&quot;, bookId);
+        queryWrapper.eq(&quot;member_id&quot;, memberId);
+        MemberReadState memberReadState = memberReadStateMapper.selectOne(queryWrapper);
+        return memberReadState;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/BookController.java
+//51.进行页面的绑定 获取读书编号 52把所有ftl相对路径改成绝对路径 ./前面的.删掉
+    //加上了./就是  localhost/book/......   删掉就是 localhost/......
+    //52更改detail.ftl将静态页面改成动态页面
+    @GetMapping(&quot;/book/&#123;id&#125;&quot;) //↓ 路径变量 和 上面的保持一致
+    //79.新增一个参数 获取当前用户登录信息
+    public ModelAndView showDetail(@PathVariable(&quot;id&quot;) Long id, HttpSession session) &#123;
+        Book book = bookService.selectById(id);
+        //56.写完并放入 mav.addObject 57得到了对象就要去detail.ftl渲染循环遍历[写短评下方的div]
+        List&lt;Evaluation&gt; evaluationList = evaluationService.selectByBookId(id);
+        //79.将之前设置的用户信息拿出来 两种情况 ①会员没登录就null ②会员登录了member对象存在了 注入memberService
+        Member member = (Member)session.getAttribute(&quot;loginMember&quot;);
+        ModelAndView mav = new ModelAndView(&quot;/detail&quot;);
+        if (member != null) &#123; //获取会员阅读状态    会员编号 图书编号  80 detail.ftl想看[1]与看过[2] 页面上方找script块
+            MemberReadState memberReadState = memberService.selectMemberReadState(member.getMemberId(), id);
+            mav.addObject(&quot;memberReadState&quot;, memberReadState);
+
+        &#125;
+        mav.addObject(&quot;book&quot;, book);
+        mav.addObject(&quot;evaluationList&quot;, evaluationList);
+        return mav;
+    &#125;
+</code></pre>
+<pre><code class="java">detail.ftl
+ &lt;script&gt;
+        $.fn.raty.defaults.path = &#39;/resources/raty/lib/images&#39;;
+        $(function () &#123;
+            $(&quot;.stars&quot;).raty(&#123;readOnly: true&#125;);
+        &#125;)
+       // 80 想看与看过 freemark脚本 如果它存在(想看/看过)
+        $(function () &#123;
+            &lt;#if memberReadState ??&gt;
+            // 重选阅读状态回填
+            $(&quot;*[data-read-state=&#39;$&#123;memberReadState.readState&#125;&#39;]&quot;).addClass(&quot;highlight&quot;);
+            &lt;/#if&gt;
+            &lt;#if !loginMember ??&gt;
+                $(&quot;*[data-read-state]&quot;).click(function () &#123;
+                    // 利用jquery选择div的对话框函数 显示需要登录
+                    $(&quot;#exampleModalCenter&quot;).modal(&quot;show&quot;);
+                &#125;)
+            &lt;/#if&gt;
+        &#125;)
+    &lt;/script&gt;
+</code></pre>
 
             
         </div>
@@ -2136,7 +2248,7 @@ http://localhost/register.html
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -2211,7 +2323,7 @@ http://localhost/register.html
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#1bccbc>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -9595,7 +9707,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -16584,7 +16696,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -17878,7 +17990,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -19299,7 +19411,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
