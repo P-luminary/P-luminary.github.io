@@ -2390,6 +2390,571 @@ public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer
         return result;
     &#125;
 </code></pre>
+<pre><code class="java">detail.ftl
+//86.评论对话框提交数据  87完成点赞核心实现 MemberService
+            $(&quot;#btnSubmit&quot;).click(function () &#123;
+                var score = $(&quot;#score&quot;).raty(&quot;score&quot;);//获取评分
+                var content = $(&quot;#content&quot;).val();
+                if (score == 0 || $.trim(content) == &quot;&quot;)&#123; //没有进行选择 或 删除前后空格
+                    return; //禁止提交方法中断
+                &#125;
+                $.post(&quot;/evaluate&quot;,&#123;
+                    score : score,
+                    bookId: $&#123;book.bookId&#125;,
+                    memberId: $&#123;loginMember.memberId&#125;,
+                    content: content
+                &#125;,function (json) &#123;
+                    if (json.code == &quot;0&quot;) &#123;//处理成功
+                        window.location.reload();//列表进行刷新
+                    &#125;
+                &#125;,&quot;json&quot;)
+            &#125;)
+</code></pre>
+<h3 id="完成会员短评点赞核心实现"><a href="#完成会员短评点赞核心实现" class="headerlink" title="完成会员短评点赞核心实现"></a>完成会员短评点赞核心实现</h3><pre><code class="java">com/imooc/reader/service/MemberService.java
+ /**
+     * 短评点赞
+     * @param evaluationId 短评编号
+     * @return 短评对象
+     */
+//    87完成点赞核心实现 MemberServiceImpl
+    public Evaluation enjoy(Long evaluationId);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
+// 87.短评点赞 自增+1 Membercontroller
+    public Evaluation enjoy(Long evaluationId) &#123;
+        Evaluation evaluation = evaluationMapper.selectById(evaluationId);
+        evaluation.setEnjoy(evaluation.getEnjoy()+1);
+        evaluationMapper.updateById(evaluation);
+        return evaluation;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/MemberController.java
+ //87.实现controller 88让客户端页面发送ajax请求
+    @PostMapping(&quot;/enjoy&quot;)
+    @ResponseBody
+    public Map evaluate(Long evaluationId) &#123;
+        Map result = new HashMap();
+        try &#123;
+//    Evaluation eva = memberService.evaluate(memberId, bookId, score, content);
+            Evaluation eva = memberService.enjoy(evaluationId);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+            result.put(&quot;evaluation&quot;, eva); //包含最新点赞数
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;msg&quot;, ex.getMsg());
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<pre><code class="java">detail.ftl
+// 88.评论点赞
+            $(&quot;*[data-evaluation-id]&quot;).click(function()&#123;
+                var evaluationId = $(this).data(&quot;evaluation-id&quot;);
+                $.post(&quot;/enjoy&quot;,&#123;evaluationId:evaluationId&#125;,function(json)&#123;
+                    if(json.code == &quot;0&quot;)&#123;
+                        $(&quot;*[data-evaluation-id=&#39;&quot; + evaluationId + &quot;&#39;] span&quot;).text(json.evaluation.enjoy);
+                    &#125;
+                &#125;,&quot;json&quot;)
+            &#125;)
+</code></pre>
+<h3 id="Spring-Task定时任务-eg-闹钟命令"><a href="#Spring-Task定时任务-eg-闹钟命令" class="headerlink" title="Spring Task定时任务 [eg:  闹钟命令]"></a>Spring Task定时任务 [eg:  闹钟命令]</h3><ul>
+<li>Spting Task 是 Spring 3.0后推出的定时任务模块</li>
+<li>Spring Task的职责是按周期后台自动执行任务</li>
+<li>Spring Task可利用Cron表达式实现灵活的定时处理</li>
+</ul>
+<h5 id="Cron表达式实例"><a href="#Cron表达式实例" class="headerlink" title="Cron表达式实例"></a>Cron表达式实例</h5><table>
+<thead>
+<tr>
+<th align="center">秒</th>
+<th align="center">分</th>
+<th align="center">小时</th>
+<th align="center">日</th>
+<th align="center">月</th>
+<th align="center">星期</th>
+<th align="center">年</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">*</td>
+<td align="center">*</td>
+<td align="center">*</td>
+<td align="center">*</td>
+<td align="center">？</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">0,30</td>
+<td align="center">0-5</td>
+<td align="center">*</td>
+<td align="center">*</td>
+<td align="center">*</td>
+<td align="center">?</td>
+<td align="center">2000</td>
+</tr>
+<tr>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">9-18</td>
+<td align="center">?</td>
+<td align="center">*</td>
+<td align="center">WED</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h5 id="利用Spring-Task自动计算图书评分-所有图书评价信息重算"><a href="#利用Spring-Task自动计算图书评分-所有图书评价信息重算" class="headerlink" title="利用Spring-Task自动计算图书评分 [所有图书评价信息重算]"></a>利用Spring-Task自动计算图书评分 [所有图书评价信息重算]</h5><pre><code class="java">mappers/book.xml
+&lt;!--    89.增加平均评分增加信息  增加接口BookMapper --&gt;
+    &lt;update id=&quot;updateEvaluation&quot;&gt;
+        update book b SET evaluation_score = (
+            select ifnull(avg(score),0) from evaluation where book_id = b.book_id and state=&#39;enable&#39;
+        ),evaluation_quantity = (
+            select ifnull(count(*),0) from evaluation where book_id = b.book_id and state=&#39;enable&#39;
+        )
+    &lt;/update&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/mapper/BookMapper.java
+package com.imooc.reader.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.imooc.reader.entity.Book;
+//33.创建完Book接口  34与之对应的创建book.xml文件
+//89. 更新图书评分  BookService去定义
+public interface BookMapper extends BaseMapper&lt;Book&gt; &#123;
+    /**
+     * 更新图书评分/评价数量
+     */
+    public void updateEvaluation();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+ /**
+     * 更新图书评分/评价数量
+     */
+    //89. 定义完去impl定义实现类
+    public void updateEvaluation();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+/**
+     * 更新图书评分/评价数量  Controller直接面向Service Service面向Mapper
+     */
+    //89. 更新操作需要声明式事务 开启  90applicationContext.xml开启task
+    @Transactional
+    public void updateEvaluation() &#123;
+        bookMapper.updateEvaluation();
+    &#125;
+</code></pre>
+<pre><code class="java">applicationContext.xml
+&lt;!--  61.配置Kaptcha 的bean  62创造KaptchaController.java--&gt;
+    &lt;bean id=&quot;KaptchaProducer&quot; class=&quot;com.google.code.kaptcha.impl.DefaultKaptcha&quot;&gt;
+        &lt;property name=&quot;config&quot;&gt;
+            &lt;bean class=&quot;com.google.code.kaptcha.util.Config&quot;&gt;
+                &lt;constructor-arg&gt;
+                    &lt;props&gt;
+                        &lt;!-- 验证码图片不生成边框 --&gt;
+                        &lt;prop key=&quot;kaptcha.border&quot;&gt;no&lt;/prop&gt;
+                        &lt;!-- 验证码图片宽度为120像素  --&gt;
+                        &lt;prop key=&quot;kaptcha.image.width&quot;&gt;120&lt;/prop&gt;
+                        &lt;!-- 验证码图片字体颜色为蓝色  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.font.color&quot;&gt;blue&lt;/prop&gt;
+                        &lt;!-- 每个字符最大占用40像素  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.font.size&quot;&gt;40&lt;/prop&gt;
+                        &lt;!-- 验证码包含4个字符  --&gt;
+                        &lt;prop key=&quot;kaptcha.textproducer.char.length&quot;&gt;4&lt;/prop&gt;
+                    &lt;/props&gt;
+                &lt;/constructor-arg&gt;
+            &lt;/bean&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;
+    &lt;!-- 90.开启Spring Task定时任务的注解模式 创建一个reader/task/ComputeTask.java--&gt;
+    &lt;task:annotation-driven/&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/task/ComputeTask.java
+package com.imooc.reader.task;
+
+import com.imooc.reader.service.BookService;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+
+//90.组件注解 不确定是哪个类 但是会被扫描实例化和管理
+@Component
+public class ComputeTask &#123;
+    @Resource
+    private BookService bookService;
+//  每分钟0秒时候 执行一次Cron表达式
+    @Scheduled(cron = &quot;0 * * * * ?&quot;)
+    public void updateEvaluation()&#123;
+        bookService.updateEvaluation();
+        System.out.println(&quot;已更新所有图书评分&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="后台管理功能-图书管理"><a href="#后台管理功能-图书管理" class="headerlink" title="后台管理功能-图书管理"></a>后台管理功能-图书管理</h3><h5 id="富文本编辑器wangEditor使用入门"><a href="#富文本编辑器wangEditor使用入门" class="headerlink" title="富文本编辑器wangEditor使用入门"></a>富文本编辑器<code>wangEditor</code>使用入门</h5><ul>
+<li>基于Javascript与css开发的Web富文本编辑器</li>
+</ul>
+<pre><code class="java">test.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+    &lt;!-- 91.引入wangEditor  创建WEB-INF/ftl/management/book.ftl--&gt;
+    &lt;script src=&quot;/resources/wangEditor.min.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div&gt;
+    &lt;button id=&quot;btnRead&quot;&gt;读取内容&lt;/button&gt;
+    &lt;button id=&quot;btnWrite&quot;&gt;写入内容&lt;/button&gt;
+&lt;/div&gt;
+&lt;div id=&quot;divEditor&quot; style=&quot;width: 800px;height:600px&quot;&gt;&lt;/div&gt;
+&lt;script&gt;
+    var E = window.wangEditor;
+    var editor = new E(&quot;#divEditor&quot;);//完成富文本编辑器初始化
+    editor.create();//创建富文本编辑器,显示在页面上
+    document.getElementById(&quot;btnRead&quot;).onclick = function()&#123;
+        var content = editor.txt.html();//获取编辑器现有的html内容
+        alert(content);
+    &#125;
+    document.getElementById(&quot;btnWrite&quot;).onclick = function()&#123;
+        var content = &quot;&lt;li style=&#39;color:red&#39;&gt;我是&lt;b&gt;新内容&lt;/b&gt;&lt;/li&gt;&quot;;
+        editor.txt.html(content);
+    &#125;
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现图书管理功能"><a href="#实现图书管理功能" class="headerlink" title="实现图书管理功能"></a>实现图书管理功能</h3><h6 id="在训练素材中导入图书管理页"><a href="#在训练素材中导入图书管理页" class="headerlink" title="在训练素材中导入图书管理页"></a>在训练素材中导入图书管理页</h6><pre><code class="java">book.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;#-- 91.创建后台图书管理控制器com/imooc/reader/controller/management/MBookController.java   --&gt;
+    &lt;title&gt;图书管理功能&lt;/title&gt;
+    &lt;style&gt;
+        #dlgBook&#123;
+            padding: 10px
+        &#125;
+    &lt;/style&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+
+    &lt;script src=&quot;/resources/wangEditor.min.js&quot;&gt;&lt;/script&gt;
+
+
+    &lt;script type=&quot;text/html&quot; id=&quot;toolbar&quot;&gt;
+        &lt;div class=&quot;layui-btn-container&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-sm&quot; id=&quot;btnAdd&quot; onclick=&quot;showCreate()&quot;&gt;添加&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/script&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+
+
+&lt;div class=&quot;layui-container&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;图书列表&lt;/blockquote&gt;
+    &lt;!-- 数据表格 --&gt;
+    &lt;table id=&quot;grdBook&quot; lay-filter=&quot;grdBook&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;!--表单内容--&gt;
+&lt;div id=&quot;dialog&quot; style=&quot;padding: 10px;display: none&quot;&gt;
+    &lt;form class=&quot;layui-form&quot; &gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!-- 图书类别 --&gt;
+            &lt;select id=&quot;categoryId&quot; name=&quot;categoryId&quot; lay-verify=&quot;required&quot; lay-filter=
+            &quot;categoryId&quot;&gt;
+                &lt;option value=&quot;&quot;&gt;&lt;/option&gt;
+                &lt;option value=&quot;1&quot;&gt;前端&lt;/option&gt;
+                &lt;option value=&quot;2&quot;&gt;后端&lt;/option&gt;
+                &lt;option value=&quot;3&quot;&gt;测试&lt;/option&gt;
+                &lt;option value=&quot;4&quot;&gt;产品&lt;/option&gt;
+            &lt;/select&gt;
+
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!-- 书名 --&gt;
+            &lt;input type=&quot;text&quot; id=&quot;bookName&quot; name=&quot;bookName&quot; required lay-verify=&quot;required&quot; placeholder=&quot;请输入书名&quot;
+                   autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!-- 子标题 --&gt;
+            &lt;input type=&quot;text&quot; id=&quot;subTitle&quot; name=&quot;subTitle&quot; required lay-verify=&quot;required&quot; placeholder=&quot;请输入子标题&quot;
+                   autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!-- 作者 --&gt;
+            &lt;input type=&quot;text&quot; id=&quot;author&quot; name=&quot;author&quot; required lay-verify=&quot;required&quot; placeholder=&quot;请输入作者信息&quot;
+                   autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+
+        &lt;div style=&quot;margin-top: 30px;font-size: 130%&quot;&gt;图书介绍(默认第一图将作为图书封面)&lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot; &gt;
+            &lt;!-- wangEditor编辑器 --&gt;
+            &lt;div id=&quot;editor&quot; style=&quot;width: 100%&quot;&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;!-- 图书编号 --&gt;
+        &lt;input id=&quot;bookId&quot; type=&quot;hidden&quot;&gt;
+        &lt;!-- 当前表单操作类型,create代表新增 update代表修改 --&gt;
+        &lt;input id=&quot;optype&quot;  type=&quot;hidden&quot;&gt;
+        &lt;div class=&quot;layui-form-item&quot; style=&quot;text-align: center&quot;&gt;
+            &lt;!-- 提交按钮 --&gt;
+            &lt;button class=&quot;layui-btn&quot; lay-submit=&quot;&quot; lay-filter=&quot;btnSubmit&quot;&gt;立即提交&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+
+    var table = layui.table; //table数据表格对象
+    var $ = layui.$; //jQuery
+    var editor = null; //wangEditor富文本编辑器对象
+    //初始化图书列表
+    table.render(&#123;
+        elem: &#39;#grdBook&#39;  //指定div
+        , id : &quot;bookList&quot; //数据表格id
+        , toolbar: &quot;#toolbar&quot; //指定工具栏,包含新增添加
+        , url: &quot;/management/book/list&quot; //数据接口
+        , page: true //开启分页
+        , cols: [[ //表头
+            &#123;field: &#39;bookName&#39;, title: &#39;书名&#39;, width: &#39;300&#39;&#125;
+            , &#123;field: &#39;subTitle&#39;, title: &#39;子标题&#39;, width: &#39;200&#39;&#125;
+            , &#123;field: &#39;author&#39;, title: &#39;作者&#39;, width: &#39;200&#39;&#125;
+            , &#123;type: &#39;space&#39;, title: &#39;操作&#39;, width: &#39;200&#39; , templet : function(d)&#123;
+                    //为每一行表格数据生成&quot;修改&quot;与&quot;删除&quot;按钮,并附加data-id属性代表图书编号
+                    return &quot;&lt;button class=&#39;layui-btn layui-btn-sm btn-update&#39;  data-id=&#39;&quot; + d.bookId + &quot;&#39; data-type=&#39;update&#39; onclick=&#39;showUpdate(this)&#39;&gt;修改&lt;/button&gt;&quot; +
+                        &quot;&lt;button class=&#39;layui-btn layui-btn-sm btn-delete&#39;  data-id=&#39;&quot; + d.bookId + &quot;&#39;   onclick=&#39;showDelete(this)&#39;&gt;删除&lt;/button&gt;&quot;;
+                &#125;
+            &#125;
+        ]]
+    &#125;);
+    //显示更新图书对话框
+    //obj对应点击的&quot;修改&quot;按钮对象
+    function showUpdate(obj)&#123;
+        //弹出&quot;编辑图书&quot;对话框
+        layui.layer.open(&#123;
+            id: &quot;dlgBook&quot;, //指定div
+            title: &quot;编辑图书&quot;, //标题
+            type: 1, 
+            content: $(&#39;#dialog&#39;).html(), //设置对话框内容,复制自dialog DIV
+            area: [&#39;820px&#39;, &#39;730px&#39;], //设置对话框宽度高度
+            resize: false //是否允许调整尺寸
+        &#125;)
+
+        var bookId = $(obj).data(&quot;id&quot;); //获取&quot;修改&quot;按钮附带的图书编号
+        $(&quot;#dlgBook #bookId&quot;).val(bookId); //为表单隐藏域赋值,提交表单时用到
+
+        editor = new wangEditor(&#39;#dlgBook #editor&#39;); //初始化富文本编辑器
+        editor.customConfig.uploadImgServer = &#39;/management/book/upload&#39; //设置图片上传路径
+        editor.customConfig.uploadFileName = &#39;img&#39;; //图片上传时的参数名
+        editor.create(); //创建wangEditor
+        $(&quot;#dlgBook #optype&quot;).val(&quot;update&quot;); //设置当前表单提交时提交至&quot;update&quot;更新地址
+
+        //发送ajax请求,获取对应图书信息
+        $.get(&quot;/management/book/id/&quot; + bookId , &#123;&#125; , function(json)&#123;
+            //文本框回填已有数据
+            $(&quot;#dlgBook #bookName&quot;).val(json.data.bookName);//书名
+            $(&quot;#dlgBook #subTitle&quot;).val(json.data.subTitle); //子标题
+            $(&quot;#dlgBook #author&quot;).val(json.data.author);//作者
+            $(&quot;#dlgBook #categoryId&quot;).val(json.data.categoryId); //分类选项
+            editor.txt.html(json.data.description); //设置图文内容
+            layui.form.render();//重新渲染LayUI表单
+        &#125; , &quot;json&quot;)
+
+
+
+    &#125;
+    //显示新增图书对话框
+    function showCreate()&#123;
+        //弹出&quot;新增图书&quot;对话框
+        layui.layer.open(&#123;
+            id: &quot;dlgBook&quot;,
+            title: &quot;新增图书&quot;,
+            type: 1,
+            content: $(&#39;#dialog&#39;).html(),
+            area: [&#39;820px&#39;, &#39;730px&#39;],
+            resize: false
+        &#125;)
+        //初始化wangEditor
+        editor = new wangEditor(&#39;#dlgBook #editor&#39;);
+        editor.customConfig.uploadImgServer = &#39;/management/book/upload&#39;;//设置图片上传地址
+        editor.customConfig.uploadFileName = &#39;img&#39;;//设置图片上传参数
+        editor.create();//创建wangEditor
+
+        layui.form.render(); //LayUI表单重新
+        $(&quot;#dlgBook #optype&quot;).val(&quot;create&quot;);//设置当前表单提交时提交至&quot;create&quot;新增地址
+
+    &#125;;
+
+    //对话框表单提交
+    layui.form.on(&#39;submit(btnSubmit)&#39;, function(data)&#123;
+        //获取表单数据
+        var formData = data.field;
+        
+        //判断是否包含至少一副图片,默认第一图作为封面显示
+        var description = editor.txt.html();
+        if(description.indexOf(&quot;img&quot;) == -1)&#123;
+            layui.layer.msg(&#39;请放置一副图片作为封面&#39;);
+            return false;
+        &#125;
+        //获取当前表单要提交的地址
+        //如果是新增数据则提交至create
+        //如果是更新数据则提交至update
+        var optype = $(&quot;#dlgBook #optype&quot;).val();
+        
+        if(optype == &quot;update&quot;)&#123;
+            //更新数据时,提交时需要附加图书编号
+            formData.bookId=$(&quot;#dlgBook #bookId&quot;).val();
+        &#125;
+        //附加图书详细描述的图文html
+        formData.description = description;
+        //向服务器发送请求
+        $.post(&quot;/management/book/&quot; + optype , formData , function(json)&#123;
+            if(json.code==&quot;0&quot;)&#123;
+                //处理成功,关闭对话框,刷新列表,提示操作成功
+                layui.layer.closeAll();
+                table.reload(&#39;bookList&#39;);
+                layui.layer.msg(&#39;数据操作成功,图书列表已刷新&#39;);
+            &#125;else&#123;
+                //处理失败,提示错误信息
+                layui.layer.msg(json.msg);
+            &#125;
+        &#125; ,&quot;json&quot;)
+        return false;
+    &#125;);
+    //删除图书
+    function showDelete(obj)&#123;
+        //获取当前点击的删除按钮中包含的图书编号
+        var bookId = $(obj).data(&quot;id&quot;);
+        //利用layui的询问对话框进行确认
+        layui.layer.confirm(&#39;确定要执行删除操作吗?&#39;, &#123;icon: 3, title:&#39;提示&#39;&#125;, function(index)&#123;
+                    
+                //确认按钮后发送ajax请求,包含图书编号
+                $.get(&quot;/management/book/delete/&quot; + bookId, &#123;&#125;, function (json) &#123;
+                    if(json.code==&quot;0&quot;)&#123;
+                        //删除成功刷新表格
+                        table.reload(&#39;bookList&#39;);
+                        //提示操作成功
+                        layui.layer.msg(&#39;数据操作成功,图书列表已刷新&#39;);
+                        //关闭对话框
+                        layui.layer.close(index);
+                    &#125;else&#123;
+                        //处理失败,提示错误信息
+                        layui.layer.msg(json.msg);
+                    &#125;
+                &#125;, &quot;json&quot;);
+            
+        &#125;);
+
+    &#125;
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+package com.imooc.reader.controller.management;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+//http://localhost/management/book/index.html
+//91.后台管理系统 编写富文本编辑器的图片上传功能book.ftl已全实现
+//editor.customConfig.uploadImgServer = &#39;/management/book/upload&#39;;//设置图片上传地址
+//92提供文件上传地址的接口 pom.xml增加文件上传依赖 apache
+@Controller
+@RequestMapping(&quot;/management/book&quot;)
+public class MBookController &#123;
+    @GetMapping(&quot;/index.html&quot;)
+    public ModelAndView showBook()&#123;
+        return new ModelAndView(&quot;/management/book&quot;);
+    &#125;
+
+    /**
+     * wangEditor文件上传
+     * @param file 上传文件
+     * @param request 原生请求对象
+     * @return
+     * @throws IOException
+     */
+    //93. 接收提交的文件 上传的文件保存到upload目录中 代码编写
+    @PostMapping(&quot;/upload&quot;)
+    @ResponseBody
+    public Map upload(@RequestParam(&quot;img&quot;) MultipartFile file, HttpServletRequest request) throws IOException &#123;
+        //得到上传目录
+        String uploadPath = request.getServletContext().getResource(&quot;/&quot;).getPath() + &quot;/upload/&quot;;//在out里 运行时执行获取路径
+        //文件名
+        String fileName = new SimpleDateFormat(&quot;yyyyMMddHHmmssSSS&quot;).format(new Date());
+        //原始文件扩展名
+        String suffix = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(&quot;.&quot;));//最后一次获得点
+        //保存文件到upload目录
+        file.transferTo(new File(uploadPath + fileName + suffix));
+        Map result = new HashMap();
+        result.put(&quot;errno&quot;, 0);
+        result.put(&quot;data&quot;, new String[]&#123;&quot;/upload/&quot; + fileName + suffix&#125;);
+        return result;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;!-- 92.增加文件上传依赖 SpringMVC文件上传底层依赖 93去applicationContext.xml激活--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-fileupload&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-fileupload&lt;/artifactId&gt;
+            &lt;version&gt;1.4&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">applicationContext.xml
+&lt;!--  93.激活文件上传功能 回到MBookController--&gt;
+    &lt;bean id=&quot;multipartResolver&quot; class=&quot;org.springframework.web.multipart.commons.CommonsMultipartResolver&quot;&gt;
+        &lt;property name=&quot;defaultEncoding&quot; value=&quot;UTF-8&quot;/&gt;
+    &lt;/bean&gt;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+ /**
+     * wangEditor文件上传
+     * @param file 上传文件
+     * @param request 原生请求对象
+     * @return
+     * @throws IOException
+     */
+    //93. 接收提交的文件 上传的文件保存到upload目录中 代码编写
+    @PostMapping(&quot;/upload&quot;)
+    @ResponseBody
+    public Map upload(@RequestParam(&quot;img&quot;) MultipartFile file, HttpServletRequest request) throws IOException &#123;
+        //得到上传目录
+        String uploadPath = request.getServletContext().getResource(&quot;/&quot;).getPath() + &quot;/upload/&quot;;//在out里 运行时执行获取路径
+        //文件名
+        String fileName = new SimpleDateFormat(&quot;yyyyMMddHHmmssSSS&quot;).format(new Date());
+        //原始文件扩展名
+        String suffix = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(&quot;.&quot;));//最后一次获得点
+        //保存文件到upload目录
+        file.transferTo(new File(uploadPath + fileName + suffix));
+        Map result = new HashMap();
+        result.put(&quot;errno&quot;, 0);
+        result.put(&quot;data&quot;, new String[]&#123;&quot;/upload/&quot; + fileName + suffix&#125;);
+        return result;
+    &#125;
+</code></pre>
 
             
         </div>
@@ -2404,7 +2969,7 @@ public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -2479,7 +3044,7 @@ public MemberReadState updateMemberReadState(Long memberId, Long bookId, Integer
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ffa2c4>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -11778,7 +12343,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -14883,7 +15448,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -18146,7 +18711,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -19567,7 +20132,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
