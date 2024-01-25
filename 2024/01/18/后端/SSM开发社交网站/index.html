@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2917,7 +2917,7 @@ public class MBookController &#123;
      * @return
      * @throws IOException
      */
-    //93. 接收提交的文件 上传的文件保存到upload目录中 代码编写
+    //93. 接收提交的文件 上传的文件保存到upload目录中 代码编写 94book.ftl对话框表单提交
     @PostMapping(&quot;/upload&quot;)
     @ResponseBody
     public Map upload(@RequestParam(&quot;img&quot;) MultipartFile file, HttpServletRequest request) throws IOException &#123;
@@ -2934,6 +2934,352 @@ public class MBookController &#123;
         result.put(&quot;data&quot;, new String[]&#123;&quot;/upload/&quot; + fileName + suffix&#125;);
         return result;
     &#125;
+</code></pre>
+<h3 id="实现图书新增功能"><a href="#实现图书新增功能" class="headerlink" title="实现图书新增功能"></a>实现图书新增功能</h3><pre><code class="java">book.ftl
+// 94.对话框表单提交 95增加全新方法声明BookService
+    layui.form.on(&#39;submit(btnSubmit)&#39;, function(data)&#123;
+        //获取表单数据
+        var formData = data.field;
+        
+        //判断是否包含至少一副图片,默认第一图作为封面显示
+        var description = editor.txt.html();
+        if(description.indexOf(&quot;img&quot;) == -1)&#123;
+            layui.layer.msg(&#39;请放置一副图片作为封面&#39;);
+            return false;
+        &#125;
+        //获取当前表单要提交的地址
+        //如果是新增数据则提交至create
+        //如果是更新数据则提交至update
+        var optype = $(&quot;#dlgBook #optype&quot;).val();
+        
+        if(optype == &quot;update&quot;)&#123;
+            //更新数据时,提交时需要附加图书编号
+            formData.bookId=$(&quot;#dlgBook #bookId&quot;).val();
+        &#125;
+        //附加图书详细描述的图文html
+        formData.description = description;
+        //向服务器发送请求
+        $.post(&quot;/management/book/&quot; + optype , formData , function(json)&#123;
+            if(json.code==&quot;0&quot;)&#123;
+                //处理成功,关闭对话框,刷新列表,提示操作成功
+                layui.layer.closeAll();
+                table.reload(&#39;bookList&#39;);
+                layui.layer.msg(&#39;数据操作成功,图书列表已刷新&#39;);
+            &#125;else&#123;
+                //处理失败,提示错误信息
+                layui.layer.msg(json.msg);
+            &#125;
+        &#125; ,&quot;json&quot;)
+        return false;
+    &#125;);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+ //95.创建新的图书 BookServiceImpl
+    public Book createBook(Book book);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+ //95.数据增加 MBookController
+    @Transactional
+    public Book createBook(Book book) &#123;
+        bookMapper.insert(book);
+        return book;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+//95.获取书籍数据
+    @PostMapping(&quot;/create&quot;)
+    @ResponseBody
+    public Map createBook(Book book)&#123;
+        Map result = new HashMap();
+        try &#123;
+            book.setEvaluationQuantity(0);
+            book.setEvaluationScore(0f);
+            Document doc = Jsoup.parse(book.getDescription()); //一个个片段被解析
+            Element img = doc.select(&quot;img&quot;).first();//选中所有标签提取第一个 获取图书详情第一图的元素对象
+            String cover = img.attr(&quot;src&quot;);//获取当前元素指定值
+            book.setCover(cover); //95.来自于description描述的第一幅图
+            //用html解析器jsoup.jorg从前台的描述里截取图片位置 96加入依赖
+            bookService.createBook(book); //此处可以打点debug
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;msg&quot;, ex.getMsg());
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<h3 id="实现图书分页查询-显示图书列表"><a href="#实现图书分页查询-显示图书列表" class="headerlink" title="实现图书分页查询[显示图书列表]"></a>实现图书分页查询[显示图书列表]</h3><pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+ //96.设计列表显示加载 97回到book.ftl
+    @GetMapping(&quot;/list&quot;)
+    @ResponseBody
+    public Map list(Integer page, Integer limit)&#123;
+        if (page == null)&#123;
+            page = 1;
+        &#125;
+        if (limit == null)&#123;
+            limit = 10;
+        &#125;
+        IPage&lt;Book&gt; pageObject = bookService.paging(null, null, page, limit);//返回paging的分页对象
+        Map result = new HashMap();
+        result.put(&quot;code&quot;, &quot;0&quot;);
+        result.put(&quot;msg&quot;, &quot;success&quot;);
+        //layUI返回值必须要求写的
+        result.put(&quot;data&quot;, pageObject.getRecords()); //当前页面数据
+        result.put(&quot;count&quot;, pageObject.getTotal()); //未分页时记录总数
+        return result;
+    &#125;
+</code></pre>
+<h3 id="实现图书修改更新功能-原有数据调整-回填数据"><a href="#实现图书修改更新功能-原有数据调整-回填数据" class="headerlink" title="实现图书修改更新功能 [原有数据调整 回填数据]"></a>实现图书修改更新功能 [原有数据调整 回填数据]</h3><pre><code class="java">book.ftl
+// 94.对话框表单提交 95增加全新方法声明BookService
+    layui.form.on(&#39;submit(btnSubmit)&#39;, function(data)&#123;
+        //获取表单数据
+        var formData = data.field;
+        
+        //判断是否包含至少一副图片,默认第一图作为封面显示
+        var description = editor.txt.html();
+        if(description.indexOf(&quot;img&quot;) == -1)&#123;
+            layui.layer.msg(&#39;请放置一副图片作为封面&#39;);
+            return false;
+        &#125;
+        //获取当前表单要提交的地址
+        //如果是新增数据则提交至create
+        //如果是更新数据则提交至update
+        var optype = $(&quot;#dlgBook #optype&quot;).val();
+     // 97.从隐藏域拿数据   98 MBookController
+        if(optype == &quot;update&quot;)&#123;
+            //更新数据时,提交时需要附加图书编号
+            formData.bookId=$(&quot;#dlgBook #bookId&quot;).val();
+        &#125;
+        //附加图书详细描述的图文html
+        formData.description = description;
+        //向服务器发送请求
+        $.post(&quot;/management/book/&quot; + optype , formData , function(json)&#123;
+            if(json.code==&quot;0&quot;)&#123;
+                //处理成功,关闭对话框,刷新列表,提示操作成功
+                layui.layer.closeAll();
+                table.reload(&#39;bookList&#39;);
+                layui.layer.msg(&#39;数据操作成功,图书列表已刷新&#39;);
+            &#125;else&#123;
+                //处理失败,提示错误信息
+                layui.layer.msg(json.msg);
+            &#125;
+        &#125; ,&quot;json&quot;)
+        return false;
+    &#125;);
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+//98 前台ajax发送的格式保持一致 /managemet/book/id/ + bookId
+    @GetMapping(&quot;/id/&#123;id&#125;&quot;)
+    @ResponseBody
+    public Map selectById(@PathVariable(&quot;id&quot;) Long bookId) &#123;
+        Book book = bookService.selectById(bookId);
+        Map result = new HashMap();
+        result.put(&quot;code&quot;, &quot;0&quot;);
+        result.put(&quot;msg&quot;, &quot;success&quot;);
+        result.put(&quot;data&quot;, book); //服务器返回json.data book.ftl132行
+        return result;
+        //99 点击修改后的确认提交 增添更新操作 BookService.java
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+/**
+     * 更新图书
+     * @param book 新图书数据
+     * @return 更新后的数据
+     */
+    //99.创建新的更新 BookServiceImpl
+    public Book updateBook(Book book);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+/**
+     * 更新图书
+     * @param book 新图书数据
+     * @return 更新后的数据
+     */
+    //99.更新数据 100 MBookController
+    @Transactional
+    public Book updateBook(Book book) &#123;
+        bookMapper.updateById(book);
+        return null;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+    /**
+     * 更新图书数据
+     * @param book
+     * @return
+     */
+    //100. 更新代码 不要轻易对Book book数据直接更新 根据传入的book编号把数据库记录查出来
+//101 删除方法BookService
+    @PostMapping(&quot;/update&quot;)
+    @ResponseBody
+    public Map updateBook(Book book)&#123;
+        Map result = new HashMap();
+        try &#123;
+            Book rawBook = bookService.selectById(book.getBookId());
+            //通过前台数据获取
+            rawBook.setBookName(book.getBookName());
+            rawBook.setSubTitle(book.getSubTitle());
+            rawBook.setAuthor(book.getAuthor());
+            rawBook.setCategoryId(book.getCategoryId());
+            rawBook.setDescription(book.getDescription());
+            Document doc = Jsoup.parse(book.getDescription());
+            String cover = doc.select(&quot;img&quot;).first().attr(&quot;src&quot;);
+            rawBook.setCover(cover);
+            bookService.updateBook(rawBook);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode()); ///成功时
+            result.put(&quot;msg&quot;, ex.getMsg());//失败时
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<h3 id="实现图书删除功能"><a href="#实现图书删除功能" class="headerlink" title="实现图书删除功能"></a>实现图书删除功能</h3><p><a target="_blank" rel="noopener" href="http://localhost/management/book/index.html">http://localhost/management/book/index.html</a><br><a target="_blank" rel="noopener" href="http://localhost/">http://localhost/</a></p>
+<pre><code class="java">com/imooc/reader/service/BookService.java
+ //101.删除方法 BookServiceImpl
+    public void deleteBook(Long book);
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/impl/BookServiceImpl.java
+//101.删除相关数据 上面增加memberReadStateMapper evaluationMapper
+    //一次性三个表删除 有声明式事务不会删一半 102 MBookController.java
+    /**
+     * 删除图书及其数据
+     * @param bookId 图书编号
+     */
+    @Transactional
+    public void deleteBook(Long bookId) &#123;
+        bookMapper.deleteById(bookId);//单独删除id效率太低 写个构造器
+        QueryWrapper&lt;MemberReadState&gt; mrsQueryWrapper = new QueryWrapper&lt;MemberReadState&gt;();
+        mrsQueryWrapper.eq(&quot;book_id&quot;, bookId);
+        memberReadStateMapper.delete(mrsQueryWrapper);
+        QueryWrapper&lt;Evaluation&gt; evaluationQueryWrapper = new QueryWrapper&lt;Evaluation&gt;();
+        evaluationQueryWrapper.eq(&quot;book_id&quot;, bookId);
+        evaluationMapper.delete(evaluationQueryWrapper);
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/controller/management/MBookController.java
+//102. 封装 以及 code输出  103加入后台首页=&gt;index.ftl 后增加ManagementController
+    @GetMapping(&quot;/delete/&#123;id&#125;&quot;)
+    @ResponseBody
+    public Map deleteBook(@PathVariable(&quot;id&quot;) Long bookId) &#123;
+        Map result = new HashMap();
+        try &#123;
+            bookService.deleteBook(bookId);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;msg&quot;, &quot;success&quot;);
+        &#125; catch (BussinessException ex) &#123;
+            ex.printStackTrace();
+            result.put(&quot;code&quot;, ex.getCode()); ///成功时
+            result.put(&quot;msg&quot;, ex.getMsg());//失败时
+        &#125;
+        return result;
+    &#125;
+</code></pre>
+<h5 id="增加后台框架"><a href="#增加后台框架" class="headerlink" title="增加后台框架"></a>增加后台框架</h5><p><a target="_blank" rel="noopener" href="http://localhost/management/index.html">慕课书评网数据管理系统</a></p>
+<pre><code class="java">com/imooc/reader/controller/management/ManagementController.java
+package com.imooc.reader.controller.management;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+//103.后台管理系统控制器 104 修改index.ftl的静态地址
+/**
+ * 后台管理系统控制器
+ */
+@Controller
+@RequestMapping(&quot;/management&quot;) //功能启动后台所需
+public class ManagementController &#123;
+    @GetMapping(&quot;/index.html&quot;)
+    public ModelAndView showIndex()&#123;
+        return new ModelAndView(&quot;/management/index&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">index.ftl
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;慕课书评网数据管理系统&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课书评网数据管理系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    admin
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;/management/logout&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+
+
+                    &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                        &lt;a href=&quot;javascript:void(0)&quot;&gt;数据管理&lt;/a&gt;
+                        &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;xxx&quot;&gt;
+&lt;#--       104.静态地址改为动态地址--&gt;
+                            &lt;dd&gt;&lt;a href=&quot;/management/book/index.html&quot; target=&quot;ifmMain&quot;&gt;图书管理&lt;/a&gt;&lt;/dd&gt;
+                            &lt;dd&gt;&lt;a href=&quot;短评管理.html&quot; target=&quot;ifmMain&quot;&gt;短评管理
+                                &lt;/a&gt;&lt;/dd&gt;
+                        &lt;/dl&gt;
+                    &lt;/li&gt;
+
+
+
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot; src=&quot;/management/book/index.html&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;);
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
 
     </div>
