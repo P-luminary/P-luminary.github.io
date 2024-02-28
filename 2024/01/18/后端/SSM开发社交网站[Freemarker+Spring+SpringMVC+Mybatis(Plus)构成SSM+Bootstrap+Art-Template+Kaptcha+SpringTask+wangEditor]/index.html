@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -839,6 +839,7 @@ public class Category &#123;
     private Long categoryId;
 // 已自动配置好了驼峰命名法 可以忽略
 // @TableField(&quot;category_name&quot;)
+    private String categoryName;
 &#125;Getter + Setter + 重写toString
 </code></pre>
 <pre><code class="java">com/imooc/reader/mapper/CategoryMapper.java
@@ -1103,15 +1104,32 @@ public class BookServiceImplTest &#123;
      * @param p 页号
      * @return 分页对象
      */
+package com.imooc.controller;
+
+import com.imooc.reader.entity.Book;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.imooc.reader.service.BookService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+
+@Controller
+public class BookController &#123;
+    @Resource
+    private BookService bookService;
+    
     @GetMapping(&quot;/books&quot;)
-    @ResponseBody
-    public IPage&lt;Book&gt; selectBook(Integer p)&#123;
-        if (p==null)&#123;
+    @ResponseBody //具体数据来自客户端传入
+    public IPage&lt;Book&gt; selectBook(Long categoryId, String order, Integer p) &#123;
+        if (p == null) &#123;
             p = 1;
         &#125;
-        IPage&lt;Book&gt; pageObject = bookService.paging(p, 10);
+        IPage&lt;Book&gt; pageObject = bookService.paging(categoryId, order, p, 10);
         return pageObject;
     &#125;
+&#125;
 </code></pre>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/gybshen/article/details/79990533">img标签src引用网络图片，响应403的解决方法_img src引用其他网站图片-CSDN博客</a></p>
 <pre><code class="java">index.ftl
@@ -1334,7 +1352,7 @@ public interface BookService &#123;
     public IPage&lt;Book&gt; paging(Long categoryId, String order, Integer page, Integer rows);
 &#125;
 </code></pre>
-<pre><code class="java">package com.imooc.reader.service.impl;
+<pre><code class="java">package com.imooc.reader.service.impl.BookServiceImpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -1551,7 +1569,20 @@ public IPage&lt;Book&gt; paging(Long categoryId, String order, Integer page, Int
         $&#123;book.description&#125;
     &lt;/div&gt;
 </code></pre>
-<h3 id="图书详情页-显示评论列表"><a href="#图书详情页-显示评论列表" class="headerlink" title="图书详情页-显示评论列表"></a>图书详情页-显示评论列表</h3><pre><code class="java">com/imooc/reader/entity/Evaluation.java
+<h3 id="图书详情页-显示评论列表"><a href="#图书详情页-显示评论列表" class="headerlink" title="图书详情页-显示评论列表"></a>图书详情页-显示评论列表</h3><pre><code class="java">com/imooc/reader/entity/Member.java
+//59.创建Member实体后完成MemberMapper接口
+@TableName(&quot;member&quot;)
+public class Member &#123;
+    @TableId(type = IdType.AUTO)
+    private Long memberId;
+    private String username;
+    private String password;
+    private Integer salt;
+    private String nickname;
+    private Date createTime;
+&#125;Getter+Setter
+</code></pre>
+<pre><code class="java">com/imooc/reader/entity/Evaluation.java
 package com.imooc.reader.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -1930,6 +1961,57 @@ public interface MemberService &#123;
      * @return
      */
     public Member createMember(String username, String password, String nickname);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/service/exception.java
+package com.imooc.reader.service.exception;
+
+/**
+ * 68.业务逻辑异常 回到MemberServiceImpl编写用户名异常 69返回MemberServiceImpl
+ */
+public class BussinessException extends RuntimeException&#123;
+    private String code;
+    private String msg;
+
+    //构造方法
+    public BussinessException(String code, String msg) &#123;
+        super(msg); //继承自运行时异常
+        this.code = code;
+        this.msg = msg;
+    &#125;
+
+    public String getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(String code) &#123;
+        this.code = code;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/reader/utils/MD5Utils.java
+package com.imooc.reader.utils;
+
+import org.apache.commons.codec.digest.DigestUtils;
+//70.生成MD5方法 返回MemberServiceImpl编写随机数
+public class MD5Utils &#123;
+    public static String md5Digest(String source, Integer salt)&#123;
+        char[] ca = source.toCharArray();//获取字符数组
+        for (int i = 0; i &lt; ca.length; i++) &#123;
+            ca[i] = (char) (ca[i] + salt);
+        &#125;
+        String target = new String(ca);
+        String md5 = DigestUtils.md5Hex(target);
+        return md5;
+    &#125;
 &#125;
 </code></pre>
 <pre><code class="java">com/imooc/reader/service/impl/MemberServiceImpl.java
