@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -180,12 +180,267 @@
 <li>如何选择版本？   <strong>2.1.10 GA</strong></li>
 </ul>
 <h3 id="新建Spring-Boot项目演示"><a href="#新建Spring-Boot项目演示" class="headerlink" title="新建Spring Boot项目演示"></a>新建Spring Boot项目演示</h3><ul>
-<li>Spring官网 <strong>start.spring.io</strong></li>
+<li>Spring官网 <strong><a target="_blank" rel="noopener" href="https://start.spring.io/">Spring Initializr</a></strong></li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/c9c72f61bc8fdb6d207a1221c3e2fb6ed9dcad81/data/%E6%96%B0%E5%BB%BASpringBoot%E9%A1%B9%E7%9B%AE%E6%BC%94%E7%A4%BA.jpg"></p>
 <ul>
 <li>IDEA集成的Spring Initializr</li>
 </ul>
+<h3 id="第一个接口开发"><a href="#第一个接口开发" class="headerlink" title="第一个接口开发"></a>第一个接口开发</h3><pre><code class="java">com/imooc/springbootlearn/SpringBootlearnApplication.java
+package com.imooc.springbootlearn;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringBootlearnApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SpringBootlearnApplication.class, args);
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/ParaController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 演示各种传参形式
+ */
+@RestController
+public class ParaController &#123;
+    @GetMapping(&#123;&quot;/firstrequest&quot;&#125;)
+    public String firstRequest()&#123;
+        return &quot;第一个Spring Boot接口&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.1.1.RELEASE&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;SpringBootlearn&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;name&gt;SpringBootlearn&lt;/name&gt;
+    &lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-engine&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<h3 id="多种配置URL的方式"><a href="#多种配置URL的方式" class="headerlink" title="多种配置URL的方式"></a>多种配置URL的方式</h3><pre><code class="java">com/imooc/springbootlearn/ParaController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 演示各种传参形式
+ */
+@RestController
+@RequestMapping(&quot;/prefix&quot;)//统一增加公共前缀
+public class ParaController &#123;
+    @GetMapping(&#123;&quot;/firstrequest&quot;&#125;)
+    public String firstRequest() &#123;
+        return &quot;第一个Spring Boot接口&quot;;
+    &#125;
+
+    //@RequestParam 从请求中找到这个参数进行绑定
+    @GetMapping(&#123;&quot;/requestpara&quot;&#125;)
+    public String requestpara(@RequestParam Integer num) &#123;
+        return &quot;para from request: &quot; + num;
+    &#125;
+
+    //@PathVariable 从URL中寻找对应的参数进行绑定
+    @GetMapping(&#123;&quot;/para/&#123;num&#125;&quot;&#125;)
+    public String pathpara(@PathVariable Integer num) &#123;
+        return &quot;para from path: &quot; + num;
+    &#125;
+
+    //多URL的用法
+    @GetMapping(&#123;&quot;/multiurl1&quot;, &quot;/multiurl2&quot;&#125;)
+    public String multiurl(@RequestParam Integer num) &#123;
+        return &quot;para from path: &quot; + num;
+    &#125;
+
+    //增加程序健壮性 不一定必须传值
+    @GetMapping(&#123;&quot;/required&quot;&#125;)
+    public String required(@RequestParam(required =
+            false, defaultValue = &quot;0&quot;) Integer num) &#123;
+        return &quot;para form request: &quot; + num;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Web项目的三层结构"><a href="#Web项目的三层结构" class="headerlink" title="Web项目的三层结构"></a>Web项目的三层结构</h3><ul>
+<li><strong>Controller职责</strong>：对外暴露接口</li>
+<li><strong>Service职责</strong>：复杂业务场景下对业务逻辑做一层抽象和封装，保持Controller的简洁和独立，抽象出来的Service可以被Controller重复调用。具体业务代码写在service层，Controller只做简单的逻辑判断</li>
+<li><strong>DAO层职责</strong>：和数据相关的、增删改查数据库代码</li>
+</ul>
+<h3 id="配置文件简介"><a href="#配置文件简介" class="headerlink" title="配置文件简介"></a>配置文件简介</h3><ul>
+<li><p><strong>properties</strong>：容器端口名、数据库信息、日志级别…</p>
+<ul>
+<li>environments.dev.url&#x3D;<a target="_blank" rel="noopener" href="http://imooc.com/">http://imooc.com</a></li>
+<li>environments.dev.name&#x3D;Developer</li>
+</ul>
+</li>
+<li><p><strong>yml</strong>：分层级，冒号后需要空格</p>
+<ul>
+<li>enviroments:<ul>
+<li>dev:<ul>
+<li>url: <a target="_blank" rel="noopener" href="http://imooc.com/">http://imooc.com</a></li>
+<li>name: Developer</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>可以自动转换的网址：<a target="_blank" rel="noopener" href="https://www.toyaml.com/">在线yaml转properties-在线properties转yaml-ToYaml.com</a></p>
+<pre><code class="java">Properties:
+server.port=8081
+server.servlet.context-path=/first
+============================================================
+YAML:
+server:
+  port: 8081
+  servlet:
+    context-path: /first
+</code></pre>
+<h3 id="进行自定义配置"><a href="#进行自定义配置" class="headerlink" title="进行自定义配置"></a>进行自定义配置</h3><p><strong>注解类</strong>配置载入数据[利用@Value注解]</p>
+<pre><code class="java">com/imooc/springbootlearn/PropertiesController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 演示读取配置的Controller
+ */
+@RestController
+public class PropertiesController &#123;
+    //用@Value将properties的设置值进行绑定
+    @Value(&quot;$&#123;school.grade&#125;&quot;)
+    Integer grade;
+    @Value(&quot;$&#123;school.classnum&#125;&quot;)
+    Integer classnum;
+    @GetMapping(&quot;/gradeclass&quot;)
+    public String gradeClass()&#123;
+        return &quot;年级： &quot; + grade + &quot; 班级：&quot; + classnum;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">resoources/application.properties
+#server.port=8081
+##对于整个项目建立统一的前缀 http://127.0.0.1:8081/first/prefix/required
+#server.servlet.context-path=/first
+#school.方便分类
+school.grade=3
+school.classnum=6
+</code></pre>
+<p><strong>配置类</strong>文件配置载入数据</p>
+<pre><code class="java">com/imooc/springbootlearn/SchoolConfig.java
+package com.imooc.springbootlearn;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * School配置类
+ */
+@Component
+@ConfigurationProperties(prefix = &quot;school&quot;)
+public class SchoolConfig &#123;
+    //自动去配置信息里寻找且绑定
+    Integer grade;
+    Integer classnum;
+
+    public Integer getGrade() &#123;
+        return grade;
+    &#125;
+
+    public void setGrade(Integer grade) &#123;
+        this.grade = grade;
+    &#125;
+
+    public Integer getClassnum() &#123;
+        return classnum;
+    &#125;
+
+    public void setClassnum(Integer classnum) &#123;
+        this.classnum = classnum;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/ConfigController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 读取配置类
+ */
+@RestController
+public class ConfigController &#123;
+    @Autowired
+    SchoolConfig schoolConfig;
+    @GetMapping(&#123;&quot;/gradefromconfig&quot;&#125;)
+    public String gradeclass()&#123;
+        return &quot;年级： &quot; + schoolConfig.grade + &quot; 班级：&quot; + schoolConfig.classnum;
+
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Service和Dao的编写"><a href="#Service和Dao的编写" class="headerlink" title="Service和Dao的编写"></a>Service和Dao的编写</h3><ul>
+<li><h5 id="学生信息查询案例"><a href="#学生信息查询案例" class="headerlink" title="学生信息查询案例"></a>学生信息查询案例</h5></li>
+</ul>
+<pre><code class="sql">CREATE TABLE students(
+    &#39;id&#39; int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;自增id&#39;,
+    &#39;name&#39; VARCHAR(250) NOT NULL DEFAULT &#39;&#39; COMMIT &#39;姓名&#39;,
+    PRIMARY KEY(&#39;id&#39;)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+</code></pre>
 
     </div>
 
