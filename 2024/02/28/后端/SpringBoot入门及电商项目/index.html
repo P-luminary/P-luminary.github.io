@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -435,11 +435,174 @@ public class ConfigController &#123;
 <h3 id="Service和Dao的编写"><a href="#Service和Dao的编写" class="headerlink" title="Service和Dao的编写"></a>Service和Dao的编写</h3><ul>
 <li><h5 id="学生信息查询案例"><a href="#学生信息查询案例" class="headerlink" title="学生信息查询案例"></a>学生信息查询案例</h5></li>
 </ul>
-<pre><code class="sql">CREATE TABLE students(
-    &#39;id&#39; int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;自增id&#39;,
-    &#39;name&#39; VARCHAR(250) NOT NULL DEFAULT &#39;&#39; COMMIT &#39;姓名&#39;,
-    PRIMARY KEY(&#39;id&#39;)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+<pre><code class="java">com/imooc/springbootlearn/Student.java
+package com.imooc.springbootlearn;
+
+/**
+ * 学生实体类
+ */
+public class Student &#123;
+    Integer id;
+    String name;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Student&#123;&quot; +
+                &quot;id=&quot; + id +
+                &quot;, name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &#39;&#125;&#39;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/StudentController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 学生Controller
+ */
+@RestController
+public class StudentController &#123;
+    @Autowired
+    StudentService studentService;
+    //服务层 去中转
+
+    @GetMapping(&quot;/student&quot;)
+    public String student(@RequestParam Integer num)&#123;
+        Student student = studentService.findStudent(num);
+        return student.toString();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/StudentService.java
+package com.imooc.springbootlearn;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * 学生Service  之后调用mapper操作数据库[interface]
+ */
+@Service
+public class StudentService &#123;
+    @Autowired
+    StudentMapper studentMapper;
+
+    public Student findStudent(Integer id)&#123;
+        return studentMapper.findById(id);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/StudentMapper.java 【接口】
+package com.imooc.springbootlearn;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Repository;
+
+/**
+ * 学生Mapper
+ */
+@Mapper
+@Repository
+public interface StudentMapper &#123;
+    @Select(&quot;select * from students where id = #&#123;id&#125;&quot;)
+    Student findById(Integer id);
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.1.1.RELEASE&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;springbootlearn&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;name&gt;SpringBootlearn&lt;/name&gt;
+    &lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.1.1&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-engine&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/springbootlearn/SpringBootlearnApplication.java
+package com.imooc.springbootlearn;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication(scanBasePackages=&quot;com.imooc&quot;)
+public class SpringBootlearnApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SpringBootlearnApplication.class, args);
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">
+#server.port=8081
+#server.servlet.context-path=/first
+school.grade=10
+school.classnum=6
+
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/test?serverTimezone=UTC&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true
+spring.datasource.username=root
+spring.datasource.password=root
 </code></pre>
 
     </div>
