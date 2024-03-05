@@ -870,8 +870,7 @@ spring.datasource.password=root
     &lt;/build&gt;
 &lt;/project&gt;
 </code></pre>
-<pre><code class="java">com/imooc/mall/controller/UserController.java
-package com.imooc.mall.controller;
+<pre><code class="java">package com.imooc.mall.controller;
 
 import com.imooc.mall.model.pojo.User;
 import com.imooc.mall.service.UserService;
@@ -893,6 +892,7 @@ public class UserController &#123;
     public User personalPage()&#123;
 //  6.补全return 7告诉mapper在哪里怎么去找 去application.properties编写 mybatis.mapper-locations:......
 //  去主类里编写@MapperScan(basePackages = &quot;com.imooc.mall.model.dao&quot;) 以防找不到mapper 8.去配置端口8083
+//   9.加入log4j2.xml
         return userService.getUser();
     &#125;
 &#125;
@@ -950,7 +950,7 @@ public class MallApplication &#123;
 <li>日志级别(优先级降低)：error, warn, info, debug, trace</li>
 <li>排除Logback依赖</li>
 </ul>
-<pre><code class="xml">     &lt;dependency&gt;
+<pre><code class="xml">        &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
             &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
             &lt;exclusions&gt;
@@ -961,6 +961,274 @@ public class MallApplication &#123;
             &lt;/exclusions&gt;
         &lt;/dependency&gt;
 </code></pre>
+<pre><code class="xml">log4j2.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;Configuration status=&quot;fatal&quot;&gt;
+  &lt;Properties&gt;
+    &lt;Property name=&quot;baseDir&quot; value=&quot;$&#123;sys:user.home&#125;/Desktop/idea_Space/logs&quot;/&gt;
+  &lt;/Properties&gt;
+
+  &lt;Appenders&gt;
+    &lt;Console name=&quot;Console&quot; target=&quot;SYSTEM_OUT&quot;&gt;
+      &lt;!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） --&gt;
+      &lt;ThresholdFilter level=&quot;info&quot; onMatch=&quot;ACCEPT&quot;
+        onMismatch=&quot;DENY&quot;/&gt;
+      &lt;PatternLayout
+        pattern=&quot;[%d&#123;MM:dd HH:mm:ss.SSS&#125;] [%level] [%logger&#123;36&#125;] - %msg%n&quot;/&gt;
+    &lt;/Console&gt;
+
+    &lt;!--debug级别日志文件输出--&gt;
+    &lt;RollingFile name=&quot;debug_appender&quot; fileName=&quot;$&#123;baseDir&#125;/debug.log&quot;
+      filePattern=&quot;$&#123;baseDir&#125;/debug_%i.log.%d&#123;yyyy-MM-dd&#125;&quot;&gt;
+      &lt;!-- 过滤器 --&gt;
+      &lt;Filters&gt;
+        &lt;!-- 限制日志级别在debug及以上在info以下 --&gt;
+        &lt;ThresholdFilter level=&quot;debug&quot;/&gt;
+        &lt;ThresholdFilter level=&quot;info&quot; onMatch=&quot;DENY&quot; onMismatch=&quot;NEUTRAL&quot;/&gt;
+      &lt;/Filters&gt;
+      &lt;!-- 日志格式 --&gt;
+      &lt;PatternLayout pattern=&quot;[%d&#123;HH:mm:ss:SSS&#125;] [%p] - %l - %m%n&quot;/&gt;
+      &lt;!-- 策略 --&gt;
+      &lt;Policies&gt;
+        &lt;!-- 每隔一天转存 --&gt;
+        &lt;TimeBasedTriggeringPolicy interval=&quot;1&quot; modulate=&quot;true&quot;/&gt;
+        &lt;!-- 文件大小 --&gt;
+        &lt;SizeBasedTriggeringPolicy size=&quot;100 MB&quot;/&gt;
+      &lt;/Policies&gt;
+    &lt;/RollingFile&gt;
+
+    &lt;!-- info级别日志文件输出 --&gt;
+    &lt;RollingFile name=&quot;info_appender&quot; fileName=&quot;$&#123;baseDir&#125;/info.log&quot;
+      filePattern=&quot;$&#123;baseDir&#125;/info_%i.log.%d&#123;yyyy-MM-dd&#125;&quot;&gt;
+      &lt;!-- 过滤器 --&gt;
+      &lt;Filters&gt;
+        &lt;!-- 限制日志级别在info及以上在error以下 --&gt;
+        &lt;ThresholdFilter level=&quot;info&quot;/&gt;
+        &lt;ThresholdFilter level=&quot;error&quot; onMatch=&quot;DENY&quot; onMismatch=&quot;NEUTRAL&quot;/&gt;
+      &lt;/Filters&gt;
+      &lt;!-- 日志格式 --&gt;
+      &lt;PatternLayout pattern=&quot;[%d&#123;HH:mm:ss:SSS&#125;] [%p] - %l - %m%n&quot;/&gt;
+      &lt;!-- 策略 --&gt;
+      &lt;Policies&gt;
+        &lt;!-- 每隔一天转存 --&gt;
+        &lt;TimeBasedTriggeringPolicy interval=&quot;1&quot; modulate=&quot;true&quot;/&gt;
+        &lt;!-- 文件大小 --&gt;
+        &lt;SizeBasedTriggeringPolicy size=&quot;100 MB&quot;/&gt;
+      &lt;/Policies&gt;
+    &lt;/RollingFile&gt;
+
+    &lt;!-- error级别日志文件输出 --&gt;
+    &lt;RollingFile name=&quot;error_appender&quot; fileName=&quot;$&#123;baseDir&#125;/error.log&quot;
+      filePattern=&quot;$&#123;baseDir&#125;/error_%i.log.%d&#123;yyyy-MM-dd&#125;&quot;&gt;
+      &lt;!-- 过滤器 --&gt;
+      &lt;Filters&gt;
+        &lt;!-- 限制日志级别在error及以上 --&gt;
+        &lt;ThresholdFilter level=&quot;error&quot;/&gt;
+      &lt;/Filters&gt;
+      &lt;!-- 日志格式 --&gt;
+      &lt;PatternLayout pattern=&quot;[%d&#123;HH:mm:ss:SSS&#125;] [%p] - %l - %m%n&quot;/&gt;
+      &lt;Policies&gt;
+        &lt;!-- 每隔一天转存 --&gt;
+        &lt;TimeBasedTriggeringPolicy interval=&quot;1&quot; modulate=&quot;true&quot;/&gt;
+        &lt;!-- 文件大小 --&gt;
+        &lt;SizeBasedTriggeringPolicy size=&quot;100 MB&quot;/&gt;
+      &lt;/Policies&gt;
+    &lt;/RollingFile&gt;
+  &lt;/Appenders&gt;
+  &lt;Loggers&gt;
+    &lt;Root level=&quot;debug&quot;&gt;
+      &lt;AppenderRef ref=&quot;Console&quot;/&gt;
+      &lt;AppenderRef ref=&quot;debug_appender&quot;/&gt;
+      &lt;AppenderRef ref=&quot;info_appender&quot;/&gt;
+      &lt;AppenderRef ref=&quot;error_appender&quot;/&gt;
+    &lt;/Root&gt;
+
+  &lt;/Loggers&gt;
+&lt;/Configuration&gt;
+</code></pre>
+<h3 id="AOP统一处理Web请求日志"><a href="#AOP统一处理Web请求日志" class="headerlink" title="AOP统一处理Web请求日志"></a>AOP统一处理Web请求日志</h3><ul>
+<li>为什么需要AOP统一处理Web请求日志 [对系统健壮性的保证 创建filter]</li>
+</ul>
+<pre><code class="java">com/imooc/mall/filter/WebLogAspect.java
+package com.imooc.mall.filter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+
+/**
+ * 打印请求和响应信息
+ */
+@Aspect
+@Component
+public class WebLogAspect &#123;
+    //生成loger类
+    private final Logger log = LoggerFactory.getLogger(WebLogAspect.class);
+//10.增加一个拦截点AOP
+    @Pointcut(&quot;execution(public * com.imooc.mall.controller..*.*(..))&quot;)
+    public void webLog()&#123;
+
+    &#125;
+//  10.提供请求参数
+    @Before(&quot;webLog()&quot;)
+    public void doBefore(JoinPoint joinPoint)&#123;
+        //收到请求,记录请求内容  请求到来所作的事情
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();
+        log.info(&quot;URL: &quot; + request.getRequestURI().toString());
+        log.info(&quot;HTTP_METHOD: &quot; + request.getMethod());
+        log.info(&quot;IP: &quot; + request.getRemoteAddr());
+        log.info(&quot;CLASS_METHOD: &quot; + joinPoint.getSignature().getDeclaringTypeName() + &quot;.&quot; + joinPoint.getSignature().getName());
+        log.info(&quot;ARGS: &quot; + Arrays.toString(joinPoint.getArgs()));
+    &#125;
+//  11.返回的时候也要拦截  返回参数res 拦截点webLog
+    @AfterReturning(returning = &quot;res&quot;,pointcut = &quot;webLog()&quot;)
+    public void doAfterReturning(Object res)throws Exception&#123;
+        //处理完请求,返回内容
+        log.info(&quot;RESPONSE: &quot; + new ObjectMapper().writeValueAsString(res));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="用户模块"><a href="#用户模块" class="headerlink" title="用户模块"></a>用户模块</h3><ul>
+<li>整体介绍：知识点、功能点<br> [<u>登录、注册、重名校验、密码加密存储、Session的使用、越权校验、统一响应对象、异常枚举、Java异常体系、Postman实操、统一异常处理、更新个人信息</u>]</li>
+<li>接口设计</li>
+<li>编码设计</li>
+</ul>
+<h3 id="API统一返回对象"><a href="#API统一返回对象" class="headerlink" title="API统一返回对象"></a>API统一返回对象</h3><pre><code class="java">com/imooc/mall/common/ApiRestResponse.java
+package com.imooc.mall.common;
+
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+
+/**
+ * 通用返回对象 T有可能是返回的购物车对象
+ * 12.编写响应API      13创建枚举异常com/imooc/mall/exception/ImoocMallExceptionEnum.java
+ */
+public class ApiRestResponse&lt;T&gt; &#123;
+    private Integer status;
+    private String msg;
+    private T data;
+    private static final int OK_CODE = 10000;
+    private static final String OK_MSG = &quot;SUCCESS&quot;;
+
+    public ApiRestResponse(Integer status, String msg, T data) &#123;
+        this.status = status;
+        this.msg = msg;
+        this.data = data;
+    &#125;
+
+    public ApiRestResponse(Integer status, String msg) &#123;
+        this.status = status;
+        this.msg = msg;
+    &#125;
+
+    public ApiRestResponse() &#123;
+        //默认请求信息
+        this(OK_CODE, OK_MSG);
+    &#125;
+    public static&lt;T&gt; ApiRestResponse&lt;T&gt; success()&#123;
+//   建立带着10000 和 SUCCESS的方法
+        return new ApiRestResponse&lt;&gt;();
+    &#125;
+
+    public static &lt;T&gt; ApiRestResponse&lt;T&gt; error(Integer code, String msg) &#123;
+        return new ApiRestResponse&lt;&gt;(code, msg);
+    &#125;
+//  14.用枚举来搞错误 为了方便调试编写完后生成一个toString方法
+    public static &lt;T&gt; ApiRestResponse&lt;T&gt; error(ImoocMallExceptionEnum ex) &#123;
+        return new ApiRestResponse&lt;&gt;(ex.getCode(), ex.getMsg());
+    &#125;
+//   把错误[异常]创建成一个枚举类
+
+    public static&lt;T&gt; ApiRestResponse&lt;T&gt; success(T result)&#123;
+//    两个成功success的方法
+        ApiRestResponse&lt;T&gt; response = new ApiRestResponse&lt;&gt;();
+        response.setData(result);
+        return response;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;ApiRestResponse&#123;&quot; +
+                &quot;status=&quot; + status +
+                &quot;, msg=&#39;&quot; + msg + &#39;\&#39;&#39; +
+                &quot;, data=&quot; + data +
+                &#39;&#125;&#39;;
+    &#125;
+
+    public Integer getStatus() &#123;
+        return status;
+    &#125;
+
+    public void setStatus(Integer status) &#123;
+        this.status = status;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+
+    public T getData() &#123;
+        return data;
+    &#125;
+
+    public void setData(T data) &#123;
+        this.data = data;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+package com.imooc.mall.exception;
+
+/**
+ * 异常枚举
+ */
+//13.编写异常枚举 注意类是enum噢  14返回ApiRestResponse
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;);
+    //异常码
+    Integer code;
+    //异常信息
+    String msg;
+
+    ImoocMallExceptionEnum(Integer code, String msg) &#123;
+        this.code = code;
+        this.msg = msg;
+    &#125;
+
+    public Integer getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(Integer code) &#123;
+        this.code = code;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="注册接口开发"><a href="#注册接口开发" class="headerlink" title="注册接口开发"></a>注册接口开发</h3><p>4-4     4:56</p>
 
             
         </div>
@@ -975,7 +1243,7 @@ public class MallApplication &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -4284,7 +4552,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -4782,7 +5050,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -12250,7 +12518,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -12458,7 +12726,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -14165,7 +14433,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -17270,7 +17538,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -19239,7 +19507,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -20533,7 +20801,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
