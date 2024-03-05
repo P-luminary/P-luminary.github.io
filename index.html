@@ -1105,8 +1105,7 @@ public class WebLogAspect &#123;
 <li>接口设计</li>
 <li>编码设计</li>
 </ul>
-<h3 id="API统一返回对象"><a href="#API统一返回对象" class="headerlink" title="API统一返回对象"></a>API统一返回对象</h3><pre><code class="java">com/imooc/mall/common/ApiRestResponse.java
-package com.imooc.mall.common;
+<h3 id="API统一返回对象"><a href="#API统一返回对象" class="headerlink" title="API统一返回对象"></a>API统一返回对象</h3><pre><code class="java">package com.imooc.mall.common;
 
 import com.imooc.mall.exception.ImoocMallExceptionEnum;
 
@@ -1144,7 +1143,7 @@ public class ApiRestResponse&lt;T&gt; &#123;
     public static &lt;T&gt; ApiRestResponse&lt;T&gt; error(Integer code, String msg) &#123;
         return new ApiRestResponse&lt;&gt;(code, msg);
     &#125;
-//  14.用枚举来搞错误 为了方便调试编写完后生成一个toString方法
+//  14.用枚举来搞错误 为了方便调试编写完后生成一个toString方法 15修改UserController的register()
     public static &lt;T&gt; ApiRestResponse&lt;T&gt; error(ImoocMallExceptionEnum ex) &#123;
         return new ApiRestResponse&lt;&gt;(ex.getCode(), ex.getMsg());
     &#125;
@@ -1200,7 +1199,11 @@ package com.imooc.mall.exception;
 //13.编写异常枚举 注意类是enum噢  14返回ApiRestResponse
 public enum ImoocMallExceptionEnum &#123;
 //  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
-    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;);
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;);
+
+
     //异常码
     Integer code;
     //异常信息
@@ -1228,7 +1231,365 @@ public enum ImoocMallExceptionEnum &#123;
     &#125;
 &#125;
 </code></pre>
-<h3 id="注册接口开发"><a href="#注册接口开发" class="headerlink" title="注册接口开发"></a>注册接口开发</h3><p>4-4     4:56</p>
+<h3 id="注册接口开发"><a href="#注册接口开发" class="headerlink" title="注册接口开发"></a>注册接口开发</h3><pre><code class="java">com/imooc/mall/controller/UserController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.pojo.User;
+import com.imooc.mall.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ * 用户控制器
+ */
+@Controller
+public class UserController &#123;
+    //4.返回对象的基本信息 return里面会写和service相关的  5建立Service层
+    @Autowired
+    UserService userService;
+    @GetMapping(&quot;/test&quot;)
+    @ResponseBody //返回Json格式内容
+    public User personalPage()&#123;
+//  6.补全return 7告诉mapper在哪里怎么去找 去application.properties编写 mybatis.mapper-locations:......
+//  去主类里编写@MapperScan(basePackages = &quot;com.imooc.mall.model.dao&quot;) 以防找不到mapper 8.去配置端口8083
+//   9.加入log4j2.xml  增加aop的pom
+        return userService.getUser();
+    &#125;
+// 12.创造一个统一返回对象 com/imooc/mall/common/ApiRestResponse.java
+    // 15.参数加在请求中所以加上@RequestParam 编写校验  16去UserService增加register接口
+    @PostMapping(&quot;/register&quot;)
+    @ResponseBody
+    public ApiRestResponse register(@RequestParam(&quot;userName&quot;) String userName, @RequestParam(&quot;password&quot;) String password) throws ImoocMallException &#123;
+//    字符串为空 || 符合参数
+        if (StringUtils.isEmpty(userName))&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
+        &#125;if (StringUtils.isEmpty(userName))&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
+        &#125;
+//   防止用户密码长度设置简单 密码长度不能少于8
+        if (password.length()&lt;8)&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.PASSWORD_TOO_SHORT);
+        &#125;
+        //18.补全操作
+        userService.register(userName, password);
+        return ApiRestResponse.success();
+    &#125;
+&#125;
+
+=========================================
+http://127.0.0.1:8083/register
+
+Whitelabel Error Page
+This application has no explicit mapping for /error, so you are seeing this as a fallback.
+
+Wed Mar 06 00:06:06 CST 2024
+There was an unexpected error (type=Method Not Allowed, status=405).
+Request method &#39;GET&#39; not supported
+    
+因为注册的时候采用的是@PostMapping(&quot;/register&quot;)
+单纯查询用get 往数据库写东西post
+@RequestMapping(&quot;/register&quot;)是GET和POST都支持的 但是不推荐
+根据不同的业务逻辑选择类型
+
+打开postman 新建一个去查询post
+POST: 127.0.0.1:8083/register?userName=mumu&amp;password=12345678
+
+&#123;
+    &quot;status&quot;: 10000,
+    &quot;msg&quot;: &quot;SUCCESS&quot;,
+    &quot;data&quot;: null
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/UserService.java
+package com.imooc.mall.service;
+
+import com.imooc.mall.model.pojo.User;
+
+//5.这是抽象的接口 还要让它实现 再创建一个impl 实现接口类 UserServiceImpl.java
+public interface UserService &#123;
+    User getUser();
+// 16.写完接口去实现接口UserServiceImpl.java
+    void register(String userName, String password);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.dao.UserMapper;
+import com.imooc.mall.model.pojo.User;
+import com.imooc.mall.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * UserService实现类
+ */
+@Service
+//5.重写里面的方法  @Autowired引入一个mapper去查询数据库返回真正的信息 6返回UserController补全return
+public class UserServiceImpl implements UserService &#123;
+    @Autowired
+    UserMapper userMapper;
+
+    @Override
+    public User getUser()&#123;
+        //通过主键来查询一个对象
+        return userMapper.selectByPrimaryKey(1);
+    &#125;
+    @Override
+    public void register(String userName, String password) throws ImoocMallException &#123;
+//    16.查询用户名是否存在, 不允许重名 用userMapper去查数据
+//    但未编写功能 去手动编写UserMapper.java
+        User result = userMapper.selectByName(userName);
+        if (result != null)&#123;
+//    17. 用户已存在 在Service层不能直接return但是controller可以直接返回
+            // 创建一个异常类 com/imooc/mall/exception/ImoocMallException.java
+            throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+        &#125;
+    // 通过检测 允许写入数据库
+        User user = new User();
+        user.setUsername(userName);
+        user.setPassword(password);
+        //先判断是不是空 不是空才修改  实现完以后回到controller层进行调用
+        int count = userMapper.insertSelective(user);
+        if (count==0)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.INSERT_FAILED);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/UserMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.User;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(User record);
+
+    int insertSelective(User record);
+
+    User selectByPrimaryKey(Integer id);
+
+    int updateByPrimaryKeySelective(User record);
+
+    int updateByPrimaryKey(User record);
+
+    // 16. 新增功能 去对应的UserMapper.xml进行描述 117行  BaseResultMap就是一开始自动生成的User对象
+    // &lt;include refid=&quot;Base_Column_List&quot;/&gt; 选取完整的User对象
+    User selectByName(String userName);
+&#125;
+</code></pre>
+<pre><code class="xml">mappers/UserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.mall.model.dao.UserMapper&quot;&gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.mall.model.pojo.User&quot;&gt;
+    &lt;id column=&quot;id&quot; jdbcType=&quot;INTEGER&quot; property=&quot;id&quot; /&gt;
+    &lt;result column=&quot;username&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;username&quot; /&gt;
+    &lt;result column=&quot;password&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;password&quot; /&gt;
+    &lt;result column=&quot;personalized_signature&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;personalizedSignature&quot; /&gt;
+    &lt;result column=&quot;role&quot; jdbcType=&quot;INTEGER&quot; property=&quot;role&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; jdbcType=&quot;TIMESTAMP&quot; property=&quot;createTime&quot; /&gt;
+    &lt;result column=&quot;update_time&quot; jdbcType=&quot;TIMESTAMP&quot; property=&quot;updateTime&quot; /&gt;
+  &lt;/resultMap&gt;
+  &lt;sql id=&quot;Base_Column_List&quot;&gt;
+    id, username, `password`, personalized_signature, `role`, create_time, update_time
+  &lt;/sql&gt;
+  &lt;select id=&quot;selectByPrimaryKey&quot; parameterType=&quot;java.lang.Integer&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+    select 
+    &lt;include refid=&quot;Base_Column_List&quot; /&gt;
+    from imooc_mall_user
+    where id = #&#123;id,jdbcType=INTEGER&#125;
+  &lt;/select&gt;
+  &lt;delete id=&quot;deleteByPrimaryKey&quot; parameterType=&quot;java.lang.Integer&quot;&gt;
+    delete from imooc_mall_user
+    where id = #&#123;id,jdbcType=INTEGER&#125;
+  &lt;/delete&gt;
+  &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.mall.model.pojo.User&quot;&gt;
+    insert into imooc_mall_user (id, username, `password`, 
+      personalized_signature, `role`, create_time, 
+      update_time)
+    values (#&#123;id,jdbcType=INTEGER&#125;, #&#123;username,jdbcType=VARCHAR&#125;, #&#123;password,jdbcType=VARCHAR&#125;, 
+      #&#123;personalizedSignature,jdbcType=VARCHAR&#125;, #&#123;role,jdbcType=INTEGER&#125;, #&#123;createTime,jdbcType=TIMESTAMP&#125;, 
+      #&#123;updateTime,jdbcType=TIMESTAMP&#125;)
+  &lt;/insert&gt;
+  &lt;insert id=&quot;insertSelective&quot; parameterType=&quot;com.imooc.mall.model.pojo.User&quot;&gt;
+    insert into imooc_mall_user
+    &lt;trim prefix=&quot;(&quot; suffix=&quot;)&quot; suffixOverrides=&quot;,&quot;&gt;
+      &lt;if test=&quot;id != null&quot;&gt;
+        id,
+      &lt;/if&gt;
+      &lt;if test=&quot;username != null&quot;&gt;
+        username,
+      &lt;/if&gt;
+      &lt;if test=&quot;password != null&quot;&gt;
+        `password`,
+      &lt;/if&gt;
+      &lt;if test=&quot;personalizedSignature != null&quot;&gt;
+        personalized_signature,
+      &lt;/if&gt;
+      &lt;if test=&quot;role != null&quot;&gt;
+        `role`,
+      &lt;/if&gt;
+      &lt;if test=&quot;createTime != null&quot;&gt;
+        create_time,
+      &lt;/if&gt;
+      &lt;if test=&quot;updateTime != null&quot;&gt;
+        update_time,
+      &lt;/if&gt;
+    &lt;/trim&gt;
+    &lt;trim prefix=&quot;values (&quot; suffix=&quot;)&quot; suffixOverrides=&quot;,&quot;&gt;
+      &lt;if test=&quot;id != null&quot;&gt;
+        #&#123;id,jdbcType=INTEGER&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;username != null&quot;&gt;
+        #&#123;username,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;password != null&quot;&gt;
+        #&#123;password,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;personalizedSignature != null&quot;&gt;
+        #&#123;personalizedSignature,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;role != null&quot;&gt;
+        #&#123;role,jdbcType=INTEGER&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;createTime != null&quot;&gt;
+        #&#123;createTime,jdbcType=TIMESTAMP&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;updateTime != null&quot;&gt;
+        #&#123;updateTime,jdbcType=TIMESTAMP&#125;,
+      &lt;/if&gt;
+    &lt;/trim&gt;
+  &lt;/insert&gt;
+  &lt;update id=&quot;updateByPrimaryKeySelective&quot; parameterType=&quot;com.imooc.mall.model.pojo.User&quot;&gt;
+    update imooc_mall_user
+    &lt;set&gt;
+      &lt;if test=&quot;username != null&quot;&gt;
+        username = #&#123;username,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;password != null&quot;&gt;
+        `password` = #&#123;password,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;personalizedSignature != null&quot;&gt;
+        personalized_signature = #&#123;personalizedSignature,jdbcType=VARCHAR&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;role != null&quot;&gt;
+        `role` = #&#123;role,jdbcType=INTEGER&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;createTime != null&quot;&gt;
+        create_time = #&#123;createTime,jdbcType=TIMESTAMP&#125;,
+      &lt;/if&gt;
+      &lt;if test=&quot;updateTime != null&quot;&gt;
+        update_time = #&#123;updateTime,jdbcType=TIMESTAMP&#125;,
+      &lt;/if&gt;
+    &lt;/set&gt;
+    where id = #&#123;id,jdbcType=INTEGER&#125;
+  &lt;/update&gt;
+  &lt;update id=&quot;updateByPrimaryKey&quot; parameterType=&quot;com.imooc.mall.model.pojo.User&quot;&gt;
+    update imooc_mall_user
+    set username = #&#123;username,jdbcType=VARCHAR&#125;,
+      `password` = #&#123;password,jdbcType=VARCHAR&#125;,
+      personalized_signature = #&#123;personalizedSignature,jdbcType=VARCHAR&#125;,
+      `role` = #&#123;role,jdbcType=INTEGER&#125;,
+      create_time = #&#123;createTime,jdbcType=TIMESTAMP&#125;,
+      update_time = #&#123;updateTime,jdbcType=TIMESTAMP&#125;
+    where id = #&#123;id,jdbcType=INTEGER&#125;
+  &lt;/update&gt;
+  &lt;select id=&quot;selectByName&quot; parameterType=&quot;java.lang.String&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+    select
+        &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+        from imooc_mall_user
+        where username = #&#123;userName,jdbcType=VARCHAR&#125;
+  &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallException.java
+package com.imooc.mall.exception;
+
+/**
+ * 17. 统一异常(感觉像递归之前编写的枚举异常)
+ */
+public class ImoocMallException extends Exception&#123;
+    private final Integer code;
+    private final String message;
+
+    public ImoocMallException(Integer code, String message) &#123;
+        this.code = code;
+        this.message = message;
+    &#125;
+
+    public ImoocMallException(ImoocMallExceptionEnum exceptionEnum) &#123;
+        this(exceptionEnum.getCode(), exceptionEnum.getMsg());
+    &#125;
+
+    public Integer getCode() &#123;
+        return code;
+    &#125;
+
+    @Override
+    public String getMessage() &#123;
+        return message;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+package com.imooc.mall.exception;
+
+/**
+ * 异常枚举
+ */
+//13.编写异常枚举 注意类是enum噢  14返回ApiRestResponse
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名，注册失败&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;);
+
+
+    //异常码
+    Integer code;
+    //异常信息
+    String msg;
+
+    ImoocMallExceptionEnum(Integer code, String msg) &#123;
+        this.code = code;
+        this.msg = msg;
+    &#125;
+
+    public Integer getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(Integer code) &#123;
+        this.code = code;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="GlobalExceptionHandler编写"><a href="#GlobalExceptionHandler编写" class="headerlink" title="GlobalExceptionHandler编写"></a>GlobalExceptionHandler编写</h3><p>4-6</p>
 
             
         </div>
@@ -1243,7 +1604,7 @@ public enum ImoocMallExceptionEnum &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -4552,7 +4913,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -7311,7 +7672,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -12518,7 +12879,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -14433,7 +14794,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -17538,7 +17899,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -20801,7 +21162,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
