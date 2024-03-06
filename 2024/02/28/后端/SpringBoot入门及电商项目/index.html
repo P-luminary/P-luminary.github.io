@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1258,7 +1258,7 @@ public class UserController &#123;
         if (password.length()&lt;8)&#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.PASSWORD_TOO_SHORT);
         &#125;
-        //18.补全操作
+ //18.补全操作  19进行统一处理异常[对前端安全考虑] GlobalExceptionHandler.java
         userService.register(userName, password);
         return ApiRestResponse.success();
     &#125;
@@ -1569,7 +1569,353 @@ public enum ImoocMallExceptionEnum &#123;
     &#125;
 &#125;
 </code></pre>
-<h3 id="GlobalExceptionHandler编写"><a href="#GlobalExceptionHandler编写" class="headerlink" title="GlobalExceptionHandler编写"></a>GlobalExceptionHandler编写</h3><p>4-6</p>
+<h3 id="GlobalExceptionHandler编写"><a href="#GlobalExceptionHandler编写" class="headerlink" title="GlobalExceptionHandler编写"></a>GlobalExceptionHandler编写</h3><ul>
+<li>对前端安全考虑，敏感信息不会暴露给用户</li>
+<li>抛出异常，直接转化为Json的APIResponse</li>
+<li>抛出重名异常</li>
+<li>拦截异常并且转变成APIRespond统一类型输出</li>
+</ul>
+<pre><code class="java">com/imooc/mall/exception/GlobalExceptionHandler.java
+package com.imooc.mall.exception;
+
+import com.imooc.mall.common.ApiRestResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ * 19.处理统一异常的handler 业务异常 处理不同逻辑异常  
+   20对密码进行MD5加密UserServiceImpl 先创建MD5Utils
+ */
+@ControllerAdvice
+public class GlobalExceptionHandler &#123;
+    private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    //   统一处理Exception.class异常
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public Object handleException(Exception e) &#123;
+        log.error(&quot;Default Exception: &quot;, e);
+        return ApiRestResponse.error(ImoocMallExceptionEnum.SYSTEM_ERROR);
+    &#125;
+    @ExceptionHandler(ImoocMallException.class)
+    @ResponseBody
+    public Object handleImoocMallException(ImoocMallException e) &#123;
+        log.error(&quot;ImoocMallException: &quot;, e); //传进来的是什么就传出去
+        return ApiRestResponse.error(e.getCode(), e.getMessage());
+    &#125;
+&#125;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e682b6dfead4194de33f37c0a5d1f116f2d9ad96/data/Java%E5%BC%82%E5%B8%B8%E4%BD%93%E7%B3%BB.png"></p>
+<h3 id="对密码进行MD5保护"><a href="#对密码进行MD5保护" class="headerlink" title="对密码进行MD5保护"></a>对密码进行MD5保护</h3><pre><code class="java">com/imooc/mall/util/MD5Utils.java
+package com.imooc.mall.util;
+
+import com.imooc.mall.common.Constant;
+import org.apache.tomcat.util.codec.binary.Base64;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+//20.不具备解密的协议 哈希算法  因为有破解MD5的网站所以需要加盐 21com/imooc/mall/common/Constant.java
+public class MD5Utils &#123;
+    public static String getMD5Str(String strValue) throws NoSuchAlgorithmException &#123;
+        MessageDigest md5 = MessageDigest.getInstance(&quot;MD5&quot;);
+        return Base64.encodeBase64String(md5.digest((strValue+ Constant.SALT).getBytes()));
+    &#125;
+//  用这个方法测试生成MD5的值
+    public static void main(String[] args) throws NoSuchAlgorithmException &#123;
+        String md5Str = getMD5Str(&quot;12345&quot;);
+        System.out.println(md5Str);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+package com.imooc.mall.common;
+
+/**
+ * 21.SALT常量值 写完以后去UserServiceImpl重写密码代码
+ */
+public class Constant &#123;
+    public static final String SALT = &quot;aSp[PCx,aw.xq246&#125;&quot;;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.dao.UserMapper;
+import com.imooc.mall.model.pojo.User;
+import com.imooc.mall.service.UserService;
+import com.imooc.mall.util.MD5Utils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.security.NoSuchAlgorithmException;
+
+/**
+ * UserService实现类
+ */
+@Service
+//5.重写里面的方法  @Autowired引入一个mapper去查询数据库返回真正的信息 6返回UserController补全return
+public class UserServiceImpl implements UserService &#123;
+    @Autowired
+    UserMapper userMapper;
+
+    @Override
+    public User getUser()&#123;
+        //通过主键来查询一个对象
+        return userMapper.selectByPrimaryKey(1);
+    &#125;
+    @Override
+    public void register(String userName, String password) throws ImoocMallException, NoSuchAlgorithmException &#123;
+//    16.查询用户名是否存在, 不允许重名 用userMapper去查数据
+//    但未编写功能 去手动编写UserMapper.java
+        User result = userMapper.selectByName(userName);
+        if (result != null)&#123;
+//    17. 用户已存在 在Service层不能直接return但是controller可以直接返回
+            // 创建一个异常类 com/imooc/mall/exception/ImoocMallException.java
+            throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+        &#125;
+    // 通过检测 允许写入数据库
+        User user = new User();
+        user.setUsername(userName);
+//        user.setPassword(password);
+        //21.重写密码
+        user.setPassword(MD5Utils.getMD5Str(password));
+        //先判断是不是空 不是空才修改  18实现完以后回到controller层进行调用
+        int count = userMapper.insertSelective(user);
+        if (count==0)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.INSERT_FAILED);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="登录功能分析"><a href="#登录功能分析" class="headerlink" title="登录功能分析"></a>登录功能分析</h3><ul>
+<li>登录状态需要保持 </li>
+<li>session的实现方案：登陆后，会保存用户信息到session</li>
+<li>之后的访问，会先从session中获取用户信息，然后再执行业务逻辑</li>
+</ul>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+package com.imooc.mall.common;
+
+/**
+ * 21.SALT常量值 写完以后去UserServiceImpl重写密码代码
+ */
+public class Constant &#123;
+    public static final String SALT = &quot;aSp[PCx,aw.xq246&#125;&quot;;
+    public static final String IMOOC_MALL_USER = &quot;imooc_mall_user&quot;;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名，注册失败&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;),
+    WRONG_PASSWORD(10006,&quot;密码错误&quot;),
+    SYSTEM_ERROR(20000,&quot;系统异常&quot;);
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/UserController.java
+//22登录login接口的开发 23返回UserServiceImpl写login
+    @PostMapping(&quot;/login&quot;)
+    @ResponseBody
+    public ApiRestResponse login(@RequestParam(&quot;userName&quot;) String userName, @RequestParam(&quot;password&quot;) String password, HttpSession session) throws ImoocMallException, NoSuchAlgorithmException &#123;
+        if (StringUtils.isEmpty(userName))&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
+        &#125;if (StringUtils.isEmpty(userName))&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
+        &#125;//26.编写完毕login接口
+        User user = userService.login(userName, password);
+        //保存用户信息时，不保存密码
+        user.setPassword(null);
+        //把对象放入session中
+        session.setAttribute(Constant.IMOOC_MALL_USER,user);
+        return ApiRestResponse.success(user);
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
+    //23.写方法判断md5与其匹配
+    @Override
+    public User login(String userName, String password) throws ImoocMallException &#123;
+        String md5Password = null;
+        try &#123;
+            md5Password = MD5Utils.getMD5Str(password);
+        &#125; catch (NoSuchAlgorithmException e) &#123;
+            e.printStackTrace();
+        &#125;
+//   23写方法判断md5与其匹配 UserMapper中写 login
+        //25.匹配 且去接口增加
+        User user = userMapper.selectLogin(userName, password);
+        if (user == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_PASSWORD);
+        &#125;//能找到就返回用户 直接从上面写@Override再自动修复就可以自动生成login的接口
+        //26.返回UserController写完login接口
+        return user;
+    &#125;
+</code></pre>
+<h3 id="用户模块剩余接口开发-更新个性签名"><a href="#用户模块剩余接口开发-更新个性签名" class="headerlink" title="用户模块剩余接口开发 [更新个性签名]"></a>用户模块剩余接口开发 [更新个性签名]</h3><pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名，注册失败&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;),
+    WRONG_PASSWORD(10006,&quot;密码错误&quot;),
+    NEED_LOGIN(10007,&quot;用户未登录&quot;),
+    UPDATE_FAILD(10008,&quot;更新失败&quot;),
+    SYSTEM_ERROR(20000,&quot;系统异常&quot;);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/UserController.java
+//22登录login接口的开发 23返回UserServiceImpl写login
+    @PostMapping(&quot;/login&quot;)
+    @ResponseBody
+    public ApiRestResponse login(@RequestParam(&quot;userName&quot;) String userName, @RequestParam(&quot;password&quot;) String password, HttpSession session) throws ImoocMallException, NoSuchAlgorithmException &#123;
+        if (StringUtils.isEmpty(userName)) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
+        &#125;
+        if (StringUtils.isEmpty(userName)) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
+        &#125;//26.编写完毕login接口  27更新个性签名接口
+        User user = userService.login(userName, password);
+        //保存用户信息时，不保存密码
+        user.setPassword(null);
+        //把对象放入session中 KEY
+        session.setAttribute(Constant.IMOOC_MALL_USER, user);
+        return ApiRestResponse.success(user);
+    &#125;
+
+    //  27.个性签名接口 28编写UserServiceImpl的updateUserInfo方法
+    @PostMapping(&quot;/user/update&quot;)
+    @ResponseBody
+    public ApiRestResponse updateUserInfo(HttpSession session, @RequestParam String signature) throws ImoocMallException &#123;
+        User currentUser = (User)session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null)&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_LOGIN);
+        &#125;
+        User user = new User();
+        user.setId(currentUser.getId());
+        user.setPersonalizedSignature(signature);
+        //29.搞全代码
+        userService.updateInformation(user);
+        return ApiRestResponse.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
+//23.写方法判断md5与其匹配
+    @Override
+    public User login(String userName, String password) throws ImoocMallException &#123;
+        String md5Password = null;
+        try &#123;
+            md5Password = MD5Utils.getMD5Str(password);
+        &#125; catch (NoSuchAlgorithmException e) &#123;
+            e.printStackTrace();
+        &#125;
+//   23写方法判断md5与其匹配 UserMapper中写 login
+        //25.匹配 且去接口增加
+        User user = userMapper.selectLogin(userName, md5Password);
+        if (user == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_PASSWORD);
+        &#125;//能找到就返回用户 直接从上面写@Override再自动修复就可以自动生成login的接口
+        //26.返回UserController写完login接口
+        return user;
+    &#125;
+// 28写updateUserInfo方法 不需要返回任何信息 只需要提醒更行成功即可
+    @Override
+    public void updateInformation(User user) throws ImoocMallException &#123;
+//    更新个性签名
+        int updateCount = userMapper.updateByPrimaryKeySelective(user);
+        if(updateCount&gt;1)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.UPDATE_FAILD);
+        &#125;
+        //快速使用@Override 快速补全接口代码 29返回UserController补全代码
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/UserService.java
+package com.imooc.mall.service;
+
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.model.pojo.User;
+
+import java.security.NoSuchAlgorithmException;
+
+//5.这是抽象的接口 还要让它实现 再创建一个impl 实现接口类 UserServiceImpl.java
+public interface UserService &#123;
+    User getUser();
+// 16.写完接口去实现接口UserServiceImpl.java
+    void register(String userName, String password) throws ImoocMallException, NoSuchAlgorithmException;
+
+    //23.写方法判断md5与其匹配
+    User login(String userName, String password) throws ImoocMallException;
+
+    // 28写updateUserInfo方法 不需要返回任何信息 只需要提醒更行成功即可
+    void updateInformation(User user) throws ImoocMallException;
+&#125;
+</code></pre>
+<h3 id="退出登录"><a href="#退出登录" class="headerlink" title="退出登录"></a>退出登录</h3><pre><code class="java">com/imooc/mall/controller/UserController.java
+//30.退出登录接口
+    @PostMapping(&quot;/user/logout&quot;)
+    @ResponseBody
+    public ApiRestResponse logout(HttpSession session)&#123;
+        session.removeAttribute(Constant.IMOOC_MALL_USER);
+        return ApiRestResponse.success();
+    &#125;
+</code></pre>
+<h3 id="管理员接口"><a href="#管理员接口" class="headerlink" title="管理员接口"></a>管理员接口</h3><pre><code class="java">com/imooc/mall/controller/UserController.java
+    //  31.管理员登录接口 思路可以借鉴
+    @PostMapping(&quot;/adminLogin&quot;)
+    @ResponseBody
+    public ApiRestResponse adminLogin(@RequestParam(&quot;userName&quot;) String userName, @RequestParam(&quot;password&quot;) String password, HttpSession session) throws ImoocMallException, NoSuchAlgorithmException &#123;
+        if (StringUtils.isEmpty(userName)) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
+        &#125;
+        if (StringUtils.isEmpty(userName)) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
+        &#125;//31.拿到用户名和密码的时候 对其进行校验是否为管理员
+        //数据库中 role=1是普通用户   role=2是管理员用户
+        // 32去serviceImpl写一个方法
+        User user = userService.login(userName, password);
+        //33.判断是否为管理员
+//        userService.checkAdminRole(user).if
+        if (userService.checkAdminRole(user)) &#123;
+            //是管理员
+            //保存用户信息时，不保存密码
+            user.setPassword(null);
+            //把对象放入session中 KEY
+            session.setAttribute(Constant.IMOOC_MALL_USER, user);
+            return ApiRestResponse.success(user);
+        &#125;else &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_ADMIN);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
+//  32.拿到用户  role=1是普通用户   role=2是管理员用户
+    //33.回到Controller
+    @Override
+    public boolean checkAdminRole(User user)&#123;
+        return user.getRole().equals(2);
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名，注册失败&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;),
+    WRONG_PASSWORD(10006,&quot;密码错误&quot;),
+    NEED_LOGIN(10007,&quot;用户未登录&quot;),
+    UPDATE_FAILD(10008,&quot;更新失败&quot;),
+    NEED_ADMIN(10009,&quot;无管理员权限&quot;),
+    SYSTEM_ERROR(20000,&quot;系统异常&quot;);
+&#125;
+</code></pre>
 
     </div>
 
