@@ -1251,7 +1251,7 @@ public class UserController &#123;
 //    字符串为空 || 符合参数
         if (StringUtils.isEmpty(userName))&#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
-        &#125;if (StringUtils.isEmpty(userName))&#123;
+        &#125;if (StringUtils.isEmpty(password))&#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
         &#125;
 //   防止用户密码长度设置简单 密码长度不能少于8
@@ -1725,7 +1725,7 @@ public class Constant &#123;
     public ApiRestResponse login(@RequestParam(&quot;userName&quot;) String userName, @RequestParam(&quot;password&quot;) String password, HttpSession session) throws ImoocMallException, NoSuchAlgorithmException &#123;
         if (StringUtils.isEmpty(userName))&#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
-        &#125;if (StringUtils.isEmpty(userName))&#123;
+        &#125;if (StringUtils.isEmpty(password))&#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
         &#125;//26.编写完毕login接口
         User user = userService.login(userName, password);
@@ -1778,7 +1778,7 @@ public enum ImoocMallExceptionEnum &#123;
         if (StringUtils.isEmpty(userName)) &#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
         &#125;
-        if (StringUtils.isEmpty(userName)) &#123;
+        if (StringUtils.isEmpty(password)) &#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
         &#125;//26.编写完毕login接口  27更新个性签名接口
         User user = userService.login(userName, password);
@@ -1873,7 +1873,7 @@ public interface UserService &#123;
         if (StringUtils.isEmpty(userName)) &#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_USER_NAME);
         &#125;
-        if (StringUtils.isEmpty(userName)) &#123;
+        if (StringUtils.isEmpty(password)) &#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_PASSWORD_NAME);
         &#125;//31.拿到用户名和密码的时候 对其进行校验是否为管理员
         //数据库中 role=1是普通用户   role=2是管理员用户
@@ -1891,6 +1891,7 @@ public interface UserService &#123;
         &#125;else &#123;
             return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_ADMIN);
         &#125;
+    //  34.创建分类接口 CategoryController
     &#125;
 </code></pre>
 <pre><code class="java">com/imooc/mall/service/impl/UserServiceImpl.java
@@ -1940,7 +1941,254 @@ public enum ImoocMallExceptionEnum &#123;
 </ul>
 </li>
 </ul>
-<p>5-2</p>
+<h3 id="分类模块的主要功能"><a href="#分类模块的主要功能" class="headerlink" title="分类模块的主要功能"></a>分类模块的主要功能</h3><ul>
+<li>分类数据的设置</li>
+<li>分类的父一级目录、递归</li>
+</ul>
+<h5 id="模块介绍"><a href="#模块介绍" class="headerlink" title="模块介绍"></a>模块介绍</h5><ul>
+<li>接口设计</li>
+<li>表设计</li>
+</ul>
+<h3 id="开发添加分类接口part1"><a href="#开发添加分类接口part1" class="headerlink" title="开发添加分类接口part1"></a>开发添加分类接口part1</h3><pre><code class="java">com/imooc/mall/controller/CategoryController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.common.Constant;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.model.AddCategoryReq;
+import com.imooc.mall.model.pojo.User;
+import com.imooc.mall.service.CategoryService;
+import com.imooc.mall.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpSession;
+
+//  34.创建分类接口 CategoryController
+@Controller
+public class CategoryController &#123;
+    @Autowired
+    UserService userService;
+    @Autowired
+    CategoryService categoryService;
+    @PostMapping(&quot;admin/category/add&quot;)
+    @ResponseBody
+    public ApiRestResponse addCategory(HttpSession session, @RequestBody AddCategoryReq addCategoryReq) &#123;
+        //登录且必须为管理员才可以 参数中需要添加很多元素 可以使用封装来搞
+        //com/imooc/mall/model/model/AddCategoryReq.java
+        if (addCategoryReq.getName() == null || addCategoryReq.getType() == null || addCategoryReq.getParentId() == null || addCategoryReq.getOrderNum() == null) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.PARA_NOT_NULL);
+        &#125;
+        //对身份进行校验 用session获取当前的用户
+        User currentUser = (User) session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null)&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_LOGIN);
+        &#125;//校验管理员 userService写过直接引用过来
+        boolean adminRole = userService.checkAdminRole(currentUser);
+        if (adminRole)&#123; //35.创建一个CategoryService 分类目录Service
+        //37.补全代码 是管理员  在上面添加@RequestBody 去postman Body-&gt;(raw/JSON)里测试接口
+            categoryService.add(addCategoryReq);
+            return ApiRestResponse.success();
+        &#125;else &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_ADMIN);
+        &#125;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/model/AddCategoryReq.java
+package com.imooc.mall.model.model;
+
+/**
+ * 34.AddCategoryReq 新建一个类 供添加接口进行封装 回去引用
+ */
+public class AddCategoryReq &#123;
+    private String name;
+    private Integer type;
+    private Integer parentId;
+    private Integer orderNum;
+&#125;+GETTER SETTER
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/CategoryService.java
+package com.imooc.mall.service;
+
+import com.imooc.mall.model.model.AddCategoryReq;
+import com.imooc.mall.model.pojo.Category;
+
+//35.创建一个CategoryService 分类目录Service 36创建一个它的实现类CategoryServiceImpl
+public interface CategoryService &#123;
+    void add(AddCategoryReq addCategoryReq);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.fasterxml.jackson.databind.util.BeanUtil;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.dao.CategoryMapper;
+import com.imooc.mall.model.model.AddCategoryReq;
+import com.imooc.mall.model.pojo.Category;
+import com.imooc.mall.service.CategoryService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * 36.目录分类Service实现类
+ */
+@Service
+public class CategoryServiceImpl implements CategoryService &#123;
+    @Autowired
+//   去Mapper里增加selectbyName 117行
+    CategoryMapper categoryMapper;
+    public void add(AddCategoryReq addCategoryReq) &#123;
+        Category category = new Category();
+//        category.setName(addCategoryReq.getName());
+        //字段类型一样 字段名一样的话可以自动拷贝进去
+        BeanUtils.copyProperties(addCategoryReq,category);
+        Category categoryOld = categoryMapper.selectByName(addCategoryReq.getName());
+        if (categoryOld != null)&#123; //重名目录 不允许创建 (优化)将ImoocMallException中的extends换一个
+            throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+        &#125;
+        int count = categoryMapper.insertSelective(category);
+        if (count == 0)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NEED_ADMIN);
+        &#125;//37.回到CategoryController.java
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">mappers/CategoryMapper.xml
+  &lt;select id=&quot;selectByName&quot; parameterType=&quot;java.lang.String&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+    select
+    &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_category
+    where name = #&#123;name,jdbcType=VARCHAR&#125;
+  &lt;/select&gt;
+</code></pre>
+<h3 id="参数校验"><a href="#参数校验" class="headerlink" title="参数校验"></a>参数校验</h3><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Valid</td>
+<td>需要验证</td>
+</tr>
+<tr>
+<td>@NotNull</td>
+<td>非空</td>
+</tr>
+<tr>
+<td>@Max(value)</td>
+<td>最大值</td>
+</tr>
+<tr>
+<td>@Size(max, min)</td>
+<td>字符串长度范围限制</td>
+</tr>
+</tbody></table>
+<pre><code class="java">com/imooc/mall/model/model/AddCategoryReq.java
+package com.imooc.mall.model.model;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+/**
+ * 34.AddCategoryReq 新建一个类 供添加接口进行封装 回去引用
+ */
+public class AddCategoryReq &#123;
+    @Size(min=2,max=5)
+    private String name;
+    @NotNull
+    @Max(3)
+    private Integer type;
+    @NotNull(message = &quot;parentId不能&quot;)
+    private Integer parentId;
+    @NotNull
+    private Integer orderNum;
+    
+===================================================
+POST:127.0.0.1:8083/admin/category/add
+Body→raw→JSON：&#123;&quot;name&quot;:&quot;鸭货伴手零食&quot;,&quot;type&quot;:2,&quot;parentId&quot;:6,&quot;orderNum&quot;:10&#125;
+
+&#123;
+    &quot;status&quot;: 20000,
+    &quot;msg&quot;: &quot;系统异常&quot;,
+    &quot;data&quot;: null
+&#125;
+
+org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [1] in public com.imooc.mall.common.ApiRestResponse com.imooc.mall.controller.CategoryController.addCategory(javax.servlet.http.HttpSession,com.imooc.mall.model.model.AddCategoryReq): [Field error in object &#39;addCategoryReq&#39; on field &#39;name&#39;: rejected value [鸭货伴手零食]; codes [Size.addCategoryReq.name,Size.name,Size.java.lang.String,Size]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [addCategoryReq.name,name]; arguments []; default message [name],5,2]; default message [个数必须在2和5之间]] 
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/GlobalExceptionHandler.java
+package com.imooc.mall.exception;
+
+import com.imooc.mall.common.ApiRestResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 19.处理统一异常的handler 业务异常 处理不同逻辑异常  20对密码进行MD5加密UserServiceImpl 先创建MD5Utils
+ */
+@ControllerAdvice
+public class GlobalExceptionHandler &#123;
+    private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    //   统一处理Exception.class异常
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public Object handleException(Exception e) &#123;
+        log.error(&quot;Default Exception: &quot;, e);
+        return ApiRestResponse.error(ImoocMallExceptionEnum.SYSTEM_ERROR);
+    &#125;
+
+    @ExceptionHandler(ImoocMallException.class)
+    @ResponseBody
+    public Object handleImoocMallException(ImoocMallException e) &#123;
+        log.error(&quot;ImoocMallException: &quot;, e); //传进来的是什么就传出去
+        return ApiRestResponse.error(e.getCode(), e.getMessage());
+    &#125;
+
+    //  39.处理方法参数不合规的情况
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseBody
+    public ApiRestResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) &#123;
+        log.error(&quot;handleMethodArgumentNotValidException: &quot;, e);
+        return handleBindingResult(e.getBindingResult());
+    &#125;
+//  40.处理返回异常的ApiRespond
+    private ApiRestResponse handleBindingResult(BindingResult result)&#123;
+//  把异常处理为对外暴露的提示
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        if (result.hasErrors())&#123;
+            List&lt;ObjectError&gt; allErrors = result.getAllErrors();
+            for (ObjectError objectError : allErrors) &#123; //itli快速  对着for按alt+回车 改成增强for
+                String message = objectError.getDefaultMessage();
+                list.add(message);
+            &#125;
+        &#125;
+        if (list.size() == 0)&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.REQUEST_PARAM_ERROR);
+        &#125; //list.toString()生成所创建的异常描述信息
+        return ApiRestResponse.error(ImoocMallExceptionEnum.REQUEST_PARAM_ERROR.getCode(), list.toString());
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
