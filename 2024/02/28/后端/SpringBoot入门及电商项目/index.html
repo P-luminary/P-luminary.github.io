@@ -2109,7 +2109,7 @@ public class AddCategoryReq &#123;
     @NotNull
     @Max(3)
     private Integer type;
-    @NotNull(message = &quot;parentId不能&quot;)
+    @NotNull(message = &quot;parentId不能为null&quot;)
     private Integer parentId;
     @NotNull
     private Integer orderNum;
@@ -2171,7 +2171,7 @@ public class GlobalExceptionHandler &#123;
         log.error(&quot;handleMethodArgumentNotValidException: &quot;, e);
         return handleBindingResult(e.getBindingResult());
     &#125;
-//  40.处理返回异常的ApiRespond
+//  40.处理返回异常的ApiRespond 41去pom引入Swagger自动生成API文档
     private ApiRestResponse handleBindingResult(BindingResult result)&#123;
 //  把异常处理为对外暴露的提示
         List&lt;String&gt; list = new ArrayList&lt;&gt;();
@@ -2187,6 +2187,173 @@ public class GlobalExceptionHandler &#123;
         &#125; //list.toString()生成所创建的异常描述信息
         return ApiRestResponse.error(ImoocMallExceptionEnum.REQUEST_PARAM_ERROR.getCode(), list.toString());
     &#125;
+&#125;
+</code></pre>
+<h3 id="Swagger自动生成API文档"><a href="#Swagger自动生成API文档" class="headerlink" title="Swagger自动生成API文档"></a>Swagger自动生成API文档</h3><pre><code class="xml">pom.xml
+&lt;!--41.导入Swagger自动生成API文档 并在main函数中加入注解 @EnableSwagger2--&gt;
+&lt;!--42.再去创造一个config  配置文件    --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger2&lt;/artifactId&gt;
+            &lt;version&gt;2.9.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger-ui&lt;/artifactId&gt;
+            &lt;version&gt;2.9.2&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">com/imooc/mall/config/SpringFoxConfig.java
+package com.imooc.mall.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+
+@Configuration
+public class SpringFoxConfig &#123;
+ //41.访问http://localhost:8083/swagger-ui.html可以看到API文档 
+    //42创建ImoocMallWebMvcConfig
+    @Bean
+    public Docket api() &#123;
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                .select()
+                .apis(RequestHandlerSelectors.any())
+                .paths(PathSelectors.any())
+                .build();
+    &#125;
+
+    private ApiInfo apiInfo() &#123;
+        return new ApiInfoBuilder()
+                .title(&quot;慕慕生鲜&quot;)
+                .description(&quot;&quot;)
+                .termsOfServiceUrl(&quot;&quot;)
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/MallApplication.java
+package com.imooc.mall;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@SpringBootApplication
+@MapperScan(basePackages = &quot;com.imooc.mall.model.dao&quot;)
+@EnableSwagger2
+public class MallApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(MallApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/config/ImoocMallWebMvcConfig.java
+package com.imooc.mall.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * 42.配置地址映射 
+ * 43去CategoryController.java 加一个 @ApiOperation(&quot;后台添加目录&quot;)
+   44.新增一个目录的updateCategory的参数 [UpdateCategoryReq.java  ]
+ */
+@Configuration  //代表是一个配置
+public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
+
+    public void addResourceHandles(ResourceHandlerRegistry registry)&#123;
+//     把地址给到对应的目录下
+        registry.addResourceHandler(&quot;swagger-ui.html&quot;)
+                .addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(
+                &quot;classpath:/META-INF/resources/webjars&quot;);
+    &#125;
+&#125;
+==================================================
+http://localhost:8083/swagger-ui.html
+</code></pre>
+<h3 id="更新目录接口"><a href="#更新目录接口" class="headerlink" title="更新目录接口"></a>更新目录接口</h3><pre><code class="java">com/imooc/mall/model/request/UpdateCategoryReq.java
+package com.imooc.mall.model.request;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+/**
+ * 45.CategoryController.java中创建新增方法
+ */
+public class UpdateCategoryReq &#123;
+    @NotNull(message = &quot;id不能为null&quot;)
+    private Integer id;
+
+    @Size(min=2,max=5)
+    private String name;
+    @Max(3)
+    private Integer type;
+
+    private Integer parentId;
+    private Integer orderNum;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/CategoryController.java
+ //    45.创建新增接口   46在CategoryServiceImpl.java中新增更新方法
+    @ApiOperation(&quot;后台更新目录&quot;)
+    @PostMapping(&quot;admin/category/update&quot;)
+    @ResponseBody
+    public ApiRestResponse updateCategory( @Valid @RequestBody UpdateCategoryReq updateCategoryReq, HttpSession session) &#123;
+        //对身份进行校验 用session获取当前的用户
+        User currentUser = (User) session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_LOGIN);
+        &#125;//校验管理员 userService写过直接引用过来
+        boolean adminRole = userService.checkAdminRole(currentUser);
+        if (adminRole) &#123;
+            //补全代码 是管理员  在上面添加@RequestBody 去postman Body-&gt;(raw/JSON)里测试接口
+            //46.补全接口代码
+            Category category = new Category(); //复制过来
+            BeanUtils.copyProperties(updateCategoryReq, category);
+            categoryService.update(category);
+            return ApiRestResponse.success();
+        &#125; else &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.NEED_ADMIN);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+ @Override //47.快速生成
+    // 46在CategoryServiceImpl.java中新增更新方法
+    public void update(Category updateCategory)&#123;
+        if (updateCategory.getName() != null)&#123;
+            Category categoryOld = categoryMapper.selectByName(updateCategory.getName());
+            if (categoryOld != null &amp;&amp; !categoryOld.getId().equals(updateCategory.getId()))&#123; //不能为空且和原来的名字不一样
+                throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+            &#125;
+        &#125;
+        categoryMapper.updateByPrimaryKeySelective(updateCategory); //根据主键更新
+// 不和其他名字冲突
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/CategoryService.java
+package com.imooc.mall.service;
+
+import com.imooc.mall.model.pojo.Category;
+import com.imooc.mall.model.request.AddCategoryReq;
+
+//35.创建一个CategoryService 分类目录Service 36创建一个它的实现类CategoryServiceImpl
+public interface CategoryService &#123;
+    void add(AddCategoryReq addCategoryReq);
+
+    //47.快速生成
+    // 46在CategoryServiceImpl.java中新增更新方法
+    void update(Category updateCategory);
 &#125;
 </code></pre>
 
