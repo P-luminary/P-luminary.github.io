@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -2488,6 +2488,159 @@ public class AdminFilterConfig &#123;
     &#125;
 &#125;
 com/imooc/mall/filter/AdminFilterConfig.java
+</code></pre>
+<h3 id="删除目录接口、分页功能开发"><a href="#删除目录接口、分页功能开发" class="headerlink" title="删除目录接口、分页功能开发"></a>删除目录接口、分页功能开发</h3><pre><code class="java">@RequestBody用来接收http post请求的body，前端传入序列化好的json数据，后端可以解析为json对象（Content-Type需要指定为 application/json）。
+@RequestParam用来接收请求url?后面的参数，或者Content-Type为multipart/form-data、application/x-www-form-urlencoded时的http body数据。
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/CategoryController.java
+     @ApiOperation(&quot;后台删除目录&quot;)
+    @PostMapping(&quot;admin/category/delete&quot;)
+    @ResponseBody //没有在接口里做权限校验
+    //49.编写delete接口  再去CategoryServiceImpl.java 写delete方法
+    public ApiRestResponse deleteCategory(@RequestParam Integer id) &#123;
+        categoryService.delete(id);
+        return ApiRestResponse.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+//49.写delete方法     @Override快速更新service
+    @Override
+    public void delete(Integer id)&#123;
+        Category categoryOld = categoryMapper.selectByPrimaryKey(id);
+        //查不到记录，无法删除，删除失败
+        if (categoryOld == null)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.DELETE_FAILED);
+        &#125;
+        int count = categoryMapper.deleteByPrimaryKey(id);
+        if (count == 0)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.DELETE_FAILED);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/CategoryController.java
+ //50.写后台查询商品分类列表的接口
+    @ApiOperation(&quot;后台目录列表&quot;)
+    @PostMapping(&quot;admin/category/list&quot;)
+    @ResponseBody //没有在接口里做权限校验
+    public ApiRestResponse listCategoryForAdmin(@RequestParam Integer pageNum, @RequestParam Integer pageSize)&#123;
+        //51.去CategoryServiceImpl编写该接口的实现类
+        PageInfo pageInfo = categoryService.listForAdmin(pageNum, pageSize);
+        return ApiRestResponse.success(pageInfo);
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/vo/CategoryVO.java
+package com.imooc.mall.model.vo;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class CategoryVO &#123;
+    private Integer id;
+    private String name;
+    private Integer type;
+    private Integer parentId;
+    private Integer orderNum;
+    private Date createTime;
+    private Date updateTime;
+    private List&lt;CategoryVO&gt; childCategory = new ArrayList&lt;&gt;();
+&#125;Setter+Getter
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+//51.创建vo[转换过后反应给前端的一个类]  pageInfo里面蕴藏着一个List&lt;Category&gt;
+    @Override
+    public PageInfo listForAdmin(Integer pageNum, Integer pageSize)&#123;
+        //把分页的功能包裹在List后 而不是直接返回
+        //52.引入分页查询的pom 续写分页代码
+        PageHelper.startPage(pageNum,pageSize,&quot;type,order_num&quot;);
+        //53.写一个查询的mapper新的sql语句 CategoryMapper.java =&gt; List&lt;Category&gt; selectList();
+        //54.返回Categorycontroller补全代码
+        List&lt;Category&gt; categoryList = categoryMapper.selectList();
+        PageInfo pageInfo = new PageInfo(categoryList);
+        return pageInfo;
+    &#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;!--  52.引入分页的依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.pagehelper&lt;/groupId&gt;
+            &lt;artifactId&gt;pagehelper-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.2.13&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<h3 id="用户分类列表接口开发"><a href="#用户分类列表接口开发" class="headerlink" title="用户分类列表接口开发"></a>用户分类列表接口开发</h3><pre><code class="java">com/imooc/mall/controller/CategoryController.java
+//54.用户分类列表接口开发 去Impl补写实现类
+    @ApiOperation(&quot;前台目录列表&quot;)
+    @PostMapping(&quot;category/list&quot;)
+    @ResponseBody
+    public ApiRestResponse listCategoryForCustomer()&#123;
+        List&lt;CategoryVO&gt; categoryVOS = categoryService.listCategoryForCustomer();
+        return ApiRestResponse.success(categoryVOS);
+    &#125;
+
+============================================
+目录列表(給用户看)：127.0.0.1:8083/category/list
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+//54.用户分类列表接口开发
+    @Override
+    public List&lt;CategoryVO&gt; listCategoryForCustomer()&#123;
+        ArrayList&lt;CategoryVO&gt; categoryVOList = new ArrayList&lt;&gt;();
+        recursivelyFindCategories(categoryVOList, 0);
+        //55.去Mapper.java 和 Mapper.xml写方法
+        return categoryVOList;
+    &#125;
+
+    private void recursivelyFindCategories(List&lt;CategoryVO&gt; categoryVOList, Integer parentId)&#123;
+        //递归获取所有子类别并组合 合成一个&quot;目录树&quot;
+        List&lt;Category&gt; categoryList = categoryMapper.selectCategoriesByParentId(parentId);
+        if (!CollectionUtils.isEmpty(categoryList))&#123;
+            //空 或 有无元素   itli
+            for (int i = 0; i &lt; categoryList.size(); i++) &#123;
+                Category category =  categoryList.get(i);
+                CategoryVO categoryVO = new CategoryVO();
+                //拷贝链接  比原来的多一个childCategory这个字段未被赋值
+                BeanUtils.copyProperties(category, categoryVO);
+                categoryVOList.add(categoryVO);
+                //拿到childCategory字段并赋值 再从上面return categoryVOList;
+                recursivelyFindCategories(categoryVO.getChildCategory(), categoryVO.getId());
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/CategoryMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.Category;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CategoryMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+    int insert(Category record);
+    int insertSelective(Category record);
+    Category selectByPrimaryKey(Integer id);
+    int updateByPrimaryKeySelective(Category record);
+    int updateByPrimaryKey(Category record);
+    Category selectByName(String name);
+    List&lt;Category&gt; selectList();
+    List&lt;Category&gt; selectCategoriesByParentId(Integer parentId);
+&#125;
+</code></pre>
+<pre><code class="java">mappers/CategoryMapper.xml
+&lt;mapper&gt;
+ &lt;select id=&quot;selectList&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+    select &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_category
+  &lt;/select&gt;
+  &lt;select id=&quot;selectCategoriesByParentId&quot; resultMap=&quot;BaseResultMap&quot; parameterType=&quot;int&quot;&gt;
+    select &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_category
+    where parent_id = #&#123;parentId&#125;
+  &lt;/select&gt;
+&lt;/mapper&gt;
 </code></pre>
 
     </div>
