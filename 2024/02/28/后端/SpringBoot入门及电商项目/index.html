@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -2642,6 +2642,236 @@ public interface CategoryMapper &#123;
   &lt;/select&gt;
 &lt;/mapper&gt;
 </code></pre>
+<h3 id="利用Redis缓存加速响应-目录变化频繁-访问量大的-增加效率"><a href="#利用Redis缓存加速响应-目录变化频繁-访问量大的-增加效率" class="headerlink" title="利用Redis缓存加速响应 [目录变化频繁(访问量大的) 增加效率]"></a>利用Redis缓存加速响应 [目录变化频繁(访问量大的) 增加效率]</h3><pre><code class="xml">pom.xml
+&lt;!--    55.导入Redis的pom文件    --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-cache&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">56.增加一个@EnableCaching注解让idea知道你想打开缓存功能
+com/imooc/mall/MallApplication.java
+package com.imooc.mall;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@SpringBootApplication
+@MapperScan(basePackages = &quot;com.imooc.mall.model.dao&quot;)
+@EnableSwagger2
+@EnableCaching
+//56.增加注解 并去想用的前面加注解 @Cacheable(value = &quot;listCategoryForCustomer&quot;)
+public class MallApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(MallApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>import org.springframework.cache.annotation.Cacheable; [对的]<br><del>import springfox.documentation.annotations.Cacheable;</del> [错的]</p>
+</blockquote>
+<pre><code class="java">com/imooc/mall/service/impl/CategoryServiceImpl.java
+//这里要格外注意 不要导错包 不然运行不了redis 里面的keys会没有键值对
+// import org.springframework.cache.annotation.Cacheable; [对的]
+// import springfox.documentation.annotations.Cacheable; [错的]
+ //54.用户分类列表接口开发
+    @Override //56.在下方加想用Redis的注解  
+  //57.创建一个对于缓存的配置类com/imooc/mall/config/CachingConfig.java
+    @Cacheable(value = &quot;listCategoryForCustomer&quot;)
+    public List&lt;CategoryVO&gt; listCategoryForCustomer()&#123;
+        ArrayList&lt;CategoryVO&gt; categoryVOList = new ArrayList&lt;&gt;();
+        recursivelyFindCategories(categoryVOList, 0);
+        //55.去Mapper.java 和 Mapper.xml写方法
+        return categoryVOList;
+    &#125;
+
+    private void recursivelyFindCategories(List&lt;CategoryVO&gt; categoryVOList, Integer parentId)&#123;
+        //递归获取所有子类别并组合 合成一个&quot;目录树&quot;
+        List&lt;Category&gt; categoryList = categoryMapper.selectCategoriesByParentId(parentId);
+        if (!CollectionUtils.isEmpty(categoryList))&#123;
+            //空 或 有无元素   itli
+            for (int i = 0; i &lt; categoryList.size(); i++) &#123;
+                Category category =  categoryList.get(i);
+                CategoryVO categoryVO = new CategoryVO();
+                //拷贝链接  比原来的多一个childCategory这个字段未被赋值
+                BeanUtils.copyProperties(category, categoryVO);
+                categoryVOList.add(categoryVO);
+                //拿到childCategory字段并赋值 再从上面return categoryVOList;
+                recursivelyFindCategories(categoryVO.getChildCategory(), categoryVO.getId());
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/config/CachingConfig.java
+package com.imooc.mall.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+
+import java.time.Duration;
+
+/**
+ * 57.缓存的配置类 想要运行成功保存序列化 要去弄个序列化接口com/imooc/mall/model/vo/CategoryVO.java
+ */
+@Configuration
+@EnableCaching
+public class CachingConfig &#123;
+    @Bean
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) &#123;
+
+        RedisCacheWriter redisCacheWriter = RedisCacheWriter
+                .lockingRedisCacheWriter(connectionFactory);
+        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig();
+        cacheConfiguration = cacheConfiguration.entryTtl(Duration.ofSeconds(30));
+
+        RedisCacheManager redisCacheManager = new RedisCacheManager(redisCacheWriter,
+                cacheConfiguration);
+        return redisCacheManager;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/vo/CategoryVO.java
+public class CategoryVO implements Serializable &#123;
+     private Integer id;
+    private String name;
+    private Integer type;
+    private Integer parentId;
+    private Integer orderNum;
+    private Date createTime;
+    private Date updateTime;
+    private List&lt;CategoryVO&gt; childCategory = new ArrayList&lt;&gt;();
+&#125;Setter+Getter
+</code></pre>
+<h3 id="Idea调试技巧"><a href="#Idea调试技巧" class="headerlink" title="Idea调试技巧"></a>Idea调试技巧</h3><ul>
+<li>断点统一开关</li>
+<li>条件断点</li>
+<li>单步调试<ul>
+<li>step into 会进入方法内部</li>
+<li>step out 跳出方法</li>
+</ul>
+</li>
+<li>表达式求值 [Evaluate Expression]</li>
+</ul>
+<h3 id="总结商品分类模块"><a href="#总结商品分类模块" class="headerlink" title="总结商品分类模块"></a>总结商品分类模块</h3><ul>
+<li>重难点：参数校验、Swagger[API文档自动]、统一鉴权[Filter过滤器]、Redis整合[Springboot整合]、调试功能</li>
+<li>常见错误：参数手动校验、<span style = "color:red"><strong>项目没用Redis缓存</strong></span>、不善用调试</li>
+</ul>
+<h1 id="商品模块介绍"><a href="#商品模块介绍" class="headerlink" title="商品模块介绍"></a>商品模块介绍</h1><h6 id="演示、数据表设计、接口设计"><a href="#演示、数据表设计、接口设计" class="headerlink" title="演示、数据表设计、接口设计"></a>演示、数据表设计、接口设计</h6><h3 id="新增商品功能开发"><a href="#新增商品功能开发" class="headerlink" title="新增商品功能开发"></a>新增商品功能开发</h3><pre><code class="java">com\imooc\mall\controller\ProductAdminController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import org.springframework.stereotype.Controller;
+
+/**
+ * 58.后台商品管理Controller  pojo的product复制一份到request变成AddProductReq
+   59.需要ProductService.java
+ */
+@Controller
+public class ProductAdminController &#123;
+    @Autowired
+    ProductService productService;
+    @PostMapping(&quot;admin/product/add&quot;)
+    public ApiRestResponse addProduct(@Valid @RequestBody AddProductReq addProductReq)&#123;
+    //61.补全代码  目前图片上传还未开发成功
+        productService.add(addProductReq);
+        return ApiRestResponse.success();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/request/AddProductReq.java
+package com.imooc.mall.model.request;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+public class AddProductReq &#123;
+    @NotNull(message = &quot;商品名称不能为null&quot;)
+    private String name;
+    @NotNull(message = &quot;商品图片不能为null&quot;)
+    private String image;
+
+    private String detail;
+    @NotNull(message = &quot;商品分类不能为null&quot;)
+    private Integer categoryId;
+    @NotNull(message = &quot;商品价格不能为null&quot;)
+    @Min(value = 1, message = &quot;价格不能为null&quot;)
+    private Integer price;
+
+    @NotNull(message = &quot;商品库存不能为null&quot;)
+    @Max(value = 10000, message = &quot;库存不能大于10000&quot;)
+    private Integer stock;
+
+    private Integer status;
+&#125;Getter+Setter
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/ProductService.java
+package com.imooc.mall.service;
+
+import com.imooc.mall.model.request.AddProductReq;
+
+/**
+ * 59.商品Service 再创建一个实现类ProductServiceImpl
+ */
+public interface ProductService &#123;
+
+    void add(AddProductReq addProductReq);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/ProductServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.dao.ProductMapper;
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.model.request.AddProductReq;
+import com.imooc.mall.service.ProductService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * 59.商品服务实现类
+ */
+@Service
+public class ProductServiceImpl implements ProductService &#123;
+    @Autowired
+    ProductMapper productMapper;//60.ProductMapper SQL通过名字查找product是否存在 151行
+    @Override
+    public void add(AddProductReq addProductReq)&#123;
+        Product product = new Product();
+        BeanUtils.copyProperties(addProductReq, product);//赋值
+        //61.商品重名情况  返回ProductAdminController补全代码  
+        //62.图片上传接口 ProductAdminController
+        Product productOld = productMapper.selectByName(addProductReq.getName());
+        if (productOld != null)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+        &#125;
+        int count = productMapper.insertSelective(product);
+        if (count == 0)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.CREATE_FAILED);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="图片上传"><a href="#图片上传" class="headerlink" title="图片上传"></a>图片上传</h3><ul>
+<li>文件名UUID</li>
+<li>通用唯一识别码(Universally Unique Identifier)</li>
+<li>防止重名、防止爬图</li>
+<li>生成规则：日期和时间、<strong>MAC地址、HashCode、随机数</strong></li>
+</ul>
+<p>6-4     04:15</p>
 
     </div>
 
