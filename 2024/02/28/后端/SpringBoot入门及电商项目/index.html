@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2871,7 +2871,224 @@ public class ProductServiceImpl implements ProductService &#123;
 <li>防止重名、防止爬图</li>
 <li>生成规则：日期和时间、<strong>MAC地址、HashCode、随机数</strong></li>
 </ul>
-<p>6-4     04:15</p>
+<pre><code class="java">com/imooc/mall/controller/ProductAdminController.java
+//62.图片上传接口
+    @PostMapping(&quot;admin/upload/file&quot;)
+    public  ApiRestResponse upload(HttpServletRequest httpServletRequest, @RequestParam(&quot;file&quot;) MultipartFile file)&#123;
+        String fileName = file.getOriginalFilename();
+        String suffixName = fileName.substring(fileName.lastIndexOf(&quot;.&quot;));//用文件后面的名字
+        //生成文件名称UUID
+        UUID uuid = UUID.randomUUID();
+        String newFileName = uuid.toString() + suffixName;
+        //创建文件 放在常量类中 Constant.java
+        //63.application.properties配置file.upload.dir
+//        new File()
+        File fileDirectory = new File(Constant.FILE_UPLOAD_DIR);
+        File destFile = new File(Constant.FILE_UPLOAD_DIR + newFileName);
+        if (!fileDirectory.exists())&#123;
+            if (!fileDirectory.mkdir())&#123;//新建文件夹
+                throw new ImoocMallException(ImoocMallExceptionEnum.MKDIR_FAILED);
+            &#125;
+        &#125;
+        try &#123;
+            file.transferTo(destFile); //传进来的写到空的方法中去
+        &#125; catch (IOException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        try &#123;
+            return ApiRestResponse.success(getHost(new URI(httpServletRequest.getRequestURL()+&quot;&quot;))+&quot;/images/&quot;+newFileName); //生成的路径IP和端口号
+        &#125; catch (URISyntaxException e) &#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.UPLOAD_FAILED);
+        &#125;
+    &#125;
+    private URI getHost(URI uri)&#123;
+        URI effectiveURI;
+        try &#123;
+            effectiveURI = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(),null,null,null);
+        &#125; catch (URISyntaxException e) &#123;
+            effectiveURI = null; //如果新建失败 就返回回去
+        &#125;
+        return effectiveURI;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+public class Constant &#123;
+    public static final String SALT = &quot;aSp[PCx,aw.xq246&#125;&quot;;
+    public static final String IMOOC_MALL_USER = &quot;imooc_mall_user&quot;;
+    @Value(&quot;$&#123;file.upload.dir&#125;&quot;)
+    public static String FILE_UPLOAD_DIR;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;),
+    WRONG_PASSWORD(10006,&quot;密码错误&quot;),
+    NEED_LOGIN(10007,&quot;用户未登录&quot;),
+    UPDATE_FAILD(10008,&quot;更新失败&quot;),
+    NEED_ADMIN(10009,&quot;无管理员权限&quot;),
+    NAME_NOT_NULL(10010,&quot;参数不能为空&quot;),
+    PARA_NOT_NULL(10011,&quot;参数不能为空&quot;),
+    CREATE_FAILED(10012,&quot;新增失败&quot;),
+    REQUEST_PARAM_ERROR(10013,&quot;参数错误&quot;),
+    DELETE_FAILED(10014,&quot;删除失败&quot;),
+    MKDIR_FAILED(10015,&quot;文件夹创建失败&quot;),
+    UPLOAD_FAILED(10015,&quot;图片上传失败&quot;),
+    SYSTEM_ERROR(20000,&quot;系统异常&quot;);
+&#125;
+</code></pre>
+<h3 id="资源映射开发"><a href="#资源映射开发" class="headerlink" title="资源映射开发"></a>资源映射开发</h3><blockquote>
+<p>此时从postman中创建一个上传图片的接口<br>127.0.0.1:8083&#x2F;admin&#x2F;upload&#x2F;file<br>选择Body→form-data<br>此时上传图片会报错 {<br>  “status”: 20000,<br>  “msg”: “系统异常”,<br>  “data”: null<br>}</p>
+</blockquote>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+package com.imooc.mall.common;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+/**
+ * 21.SALT常量值 写完以后去UserServiceImpl重写密码代码
+ */
+@Component //让spring帮注入value
+public class Constant &#123;
+    public static final String SALT = &quot;aSp[PCx,aw.xq246&#125;&quot;;
+    public static final String IMOOC_MALL_USER = &quot;imooc_mall_user&quot;;
+    public static String FILE_UPLOAD_DIR;
+    //64.为了解决上传图片系统异常报错 注入失败的原因是上方是static普通变量 set方法把静态变量赋值
+    @Value(&quot;$&#123;file.upload.dir&#125;&quot;)
+    public void setFileUploadDir(String fileUploadDir)&#123;
+        FILE_UPLOAD_DIR = fileUploadDir;
+    &#125;//65.打开ImoocMallWebMvcConfig 加一个映射规则
+&#125;
+</code></pre>
+<h3 id="自定义静态资源映射目录"><a href="#自定义静态资源映射目录" class="headerlink" title="自定义静态资源映射目录"></a>自定义静态资源映射目录</h3><ul>
+<li>上传图片后回显</li>
+<li>配置SpringBootWebMvcConfig</li>
+<li>静态资源到本地目录的映射</li>
+<li>演示打开图片</li>
+</ul>
+<pre><code class="java">com/imooc/mall/config/ImoocMallWebMvcConfig.java
+package com.imooc.mall.config;
+
+import com.imooc.mall.common.Constant;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * 42.配置地址映射 43去CategoryController.java 加一个 @ApiOperation(&quot;后台添加目录&quot;)
+ * 44.新增一个目录的updateCategory的参数 [UpdateCategoryReq.java  ]
+ */
+@Configuration  //代表是一个配置
+public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
+    public void addResourceHandles(ResourceHandlerRegistry registry)&#123;
+        registry.addResourceHandler(&quot;/images/**&quot;).addResourceLocations(&quot;file:&quot; + Constant.FILE_UPLOAD_DIR);
+//     把地址给到对应的目录下
+        registry.addResourceHandler(&quot;swagger-ui.html&quot;)
+                .addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(
+                &quot;classpath:/META-INF/resources/webjars&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="更新-UpdateProductReq-和新增-AddProductReq-商品"><a href="#更新-UpdateProductReq-和新增-AddProductReq-商品" class="headerlink" title="更新(UpdateProductReq)和新增(AddProductReq)商品"></a>更新(UpdateProductReq)和新增(AddProductReq)商品</h3><ul>
+<li>合并写法不可取</li>
+<li>业务逻辑清晰、独立</li>
+</ul>
+<pre><code class="java">com/imooc/mall/model/request/UpdateProductReq.java
+public class UpdateProductReq &#123;
+    @NotNull
+    private Integer id; 
+    private String name;
+    private String image;
+    private String detail;
+    private Integer categoryId;
+    @Min(value = 1, message = &quot;价格不能为null&quot;)
+    private Integer price;
+
+    @Max(value = 10000, message = &quot;库存不能大于10000&quot;)
+    private Integer stock;
+
+    private Integer status;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/config/ImoocMallWebMvcConfig.java
+package com.imooc.mall.config;
+
+import com.imooc.mall.common.Constant;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * 42.配置地址映射 43去CategoryController.java 加一个 @ApiOperation(&quot;后台添加目录&quot;)
+ * 44.新增一个目录的updateCategory的参数 [UpdateCategoryReq.java  ]
+ */
+@Configuration  //代表是一个配置
+public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
+    public void addResourceHandles(ResourceHandlerRegistry registry)&#123;
+        //65.增加一个registry  66.新增接口继续开发 ProductAdminController
+        registry.addResourceHandler(&quot;/images/**&quot;).addResourceLocations(&quot;file:&quot; + Constant.FILE_UPLOAD_DIR);
+//     把地址给到对应的目录下
+        registry.addResourceHandler(&quot;swagger-ui.html&quot;)
+                .addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(
+                &quot;classpath:/META-INF/resources/webjars&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/ProductAdminController.java
+ //66. 接口 复制一个request中的AddProductReq 之后回来补全代码
+    @ApiOperation(&quot;后台更新商品&quot;)
+    @PostMapping(&quot;/admin/product/update&quot;)
+    public ApiRestResponse updateProduct(@Valid @RequestBody UpdateProductReq updateProductReq)&#123;
+        Product product = new Product();
+        BeanUtils.copyProperties(updateProductReq, product);
+        //67.进入ProductServiceImpl编写接口实现类
+        productService.update(product);
+        return ApiRestResponse.success();
+    &#125;
+    //68. 搞一个删除的接口 同理也在ProductServiceImpl中写实现类 之后回来补全代码
+    @ApiOperation(&quot;后台删除商品&quot;)
+    @PostMapping(&quot;/admin/product/delete&quot;)
+    public ApiRestResponse deleteProduct(@RequestParam Integer id)&#123;
+        productService.delete(id);
+        return ApiRestResponse.success();
+    &#125;com/imooc/mall/controller/ProductAdminController.java
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/ProductServiceImpl.java
+//67.写updateProduct实现类 @Override自动导入
+    @Override
+    public void update(Product updateProduct) &#123;
+        Product productOld = productMapper.selectByName(updateProduct.getName());
+        //同名且不同id，不能继续修改
+        if (productOld != null &amp;&amp; productOld.getId().equals(updateProduct.getId())) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NAME_EXISTED);
+        &#125;
+        int count = productMapper.updateByPrimaryKeySelective(updateProduct);
+        if (count == 0) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.UPDATE_FAILD);
+        &#125;
+    &#125;
+
+    //68.删除实现类  @Override自动导入
+    @Override
+    public void delete(Integer id) &#123;
+        Product productOld = productMapper.selectByPrimaryKey(id);
+        //查不到该记录，无法删除
+        if (productOld == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.DELETE_FAILED);
+        &#125;
+        int count = productMapper.deleteByPrimaryKey(id);
+        if (count == 0) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.DELETE_FAILED);
+        &#125;
+    &#125;
+</code></pre>
 
     </div>
 
