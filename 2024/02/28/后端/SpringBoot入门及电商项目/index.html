@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -3088,6 +3088,125 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
             throw new ImoocMallException(ImoocMallExceptionEnum.DELETE_FAILED);
         &#125;
     &#125;
+</code></pre>
+<h3 id="批量上下架"><a href="#批量上下架" class="headerlink" title="批量上下架"></a>批量上下架</h3><ul>
+<li>MyBatis遍历List</li>
+<li>where语句拼接</li>
+</ul>
+<pre><code class="java">com/imooc/mall/controller/ProductAdminController.java
+//69. 批量上下架接口 同理也在ProductServiceImpl中写实现类 Napper中增加批量上下架的SQL
+    // 之后回来补全代码
+    @ApiOperation(&quot;后台批量上下架接口&quot;)
+    @PostMapping(&quot;/admin/product/batchUpdateSellStatus&quot;)
+    public ApiRestResponse batchUpdateSellStatus(@RequestParam Integer[] ids, @RequestParam Integer sellStatus)&#123;
+        productService.batchUpdateSellStatus(ids,sellStatus);
+        return ApiRestResponse.success();
+    &#125;
+=====================================================
+127.0.0.1:8083//admin/product/batchUpdateSellStatus?ids=2,3&amp;sellStatus=0
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/ProductServiceImpl.java
+//69.去ProductAdminController增加batchUpdateSellStatus接口
+    @Override
+    public void batchUpdateSellStatus(Integer[] ids, Integer sellStatus)&#123;
+        productMapper.batchUpdateSellStatus(ids, sellStatus);
+    return null;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/ProductMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.Product;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ProductMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(Product record);
+
+    int insertSelective(Product record);
+
+    Product selectByPrimaryKey(Integer id);
+
+    int updateByPrimaryKeySelective(Product record);
+
+    int updateByPrimaryKey(Product record);
+
+    Product selectByName(String name);
+    int batchUpdateSellStatus(@Param(&quot;ids&quot;) Integer[] ids, @Param(&quot;sellStatus&quot;) Integer sellStatus);
+
+&#125;
+</code></pre>
+<pre><code class="java">mappers/ProductMapper.xml
+  &lt;select id=&quot;selectByName&quot; parameterType=&quot;java.lang.String&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+    select &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_product
+    where name = #&#123;name,jdbcType = VARCHAR&#125;
+  &lt;/select&gt;
+  &lt;update id=&quot;batchUpdateSellStatus&quot;&gt;
+    update imooc_mall_product
+    set status=#&#123;sellStatus&#125;
+    where id in
+    &lt;foreach collection=&quot;ids&quot; close=&quot;)&quot; item=&quot;id&quot; open=&quot;(&quot; separator=&quot;,&quot;&gt;
+      #&#123;id&#125;
+    &lt;/foreach&gt;
+  &lt;/update&gt;
+</code></pre>
+<h3 id="后台商品列表、商品详情接口"><a href="#后台商品列表、商品详情接口" class="headerlink" title="后台商品列表、商品详情接口"></a>后台商品列表、商品详情接口</h3><pre><code class="java">com/imooc/mall/service/impl/ProductServiceImpl.java
+ //70.后台商品列表接口
+    @Override
+    public PageInfo listForAdmin(Integer pageNum, Integer pageSize)&#123;
+        PageHelper.startPage(pageNum, pageSize); //在mapper里写查询sql
+        List&lt;Product&gt; products = productMapper.selectListForAdmin();
+        PageInfo pageInfo = new PageInfo(products);
+        return pageInfo;
+    &#125;
+    //72.商品详情接口开发 再去ProductController调用
+    @Override
+    public Product detail(Integer id)&#123;
+        Product product = productMapper.selectByPrimaryKey(id);
+        return product;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/ProductAdminController.java
+ //70.后台商品列表接口 同理也在ProductServiceImpl中写实现类 Napper中增加批量上下架的SQL 补全代码
+    //71.开发与前台商品ProductController.java
+    @ApiOperation(&quot;后台商品列表接口&quot;)
+    @PostMapping(&quot;/admin/product/list&quot;)
+    public ApiRestResponse list(@RequestParam Integer[] pageNum, @RequestParam Integer pageSize)&#123;
+        PageInfo pageInfo = productService.batchUpdateSellStatus(pageNum,pageSize);
+        return ApiRestResponse.success(pageInfo);
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/ProductController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.service.ProductService;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 71.前台商品Controller 72新增detail接口 ProductServiceImpl.java
+ */
+@RestController
+public class ProductController &#123;
+    @Autowired
+    ProductService productService;
+
+    @ApiOperation(&quot;商品详情&quot;)
+    @GetMapping(&quot;product/detail&quot;)
+    public ApiRestResponse detail(@RequestParam Integer id)&#123;
+        Product product = productService.detail(id);
+        return ApiRestResponse.success(product);
+    &#125;
+&#125;
 </code></pre>
 
     </div>
