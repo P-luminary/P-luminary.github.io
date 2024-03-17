@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -3561,12 +3561,154 @@ public class CartServiceImpl &#123;
 &#125;
 </code></pre>
 <pre><code class="java">com/imooc/mall/common/Constant.java
- //83.创建商品上下架的状态
+    //83.创建商品上下架的状态 创建CartMapper[Cart selectCartByUserIdAndProductId] 写sql 
+    //84再去CartServiceImpl
     public interface SaleStatus&#123;
         int NOT_SALE = 0; //商品下架状态
         int SALE = 1; //商品上架状态
     &#125;
 </code></pre>
+<pre><code class="java">@Service
+public class CartServiceImpl implements CartService &#123;
+    @Autowired
+    ProductMapper productMapper;
+    @Autowired
+    CategoryMapper categoryMapper;
+    @Autowired
+    CartMapper cartMapper;
+@Override
+    public List&lt;CartVO&gt; add(Integer userId, Integer productId, Integer count) &#123;
+        validProduct(productId, count);
+        Cart cart = cartMapper.selectCartByUserIdAndProductId(userId, productId);
+        //84.补全代码
+        if (cart==null)&#123;
+            //这个商品之前不在购物车里，需要新增一个记录
+            cart = new Cart();
+            cart.setProductId(productId);
+            cart.setUserId(userId);
+            cart.setQuantity(count);
+            cart.setSelected(Constant.Cart.CHECKED);
+            cartMapper.insertSelective(cart);
+        &#125;else &#123;
+            //这个商品已经在购物车里了，数量相加
+            count = cart.getQuantity() + count;
+            Cart cartNew = new Cart();
+            cartNew.setQuantity(count);
+            cartNew.setId(cart.getId());
+            cartNew.setProductId(cart.getProductId());
+            cartNew.setUserId(cart.getUserId());
+            //无论是否想买都选中
+            cartNew.setSelected(Constant.Cart.CHECKED);
+            cartMapper.updateByPrimaryKeySelective(cartNew);
+        &#125;
+        //85.去CartController补全代码逻辑 返回购物车列表哦~ 86.CartMapper.java
+        return null;
+    &#125;
+
+    private void validProduct(Integer productId, Integer count) &#123;
+        Product product = productMapper.selectByPrimaryKey(productId);
+        //判断商品是否存在，商品是否上架
+        if (product == null || product.getStatus().equals(Constant.SaleStatus.NOT_SALE)) &#123;
+            //82. 1是上架 1不明确要形成代码让顾客知道 Constant.java
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_SALE);
+        &#125;
+        //判断商品库存 如果要买的比库存多 就买不了
+        if (count &gt; product.getStock()) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_ENOUGH);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/CartMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.Cart;
+import com.imooc.mall.model.vo.CartVO;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
+
+@Repository
+public interface CartMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(Cart record);
+
+    int insertSelective(Cart record);
+
+    Cart selectByPrimaryKey(Integer id);
+
+    int updateByPrimaryKeySelective(Cart record);
+
+    int updateByPrimaryKey(Cart record);
+
+    //86.选中列表的方法 传入的参数是userId
+    List&lt;CartVO&gt; selectList(@Param(&quot;userId&quot;) Integer userId);
+    Cart selectCartByUserIdAndProductId(@Param(&quot;userId&quot;) Integer userId, @Param(&quot;productId&quot;)Integer productId);
+&#125;
+</code></pre>
+<pre><code class="xml">mappers/CartMapper.xml
+ &lt;select id=&quot;selectList&quot; resultType=&quot;com.imooc.mall.model.vo.CartVO&quot; parameterType=&quot;java.lang.Integer&quot;&gt;
+    select
+    c.id as id,
+    p.id as productId,
+    c.user_id as userId,
+    c.quantity as quantity,
+    c.selected as selected,
+    p.price as price,
+    p.name as productName,
+    p.image as productImage
+    from imooc_mall_cart c
+    left join imooc_mall_product p on p.id = c.product_id
+    where c.user_id = #&#123;userId&#125;
+    and p.status = 1
+  &lt;/select&gt;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/CartController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.filter.UserFilter;
+import com.imooc.mall.model.vo.CartVO;
+import com.imooc.mall.service.CartService;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+/**
+ * 76.购物车Controller  77.用一个通用User_filter逻辑
+ */
+@RestController //404的错误① 返回的json格式 要用RestController
+@RequestMapping(&quot;/cart&quot;)
+public class CartController &#123;//因为放在url中 要加数据绑定 通过HttpSession获取用户信息太麻烦 用一个通用filter逻辑
+    @Autowired
+    CartService cartService;
+    @PostMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;购物车列表&quot;)
+    public ApiRestResponse list()&#123;
+        //86.去写service的list接口 CartMapper中写选中列表的方法
+        //内部获取用户Id,防止横向越权
+        List&lt;CartVO&gt; cartList = cartService.list(UserFilter.currentUser.getId());
+        return ApiRestResponse.success();
+    &#125;
+
+    @PostMapping(&quot;/add&quot;)
+    @ApiOperation(&quot;添加商品到购物车&quot;)
+    public ApiRestResponse add(@RequestParam Integer productId, @RequestParam Integer count)&#123;
+        //85.补全完逻辑代码 87在下面补全代码 List&lt;CartVO&gt; cartVOList =
+        List&lt;CartVO&gt; cartVOList = cartService.add(UserFilter.currentUser.getId(), productId, count);
+        return ApiRestResponse.success(cartVOList);
+    &#125;
+&#125;
+</code></pre>
+<p>7-6</p>
 
     </div>
 
