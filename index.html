@@ -3253,6 +3253,7 @@ public class ProductController &#123;
         //☆☆搜索处理☆☆  拼接且转换成字符串去数据库查找
         if (!StringUtils.isEmpty(productListReq.getKeyword()))&#123;
             String keyword = new StringBuilder().append(&quot;%&quot;).append(productListReq.getKeyword()).append(&quot;%&quot;).toString();
+            productListQuery.setKeyword(keyword);
         &#125;
         //☆☆目录处理☆☆：如果查某个目录下的商品，不仅是需要查出该目录下的，还要把所有子目录的所有商品都查出来，所以要拿到一个目录id的List
         if (productListReq.getCategoryId() != null)&#123;
@@ -3321,22 +3322,58 @@ public interface ProductMapper &#123;
 &#125;
 </code></pre>
 <pre><code class="java">mappers/ProductMapper.xml
-  &lt;select id=&quot;selectList&quot; parameterType=&quot;com.imooc.mall.model.query.ProductListQuery&quot; resultMap=&quot;BaseResultMap&quot; &gt;
-    select &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+ &lt;select id=&quot;selectList&quot; resultMap=&quot;BaseResultMap&quot;
+          parameterType=&quot;com.imooc.mall.model.query.ProductListQuery&quot;&gt;
+    select
+    &lt;include refid=&quot;Base_Column_List&quot;/&gt;
     from imooc_mall_product
     &lt;where&gt;
       &lt;if test=&quot;query.keyword != null&quot;&gt;
         and name like #&#123;query.keyword&#125;
       &lt;/if&gt;
       &lt;if test=&quot;query.categoryIds != null&quot;&gt;
-        and catrgory_id in
+        and category_id in
         &lt;foreach collection=&quot;query.categoryIds&quot; close=&quot;)&quot; item=&quot;item&quot; open=&quot;(&quot; separator=&quot;,&quot;&gt;
           #&#123;item&#125;
         &lt;/foreach&gt;
       &lt;/if&gt;
-        and status = 1
+      and status = 1
     &lt;/where&gt;
+    order by update_time desc
   &lt;/select&gt;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/ProductMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.model.query.ProductListQuery;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ProductMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(Product record);
+
+    int insertSelective(Product record);
+
+    Product selectByPrimaryKey(Integer id);
+
+    int updateByPrimaryKeySelective(Product record);
+
+    int updateByPrimaryKey(Product record);
+
+    Product selectByName(String name);
+    int batchUpdateSellStatus(@Param(&quot;ids&quot;) Integer[] ids, @Param(&quot;sellStatus&quot;) Integer sellStatus);
+
+    List&lt;Product&gt; selectListForAdmin(); //给前台用户用的
+
+    List&lt;Product&gt; selectList(@Param(&quot;query&quot;)ProductListQuery query); //给后台用户用的 Type是一个类
+
+&#125;
 </code></pre>
 <pre><code class="java">com/imooc/mall/controller/ProductController.java
 package com.imooc.mall.controller;
@@ -3375,6 +3412,181 @@ public class ProductController &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="总结商品模块"><a href="#总结商品模块" class="headerlink" title="总结商品模块"></a>总结商品模块</h3><ul>
+<li>重难点：<strong>商品的搜索</strong>[<u>like</u>]、<strong>排序</strong>[<u>枚举+自定义</u>]、<strong>目录查询</strong>[<u>所有目录id都查到  再用查询列表方式</u>]</li>
+<li>常见错误：更新和新增放在同一个接口、排序字段不用枚举</li>
+</ul>
+<h3 id="购物车模块介绍"><a href="#购物车模块介绍" class="headerlink" title="购物车模块介绍"></a>购物车模块介绍</h3><h5 id="业务流程"><a href="#业务流程" class="headerlink" title="业务流程"></a>业务流程</h5><ul>
+<li>添加商品到购物车 → 商品是否在售、是否有库存 <ul>
+<li>→[否] 提示用户</li>
+<li>→[是] 该商品之前就在购物车里<ul>
+<li>→[否] 添加新商品</li>
+<li>→[是] 原有基础上添加数量</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">com/imooc/mall/controller/CartController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+/**
+ * 76.购物车Controller  77.用一个通用UserFilter逻辑
+ */
+@Controller
+@RequestMapping(&quot;/cart&quot;)
+public class CartController &#123;//因为放在url中 要加数据绑定 通过HttpSession获取用户信息太麻烦 用一个通用filter逻辑
+    @PostMapping(&quot;/add&quot;)
+    public ApiRestResponse add(@RequestParam Integer productId, @RequestParam Integer count)&#123;
+        return null;
+    &#125;
+&#125;
+========================================================
+127.0.0.1:8083/cart/add?productId=22&amp;count=1
+</code></pre>
+<pre><code class="java">com/imooc/mall/filter/UserFilter.java
+package com.imooc.mall.filter;
+
+import com.imooc.mall.common.Constant;
+import com.imooc.mall.model.pojo.User;
+import com.imooc.mall.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+/**
+ *
+ * 77.用户过滤器 希望把用户信息currentUser保存下来
+ */
+public class UserFilter implements Filter &#123;
+    public static User currentUser;
+    @Autowired
+    UserService userService;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        //对身份进行校验 用session获取当前的用户
+        HttpServletRequest request = (HttpServletRequest)servletRequest;
+        HttpSession session = request.getSession();
+        currentUser = (User) session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null) &#123;
+            PrintWriter out = new HttpServletResponseWrapper((HttpServletResponse) servletResponse).getWriter();
+            out.write(&quot;&#123;\n&quot; //用户未登录
+                    + &quot;    \&quot;status\&quot;: 10007,\n&quot;
+                    + &quot;    \&quot;msg\&quot;: \&quot;NEED_LOGIN\&quot;,\n&quot;
+                    + &quot;    \&quot;data\&quot;: null\n&quot;
+                    + &quot;&#125;&quot;);
+            out.flush();
+            out.close();
+            return;
+        &#125;
+        //78.续写过滤器链条 写好后对用户链条进行config配置 UserFilterConfig.java
+        filterChain.doFilter(servletRequest,servletResponse);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/config/UserFilterConfig.java
+package com.imooc.mall.config;
+
+import com.imooc.mall.filter.UserFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * 78.对调用接口时对哪个类进行拦截 过滤器的配置 79创建cartService
+ */
+@Configuration
+public class UserFilterConfig &#123;
+    @Bean
+    public UserFilter userFilter()&#123;
+        return new UserFilter();
+    &#125;
+    @Bean(name = &quot;userFilterConf&quot;)
+    public FilterRegistrationBean adminFilterConfig()&#123;
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+        filterRegistrationBean.setFilter(userFilter());
+        //下面的是校验与拦截
+        filterRegistrationBean.addUrlPatterns(&quot;/cart/*&quot;); //CartController.java
+        filterRegistrationBean.addUrlPatterns(&quot;/order/*&quot;);
+        filterRegistrationBean.setName(&quot;userFilterConf&quot;);
+        return filterRegistrationBean;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/CartServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.common.Constant;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.model.dao.CategoryMapper;
+import com.imooc.mall.model.dao.ProductMapper;
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.model.vo.CartVO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * 80.购物车Service实现类 其中List&lt;&gt;中间是需要包括 商品id 图片 名字 商品选中 数量信息
+ * 81.创建一个VO增加那些属性放在&lt;&gt;中 是返回给前端组合后的对象
+ */
+@Service
+public class CartServiceImpl &#123;
+    @Autowired
+    ProductMapper productMapper;
+    @Autowired
+    CategoryMapper categoryMapper;
+
+    public List&lt;CartVO&gt; add(Integer userId, Integer productId, Integer count) &#123;
+        validProduct(productId, count);
+
+    &#125;
+
+    private void validProduct(Integer productId, Integer count) &#123;
+        Product product = productMapper.selectByPrimaryKey(productId);
+        //判断商品是否存在，商品是否上架
+        if (product == null || product.getStatus().equals(Constant.SaleStatus.NOT_SALE)) &#123;
+            //82. 1是上架 1不明确要形成代码让顾客知道 Constant.java
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_SALE);
+        &#125;
+        //判断商品库存 如果要买的比库存多 就买不了
+        if (count &gt; product.getStock()) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_ENOUGH);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+ //83.创建商品上下架的状态
+    public interface SaleStatus&#123;
+        int NOT_SALE = 0; //商品下架状态
+        int SALE = 1; //商品上架状态
+    &#125;
+</code></pre>
 
             
         </div>
@@ -3389,7 +3601,7 @@ public class ProductController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -6698,7 +6910,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -7196,7 +7408,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -9457,7 +9669,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -14664,7 +14876,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -14872,7 +15084,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -16579,7 +16791,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -19684,7 +19896,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -22947,7 +23159,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
