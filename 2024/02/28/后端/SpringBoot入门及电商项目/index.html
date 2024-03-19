@@ -3809,6 +3809,7 @@ public interface CartService &#123;
     public ApiRestResponse selectAll(@RequestParam Integer selected)&#123;
         //89.全选/全不选购物车某商品
         //不能传入userId, cartId, 否则可以删除别人的购物车
+////90.订单模块接口编写 91创建OrderController.java  OrderService.java  OrderServiceImpl.java
         List&lt;CartVO&gt; cartVOList = cartService.selectAllOrNot(UserFilter.currentUser.getId(), selected);
         return ApiRestResponse.success(cartVOList);
     &#125;
@@ -3873,6 +3874,168 @@ public interface CartService &#123;
 <li><p>常见错误：不做越权判断 [不允许前端传入Id]</p>
 </li>
 </ul>
+<h3 id="创建订单接口-主流程框架搭建"><a href="#创建订单接口-主流程框架搭建" class="headerlink" title="创建订单接口 - 主流程框架搭建"></a>创建订单接口 - 主流程框架搭建</h3><ul>
+<li>登录 → 浏览商品 → 加入购物车 → 下单 <ul>
+<li>​                                                            → 取消订单</li>
+<li>​                                                            → 扫码支付 → 发货 → 收获 → 订单完结</li>
+</ul>
+</li>
+</ul>
+<h3 id="生成订单-——-用户下单"><a href="#生成订单-——-用户下单" class="headerlink" title="生成订单 —— 用户下单"></a>生成订单 —— 用户下单</h3><ul>
+<li>入参</li>
+<li>从购物车中查找已经勾选的商品</li>
+<li>判断商品是否正在售卖中</li>
+<li>判断库存，保证不超卖，扣库存</li>
+<li>数据库事务(实操演示效果)</li>
+<li>删除购物车中对应的商品</li>
+<li>生成订单</li>
+<li>订单号生成规则</li>
+<li>循环保存每个商品到order_item表</li>
+<li>进入Coding阶段</li>
+</ul>
+<pre><code class="java">com/imooc/mall/controller/OrderController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.model.request.CreateOrderReq;
+import com.imooc.mall.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 91.订单Controller 新建一个根据pojo的Order → CreateOrderReq 新建一个OrderService
+ */
+@RestController
+public class OrderController &#123;
+    @Autowired
+    OrderService orderService;
+
+    @PostMapping(&quot;order/create&quot;)
+    public ApiRestResponse create(@RequestBody CreateOrderReq createOrderReq)&#123;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.common.Constant;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.filter.UserFilter;
+import com.imooc.mall.model.dao.CartMapper;
+import com.imooc.mall.model.dao.CategoryMapper;
+import com.imooc.mall.model.dao.ProductMapper;
+import com.imooc.mall.model.pojo.Cart;
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.model.request.CreateOrderReq;
+import com.imooc.mall.model.vo.CartVO;
+import com.imooc.mall.service.CartService;
+import com.imooc.mall.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 91.★★ 订单Service实现类 ★★
+ */
+@Service
+public class OrderServiceImpl implements OrderService &#123;
+    @Autowired
+    CartService cartService;
+
+    public String create(CreateOrderReq createOrderReq) &#123;
+        //拿到用户ID
+        Integer userId = UserFilter.currentUser.getId();
+        //从购物车查找已经勾选的商品 CartVO里面包含着任何信息
+        List&lt;CartVO&gt; cartVOList = cartService.list(userId);
+        //勾选的单独拿出来
+        ArrayList&lt;CartVO&gt; cartVOListTemp = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; cartVOList.size(); i++) &#123;
+            CartVO cartVO = cartVOList.get(i);
+            if (cartVO.getSelected().equals(Constant.Cart.CHECKED)) &#123;
+                cartVOListTemp.add(cartVO);
+            &#125;
+        &#125;
+        cartVOList = cartVOListTemp;
+        //如果购物车已勾选的为空,报错
+        if (CollectionUtils.isEmpty(cartVOList))&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.CART_EMPTY);
+        &#125;
+    &#125;
+    //判断商品是否存在、上下架状态、库存
+    //把购物车对象转换为订单item对象
+    //扣库存
+    //把购物车中的已勾选商品删除
+    //生成订单
+    //生成订单号,有独立的规则
+    //循环保存每个商品的order_item表
+    //把结果返回
+&#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/exception/ImoocMallExceptionEnum.java
+package com.imooc.mall.exception;
+
+/**
+ * 异常枚举
+ */
+//13.编写异常枚举 注意类是enum噢  14返回ApiRestResponse
+public enum ImoocMallExceptionEnum &#123;
+//  正确状态码是10000 这个错误的就10001 变红是因为没构造函数
+    NEED_USER_NAME(10001,&quot;用户名不能为空&quot;),
+    NEED_PASSWORD_NAME(10002,&quot;密码不能为空&quot;),
+    PASSWORD_TOO_SHORT(10003,&quot;密码长度不能小于8位&quot;),
+    NAME_EXISTED(10004,&quot;不允许重名&quot;),
+    INSERT_FAILED(10005,&quot;插入失败，请重试&quot;),
+    WRONG_PASSWORD(10006,&quot;密码错误&quot;),
+    NEED_LOGIN(10007,&quot;用户未登录&quot;),
+    UPDATE_FAILD(10008,&quot;更新失败&quot;),
+    NEED_ADMIN(10009,&quot;无管理员权限&quot;),
+    NAME_NOT_NULL(10010,&quot;参数不能为空&quot;),
+    CREATE_FAILED(10011,&quot;新增失败&quot;),
+    REQUEST_PARAM_ERROR(10012,&quot;参数错误&quot;),
+    DELETE_FAILED(10013,&quot;删除失败&quot;),
+    MKDIR_FAILED(10014,&quot;文件夹创建失败&quot;),
+    UPLOAD_FAILED(10015,&quot;图片上传失败&quot;),
+    NOT_SALE(10016,&quot;商品状态不可售&quot;),
+    NOT_ENOUGH(10017,&quot;商品库存不足&quot;),
+    CART_EMPTY(10018, &quot;购物车已勾选的商品为空&quot;),
+    SYSTEM_ERROR(20000,&quot;系统异常&quot;);
+
+
+    //异常码
+    Integer code;
+    //异常信息
+    String msg;
+
+    ImoocMallExceptionEnum(Integer code, String msg) &#123;
+        this.code = code;
+        this.msg = msg;
+    &#125;
+
+    public Integer getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(Integer code) &#123;
+        this.code = code;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
