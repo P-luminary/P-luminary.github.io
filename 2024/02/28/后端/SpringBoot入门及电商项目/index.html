@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -4033,6 +4033,339 @@ public enum ImoocMallExceptionEnum &#123;
 
     public void setMsg(String msg) &#123;
         this.msg = msg;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="创建订单-——-对象转换与扣库存"><a href="#创建订单-——-对象转换与扣库存" class="headerlink" title="创建订单 —— 对象转换与扣库存"></a>创建订单 —— 对象转换与扣库存</h3><pre><code class="java">com/imooc/mall/controller/OrderController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.model.request.CreateOrderReq;
+import com.imooc.mall.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 91.订单Controller 新建一个根据pojo的Order → CreateOrderReq 新建一个OrderService
+ */
+@RestController
+public class OrderController &#123;
+    @Autowired
+    OrderService orderService;
+
+    @PostMapping(&quot;order/create&quot;)
+    @ApiOperation(&quot;创建订单&quot;)
+    public ApiRestResponse create(@RequestBody CreateOrderReq createOrderReq)&#123;
+        //95.调用orderService
+        String orderNo = orderService.create(createOrderReq);
+        return ApiRestResponse.success(orderNo);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+package com.imooc.mall.service.impl;
+
+import com.imooc.mall.common.Constant;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import com.imooc.mall.filter.UserFilter;
+import com.imooc.mall.model.dao.*;
+import com.imooc.mall.model.pojo.Order;
+import com.imooc.mall.model.pojo.OrderItem;
+import com.imooc.mall.model.pojo.Product;
+import com.imooc.mall.model.request.CreateOrderReq;
+import com.imooc.mall.model.vo.CartVO;
+import com.imooc.mall.service.CartService;
+import com.imooc.mall.service.OrderService;
+import com.imooc.mall.util.OrderCodeFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 91.★★ 订单Service实现类 ★★
+ */
+@Service
+public class OrderServiceImpl implements OrderService &#123;
+    @Autowired
+    CartService cartService;
+    @Autowired
+    ProductMapper productMapper;
+    @Autowired
+    CartMapper cartMapper;
+    @Autowired
+    OrderMapper orderMapper;
+    @Autowired
+    OrderItemMapper orderItemMapper;
+    @Override
+    public String create(CreateOrderReq createOrderReq) &#123;
+        //拿到用户ID
+        Integer userId = UserFilter.currentUser.getId();
+        //从购物车查找已经勾选的商品 CartVO里面包含着任何信息
+        List&lt;CartVO&gt; cartVOList = cartService.list(userId);
+        //勾选的单独拿出来
+        ArrayList&lt;CartVO&gt; cartVOListTemp = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; cartVOList.size(); i++) &#123;
+            CartVO cartVO = cartVOList.get(i);
+            if (cartVO.getSelected().equals(Constant.Cart.CHECKED)) &#123;
+                cartVOListTemp.add(cartVO);
+            &#125;
+        &#125;
+        cartVOList = cartVOListTemp;
+        //如果购物车已勾选的为空,报错
+        if (CollectionUtils.isEmpty(cartVOList))&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.CART_EMPTY);
+        &#125;
+        //判断商品是否存在、上下架状态、库存
+        validSaleStatusAndStock(cartVOList);
+        //把购物车对象转换为订单item对象
+        List&lt;OrderItem&gt; orderItemList = cartVOListToOrderItemList(cartVOList);
+        //扣库存
+        for (int i = 0; i &lt; orderItemList.size(); i++) &#123;
+            OrderItem orderItem =  orderItemList.get(i);
+            Product product = productMapper.selectByPrimaryKey(orderItem.getProductId());
+            int stock = product.getStock() - orderItem.getQuantity();
+            if (stock &lt; 0)&#123;
+                throw new ImoocMallException(ImoocMallExceptionEnum.NOT_ENOUGH);
+            &#125;
+            product.setStock(stock);
+            productMapper.updateByPrimaryKeySelective(product);
+        &#125;
+        //把购物车中的已勾选商品删除
+        cleanCart(cartVOList);
+        //生成订单
+        Order order = new Order();
+        //93.创建一个Util/OrderCodeFactory
+        //生成订单号,有独立的规则
+        String orderNo = OrderCodeFactory.getOrderCode(Long.valueOf(userId));
+        order.setOrderNo(orderNo);
+        order.setUserId(userId);
+        order.setTotalPrice(totalPrice(orderItemList));
+        order.setReceiverName(createOrderReq.getReceiverName());
+        order.setReceiverMobile(createOrderReq.getReceiverAddress());
+        order.setOrderStatus(Constant.OrderStatusEnum.NOT_PAID.getCode()); //94.去Constant定义订单状态
+        //循环保存每个商品的order_item表
+        order.setPostage(0);
+        order.setPaymentType(1);
+        //插入到Order表
+        orderMapper.insertSelective(order);
+        //循环保存每个商品到order_item表
+        for (int i = 0; i &lt; orderItemList.size(); i++) &#123;
+            OrderItem orderItem =  orderItemList.get(i);
+            orderItem.setOrderNo(order.getOrderNo());
+            orderItemMapper.insertSelective(orderItem);
+        &#125;
+        //把结果返回
+        return orderNo;
+        //95.回到Controller调用
+    &#125;
+//92.生成相似代码并改造
+    private void validSaleStatusAndStock(List&lt;CartVO&gt; cartVOList) &#123;
+        for (int i = 0; i &lt; cartVOList.size(); i++) &#123;
+            CartVO cartVO =  cartVOList.get(i);
+            Product product = productMapper.selectByPrimaryKey(cartVO.getProductId());
+            //判断商品是否存在，商品是否上架
+            if (product == null || product.getStatus().equals(Constant.SaleStatus.NOT_SALE)) &#123;
+                //82. 1是上架 1不明确要形成代码让顾客知道 Constant.java
+                throw new ImoocMallException(ImoocMallExceptionEnum.NOT_SALE);
+            &#125;
+            //判断商品库存 如果要买的比库存多 就买不了
+            if (cartVO.getQuantity() &gt; product.getStock()) &#123;
+                throw new ImoocMallException(ImoocMallExceptionEnum.NOT_ENOUGH);
+            &#125;
+        &#125;
+    &#125;
+    private List&lt;OrderItem&gt; cartVOListToOrderItemList(List&lt;CartVO&gt; cartVOList) &#123;
+        List&lt;OrderItem&gt; orderItemList = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; cartVOList.size(); i++) &#123;
+            CartVO cartVO =  cartVOList.get(i);
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(cartVO.getProductId());
+            //记录商品快照信息
+            orderItem.setProductName(cartVO.getProductName());
+            orderItem.setProductImg(cartVO.getProductImage());
+            orderItem.setUnitPrice(cartVO.getPrice());
+            orderItem.setQuantity(cartVO.getQuantity());
+            orderItem.setTotalPrice(cartVO.getTotalPrice());
+            orderItemList.add(orderItem);
+        &#125;
+        return orderItemList;
+    &#125;
+    private void cleanCart(List&lt;CartVO&gt; cartVOList)&#123;
+        for (int i = 0; i &lt; cartVOList.size(); i++) &#123;
+            CartVO cartVO =  cartVOList.get(i);
+            cartMapper.deleteByPrimaryKey(cartVO.getId());
+
+        &#125;
+    &#125;
+    private Integer totalPrice(List&lt;OrderItem&gt; orderItemList)&#123;
+        Integer totalPrice = 0;
+        for (int i = 0; i &lt; orderItemList.size(); i++) &#123;
+            OrderItem orderItem =  orderItemList.get(i);
+            totalPrice += orderItem.getTotalPrice();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/util/OrderCodeFactory.java
+package com.imooc.mall.util;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
+
+/**
+ * 描述：     生成订单No工具类
+ */
+public class OrderCodeFactory &#123;
+
+    /**
+     * 订单类别头
+     */
+    private static final String ORDER_CODE = &quot;1&quot;;
+    /**
+     * 随机编码
+     */
+    private static final int[] r = new int[]&#123;7, 9, 6, 2, 8, 1, 3, 0, 5, 4&#125;;
+    /**
+     * 用户id和随机数总长度
+     */
+    private static final int maxLength = 5;
+
+    /**
+     * 更具id进行加密+加随机数组成固定长度编码
+     */
+    private static String toCode(Long id) &#123;
+        String idStr = id.toString();
+        StringBuilder idSb = new StringBuilder();
+        for (int i = idStr.length() - 1; i &gt;= 0; i--) &#123;
+            idSb.append(r[idStr.charAt(i) - &#39;0&#39;]);
+        &#125;
+        return idSb.append(getRandom(maxLength - idStr.length())).toString();
+    &#125;
+
+    /**
+     * 生成时间戳
+     */
+    private static String getDateTime() &#123;
+        DateFormat sdf = new SimpleDateFormat(&quot;HHmmss&quot;);
+        return sdf.format(new Date());
+    &#125;
+
+    /**
+     * 生成固定长度随机码
+     *
+     * @param n 长度
+     */
+    private static long getRandom(long n) &#123;
+        long min = 1, max = 9;
+        for (int i = 1; i &lt; n; i++) &#123;
+            min *= 10;
+            max *= 10;
+        &#125;
+        long rangeLong = (((long) (new Random().nextDouble() * (max - min)))) + min;
+        return rangeLong;
+    &#125;
+
+    /**
+     * 生成不带类别标头的编码
+     */
+    private static synchronized String getCode(Long userId) &#123;
+        userId = userId == null ? 10000 : userId;
+        return getDateTime() + toCode(userId);
+    &#125;
+
+    /**
+     * 生成订单单号编码
+     */
+    public static String getOrderCode(Long userId) &#123;
+        return ORDER_CODE + getCode(userId);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/common/Constant.java
+package com.imooc.mall.common;
+
+import com.google.common.collect.Sets;
+import com.imooc.mall.exception.ImoocMallException;
+import com.imooc.mall.exception.ImoocMallExceptionEnum;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.util.Set;
+
+
+/**
+ * 21.SALT常量值 写完以后去UserServiceImpl重写密码代码
+ */
+@Component //让spring帮注入value
+public class Constant &#123;
+    public static final String SALT = &quot;aSp[PCx,aw.xq246&#125;&quot;;
+    public static final String IMOOC_MALL_USER = &quot;imooc_mall_user&quot;;
+    public static String FILE_UPLOAD_DIR;
+    //64.为了解决上传图片系统异常报错 注入失败的原因是上方是static普通变量 set方法把静态变量赋值
+    @Value(&quot;$&#123;file.upload.dir&#125;&quot;)
+    public void setFileUploadDir(String fileUploadDir)&#123;
+        FILE_UPLOAD_DIR = fileUploadDir;
+    &#125;//65.打开ImoocMallWebMvcConfig 加一个映射规则
+
+    //74.排序处理 去Constant定义支持的排序模式和手段
+    public interface ProductListOrderBy&#123;
+        Set&lt;String&gt; PRICE_ASC_DESC = Sets.newHashSet(&quot;price desc&quot;,&quot;price asc&quot;);
+    &#125;
+    //83.创建商品上下架的状态 创建CartMapper[Cart selectCartByUserIdAndProductId] 写sql 84再去CartServiceImpl
+    public interface SaleStatus&#123;
+        int NOT_SALE = 0; //商品下架状态
+        int SALE = 1; //商品上架状态
+    &#125;
+    public interface Cart&#123;
+        int UN_CHECKED = 0; //购物车未选中状态
+        int CHECKED = 1; //购物车选中状态
+    &#125;
+    public enum OrderStatusEnum&#123;
+        CANCELED(0, &quot;用户已取消&quot;),
+        NOT_PAID(10, &quot;未付款&quot;),
+        PAID(20, &quot;已付款&quot;),
+        DELIVERED(30, &quot;已发货&quot;),
+        ;
+
+        private String value;
+        private int code;
+        //94.去Constant定义订单状态
+        OrderStatusEnum(int code,String value)&#123;
+            this.value = value;
+            this.code = code;
+        &#125;
+        public static OrderStatusEnum codeOf(int code)&#123;
+            for (OrderStatusEnum orderStatusEnum : values())&#123;
+                if (orderStatusEnum.getCode() == code)&#123;
+                    return orderStatusEnum;
+                &#125;
+            &#125;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ENUM);
+        &#125;
+
+        public String getValue() &#123;
+            return value;
+        &#125;
+
+        public void setValue(String value) &#123;
+            this.value = value;
+        &#125;
+
+        public int getCode() &#123;
+            return code;
+        &#125;
+
+        public void setCode(int code) &#123;
+            this.code = code;
+        &#125;
     &#125;
 &#125;
 </code></pre>
