@@ -4167,7 +4167,8 @@ public class OrderServiceImpl implements OrderService &#123;
         order.setUserId(userId);
         order.setTotalPrice(totalPrice(orderItemList));
         order.setReceiverName(createOrderReq.getReceiverName());
-        order.setReceiverMobile(createOrderReq.getReceiverAddress());
+        order.setReceiverMobile(createOrderReq.getReceiverMobile());
+        order.setReceiverAddress(createOrderReq.getReceiverAddress());
         order.setOrderStatus(Constant.OrderStatusEnum.NOT_PAID.getCode()); //94.去Constant定义订单状态
         //循环保存每个商品的order_item表
         order.setPostage(0);
@@ -4229,6 +4230,7 @@ public class OrderServiceImpl implements OrderService &#123;
             OrderItem orderItem =  orderItemList.get(i);
             totalPrice += orderItem.getTotalPrice();
         &#125;
+        return totalPrice;
     &#125;
 &#125;
 </code></pre>
@@ -4389,6 +4391,195 @@ public class Constant &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="添加数据库事务"><a href="#添加数据库事务" class="headerlink" title="添加数据库事务"></a>添加数据库事务</h3><pre><code class="java">//95.写数据库事务代码 @Transactional (要么全对全要 要么全不要)
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String create(CreateOrderReq createOrderReq) &#123;
+     ......
+    &#125;
+</code></pre>
+<h3 id="订单详情"><a href="#订单详情" class="headerlink" title="订单详情"></a>订单详情</h3><pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+/* 95.继续实现Service实现类 拷贝一个Order成OrderVo 新增两个属性
+        private String orderStatusName;
+        private List&lt;OrderItemVo&gt; orderItemVoList;
+        因为没有&lt;OrderItemVo&gt;要根据需求去创建
+        拷贝OrderItem成OrderItemVO 更改属性
+        之后回来补写代码
+     */
+    public OrderVO detail(String orderNo)&#123;
+
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/vo/OrderItemVO.java
+public class OrderItemVO &#123;
+    private Integer id;
+
+    private String orderNo;
+
+    private Integer productId;
+
+    private String productName;
+
+    private String productImg;
+
+    private Integer unitPrice;
+
+    private Integer quantity;
+
+    private Integer totalPrice;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/vo/OrderVO.java
+public class OrderVO &#123;
+    private Integer id;
+
+    private String orderNo;
+
+    private Integer userId;
+
+    private Integer totalPrice;
+
+    private String receiverName;
+
+    private String receiverMobile;
+
+    private String receiverAddress;
+
+    private Integer orderStatus;
+
+    private Integer postage;
+
+    private Integer paymentType;
+
+    private Date deliveryTime;
+
+    private Date payTime;
+
+    private Date endTime;
+
+    private Date createTime;
+
+    private Date updateTime;
+</code></pre>
+<h5 id="订单状态"><a href="#订单状态" class="headerlink" title="订单状态"></a>订单状态</h5><ul>
+<li>0 用户已取消</li>
+<li>10 未付款(下单后的初始状态)</li>
+<li>20 已付款</li>
+<li>30 已发货</li>
+<li>40 交易完成</li>
+</ul>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+ /* 95.继续实现Service实现类 拷贝一个Order成OrderVo 新增两个属性
+        private String orderStatusName;
+        private List&lt;OrderItemVo&gt; orderItemVoList;
+        因为没有&lt;OrderItemVo&gt;要根据需求去创建
+        拷贝OrderItem成OrderItemVO 更改属性
+        之后回来补写代码
+     */
+   @Override
+    public OrderVO detail(String orderNo)&#123;
+        //96.去创建mapper的方法后回来补写代码
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        //订单不存在,则报错
+        if (order == null)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ORDER);
+        &#125;
+        //订单存在,需要判断所属
+        Integer userId = UserFilter.currentUser.getId();
+        if (!order.getUserId().equals(userId)) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_YOUR_ORDER);
+        &#125;
+        OrderVO orderVO = getOrderVo(order);
+        return orderVO;
+    &#125;
+
+    private OrderVO getOrderVo(Order order) &#123;
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(order,orderVO);
+        //获取订单对应的orderItemVOList
+        List&lt;OrderItem&gt; orderItemList = orderItemMapper.selectByOrderNo(order.getOrderNo());
+        //OrderItem和OrderItem相比少了几个字段
+        List&lt;OrderItemVO&gt; orderItemVOList = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; orderItemList.size(); i++) &#123;
+            OrderItem orderItem = orderItemList.get(i);
+            OrderItemVO orderItemVO = new OrderItemVO();
+            BeanUtils.copyProperties(orderItem, orderItemVO);
+            orderItemVOList.add(orderItemVO);
+        &#125;
+        orderVO.setOrderItemVOList(orderItemVOList);
+        //com/imooc/mall/common/Constant.java的列举枚举
+        orderVO.setOrderStatusName(Constant.OrderStatusEnum.codeOf(orderVO.getOrderStatus()).getValue());
+        return orderVO;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/OrderMapper.java
+package com.imooc.mall.model.dao;
+
+import com.imooc.mall.model.pojo.Order;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface OrderMapper &#123;
+    int deleteByPrimaryKey(Integer id);
+
+    int insert(Order record);
+
+    int insertSelective(Order record);
+
+    Order selectByPrimaryKey(Integer id);
+
+    int updateByPrimaryKeySelective(Order record);
+
+    int updateByPrimaryKey(Order record);
+
+    Order selectByOrderNo(String orderNo);
+&#125;
+
+=====================================================
+ &lt;select id=&quot;selectByOrderNo&quot; resultMap=&quot;BaseResultMap&quot; parameterType=&quot;java.lang.String&quot;&gt;
+    select
+    &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_order
+    where order_no = #&#123;orderNo&#125;
+  &lt;/select&gt;
+</code></pre>
+<pre><code class="java">com/imooc/mall/controller/OrderController.java
+package com.imooc.mall.controller;
+
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.model.request.CreateOrderReq;
+import com.imooc.mall.model.vo.OrderVO;
+import com.imooc.mall.service.OrderService;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 91.订单Controller 新建一个根据pojo的Order → CreateOrderReq 新建一个OrderService
+ */
+@RestController
+public class OrderController &#123;
+    @Autowired
+    OrderService orderService;
+
+    @PostMapping(&quot;order/create&quot;)
+    @ApiOperation(&quot;创建订单&quot;)
+    public ApiRestResponse create(@RequestBody CreateOrderReq createOrderReq)&#123;
+        //95.调用orderService
+        String orderNo = orderService.create(createOrderReq);
+        return ApiRestResponse.success(orderNo);
+    &#125;
+
+    @GetMapping(&quot;order/detail&quot;)
+    @ApiOperation(&quot;前台订单详情&quot;)
+    public ApiRestResponse detail(@RequestParam String orderNo)&#123;
+        //95.调用orderService  Service层具体实现
+        OrderVO orderVO = orderService.detail(orderNo);
+        return ApiRestResponse.success(orderVO);
+    &#125;
+&#125;
+==========================================
+生成订单详情 GET:127.0.0.1:8083/order/detail?orderNo=100233359639
+</code></pre>
 
             
         </div>
@@ -4403,7 +4594,7 @@ public class Constant &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -7712,7 +7903,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -8210,7 +8401,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#1bccbc>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
@@ -10471,7 +10662,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -15886,7 +16077,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -17593,7 +17784,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -20698,7 +20889,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -22667,7 +22858,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -23961,7 +24152,7 @@ public class StreamMethod &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
