@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -4457,7 +4457,7 @@ public class OrderVO &#123;
      */
    @Override
     public OrderVO detail(String orderNo)&#123;
-        //96.去创建mapper的方法后回来补写代码
+        //96.去创建mapper的方法后回来补写代码 97写订单controller
         Order order = orderMapper.selectByOrderNo(orderNo);
         //订单不存在,则报错
         if (order == null)&#123;
@@ -4560,6 +4560,377 @@ public class OrderController &#123;
 ==========================================
 生成订单详情 GET:127.0.0.1:8083/order/detail?orderNo=100233359639
 </code></pre>
+<h3 id="订单列表"><a href="#订单列表" class="headerlink" title="订单列表"></a>订单列表</h3><pre><code class="java">com/imooc/mall/controller/OrderController.java
+//97.写一个订单列表controller
+    @GetMapping(&quot;order/list&quot;)
+    @ApiOperation(&quot;前台订单列表&quot;)
+    public ApiRestResponse list(@RequestParam Integer pageNum, @RequestParam Integer pageSize)&#123;
+        //95.调用list   Service  Service层具体实现
+        PageInfo pageInfo = orderService.listForCustomer(pageNum, pageSize);
+        return  ApiRestResponse.success(pageInfo);
+    &#125;
+===============================================
+订单列表：GET:127.0.0.1:8083/order/list?pageNum=1&amp;pageSize=10
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+  //97.前台订单实现类 搞个OrderMapper中的selectForCustomer
+    @Override
+    public PageInfo listForCustomer(Integer pageNum, Integer pageSize)&#123;
+        Integer userId = UserFilter.currentUser.getId();
+        PageHelper.startPage(pageNum, pageSize);
+        List&lt;Order&gt; orderList = orderMapper.selectForCustomer(userId);
+        List&lt;OrderVO&gt; orderVOList = orderListToOrderVOList(orderList);
+        //新建一个pageinfo返回 方便前端查看
+        PageInfo pageInfo = new PageInfo&lt;&gt;(orderList);
+        pageInfo.setList(orderVOList);
+        return pageInfo;
+    &#125;
+
+    private List&lt;OrderVO&gt; orderListToOrderVOList(List&lt;Order&gt; orderList) &#123;
+        List&lt;OrderVO&gt; orderVOList = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; orderList.size(); i++) &#123;
+            Order order =  orderList.get(i);
+            OrderVO orderVO = getOrderVo(order);
+            orderVOList.add(orderVO);
+        &#125;
+        return  orderVOList;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/OrderMapper.java
+ List&lt;Order&gt; selectForCustomer(Integer userId);
+===============================================
+mappers/OrderMapper.xml
+  &lt;select id=&quot;selectForCustomer&quot; resultMap=&quot;BaseResultMap&quot; parameterType=&quot;integer&quot;&gt;
+    select
+    &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_order
+    where user_id = #&#123;userId&#125;
+    order by create_time desc
+  &lt;/select&gt;
+</code></pre>
+<h3 id="取消订单"><a href="#取消订单" class="headerlink" title="取消订单"></a>取消订单</h3><pre><code class="java">com/imooc/mall/controller/OrderController.java
+//98.写一个订单取消controller
+    @PostMapping(&quot;order/cancel&quot;)
+    @ApiOperation(&quot;前台取消订单&quot;)
+    public ApiRestResponse cancel(@RequestParam String orderNo)&#123;
+        orderService.cancel(orderNo);
+        return  ApiRestResponse.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+//98.写一个订单取消实现类
+    @Override
+    public void cancel(String orderNo)&#123;
+        //能查到订单就取消
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        //查不到订单，报错
+        if (order == null)&#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ORDER);
+        &#125;
+        //验证用户身份
+        //订单存在,需要判断所属
+        Integer userId = UserFilter.currentUser.getId();
+        if (!order.getUserId().equals(userId)) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_YOUR_ORDER);
+        &#125;
+        //没有付款才可以取消
+        if (order.getOrderStatus().equals(Constant.OrderStatusEnum.NOT_PAID.getCode())) &#123;
+            order.setOrderStatus(Constant.OrderStatusEnum.CANCELED.getCode());
+            order.setEndTime(new Date());
+            //更新状态
+            orderMapper.updateByPrimaryKeySelective(order);
+        &#125;else &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_ORDER_STATUS);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="二维码接口开发"><a href="#二维码接口开发" class="headerlink" title="二维码接口开发"></a>二维码接口开发</h3><p><a target="_blank" rel="noopener" href="https://tool.oschina.net/qr?type=2">在线生成 QR Code (oschina.net)</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42456466/article/details/91869955">Springboot 上传图片到项目路径下不能访问，需要重启_springboot能上传图片到win11中但无法访问图片-CSDN博客</a></p>
+<pre><code class="java">com/imooc/mall/controller/OrderController.java
+//99.生成支付二维码
+    @GetMapping(&quot;order/qrcode&quot;)
+    @ApiOperation(&quot;前台取消订单&quot;)
+    public ApiRestResponse qrcode(@RequestParam String orderNo)&#123;
+        orderService.cancel(orderNo);
+        return  ApiRestResponse.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+ //99.生成支付二维码 pom.xml生成新的二维码依赖 util新建一个QRCodeGenerator类
+       @Override
+    public String qrcode(String orderNo) &#123;
+        //得到请求相关的信息
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();//不能直接拿到内网的信息 要经过多层转发才可以
+        //去application.properties配置一下可以访问的ip  去上面String ip
+        String address = ip + &quot;:&quot; + request.getLocalPort();//拼接一下 这下生成的是整个地址
+        String payUrl = &quot;http://&quot; + address + &quot;/pay?orderNo=&quot; + orderNo;
+        System.out.println(address);
+        System.out.println(payUrl);
+        try &#123;
+            QRCodeGenerator.generateQRCodeImage(payUrl, 350, 350, Constant.FILE_UPLOAD_DIR + orderNo + &quot;.png&quot;);
+        &#125; catch (WriterException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IOException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        //这个图片可以通过这个url访问到
+        String pngAddress = &quot;http://&quot; + address + &quot;/images/&quot; + orderNo + &quot;.png&quot;;
+        return pngAddress;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/util/QRCodeGenerator.java
+package com.imooc.mall.util;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
+/**
+ * 99.生成二维码工具
+ */
+public class QRCodeGenerator &#123;
+    public static void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException &#123;
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+        Path path = FileSystems.getDefault().getPath(filePath);
+        MatrixToImageWriter.writeToPath(bitMatrix,&quot;PNG&quot;,path);
+    &#125;
+
+    public static void main(String[] args) &#123;
+        try &#123;
+            generateQRCodeImage(&quot;PANCHUNYAO&quot;, 350,350,&quot;/Users/Pluminary/Desktop/idea_Space/mall_file_upload/QRTest.png&quot;);
+        &#125; catch (WriterException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (IOException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">application.properties
+file.upload.dir=/Users/Pluminary/Desktop/idea_Space/mall_file_upload/
+file.upload.ip=127.0.0.1
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+/**
+ * 91.★★ 订单Service实现类 ★★
+ */
+@Service
+public class OrderServiceImpl implements OrderService &#123;
+    @Autowired
+    CartService cartService;
+    @Autowired
+    ProductMapper productMapper;
+    @Autowired
+    CartMapper cartMapper;
+    @Autowired
+    OrderMapper orderMapper;
+    @Autowired
+    OrderItemMapper orderItemMapper;
+    @Value(&quot;$&#123;file.upload.ip&#125;&quot;)
+    String ip;
+............
+&#125;
+</code></pre>
+<h3 id="后台订单列表接口"><a href="#后台订单列表接口" class="headerlink" title="后台订单列表接口"></a>后台订单列表接口</h3><pre><code class="java">com/imooc/mall/controller/OrderAdminController.java
+package com.imooc.mall.controller;
+
+import com.github.pagehelper.PageInfo;
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.service.OrderService;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 100.订单后台管理Controller
+ */
+@RestController
+public class OrderAdminController &#123;
+    @Autowired
+    OrderService orderService;
+
+    @GetMapping(&quot;admin/order/list&quot;)
+    @ApiOperation(&quot;管理员订单列表&quot;)
+    public ApiRestResponse listForAdmin(@RequestParam Integer pageNum, @RequestParam Integer pageSize)&#123;
+        PageInfo pageInfo = orderService.listForAdmin(pageNum, pageSize);
+        return ApiRestResponse.success(pageInfo);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+ //100.实现类
+    @Override
+    public PageInfo listForAdmin(Integer pageNum, Integer pageSize) &#123;//想看到所有订单
+        PageHelper.startPage(pageNum, pageSize);
+        List&lt;Order&gt; orderList = orderMapper.selectAllForAdmin();
+        List&lt;OrderVO&gt; orderVOList = orderListToOrderVOList(orderList);
+        //新建一个pageinfo返回 方便前端查看
+        PageInfo pageInfo = new PageInfo&lt;&gt;(orderList);
+        pageInfo.setList(orderVOList);
+        return pageInfo;
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/model/dao/OrderMapper.java
+List&lt;Order&gt; selectAllForAdmin();
+===========================================
+mappers/OrderMapper.xml 
+&lt;select id=&quot;selectAllForAdmin&quot; resultMap=&quot;BaseResultMap&quot; parameterType=&quot;integer&quot;&gt;
+    select
+    &lt;include refid=&quot;Base_Column_List&quot;/&gt;
+    from imooc_mall_order
+    order by create_time desc
+  &lt;/select&gt;
+</code></pre>
+<h3 id="支付"><a href="#支付" class="headerlink" title="支付"></a>支付</h3><h6 id="根据订单号生成支付二维码-→-扫码支付-→-访问支付URL-完成支付"><a href="#根据订单号生成支付二维码-→-扫码支付-→-访问支付URL-完成支付" class="headerlink" title="根据订单号生成支付二维码 → 扫码支付 → 访问支付URL, 完成支付"></a>根据订单号生成支付二维码 → 扫码支付 → 访问支付URL, 完成支付</h6><pre><code class="java">com/imooc/mall/controller/OrderController.java
+ //101.支付接口
+    @GetMapping(&quot;pay&quot;)
+    @ApiOperation(&quot;支付接口&quot;)
+    public ApiRestResponse pay(@RequestParam String orderNo)&#123;
+        orderService.pay(orderNo);
+        return ApiRestResponse.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+//101.支付
+    @Override
+    public void pay(String orderNo)&#123;
+        //能查到订单就取消
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        //查不到订单，报错
+        if (order == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ORDER);
+        &#125;
+        //支付前的判断 未付款才可以付款
+        if (order.getOrderStatus() == Constant.OrderStatusEnum.NOT_PAID.getCode()) &#123;
+            order.setOrderStatus(Constant.OrderStatusEnum.PAID.getCode());
+            order.setPayTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+        &#125;else &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_ORDER_STATUS);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="完结订单"><a href="#完结订单" class="headerlink" title="完结订单"></a>完结订单</h3><pre><code class="java">com/imooc/mall/controller/OrderAdminController.java
+package com.imooc.mall.controller;
+
+import com.github.pagehelper.PageInfo;
+import com.imooc.mall.common.ApiRestResponse;
+import com.imooc.mall.service.OrderService;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 100.订单后台管理Controller
+ */
+@RestController
+public class OrderAdminController &#123;
+    @Autowired
+    OrderService orderService;
+
+    @GetMapping(&quot;admin/order/list&quot;)
+    @ApiOperation(&quot;管理员订单列表&quot;)
+    public ApiRestResponse listForAdmin(@RequestParam Integer pageNum, @RequestParam Integer pageSize)&#123;
+        PageInfo pageInfo = orderService.listForAdmin(pageNum, pageSize);
+        return ApiRestResponse.success(pageInfo);
+    &#125;
+
+    /**
+     * 102.发货。订单状态流程：0用户已取消，10未付款，20已付款，30已发货，40交易完成
+     */
+    @GetMapping(&quot;admin/order/delivered&quot;)
+    @ApiOperation(&quot;管理员发货&quot;)
+    public ApiRestResponse delivered(@RequestParam String orderNo)&#123;
+        orderService.deliver(orderNo);
+        return ApiRestResponse.success();
+    &#125;
+
+    /**
+     * 103.完结订单。订单状态流程：0用户已取消，10未付款，20已付款，30已发货，40交易完成
+     * 管理员和用户都可以调用
+     */
+    @GetMapping(&quot;order/finish&quot;)
+    @ApiOperation(&quot;完结订单&quot;)
+    public ApiRestResponse finish(@RequestParam String orderNo)&#123;
+        orderService.finish(orderNo);
+        return ApiRestResponse.success();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/mall/service/impl/OrderServiceImpl.java
+ //102.管理订单实现类开发 发货
+    @Override
+    public void deliver(String orderNo)&#123;
+        //能查到订单就取消
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        //查不到订单，报错
+        if (order == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ORDER);
+        &#125;
+        //支付前的判断 判断已付款的
+        if (order.getOrderStatus() == Constant.OrderStatusEnum.PAID.getCode()) &#123;
+            order.setOrderStatus(Constant.OrderStatusEnum.DELIVERED.getCode());
+            order.setDeliveryTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+        &#125;else &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_ORDER_STATUS);
+        &#125;
+    &#125;
+    //103.完结订单
+    @Override
+    public void finish(String orderNo)&#123;
+        //能查到订单就取消
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        //查不到订单，报错
+        if (order == null) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NO_ORDER);
+        &#125;
+        //有可能管理员调用 有可能用户调用 如果是普通用户, 要去校验一下订单所属
+        if (!userService.checkAdminRole(UserFilter.currentUser) &amp;&amp; !order.getUserId().equals(UserFilter.currentUser.getId())) &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.NOT_YOUR_ORDER);
+        &#125;
+        //支付前的判断 判断已付款的 //发货后可以完结订单
+        if (order.getOrderStatus() == Constant.OrderStatusEnum.DELIVERED.getCode()) &#123;
+            order.setOrderStatus(Constant.OrderStatusEnum.FINISHED.getCode());
+            order.setEndTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+        &#125;else &#123;
+            throw new ImoocMallException(ImoocMallExceptionEnum.WRONG_ORDER_STATUS);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="全流程测试"><a href="#全流程测试" class="headerlink" title="全流程测试"></a>全流程测试</h3><ul>
+<li>Postman实操</li>
+<li>登录 → 浏览商品 → 加入购物车 → 下单 <ul>
+<li>​                                                            → 取消订单</li>
+<li>​                                                            → 扫码支付 → 发货 → 收获 → 订单完结</li>
+</ul>
+</li>
+</ul>
+<h5 id="总结订单模块"><a href="#总结订单模块" class="headerlink" title="总结订单模块"></a>总结订单模块</h5><ul>
+<li><p>重难点</p>
+<ul>
+<li>VO的封装、裁剪</li>
+<li>一个订单内包括多个商品</li>
+<li>订单状态流转</li>
+<li>二维码生成</li>
+</ul>
+</li>
+<li><p>常见错误：把POJO返回到前端</p>
+</li>
+</ul>
 
     </div>
 
