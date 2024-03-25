@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -617,7 +617,8 @@ spring.datasource.password=root
 </code></pre>
 <hr>
 <hr>
-<h1 id="SpringBoot电商项目"><a href="#SpringBoot电商项目" class="headerlink" title="SpringBoot电商项目"></a>SpringBoot电商项目</h1><h3 id="课程整体介绍"><a href="#课程整体介绍" class="headerlink" title="课程整体介绍"></a>课程整体介绍</h3><ul>
+<h1 id="SpringBoot电商项目"><a href="#SpringBoot电商项目" class="headerlink" title="SpringBoot电商项目"></a>SpringBoot电商项目</h1><p><a target="_blank" rel="noopener" href="http://127.0.0.1:8083/#/index">慕慕生鲜前台</a><br><a target="_blank" rel="noopener" href="http://127.0.0.1:8083/admin/index.html#/login">慕慕生鲜后台</a></p>
+<h3 id="课程整体介绍"><a href="#课程整体介绍" class="headerlink" title="课程整体介绍"></a>课程整体介绍</h3><ul>
 <li>为什么要做电商项目</li>
 <li>项目亮点以及功能模块介绍</li>
 <li>项目演示</li>
@@ -2571,7 +2572,7 @@ public class CategoryVO &#123;
 <h3 id="用户分类列表接口开发"><a href="#用户分类列表接口开发" class="headerlink" title="用户分类列表接口开发"></a>用户分类列表接口开发</h3><pre><code class="java">com/imooc/mall/controller/CategoryController.java
 //54.用户分类列表接口开发 去Impl补写实现类
     @ApiOperation(&quot;前台目录列表&quot;)
-    @PostMapping(&quot;category/list&quot;)
+    @GetMapping(&quot;category/list&quot;)
     @ResponseBody
     public ApiRestResponse listCategoryForCustomer()&#123;
         List&lt;CategoryVO&gt; categoryVOS = categoryService.listCategoryForCustomer();
@@ -4931,6 +4932,139 @@ public class OrderAdminController &#123;
 <li><p>常见错误：把POJO返回到前端</p>
 </li>
 </ul>
+<h1 id="上线前准备工作"><a href="#上线前准备工作" class="headerlink" title="上线前准备工作"></a>上线前准备工作</h1><h3 id="阿里云部署"><a href="#阿里云部署" class="headerlink" title="阿里云部署"></a>阿里云部署</h3><p>把每个 com&#x2F;imooc&#x2F;mall&#x2F;model&#x2F;request&#x2F;… 类都加上**toString()**方法 方便调试<br><strong>后台、前台、获取类的行为</strong> 的目录列表都是 <strong>Get</strong>Mapping</p>
+<h3 id="前端准备工作"><a href="#前端准备工作" class="headerlink" title="前端准备工作"></a>前端准备工作</h3><h6 id="把static里的前端文件导入项目中"><a href="#把static里的前端文件导入项目中" class="headerlink" title="把static里的前端文件导入项目中"></a>把static里的前端文件导入项目中</h6><pre><code class="java">com/imooc/mall/config/ImoocMallWebMvcConfig.java
+//104.ImoocMallWebMvcConfig.java 根据路由配置相关文件 以admin开头的文件会被路由到下面的Locations
+package com.imooc.mall.config;
+
+import com.imooc.mall.common.Constant;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * 42.配置地址映射 43去CategoryController.java 加一个 @ApiOperation(&quot;后台添加目录&quot;)
+ * 44.新增一个目录的updateCategory的参数 [UpdateCategoryReq.java  ]
+ */
+@Configuration  //代表是一个配置
+public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
+    public void addResourceHandles(ResourceHandlerRegistry registry)&#123;
+        //104.根据路由配置相关文件 以admin开头的文件会被路由到下面的Locations
+        registry.addResourceHandler(&quot;/admin/**&quot;).addResourceLocations(&quot;classpath:/static/admin&quot;);
+        //65.增加一个registry  66.新增接口继续开发 ProductAdminController
+        registry.addResourceHandler(&quot;/images/**&quot;).addResourceLocations(&quot;file:&quot; + Constant.FILE_UPLOAD_DIR);
+//     把地址给到对应的目录下
+        registry.addResourceHandler(&quot;swagger-ui.html&quot;)
+                .addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(
+                &quot;classpath:/META-INF/resources/webjars&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="部署云服务器"><a href="#部署云服务器" class="headerlink" title="部署云服务器"></a>部署云服务器</h3><ul>
+<li>阿里云简介</li>
+<li>选择云服务器并购买</li>
+<li>环境配置</li>
+<li>Spring Boot部署[包括maven打包 sql文件也要上传]</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://ecs.console.aliyun.com/server/region/cn-hangzhou">云服务器管理控制台 (aliyun.com)</a></p>
+<blockquote>
+<p>免费试用三个月<br>账号: root<br>密码: panchunyao123!</p>
+</blockquote>
+<pre><code class="java">复制服务器的公网ip：47.98.225.105
+cmd本地电脑 → ssh root@47.98.225.105
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_57581439/article/details/124928451">在阿里云购买Linux服务器，配置宝塔环境，全图文，最最详细图解，保姆级教学_阿里云服务器怎么直接买宝塔-CSDN博客</a></p>
+<blockquote>
+<h2 id="【宝塔安装jdk1-8-yum安装-】"><a href="#【宝塔安装jdk1-8-yum安装-】" class="headerlink" title="【宝塔安装jdk1.8(yum安装)】"></a><strong>【宝塔安装jdk1.8(yum安装)】</strong></h2><p>1、检索检索1.8的列表</p>
+<pre><code class="none">yum list java-1.8*
+</code></pre>
+<p>2、安装1.8.0的所有文件</p>
+<pre><code class="none">yum install java-1.8.0-openjdk* -y
+</code></pre>
+<p>3、使用命令检查是否安装成功</p>
+<pre><code class="none">java -version
+</code></pre>
+</blockquote>
+<p>登录宝塔 → 绑定宝塔 → 下载软件<br>宝塔服务器[<a target="_blank" rel="noopener" href="http://47.98.225.105:22003/]">http://47.98.225.105:22003/]</a></p>
+<pre><code class="sql">☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆ 宝塔BaoTa ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+========================面板账户登录信息=========================
+ 外网面板地址: http://47.98.225.105:22003/1259ebfa
+ 内网面板地址: http://172.24.91.49:22003/1259ebfa
+ username: grltvl7d
+ password: 46303f93
+
+
+======================== mysql-5.7 ===========================
+root密码成功修改为: panchunyao123
+
+[root@iZbp1dssknxftmjczbtpndZ ~]# mysql -uroot -ppanchunyao123
+mysql&gt; create database imooc_mall;
+mysql&gt; use imooc_mall;
+Database changed
+导入sql文件:imooc_mall_online.sql
+从本机将其上传到服务器在cmd中运行:
+scp /Users/Pluminary/Desktop/imooc_mall_online.sql root@47.98.225.105:22003:/root
+输入服务器密码:panchunyao123!
+
+回到服务器端输入：
+mysql&gt; use imooc_mall
+Database changed
+mysql&gt; source /root/imooc_mall_online.sql
+mysql&gt; show tables;
++-----------------------+
+| Tables_in_imooc_mall  |
++-----------------------+
+| imooc_mall_cart       |
+| imooc_mall_category   |
+| imooc_mall_order      |
+| imooc_mall_order_item |
+| imooc_mall_product    |
+| imooc_mall_user       |
++-----------------------+
+#为数据库赋予权限！！！
+mysql&gt; grant all privileges on imooc_mall.* to &#39;root&#39;@&#39;127.0.0.1&#39; identified by &#39;panchunyao123&#39;;
+mysql&gt; quit
+Bye
+[root@iZbp1dssknxftmjczbtpndZ ~]# mysql -uroot -ppanchunyao123 -h127.0.0.1
+去云服务器 安全组 访问规则 入方向 手动添加一个 目的:8081/8081 源:0.0.0.0/0
+==============================================================
+</code></pre>
+<p>整理文件上传到服务器 先**Build → Rebuild Project **<br>打包 <strong>Maven → Lifecycle → clean[之前的内容删除 不容易出错] → package[打包操作]</strong><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_62488212/article/details/132412209">spring打包报错：Java Runtime (class file version 55.0), class file versions up to 52.0_there was an error in the forked process org&#x2F;testn-CSDN博客</a></p>
+<pre><code class="sql">[INFO] Building jar: C:\Users\Pluminary\Desktop\idea_Space\mall\target\mall-0.0.1-SNAPSHOT.jar
+在本机cmd中运行把导好的包发送給服务器
+C:\Users\Pluminary&gt;scp C:\Users\Pluminary\Desktop\idea_Space\mall\target\mall-0.0.1-SNAPSHOT.jar root@47.98.225.105:/root
+#rm -rf images/ 删除images文件夹
+新建一个文件夹
+[root@iZbp1dssknxftmjczbtpndZ ~]# pwd
+[root@iZbp1dssknxftmjczbtpndZ ~]# mkdir image
+
+图片上传到服务器中[图片尽量在没有根目录空格的文件夹下 比如Spring Boot 中间有空格]
+C:\Users\Pluminary&gt;scp C:/Users/Pluminary/Desktop/images/. root@47.98.225.105:/root/images/
+
+在Xshell7中阿里云服务器
+[root@iZbp1dssknxftmjczbtpndZ ~]# ls
+images  imooc_mall_online.sql  install.sh  mall-0.0.1-SNAPSHOT.jar
+
+每一次部署之前要把当前的java停止掉
+[root@iZbp1dssknxftmjczbtpndZ images]# lsof -i:8081
+[root@iZbp1dssknxftmjczbtpndZ images]# kill -9 12345 //按照PID杀死端口号
+-bash: kill: (12345) - No such process
+
+部署到云服务器 [/root/null 2&gt;&amp;1 &amp;]将日志输出到哪里 这里是丢弃的意思
+[root@iZbp1dssknxftmjczbtpndZ ~]# nohup java -jar -Dserver.port=8081 -Dspring.profiles.active=prod /root/mall-0.0.1-SNAPSHOT.jar &gt; /root/null 2&gt;&amp;1 &amp;
+[1] 18656
+ #代表当前程序的进程号
+[root@iZbp1dssknxftmjczbtpndZ ~]# lsof -i:8081   //查询端口号
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+java    18656 root   19u  IPv6 195648      0t0  TCP *:tproxy (LISTEN)
+
+若打不开请检查网页报错 寻找传入的application.prod.properties的 
+spring.datasource.url地址和spring.datasource.username &amp;&amp; password数据库用户和密码
+
+查看服务器的端口: mysql&gt; show global variables like &#39;port&#39;;
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_46070108/article/details/116495116">SpringBoot上传图片，图片不能及时显示问题_springboot项目上传照片到uoload 不会实时更新-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42456466/article/details/91869955">Springboot 上传图片到项目路径下不能访问，需要重启_springboot能上传图片到win11中但无法访问图片-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/twotwo22222/article/details/124680688">关于springboot项目图片上传到本地，必须重启之后才能访问的解决方案_springboot上传图片需要重启-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/rqz__/article/details/130304492">关于IDEA2022开启热部署没有compiler.automake.allow.when.app.running的解决方案-CSDN博客</a></p>
 
     </div>
 
