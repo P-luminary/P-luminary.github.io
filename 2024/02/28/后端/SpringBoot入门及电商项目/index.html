@@ -5024,6 +5024,11 @@ mysql&gt; show tables;
 +-----------------------+
 #为数据库赋予权限！！！
 mysql&gt; grant all privileges on imooc_mall.* to &#39;root&#39;@&#39;127.0.0.1&#39; identified by &#39;panchunyao123&#39;;
+--------------------------------------------------------------
+MySql8.0
+CREATE USER &#39;pcy&#39;@&#39;47.98.225.105&#39; IDENTIFIED BY &#39;Panchunyao123!&#39;;
+GRANT ALL PRIVILEGES ON *.* TO &#39;pcy&#39;@&#39;47.98.225.105&#39; WITH GRANT OPTION;
+--------------------------------------------------------------
 mysql&gt; quit
 Bye
 [root@iZbp1dssknxftmjczbtpndZ ~]# mysql -uroot -ppanchunyao123 -h127.0.0.1
@@ -5054,17 +5059,59 @@ images  imooc_mall_online.sql  install.sh  mall-0.0.1-SNAPSHOT.jar
 部署到云服务器 [/root/null 2&gt;&amp;1 &amp;]将日志输出到哪里 这里是丢弃的意思
 [root@iZbp1dssknxftmjczbtpndZ ~]# nohup java -jar -Dserver.port=8081 -Dspring.profiles.active=prod /root/mall-0.0.1-SNAPSHOT.jar &gt; /root/null 2&gt;&amp;1 &amp;
 [1] 18656
+如果没有别名就一个本来的application.properties
+[root@iZbp1dssknxftmjczbtpndZ ~]# nohup java -jar -Dserver.port=8081 /root/mall-0.0.1-SNAPSHOT.jar &gt; /root/null 2&gt;&amp;1 &amp;
+
+
  #代表当前程序的进程号
 [root@iZbp1dssknxftmjczbtpndZ ~]# lsof -i:8081   //查询端口号
 COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 java    18656 root   19u  IPv6 195648      0t0  TCP *:tproxy (LISTEN)
 
+============================================================================
+
 若打不开请检查网页报错 寻找传入的application.prod.properties的 
 spring.datasource.url地址和spring.datasource.username &amp;&amp; password数据库用户和密码
 
 查看服务器的端口: mysql&gt; show global variables like &#39;port&#39;;
+
+阿里云控制台:
+https://ecs.console.aliyun.com/server/i-bp1dssknxftmjczbtpnd/detail?regionId=cn-hangzhou
+
+如何查看linux服务器安装了tomcat：
+rpm -qa|grep tomcat
+
+宝塔安装目录: $cd /www/server/.....
+[root@iZbp1dssknxftmjczbtpndZ data]# cd /www/server/tomcat/bin
+#找到文件后启动tomcat
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./startup.sh
+#看进程，如果返回一大串东西，说明tomcat启动成功。
+[root@iZbp1dssknxftmjczbtpndZ ~]# ps -ef|grep tomcat
+
+运行SpringBoot: 
+[root@iZbp1dssknxftmjczbtpndZ ~]# ls
+Desktop  images  imooc_mall_online.sql  install.sh  logs  mall-0.0.1-SNAPSHOT.jar  null
+[root@iZbp1dssknxftmjczbtpndZ ~]# java -jar mall-0.0.1-SNAPSHOT.jar 
+
+===============================================
+当把SpringBoot项目的jar包部署到linux服务器中，启动SpringBoot项目，却无法正常访问，这是怎么回事呢？
+主要的原因是端口号被Linux的firewall防火墙拦截掉了
+解决办法：
+1、查询已开启的端口列表：firewall-cmd --list-ports 
+不出意外的话，是啥也没有，这也表示，所有端口都未放行，当然springboot项目的80端口也被拦截掉了
+2、firewall-cmd --zone=public --add-port=1-12345/tcp --permanent
+将端口1~12345全都开启
+3、重启防火墙
+service firewalld restart
+4、重新运行springboot项目
+5、成功访问
+===============================================
 </code></pre>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_46070108/article/details/116495116">SpringBoot上传图片，图片不能及时显示问题_springboot项目上传照片到uoload 不会实时更新-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42456466/article/details/91869955">Springboot 上传图片到项目路径下不能访问，需要重启_springboot能上传图片到win11中但无法访问图片-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/twotwo22222/article/details/124680688">关于springboot项目图片上传到本地，必须重启之后才能访问的解决方案_springboot上传图片需要重启-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/rqz__/article/details/130304492">关于IDEA2022开启热部署没有compiler.automake.allow.when.app.running的解决方案-CSDN博客</a></p>
+<blockquote>
+<p>server.port&#x3D;8083<br>spring.datasource.name&#x3D;imooc_mall_datasource<br>spring.datasource.url&#x3D;jdbc:mysql:&#x2F;&#x2F;47.98.225.105&#x2F;imooc_mall?useUnicode&#x3D;true&amp;characterEncoding&#x3D;utf8&amp;autoReconnect&#x3D;true&amp;useSSL&#x3D;true&amp;allowPublicKeyRetrieval&#x3D;true&amp;serverTimezone&#x3D;Asia&#x2F;Shanghai<br>spring.datasource.driver-class-name&#x3D;com.mysql.cj.jdbc.Driver<br>spring.datasource.username&#x3D;root<br>spring.datasource.password&#x3D;Panchunyao123!<br>mybatis.mapper-locations&#x3D;classpath:mappers&#x2F;*.xml<br>spring.redis.host&#x3D;localhost<br>spring.redis.port&#x3D;6379<br>spring.redis.password&#x3D;<br>file.upload.dir&#x3D;&#x2F;root&#x2F;images&#x2F;<br>file.upload.ip&#x3D;47.98.225.105<br>icode&#x3D;ABCDE</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_46070108/article/details/116495116">SpringBoot上传图片，图片不能及时显示问题_springboot项目上传照片到uoload 不会实时更新-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42456466/article/details/91869955">Springboot 上传图片到项目路径下不能访问，需要重启_springboot能上传图片到win11中但无法访问图片-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/twotwo22222/article/details/124680688">关于springboot项目图片上传到本地，必须重启之后才能访问的解决方案_springboot上传图片需要重启-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/rqz__/article/details/130304492">关于IDEA2022开启热部署没有compiler.automake.allow.when.app.running的解决方案-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_37954460/article/details/125842857">Linux部署SpringBoot项目无法访问问题_linux springboot项目启动外面不能访问-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/terry711/article/details/106226298/">linux服务器部署SpringBoot项目并查看项目运行日志_linux 怎么实时查看springboot 日志-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://class.imooc.com/course/qadetail/269346">线上发布报数据库没有连接成功，麻烦帮忙看…-慕课网 (imooc.com)</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_63693805/article/details/132626318">linux安装mysql 8 数据库（保姆级）_linux安装mysql8-CSDN博客</a></p>
+<p>mysql8.0密码&#x3D;&gt; root &amp; Panchunyao123!</p>
 
     </div>
 
