@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1001,7 +1001,7 @@ http://localhost:8080/sample
 <td align="left">用户会话 - HttpSession</td>
 </tr>
 <tr>
-<td align="left">application</td>
+<td align="left">application [全局实例]</td>
 <td align="left">应用全局对象 - ServletContext</td>
 </tr>
 <tr>
@@ -1010,19 +1010,1146 @@ http://localhost:8080/sample
 </tr>
 <tr>
 <td align="left">page</td>
-<td align="left">当前页面对象 - this</td>
+<td align="left">当前页面对象 - this [Object实例]</td>
 </tr>
 <tr>
 <td align="left">pageContext</td>
 <td align="left">页面上下文对象 - PageContext</td>
 </tr>
 <tr>
-<td align="left">config</td>
+<td align="left">config [全局参数]</td>
 <td align="left">应用配置对象 - ServletConfig</td>
 </tr>
 <tr>
 <td align="left">exception</td>
 <td align="left">应用异常对象 - Throwable</td>
+</tr>
+</tbody></table>
+<h3 id="Statement-和-PreparedStatement的区别"><a href="#Statement-和-PreparedStatement的区别" class="headerlink" title="Statement 和 PreparedStatement的区别"></a>Statement 和 PreparedStatement的区别</h3><ul>
+<li>PreparedStatement是预编译的SQL语句，效率高于Statement</li>
+<li>PreparedStatement支持 ‘?’ 操作符，相对于Statement更加灵活</li>
+<li>PreparedStatement可以防止SQL注入，安全性高于Statement</li>
+</ul>
+<pre><code class="java">package com.example.text.jdbc;
+
+import java.sql.*;
+
+public class StatementSample &#123;
+    //使用Statement sql语句解释N多次
+    //SQL注入攻击：  &#39; or 1=1 or &#39;
+    public void findByEname1(String ename) &#123;
+        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
+        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
+        String username = &quot;root&quot;;
+        String password = &quot;root&quot;;
+        Connection conn = null;
+        try &#123;
+            Class.forName(driverName);
+            conn = DriverManager.getConnection(URL, username, password);
+            Statement ps = conn.createStatement();
+            //使用Statement
+            String sql = &quot;SELECT * FROM emp where ename = &#39;&quot; + ename + &quot;&#39; &quot;;
+            System.out.println(sql);
+            ResultSet rs = ps.executeQuery(sql);
+
+            while (rs.next()) &#123;
+                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
+                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
+                        rs.getFloat(&quot;sal&quot;));
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+        //5.关闭连接
+        finally &#123;
+            if (conn != null) &#123;
+                try &#123;
+                    conn.close();
+                &#125; catch (SQLException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.example.text.jdbc;
+
+import java.sql.*;
+
+public class StatementSample &#123;
+
+    //使用预编译PreparedStatement sql语句解释一次
+    public void findByEname2(String ename) &#123;
+        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
+        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
+
+        String username = &quot;root&quot;;
+        String password = &quot;root&quot;;
+        Connection conn = null;
+        try &#123;
+            Class.forName(driverName);
+            conn = DriverManager.getConnection(URL, username, password);
+
+            //使用预编译PreparedStatement
+            String sql = &quot;SELECT * FROM emp where ename = ?&quot;;
+            System.out.println(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, ename);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) &#123;
+                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
+                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
+                        rs.getFloat(&quot;sal&quot;));
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+        //5.关闭连接
+        finally &#123;
+            if (conn != null) &#123;
+                try &#123;
+                    conn.close();
+                &#125; catch (SQLException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        StatementSample sample = new StatementSample();
+        sample.findByEname1(&quot;SMITH&#39; or 1=1 or &#39;&quot;); //SQL注入攻击
+        sample.findByEname2(&quot;SMITH&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="请说明JDBC的使用步骤"><a href="#请说明JDBC的使用步骤" class="headerlink" title="请说明JDBC的使用步骤"></a>请说明JDBC的使用步骤</h3><ul>
+<li>加载JDBC驱动</li>
+<li>创建数据库连接(Connection)</li>
+<li>创建命令(Statement)</li>
+<li>处理结果(ResultSet)</li>
+<li>关闭连接</li>
+</ul>
+<pre><code class="java">package com.example.text.jdbc;
+
+import java.sql.*;
+
+public class MysqlJDBC &#123;
+    public static void main(String[] args) &#123;
+        //连接需要提前下载好包   mysql-connector-java-5.1.47.jar
+        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
+        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
+        String sql = &quot;SELECT * FROM emp&quot;;
+        String username = &quot;root&quot;;
+        String password = &quot;root&quot;;
+        Connection conn = null;
+        try &#123;
+            //1.加载JDBC驱动
+            Class.forName(driverName);
+            //2.建立连接
+            conn = DriverManager.getConnection(URL, username, password);
+            //3.创建命令（Statement)
+            Statement ps = conn.createStatement();
+            //4.处理结果
+            ResultSet rs = ps.executeQuery(sql);
+            while (rs.next()) &#123;
+                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
+                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
+                        rs.getFloat(&quot;sal&quot;));
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+        //5.关闭连接
+        finally &#123;
+            if (conn != null) &#123;
+                try &#123;
+                    conn.close();
+                &#125; catch (SQLException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="SQL编程训练"><a href="#SQL编程训练" class="headerlink" title="SQL编程训练"></a>SQL编程训练</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/bc48ea2eefeb9921758f69d1ee9d506366d73753/data/scott_sql%E7%BB%83%E4%B9%A0%E9%A2%98.png"></p>
+<pre><code class="sql">scott.sql文件已准备好
+
+★按部门编号升序、工资倒序的排列员工信息
+SELECT * FROM emp ORDER BY deptno ASC, sal DESC
+
+★列出deptno=30的部门名称及员工[关联查询]
+SELECT dept.dname, emp.* FROM emp,dept
+WHERE emp.deptno = dept.deptno
+AND dept.deptno = 30
+
+★列出每个部门最高、最低、平均工资 #若再列出人数只需要再SELECT后面加 COUNT(*)
+SELECT deptno, max(sal), min(sal), avg(sal)
+FROM emp 
+GROUP BY deptno  
+
+★列出市场部(SALES)及研发部(RESEARCH)的员工
+SELECT * FROM dept d, emp e
+WHERE d.deptno = e.deptno 
+AND (d.dname = &#39;SALES&#39; or d.dname = &#39;RESEARCH&#39;)
+
+★列出人数超过3人的部门 #按照部门分组 
+# WHERE对原始数据进行筛选[在GROUP BY之前进行的] 
+# HAVING对分组后的进行二次筛选[在GROUP BY之后进行的]
+SELECT d.dname, count(*)
+FROM dept d, emp e
+WHERE d.deptno = e.deptno 
+GROUP BY d.dname 
+HAVING count(*)&gt;3
+
+★计算MILLER年薪比SMITH高多少
+SELECT a.a_sal, b.b_sal, a.a_sal - b.b_sal FROM 
+(SELECT sal * 12 a_sal FROM emp WHERE ename = &#39;MILLER&#39;) a,
+(SELECT sal * 12 b_sal FROM emp WHERE ename = &#39;SMITH&#39;) b
+
+★★列出直接向King汇报的员工
+SELECT * FROM emp
+WHERE mgr = (SELECT empno FROM emp WHERE ename = &#39;KING&#39;)
+#或
+SELECT e.* FROM emp e, (SELECT empno FROM emp WHERE ename = &#39;KING&#39;) k
+WHERE e.mgr = k.empno
+
+★★列出公司所有员工的工龄，并倒序排列 
+# NOW获取当前时间 
+# SELECT DATE_FORMAT(date,format)   DATE_FORMAT只对日期形式的数据生效
+SELECT * FROM(
+    SELECT emp.*, DATE_FORMAT(NOW(),&quot;%Y&quot;) - DATE_FORMAT(hiredate,&quot;%Y&quot;) yg 
+    FROM emp
+)d 
+ORDER BY d.yg DESC
+
+★★计算管理者与基层员工平均薪资差额
+SELECT a_avg - b_avg 
+FROM
+ (SELECT avg(sal) a_avg 
+ FROM emp
+ WHERE job = &#39;MANAGER&#39; OR job = &#39;PRESIDENT&#39;) a,
+  (SELECT avg(sal) b_avg
+  FROM emp
+  WHERE job IN (&#39;CLERK&#39;,&#39;SALESMAN&#39;,&#39;ANALYST&#39;))b
+</code></pre>
+<h1 id="Java面试-——-主流框架"><a href="#Java面试-——-主流框架" class="headerlink" title="Java面试 —— 主流框架"></a>Java面试 —— 主流框架</h1><h3 id="谈谈你对IOC和DI的理解"><a href="#谈谈你对IOC和DI的理解" class="headerlink" title="谈谈你对IOC和DI的理解"></a>谈谈你对IOC和DI的理解</h3><ul>
+<li><h6 id="IOC控制反转，设计理念，由第三方来管理与控制对象"><a href="#IOC控制反转，设计理念，由第三方来管理与控制对象" class="headerlink" title="IOC控制反转，设计理念，由第三方来管理与控制对象"></a>IOC控制反转，设计理念，由第三方来管理与控制对象</h6></li>
+<li><h6 id="DI依赖注入，具体实现，由对象容器在运行时动态注入对象"><a href="#DI依赖注入，具体实现，由对象容器在运行时动态注入对象" class="headerlink" title="DI依赖注入，具体实现，由对象容器在运行时动态注入对象"></a>DI依赖注入，具体实现，由对象容器在运行时动态注入对象</h6></li>
+</ul>
+<p>[<strong><u>DI是一种具体的技术实现，是对宏观IOC里面的一种技术上的形式，在Spring中使用了反射+工厂模式来实现DI</u></strong>]</p>
+<pre><code class="java">IDAO dao = new UserDao(); //原始版本 原本的容器控制器
+
+运行时Spring动态进行创建 对程序进行有效的解耦 //将控制权交给第三方控制容器  IOC容器
+// applicationContext最底层是类工厂模式
+IDAO dao = (IDAO)applicationContext.getBean(&quot;userDAO&quot;); //ICO容器 动态实例化DAO
+ &lt;bean id = &quot;userDAO&quot; class = &quot;com.imooc.dao.UserDAO&quot;/&gt;
+ &lt;bean id = &quot;userDAO&quot; class = &quot;com.imooc.dao.UserExtDAO&quot;/&gt; //方便随时更改
+</code></pre>
+<h3 id="Spring中Bean实例化有几种方式"><a href="#Spring中Bean实例化有几种方式" class="headerlink" title="Spring中Bean实例化有几种方式"></a>Spring中Bean实例化有几种方式</h3><ul>
+<li>使用<strong>类构造器</strong>实例化</li>
+<li>使用<strong>静态工厂方法</strong>实例化</li>
+<li>使用<strong>实例工厂方法</strong>实例化</li>
+</ul>
+<pre><code class="java">com/example/text/spring/Person.java
+package com.example.text.spring;
+
+public class Person &#123;
+
+    private String name;
+    private Integer age;
+
+
+    public Person() &#123;
+        System.out.println(&quot;Person默认构造函数&quot;);
+    &#125;
+
+    public Person(String name, Integer age) &#123;
+        this.name = name;
+        this.age = age;
+
+        System.out.println(&quot;Person&#123;&quot; +
+                &quot;name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &quot;, age=&quot; + age +
+                &#39;&#125;&#39;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/example/text/spring/PersonStaticFactory.java
+package com.example.text.spring;
+
+/**
+ * Person静态工厂
+ */
+public class PersonStaticFactory &#123;
+    public static Person createPerson(String name,int age)&#123;
+        return new Person(name,age);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/example/text/spring/PersonFactory.java
+package com.example.text.spring;
+
+/**
+ * Person实例工厂 实例化以后才可以调用
+ */
+public class PersonFactory &#123;
+    public Person createPerson(String name,int age)&#123;
+        return new Person(name,age);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">C:\Users\Pluminary\Desktop\text\src\main\resources\applicationContext.xml
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;!--构造函数实例化--&gt;
+    &lt;!-- 1.调用无参构造函数 --&gt;
+    &lt;bean id=&quot;person1&quot; class=&quot;com.imooc.spring.instance.Person&quot;&gt;&lt;/bean&gt;
+
+    &lt;!-- 2.调用有参构造函数 --&gt;
+    &lt;bean id=&quot;person2&quot; class=&quot;com.imooc.spring.instance.Person&quot;&gt;
+        &lt;constructor-arg name=&quot;name&quot; value=&quot;枫叶(构造函数)&quot;/&gt;
+        &lt;constructor-arg name=&quot;age&quot; value=&quot;23&quot;/&gt;
+    &lt;/bean&gt;
+
+
+    &lt;!-- 通过静态工厂创建对象--&gt;
+    &lt;bean id=&quot;person3&quot; class=&quot;com.imooc.spring.instance.PersonStaticFactory&quot; factory-method=&quot;createPerson&quot;&gt;
+        &lt;constructor-arg name=&quot;name&quot; value=&quot;蓝天(静态工厂)&quot;/&gt;
+        &lt;constructor-arg name=&quot;age&quot; value=&quot;27&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;!-- 通过实例工厂创建对象--&gt;
+&lt;!-- 实例化PersonFactory--&gt;
+    &lt;bean id=&quot;instanceFactory&quot; class=&quot;com.imooc.spring.instance.PersonFactory&quot;&gt;&lt;/bean&gt;
+
+    &lt;bean id=&quot;person4&quot; factory-bean=&quot;instanceFactory&quot; factory-method=&quot;createPerson&quot;&gt;
+        &lt;constructor-arg name=&quot;name&quot; value=&quot;绿地(实例工厂)&quot;/&gt;
+        &lt;constructor-arg name=&quot;age&quot; value=&quot;29&quot;/&gt;
+    &lt;/bean&gt;
+
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">com/example/text/Application.java
+package com.example.text;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Application &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
+    &#125;
+&#125;
+===================================================================
+Person默认构造函数
+Person&#123;name=&#39;枫叶(构造函数)&#39;,age=23&#125;
+Person&#123;name=&#39;蓝天(静态工厂)&#39;,age=27&#125;
+Person&#123;name=&#39;绿地(实例工厂)&#39;,age=29&#125;
+</code></pre>
+<h3 id="Bean注入属性有哪几种方式"><a href="#Bean注入属性有哪几种方式" class="headerlink" title="Bean注入属性有哪几种方式"></a>Bean注入属性有哪几种方式</h3><ul>
+<li><h6 id="setter注入"><a href="#setter注入" class="headerlink" title="setter注入"></a>setter注入</h6></li>
+<li><h6 id="构造器注入"><a href="#构造器注入" class="headerlink" title="构造器注入"></a>构造器注入</h6></li>
+<li><h6 id="注解注入"><a href="#注解注入" class="headerlink" title="注解注入"></a>注解注入</h6></li>
+<li><h6 id="Java-Config注入"><a href="#Java-Config注入" class="headerlink" title="Java Config注入"></a>Java Config注入</h6></li>
+</ul>
+<h6 id="setter注入-1"><a href="#setter注入-1" class="headerlink" title="setter注入"></a>setter注入</h6><blockquote>
+<p>在UserService使用的时候依赖于UserDao，目前UserDao是空的，要想运行时通过setter方法注入的话，我们需要在injection.xml中<br>&lt;context:component-scan base-package&#x3D;”com.imooc.spring”&#x2F;&gt;<br><bean id="userDAO" class="com.imooc.spring.injection.UserDAOImpl"/><br><bean id="userService" class="com.imooc.spring.injection.UserService"><br>    <property name="userDAO" ref="userDAO"/><br>    <constructor-arg name="userDAO" ref="userDAO"/><br>前面的name&#x3D;”userDAO”对应着UserService.java中的userDAO属性 <code>private UserDAO userDAO</code><br>后面的ref&#x3D;”userDAO”对应着当前文件中的bean id &#x3D; “userDAO”<br></bean></p>
+</blockquote>
+<pre><code class="java">com/example/text/injection/UserDAO.java
+package com.example.text.injection;
+
+public interface UserDAO &#123;
+    public void insert();
+&#125;
+</code></pre>
+<pre><code class="java">com/example/text/injection/UserDAOImpl.java
+package com.example.text.injection;
+
+import org.springframework.stereotype.Repository;
+
+//@Repository(&quot;userDAO&quot;) ★注解方式注入
+public class UserDAOImpl implements UserDAO&#123;
+    public UserDAOImpl()&#123;
+        System.out.println(this + &quot;已创建&quot;);
+    &#125;
+    public void insert() &#123;
+        System.out.println(this + &quot;:正在调用UserDAOImpl.insert()&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/example/text/injection/UserService.java
+package com.example.text.injection;
+
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+//@Service(&quot;userService&quot;) ★注解方式注入
+//spring需要动态将userDao注入到UserService上
+public class UserService &#123;
+//  @Resource(name=&quot;userDAO&quot;)  注解方式注入 可以把原始的bean都注释掉
+    private UserDAO userDAO;
+
+    public UserService() &#123;
+        System.out.println(this + &quot;已创建&quot;);
+    &#125;
+/* 注解方式这些可以抛弃 并且摒弃了xml的那些bean 只需要增加个扫描的注解方式注入
+    //通过构造函数注入
+    public UserService(UserDAO userDAO) &#123;
+        this.userDAO = userDAO;
+        System.out.println(this + &quot;:正在调用构造函数注入，UserService(&quot; + userDAO + &quot;)&quot;);
+    &#125;
+
+    //通过Setter方法注入
+    public void setUserDAO(UserDAO userDAO) &#123;
+        this.userDAO = userDAO;
+        System.out.println(this + &quot;:正在调用Setter方法注入，setUserDAO(&quot; + userDAO + &quot;)&quot;);
+    &#125;
+*/
+
+    public void createUser()&#123;
+        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
+        userDAO.insert();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/example/text/InjectionRunner.java
+package com.example.text;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class InjectionRunner &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:injection.xml&quot;);
+        UserService userService = (UserService)ctx.getBean(&quot;userService&quot;);
+        userService.createUser();
+    &#125;
+&#125;
+
+==============================================================
+UserDAOImpl@531be3c5对象已创建
+UserService@5034c75a对象已创建
+UserService@5034c75a:正在调用Setter方法注入,setUserDAO
+UserService@5034c75a:正在调用UserService.createUser()
+UserDAOImpl@531be3c5:正在调用UserDAOImpl.insert()
+</code></pre>
+<pre><code class="java">C:\Users\Pluminary\Desktop\text\src\main\resources\injection.xml
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.spring&quot;/&gt; //★扫描注解方式注入
+    &lt;bean id=&quot;userDAO&quot; class=&quot;com.imooc.spring.injection.UserDAOImpl&quot;/&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.injection.UserService&quot;&gt;
+        &lt;property name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt; //★这个是setter注入
+        &lt;constructor-arg name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt; //★这个是构造函数注入
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<h6 id="Java-config注入"><a href="#Java-config注入" class="headerlink" title="Java config注入"></a>Java config注入</h6><pre><code class="java">Appconfig.java 
+[配置文件 在原有代码之外的东西 优点：不用破坏原始代码去达到效果 比xml优点在于java可以及时检查]
+package com.imooc.spring.injection;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig &#123; //类似创建对象的方法
+    @Bean(name=&quot;userDAO&quot;)
+    public UserDAO userDAO()&#123;
+        return new UserDAOImpl();
+    &#125;
+
+    @Bean(name=&quot;userService&quot;)
+    public UserService userService()&#123;
+        UserService userService = new UserService();
+        userService.setUserDAO(this.userDAO());
+        return userService;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Spring常见面试问题"><a href="#Spring常见面试问题" class="headerlink" title="Spring常见面试问题"></a>Spring常见面试问题</h3><pre><code class="xml">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
+    &lt;bean id=&quot;userDAO&quot; class=&quot;com.imooc.spring.scope.UserDAOImpl&quot;/&gt;
+    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.scope.UserService&quot; scope=&quot;prototype&quot; lazy-init=&quot;false&quot;&gt;  
+//scope是控制对象的数量是单例(singleton)还是多例(prototype)[每一次创建getbean创建对象]
+//还有两个不常见的值 request[同一个对象是同一个请求 不同对象ICO容器创建不同对象] 和 
+//session[调用多个getbean是同一个对象 不同session是不同对象] [SpringMVC时用]
+        //lazy-init=&quot;true&quot; 延迟初始化 需要的时候才会加载 若getBean被注释则不会加载
+        &lt;property name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">ScopeRunner.java
+package com.imooc.spring.scope;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class ScopeRunner &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:scope.xml&quot;);
+        UserService userService1 = (UserService)ctx.getBean(&quot;userService&quot;);
+        UserService userService2 = (UserService)ctx.getBean(&quot;userService&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserDAO.java   UserDAOImpl.java   UserService.java 与上方相同
+</code></pre>
+<h6 id="两个注解"><a href="#两个注解" class="headerlink" title="两个注解"></a>两个注解</h6><p><code>@Autowired</code>[第三方] 和 <code>@Resource</code>[官方推荐]</p>
+<blockquote>
+<p>@Resource(name&#x3D;”userDAO”) &#x2F;&#x2F;设置了则进行精准匹配<br>private UserDAO userDAO;&#x2F;&#x2F;没设置则优先将名字userDAO在beanId内查找, 再没有就按照UserDAO类型在IOC容器中查找</p>
+</blockquote>
+<h3 id="AOP有几种通知类型"><a href="#AOP有几种通知类型" class="headerlink" title="AOP有几种通知类型"></a>AOP有几种通知类型</h3><h6 id="在不修改原始程序的前提下使用通知来对程序进行扩展"><a href="#在不修改原始程序的前提下使用通知来对程序进行扩展" class="headerlink" title="在不修改原始程序的前提下使用通知来对程序进行扩展"></a>在不修改原始程序的前提下使用通知来对程序进行扩展</h6><ul>
+<li><h6 id="前置通知-Before"><a href="#前置通知-Before" class="headerlink" title="前置通知[Before]"></a>前置通知[Before]</h6></li>
+<li><h6 id="返回通知-After-returning"><a href="#返回通知-After-returning" class="headerlink" title="返回通知[After returning]"></a>返回通知[After returning]</h6></li>
+<li><h6 id="异常通知-After-throwing"><a href="#异常通知-After-throwing" class="headerlink" title="异常通知[After throwing]"></a>异常通知[After throwing]</h6></li>
+<li><h6 id="后置通知-After"><a href="#后置通知-After" class="headerlink" title="后置通知[After]"></a>后置通知[After]</h6></li>
+<li><h6 id="环绕通知-Around-统统实现"><a href="#环绕通知-Around-统统实现" class="headerlink" title="环绕通知[Around] (统统实现)"></a><span style = "color:red">环绕通知[Around]</span> (统统实现)</h6></li>
+</ul>
+<pre><code class="java">SampleAspect.java
+package com.imooc.spring.aop;
+
+import java.util.Date;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+
+//切面类
+public class SampleAspect &#123;
+    
+    //1.前置通知
+    public void doBefore(JoinPoint jp)&#123;
+        String clzName = jp.getTarget().getClass().getName();
+        //getTarget() 获取即将要执行的对象
+        String method = jp.getSignature().getName();//即将要执行的方法
+        Object args = jp.getArgs();
+        System.out.println(&quot;【前置通知】&quot;  + clzName + &quot;.&quot; + method );
+    &#125;
+    
+    //2.后置通知
+    public void doAfter(JoinPoint jp)&#123;
+        String clzName = jp.getTarget().getClass().getName();
+        //getTarget() 获取即将要执行的对象
+        String method = jp.getSignature().getName();//即将要执行的方法
+        System.out.println(&quot;【后置通知】&quot;  + clzName + &quot;.&quot; + method );
+
+    &#125;
+    
+    //3.返回通知
+    public void doAfterReturning(JoinPoint jp , Object ret)&#123;
+        System.out.println(&quot;【返回后通知】&quot; + ret);
+        
+    &#125;
+    //4.异常通知
+    public void doAfterThrowing(JoinPoint jp , Throwable t)&#123;
+        System.out.println(&quot;【异常通知】&quot; + t.getMessage());
+    &#125;
+
+    //5.环绕通知
+    public Object doAround(ProceedingJoinPoint pjp) throws Throwable&#123;
+        String clzName = pjp.getTarget().getClass().getName();
+        //getTarget() 获取即将要执行的对象
+        String method = pjp.getSignature().getName();//即将要执行的方法
+        Object args = pjp.getArgs();
+        System.out.println(&quot;【前置通知】&quot;  + clzName + &quot;.&quot; + method );
+        Object ret = null;
+        try &#123;
+            ret = pjp.proceed();//执行目标方法
+            System.out.println(&quot;【返回后通知】&quot; + ret);
+        &#125; catch (Throwable t) &#123;
+            // TODO Auto-generated catch block
+            System.out.println(&quot;【异常通知】&quot; + t.getMessage());
+            throw t;
+        &#125;finally&#123;
+            System.out.println(&quot;【后置通知】&quot;  + clzName + &quot;.&quot; + method + &quot;()&quot;);
+        &#125;
+        return ret;
+    &#125;
+    
+&#125;
+</code></pre>
+<pre><code class="java">UserService.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.scope.UserDAO;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+//@Transactional(propagation = Propagation.REQUIRED , rollbackFor = Exception.class)
+@Transactional(propagation = Propagation.NOT_SUPPORTED , readOnly = true )
+public class UserService &#123;
+
+    public String createUser()&#123;
+        //打开事务
+        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
+        //提交事务
+        //catch块中回滚事务 - RuntimeException
+        return &quot;success&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">AOPRunner.java
+package com.imooc.spring.aop;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class AOPRunner &#123;
+    public static void main(String[] args) &#123;
+        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:aop.xml&quot;);
+        UserService userService1 = (UserService)ctx.getBean(&quot;userService&quot;);
+        userService1.createUser();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">aop.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/context
+ http://www.springframework.org/schema/context/spring-context.xsd
+ http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd
+ http://www.springframework.org/schema/aop
+ http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
+    &lt;!-- 定义类被Spring IOC容器管理 --&gt;
+    &lt;bean name=&quot;sampleAspect&quot; class=&quot;com.imooc.spring.aop.SampleAspect&quot;&gt;&lt;/bean&gt;
+    &lt;bean name=&quot;userService&quot; class=&quot;com.imooc.spring.aop.UserService&quot;&gt;&lt;/bean&gt;
+    &lt;!-- 配置Spring AOP --&gt;
+    &lt;aop:config&gt;
+        &lt;!-- 配置过程中引用切面类  sampleAspect是切面 扩展--&gt;
+        &lt;aop:aspect ref=&quot;sampleAspect&quot;&gt;
+            &lt;!-- PointCut(切点) 限制了切面应用的范围 ↓↓aop作用了哪些方法上↓↓--&gt;
+            &lt;aop:pointcut id=&quot;samplePC&quot; expression=&quot;execution(* com.imooc.spring.aop.*Service.create*(..))&quot; /&gt;
+            &lt;!-- 定义通知 --&gt;
+            &lt;!-- 前置通知 method=对应着SampleAspect.java中的doBefore--&gt;
+            &lt;aop:before pointcut-ref=&quot;samplePC&quot; method=&quot;doBefore&quot;/&gt;
+            &lt;!-- 后置通知 --&gt;
+            &lt;aop:after pointcut-ref=&quot;samplePC&quot; method=&quot;doAfter&quot;/&gt;
+            &lt;!-- 返回后通知，注意：返回后通知需要增加retruning属性
+            指向doAfterReturning的名为ret的参数，使用ret参数获取方法的返回值 --&gt;
+            &lt;aop:after-returning method=&quot;doAfterReturning&quot; pointcut-ref=&quot;samplePC&quot; returning=&quot;ret&quot;/&gt; 
+&lt;!--3.ret是返回通知里面的参数 public void doAfterReturning(JoinPoint jp , Object ret)--&gt;
+             &lt;!-- 异常通知 --&gt;
+&lt;!--public void doAfterThrowing(JoinPoint jp , Throwable t)中的Throwable的参数是目标方法所抛出的异常  throwing=&quot;t&quot;相关噢~ --&gt;
+            &lt;aop:after-throwing method=&quot;doAfterThrowing&quot; pointcut-ref=&quot;samplePC&quot; throwing=&quot;t&quot;/&gt;
+            --&gt;
+            &lt;!-- ★★★★ 环绕通知 ★★★★ --&gt;
+            &lt;aop:around method=&quot;doAround&quot; pointcut-ref=&quot;samplePC&quot;/&gt;
+        &lt;/aop:aspect&gt;
+    &lt;/aop:config&gt;
+&lt;/beans&gt;
+</code></pre>
+<h3 id="请介绍Spring的声明式事务"><a href="#请介绍Spring的声明式事务" class="headerlink" title="请介绍Spring的声明式事务"></a>请介绍Spring的声明式事务</h3><ul>
+<li>在执行方法前自动开启的事务</li>
+<li>声明式事务式指利用AOP自动提交、回滚数据库事务</li>
+<li>声明式事务式规则进入方法打开事务，成功提交，<strong>运行时异常</strong>回滚</li>
+<li><code>@Transactional</code>是声明式事务的注解 放在类上则所有方法执行此事务 放在方法上则单独方法执行此事务</li>
+<li>propagation &#x3D; 确定方法是否启动事务[Propagation.REQUIRED]执行的方法自动使用事务<br>rollbackFor &#x3D; Exception.class在什么时机进行回滚  readOnly &#x3D; true 方法只读</li>
+<li>通过程序打开或关闭事务属于<strong>编程式事务</strong></li>
+</ul>
+<pre><code class="java">UserService.java
+package com.imooc.spring.aop;
+
+import com.imooc.spring.scope.UserDAO;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+//@Transactional(propagation = Propagation.REQUIRED , rollbackFor = Exception.class)
+@Transactional(propagation = Propagation.NOT_SUPPORTED , readOnly = true )
+public class UserService &#123;
+    public String createUser()&#123;
+        //进入方法 → 打开事务
+        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
+        //方法执行成功 → 提交事务
+        
+        //方法抛出运行时异常 → 回滚事务
+        //catch块中回滚事务 - RuntimeException[及其子类会自动回滚]
+        return &quot;success&quot;;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="使用SpringMVC实现REST风格"><a href="#使用SpringMVC实现REST风格" class="headerlink" title="使用SpringMVC实现REST风格"></a>使用SpringMVC实现REST风格</h3><ul>
+<li>REST(表述性状态传递)以URL表示要访问的资源</li>
+<li><strong>GET&#x2F;POST&#x2F;PUT&#x2F;DELETE</strong>对应<strong>查询、新增、更新、删除</strong>操作[浏览器不支持PUT和DELETE操作]<br><span style = "color:red"><strong>[用GET对应查询操作(写)、用POST对应新增、更新、删除操作(写)]</strong></span></li>
+<li>REST风格<strong>只响应的数据</strong>，通常是以JSON形式体现</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;interview-springmvc&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
+            &lt;version&gt;5.1.3.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+            &lt;version&gt;1.2.54&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.1.0&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">web/WEB-INF/web.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
+         version=&quot;4.0&quot;&gt;
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;spring&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
+            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
+        &lt;/init-param&gt;
+    &lt;/servlet&gt;
+
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;spring&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+&lt;/web-app&gt;
+</code></pre>
+<pre><code class="xml">interview-springmvc\src\main\resources\applicationContext.xml
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
+       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
+    &lt;!-- 配置扫描的包 --&gt;
+    &lt;context:component-scan base-package=&quot;com.imooc.interview&quot;/&gt;
+    &lt;!-- 注册HandlerMapper、HandlerAdapter两个映射类 开启注解模式--&gt;
+    &lt;mvc:annotation-driven/&gt;
+    &lt;!-- 访问静态资源 --&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+    &lt;mvc:interceptors&gt;
+        &lt;mvc:interceptor&gt;
+            &lt;mvc:mapping path=&quot;/**&quot;/&gt; //所有URL不分层级和格式
+            &lt;bean class=&quot;com.imooc.interview.rest.MyInterceptor&quot;/&gt;
+        &lt;/mvc:interceptor&gt;
+    &lt;/mvc:interceptors&gt;
+&lt;/beans&gt;
+</code></pre>
+<pre><code class="java">Employee.java
+package com.imooc.interview.rest;
+
+public class Employee &#123;
+    private String name;
+    private int age;
+    private String department;
+
+    public Employee(String name, int age, String department) &#123;
+        this.name = name;
+        this.age = age;
+        this.department = department;
+    &#125;
+
+    public String getName() &#123;
+        return name;
+    &#125;
+
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+
+    public int getAge() &#123;
+        return age;
+    &#125;
+
+    public void setAge(int age) &#123;
+        this.age = age;
+    &#125;
+
+    public String getDepartment() &#123;
+        return department;
+    &#125;
+
+    public void setDepartment(String department) &#123;
+        this.department = department;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">RestfulController.java
+package com.imooc.interview.rest;
+
+import com.alibaba.fastjson.JSON;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+@Controller //在IOC容器初始化的情况下自动扫描这个类进行加载并且通知IOC容器 这个是一个MVC中的控制类
+//@RestController
+public class RestfulController &#123; //&#123;XXX&#125;是路径变量 随时产生变化的 注解@PathVariable(&quot;DEPT&quot;)
+    @GetMapping(&quot;/emp/list/&#123;DEPT&#125;&quot;) //响应GET请求 前面的是响应URL输入这个的时候响应下面的方法
+    @ResponseBody
+    public String list(@PathVariable(&quot;DEPT&quot;) String department) &#123;
+        List&lt;Employee&gt; list = new ArrayList&lt;Employee&gt;();
+        if (department.equals(&quot;RESEARCH&quot;)) &#123;
+            list.add(new Employee(&quot;JAMES&quot;, 38, &quot;RESEARCH&quot;));
+            list.add(new Employee(&quot;ANDY&quot;, 23, &quot;RESEARCH&quot;));
+            list.add(new Employee(&quot;SMITH&quot;, 31, &quot;RESEARCH&quot;));
+        &#125;
+        return JSON.toJSONString(list);//只返回纯粹的JSON数据 只返回页面名称
+        //如何只返回数据不跳转页面呢？ 用 @RespondBoday 直接将返回的数据输出到客户端
+//但是可以简化使用 @RestController 所有的可以直接不用写 @RespondBoday
+    &#125;
+&#125;//前端使用AJAX技术接收数据
+</code></pre>
+<h3 id="请说明SpringMVC拦截器的作用-底层就是AOP面向切面编程技术"><a href="#请说明SpringMVC拦截器的作用-底层就是AOP面向切面编程技术" class="headerlink" title="请说明SpringMVC拦截器的作用 [底层就是AOP面向切面编程技术]"></a>请说明SpringMVC拦截器的作用 [底层就是AOP面向切面编程技术]</h3><ul>
+<li>SpringMVC拦截器用于对控制器方法进行前置、后置处理</li>
+<li>拦截器的底层实现技术是AOP(面向切面编程)</li>
+<li>拦截器必须实现HandlerInterceptor接口</li>
+</ul>
+<pre><code class="java">★★ 上一个代码通用 ★★
+interview-springmvc\src\main\java\com\imooc\interview\rest\MyInterceptor.java
+package com.imooc.interview.rest;
+
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.logging.Logger;
+
+public class MyInterceptor implements HandlerInterceptor &#123;
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(&quot;进入 preHandle 方法...&quot; + request.getRequestURL().toString());
+        return true;
+    &#125;
+ 
+
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+        System.out.println(&quot;进入 postHandle 方法...&quot; + request.getRequestURL().toString());
+    &#125;
+ 
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+        System.out.println(&quot;进入 afterCompletion 方法...&quot; + request.getRequestURL().toString());
+    &#125;
+&#125;
+====================================================================================
+查看上面的applicationContext.xml
+&lt;bean&gt;
+&lt;!-- 访问静态资源 --&gt;
+    &lt;mvc:default-servlet-handler/&gt;
+    &lt;mvc:interceptors&gt;
+        &lt;mvc:interceptor&gt;
+            &lt;mvc:mapping path=&quot;/**&quot;/&gt; //所有URL不分层级和格式
+            &lt;bean class=&quot;com.imooc.interview.rest.MyInterceptor&quot;/&gt; 
+            //对上面这个类进行处理和拦截
+        &lt;/mvc:interceptor&gt;
+    &lt;/mvc:interceptors&gt;
+&lt;/bean&gt;
+</code></pre>
+<h3 id="SpringMVC的执行流程"><a href="#SpringMVC的执行流程" class="headerlink" title="SpringMVC的执行流程"></a>SpringMVC的执行流程</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/bfd26ff021aa3755cfc43c62bfa86e0b3ef77144/data/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B.jpg"></p>
+<h3 id="说明Mybatis的开发过程"><a href="#说明Mybatis的开发过程" class="headerlink" title="说明Mybatis的开发过程"></a>说明Mybatis的开发过程</h3><blockquote>
+<p>案例沿用之前的scott.sql表</p>
+</blockquote>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+             
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;interview-mybatis&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+            &lt;version&gt;3.4.6&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;5.1.46&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">mybatis.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+    &lt;settings&gt;
+        &lt;setting name=&quot;cacheEnabled&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+    &lt;environments default=&quot;development&quot;&gt;
+        &lt;environment id=&quot;development&quot;&gt;
+            &lt;transactionManager type=&quot;JDBC&quot; /&gt;
+            &lt;!-- 配置数据库连接信息 --&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt; &lt;!--数据库连接池的方式--&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot; /&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/scott&quot; /&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot; /&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot; /&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;mappers&gt;
+        &lt;mapper resource=&quot;mapper/emp.xml&quot;&gt;&lt;/mapper&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">Employee.java
+package com.imooc.interview.mybatis.entity;
+
+import java.io.Serializable;
+import java.util.Date;
+
+public class Employee implements Serializable &#123;
+    private Integer empno;
+    private String ename;
+    private String job;
+    private Integer mgr;
+    private Date hiredate;
+    private Float sal;
+    private Float comm;
+    private Integer deptno;
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="xml">用于查询的配置文件 emp.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;!-- 命名空间是个虚拟的类 --&gt;
+&lt;mapper namespace=&quot;com.imooc.interview.mybatis.mapper.EmpMapper&quot;&gt; 
+    &lt;cache size=&quot;512&quot; eviction=&quot;FIFO&quot; flushInterval=&quot;60000&quot; readOnly=&quot;true&quot;/&gt;
+    &lt;select id=&quot;findAll&quot; resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;false&quot;&gt;
+        select * from emp
+    &lt;/select&gt;
+&lt;!-- 类型是int 把传入的int代入到#&#123;value&#125;中 --&gt;
+    &lt;select id=&quot;findById&quot; parameterType=&quot;int&quot; 
+            resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;true&quot;&gt;
+        select * from emp where empno = #&#123;value&#125;
+&lt;!--查询数据 根据数据自动创建Employee对象 根据字段名把值一一的设置到属性中--&gt;
+&lt;!--记得写完以后再mybatis.xml中注册 通知mybatis 有个&lt;mapper resource=&quot;mapper/emp.xml&quot;&gt;--&gt;
+&lt;!--至此mybatis的配置全部完成 --&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">MybatisRunner.java
+package com.imooc.interview.mybatis.entity;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import java.io.InputStream;
+
+public class MybatisRunner &#123;
+    public static void main(String[] args) &#123;
+        //mybatis的配置文件 核心配置文件↓
+        String resource = &quot;mybatis.xml&quot;;
+        InputStream is = MybatisRunner.class.getClassLoader().getResourceAsStream(resource);
+        //构建sqlSession的工厂(对Mybatis进行解析)  build(is)是初始化
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
+//com.imooc.interview.mybatis.mapper.EmpMapper前面是命名空间
+        //.findById对应着select的Id
+        String statement = &quot;com.imooc.interview.mybatis.mapper.EmpMapper.findById&quot;;
+        SqlSession session = sessionFactory.openSession();
+//selectOne获取唯一的查询结果  之前定义了要传入整数int
+        Employee emp1 = session.selectOne(statement, 7566);
+        System.out.println(emp1);
+        session.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Mybatis的缓存机制"><a href="#Mybatis的缓存机制" class="headerlink" title="Mybatis的缓存机制"></a>Mybatis的缓存机制</h3><h6 id="把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率"><a href="#把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率" class="headerlink" title="把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率"></a>把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率</h6><ul>
+<li><p>Mybatis存在两级缓存</p>
+<ul>
+<li><p>一级缓存与SqlSession会话绑定，默认开启 [巨大的HashMap] [默认开启]</p>
+</li>
+<li><p>二级缓存是应用全局缓存，所有SqlSession共享 [分布式数据库等]</p>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">//一级缓存验证结果
+Employee emp1 = session.selectOne(statement, 7566);
+Employee emp2 = session.selectOne(statement, 7566);
+System.out.println(emp1);
+System.out.println(emp2);
+======================打印结果========================
+com.imooc.interview.mybatis.entity.Employee@6a41eaa2
+com.imooc.interview.mybatis.entity.Employee@6a41eaa2
+从缓存中将这个7566提出来，所以对象是一样的
+随着session的关闭 → session.close(); 一级缓存也随着消失; 输出的对象结果就不相同了
+</code></pre>
+<pre><code class="java">//二级缓存验证结果  让7566全局缓存 默认是不开启的 需要在mapper中开启 → emp.xml
+//在缓存中最大容纳512个对象 缓存多余清除策略[FIFO先进先出算法 LRU访问最少的对象清除] 
+//flushInterval=&gt;时间间隔定时清理缓存[毫秒数 每60秒]
+&lt;cache size=&quot;512&quot; eviction=&quot;FIFO&quot; flushInterval=&quot;60000&quot; readOnly=&quot;true&quot;/&gt;
+//若对全部查找 则不适合使用缓存 因为每次都变化 这样就可以设置useCache=&quot;false&quot;
+&lt;select id=&quot;findAll&quot; resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;false&quot;&gt;
+//对数据进行新增、修改、删除也会对缓存进行强制更新 上面设置 readOnly=&quot;true&quot; 保存在缓存中的数据都是只读的
+//二级缓存要对工具类Employee进行接口的实现
+public class Employee implements Serializable &#123;...&#125;
+</code></pre>
+<h3 id="Spring、SpringMVC与SpringBoot的区别"><a href="#Spring、SpringMVC与SpringBoot的区别" class="headerlink" title="Spring、SpringMVC与SpringBoot的区别"></a>Spring、SpringMVC与SpringBoot的区别</h3><ul>
+<li>Spring是所有应用的基础，提供了IOC与AOP特性实现对对象轻松的管理</li>
+<li>SpringMVC是Spring的子项目用于提供Web支持 替代传统的Servlet [<u>提高兼容性和可维护性</u>]</li>
+<li>SpringBoot是Spring体系的敏捷开发框架，提高了开发效率 [<u>对Spring整个体系都有良好的支撑</u>]<ul>
+<li>Spring Framework是整个Spring的框架基础</li>
+<li>Spring Cloud对分布式架构与微服务提供了良好的支持</li>
+<li>Spring Data简化关系型数据库 非关系型数据库 大数据源</li>
+<li>Spring Batch提供高效率的批处理任务</li>
+<li>Spring Security超级牛逼的安全框架 登录验证之类的</li>
+<li>Spring Amqp消息队列进行支持 统一的接口进行适配</li>
+<li>Spring Mobile手机开发特性</li>
+</ul>
+</li>
+</ul>
+<h3 id="SpringBoot面试题"><a href="#SpringBoot面试题" class="headerlink" title="SpringBoot面试题"></a>SpringBoot面试题</h3><ul>
+<li><p>Spring Initializr是创建SpringBoot Project的唯一方法吗？</p>
+<blockquote>
+<p>否！也可以用Maven进行手动创建，也可以官网创建</p>
+</blockquote>
+</li>
+<li><p>SpringBoot支持几种配置文件？</p>
+<blockquote>
+<p>只有两种</p>
+<pre><code class="xml">一种
+server.port=80
+debug=false
+server.servlet.context-path=/myspringboot
+logging.file=d:/logs/msb.log
+spring.mvc.date-format=yyyy-MM-dd
+</code></pre>
+<pre><code class="xml">二种 [按层级进行区分 yml 对程序维护有很大帮助]
+debug:false
+server:
+  port:8000
+  servlet:
+    context-path:/
+spring:
+  mvc:
+    date-format:yyyy-MM-dd
+</code></pre>
+</blockquote>
+</li>
+<li><p>请列举至少五个SpringBoot中配置选项</p>
+<table>
+<thead>
+<tr>
+<th>配置名称</th>
+<th>默认值</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>server.port</td>
+<td>8080</td>
+<td>端口号</td>
+</tr>
+<tr>
+<td>server.servlet.context-path</td>
+<td>&#x2F;</td>
+<td>设置应用上下文</td>
+</tr>
+<tr>
+<td>logging.file</td>
+<td>无</td>
+<td>日志文件输出路径</td>
+</tr>
+<tr>
+<td>logging.level</td>
+<td>info</td>
+<td>最低日志输出级别</td>
+</tr>
+<tr>
+<td>debug</td>
+<td>false</td>
+<td>开启&#x2F;关闭调试模式</td>
+</tr>
+<tr>
+<td>spring.datasource.*</td>
+<td></td>
+<td>与数据库相关的设置</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h3 id="Maven的构建生命周期"><a href="#Maven的构建生命周期" class="headerlink" title="Maven的构建生命周期"></a>Maven的构建生命周期</h3><table>
+<thead>
+<tr>
+<th align="center">命令</th>
+<th align="center">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">mvn archetype:generate</td>
+<td align="center">创建Maven工程构建</td>
+</tr>
+<tr>
+<td align="center">mvn validate</td>
+<td align="center">验证工程结构</td>
+</tr>
+<tr>
+<td align="center">mvn compile</td>
+<td align="center">编译源代码</td>
+</tr>
+<tr>
+<td align="center">mvn test</td>
+<td align="center">执行测试用例</td>
+</tr>
+<tr>
+<td align="center">mvn package</td>
+<td align="center">项目打包</td>
+</tr>
+<tr>
+<td align="center">mvn install</td>
+<td align="center">安装至本地仓库</td>
+</tr>
+<tr>
+<td align="center">mvn deploy</td>
+<td align="center">发布至远程仓库</td>
 </tr>
 </tbody></table>
 
