@@ -1,0 +1,974 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || 多线程与分布式</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>多线程与分布式 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/4/4
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#1bccbc>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h1 id="多线程与分布式-周介绍"><a href="#多线程与分布式-周介绍" class="headerlink" title="多线程与分布式 [周介绍]"></a>多线程与分布式 [周介绍]</h1><ul>
+<li><h6 id="线程池的基本使用、特点、注意点"><a href="#线程池的基本使用、特点、注意点" class="headerlink" title="线程池的基本使用、特点、注意点"></a>线程池的基本使用、特点、注意点</h6></li>
+<li><h6 id="ThreadLoacal的基本使用、原理和注意事项"><a href="#ThreadLoacal的基本使用、原理和注意事项" class="headerlink" title="ThreadLoacal的基本使用、原理和注意事项"></a>ThreadLoacal的基本使用、原理和注意事项</h6></li>
+<li><h6 id="分布式基础、核心概念"><a href="#分布式基础、核心概念" class="headerlink" title="分布式基础、核心概念"></a>分布式基础、核心概念</h6></li>
+<li><h6 id="docker的下载、安装和基本命令"><a href="#docker的下载、安装和基本命令" class="headerlink" title="docker的下载、安装和基本命令"></a>docker的下载、安装和基本命令</h6></li>
+<li><h6 id="独立制作docker容器"><a href="#独立制作docker容器" class="headerlink" title="独立制作docker容器"></a>独立制作docker容器</h6></li>
+<li><h6 id="Nginx的安装、基本使用和使用命令"><a href="#Nginx的安装、基本使用和使用命令" class="headerlink" title="Nginx的安装、基本使用和使用命令"></a>Nginx的安装、基本使用和使用命令</h6></li>
+<li><h6 id="使用Nginx搭建文件服务"><a href="#使用Nginx搭建文件服务" class="headerlink" title="使用Nginx搭建文件服务"></a>使用Nginx搭建文件服务</h6></li>
+<li><h6 id="消息队列RabbitMQ的核心概念queue、message和exchange"><a href="#消息队列RabbitMQ的核心概念queue、message和exchange" class="headerlink" title="消息队列RabbitMQ的核心概念queue、message和exchange"></a>消息队列RabbitMQ的核心概念queue、message和exchange</h6></li>
+<li><h6 id="RabbitMQ的四种交换机模式"><a href="#RabbitMQ的四种交换机模式" class="headerlink" title="RabbitMQ的四种交换机模式"></a>RabbitMQ的四种交换机模式</h6></li>
+<li><h6 id="SpringBoot整合RabbitMQ案例"><a href="#SpringBoot整合RabbitMQ案例" class="headerlink" title="SpringBoot整合RabbitMQ案例"></a>SpringBoot整合RabbitMQ案例</h6></li>
+</ul>
+<h2 id="线程池-——-治理线程的法宝"><a href="#线程池-——-治理线程的法宝" class="headerlink" title="线程池 —— 治理线程的法宝"></a>线程池 —— 治理线程的法宝</h2><ul>
+<li>线程池的<strong>自我介绍</strong></li>
+<li><strong>创建</strong>和停止线程池</li>
+<li><strong>常见线程池</strong>的特点和用法</li>
+<li>任务太多，怎么<strong>拒绝</strong></li>
+<li>钩子方法，给线程池加点料</li>
+<li>实现<strong>原理、源码分析</strong></li>
+<li>使用线程池的注意点</li>
+</ul>
+<h5 id="线程池的自我介绍"><a href="#线程池的自我介绍" class="headerlink" title="线程池的自我介绍"></a>线程池的自我介绍</h5><ul>
+<li>线程池的重要性 [可以复用我们的线程]</li>
+<li>什么是”池” – 软件中的”池”，可以理解为计划经济</li>
+<li>如果不适用线程池，每个任务都新开一个线程处理<ul>
+<li>一个线程</li>
+<li>for循环创建线程</li>
+<li>当任务数量上升到1000<br><code>这样开销太大，我们希望有固定数量的线程，来执行这1000个线程，这样就避免了反复创建并销毁线程所带来的开销问题</code>[多了会报错 内存不足异常]</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">threadpool/ForLoop.java
+package threadpool;
+/**
+ * 描述：     TODO
+ */
+public class ForLoop &#123;
+
+    public static void main(String[] args) &#123;
+        for (int i = 0; i &lt; 10; i++) &#123;
+            Thread thread = new Thread(new Task());
+            thread.start();
+        &#125;
+    &#125;
+
+    static class Task implements Runnable &#123;
+        @Override
+        public void run() &#123;
+            System.out.println(&quot;执行了任务&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="为什么要使用线程池"><a href="#为什么要使用线程池" class="headerlink" title="为什么要使用线程池"></a>为什么要使用线程池</h5><ul>
+<li>问题一：反复创建线程开销大</li>
+<li>问题二：过多的线程会占用太多内存</li>
+<li>解决以上两个问题的思路<ul>
+<li>用少量的线程——避免内存占用过多</li>
+<li>让这部分线程都保持工作，且可以反复执行任务——避免生命周期的损耗</li>
+</ul>
+</li>
+</ul>
+<h5 id="线程池的好处"><a href="#线程池的好处" class="headerlink" title="线程池的好处"></a>线程池的好处</h5><ul>
+<li>加快响应速度</li>
+<li>合理利用CPU和内存</li>
+<li>统一管理</li>
+</ul>
+<h5 id="线程池使用应用的场合"><a href="#线程池使用应用的场合" class="headerlink" title="线程池使用应用的场合"></a>线程池使用应用的场合</h5><ul>
+<li>服务器(Tomcat)接收到大量请求时，使用线程池技术是非常合适的，它可以大大减少现成的创建和销毁次数，提高服务器的工作效率</li>
+<li>实际上，在开发中，如果需要创建5个以上的线程，那么就可以使用线程池来管理</li>
+</ul>
+<h3 id="线程增减的时机"><a href="#线程增减的时机" class="headerlink" title="线程增减的时机"></a>线程增减的时机</h3><h5 id="创建和停止线程池"><a href="#创建和停止线程池" class="headerlink" title="创建和停止线程池"></a>创建和停止线程池</h5><ul>
+<li>线程池<strong>构造方法的参数</strong></li>
+<li>线程池应该<strong>手动创建</strong>还是自动创建</li>
+<li>线程池里的<strong>线程数量</strong>设定为多少比较合适</li>
+<li><strong>停止</strong>线程池的方法</li>
+</ul>
+<h5 id="线程池构造方法的参数"><a href="#线程池构造方法的参数" class="headerlink" title="线程池构造方法的参数"></a>线程池构造方法的参数</h5><table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>corePoolSize</td>
+<td>int</td>
+<td>核心线程数</td>
+</tr>
+<tr>
+<td>maxPoolSize</td>
+<td>int</td>
+<td>最大线程数</td>
+</tr>
+<tr>
+<td>keepAliveTime</td>
+<td>long</td>
+<td>保持存活时间</td>
+</tr>
+<tr>
+<td>workQueue</td>
+<td>BlockingQueue</td>
+<td>任务存储队列</td>
+</tr>
+<tr>
+<td>threadFactory</td>
+<td>ThreadFactory</td>
+<td>当线程池需要新的线程的时候，会使用threadFactory来生成新的线程</td>
+</tr>
+<tr>
+<td>Handler</td>
+<td>RejectedExecutionHandler</td>
+<td>由于线程池无法接收你所提交的任务的拒绝策略</td>
+</tr>
+</tbody></table>
+<h5 id="参数中的corePoolSize和maxPoolSize"><a href="#参数中的corePoolSize和maxPoolSize" class="headerlink" title="参数中的corePoolSize和maxPoolSize"></a>参数中的corePoolSize和maxPoolSize</h5><ul>
+<li><p><strong>corePoolSize</strong>指的是核心线程数<br>线程池在完成初始化后，默认情况下，线程池中并没有任何线程，线程池会等待有任务到来时，再创建新的线程去执行任务</p>
+</li>
+<li><p>最大量<strong>maxPoolSize</strong><br>在核心线程数的基础上，格外增加的线程数的上限</p>
+</li>
+</ul>
+<h5 id="添加线程规则"><a href="#添加线程规则" class="headerlink" title="添加线程规则"></a>添加线程规则</h5><ol>
+<li>如果线程数小于corePoolSize，创建一个新线程来运行新任务</li>
+<li>如果线程数等于(或大于) corePoolSize但少于maximumPoolSize，则将任务放入<strong>队列</strong></li>
+<li>如果队列已满，并且线程数小于maxPoolSize，则创建一个<strong>新线程</strong></li>
+<li>如果队列已满，并且线程数大于或等于maxPoolSize，则<strong>拒绝</strong></li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/4cb2755066dc76e6602ff1110cfc24124f38b42f/data/%E6%B7%BB%E5%8A%A0%E7%BA%BF%E7%A8%8B%E8%A7%84%E5%88%99.png"></p>
+<ul>
+<li>是否需要增加线程的判断顺序是：<ul>
+<li>corePoolSize</li>
+<li>workQueue</li>
+<li>maxPoolSize</li>
+</ul>
+</li>
+</ul>
+<h6 id="举个例子"><a href="#举个例子" class="headerlink" title="举个例子"></a><strong>举个例子</strong></h6><ul>
+<li>线程池：核心池大小为5，最大池大小为10，队列为100</li>
+<li>因为线程中的请求最多会创建5个，然后任务将被添加到队列中，直到达到100。当队列已满时，将创建新的线程maxPoolSize，最多到10个线程，如果再来任务，就拒绝</li>
+</ul>
+<h5 id="增减线程的特点"><a href="#增减线程的特点" class="headerlink" title="增减线程的特点"></a>增减线程的特点</h5><ul>
+<li>通过设置corePoolSize和maximumPoolSize相同，就可以创建固定大小的线程池</li>
+<li>线程池<strong>希望保持较小的线程数</strong>，并且只有在负载变得很大时才增加它</li>
+<li>通过设置maximumPoolSize为很高的值，可以允许线程池容纳任意数量的并发任务</li>
+<li>只有在队列填满时才创建多于corePoolSize的线程，如果使用的是无界队列，那么线程数就不会超过corePoolSize</li>
+</ul>
+<h3 id="线程存活时间和工作队列"><a href="#线程存活时间和工作队列" class="headerlink" title="线程存活时间和工作队列"></a>线程存活时间和工作队列</h3><h5 id="keepAliveTime"><a href="#keepAliveTime" class="headerlink" title="keepAliveTime"></a>keepAliveTime</h5><ul>
+<li>如果线程池当前的线程多余corePoolSize，那么如果多余的线程空闲时间超过keepAliveTime，它们就会被终止</li>
+</ul>
+<h5 id="ThreadFactory-用来创建线程"><a href="#ThreadFactory-用来创建线程" class="headerlink" title="ThreadFactory 用来创建线程"></a>ThreadFactory 用来创建线程</h5><ul>
+<li>默认使用Executors.defaultThreadFactory()</li>
+<li>创建出来的线程都在同一个线程组</li>
+<li>如果自己指定ThreadFactory，那么就可以改变线程名、线程组、优先级、是否是守护线程等</li>
+</ul>
+<h5 id="工作队列"><a href="#工作队列" class="headerlink" title="工作队列"></a>工作队列</h5><ul>
+<li>有三种最常见的队列类型<ul>
+<li>直接交接：SynchronousQueue</li>
+<li>无界队列：LinkedBlockingQueue</li>
+<li>有界队列：ArrayBlockingQueue</li>
+</ul>
+</li>
+</ul>
+<h3 id="自动创建线程池的风险"><a href="#自动创建线程池的风险" class="headerlink" title="自动创建线程池的风险"></a>自动创建线程池的风险</h3><h5 id="线程池应该手动创建还是自动创建"><a href="#线程池应该手动创建还是自动创建" class="headerlink" title="线程池应该手动创建还是自动创建"></a>线程池应该手动创建还是自动创建</h5><ul>
+<li>手动创建更好，因为这样可以更加明确线程池的运行规则，避免资源耗尽的风险<br>自动创建线程池(即直接调用JDK封装好的构造方法) 可能会带来哪些问题？</li>
+<li><strong>newFixedThreadPool</strong><ul>
+<li>容易造成大量内存占用，可能会导致OOM</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">threadpool/FixedThreadPoolThread.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class FixedThreadPoolThread &#123;
+    public static void main(String[] args) &#123; //核心线程数量
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            executorService.execute(new Task());
+        &#125;
+    &#125;
+&#125;
+class Task implements Runnable&#123;
+
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        System.out.println(Thread.currentThread().getName());
+    &#125;
+&#125;
+=======================================================================
+pool-1-thread-3
+pool-1-thread-4
+pool-1-thread-1
+pool-1-thread-2
+    
+pool-1-thread-3
+pool-1-thread-1
+pool-1-thread-4
+pool-1-thread-2
+因为核心线程数量只规定了4个 这有这四个线程跑程序
+</code></pre>
+<pre><code class="java">threadpool/FixedThreadPoolOOM.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 演示nexFixedThreadPool出错的情况
+ */
+public class FixedThreadPoolOOM &#123;
+    private static ExecutorService executorService = Executors.newFixedThreadPool(1);
+
+    public static void main(String[] args) &#123;
+        for (int i = 0; i &lt; Integer.MAX_VALUE; i++)&#123;
+            executorService.execute(new SubThread());
+        &#125;
+    &#125;
+&#125;
+class SubThread implements Runnable&#123;
+
+    @Override
+    public void run() &#123;
+        try&#123;//一直睡觉 不让它结束
+            Thread.sleep(1000000000);
+        &#125;catch (InterruptedException e)&#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+=======================================================================
+报错：java.lang.OutOfMemoryError:GC overhead limilt exceeded
+</code></pre>
+<ul>
+<li><strong>newSingleThreadExecutor</strong> [单独的线程]<ul>
+<li>当请求堆积的时候，可能会占用大量的内存</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">threadpool/SingleThreadExecutor.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class SingleThreadExecutor &#123;
+    public static void main(String[] args) &#123;
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            executorService.execute(new Task());
+        &#125;
+    &#125;
+&#125;
+=======================================================================
+pool-1-thread-1
+pool-1-thread-1
+pool-1-thread-1
+pool-1-thread-1
+pool-1-thread-1
+</code></pre>
+<ul>
+<li><strong>CachedThreadPool</strong> [可缓存线程池]<ul>
+<li>特点：具有自动回收多余线程的功能</li>
+<li>弊端在于第二个参数maximumPoolSize被设置为了Integer.MAX_VALUE, 这可能会创建数量非常多的线程，甚至导致OOM</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">threadpool/CachedThreadPool.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class CachedThreadPool &#123;
+    public static void main(String[] args) &#123;
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            executorService.execute(new Task());
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>newScheduledThreadPool</strong> [跟时间相关的]</li>
+</ul>
+<pre><code class="java">threadpool/ScheduledThreadPool.java
+package threadpool;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class ScheduledThreadPool &#123;
+    public static void main(String[] args) &#123;
+        ScheduledExecutorService threadPool = Executors.newScheduledThreadPool(10);
+        threadPool.schedule(new Task(), 5, TimeUnit.SECONDS);
+        threadPool.scheduleAtFixedRate(new Task(), 1, 3, TimeUnit.SECONDS);//每隔3s运行
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>正确的创建线程池的方法<ul>
+<li><strong>根据不同的业务场景</strong>，设置线程池参数</li>
+<li>比如：内存有多大，给线程取什么名字等等</li>
+</ul>
+</li>
+</ul>
+<h5 id=""><a href="#" class="headerlink" title=""></a></h5><h3 id="线程池里的线程数量设定为多少比较合适？"><a href="#线程池里的线程数量设定为多少比较合适？" class="headerlink" title="线程池里的线程数量设定为多少比较合适？"></a>线程池里的线程数量设定为多少比较合适？</h3><ul>
+<li><strong>CPU密集型</strong>(加密、计算hash等)：最佳线程数为CPU核心数的1-2倍左右</li>
+<li><strong>耗时IO型</strong>(读写数据库、文件、网络读写等)：最佳线程数一般会大于CPU核心数很多倍<br>参考Brain Goetz推荐的计算方法：<br><span style = "color:red"><strong>线程数 &#x3D; CPU核心数 × (1 + 平均等待时间 &#x2F; 平均工作时间)</strong></span></li>
+</ul>
+<h3 id="对比各种线程池的特点"><a href="#对比各种线程池的特点" class="headerlink" title="对比各种线程池的特点"></a>对比各种线程池的特点</h3><h5 id="常见的线程池的特点"><a href="#常见的线程池的特点" class="headerlink" title="常见的线程池的特点"></a>常见的线程池的特点</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/ee67f47de97062e593b16348ff148cd52f7b7d6e/data/%E5%87%A0%E7%A7%8D%E7%BA%BF%E7%A8%8B%E6%B1%A0.jpg"></p>
+<h5 id="以上4种线程池的构造方法的参数"><a href="#以上4种线程池的构造方法的参数" class="headerlink" title="以上4种线程池的构造方法的参数"></a>以上4种线程池的构造方法的参数</h5><table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>FixedThreadPool</th>
+<th>CachedThreadPool</th>
+<th>ScheduledThreadPool</th>
+<th>SingleThreaded</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>corePoolSize</td>
+<td>constructor-arg</td>
+<td>0</td>
+<td>constructor-arg</td>
+<td>1</td>
+</tr>
+<tr>
+<td>maxPoolSize</td>
+<td>same as corePoolSize</td>
+<td>Integer.MAX_VALUE</td>
+<td>Integer.MAX_VALUE</td>
+<td>1</td>
+</tr>
+<tr>
+<td>keepAliveTime</td>
+<td>0 seconds</td>
+<td>60 seconds</td>
+<td>0 seconds</td>
+<td>0 seconds</td>
+</tr>
+</tbody></table>
+<h3 id="阻塞队列分析"><a href="#阻塞队列分析" class="headerlink" title="阻塞队列分析"></a>阻塞队列分析</h3><ul>
+<li>FixedThreadPool和SingleThreadExecutor的Queue是<strong>LinedBlockingQueue</strong>？</li>
+<li>CachedThreadPool使用的是Queue是<strong>SynchronousQueue</strong>？</li>
+<li>ScheduledThreadPool使用延迟队列DelayedWorkQueue</li>
+</ul>
+<h5 id="workStealingPool是JDK1-8加入的"><a href="#workStealingPool是JDK1-8加入的" class="headerlink" title="workStealingPool是JDK1.8加入的"></a>workStealingPool是JDK1.8加入的</h5><ul>
+<li>这个线程池和之前的都有很大不同</li>
+<li>子任务</li>
+<li>窃取 [并行执行]</li>
+</ul>
+<h3 id="如何正确关闭线程池"><a href="#如何正确关闭线程池" class="headerlink" title="如何正确关闭线程池"></a>如何正确关闭线程池</h3><h5 id="停止线程池的正确方法"><a href="#停止线程池的正确方法" class="headerlink" title="停止线程池的正确方法"></a>停止线程池的正确方法</h5><ul>
+<li><strong>shutdown</strong> [再给就拒绝 新的任务不会增加了]</li>
+</ul>
+<pre><code class="java">threadpool/Shutdown.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 演示关闭线程池
+ */
+public class Shutdown &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        //任务往线程池中提交
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            executorService.execute(new ShutDownTask());
+        &#125;
+        Thread.sleep(1500);
+        executorService.shutdown();//绅士的暂停 再去提交的任务就不会增加了
+        executorService.execute(new ShutDownTask());
+    &#125;
+&#125;
+class ShutDownTask implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+            System.out.println(Thread.currentThread().getName());
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+
+=================================================================================
+pool-1-thread-4
+pool-1-thread-9
+pool-1-thread-10
+Exception in thread &quot;main&quot; java.util.concurrent.RejectedExecutionException: Task threadpool.ShutDownTask@61bbe9ba rejected from java.util.concurrent.ThreadPoolExecutor@610455d6[Shutting down, pool size = 10, active threads = 10, queued tasks = 970, completed tasks = 20]
+    at java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2047)
+    at java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:823)
+    at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1369)
+    at threadpool.Shutdown.main(Shutdown.java:18)
+pool-1-thread-8
+pool-1-thread-1
+pool-1-thread-3
+</code></pre>
+<ul>
+<li><strong>isShutdown</strong> [判断是否进入停止状态]</li>
+</ul>
+<pre><code class="java">threadpool/Shutdown.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 演示关闭线程池
+ */
+public class Shutdown &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        //任务往线程池中提交
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            executorService.execute(new ShutDownTask());
+        &#125;
+        Thread.sleep(1500);
+        System.out.println(executorService.isShutdown());//false
+        executorService.shutdown();//绅士的暂停 再去提交的任务就不会增加了
+        System.out.println(executorService.isShutdown());//true 已经结束了
+    &#125;
+&#125;
+class ShutDownTask implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+            System.out.println(Thread.currentThread().getName());
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>isTerminated</strong> [线程停止返回 整个程序执行完毕]</li>
+</ul>
+<pre><code class="java">threadpool/Shutdown.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 演示关闭线程池
+ */
+public class Shutdown &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        //任务往线程池中提交
+        for (int i = 0; i &lt; 100; i++) &#123;
+            executorService.execute(new ShutDownTask());
+        &#125;
+        Thread.sleep(1500);
+        System.out.println(executorService.isShutdown());//false
+        executorService.shutdown();//绅士的暂停 再去提交的任务就不会增加了
+        System.out.println(executorService.isShutdown());//true 已经结束了
+        System.out.println(executorService.isTerminated());
+        Thread.sleep(10000);
+        System.out.println(executorService.isTerminated());
+    &#125;
+&#125;
+class ShutDownTask implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+            System.out.println(Thread.currentThread().getName());
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+==========================================================================
+pool-1-thread-5
+pool-1-thread-10
+false
+true
+false
+pool-1-thread-2
+pool-1-thread-6
+pool-1-thread-6
+pool-1-thread-2
+true
+</code></pre>
+<ul>
+<li><strong>awaitTermination</strong> [测试一段时间内线程会不会完全停止的方法 <u>等待的时间进程被打乱了</u> 等待的时间到了]</li>
+</ul>
+<pre><code class="java">threadpool/Shutdown.java
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 演示关闭线程池
+ */
+public class Shutdown &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        //任务往线程池中提交
+        for (int i = 0; i &lt; 100; i++) &#123;
+            executorService.execute(new ShutDownTask());
+        &#125;
+        Thread.sleep(1500); //七秒钟之内是否完全运行完毕了
+        executorService.shutdown();
+        boolean b = executorService.awaitTermination(7L, TimeUnit.SECONDS);
+        System.out.println(b);
+    &#125;
+&#125;
+class ShutDownTask implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+            System.out.println(Thread.currentThread().getName());
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>shutdownNow</strong> [立刻关闭线程池]</li>
+</ul>
+<pre><code class="java">///正在执行的和不要关闭 正在等待的内容直接返回 如何优雅编写？
+package threadpool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 演示关闭线程池
+ */
+public class Shutdown &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        //任务往线程池中提交
+        for (int i = 0; i &lt; 100; i++) &#123;
+            executorService.execute(new ShutDownTask());
+        &#125;
+        Thread.sleep(1500); //七秒钟之内是否完全运行完毕了
+        executorService.shutdownNow();//暴力关闭线程
+        //这是正在队列中的数据 取了个List集合 都到runnableList里面了 要给它一个交代
+        List&lt;Runnable&gt; runnableList = executorService.shutdownNow();
+    &#125;
+&#125;
+class ShutDownTask implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        try &#123;
+            Thread.sleep(500);
+            System.out.println(Thread.currentThread().getName());
+        &#125; catch (InterruptedException e) &#123;
+            System.out.println(Thread.currentThread().getName()+&quot;被中断了&quot;);
+        &#125;
+    &#125;
+&#125;
+
+=================================================================
+pool-1-thread-6
+pool-1-thread-4
+pool-1-thread-10
+pool-1-thread-8
+pool-1-thread-3被中断了
+pool-1-thread-1被中断了
+pool-1-thread-8被中断了
+pool-1-thread-2被中断了
+</code></pre>
+<h3 id="暂停和恢复线程池"><a href="#暂停和恢复线程池" class="headerlink" title="暂停和恢复线程池"></a>暂停和恢复线程池</h3><ul>
+<li><strong>拒绝时机</strong><ul>
+<li>当Executor关闭时，提交<strong>新任务</strong>会<strong>被拒绝</strong></li>
+<li>以及当Executor对最大线程和工作队列容量使用有限边界并且<strong>已经饱和</strong>时</li>
+</ul>
+</li>
+</ul>
+<h5 id="4种拒绝策略"><a href="#4种拒绝策略" class="headerlink" title="4种拒绝策略"></a>4种拒绝策略</h5><ul>
+<li><strong>AbortPolicy</strong> [直接抛出异常]</li>
+<li><strong>DiscardPolicy</strong> [默默的丢弃]</li>
+<li><strong>DiscardOldestPolicy</strong> [丢弃最老的]</li>
+<li><strong>CallerRunsPolicy</strong> [誰提交任务誰去跑(避免了业务损失 提交任务速度下降 给了线程池缓冲时间)]</li>
+</ul>
+<h5 id="钩子方法，给线程池加点料"><a href="#钩子方法，给线程池加点料" class="headerlink" title="钩子方法，给线程池加点料"></a>钩子方法，给线程池加点料</h5><ul>
+<li>每个任务执行前后</li>
+<li>日志、统计</li>
+<li>代码演示</li>
+</ul>
+<pre><code class="java">threadpool/PauseableThreadPool.java
+package threadpool;
+
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 演示每个任务执行前后放钩子函数
+ */
+public class PauseableThreadPool extends ThreadPoolExecutor &#123;
+    private final ReentrantLock lock = new ReentrantLock();
+    private Condition unpaused = lock.newCondition();
+    private boolean isPaused;
+    public PauseableThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue&lt;Runnable&gt; workQueue) &#123;
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+    &#125;
+
+    public PauseableThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue&lt;Runnable&gt; workQueue, ThreadFactory threadFactory) &#123;
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+    &#125;
+
+    public PauseableThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue&lt;Runnable&gt; workQueue, RejectedExecutionHandler handler) &#123;
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+    &#125;
+
+    public PauseableThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue&lt;Runnable&gt; workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) &#123;
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+    &#125;
+
+    @Override //在执行任务之前都会调用这个函数
+    protected void beforeExecute(Thread t, Runnable r) &#123;
+        super.beforeExecute(t, r);
+        lock.lock();
+        //如果检测到就暂停休息
+        try &#123;
+            while (isPaused) &#123;
+                unpaused.await();
+            &#125;
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            lock.unlock();
+        &#125;
+    &#125;
+
+    private void pause()&#123;
+        lock.lock();
+        try&#123;
+            isPaused = true;
+        &#125;finally &#123;
+            lock.unlock();
+        &#125;
+    &#125;
+    public void resume()&#123;
+        lock.lock();
+        try&#123;
+            isPaused = false;
+            unpaused.signalAll(); //唤醒全部
+        &#125;finally &#123;
+            lock.unlock();
+        &#125;
+    &#125;
+
+    public static void main(String[] args) throws InterruptedException &#123;
+        PauseableThreadPool pauseableThreadPool = new PauseableThreadPool(10, 20, 10l,
+                TimeUnit.SECONDS, new LinkedBlockingQueue&lt;&gt;());
+        Runnable runnable = new Runnable() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(&quot;我被执行&quot;);
+                try &#123;
+                    Thread.sleep(10);
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;;
+        for (int i = 0; i &lt; 10000; i++) &#123;
+            pauseableThreadPool.execute(runnable);
+        &#125;
+            Thread.sleep(1500);
+            pauseableThreadPool.pause();
+            System.out.println(&quot;线程池被暂停了&quot;);
+            Thread.sleep(1500);
+            pauseableThreadPool.resume();
+            System.out.println(&quot;线程池被恢复了&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="线程池实现复用的原因"><a href="#线程池实现复用的原因" class="headerlink" title="线程池实现复用的原因"></a>线程池实现复用的原因</h3><ul>
+<li>线程池组成部分<ul>
+<li>线程池管理器</li>
+<li>工作线程</li>
+<li>任务队列</li>
+<li>任务接口(Task)</li>
+</ul>
+</li>
+</ul>
+<h5 id="Executor家族"><a href="#Executor家族" class="headerlink" title="Executor家族"></a>Executor家族</h5><ul>
+<li><p>线程池、ThreadPoolExecutor、ExecutorService、Executor、Executors等这么多和线程池相关的类，都是什么关系？</p>
+<p>Executor ← ExecutorService ← AbstractExecutorService ← ThreadPoolExecutor</p>
+</li>
+</ul>
+<h5 id="线程池实现任务复用的原理"><a href="#线程池实现任务复用的原理" class="headerlink" title="线程池实现任务复用的原理"></a>线程池实现任务复用的原理</h5><ul>
+<li>相同线程执行不同任务</li>
+</ul>
+<h3 id="线程池状态和使用注意点"><a href="#线程池状态和使用注意点" class="headerlink" title="线程池状态和使用注意点"></a>线程池状态和使用注意点</h3><h5 id="线程池状态"><a href="#线程池状态" class="headerlink" title="线程池状态"></a>线程池状态</h5><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RUNNING</td>
+<td>接收新任务并处理排队任务</td>
+</tr>
+<tr>
+<td>SHUTDOWN</td>
+<td>不接受新任务，但处理排队任务</td>
+</tr>
+<tr>
+<td>STOP</td>
+<td>不接受新任务，也不处理排队任务，并中断正在进行的任务</td>
+</tr>
+<tr>
+<td>TIDYING</td>
+<td>所有任务都已终止，workerCount为零时，线程会转换到TIDYING状态，并将运行terminate()钩子方法</td>
+</tr>
+<tr>
+<td>TERMINATED</td>
+<td>terminate()运行完成</td>
+</tr>
+</tbody></table>
+<h5 id="使用线程池的注意点"><a href="#使用线程池的注意点" class="headerlink" title="使用线程池的注意点"></a>使用线程池的注意点</h5><ul>
+<li>避免任务<strong>堆积</strong></li>
+<li>避免线程数<strong>过度增加</strong></li>
+<li>排查<strong>线程泄露</strong></li>
+</ul>
+<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><p>ThreadLocal类用来提供线程内部的局部变量。这种变量在多线程环境下访问(通过get和set方法访问) 时能保证各个线程的变量相对独立于其他线程内的变量。ThreadLocal实例通常来说都是ptivate static类型的，用于关联线程和线程上下文，它的作用是：提供线程内的局部变量，不同的线程之间不会相互干扰，这种变量在线程的生命周期内起作用，减少同一个线程内多个函数或组件之间一些公共变量传递的复杂性</p>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2024 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>
