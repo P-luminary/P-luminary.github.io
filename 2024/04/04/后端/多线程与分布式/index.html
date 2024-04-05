@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -878,7 +878,531 @@ public class PauseableThreadPool extends ThreadPoolExecutor &#123;
 <li>避免线程数<strong>过度增加</strong></li>
 <li>排查<strong>线程泄露</strong></li>
 </ul>
-<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><p>ThreadLocal类用来提供线程内部的局部变量。这种变量在多线程环境下访问(通过get和set方法访问) 时能保证各个线程的变量相对独立于其他线程内的变量。ThreadLocal实例通常来说都是ptivate static类型的，用于关联线程和线程上下文，它的作用是：提供线程内的局部变量，不同的线程之间不会相互干扰，这种变量在线程的生命周期内起作用，减少同一个线程内多个函数或组件之间一些公共变量传递的复杂性</p>
+<h2 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h2><h6 id="ThreadLocal的两个作用"><a href="#ThreadLocal的两个作用" class="headerlink" title="ThreadLocal的两个作用"></a>ThreadLocal的两个作用</h6><ul>
+<li>让某个需要用到的对象在<strong>线程间隔离</strong></li>
+<li>在任何方法中都可以<strong>轻松获取</strong>到该对象 .get</li>
+</ul>
+<p>ThreadLocal类用来提供线程内部的局部变量。这种变量在多线程环境下访问(通过get和set方法访问) 时能保证各个线程的变量相对独立于其他线程内的变量。ThreadLocal实例通常来说都是ptivate static类型的，用于关联线程和线程上下文，它的作用是：提供线程内的局部变量，不同的线程之间不会相互干扰，这种变量在线程的生命周期内起作用，减少同一个线程内多个函数或组件之间一些公共变量传递的复杂性。</p>
+<ul>
+<li>定义：提供<strong>线程局部</strong>变量；一个线程局部变量在多个线程中，分别由独立的值(副本)</li>
+<li>特点：简单(开箱即用)、快速(无格外开销)、安全(线程安全)</li>
+<li>场景：多线程场景(<strong>资源持有、线程一致性、并发计算、线程安全</strong>等场景)</li>
+<li>实现原理：Java中使用<strong>哈希表</strong>实现</li>
+<li>应用范围：几乎<strong>所有</strong>提供多线程特征的语言</li>
+<li>设计者追求开箱即用的体验</li>
+</ul>
+<h3 id="ThreadLocal-API"><a href="#ThreadLocal-API" class="headerlink" title="ThreadLocal API"></a>ThreadLocal API</h3><ul>
+<li>构造函数 <strong>ThreadLocal<T>()</strong></li>
+<li>初始化 <strong>initialValue()</strong><ul>
+<li>该方法会返回当前线程对应的”初始值”，这是一个<strong>延迟加载</strong>的方法，只有在<strong>调用get</strong>的时候，才会触发</li>
+<li>当线程<strong>第一次使用get</strong>方法访问变量时，将调用此方法</li>
+<li>每个线程最多调用<strong>一次</strong>此方法，但如果已经调用了remove()后，在调用get()，则可以再次调用此方法</li>
+<li>如果不重写本方法，这个方法会返回null。一般使用匿名内部类的方法来**重写initialValue()**方法</li>
+</ul>
+</li>
+<li>访问器 T <strong>get</strong>()：得到这个线程对应的value，如果是首次调用get()则会调用initialize来得到这个值 &#x2F;&#x2F; void <strong>set</strong>(T t)：为这个线程设置一个新值</li>
+<li>回收 void <strong>remove</strong>(): 删除这个线程</li>
+</ul>
+<h6 id="根据共享对象的生成时机不同，选择initialValue或set来保存对象"><a href="#根据共享对象的生成时机不同，选择initialValue或set来保存对象" class="headerlink" title="根据共享对象的生成时机不同，选择initialValue或set来保存对象"></a>根据共享对象的生成时机不同，选择initialValue或set来保存对象</h6><h6 id="场景一：initialValue"><a href="#场景一：initialValue" class="headerlink" title="场景一：initialValue"></a>场景一：initialValue</h6><ul>
+<li>在ThreadLocal<strong>第一次get</strong>的时候把对象給初始化出来，对象的初始化时机可以<strong>由我们控制</strong></li>
+</ul>
+<h6 id="场景二：set"><a href="#场景二：set" class="headerlink" title="场景二：set"></a>场景二：set</h6><ul>
+<li>如果需要保存到ThreadLocal里的对象的生成时机<strong>不由我们随机控制</strong>，例如拦截器生成的用户信息</li>
+<li>用ThreadLocal.set直接放到我们的ThreadLocal中去，以便后续使用</li>
+</ul>
+<h6 id="使用ThreadLocal带来的好处"><a href="#使用ThreadLocal带来的好处" class="headerlink" title="使用ThreadLocal带来的好处"></a>使用ThreadLocal带来的好处</h6><ul>
+<li>达到<strong>线程安全</strong></li>
+<li><strong>不需要加锁</strong>，提高执行<strong>效率</strong></li>
+<li>更高效地<strong>利用内存、节省开销</strong></li>
+<li><strong>避免传参</strong>的繁琐</li>
+</ul>
+<pre><code class="java">threadpool/ThreadLocalAPI.java
+package threadpool;
+
+public class ThreadLocalAPI &#123;
+    public static ThreadLocal&lt;Long&gt; x = new ThreadLocal()&#123;
+        @Override
+        protected Long initialValue()&#123;
+            System.out.println(&quot;Inital Value run...&quot;);
+            return Thread.currentThread().getId();
+        &#125;
+    &#125;;
+
+    public static void main(String[] args) &#123;
+        new Thread() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(x.get());
+            &#125;
+        &#125;.start(); //调用一次initialValue 每个线程单独拥有一个
+        x.set(101l);
+        x.remove();//清空线程 结果为1 因为 Thread.currentThread().getId();
+        System.out.println(x.get());//发现x.remove被移除了 结果去重新触发initialValue
+        System.out.println(x.get());
+    &#125;
+&#125;
+========================================================================
+Inital Value run...
+Inital Value run...
+20
+1
+1
+
+若注释掉x.remove则会出现结果：
+Inital Value run...
+101
+101
+20
+</code></pre>
+<h3 id="ThreadLocal的4种核心场景"><a href="#ThreadLocal的4种核心场景" class="headerlink" title="ThreadLocal的4种核心场景"></a>ThreadLocal的4种核心场景</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/e19e3d304bdfe6eeda2ae3a7f83a22ad4b9f274c/data/ThreadLocal%E7%9A%844%E7%A7%8D%E6%A0%B8%E5%BF%83%E5%9C%BA%E6%99%AF.png"></p>
+<ul>
+<li><strong>持有资源</strong>——持有线程资源供线程的各个部分使用，全局获取，减少<strong>编程难度</strong></li>
+<li><strong>线程一致</strong>——帮助需要保持线程一致的资源(如数据库事务) 维护一致性，降低<strong>编程难度</strong></li>
+<li><strong>线程安全</strong>——帮助只考虑了单线程的程序库，无缝向多线程场景迁移</li>
+</ul>
+<h3 id="ThreadLocal并发场景分析01"><a href="#ThreadLocal并发场景分析01" class="headerlink" title="ThreadLocal并发场景分析01"></a>ThreadLocal并发场景分析01</h3><h5 id="例1-200QPS压测统计接口"><a href="#例1-200QPS压测统计接口" class="headerlink" title="例1 200QPS压测统计接口"></a>例1 200QPS压测统计接口</h5><ul>
+<li>观察200QPS下Spring框架的执行情况</li>
+<li>目标：理解并发、竞争条件、临界区等概念</li>
+<li>代表场景：交易场景</li>
+</ul>
+<h5 id="并发、竞争条件和临界区"><a href="#并发、竞争条件和临界区" class="headerlink" title="并发、竞争条件和临界区"></a>并发、竞争条件和临界区</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/7abcc6448891d1b18f32a37dcaf90210ca396b58/data/ThreadLocal%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF.jpg" alt="ThreadLocal并发场景"></p>
+<ul>
+<li>并发：多个程序<strong>同时执行</strong></li>
+<li>竞争条件：多个进程(线程)同时访问<strong>同一个内存资源</strong>，最终的执行结果依赖于多个进程执行时的<strong>精确时序</strong></li>
+<li>临界区：访问共享内存的程序片段</li>
+</ul>
+<pre><code class="java">StatController.java
+package com.imooc.springbootlearn;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller //并发可能导致同时 数据错误 需要加★后面的代码
+public class StatController &#123;
+    //★★ 避免用锁 导致当数据多的话线程缓慢
+    static ThreadLocal&lt;Integer&gt; c = new ThreadLocal&lt;Integer&gt;() &#123;
+        @Override
+        protected Integer initialValue() &#123;
+            return 0;
+        &#125;
+    &#125;;
+    //★ 请求并发也要排队synchronized(但是不要轻易使用锁) 应该怎么办 见★★
+    synchronized void _add() throws InterruptedException &#123;
+        Thread.sleep(100);
+        c.set(c.get() + 1);
+    &#125;
+
+    @RequestMapping(&quot;/stat&quot;)
+    public Integer stat() &#123;
+        return c.get();
+    &#125;
+
+    @RequestMapping(&quot;/add&quot;)
+    public Integer add() throws InterruptedException &#123;
+//        Thread.sleep(100l);
+//        c++;
+        _add();
+        return 1;
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">SpringBootlearnApplication.java
+package com.imooc.springbootlearn;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication(scanBasePackages=&quot;com.imooc&quot;)
+public class SpringBootlearnApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SpringBootlearnApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>基于线程池模型synchronize(排队操作很危险)</li>
+<li>用ThreadLocal收集数据很快速且安全</li>
+<li>思考：如何在多个ThreadLocal中收集数据？</li>
+</ul>
+<h3 id="ThreadLocal场景分析——减少同步"><a href="#ThreadLocal场景分析——减少同步" class="headerlink" title="ThreadLocal场景分析——减少同步"></a>ThreadLocal场景分析——减少同步</h3><h5 id="ThreadLocal-lt-T-gt-同步"><a href="#ThreadLocal-lt-T-gt-同步" class="headerlink" title="ThreadLocal&lt; T &gt;同步"></a>ThreadLocal&lt; T &gt;同步</h5><pre><code class="java">StatController.java    高效解决高并发
+package com.imooc.springbootlearn;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.HashSet;
+
+@Controller //并发可能导致同时 数据错误 需要加★后面的代码
+public class StatController &#123;
+
+    static HashSet&lt;Val&lt;Integer&gt;&gt; set = new HashSet&lt;&gt;();
+    synchronized static void addSet(Val&lt;Integer&gt; v)&#123;
+        set.add(v);
+    &#125;
+
+    //★★ 避免用锁 导致当数据多的话线程缓慢
+    static ThreadLocal&lt;Val&lt;Integer&gt;&gt; c = new ThreadLocal&lt;Val&lt;Integer&gt;&gt;() &#123;
+        @Override
+        protected Val&lt;Integer&gt; initialValue() &#123;
+            Val&lt;Integer&gt; v = new Val&lt;&gt;();
+            v.set(0);
+            //set.add(v);//容易产生同步问题 小锁一下
+            return v;
+        &#125;
+    &#125;;
+
+    //★ 请求并发也要排队synchronized(但是不要轻易使用锁) 应该怎么办 见★★
+/*synchronized*/void _add() throws InterruptedException &#123;
+        Thread.sleep(100); //高并发
+        Val&lt;Integer&gt; v = c.get();
+        v.set(v.get() + 1);
+    &#125;
+
+    @RequestMapping(&quot;/stat&quot;)
+    public Integer stat() &#123;
+        return set.stream().map(x -&gt; x.get()).reduce((a, x) -&gt; a + x).get();
+    &#125;
+
+    @RequestMapping(&quot;/add&quot;)
+    public Integer add() throws InterruptedException &#123;
+//        Thread.sleep(100l);
+//        c++;
+        _add();
+        return 1;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Val.java
+package com.imooc.springbootlearn;
+
+public class Val&lt;T&gt;&#123;
+    T v;
+    public void set(T _v)&#123;
+        v = _v;
+    &#125;
+    public T get()&#123;
+        return v;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>完全避免同步(<strong>难</strong>)</li>
+<li>缩小同步范围(<strong>简单</strong>) + ThreadLocal解决问题</li>
+<li>思考：还可以用在哪些场景？</li>
+</ul>
+<h6 id="源码分析1-Quartz-SimpleSemaphore"><a href="#源码分析1-Quartz-SimpleSemaphore" class="headerlink" title="源码分析1-Quartz SimpleSemaphore"></a>源码分析1-Quartz SimpleSemaphore</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/d20d4cb3a98413a2fb910922671f8a98e6d114a5/data/Quartz%E4%BB%8B%E7%BB%8D.png"></p>
+<ul>
+<li>Quartz的SimpleSemaphore提供资源隔离(上锁)</li>
+<li>SimpleSemaphore中的lockOwners(ThreadLocal)为重度锁操作前置过滤</li>
+<li>思考：学易，用难！</li>
+</ul>
+<h6 id="源码分析2-Mybatis框架保持连接池线程一致"><a href="#源码分析2-Mybatis框架保持连接池线程一致" class="headerlink" title="源码分析2-Mybatis框架保持连接池线程一致"></a>源码分析2-Mybatis框架保持连接池线程一致</h6><h5 id="什么是本地事务"><a href="#什么是本地事务" class="headerlink" title="什么是本地事务"></a>什么是本地事务</h5><ul>
+<li>A(Atomic)原子性，操作不可分割</li>
+<li>C(Consistency)一致性，任何时刻数据都能保持一致</li>
+<li>I(Isolation)隔离性，多事务并发执行的时许不影响结果</li>
+<li>D(Durability)持久性，对数据结构的存储是永久的</li>
+</ul>
+<p>Begin → [本地事务：(更新订单状态 →&lt;订单状态更新成功&gt;→发放资源) → <strong>资源发放成功(提交)</strong> → Commit →&lt;持久化&gt;→DB。**若资源发放失败(回滚)**→Rollback]</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9693ffeda32d871b1665958a7febca56da0011bd/data/Mybatis%E6%A1%86%E6%9E%B6%E4%BF%9D%E6%8C%81%E8%BF%9E%E6%8E%A5%E6%B1%A0%E7%BA%BF%E7%A8%8B%E4%B8%80%E8%87%B4.jpg"></p>
+<h6 id="源码分析03-Spring框架对分布式事务的支持"><a href="#源码分析03-Spring框架对分布式事务的支持" class="headerlink" title="源码分析03 Spring框架对分布式事务的支持"></a>源码分析03 Spring框架对分布式事务的支持</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/b2cc782319836bb4d81765c38fe5b8de5098bb21/data/Spring%E6%A1%86%E6%9E%B6%E5%AF%B9%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9A%84%E6%94%AF%E6%8C%81.jpg"></p>
+<h3 id="技术选型——实现自己的ThreadLocal"><a href="#技术选型——实现自己的ThreadLocal" class="headerlink" title="技术选型——实现自己的ThreadLocal"></a>技术选型——实现自己的ThreadLocal</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/ec226021e343c1f8dbc268e9809361c629e6cb4d/data/threadLocalMap.jpg"></p>
+<pre><code class="java">MyThreadLocal.java
+package com.imooc.springbootlearn;
+
+import java.util.HashMap;
+import java.util.Objects;
+
+class MyThreadLocal&lt;T&gt; &#123;
+    static HashMap&lt;Thread, HashMap&lt;MyThreadLocal&lt;?&gt;, Objects&gt;&gt; threadLocalMap = new HashMap&lt;&gt;();//这里会产生临界区
+
+    synchronized static HashMap&lt;MyThreadLocal&lt;?&gt;, Objects&gt; getMap() &#123; //这是锁临界区
+        var thread = Thread.currentThread();
+        if (!threadLocalMap.containsKey(thread)) &#123;
+            threadLocalMap.put(thread, new HashMap&lt;MyThreadLocal&lt;?&gt;, Objects&gt;());
+        &#125;
+        return threadLocalMap.get(thread);
+    &#125;
+
+    T value;
+
+    protected T initialValue() &#123;
+        return null;
+    &#125;
+
+    public T get() &#123;
+        var map = getMap();
+        if (!map.containsKey(this)) &#123;
+            map.put(this, initialValue());
+        &#125;
+        return (T) map.get(this);
+    &#125;
+
+    public void set(T v)&#123;
+        var map = getMap();
+        map.put(this, v);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Test.java
+package com.imooc.springbootlearn;
+
+public class Test &#123;
+    static MyThreadLocal&lt;Long&gt; v = new MyThreadLocal&lt;Long&gt;()&#123;
+        @Override
+        protected Long initialValue() &#123;
+         return Thread.currentThread().getId();
+        &#125;
+    &#125;;
+
+    public static void main(String[] args) &#123;
+        for (Integer i = 0; i &lt; 100; i++) &#123;
+            new Thread(()-&gt;&#123;
+                System.out.println(v.get());
+            &#125;).start();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h5><ul>
+<li>HashMap中直接存储了MyThreadLocal的引用，导致内存无法回收</li>
+<li>思考：可以用整数ID替代对MyThreadLocal的引用</li>
+</ul>
+<pre><code class="java">MyThreadLocal.java
+package com.imooc.springbootlearn;
+
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+
+class MyThreadLocal&lt;T&gt; &#123;
+    static AtomicInteger atomic = new AtomicInteger(); //保证数据唯一性
+    Integer threadLocalHash = atomic.addAndGet(0x61c88647); //这个值保证hash的更平均性
+    static HashMap&lt;Thread, HashMap&lt;Integer, Objects&gt;&gt; threadLocalMap = new HashMap&lt;&gt;();//这里会产生临界区
+
+    synchronized static HashMap&lt;Integer, Objects&gt; getMap() &#123; //这是锁临界区
+        var thread = Thread.currentThread();
+        if (!threadLocalMap.containsKey(thread)) &#123;
+            threadLocalMap.put(thread, new HashMap&lt;Integer, Objects&gt;());
+        &#125;
+        return threadLocalMap.get(thread);
+    &#125;
+
+    T value;
+
+    protected T initialValue() &#123;
+        return null;
+    &#125;
+
+    public T get() &#123;
+        var map = getMap();
+        if (!map.containsKey(this.threadLocalHash)) &#123;
+            map.put(this.threadLocalHash, initialValue());
+        &#125;
+        return (T) map.get(this.threadLocalHash);
+    &#125;
+
+    public void set(T v)&#123;
+        var map = getMap();
+        map.put(this.threadLocalHash, v);
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>HashMap无限增加？初始空间分配是否合理？</li>
+</ul>
+<h3 id="HashTable"><a href="#HashTable" class="headerlink" title="HashTable"></a>HashTable</h3><h5 id="源码解读——哈希表实现ThreadLocal"><a href="#源码解读——哈希表实现ThreadLocal" class="headerlink" title="源码解读——哈希表实现ThreadLocal"></a>源码解读——哈希表实现ThreadLocal</h5><h6 id="什么是哈希表？"><a href="#什么是哈希表？" class="headerlink" title="什么是哈希表？"></a>什么是哈希表？</h6><p><strong>哈希表</strong>(散列 HashTable) 根据键(Key) 访问&#x2F;设置内存中存储的位置的值</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/c2851c7bd5792200e8f9af16f6f08a33520c6f2d/data/%E9%80%89%E5%AD%A6HashTable.png"></p>
+<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>架构是严密且精确的东西(切记夸夸其谈)</li>
+<li>并发是一个很危险的场景，提高能力才会获得安全感</li>
+<li>保持怀疑，持续学习</li>
+<li>会用 → 场景查找 → 轻量实现 → 源码对照 → 场景沉淀</li>
+<li>程序架构：低耦合(独立)、高内聚(组合做到开箱即用)</li>
+<li>无论达到什么高度，要永远认为自己是个<strong>菜鸡</strong></li>
+</ul>
+<h2 id="分布式章节"><a href="#分布式章节" class="headerlink" title="分布式章节"></a>分布式章节</h2><ul>
+<li><h5 id="什么是分布式"><a href="#什么是分布式" class="headerlink" title="什么是分布式"></a>什么是分布式</h5></li>
+<li><h5 id="分布式的作用"><a href="#分布式的作用" class="headerlink" title="分布式的作用"></a>分布式的作用</h5></li>
+<li><h5 id="分布式和单体结构的对比"><a href="#分布式和单体结构的对比" class="headerlink" title="分布式和单体结构的对比"></a>分布式和单体结构的对比</h5></li>
+<li><p><strong>CAP</strong>定理</p>
+</li>
+<li><p><span style = "color:red"><strong>集群、分布式、微服务</strong></span>的区别</p>
+</li>
+</ul>
+<h3 id="什么是分布式-1"><a href="#什么是分布式-1" class="headerlink" title="什么是分布式"></a>什么是分布式</h3><ul>
+<li><p>利用物理架构形成多个自治的处理元素，<strong>不共享主内存</strong>，但是通过<strong>发送信息</strong>合作。</p>
+</li>
+<li><h6 id="饭店初始的例子"><a href="#饭店初始的例子" class="headerlink" title="饭店初始的例子"></a>饭店初始的例子</h6><ul>
+<li><strong>一个</strong>厨师 [单例]</li>
+<li><strong>多个</strong>厨师 </li>
+<li>术业有<strong>专攻</strong>：配菜师、洗菜工</li>
+</ul>
+</li>
+<li><p>实际项目的演进过程</p>
+<ul>
+<li>一个项目，<strong>大而全</strong></li>
+<li><strong>多台机器</strong>，部署相同的应用</li>
+<li><strong>分布式</strong>：权限系统、员工系统、请假系统</li>
+</ul>
+</li>
+</ul>
+<h3 id="分布式的作用-1"><a href="#分布式的作用-1" class="headerlink" title="分布式的作用"></a>分布式的作用</h3><h5 id="为什么需要分布式"><a href="#为什么需要分布式" class="headerlink" title="为什么需要分布式"></a>为什么需要分布式</h5><ul>
+<li>实际工作中的痛点<ul>
+<li>工程<strong>臃肿</strong> [相互耦合 相互冲突]</li>
+<li>测试、上线<strong>繁琐</strong></li>
+<li>开发<strong>效率低</strong></li>
+</ul>
+</li>
+</ul>
+<h5 id="单体应用的问题"><a href="#单体应用的问题" class="headerlink" title="单体应用的问题"></a>单体应用的问题</h5><ul>
+<li>应用代码<strong>耦合</strong>严重，功能扩展难</li>
+<li>新需求开发交互周期长，测试工作量大</li>
+<li>新加入的开发同事需要很长时间才能熟悉系统</li>
+<li>升级维护也很困难(改动任何一点地方都要升级整个系统)</li>
+<li>系统性能提升艰难，可用性低，不稳定</li>
+</ul>
+<h5 id="分布式的好处"><a href="#分布式的好处" class="headerlink" title="分布式的好处"></a>分布式的好处</h5><ul>
+<li>增大系统容量</li>
+<li>加强系统可用[某个模块出bug 但不影响其他]</li>
+<li>因为模块化，所以系统模块重用度更高</li>
+<li>因为软件服务模块被拆分，开发和发布速度可以并行而变得更快</li>
+<li>系统<strong>扩展性</strong>更高</li>
+<li>团队<strong>协作流程</strong>也会得到改善</li>
+<li><strong>技术升级</strong></li>
+</ul>
+<h3 id="单体和分布式的对比"><a href="#单体和分布式的对比" class="headerlink" title="单体和分布式的对比"></a>单体和分布式的对比</h3><h5 id="分布式和单体结构的对比-1"><a href="#分布式和单体结构的对比-1" class="headerlink" title="分布式和单体结构的对比"></a>分布式和单体结构的对比</h5><table>
+<thead>
+<tr>
+<th></th>
+<th>传统单体构架</th>
+<th>分布式构架</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>新人的学习成本</strong></td>
+<td>业务逻辑成本高</td>
+<td>架构逻辑成本高</td>
+</tr>
+<tr>
+<td><strong>部署、运维</strong></td>
+<td>容易</td>
+<td>发布频繁，顺序复杂、运维难</td>
+</tr>
+<tr>
+<td><strong>隔离性</strong></td>
+<td>一损俱损，殃及鱼池</td>
+<td>故障影响范围小</td>
+</tr>
+<tr>
+<td><strong>架构设计</strong></td>
+<td>难度低</td>
+<td>难度指数级上升</td>
+</tr>
+<tr>
+<td><strong>系统性能</strong></td>
+<td>响应快、吞吐量小</td>
+<td>响应慢、吞吐量大</td>
+</tr>
+<tr>
+<td><strong>测试成本</strong></td>
+<td>低</td>
+<td>很高</td>
+</tr>
+<tr>
+<td><strong>技术多样性</strong></td>
+<td>技术单一且封闭</td>
+<td>技术多样且开放</td>
+</tr>
+<tr>
+<td><strong>系统扩展性</strong></td>
+<td>扩展性差</td>
+<td>扩展性很好</td>
+</tr>
+<tr>
+<td><strong>系统管理成本</strong></td>
+<td>成本低</td>
+<td>成本高</td>
+</tr>
+</tbody></table>
+<h3 id="CAP定理"><a href="#CAP定理" class="headerlink" title="CAP定理"></a>CAP定理</h3><h5 id="CAP的重要性"><a href="#CAP的重要性" class="headerlink" title="CAP的重要性"></a>CAP的重要性</h5><p>分布式不可能同时满足三个条件</p>
+<h5 id="CAP理论是什么？"><a href="#CAP理论是什么？" class="headerlink" title="CAP理论是什么？"></a>CAP理论是什么？</h5><ul>
+<li><span style = "color:red"><strong>C</strong>(Consistency, 一致性)</span>：读操作是否总能读到前一个写操作的结果</li>
+<li><span style = "color:red"><strong>A</strong>(Availability, 可用性)</span>：非故障节点应该在合理的时间内作出合理的响应(不是错误或超时的响应),但是可能<strong>不是最新的数据</strong>。</li>
+<li><span style = "color:red"><strong>P</strong>(Partition tolerance, 分区容错)</span>：当出现网络分区现象后，系统能够继续运行</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/793eb4ab3003af82869b186bcc016fcb8c2c2f5b/data/CAP%E5%AE%9A%E7%90%86.jpg"></p>
+<h5 id="CAP如何选择？"><a href="#CAP如何选择？" class="headerlink" title="CAP如何选择？"></a>CAP如何选择？</h5><ul>
+<li><strong>CP</strong>[支付宝]或者<strong>AP</strong>[超级跑跑系统维护]</li>
+<li>在什么场合，可用性高于一致性？<ul>
+<li>网页必须要保障<strong>可用性</strong>(一定能看到最重要 是不是最新的不重要)和<strong>分区容错</strong></li>
+<li>支付的时候一定要保障<strong>一致性</strong>(我可以保证不可用 但我不允许余额不一致)和<strong>分区容错</strong></li>
+</ul>
+</li>
+<li>合适的才是最好的</li>
+</ul>
+<h3 id="集群、分布式、微服务的区别"><a href="#集群、分布式、微服务的区别" class="headerlink" title="集群、分布式、微服务的区别"></a>集群、分布式、微服务的区别</h3><h5 id="集群和分布式的区别"><a href="#集群和分布式的区别" class="headerlink" title="集群和分布式的区别"></a>集群和分布式的区别</h5><ul>
+<li>分布式：一个业务分拆<strong>多个子业务</strong>，部署在不同的服务器上 [服务器之间要通信]</li>
+<li>集群：<strong>同一个</strong>业务，部署在多个服务器上 [五台机器可以不通信]</li>
+</ul>
+<h5 id="集群和微服务的区别"><a href="#集群和微服务的区别" class="headerlink" title="集群和微服务的区别"></a>集群和微服务的区别</h5><ul>
+<li>集群：分散<strong>压力</strong></li>
+<li>微服务：分散<strong>压力</strong></li>
+</ul>
+<h5 id="微服务和分布式的区别"><a href="#微服务和分布式的区别" class="headerlink" title="微服务和分布式的区别"></a>微服务和分布式的区别</h5><ul>
+<li><p>微服务是<strong>架构设计</strong>方式 [逻辑架构]</p>
+</li>
+<li><p>分布式是<strong>系统部署</strong>方式 [物理架构]</p>
+</li>
+<li><p>微服务：是一种架构方式 [大的服务拆成小的服务 每个服务独立开发测试]</p>
+</li>
+<li><p>分布式：主要强调部署的方式</p>
+</li>
+</ul>
+<h2 id="Docker"><a href="#Docker" class="headerlink" title="Docker"></a>Docker</h2><ul>
+<li>基本概念、用途、核心思想</li>
+<li>Docker的组成、架构、重要概念</li>
+<li>Docker的安装</li>
+<li><strong>第一个Docker容器</strong></li>
+<li>运用Nginx镜像，并访问到Docker容器内部 [从外部进行访问]</li>
+<li>制作自己的Docker容器，<strong>dockerfile</strong>实战</li>
+</ul>
+<h3 id="Docker的基本概念、用途、核心思想"><a href="#Docker的基本概念、用途、核心思想" class="headerlink" title="Docker的基本概念、用途、核心思想"></a>Docker的基本概念、用途、核心思想</h3><ul>
+<li>Docker应用广泛<br>京东618：15万个Docker实例，所有业务全部容器化</li>
+<li>Docker是什么？<br>[以前的图标是大鲸鱼拖着集装箱]<ul>
+<li>Docker是一个用来装程序及其环境的<strong>容器</strong>[类似于<u>安装包.exe</u>]，属于Linux容器的一种封装，提供简单易用的容器使用接口。它是目前<strong>最流行</strong>的Linux容器解决方案</li>
+<li>比喻：客车可以装人，衣柜可以放衣服 [Windows下写的小游戏也可以放在Docker中]</li>
+</ul>
+</li>
+</ul>
+<h3 id="为什么需要Docker"><a href="#为什么需要Docker" class="headerlink" title="为什么需要Docker"></a>为什么需要Docker</h3><ul>
+<li><strong>环境配置</strong>的难题</li>
+<li>虚拟机[资源占用很多 模拟一套完整系统但步骤多(有些步骤无法跳过) 启动慢]</li>
+<li>Docker的基础——<strong>Linux容器</strong> [体积小 速度快 轻量级虚拟机]</li>
+</ul>
+<h3 id="Docker的用途"><a href="#Docker的用途" class="headerlink" title="Docker的用途"></a>Docker的用途</h3><ul>
+<li>提供<strong>统一</strong>的环境</li>
+<li>提供<strong>快速拓展</strong>、弹性伸缩的云服务 [解决双十一淘宝+天猫 数据量剧增问题]</li>
+<li>防止其他用户的进程把服务器资源<strong>占用过多</strong> [程序相互之间可以隔离]</li>
+<li>部署简单 运维简单 节省服务器资源</li>
+</ul>
+<h3 id="Docker的特点"><a href="#Docker的特点" class="headerlink" title="Docker的特点"></a>Docker的特点</h3><h5 id="标准化"><a href="#标准化" class="headerlink" title="标准化"></a>标准化</h5><ul>
+<li><p><strong>运输方式</strong>(把程序和环境从一个机器运送到另一个机器)</p>
+</li>
+<li><p><strong>存储方式</strong>(程序和环境的存储)</p>
+</li>
+<li><p><strong>API接口</strong>(不需要Tomcat等应用的命令了，都标准化了)</p>
+</li>
+<li><p><strong>灵活</strong>：即使是最复杂的应用也可以集装箱化</p>
+</li>
+<li><p><strong>轻量级</strong>：容器利用并共享主机内核</p>
+</li>
+<li><p><strong>便携式</strong>：可以在本地构建，部署到云，并在任何地方运行</p>
+</li>
+</ul>
+<h5 id="Docker带来的好处"><a href="#Docker带来的好处" class="headerlink" title="Docker带来的好处"></a>Docker带来的好处</h5><ul>
+<li>开发团队的好处 完全可以控制所有的环境[同一个镜像] 降低了风险</li>
+</ul>
 
     </div>
 
