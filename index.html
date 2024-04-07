@@ -1427,6 +1427,274 @@ class MyThreadLocal&lt;T&gt; &#123;
 <li>存储：联合文件系统，UnionFS</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/28665426b3b7f9351280ab4c58b1ea388391f211/data/image%E9%95%9C%E5%83%8F.jpg"></p>
+<h3 id="容器和仓库"><a href="#容器和仓库" class="headerlink" title="容器和仓库"></a>容器和仓库</h3><ul>
+<li><strong>镜像类似于Java中的类，而容器就是实例化</strong></li>
+<li>容器的这一层是可以修改的，而镜像是不可以修改的</li>
+<li>同一个镜像可以生成多个容器独立运行，而她们之间没有任何的干扰</li>
+</ul>
+<h5 id="仓库"><a href="#仓库" class="headerlink" title="仓库"></a>仓库</h5><ul>
+<li><strong>hub.docker.com</strong></li>
+<li><a target="_blank" rel="noopener" href="https://c.163yun.com/hub#/m/home/">https://c.163yun.com/hub#/m/home/</a></li>
+<li>共有、私有</li>
+</ul>
+<h5 id="client和deamon"><a href="#client和deamon" class="headerlink" title="client和deamon"></a>client和deamon</h5><ul>
+<li><strong>client</strong>[<strong>客户端</strong>]：提供給用户一个终端，用户输入Docker提供的命令来管理本地或远程的服务器</li>
+<li><strong>deamon</strong>：<strong>服务端</strong>守护进程，接收Client发送的命令并执行相应的操作</li>
+</ul>
+<h3 id="Docker的安装"><a href="#Docker的安装" class="headerlink" title="Docker的安装"></a>Docker的安装</h3><ul>
+<li><h6 id="Windows安装"><a href="#Windows安装" class="headerlink" title="Windows安装"></a>Windows安装</h6><a target="_blank" rel="noopener" href="https://www.docker.com/products/docker-desktop/">Docker Desktop: The #1 Containerization Tool for Developers | Docker</a></li>
+</ul>
+<h5 id="更换系统镜像"><a href="#更换系统镜像" class="headerlink" title="更换系统镜像"></a>更换系统镜像</h5><p><a target="_blank" rel="noopener" href="https://ecs.console.aliyun.com/server/region/cn-hangzhou">云服务器管理控制台 (aliyun.com)</a> → 实例 → 更多 → 更换操作系统 → CentOS 7.6 64位</p>
+<pre><code class="java">C:\Users\Pluminary&gt;ssh root@47.98.225.105
+    
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+SHA256:THXnakQ0Se5ee+d7oHO0NYKBTW7mhEKc426m9+rQgnk.
+Please contact your system administrator.
+Add correct host key in C:\\Users\\Pluminary/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in C:\\Users\\Pluminary/.ssh/known_hosts:7
+Host key for 47.98.225.105 has changed and you have requested strict checking.
+Host key verification failed.
+    
+//使用命令或手动删除 C:\\Users\\Pluminary/.ssh/known_hosts 防火墙拦截了
+vim C:\\Users\\Pluminary/.ssh/known_hosts
+
+C:\Users\Pluminary&gt;ssh root@47.98.225.105
+root@47.98.225.105&#39;s password:Panchunyao123!
+
+[root@iZbp1dssknxftmjczbtpndZ ~]# cat /etc/redhat-release
+CentOS Linux release 7.6.1810 (Core)
+//yum地址换成国内yum源
+   //wget-O 这是大写的字母O 含义是放到指定目录下 替换本地文件为国内文件
+[root@iZbp1dssknxftmjczbtpndZ ~]# wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum clean all
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum makecache //读取新的源
+
+//较旧的Docker版本称为docker或docker-engine。如果已安装这些程序，请卸载它们以及相关的依赖项。
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+//如果yum报告未安装这些软件包，也没问题。
+    //更新yum 先查看需要更新哪些
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum check-update
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum update
+// 安装所需的软件包
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum install -y yum-utils \
+                  device-mapper-persistent-data \
+                  lvm2
+// 使用以下命令来设置稳定的存储库 sudo是用超级管理员
+[root@iZbp1dssknxftmjczbtpndZ ~]# sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+// 查看docker版本
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum list docker-ce --showduplicates | sort -r
+// 安装指定的版本
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum install docker-ce-18.09.0 docker-ce-cli-18.09.0 containerd.io
+// Docker 是服务器----客户端架构
+// 命令行运行docker命令的时候，需要本机有 Docker 服务。用下面的命令启动
+[root@iZbp1dssknxftmjczbtpndZ ~]# systemctl start docker
+// 安装完成后，运行下面的命令，验证是否安装成功。
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker version 或者 docker info
+</code></pre>
+<h3 id="第一个Docker容器"><a href="#第一个Docker容器" class="headerlink" title="第一个Docker容器"></a>第一个Docker容器</h3><ul>
+<li><span style = "color:red"><strong>下载镜像</strong></span></li>
+<li><strong>docker pull [OPTIONS] NAME[:TAG]</strong></li>
+<li><strong>docker images [OPTIONS] [REPOSITORY[:TAG]]</strong> 查看本机有没有任何镜像</li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# docker pull hello-world
+Using default tag: latest
+latest: Pulling from library/hello-world
+c1ec31eb5944: Pull complete
+Digest: sha256:53641cd209a4fecfc68e21a99871ce8c6920b2e7502df0a20671c6fccc73a7c6
+Status: Downloaded newer image for hello-world:latest
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+hello-world         latest              d2c94e258dcb        11 months ago       13.3kB
+</code></pre>
+<ul>
+<li><span style = "color:red"><strong>运行镜像</strong></span></li>
+<li><strong>docker run [OPTIONS] IMAGE [COMMAND] [ARG…]</strong></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# docker run hello-world
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the &quot;hello-world&quot; image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal. 
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+</code></pre>
+<h3 id="后台运行容器"><a href="#后台运行容器" class="headerlink" title="后台运行容器"></a>后台运行容器</h3><h5 id="运行Nginx镜像，并访问到Docker容器内部"><a href="#运行Nginx镜像，并访问到Docker容器内部" class="headerlink" title="运行Nginx镜像，并访问到Docker容器内部"></a>运行Nginx镜像，并访问到Docker容器内部</h5><ul>
+<li><strong>前台、后台</strong></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# docker images //查看一下程序镜像是否还在
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker pull hub.c.163.com/library/nginx:1.13.0
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker images
+REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
+hello-world                   latest              d2c94e258dcb        11 months ago       13.3kB
+hub.c.163.com/library/nginx   1.13.0              46102226f2fd        6 years ago         109MB
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker run hub.c.163.com/library/nginx:1.13.0
+//上面的没反应是正常情况，再开一个cmd窗口
+
+
+//第二个窗口：另一个cmd窗口 
+C:\Users\Pluminary&gt;ssh root@47.98.225.105
+root@47.98.225.105&#39;s password:
+Last login: Sun Apr  7 16:30:40 2024 from 182.102.75.173
+
+Welcome to Alibaba Cloud Elastic Compute Service !
+//展示当前容器列表
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker ps
+CONTAINER ID        IMAGE                                COMMAND                  CREATED              STATUS              PORTS               NAMES
+298f7e19f6a8        hub.c.163.com/library/nginx:1.13.0   &quot;nginx -g &#39;daemon of…&quot;   About a minute ago   Up About a minute   80/tcp              kind_taussig
+//这时回到第一个窗口 ctrl+c 关掉运行 这时去第二个窗口docker ps的时候已经没有了
+// ↓↓↓↓↓↓ 要把Nginx在后台运行才可以解决上述问题 ↓↓↓↓↓↓
+[root@iZbp1dssknxftmjczbtpndZ ~]# docekr run -d hub.c.163.com/library/nginx:1.13.0
+f124fc9171824e508639768b800efba5c780385dc1d135ab0ff70d80d3d75510 //返回容器ID
+//此时再去第二个窗口 docker ps就会看到 CONTAINER ID 有f124fc917182
+//第一个窗口 查看容器内部的风景 -i让容器输入有效 t是給我们分配一个终端 bash是启动终端
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker exec -it f124 bash //让docker明白我们让哪个启动
+root@f124fc917182:/#  //已经进入到容器内部
+root@f124fc917182:/# pwd
+/
+root@f124fc917182:/# touch 1 //创建了一个1
+root@f124fc917182:/# ls
+1  bin  boot  dev  etc  home  lib  lib32  lib64  libx32  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+root@f124fc917182:/# which nginx
+/usr/sbin/nginx
+</code></pre>
+<h3 id="Docker三种网络模式-网络会隔离-需要配置进行端口映射"><a href="#Docker三种网络模式-网络会隔离-需要配置进行端口映射" class="headerlink" title="Docker三种网络模式 [网络会隔离 需要配置进行端口映射]"></a>Docker三种网络模式 [网络会隔离 需要配置进行端口映射]</h3><ul>
+<li><strong>Bridge</strong> 网卡网络独立的端口</li>
+<li><strong>Host</strong> 同步宿主机的端口</li>
+<li>None</li>
+<li>端口映射技术</li>
+</ul>
+<h5 id="实操"><a href="#实操" class="headerlink" title="实操"></a>实操</h5><ul>
+<li>访问Docker内的Nginx</li>
+</ul>
+<pre><code class="java">cmd窗口2
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker stop f12
+f12
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker ps //目前没有容器在运行了
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+    //-p 本机的8080端口去映射内部的80端口 前面的是本机 后面的是容器内部的
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker run -d -p 8080:80 hub.c.163.com/library/nginx:1.13.0
+3906129ced72b668581a58dc36595b08734b82e247e2927eb2a8da6fbe7508ae
+//拔出端口的信息
+[root@iZbp1dssknxftmjczbtpndZ ~]# netstat -na|grep 8080
+tcp6       0      0 :::8080                 :::*                    LISTEN
+
+在网页上输入 http://47.98.225.105:8080/
+
+Welcome to nginx!
+If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
+For online documentation and support please refer to nginx.org.
+Commercial support is available at nginx.com.
+Thank you for using nginx.
+
+这个不是在宿主机启动的nginx 而是在容器中启动的【通过宿主机中转 并通过Bridge实现独立】
+★★ 通过一台服务器上去布置多台Docker 而每台docker里面是独立的 并且可以通过一个端口 来实现和外界的映射关系 ★★
+//这个与7行代码的区别 这里是大P 将这个容器的所有端口都进行映射
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker run -d -P hub.c.163.com/library/nginx:1.13.0
+</code></pre>
+<h3 id="制作自己的Docker容器，dockerfile实战"><a href="#制作自己的Docker容器，dockerfile实战" class="headerlink" title="制作自己的Docker容器，dockerfile实战"></a>制作自己的Docker容器，dockerfile实战</h3><p>[把自己的软件程序打包好传給别人]</p>
+<ul>
+<li>dockerfile作用</li>
+<li>使用dockerfile的好处[一目了然 哪个环境跑在什么环境下 非常方便知道如何配置]</li>
+<li>写一个自己的dockerfile</li>
+</ul>
+<blockquote>
+<p>因此我们只需要在dockerfile中指定需要哪些程序、依赖什么样的配置，之后把dockerfile交给“编译器”docker进行“编译”，也就是docker build命令，生成的可执行程序就是image，之后就可以运行这个image了，这就是docker run命令，image运行起来后就是docker container。</p>
+</blockquote>
+<pre><code class="sql">FROM alpine:latest #继承父类 alpine及其小的环境
+MAINTAINER imooc   #描述这个镜像由誰维护的
+CMD echo &#39;hello my dockerfile&#39;  #进入任何想要的dockerfile命令
+</code></pre>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# touch Dockerfile
+[root@iZbp1dssknxftmjczbtpndZ ~]# ls
+Dockerfile
+[root@iZbp1dssknxftmjczbtpndZ ~]# vim Dockerfile
+//按小写i进入编辑模式  按ESC退出编辑模式 :wq会保存
+//取名字 .dockerfile现在的路径
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker build -t hello_docker .
+    //先发送到服务器
+Sending build context to Docker daemon  285.7kB
+    //从父类中拉取下来
+Step 1/3 : FROM alpine:latest
+latest: Pulling from library/alpine
+4abcf2066143: Pull complete
+Digest: sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761f8e1ad6b
+Status: Downloaded newer image for alpine:latest
+ ---&gt; 05455a08881e
+    //写定它的维护者
+Step 2/3 : MAINTAINER imooc
+ ---&gt; Running in 38a73abca50e
+Removing intermediate container 38a73abca50e
+---&gt; f44831f49afe
+    //把这个语句写进去
+Step 3/3 : CMD echo &#39;hello my dockerfile&#39;
+ ---&gt; Running in 1ff431539208
+Removing intermediate container 1ff431539208
+ ---&gt; f45b88d0cabc
+Successfully built f45b88d0cabc
+Successfully tagged hello_docker:latest
+
+//运行自己的镜像
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker images
+REPOSITORY                    TAG                 IMAGE ID            CREATED             SIZE
+hello_docker                  latest              f45b88d0cabc        3 minutes ago       7.38MB
+alpine                        latest              05455a08881e        2 months ago        7.38MB
+hello-world                   latest              d2c94e258dcb        11 months ago       13.3kB
+hub.c.163.com/library/nginx   1.13.0              46102226f2fd        6 years ago         109MB
+[root@iZbp1dssknxftmjczbtpndZ ~]# docker run hello_docker
+hello my dockerfile
+</code></pre>
+<h1 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h1><ul>
+<li><h6 id="Nginx介绍"><a href="#Nginx介绍" class="headerlink" title="Nginx介绍"></a>Nginx介绍</h6></li>
+<li><h6 id="Nginx的安装"><a href="#Nginx的安装" class="headerlink" title="Nginx的安装"></a>Nginx的安装</h6></li>
+<li><h6 id="常用命令讲解和演示"><a href="#常用命令讲解和演示" class="headerlink" title="常用命令讲解和演示"></a>常用命令讲解和演示</h6></li>
+<li><h6 id="配置文件讲解"><a href="#配置文件讲解" class="headerlink" title="配置文件讲解"></a>配置文件讲解</h6></li>
+<li><h6 id="场景实战：搭建一个静态文件的Nginx服务"><a href="#场景实战：搭建一个静态文件的Nginx服务" class="headerlink" title="场景实战：搭建一个静态文件的Nginx服务"></a>场景实战：搭建一个静态文件的Nginx服务</h6></li>
+</ul>
+<h3 id="Nginx介绍-1"><a href="#Nginx介绍-1" class="headerlink" title="Nginx介绍"></a>Nginx介绍</h3><ul>
+<li>Nginx是什么、适用场景</li>
+<li>Nginx应用广泛</li>
+<li>Nginx优点</li>
+</ul>
+<h4 id="Nginx是什么、适用场景"><a href="#Nginx是什么、适用场景" class="headerlink" title="Nginx是什么、适用场景"></a>Nginx是什么、适用场景</h4><ul>
+<li>HTTP的<strong>反向代理</strong>服务器</li>
+<li><strong>动态静态</strong>资源分离</li>
+</ul>
+<h5 id="正向代理"><a href="#正向代理" class="headerlink" title="正向代理"></a><span style = "color:red">正向代理</span></h5><p>普通的请求转发，客户端把信息传递到代理服务器，代理服务器找到信息转发给我们<br>提供安全功能 代理服务器有防火墙，可以隐藏自身的信息 </p>
+<h5 id="反向代理"><a href="#反向代理" class="headerlink" title="反向代理"></a><span style = "color:red">反向代理</span></h5><p>提供安全和防火墙 在多个服务器后端提供负载均衡 为服务器提供缓存 把来自用户的压力平均分配[负载均衡]</p>
+<h5 id="动态静态资源分离-加速访问-整体速度提高"><a href="#动态静态资源分离-加速访问-整体速度提高" class="headerlink" title="动态静态资源分离 [加速访问 整体速度提高]"></a><span style = "color:red">动态静态资源分离</span> [加速访问 整体速度提高]</h5><ul>
+<li>不分离会<strong>变慢</strong></li>
+<li>静态资源<strong>无需经过Tomcat</strong>，Tomcat只负责处理动态请求</li>
+<li>后缀为gif的时候，Nginx会<strong>直接</strong>获取到当前请求的文件并返回</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/93ef10f6db6a389181a9f20268c6c4b8b82c46d7/data/%E6%AD%A3%E5%90%91_%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86_.jpg"></p>
 
             
         </div>
@@ -3508,7 +3776,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -11844,7 +12112,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -14603,7 +14871,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -19810,7 +20078,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -20018,7 +20286,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -21725,7 +21993,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -24830,7 +25098,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
