@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1852,7 +1852,63 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 //进去看到 access_log  /var/log/nginx/access.log  main; 打开它
 [root@iZbp1dssknxftmjczbtpndZ web]# cat /var/log/nginx/access.log //打开日志文件
 </code></pre>
-
+<h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h1><ul>
+<li><h5 id="初识RabbitMQ"><a href="#初识RabbitMQ" class="headerlink" title="初识RabbitMQ"></a>初识RabbitMQ</h5></li>
+<li><h5 id="RabbitMQ的安装和启动-Erlang语言"><a href="#RabbitMQ的安装和启动-Erlang语言" class="headerlink" title="RabbitMQ的安装和启动 [Erlang语言]"></a>RabbitMQ的安装和启动 [Erlang语言]</h5></li>
+<li><h5 id="RabbitMQ管理后台"><a href="#RabbitMQ管理后台" class="headerlink" title="RabbitMQ管理后台"></a>RabbitMQ管理后台</h5></li>
+<li><h5 id="实战案例演示"><a href="#实战案例演示" class="headerlink" title="实战案例演示"></a>实战案例演示</h5></li>
+<li><h5 id="交换机工作模式-fanout、direct、topic、headers"><a href="#交换机工作模式-fanout、direct、topic、headers" class="headerlink" title="交换机工作模式 [fanout、direct、topic、headers]"></a>交换机工作模式 [fanout、direct、topic、headers]</h5></li>
+<li><h5 id="SpringBoot整合RabbitMQ"><a href="#SpringBoot整合RabbitMQ" class="headerlink" title="SpringBoot整合RabbitMQ"></a>SpringBoot整合RabbitMQ</h5></li>
+</ul>
+<h3 id="初识RabbitMQ-1"><a href="#初识RabbitMQ-1" class="headerlink" title="初识RabbitMQ"></a>初识RabbitMQ</h3><ul>
+<li><p>核心思想：<strong>接收并转发消息</strong>。类似于<strong>邮局</strong></p>
+</li>
+<li><p><strong>producer</strong>：<u>信息生产者</u></p>
+</li>
+<li><p><strong>queue</strong>：<u>队列</u></p>
+</li>
+<li><p><strong>consumer</strong>：<u>会从queue中获取消息</u></p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ca2883b4e8981a89118a71e0e1590f837b4300de/data/RabbitMQ.jpg"></p>
+<h3 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h3><ul>
+<li>什么是消息队列</li>
+<li><strong>MQ</strong>(Message Queue)</li>
+</ul>
+<h5 id="消息队列的性质"><a href="#消息队列的性质" class="headerlink" title="消息队列的性质"></a>消息队列的性质</h5><ul>
+<li>业务无关 [不需要考虑上层业务模型]</li>
+<li>FIFO [先进先出]</li>
+<li>容灾 [对于消息队列可以持久化 断电后也可以保存数据后重新发送]</li>
+<li>性能</li>
+</ul>
+<h5 id="为什么要用消息队列"><a href="#为什么要用消息队列" class="headerlink" title="为什么要用消息队列"></a>为什么要用消息队列</h5><ul>
+<li>系统<strong>解耦</strong></li>
+<li><strong>异步</strong>调用 [我告诉你要做 我可以不等你做完 我再返回 <u>相互不影响</u>]<br>[点外卖 用户发送外卖请求給中间件，随后MQ帮助分发后续流程(扣钱、召唤骑手 计算天气、时间等)]</li>
+<li>流量<strong>削峰</strong> [MQ把请求先存在队列中 以合适的速度发送 化解压力]</li>
+</ul>
+<h3 id="RabbitMQ的特点和核心概念"><a href="#RabbitMQ的特点和核心概念" class="headerlink" title="RabbitMQ的特点和核心概念"></a>RabbitMQ的特点和核心概念</h3><ul>
+<li>开源、跨语言</li>
+<li>Erlang语言编写 [交换机、通信方面] [数据复制与转发性能好]</li>
+<li>应用广泛</li>
+<li>社区活跃、API丰富</li>
+</ul>
+<h5 id="AMQP协议"><a href="#AMQP协议" class="headerlink" title="AMQP协议"></a>AMQP协议</h5><ul>
+<li>Advanced Message Queuing Protocol 高级消息队列协议</li>
+</ul>
+<h5 id="RabbitMQ核心概念"><a href="#RabbitMQ核心概念" class="headerlink" title="RabbitMQ核心概念"></a>RabbitMQ核心概念</h5><ul>
+<li><strong>Server</strong>：服务</li>
+<li><strong>connection</strong>：与Server建立连接</li>
+<li><strong>channel</strong>：信道，几乎所有的操作都在信道上进行，客户端可以建立多个信道</li>
+<li><strong>message</strong>：消息，由properties和body组成</li>
+<li><strong>virtual host</strong>：虚拟主机，顶层隔离。同一个虚拟主机下，不能由重复的交换机和queue</li>
+<li><strong>Exchange</strong>：交换机，接收生产者的信息的，然后根据指定的路由器把消息转发到所绑定的队列上</li>
+<li><strong>binding</strong>：绑定交换机和队列</li>
+<li><strong>routing key</strong>：路由键，路由规则，虚拟机可以用它来确定这个消息如何进行一个路由</li>
+<li><strong>queue</strong>：队列，消费者只需要监听队列来消费消息，不需要关注消息来自于哪个Exchange</li>
+<li>Exchange和Message Queue存在着绑定的关系，一个Exchange可以绑定多个消息队列</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/8fc65400c147b4cda128b49a11d646330a5860fc/data/RabiitMQ%E6%B6%88%E6%81%AF%E6%B5%81%E8%BD%AC%E6%96%B9%E5%BC%8F.jpg"></p>
+<h3 id="RabbitMQ的安装和启动"><a href="#RabbitMQ的安装和启动" class="headerlink" title="RabbitMQ的安装和启动"></a>RabbitMQ的安装和启动</h3>
     </div>
 
     
