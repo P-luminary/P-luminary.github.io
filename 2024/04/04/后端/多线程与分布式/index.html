@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1908,7 +1908,92 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 <li>Exchange和Message Queue存在着绑定的关系，一个Exchange可以绑定多个消息队列</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/8fc65400c147b4cda128b49a11d646330a5860fc/data/RabiitMQ%E6%B6%88%E6%81%AF%E6%B5%81%E8%BD%AC%E6%96%B9%E5%BC%8F.jpg"></p>
-<h3 id="RabbitMQ的安装和启动"><a href="#RabbitMQ的安装和启动" class="headerlink" title="RabbitMQ的安装和启动"></a>RabbitMQ的安装和启动</h3>
+<h3 id="RabbitMQ的安装和启动"><a href="#RabbitMQ的安装和启动" class="headerlink" title="RabbitMQ的安装和启动"></a>RabbitMQ的安装和启动</h3><ul>
+<li>安装<strong>Erlang</strong></li>
+<li><strong>安装</strong>RabbitMQ</li>
+<li><strong>启动</strong>RabbitMQ</li>
+</ul>
+<h5 id="安装Erlang"><a href="#安装Erlang" class="headerlink" title="安装Erlang"></a>安装Erlang</h5><ul>
+<li>安装erlang-rpm包，该包经过RabbitMQ官方处理</li>
+<li>使用Erlang Solutions源进行安装</li>
+<li>使用EPEL(“Extra Packages for Enterprise Linux”)进行安装</li>
+</ul>
+<pre><code class="java">我们先准备两个安装包：//★★★★别看下面胡咧咧 直接教辅中有erlang和rabbitmq与教材相同★★★★
+RabbitMQ： https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.8.13
+Erlang：https://packages.erlang-solutions.com/erlang-solutions-2.0-1.noarch.rpm
+
+注意： 如果说你选的是最新的版本那么你就要选取对应支持的 erlang 的版本才行，具体看下面的连接
+https://www.rabbitmq.com/which-erlang.html
+
+这些都准备好之后我们使用 Xptf 软件把这个安装包传输到 linux 端对应文件下（自己建一个文件夹）即可。
+
+安装
+第一步：
+我们第一步先要对 linux 端进行一个 erlang 的环境配置，所以我们要先解压 erlang 包。
+    # rpm -Uvh erlang-solutions-2.0-1.noarch.rpm
+    # yum install -y erlang
+安装完成后，查看一下版本号，能查到说明就是安装好了
+    # erl -v
+
+第二步：
+在安装一下
+    # yum install -y socat
+
+第三步：
+接下来我们就需要进行 RabbitMQ 的安装了
+
+    # rpm -Uvh rabbitmq-server-3.8.33-1.el8.noarch.rpm 
+    # yum install rabbitmq-server -y
+
+安装完之后我们来启动测试一下：
+
+    # systemctl start rabbitmq-server
+    # systemctl status rebbitmq-server
+
+最后一步：
+安装跑起来之后我们设置一下开机自启动
+
+    # systemctl enable rabbitmq-server
+    # systemctl stop rabbitmq-server   # 关闭开机自起
+=========================================================
+可以在这些目录中查找RabbitMQ的配置文件、启动脚本等。另外，RabbitMQ的启动脚本通常会被安装到/usr/sbin或/usr/bin目录下。你可以尝试使用以下命令来查找RabbitMQ的启动脚本位置：
+
+find /usr/sbin /usr/bin -name &#39;rabbitmq*&#39;
+=========================================================
+</code></pre>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# cd /usr/sbin
+[root@iZbp1dssknxftmjczbtpndZ sbin]# systemctl start rabbitmq-server
+[root@iZbp1dssknxftmjczbtpndZ sbin]# systemctl status rabbitmq-server
+● rabbitmq-server.service - RabbitMQ broker
+   Loaded: loaded (/usr/lib/systemd/system/rabbitmq-server.service; disabled; vendor preset: disabled)
+   Active: active (running) since Mon 2024-04-08 23:24:39 CST; 38min ago
+ Main PID: 3570 (beam.smp)
+===================================================================================
+[root@iZbp1dssknxftmjczbtpndZ sbin]# systemctl enable rabbitmq-server
+[root@iZbp1dssknxftmjczbtpndZ sbin]# systemctl stop rabbitmq-server   # 关闭开机自起
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_57828911/article/details/131777471?ops_request_misc=%7B%22request_id%22:%22171259388816800186514596%22,%22scm%22:%2220140713.130102334..%22%7D&request_id=171259388816800186514596&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~baidu_landing_v2~default-4-131777471-null-null.142%5Ev100%5Epc_search_result_base9&utm_term=linux%E5%8D%B8%E8%BD%BDrabbitmq&spm=1018.2226.3001.4187">Linux环境如何彻底卸载感干净RabbitMQ_linux卸载rabbitmq-CSDN博客</a></p>
+<pre><code class="java">停止RabbitMQ
+$rabbitmqctl stop
+
+设置开机启动
+$ systemctl enable rabbitmq-server 
+
+启动RabbitMQ
+$ systemctl start rabbitmq-server
+
+看看端口有没有起来，查看状态
+
+$ rabbitmqctl status 
+
+要检查RabbitMQ服务器的状态，请运行：
+
+systemctl status rabbitmq-server
+
+开启web管理界面
+rabbitmq-plugins enable rabbitmq_management
+</code></pre>
+
     </div>
 
     
