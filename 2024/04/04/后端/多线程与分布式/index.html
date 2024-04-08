@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -1675,6 +1675,183 @@ hello my dockerfile
 <li>后缀为gif的时候，Nginx会<strong>直接</strong>获取到当前请求的文件并返回</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/93ef10f6db6a389181a9f20268c6c4b8b82c46d7/data/%E6%AD%A3%E5%90%91_%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86_.jpg"></p>
+<h3 id="Nginx应用广泛"><a href="#Nginx应用广泛" class="headerlink" title="Nginx应用广泛"></a>Nginx应用广泛</h3><h5 id="Nginx的优点"><a href="#Nginx的优点" class="headerlink" title="Nginx的优点"></a>Nginx的优点</h5><ul>
+<li>高并发、高性能</li>
+<li>可扩展性好</li>
+<li>高可靠性 [服务器运行可以达到数年之久]</li>
+<li>热部署</li>
+<li>开源、可商用</li>
+</ul>
+<h3 id="Nginx的安装-1"><a href="#Nginx的安装-1" class="headerlink" title="Nginx的安装"></a>Nginx的安装</h3><h5 id="Nginx在CentOs安装"><a href="#Nginx在CentOs安装" class="headerlink" title="Nginx在CentOs安装"></a>Nginx在CentOs安装</h5><pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# yum install yum-utils
+[root@iZbp1dssknxftmjczbtpndZ ~]# vim /etc/yum.repos.d/nginx.repo  //输入源信息 告诉它从哪下载
+//输入：3-18行 配置源
+[root@iZbp1dssknxftmjczbtpndZ ~]# [nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/7/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/7/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+    //然后查看源 列出可以使用的ngix地址
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum list | grep nginx
+    //运行安装命令
+[root@iZbp1dssknxftmjczbtpndZ ~]# yum install nginx 1:1.16.1-1.el7.ngx
+    //查看版本，若出现版本号，则安装成功
+[root@iZbp1dssknxftmjczbtpndZ ~]# nginx -v
+nginx version: nginx/1.24.0
+用whereis nginx可以查看到目录：
+[root@iZbp1dssknxftmjczbtpndZ ~]# nginx: /usr/sbin/nginx /usr/lib64/nginx /etc/nginx /usr/share/nginx /usr/share/man/man8/nginx.8.gz
+</code></pre>
+<h3 id="常用命令讲解和演示-1"><a href="#常用命令讲解和演示-1" class="headerlink" title="常用命令讲解和演示"></a>常用命令讲解和演示</h3><pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ ~]# /usr/sbin/ngix 启动
+[root@iZbp1dssknxftmjczbtpndZ ~]# systemctl stop docker //把之前的docker关停
+[root@iZbp1dssknxftmjczbtpndZ ~]# ps -aux | grep nginx //提取相关进程 80是默认端口
+[root@iZbp1dssknxftmjczbtpndZ ~]# nginx -h //提取帮助
+    
+[root@iZbp1dssknxftmjczbtpndZ ~]# cd /etc/nginx
+[root@iZbp1dssknxftmjczbtpndZ nginx]# ls //里面有nginx.conf配置文件 conf.d中也有一个defalut.conf
+conf.d  fastcgi_params  mime.types  modules  nginx.conf  scgi_params  uwsgi_params
+[root@iZbp1dssknxftmjczbtpndZ nginx]# cd conf.d/
+    
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -c   //读取指定配置文件
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -s stop //停止nginx
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -c /etc/nginx/nginx.conf //以这个文件启动nginx
+
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -t //发布前的测试
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -s stop
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# /usr/sbin/nginx //开启nginx
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -t //查看使用的哪个配置文件
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -v //打印版本信息
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -V //打印详细参数
+    
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# whereis uginx//找nginx的路径
+nginx: /usr/sbin/nginx /usr/lib64/nginx /etc/nginx /usr/share/nginx /usr/share/man/man8/nginx.8.gz
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# ps aux | grep nginx //打印进程信息
+
+    //-s信号 1.stop立即停止 2.quit优雅停止 3.reload重启[优雅停止quit] 4.reopen更换日志文件
+</code></pre>
+<h3 id="配置文件讲解-1"><a href="#配置文件讲解-1" class="headerlink" title="配置文件讲解"></a>配置文件讲解</h3><ul>
+<li><h5 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h5><ul>
+<li>“; “ 结尾</li>
+<li>“{}” 组织多条指令 </li>
+<li>“include” 引入</li>
+<li>‘’#’’ 注释</li>
+</ul>
+</li>
+<li><h5 id="实操演示"><a href="#实操演示" class="headerlink" title="实操演示"></a>实操演示</h5></li>
+<li><h5 id="默认配置文件分析"><a href="#默认配置文件分析" class="headerlink" title="默认配置文件分析"></a>默认配置文件分析</h5><ul>
+<li>nginx.conf</li>
+<li>default.conf</li>
+</ul>
+</li>
+</ul>
+<pre><code class="mysql">[root@iZbp1dssknxftmjczbtpndZ conf.d]# cat /etc/nginx/nginx.conf //打开文件配置
+nginx.conf配置文件讲解
+首先我们进入到cd etc/nginx.然后通过ls查看nginx目录的相关内容。在nginx目录下，我们需要关注nginx.conf文件，这个文件是我们的主配置文件，cat打开：
+cat nginx.conf 【效果显示在下方分割线后】
+
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# cd /usr/share/nginx/html
+[root@iZbp1dssknxftmjczbtpndZ html]# vim stst.html //新建文件
+[root@iZbp1dssknxftmjczbtpndZ html]# ls
+50x.html     index.html
+[root@iZbp1dssknxftmjczbtpndZ html# vim test.html //新建一个html文件保存下来
+//i编辑       hello nginx           esc + :wq
+[root@iZbp1dssknxftmjczbtpndZ conf.d]# nginx -c /etc/nginx/nginx.conf //启动！
+//如果不显示一定是服务器规则组的问题  自定义 TCP    目的:1/65535   源:0.0.0.0/0
+网址输入：http://47.98.225.105/test.html 
+============================================================================
+# 运行用户，默认是nginx
+user  nginx;
+# nginx进程数,一般设置为和cpu核数一样
+worker_processes  1;
+
+# 全局错误日志路径
+error_log  /var/log/nginx/error.log warn;
+# 进程pid路径
+pid        /var/run/nginx.pid;
+ 
+events &#123;
+# 最大连接数
+    worker_connections  1024;
+&#125;
+
+# 设置http服务器
+http &#123;
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+# 设置日志的格式
+    log_format  main  &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;
+                      &#39;$status $body_bytes_sent &quot;$http_referer&quot; &#39;
+                      &#39;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&#39;;
+# 访问日志的路径
+    access_log  /var/log/nginx/access.log  main;
+
+# 开启高效传输模式
+    sendfile        on;
+    #tcp_nopush     on;
+# 长连接超时时间，单位是秒
+    keepalive_timeout  65;
+#传输时是否压缩，压缩的话需要解压，但是传的大小就小了
+    #gzip  on;
+#加载其他的配置文件，一带多
+    include /etc/nginx/conf.d/*.conf;
+&#125;
+============================================================================
+</code></pre>
+<h3 id="搭建静态资源服务器"><a href="#搭建静态资源服务器" class="headerlink" title="搭建静态资源服务器"></a>搭建静态资源服务器</h3><h5 id="搭建一个静态文件的Nginx服务"><a href="#搭建一个静态文件的Nginx服务" class="headerlink" title="搭建一个静态文件的Nginx服务"></a>搭建一个静态文件的Nginx服务</h5><ul>
+<li>实操演示</li>
+<li>配置和网页文件作为教辅提供 [静态网页]</li>
+</ul>
+<pre><code class="java">//scp传输文件 -r每一个文件夹都传递归 /usr/share/nginx/web/ 上传到这个文件夹
+cmd本机框
+C:\Users\Pluminary&gt; scp -r /Users/Pluminary/Desktop/静态资源/静态网页/ root@47.98.225.105:/usr/share/nginx/web/
+
+cmd服务器框
+[root@iZbp1dssknxftmjczbtpndZ ~]# cd /usr/share/nginx/web/
+[root@iZbp1dssknxftmjczbtpndZ web]# pwd //查看现在位置
+/usr/share/nginx/web
+[root@iZbp1dssknxftmjczbtpndZ web]# ls
+css  fonts  images  index.html  js
+//修改文件 可以让nginx访问到文件 访问web下面的内容
+[root@iZbp1dssknxftmjczbtpndZ web]# vim /etc/nginx/conf.d/default.conf  
+//修改location：.../web
+===============================================================
+location / &#123;
+        root   /usr/share/nginx/web;
+        index  index.html index.htm;
+    &#125;
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html &#123;
+        root   /usr/share/nginx/web;
+    &#125;
+===============================================================
+[root@iZbp1dssknxftmjczbtpndZ web]# nginx -t //测试一下是否有问题
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+[root@iZbp1dssknxftmjczbtpndZ web]# nginx -s reload //重启服务
+//浏览器访问：http://47.98.225.105/index.html
+[root@iZbp1dssknxftmjczbtpndZ web]# cat /etc/nginx/nginx.conf
+//进去看到 access_log  /var/log/nginx/access.log  main; 打开它
+[root@iZbp1dssknxftmjczbtpndZ web]# cat /var/log/nginx/access.log //打开日志文件
+</code></pre>
 
     </div>
 
