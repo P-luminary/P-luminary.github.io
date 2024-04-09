@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -2144,10 +2144,434 @@ public class Recv &#123;
     &#125;
 &#125;
 =======================================================
-//由于是持续接收消息的 若将send.java中改为Hello World2 jiang&#39;hu
+//由于是持续接收消息的 若将send.java中改为Hello World2 将会持续打印到控制台
 开始接收消息
 收到消息：Hello World!
 收到消息：Hello World2!
+</code></pre>
+<h3 id="根据消息内容做处理"><a href="#根据消息内容做处理" class="headerlink" title="根据消息内容做处理"></a>根据消息内容做处理</h3><h5 id="多个消费者分担压力"><a href="#多个消费者分担压力" class="headerlink" title="多个消费者分担压力"></a>多个消费者分担压力</h5><p><strong>RabbitMQ后台</strong><a target="_blank" rel="noopener" href="http://47.98.225.105:15672/">http://47.98.225.105:15672/</a></p>
+<h6 id="循环调度"><a href="#循环调度" class="headerlink" title="循环调度"></a>循环调度</h6><pre><code class="java">workqueues/NewTask.java
+package workqueues;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * 生产者：生产批量消息
+ */
+public class NewTask &#123;
+    private final static String TAKS_QUEUE_NAME = &quot;task_queue&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        //创建连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        //设置RabbitMQ地址
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        //建立连接
+        Connection connection = factory.newConnection();
+        //获得信道
+        Channel channel = connection.createChannel();
+        //声明队列 参数：第二个会不会随着重启消失 第三个队列是否仅能給连接使用 第四个未使用自动删除？ 第五个参数
+        channel.queueDeclare(TAKS_QUEUE_NAME,true,false,false,null);
+        for (int i = 0; i &lt; 10; i++) &#123;
+            String message = i + &quot;...&quot;;
+            channel.basicPublish(&quot;&quot;,TAKS_QUEUE_NAME,null,message.getBytes(&quot;UTF-8&quot;));
+            System.out.println(&quot;发送了消息：&quot; + message);
+        &#125;
+        //关闭连接
+        channel.close();
+        connection.close();
+    &#125;
+&#125;
+=============================================================================================
+发送了消息：0...
+发送了消息：1...
+发送了消息：2...
+发送了消息：3...
+发送了消息：4...
+发送了消息：5...
+发送了消息：6...
+发送了消息：7...
+发送了消息：8...
+发送了消息：9...
+</code></pre>
+<pre><code class="java">workqueues/Worker.java
+package workqueues;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * 消费者，接收前面的批量消息
+ */
+public class Worker &#123;
+    private final static String TAKS_QUEUE_NAME = &quot;task_queue&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        //创建连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        //设置RabbitMQ地址
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        //建立连接
+        Connection connection = factory.newConnection();
+        //获得信道
+        Channel channel = connection.createChannel();
+        //声明队列 参数：第二个会不会随着重启消失 第三个队列是否仅能給连接使用 第四个未使用自动删除？ 第五个参数
+        channel.queueDeclare(TAKS_QUEUE_NAME, true, false, false, null);
+        System.out.println(&quot;开始接收消息&quot;);
+        channel.basicConsume(TAKS_QUEUE_NAME, true, new DefaultConsumer(channel) &#123;
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到了消息：&quot; + message);
+                try&#123;
+                    doWork(message);
+                &#125;finally &#123;
+                    System.out.println(&quot;完成消息处理&quot;);
+                &#125;
+            &#125;
+        &#125;);
+    &#125;
+
+    private static void doWork(String task) &#123;
+        //有点延迟1秒
+        char[] chars = task.toCharArray();
+        for (char ch : chars) &#123;
+            if (ch == &#39;.&#39;) &#123;
+                try &#123;
+                    Thread.sleep(100);
+                &#125; catch (InterruptedException e) &#123;
+                    throw new RuntimeException(e);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+==========================================================================================
+收到了消息：0...
+完成消息处理
+收到了消息：1...
+完成消息处理
+收到了消息：2...
+完成消息处理
+收到了消息：3...
+完成消息处理
+收到了消息：4...
+完成消息处理
+收到了消息：5...
+完成消息处理
+收到了消息：6...
+完成消息处理
+收到了消息：7...
+完成消息处理
+收到了消息：8...
+完成消息处理
+收到了消息：9...
+完成消息处理
+</code></pre>
+<h5 id="并行-多个消费者平均压力！！！"><a href="#并行-多个消费者平均压力！！！" class="headerlink" title="并行 多个消费者平均压力！！！"></a>并行 多个消费者平均压力！！！</h5><h6 id="公平派遣-因为奇数偶数压力不同-消息确认-【以工作量的程度去分任务】"><a href="#公平派遣-因为奇数偶数压力不同-消息确认-【以工作量的程度去分任务】" class="headerlink" title="公平派遣[因为奇数偶数压力不同] + 消息确认 【以工作量的程度去分任务】"></a>公平派遣[因为奇数偶数压力不同] + 消息确认 【<u>以工作量的程度去分任务</u>】</h6><pre><code class="java">//在Worker消费方打开并行消费 Run/Debug Configurations → Modify options蓝字 → Allow multiple instances             此时两个woker开始配合平均压力 一起工作
+workqueues/Worker.java
+package workqueues;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * 消费者，接收前面的批量消息
+ */
+public class Worker &#123;
+    private final static String TAKS_QUEUE_NAME = &quot;task_queue&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        //创建连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        //设置RabbitMQ地址
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        //建立连接
+        Connection connection = factory.newConnection();
+        //获得信道
+        Channel channel = connection.createChannel();
+        //声明队列 参数：第二个会不会随着重启消失 第三个队列是否仅能給连接使用 第四个未使用自动删除？ 第五个参数
+        channel.queueDeclare(TAKS_QUEUE_NAME, true, false, false, null);
+        System.out.println(&quot;开始接收消息&quot;);
+        channel.basicQos(1); //最希望处理的数量 处理完之前不会接收下一个任务
+        channel.basicConsume(TAKS_QUEUE_NAME, false, new DefaultConsumer(channel) &#123; //关掉自动接收 要手动确认false
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到了消息：&quot; + message);
+                try&#123;
+                    doWork(message);
+                &#125;finally &#123;
+                    System.out.println(&quot;完成消息处理&quot;);
+                    channel.basicAck(envelope.getDeliveryTag(), false); //false 不同时一起确认 手动确认消息
+                &#125;
+            &#125;
+        &#125;);
+    &#125;
+
+    private static void doWork(String task) &#123;
+        //有点延迟1秒
+        char[] chars = task.toCharArray();
+        for (char ch : chars) &#123;
+            if (ch == &#39;.&#39;) &#123;
+                try &#123;
+                    Thread.sleep(500);
+                &#125; catch (InterruptedException e) &#123;
+                    throw new RuntimeException(e);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+=======================================================================================
+开始接收消息
+收到了消息：1
+消息处理完成
+收到了消息：2...
+消息处理完成
+......
+</code></pre>
+<h3 id="交换机工作模式"><a href="#交换机工作模式" class="headerlink" title="交换机工作模式"></a>交换机工作模式</h3><ul>
+<li><strong>fanout</strong>：广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的</li>
+<li><strong>direct</strong>：根据RoutingKey匹配消息路由到指定队列</li>
+<li><strong>topic</strong>：生产者指定RoutingKey消息根据消费端指定的队列通过模糊匹配的方式进行相应转发</li>
+<li><strong>headers</strong>：根据发送消息内容中的headers属性来匹配</li>
+</ul>
+<h5 id="fanout模式"><a href="#fanout模式" class="headerlink" title="fanout模式"></a>fanout模式</h5><h6 id="广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的-所有消息无差别发送"><a href="#广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的-所有消息无差别发送" class="headerlink" title="广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的 [所有消息无差别发送]"></a>广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的 [所有消息无差别发送]</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/3aa53b6e78e1fd67145c5d2acf905c22eee0b44a/data/%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%B1%BB%E5%9E%8B-fanout.png"></p>
+<pre><code class="java">fanout/EmitLog.java【生产者】
+package fanout;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * 发送日志信息
+ */
+public class EmitLog &#123;
+    //创建交换机
+    private static final String EXCHANGE_NAME = &quot;logs&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        //声明交换机
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+        String message = &quot;info: Hello World！&quot;;
+        channel.basicPublish(EXCHANGE_NAME, &quot;&quot;,null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot;发送了消息：&quot; + message);
+        channel.close();
+        connection.close();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">fanout/ReceiveLogs.java【消费者】
+package fanout;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * 描述：接收日志消息 有多个接收同样的消息
+ */
+public class ReceiveLogs &#123;
+    private static final String EXCHANGE_NAME = &quot;logs&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        //声明交换机
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+        //非持久会自动删除的队列 在同一个类中多次启动 每一次队列名字都不一样
+        String queueName = channel.queueDeclare().getQueue();
+        //交换机和队列的绑定
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;&quot;);
+        System.out.println(&quot;开始接收消息&quot;);
+        Consumer consumer =  new DefaultConsumer(channel)&#123;
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到消息：&quot;+message);
+            &#125;
+        &#125;;
+        channel.basicConsume(queueName, true, consumer);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="direct模式"><a href="#direct模式" class="headerlink" title="direct模式"></a>direct模式</h5><h6 id="根据RoutingKey匹配消息路由到指定队列-消费者接收消息不一致"><a href="#根据RoutingKey匹配消息路由到指定队列-消费者接收消息不一致" class="headerlink" title="根据RoutingKey匹配消息路由到指定队列 [消费者接收消息不一致]"></a>根据RoutingKey匹配消息路由到指定队列 [消费者接收消息不一致]</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/df64342f867398846ad29a0cb944a8490cd247b0/data/%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%B1%BB%E5%9E%8B-direct.jpg"></p>
+<pre><code class="java">direct/ReceiveLogsDirect1.java
+package direct;
+
+import com.rabbitmq.client.*;
+
+import java.io.IOException;
+
+/**
+ * 接收3个等级的日志
+ */
+public class ReceiveLogsDirect1 &#123;
+
+    private static final String EXCHANGE_NAME = &quot;direct_log&quot;;
+
+    public static void main(String[] argv) throws Exception &#123;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+        //生成一个随机的临时的queue
+        String queueName = channel.queueDeclare().getQueue();
+
+        //一个交换机同时绑定三个queue
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;info&quot;);
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;warning&quot;);
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;error&quot;);
+
+        System.out.println(&quot; 开始接收消息&quot;);
+
+        Consumer consumer =  new DefaultConsumer(channel)&#123;
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到消息：&quot;+message);
+            &#125;
+        &#125;;
+        channel.basicConsume(queueName, true, consumer);
+    &#125;
+&#125;
+=============================================================================
+收到消息：Hello World！
+收到消息：Hello World！
+收到消息：Hello World！
+收到消息：Hello World！
+</code></pre>
+<pre><code class="java">direct/ReceiveLogsDirect2.java
+package direct;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import java.io.IOException;
+
+/**
+ * 接收1个等级的日志
+ */
+public class ReceiveLogsDirect2 &#123;
+
+    private static final String EXCHANGE_NAME = &quot;direct_log&quot;;
+
+    public static void main(String[] argv) throws Exception &#123;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+        //生成一个随机的临时的queue
+        String queueName = channel.queueDeclare().getQueue();
+
+        //一个交换机同时绑定两个queue，比刚第一个Receiver少接收了一个error等级
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;info&quot;);
+        channel.queueBind(queueName, EXCHANGE_NAME, &quot;warning&quot;);
+
+        System.out.println(&quot;开始接收消息&quot;);
+
+        Consumer consumer =  new DefaultConsumer(channel)&#123;
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到消息：&quot;+message);
+            &#125;
+        &#125;;
+        channel.basicConsume(queueName, true, consumer);
+    &#125;
+&#125;
+=============================================================================
+收到消息：Hello World！
+收到消息：Hello World！
+收到消息：Hello World！
+</code></pre>
+<pre><code class="java">direct/EmitLogDirect.java
+package direct;
+
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+public class EmitLogDirect &#123;
+
+    private static final String EXCHANGE_NAME = &quot;direct_log&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        //声明交换机 DIRECT
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+        String message = &quot;Hello World！&quot;;
+        //发送第一个等级消息
+        channel.basicPublish(EXCHANGE_NAME, &quot;info&quot;,null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot;发送了消息：&quot; + &quot;等级为info,消息内容：&quot; + message);
+
+        //发送第二个等级消息
+        channel.basicPublish(EXCHANGE_NAME, &quot;warning&quot;,null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot;发送了消息：&quot; + &quot;等级为warning,消息内容：&quot; + message);
+
+        //发送第三个等级消息
+        channel.basicPublish(EXCHANGE_NAME, &quot;error&quot;,null, message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot;发送了消息：&quot; + &quot;等级为error,消息内容：&quot; + message);
+        channel.close();
+        connection.close();
+    &#125;
+&#125;
+=============================================================================
+发送了消息：等级为info,消息内容：Hello World！
+发送了消息：等级为warning,消息内容：Hello World！
+发送了消息：等级为error,消息内容：Hello World！
 </code></pre>
 
     </div>
