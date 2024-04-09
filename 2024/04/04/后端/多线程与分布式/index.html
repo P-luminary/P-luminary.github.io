@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1992,6 +1992,162 @@ systemctl status rabbitmq-server
 
 开启web管理界面
 rabbitmq-plugins enable rabbitmq_management
+</code></pre>
+<h3 id="RabbitMQ管理后台-1"><a href="#RabbitMQ管理后台-1" class="headerlink" title="RabbitMQ管理后台"></a>RabbitMQ管理后台</h3><h5 id="启动RabbitMQ"><a href="#启动RabbitMQ" class="headerlink" title="启动RabbitMQ"></a>启动RabbitMQ</h5><ul>
+<li>启动RabbitMQ：<code>systemctl start rabbitmq-server</code></li>
+<li>查看状态：<code>rabbitmqctl status</code></li>
+<li>启动管理台</li>
+<li>配置admin用户</li>
+</ul>
+<pre><code class="mysql">[root@iZbp1dssknxftmjczbtpndZ ~]# rabbitmq-plugins enable rabbitmq_management
+Enabling plugins on node rabbit@iZbp1dssknxftmjczbtpndZ:
+rabbitmq_management
+The following plugins have been configured:
+  rabbitmq_management
+  rabbitmq_management_agent
+  rabbitmq_web_dispatch
+Applying plugin configuration to rabbit@iZbp1dssknxftmjczbtpndZ...
+Plugin configuration unchanged. ##添加账户
+[root@iZbp1dssknxftmjczbtpndZ ~]# rabbitmqctl add_user admin password
+Adding user &quot;admin&quot; ...            ##设置管理员
+[root@iZbp1dssknxftmjczbtpndZ ~]# rabbitmqctl set_user_tags admin administrator
+Setting tags for user &quot;admin&quot; to [administrator] ...
+浏览器进入RabbitMQ管理后台 输入 http://47.98.225.105:15672/
+</code></pre>
+<h5 id="RabbitMQ管理后台-2"><a href="#RabbitMQ管理后台-2" class="headerlink" title="RabbitMQ管理后台"></a>RabbitMQ管理后台</h5><ul>
+<li>浏览页面</li>
+<li>添加用户</li>
+<li>创建虚拟主机(Virtual Hosts) &#x3D;&gt; 都有各自的队列、交换机</li>
+</ul>
+<h3 id="第一个生产者"><a href="#第一个生产者" class="headerlink" title="第一个生产者"></a>第一个生产者</h3><h5 id="实战案例演示-1"><a href="#实战案例演示-1" class="headerlink" title="实战案例演示"></a>实战案例演示</h5><ul>
+<li>新建项目</li>
+<li>Hello World<br>P(生产者)→hello→C(消费者)</li>
+<li>创建一个rabbitmq(Maven)新项目</li>
+<li>rabbitmq支持多语言</li>
+</ul>
+<pre><code class="java">登录上RabbitMQ后台 上面Admin 右面Virtual Hosts 
+点表里的 /  下面增加一个admin
+
+pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;rabbitmq&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;20&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;20&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.rabbitmq&lt;/groupId&gt;
+            &lt;artifactId&gt;amqp-client&lt;/artifactId&gt;
+            &lt;version&gt;5.8.0&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+            &lt;artifactId&gt;slf4j-nop&lt;/artifactId&gt;
+            &lt;version&gt;1.7.29&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">helloworld/send.java
+package helloworld;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * Hello World的发送类，连接到RabbitMQ服务端，然后发送一条消息后退出
+ */
+public class send &#123;
+    //队列名字
+    private final static String QUEUE_NAME = &quot;hello&quot;;
+
+    public static void main(String[] args) throws IOException, TimeoutException &#123;
+        //创建连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        //设置RabbitMQ地址
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        //建立连接
+        Connection connection = factory.newConnection();
+        //获得信道
+        Channel channel = connection.createChannel();
+        //声明队列 参数：第二个会不会随着重启消失 第三个队列是否仅能給连接使用 第四个未使用自动删除？ 第五个参数
+        channel.queueDeclare(QUEUE_NAME,false,false,false,null);
+        //发布消息
+        String message = &quot;Hello World!&quot;;
+        channel.basicPublish(&quot;&quot;,QUEUE_NAME,null,message.getBytes(&quot;UTF-8&quot;));
+        System.out.println(&quot;发送了消息：&quot; + message);
+        //关闭连接
+        channel.close();
+        connection.close();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">helloworld/Recv.java
+package helloworld;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import java.io.IOException;
+
+/**
+ * 接收消息，并打印，持续运行
+ */
+public class Recv &#123;
+    private final static String QUEUE_NAME = &quot;hello&quot;;
+
+    public static void main(String[] args) throws Exception &#123;
+        //创建连接工厂
+        ConnectionFactory factory = new ConnectionFactory();
+        //设置RabbitMQ地址
+        factory.setHost(&quot;47.98.225.105&quot;);
+        factory.setUsername(&quot;admin&quot;);
+        factory.setPassword(&quot;password&quot;);
+        //建立连接
+        Connection connection = factory.newConnection();
+        //获得信道
+        Channel channel = connection.createChannel();
+        //声明队列 参数：第二个会不会随着重启消失 第三个队列是否仅能給连接使用 第四个未使用自动删除？ 第五个参数
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        System.out.println(&quot;开始接收消息&quot;);
+        //接收消息并消费 2:是否确认收到(快递签收 自动消息确认) 3：消息收到后进行处理
+        channel.basicConsume(QUEUE_NAME, true, new DefaultConsumer(channel) &#123;
+            //收到信息后会执行的函数
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body)
+                    throws IOException &#123;
+                String message = new String(body, &quot;UTF-8&quot;);
+                System.out.println(&quot;收到消息：&quot; + message);
+            &#125;
+        &#125;);
+    &#125;
+&#125;
+=======================================================
+//由于是持续接收消息的 若将send.java中改为Hello World2 jiang&#39;hu
+开始接收消息
+收到消息：Hello World!
+收到消息：Hello World2!
 </code></pre>
 
     </div>
