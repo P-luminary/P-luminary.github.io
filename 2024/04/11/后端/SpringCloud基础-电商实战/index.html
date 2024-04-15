@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -710,6 +710,619 @@ http://127.0.0.1:8082/price?courseId=409
 <pre><code class="mysql">数据库名：course_practice
    表名：course_price
    字段：id[自增]   course_id    price
+</code></pre>
+<h3 id="Eureka的作用和架构"><a href="#Eureka的作用和架构" class="headerlink" title="Eureka的作用和架构"></a>Eureka的作用和架构</h3><h5 id="Eureka"><a href="#Eureka" class="headerlink" title="Eureka"></a>Eureka</h5><ul>
+<li>用于定位服务，直接找到组件中的各个服务地址</li>
+<li>114[各种服务的提供者]、物业[维护各个住户的信息(注册中心)]</li>
+</ul>
+<h5 id="为什么需要服务注册与发现-移除不影响-但会有很多麻烦"><a href="#为什么需要服务注册与发现-移除不影响-但会有很多麻烦" class="headerlink" title="为什么需要服务注册与发现 [移除不影响 但会有很多麻烦]"></a>为什么需要服务注册与发现 [移除不影响 但会有很多麻烦]</h5><ul>
+<li>IP变化</li>
+<li>难以维护</li>
+<li>改进<ul>
+<li><strong>节点变化</strong>[服务的提供者和消费者] [消费者需要调用提供者的API来获得服务] 若提供者修改了ip 此时应该上传到注册中心，消费者此时需要得到IP和API 无需直接找提供者 直接去<strong>注册中心</strong>调用</li>
+</ul>
+</li>
+</ul>
+<h5 id="Eureka架构"><a href="#Eureka架构" class="headerlink" title="Eureka架构"></a>Eureka架构</h5><ul>
+<li>EureKa <strong>Server</strong> 和 EureKa <strong>Client</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/6a3bfcded810da5a827559f3b8f868a0de867787/data/Eureka%E6%9E%B6%E6%9E%84.png"></p>
+<ul>
+<li><strong>集群</strong> [只要能获得一个Eureka Server 就能获得整个信息]</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f756e06eed90edb75c6b3b6f234eee57763d8811/data/Eureka%E6%9E%B6%E6%9E%84-%E9%9B%86%E7%BE%A4.png"></p>
+<h3 id="引入Eureka"><a href="#引入Eureka" class="headerlink" title="引入Eureka"></a>引入Eureka</h3><ul>
+<li><h6 id="引入依赖"><a href="#引入依赖" class="headerlink" title="引入依赖"></a>引入依赖</h6></li>
+<li><h6 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h6></li>
+<li><h6 id="启动注解"><a href="#启动注解" class="headerlink" title="启动注解"></a>启动注解</h6></li>
+</ul>
+<pre><code class="xml">pom.xml(eureka-server)
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;spring-cloud-course-practice&lt;/artifactId&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;artifactId&gt;eureka-server&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+
+    &lt;!-- 模块名及描述信息 --&gt;
+    &lt;name&gt;course-eureka-server&lt;/name&gt;
+    &lt;description&gt;Spring Cloud Eureka&lt;/description&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-server&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">pom.xml(Spring-cloud-course-practice)
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;packaging&gt;pom&lt;/packaging&gt;
+  &lt;modules&gt;
+    &lt;module&gt;course-service&lt;/module&gt;
+    &lt;module&gt;eureka-server&lt;/module&gt;
+  &lt;/modules&gt;
+  &lt;parent&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+    &lt;version&gt;2.1.12.RELEASE&lt;/version&gt;
+    &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+  &lt;/parent&gt;
+  &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-cloud-course-practice&lt;/artifactId&gt;
+  &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+  &lt;name&gt;spring-cloud-course-practice&lt;/name&gt;
+  &lt;description&gt;course project for Spring Cloud&lt;/description&gt;
+
+  &lt;properties&gt;
+    &lt;java.version&gt;1.8&lt;/java.version&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+
+  &lt;!--  表示Spring Cloud的版本--&gt;
+  &lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+      &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+        &lt;version&gt;Greenwich.SR5&lt;/version&gt;
+        &lt;type&gt;pom&lt;/type&gt;
+        &lt;scope&gt;import&lt;/scope&gt;
+      &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+  &lt;/dependencyManagement&gt;
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="mysql">application.properties(eureka-server)
+
+spring.application.name=eureka-server
+server.port=8000
+eureka.instance.hostname=localhost
+#fetch-registry???????????????????
+eureka.client.fetch-registry=false
+#register-with-eureka??????????Eureka Server????true?
+eureka.client.register-with-eureka=false
+eureka.client.service-url.defaultZone=http://$&#123;eureka.instance.hostname&#125;:$&#123;server.port&#125;/eureka/
+</code></pre>
+<pre><code class="mysql">application.properties(course-list)
+
+server.port=8081
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/course_practice?serverTimezone=UTC&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true
+spring.datasource.username=root
+spring.datasource.password=root
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+# entity?????????????????
+mybatis.configuration.map-underscore-to-camel-case=true 
+spring.application.name=course-list
+#??????? eureka-server??application.properties?defaultZone????????????????
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+</code></pre>
+<pre><code class="mysql">application.properties(course-price)
+
+server.port=8082
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/course_practice?serverTimezone=UTC&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true
+spring.datasource.username=root
+spring.datasource.password=root
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+mybatis.configuration.map-underscore-to-camel-case=true
+spring.application.name=course-price
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+</code></pre>
+<pre><code class="java">com/imooc/course/EurekaServerApplication.java
+package com.imooc.course;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+/**
+ * Eureka的服务端
+ */
+@EnableEurekaServer
+@SpringBootApplication
+public class EurekaServerApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(EurekaServerApplication.class, args);
+    &#125;
+&#125;
+========================================================
+http://127.0.0.1:8000/
+</code></pre>
+<h3 id="利用Feign实现服务间调用"><a href="#利用Feign实现服务间调用" class="headerlink" title="利用Feign实现服务间调用"></a>利用Feign实现服务间调用</h3><h5 id="Feign"><a href="#Feign" class="headerlink" title="Feign"></a>Feign</h5><ul>
+<li>声明式、模板化的HTTP客户端，方便的调用远程的HTTP请求 [基于接口实现]</li>
+</ul>
+<h6 id="集成Feign"><a href="#集成Feign" class="headerlink" title="集成Feign"></a>集成Feign</h6><ul>
+<li>引入依赖</li>
+<li>配置文件</li>
+<li>注解</li>
+</ul>
+<pre><code class="xml">pom.xml (course-price)
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-cloud-starter-openfeign&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+application.properties
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+</code></pre>
+<pre><code class="java">com/imooc/course/controller/CoursePriceController.java
+package com.imooc.course.controller;
+
+import com.imooc.course.client.CourseListClient;
+import com.imooc.course.entity.Course;
+import com.imooc.course.entity.CoursePrice;
+import com.imooc.course.service.CoursePriceService;
+import java.util.List;
+import javax.xml.ws.Action;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 描述：     课程价格控制器
+ */
+@RestController
+public class CoursePriceController &#123;
+
+    @Autowired
+    CoursePriceService coursePriceService;
+
+    @Autowired
+    CourseListClient courseListClient;
+
+    @GetMapping(&quot;/price&quot;)
+    public Integer getCoursePrice(Integer courseId) &#123;
+        CoursePrice coursePrice = coursePriceService.getCoursePrice(courseId);
+        return coursePrice.getPrice();
+    &#125;
+
+    @GetMapping(&quot;/coursesInPrice&quot;)
+    public List&lt;Course&gt; getCourseListInPrice(Integer courseId) &#123;
+        List&lt;Course&gt; courses = courseListClient.courseList();
+        return courses;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/course/client/CourseListClient.java[接口]
+package com.imooc.course.client;
+
+import com.imooc.course.entity.Course;
+import java.util.List;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+
+/**
+ * 描述：     课程列表的Feign客户端
+ */
+@FeignClient(&quot;course-list&quot;)
+public interface CourseListClient &#123;
+
+    @GetMapping(&quot;/courses&quot;)
+    List&lt;Course&gt; courseList();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/course/CoursePriceApplication.java
+package com.imooc.course;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+public class CoursePriceApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(CoursePriceApplication.class, args);
+    &#125;
+&#125;
+=============================================================
+http://127.0.0.1:8082/coursesInPrice
+
+[
+    &#123;
+        &quot;id&quot;: 1,
+        &quot;courseId&quot;: 362,
+        &quot;courseName&quot;: &quot;SpringCloud自学&quot;,
+        &quot;valid&quot;: 1
+    &#125;,
+    &#123;
+        &quot;id&quot;: 2,
+        &quot;courseId&quot;: 409,
+        &quot;courseName&quot;: &quot;玩转Java并发工具&quot;,
+        &quot;valid&quot;: 1
+    &#125;
+]
+</code></pre>
+<h3 id="负载均衡的两种类型"><a href="#负载均衡的两种类型" class="headerlink" title="负载均衡的两种类型"></a>负载均衡的两种类型</h3><ul>
+<li><strong>客户端</strong>负载均衡(Ribbon)</li>
+<li><strong>服务端</strong>负载均衡(Nginx)</li>
+</ul>
+<h5 id="负载均衡策略"><a href="#负载均衡策略" class="headerlink" title="负载均衡策略"></a>负载均衡策略</h5><ul>
+<li>RandomRule 表示<strong>随机</strong>策略</li>
+<li>RoundRobinRule 表示<strong>轮询</strong>策略</li>
+<li>ResponseTimeWeightedRule<strong>加权</strong>，根据每一个Server的平均响应时间动态加权</li>
+</ul>
+<h5 id="配置不同的负载均衡方式"><a href="#配置不同的负载均衡方式" class="headerlink" title="配置不同的负载均衡方式"></a>配置不同的负载均衡方式</h5><ul>
+<li>Ribbon.NFLoadBalancerRuleClassName</li>
+</ul>
+<pre><code class="java">application.properties(course-price)
+course-list.ribbon.NFLoadBanlancerRuleClassName=com.netflix.loadbalancer.RoundRobinRule
+</code></pre>
+<h3 id="为什么要断路器"><a href="#为什么要断路器" class="headerlink" title="为什么要断路器"></a>为什么要断路器</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/e441bfbcf0e2cf07f9d53564669b2dbd90533142/data/%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%96%AD%E8%B7%AF%E5%99%A8.jpg"></p>
+<h5 id="Hystrix"><a href="#Hystrix" class="headerlink" title="Hystrix"></a>Hystrix</h5><pre><code class="xml">pom.xml(course-price)   
+&lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-cloud-starter-netflix-hystrix&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">application.properties(course-price)
+feign.hystrix.enabled=true
+</code></pre>
+<pre><code class="java">com/imooc/course/CoursePriceApplication.java
+package com.imooc.course;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+@EnableCircuitBreaker
+public class CoursePriceApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(CoursePriceApplication.class, args);
+    &#125;
+&#125;
+================================================================
+所有服务都打开时 http://127.0.0.1:8082/coursesInPrice
+[
+    &#123;
+        &quot;id&quot;: 1,
+        &quot;courseId&quot;: 362,
+        &quot;courseName&quot;: &quot;SpringCloud自学&quot;,
+        &quot;valid&quot;: 1
+    &#125;,
+    &#123;
+        &quot;id&quot;: 2,
+        &quot;courseId&quot;: 409,
+        &quot;courseName&quot;: &quot;玩转Java并发工具&quot;,
+        &quot;valid&quot;: 1
+    &#125;
+]
+当把CouresListApplication服务关闭的时候
+[
+    &#123;
+        &quot;id&quot;: 1,
+        &quot;courseId&quot;: 1,
+        &quot;courseName&quot;: &quot;默认课程&quot;,
+        &quot;valid&quot;: 1
+    &#125;
+]
+</code></pre>
+<h3 id="整合两个服务"><a href="#整合两个服务" class="headerlink" title="整合两个服务"></a>整合两个服务</h3><pre><code class="java">com/imooc/course/controller/CoursePriceController.java
+    @GetMapping(&quot;/coursesAndPrice&quot;)
+    public List&lt;CourseAndPrice&gt; getCoursesAndPrice()&#123;
+        List&lt;CourseAndPrice&gt; courseAndPrices = coursePriceService.getCourseAndPrice();
+        return courseAndPrices;
+    &#125;
+=====================================================
+http://127.0.0.1:8082/coursesAndPrice
+[
+    &#123;
+        &quot;id&quot;: 1,
+        &quot;courseId&quot;: 362,
+        &quot;name&quot;: &quot;SpringCloud自学&quot;,
+        &quot;price&quot;: 348
+    &#125;,
+    &#123;
+        &quot;id&quot;: 2,
+        &quot;courseId&quot;: 409,
+        &quot;name&quot;: &quot;玩转Java并发工具&quot;,
+        &quot;price&quot;: 399
+    &#125;
+]
+</code></pre>
+<pre><code class="java">com/imooc/course/service/CoursePriceService.java
+public interface CoursePriceService &#123;
+
+    CoursePrice getCoursePrice(Integer courseId);
+    List&lt;CourseAndPrice&gt; getCourseAndPrice();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/course/service/impl/CoursePriceServiceImpl.java
+package com.imooc.course.service.impl;
+
+import com.imooc.course.client.CourseListClient;
+import com.imooc.course.dao.CoursePriceMapper;
+import com.imooc.course.entity.Course;
+import com.imooc.course.entity.CourseAndPrice;
+import com.imooc.course.entity.CoursePrice;
+import com.imooc.course.service.CoursePriceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 描述：     课程价格的服务实现类
+ */
+@Service
+public class CoursePriceServiceImpl implements CoursePriceService &#123;
+
+    @Autowired
+    CoursePriceMapper coursePriceMapper;
+    @Autowired
+    CourseListClient courseListClient;
+
+    @Override
+    public CoursePrice getCoursePrice(Integer courseId) &#123;
+        return coursePriceMapper.findCoursePrice(courseId);
+    &#125;
+
+    @Override
+    public List&lt;CourseAndPrice&gt; getCourseAndPrice() &#123;
+        List&lt;CourseAndPrice&gt; courseAndPrices = new ArrayList&lt;&gt;();
+        List&lt;Course&gt; courses = courseListClient.courseList();
+        for (int i = 0; i &lt; courses.size(); i++) &#123;
+            Course course = courses.get(i);
+            //inn
+            if (course != null) &#123;
+                CoursePrice coursePrice = getCoursePrice(course.getCourseId());
+                CourseAndPrice courseAndPrice = new CourseAndPrice();
+                courseAndPrice.setPrice(coursePrice.getPrice());
+                courseAndPrice.setName(course.getCourseName());
+                courseAndPrice.setId(coursePrice.getId());
+                courseAndPrice.setCourseId(course.getCourseId());
+                courseAndPrices.add(courseAndPrice);
+            &#125;
+        &#125;
+        return courseAndPrices;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/course/entity/CourseAndPrice.java
+package com.imooc.course.entity;
+
+/**
+ * 课程与价格的融合类
+ */
+public class CourseAndPrice &#123;
+    Integer id;
+    Integer courseId;
+    String name;
+    Integer price;
+&#125;
+</code></pre>
+<h3 id="网关Zuul"><a href="#网关Zuul" class="headerlink" title="网关Zuul"></a>网关Zuul</h3><ul>
+<li>为什么<strong>需要</strong>网关</li>
+<li>签名校验、登录校验<strong>冗余</strong>问题</li>
+<li>Spring Cloud <strong>Zuul</strong> 与 Spring Cloud</li>
+<li>API网关允许您将API请求(内部或外部)路由到正确的位置</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/1f9e4c61e576605cf2c814d0d8f069c61bcef0da/data/%E7%BD%91%E5%85%B3Zuul.jpg"></p>
+<h3 id="集成Zuul-统一修改访问url地址"><a href="#集成Zuul-统一修改访问url地址" class="headerlink" title="集成Zuul [统一修改访问url地址]"></a>集成Zuul [统一修改访问url地址]</h3><ul>
+<li>把自己注册到Eureka这个注册中心</li>
+<li>引入依赖</li>
+<li>配置路由地址</li>
+</ul>
+<pre><code class="xml">pom.xml(course-zuul)
+     &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-zuul&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="java">com/imooc/course/ZuulGatewayApplication.java
+package com.imooc.course;
+
+import org.springframework.boot.SpringApplication;
+
+/**
+ * 网关启动类
+ */
+@EnableZuulProxy
+@SpringCloudApplication
+public class ZuulGatewayApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(ZuulGatewayApplication.class, args);
+    &#125;
+&#125;
+===============================================================
+http://127.0.0.1:9000/imooc/price/coursesInPrice
+[
+    &#123;
+        &quot;id&quot;: 1,
+        &quot;courseId&quot;: 362,
+        &quot;courseName&quot;: &quot;SpringCloud自学&quot;,
+        &quot;valid&quot;: 1
+    &#125;,
+    &#123;
+        &quot;id&quot;: 2,
+        &quot;courseId&quot;: 409,
+        &quot;courseName&quot;: &quot;玩转Java并发工具&quot;,
+        &quot;valid&quot;: 1
+    &#125;
+]
+</code></pre>
+<pre><code class="mysql">application.properties
+
+spring.application.name=course-gateway
+server.port=9000
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+mybatis.configuration.map-underscore-to-camel-case=true
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+
+zuul.prefix=/imooc
+zuul.routes.course-list.path=/list/**
+zuul.routes.course-list.service-id=course-list
+zuul.routes.course-price.path=/price/**
+zuul.routes.course-price.service-id=course-price
+</code></pre>
+<h3 id="利用网关实现过滤器"><a href="#利用网关实现过滤器" class="headerlink" title="利用网关实现过滤器"></a>利用网关实现过滤器</h3><ul>
+<li><strong>pre</strong> 过滤器在路由请求之前运行</li>
+<li>route 过滤器可以处理请求的实际路由</li>
+<li><strong>post</strong> 路由请求后运行过滤器</li>
+<li>error 如果在处理请求的过程中发生错误，则过滤器将运行</li>
+</ul>
+<pre><code class="java">com/imooc/course/filter/PreRequestFilter.java
+package com.imooc.course.filter;
+
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.exception.ZuulException;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
+
+/**
+ * 记录请求时间
+ */
+@Component
+public class PreRequestFilter extends ZuulFilter &#123;
+
+    @Override
+    public String filterType() &#123;
+        //过滤器的类型
+        return FilterConstants.PRE_TYPE;
+    &#125;
+
+    @Override
+    public int filterOrder() &#123;
+        return 0;
+    &#125;
+
+    @Override
+    public boolean shouldFilter() &#123;
+        //是否启用过滤器
+        return true;
+    &#125;
+
+    @Override
+    public Object run() throws ZuulException &#123;
+        //通过时间戳 获取上下文
+        RequestContext currentContext = RequestContext.getCurrentContext();
+        currentContext.set(&quot;startTime&quot;,System.currentTimeMillis());
+        System.out.println(&quot;过滤器已经记录时间&quot;);
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/course/filter/PostRequestFilter.java
+package com.imooc.course.filter;
+
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.exception.ZuulException;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
+
+/**
+ * 请求处理后的过滤器
+ */
+@Component //有了才能被spring捕捉到
+public class PostRequestFilter extends ZuulFilter &#123;
+    @Override
+    public String filterType() &#123;
+        return FilterConstants.POST_TYPE;
+    &#125;
+
+    @Override
+    public int filterOrder() &#123; //在其之前-1 先运行
+        return FilterConstants.SEND_RESPONSE_FILTER_ORDER - 1;
+    &#125;
+
+    @Override
+    public boolean shouldFilter() &#123;
+        return false;
+    &#125;
+
+    @Override
+    public Object run() throws ZuulException &#123;
+        RequestContext currentContext = RequestContext.getCurrentContext();
+        Long startTime = (Long) currentContext.get(&quot;startTime&quot;);
+        long duration = System.currentTimeMillis() - startTime;
+        String requestURI = currentContext.getRequest().getRequestURI();
+        System.out.println(&quot;uri:&quot; + requestURI + &quot;,处理时长：&quot; + duration);
+        return null;
+    &#125;
+&#125;
 </code></pre>
 
     </div>
