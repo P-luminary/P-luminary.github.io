@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1321,6 +1321,653 @@ public class PostRequestFilter extends ZuulFilter &#123;
         String requestURI = currentContext.getRequest().getRequestURI();
         System.out.println(&quot;uri:&quot; + requestURI + &quot;,处理时长：&quot; + duration);
         return null;
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<hr>
+<h3 id="Spring-Cloud电商实践"><a href="#Spring-Cloud电商实践" class="headerlink" title="Spring Cloud电商实践"></a>Spring Cloud电商实践</h3><ul>
+<li>服务拆分过程分析和经验分享</li>
+<li>完成用户、商品、购物车和订单等服务开发</li>
+<li>通用common模块的拆分和应用</li>
+<li>Eureka server注册中心开发，用Feign完成服务之间的调用</li>
+<li>共享Session的处理方案</li>
+<li>统一网关的集成与开发</li>
+</ul>
+<h3 id="Spring-Cloud电商项目"><a href="#Spring-Cloud电商项目" class="headerlink" title="Spring Cloud电商项目"></a>Spring Cloud电商项目</h3><ul>
+<li>项目介绍<ul>
+<li>在Spring Boot的基础上升级为<strong>Spring Cloud</strong></li>
+<li>从0到1 (Spring Boot)</li>
+<li><strong>从1到多</strong>、微服务</li>
+</ul>
+</li>
+<li>模块拆分</li>
+<li>Eureka-server开发</li>
+<li><strong>用户模块开发</strong></li>
+<li><strong>公共模块开发</strong></li>
+<li><strong>网关模块开发</strong></li>
+<li><strong>商品分类和商品模块开发</strong></li>
+<li><strong>购物车和订单模块开发</strong></li>
+<li>总结</li>
+</ul>
+<h3 id="模块拆分"><a href="#模块拆分" class="headerlink" title="模块拆分"></a>模块拆分</h3><ul>
+<li><p><strong>粒度</strong>：过粗、适中、过细</p>
+</li>
+<li><p>人员的角度</p>
+</li>
+<li><p>业务的角度：相关、独立</p>
+</li>
+<li><p>Eureka-server模块</p>
+</li>
+<li><p>网关模块</p>
+</li>
+<li><p>公共模块 (md5、统一API返回、常量、异常、异常枚举、二维码、工具类模块……)</p>
+</li>
+<li><p>用户模块 (相对来说比较独立，登录的时候无需获得商品信息)</p>
+</li>
+<li><p><strong>商品分类和商品模块</strong></p>
+</li>
+<li><p><strong>购物车和订单模块</strong></p>
+</li>
+</ul>
+<h3 id="功能模块介绍"><a href="#功能模块介绍" class="headerlink" title="功能模块介绍"></a>功能模块介绍</h3><ul>
+<li><h4 id="项目功能："><a href="#项目功能：" class="headerlink" title="项目功能："></a>项目功能：</h4><ul>
+<li><h5 id="前台-用户、商品分类、商品信息、购物车、订单"><a href="#前台-用户、商品分类、商品信息、购物车、订单" class="headerlink" title="前台  {用户、商品分类、商品信息、购物车、订单}"></a><span style = "color:red">前台  {用户、商品分类、商品信息、购物车、订单}</span></h5><ul>
+<li><strong>用户模块</strong>{注册、登录、更新签名、身份认证、登出}</li>
+<li><strong>商品分类模块</strong>{多级目录、递归查询、缓存}</li>
+<li><strong>商品模块</strong>{商品搜索、商品排序、商品列表、目录展示、商品详情}</li>
+<li><strong>购物车模块</strong>{加入商品、列表显示、数量更改、删除商品、勾选反选、全选全不选}</li>
+<li><strong>订单模块</strong>{下单、订单流程、订单详情、取消订单、支付二维码、扫码支付、个人订单、确认收货}</li>
+</ul>
+</li>
+<li><h5 id="后台-用户、商品分类、商品信息、订单"><a href="#后台-用户、商品分类、商品信息、订单" class="headerlink" title="后台  {用户、商品分类、商品信息、订单}"></a><span style = "color:red">后台  {用户、商品分类、商品信息、订单}</span></h5><ul>
+<li><strong>管理员模块</strong>{登录登出、身份认证、安全限制}</li>
+<li><strong>商品分类模块</strong>{分类列表、增加分类、修改分类、删除分类}</li>
+<li><strong>商品模块</strong>{商品列表、新增商品、图片上传、更新删除、批量上下架}</li>
+<li><strong>订单模块</strong>{订单列表、地址信息、发货、订单完结}</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>&#96;&#96;</p>
+<h3 id="项目初始化"><a href="#项目初始化" class="headerlink" title="项目初始化"></a>项目初始化</h3><h5 id="Eureka-server模块开发"><a href="#Eureka-server模块开发" class="headerlink" title="Eureka-server模块开发"></a>Eureka-server模块开发</h5><ul>
+<li>引入依赖</li>
+<li>配置文件</li>
+<li>启动注解</li>
+</ul>
+<blockquote>
+<p>由于是多模块开发，创建了maven项目后把cloud-mall-practice的src删除</p>
+</blockquote>
+<pre><code class="xml">pom.xml(cloud-mall-practice)
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;cloud-mall-practice&lt;/artifactId&gt;
+    &lt;packaging&gt;pom&lt;/packaging&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;modules&gt;
+        &lt;module&gt;cloud-mall-eureka-server&lt;/module&gt;
+    &lt;/modules&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.1.12.RELEASE&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger2&lt;/artifactId&gt;
+            &lt;version&gt;2.9.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger-ui&lt;/artifactId&gt;
+            &lt;version&gt;2.9.2&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;Greenwich.SR5&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.mybatis.generator&lt;/groupId&gt;
+                &lt;artifactId&gt;mybatis-generator-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;1.3.7&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;verbose&gt;true&lt;/verbose&gt;
+                    &lt;overwrite&gt;true&lt;/overwrite&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">cloud-mall-eureka-server/com/imooc/cloud/mall/practice/eureka/EurekaServerApplication.java
+package com.imooc.cloud.mall.practice.eureka;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+/**
+ * 1. Eureka Server的启动类，提供服务注册与发现
+ * 2写其pom和resources的配置文件
+ *
+ */
+@EnableEurekaServer //对外提供服务
+@SpringBootApplication
+public class EurekaServerApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(EurekaServerApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml(cloud-mall-eureka-server)
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;cloud-mall-practice&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;artifactId&gt;cloud-mall-eureka-server&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;name&gt;
+        cloud-mall-eureka-server
+    &lt;/name&gt;
+    &lt;description&gt;Spring cloud Eureka Server&lt;/description&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-server&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="mysql">application.properties
+
+spring.application.name=eureka-server
+server.port=8000
+eureka.instance.hostname=localhost
+#是否同步其他节点的信息
+eureka.client.fetch-registry=false
+#是否把自己作为服务注册在服务上
+eureka.client.register-with-eureka=false
+#eureka-server所在的地址
+eureka.client.service-url.defaultZone=http://$&#123;eureka.instance.hostname&#125;:$&#123;server.port&#125;/eureka/
+</code></pre>
+<h3 id="用户模块知识点"><a href="#用户模块知识点" class="headerlink" title="用户模块知识点"></a>用户模块知识点</h3><blockquote>
+<p>登录、注册[加盐md5]、重名校验[注册就不可注册]、密码加密存储、Session的使用、越权校验[不可编辑别人的签名]</p>
+</blockquote>
+<h5 id="用户模块"><a href="#用户模块" class="headerlink" title="用户模块"></a>用户模块</h5><ul>
+<li>表设计</li>
+<li>开发</li>
+<li>测试</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_62117675/article/details/127938285">idea中如何将包名折叠或者或如何将折叠的包名展开_idea包名折叠-CSDN博客</a></p>
+<h3 id="用户模块初始化"><a href="#用户模块初始化" class="headerlink" title="用户模块初始化"></a>用户模块初始化</h3><h5 id="公共模块"><a href="#公共模块" class="headerlink" title="公共模块"></a>公共模块</h5><ul>
+<li>常量、异常、工具类</li>
+<li>自身不是Spring Boot项目</li>
+</ul>
+<h6 id="进行模块各层级的重构-用户模块的测试"><a href="#进行模块各层级的重构-用户模块的测试" class="headerlink" title="进行模块各层级的重构 + 用户模块的测试"></a>进行模块各层级的重构 + 用户模块的测试</h6><pre><code class="mysql">一定要记得如果引用其他muder的时候 要在xml中假如其项目文件的依赖才可以跨项目引用
+比如我这个项目是【一定要引用噢！！ 不然在非其项目的时候找不到import导包】
+pom.xml(cloud-mall-zuul)
+           &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;cloud-mall-user&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<h3 id="网关模块开发"><a href="#网关模块开发" class="headerlink" title="网关模块开发"></a>网关模块开发</h3><pre><code class="xml">pom.xml(cloud-mall-zuul)
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;cloud-mall-practice&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;artifactId&gt;cloud-mall-zuul&lt;/artifactId&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-zuul&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="mysql">application.properties(cloud-mall-zuul)
+server.port=8083
+
+spring.datasource.name=imooc_mall_datasource
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/imooc_mall?useUnicode=true&amp;characterEncoding=utf8&amp;autoReconnect=true&amp;useSSL=false&amp;serverTimezone=UTC
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=root
+
+mybatis.mapper-locations=classpath*:mappers/*.xml
+
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+
+spring.application.name=cloud-mall-zuul
+
+zuul.prefix=/
+#凡是用户模块都要走/user地址
+zuul.routes.cloud-mall-user.path=/user/**
+#模块的名字
+zuul.routes.cloud-mall-user.service-id=cloud-mall-user
+</code></pre>
+<pre><code class="java">com/imooc/cloud/mall/practice/zuul/filter/UserFilter.java
+package com.imooc.cloud.mall.practice.zuul.filter;
+
+import com.imooc.cloud.mall.practice.common.common.Constant;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.exception.ZuulException;
+import com.imooc.cloud.mall.practice.user.model.pojo.User;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+/**
+ * 用户鉴权过滤器
+ */
+@Component
+public class UserFilter extends ZuulFilter &#123;
+    @Override
+    public String filterType() &#123;
+        return FilterConstants.PRE_TYPE;
+    &#125;
+
+    @Override
+    public int filterOrder() &#123;
+        return 0;
+    &#125;
+
+    @Override
+    public boolean shouldFilter() &#123;
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        String requestURI = request.getRequestURI();
+        //不经过过滤器
+        if (requestURI.contains(&quot;images&quot;) || requestURI.contains(&quot;pay&quot;)) &#123;
+            return false;
+        &#125;
+        if (requestURI.contains(&quot;cart&quot;) || requestURI.contains(&quot;order&quot;)) &#123;//前置条件必须要登录！
+            return true;
+        &#125;
+        return false;
+    &#125;
+
+    @Override
+    //用户过滤器
+    public Object run() throws ZuulException &#123;//返回true的时候执行的
+        RequestContext currentContext = RequestContext.getCurrentContext();//获取request
+        //获取session 因为user对象保存在里面  session.getAttribute取出session对象
+        HttpServletRequest request = currentContext.getRequest();
+        HttpSession session = request.getSession();
+        //拿出User对象
+        User currentUser = (User) session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null) &#123;
+            //无需通过网关再去发送
+            currentContext.setSendZuulResponse(false);
+            //返回给前端的对象
+            currentContext.setResponseBody(&quot;&#123;\n&quot;
+                    + &quot;    \&quot;status\&quot;: 10007,\n&quot;
+                    + &quot;    \&quot;msg\&quot;: \&quot;NEED_LOGIN\&quot;,\n&quot;
+                    + &quot;    \&quot;data\&quot;: null\n&quot;
+                    + &quot;&#125;&quot;);
+            currentContext.setResponseStatusCode(200);
+        &#125;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/cloud/mall/practice/zuul/filter/AdminFilter.java
+package com.imooc.cloud.mall.practice.zuul.filter;
+
+import com.imooc.cloud.mall.practice.common.common.Constant;
+import com.imooc.cloud.mall.practice.user.model.pojo.User;
+import com.imooc.cloud.mall.practice.zuul.feign.UserFeignClient;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.exception.ZuulException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+/**
+ * 管理员鉴权过滤器
+ */
+@Component
+public class AdminFilter extends ZuulFilter &#123;
+    @Autowired
+    UserFeignClient userFeignClient;
+
+    @Override
+    public String filterType() &#123;
+        return FilterConstants.PRE_TYPE;
+    &#125;
+
+    @Override
+    public int filterOrder() &#123;
+        return 0;
+    &#125;
+
+    @Override
+    public boolean shouldFilter() &#123;
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        String requestURI = request.getRequestURI();
+        //不经过过滤器
+        if (requestURI.contains(&quot;adminLogin&quot;))&#123;
+            return false;
+        &#125;
+        if (requestURI.contains(&quot;admin&quot;))&#123;
+            return true;
+        &#125;
+        if (requestURI.contains(&quot;cart&quot;) || requestURI.contains(&quot;order&quot;)) &#123;//前置条件必须要登录！
+            return true;
+        &#125;
+        return false;
+    &#125;
+
+    @Override
+    //用户过滤器
+    public Object run() throws ZuulException &#123;//返回true的时候执行的
+        RequestContext currentContext = RequestContext.getCurrentContext();//获取request
+        //获取session 因为user对象保存在里面  session.getAttribute取出session对象
+        HttpServletRequest request = currentContext.getRequest();
+        HttpSession session = request.getSession();
+        //拿出User对象
+        User currentUser = (User) session.getAttribute(Constant.IMOOC_MALL_USER);
+        if (currentUser == null) &#123;
+            //无需通过网关再去发送
+            currentContext.setSendZuulResponse(false);
+            //返回给前端的对象
+            currentContext.setResponseBody(&quot;&#123;\n&quot;
+                    + &quot;    \&quot;status\&quot;: 10010,\n&quot;
+                    + &quot;    \&quot;msg\&quot;: \&quot;NEED_LOGIN\&quot;,\n&quot;
+                    + &quot;    \&quot;data\&quot;: null\n&quot;
+                    + &quot;&#125;&quot;);
+            currentContext.setResponseStatusCode(200);
+            return null; //程序可以停止了
+        &#125;
+        //进一步判断是否是管理员
+        Boolean adminRole = userFeignClient.checkAdminRole(currentUser);
+        if (!adminRole)&#123;
+            currentContext.setSendZuulResponse(false);
+            //返回给前端的对象
+            currentContext.setResponseBody(&quot;&#123;\n&quot;
+                    + &quot;    \&quot;status\&quot;: 10011,\n&quot;
+                    + &quot;    \&quot;msg\&quot;: \&quot;NEED_ADMIN\&quot;,\n&quot;
+                    + &quot;    \&quot;data\&quot;: null\n&quot;
+                    + &quot;&#125;&quot;);
+            currentContext.setResponseStatusCode(200);
+        &#125;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/cloud/mall/practice/zuul/feign/UserFeignClient.java
+package com.imooc.cloud.mall.practice.zuul.feign;
+
+import com.imooc.cloud.mall.practice.user.model.pojo.User;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+/**
+ * UserFeignClient
+ */
+@FeignClient(value = &quot;cloud-mall-user&quot;)
+public interface UserFeignClient &#123;
+    @PostMapping(&quot;/checkAdminRole&quot;)
+    public Boolean checkAdminRole(@RequestBody User user);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/cloud/mall/practice/zuul/ZuulGatewayApplication.java
+网关模块加上SpringBoot启动类
+
+package com.imooc.cloud.mall.practice.zuul;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+/**
+ * 网关启动类
+ */
+@EnableZuulProxy
+@EnableFeignClients
+@SpringBootApplication
+public class ZuulGatewayApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(ZuulGatewayApplication.class, args);
+    &#125;
+&#125;
+=================================================================
+127.0.0.1:8083/user/login?userName=mumu9&amp;password=lihao123
+&#123;
+    &quot;status&quot;: 10000,
+    &quot;msg&quot;: &quot;SUCCESS&quot;,
+    &quot;data&quot;: &#123;
+        &quot;id&quot;: 21,
+        &quot;username&quot;: &quot;mumu9&quot;,
+        &quot;password&quot;: null,
+        &quot;personalizedSignature&quot;: &quot;乘风破浪的姐姐&quot;,
+        &quot;role&quot;: 2,
+        &quot;createTime&quot;: &quot;2024-04-17T18:08:15.000+0000&quot;,
+        &quot;updateTime&quot;: &quot;2024-04-17T18:10:49.000+0000&quot;
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>POSTMAN中cloud-mall-practice的注册新用户、用户登录、管理员登录、登出模块都通过网关共用地址的调用，但是更新个性签名不可以，提示需要登录，因为更新签名需要提前登录。但是问题的最主要的点就是没有拿到session所以并没有把用户信息传到个性签名中 这是就需要Session共享机制</p>
+</blockquote>
+<h3 id="Session共享机制"><a href="#Session共享机制" class="headerlink" title="Session共享机制"></a>Session共享机制</h3><h5 id="登录功能分析"><a href="#登录功能分析" class="headerlink" title="登录功能分析"></a>登录功能分析</h5><ul>
+<li>登录状态需要保持</li>
+<li>session的实现方案：登陆后，会保存用户信息到session</li>
+<li>之后的访问，先从session中获取用户信息，然后再执行业务逻辑</li>
+</ul>
+<h6 id="目前遇到的障碍-记得去电脑端启动Redis"><a href="#目前遇到的障碍-记得去电脑端启动Redis" class="headerlink" title="目前遇到的障碍 [记得去电脑端启动Redis]"></a>目前遇到的障碍 [记得去电脑端启动Redis]</h6><ul>
+<li>session被网关过滤</li>
+<li><strong>共享session</strong> [现在是多模块项目 其他项目保存了session 另一个项目无法获得]</li>
+<li><strong><span style ="color:red">EnableRedisHttpSession</span></strong>[需要通过中介Redis去调取]</li>
+</ul>
+<pre><code class="java">在cloud-mall-user/application.properties中
+server.port=8081
+
+spring.datasource.name=imooc_mall_datasource
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/imooc_mall?useUnicode=true&amp;characterEncoding=utf8&amp;autoReconnect=true&amp;useSSL=false&amp;serverTimezone=UTC
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=root
+
+mybatis.mapper-locations=classpath*:mappers/*.xml
+
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+
+spring.application.name=cloud-mall-user
+
+spring.session.store-type=redis
+spring.redis.host=localhost
+spring.redis.port=6379
+spring.redis.password=
+</code></pre>
+<pre><code class="java">在cloud-mall-zuul/application.properties中
+server.port=8083
+
+spring.datasource.name=imooc_mall_datasource
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/imooc_mall?useUnicode=true&amp;characterEncoding=utf8&amp;autoReconnect=true&amp;useSSL=false&amp;serverTimezone=UTC
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=root
+
+mybatis.mapper-locations=classpath*:mappers/*.xml
+
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+
+eureka.client.service-url.defaultZone=http://localhost:8000/eureka/
+
+spring.application.name=cloud-mall-zuul
+
+spring.session.store-type=redis
+spring.redis.host=localhost
+spring.redis.port=6379
+spring.redis.password=
+
+#没有敏感的需要过滤
+zuul.sensitive-headers=
+zuul.host.connect-timeout-millis=15000
+zuul.prefix=/
+#凡是用户模块都要走/user地址
+zuul.routes.cloud-mall-user.path=/user/**
+#模块的名字
+zuul.routes.cloud-mall-user.service-id=cloud-mall-user
+</code></pre>
+<pre><code class="java">之后在UserApplication和ZuulGatewayApplication前面加上@EnableRedisHttpSession
+
+com/imooc/cloud/mall/practice/user/UserApplication.java
+package com.imooc.cloud.mall.practice.user;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+/**
+ * 启动类
+ */
+@SpringBootApplication
+@EnableSwagger2
+@MapperScan(basePackages = &quot;com.imooc.cloud.mall.practice.user.model.dao&quot;)
+@EnableRedisHttpSession
+public class UserApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(UserApplication.class, args);
+    &#125;
+&#125;
+
+-------------------------------------------------------------------------------------
+
+com/imooc/cloud/mall/practice/zuul/ZuulGatewayApplication.java
+package com.imooc.cloud.mall.practice.zuul;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+
+/**
+ * 网关启动类
+ */
+@EnableZuulProxy
+@EnableFeignClients
+@SpringBootApplication
+@EnableRedisHttpSession
+public class ZuulGatewayApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(ZuulGatewayApplication.class, args);
     &#125;
 &#125;
 </code></pre>
