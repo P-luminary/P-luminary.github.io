@@ -235,6 +235,19 @@ configuration.xsl  log4j.properties  zoo  zoo.cfg  zoo_sample.cfg
 ZooKeeper JMX enabled by default
 Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
 Starting zookeeper ... already running as process 1877.
+======================================================================
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... ^[[ASTARTED
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./zkServer.sh status
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Client port found: 2181. Client address: localhost.
+Mode: standalone
+======================================================================
 </code></pre>
 <ul>
 <li>停止：<code>./bin/zkServer.sh stop</code></li>
@@ -426,6 +439,505 @@ delete [-v version] path //也可以按照版本号去删除
 [zk: 127.0.0.1:2181(CONNECTED) 44] ls /
 [imooc, imooc2, imooc3, imooc4, imooc40000000004, imooc40000000005, zookeeper]
 [zk: 127.0.0.1:2181(CONNECTED) 45] 
+</code></pre>
+<h3 id="Watcher机制"><a href="#Watcher机制" class="headerlink" title="Watcher机制"></a><span style = "color:red">Watcher机制</span></h3><ul>
+<li><h5 id="触发器、监督者"><a href="#触发器、监督者" class="headerlink" title="触发器、监督者"></a>触发器、监督者</h5></li>
+<li><h5 id="使用场景：统一资源配置-发生变化时-会給所有监听客户端发送信息"><a href="#使用场景：统一资源配置-发生变化时-会給所有监听客户端发送信息" class="headerlink" title="使用场景：统一资源配置 [发生变化时 会給所有监听客户端发送信息]"></a>使用场景：统一资源配置 [发生变化时 会給所有监听客户端发送信息]</h5></li>
+</ul>
+<h5 id="Watcher事件类型"><a href="#Watcher事件类型" class="headerlink" title="Watcher事件类型"></a>Watcher事件类型</h5><table>
+<thead>
+<tr>
+<th>EventType</th>
+<th>触发条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NodeCreated (节点创建)</td>
+<td>Watcher监听的对应数据节点被创建</td>
+</tr>
+<tr>
+<td>NodeDeleted (节点删除)</td>
+<td>Watcher监听的对应数据节点被删除</td>
+</tr>
+<tr>
+<td>NodeDataChanged(节点数据修改)</td>
+<td>Watcher监听的对应数据节点的数据内容发生变更</td>
+</tr>
+<tr>
+<td>NodeChildrenChanged(子节点变更)</td>
+<td>Watcher监听的对应数据节点的子节点列表发生变更</td>
+</tr>
+</tbody></table>
+<h5 id="ACL"><a href="#ACL" class="headerlink" title="ACL"></a>ACL</h5><ul>
+<li>access control list 权限控制</li>
+<li>它使用<strong>权限位</strong>来允许&#x2F;禁止对话节点及其所作用域的各种操作</li>
+<li>ACL仅与特定的znode有关，与<strong>子节点无关</strong></li>
+</ul>
+<h5 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h5><ul>
+<li>ACL：[scheme采用的权限机制：id用户：permissions权限组合字符串]</li>
+<li>world</li>
+<li>auth [认证登录]</li>
+<li>digest [密文加密]</li>
+<li>ip [只允许特定ip访问]</li>
+<li>super [超级权限]</li>
+</ul>
+<h5 id="权限字符串crdwa"><a href="#权限字符串crdwa" class="headerlink" title="权限字符串crdwa"></a>权限字符串crdwa</h5><ul>
+<li><h6 id="Create"><a href="#Create" class="headerlink" title="Create"></a>Create</h6></li>
+<li><h6 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h6></li>
+<li><h6 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h6></li>
+<li><h6 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h6></li>
+<li><h6 id="Admin"><a href="#Admin" class="headerlink" title="Admin"></a>Admin</h6></li>
+</ul>
+<h5 id="ACL-权限使用场景"><a href="#ACL-权限使用场景" class="headerlink" title="[ACL]权限使用场景"></a>[ACL]权限使用场景</h5><ul>
+<li>区分开发&#x2F;测试&#x2F;运维环境，防止误操作</li>
+<li>可以针对不同IP而产生具体的配置，更安全</li>
+</ul>
+<h3 id="Java原生客户端连接到zookeeper-ZK"><a href="#Java原生客户端连接到zookeeper-ZK" class="headerlink" title="Java原生客户端连接到zookeeper [ZK]"></a>Java原生客户端连接到zookeeper [ZK]</h3><ul>
+<li>利用<strong>ZK原生的Java</strong>的API</li>
+<li>利用Apache <strong>Curator</strong>作为客户端来操作ZK</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;zk-practicer&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;
+            &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;
+            &lt;version&gt;3.6.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/zkjavaapi/ZKConnect.java
+package com.imooc.zkjavaapi;
+
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.omg.CORBA.TIMEOUT;
+
+import java.io.IOException;
+
+/**
+ * 连接到ZK服务端，打印连接状态
+ */
+public class ZKConnect implements Watcher &#123;
+    public static final String SERVER_PATH=&quot;47.98.225.105:2181&quot;;
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args) throws IOException, InterruptedException &#123;
+        //后面new的相当于把这个作为参数传递进去
+        //客户端和服务端是异步连接，连接成功之后，客户端会收到watcher通知
+        //connectString：服务器的IP+端口号
+        //sessionTImeout：超时时间
+        //watcher：接收通知事件
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKConnect());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+        System.out.println(zk.getState());
+    &#125;
+
+    @Override
+    public void process(WatchedEvent watchedEvent) &#123;
+        System.out.println(&quot;收到了通知&quot; + watchedEvent);
+    &#125;
+&#125;
+===========================================================
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.free=466MB
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.max=7209MB
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.total=487MB
+17:35:46 INFO zookeeper.ZooKeeper: Initiating client connection, connectString=127.0.0.1:2181 sessionTimeout=5000 watcher=com.imooc.zkjavaapi.ZKConnect@7591083d
+17:35:46 INFO common.X509Util: Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+17:35:46 INFO zookeeper.ClientCnxnSocket: jute.maxbuffer value is 1048575 Bytes
+17:35:46 INFO zookeeper.ClientCnxn: zookeeper.request.timeout value is 0. feature enabled=false
+客户端开始连接ZK服务器了
+CONNECTING
+17:35:46 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:35:46 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:35:46 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:50517, server: 127.0.0.1/127.0.0.1:2181
+17:35:46 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710001, negotiated timeout = 5000
+收到了通知WatchedEvent state:SyncConnected type:None path:null
+CONNECTED
+</code></pre>
+<pre><code class="xml">log4j.properties
+log4j.rootLogger=INFO, stdout
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.out
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d&#123;HH:mm:ss&#125; %p %c&#123;2&#125;: %m%n
+</code></pre>
+<pre><code class="linux">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... already running as process 4147.
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33316784/article/details/88563482">windows环境下安装zookeeper教程详解（单机版）_windows zooke-CSDN博客</a></p>
+<h3 id="用代码对节点进行操作"><a href="#用代码对节点进行操作" class="headerlink" title="用代码对节点进行操作"></a>用代码对节点进行操作</h3><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+package com.imooc.zkjavaapi;
+
+import java.io.IOException;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.ZooKeeper;
+
+/**
+ * 描述：     演示对节点的操作，包含创建、读取、删除等。
+ */
+public class ZKOperator implements Watcher &#123;
+
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args)
+            throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKOperator());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+
+        /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+        System.out.println(zk.create(&quot;/imooc-create-node2&quot;, &quot;imooc2&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+                CreateMode.PERSISTENT));
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+    &#125;
+&#125;
+==========================================================================
+客户端开始连接ZK服务器了
+CONNECTING
+17:57:14 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:57:14 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:57:14 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:57443, server: 127.0.0.1/127.0.0.1:2181
+17:57:14 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710008, negotiated timeout = 5000
+/imooc-create-node2
+==========================================================================
+==========================================================================
+ /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+//        System.out.println(zk.create(&quot;/imooc-create-node2&quot;, &quot;imooc2&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+//                CreateMode.PERSISTENT));
+//        zk.setData(&quot;/imooc-create-node&quot;, &quot;imooc3&quot;.getBytes(), 1);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data));
+    &#125;
+==========================================================================
+客户端开始连接ZK服务器了
+CONNECTING
+17:58:09 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:58:09 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:58:09 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:57766, server: 127.0.0.1/127.0.0.1:2181
+17:58:09 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710009, negotiated timeout = 5000
+imooc2
+</code></pre>
+<h5 id="version版本不一样-保证不做修改"><a href="#version版本不一样-保证不做修改" class="headerlink" title="version版本不一样 保证不做修改"></a>version版本不一样 保证不做修改</h5><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+修改值 让版本变成1
+ zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 1);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data)); 
+----------------------------------------------------------------------------
+Exception in thread &quot;main&quot; org.apache.zookeeper.KeeperException$BadVersionException: KeeperErrorCode = BadVersion for /imooc-create-node2
+    at org.apache.zookeeper.KeeperException.create(KeeperException.java:122)
+    at org.apache.zookeeper.KeeperException.create(KeeperException.java:54)
+    at org.apache.zookeeper.ZooKeeper.setData(ZooKeeper.java:2551)
+    at com.imooc.zkjavaapi.ZKOperator.main(ZKOperator.java:41)
+
+报错=&gt;版本不一致
+===========================================================================
+[修改]
+ zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 0);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data));
+----------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:01:35 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:01:35 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:01:35 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:58870, server: 127.0.0.1/127.0.0.1:2181
+18:01:35 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec0871000d, negotiated timeout = 5000
+imooc3 [修改成功]
+</code></pre>
+<h5 id="删除节点-引入回调函数-休眠"><a href="#删除节点-引入回调函数-休眠" class="headerlink" title="删除节点 [引入回调函数+休眠]"></a>删除节点 [引入回调函数+休眠]</h5><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+package com.imooc.zkjavaapi;
+
+import java.io.IOException;
+
+import com.imooc.zkjavaapi.callback.DeleteCallBack;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.ZooKeeper;
+
+/**
+ * 描述：     演示对节点的操作，包含创建、读取、删除等。
+ */
+public class ZKOperator implements Watcher &#123;
+
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args)
+            throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKOperator());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+
+        /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+        zk.create(&quot;/imooc-create-node3&quot;, &quot;imooc3&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+                CreateMode.PERSISTENT);
+//        zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 0);
+//        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+
+        String ctx = &quot;删除成功&quot;; //把ctx的内容代入到DeleteCallBack()里面去运行
+        zk.delete(&quot;/imooc-create-node3&quot;,0,new DeleteCallBack(),ctx);
+        Thread.sleep(2000);
+//        System.out.println(new String(data));
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+    &#125;
+&#125;
+--------------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:10:01 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:10:01 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:10:01 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:2600, server: 127.0.0.1/127.0.0.1:2181
+18:10:01 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec0871000f, negotiated timeout = 5000
+删除节点/imooc-create-node3
+删除成功
+</code></pre>
+<pre><code class="java">com/imooc/zkjavaapi/callback/DeleteCallBack.java
+package com.imooc.zkjavaapi.callback;
+
+import org.apache.zookeeper.AsyncCallback;
+
+/**
+ * 删除后运行的方法
+ */
+public class DeleteCallBack implements AsyncCallback.VoidCallback &#123;
+    @Override
+    public void processResult(int rc, String path, Object ctx) &#123;
+        System.out.println(&quot;删除节点&quot; + path);
+        System.out.println((String)ctx);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="处理Watcher事件"><a href="#处理Watcher事件" class="headerlink" title="处理Watcher事件"></a>处理Watcher事件</h3><pre><code class="java">com/imooc/zkjavaapi/ZKGetNode.java
+package com.imooc.zkjavaapi;
+
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
+/**
+ * 和节点相关：是否存在，获取数据，加上Watch
+ */
+public class ZKGetNode implements Watcher &#123;
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    //这个是门闩
+    private static CountDownLatch countDownLatch = new CountDownLatch(1);
+
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKGetNode());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+        System.out.println(zk.getState());
+
+//        Stat exists = zk.exists(&quot;/imooc-create-node&quot;, false);//不需要额外监听
+//        if (exists != null)&#123;
+//            System.out.println(&quot;节点的版本为： &quot;+exists.getVersion());
+//        &#125;else&#123;
+//            System.out.println(&quot;该节点不存在&quot;);
+//        &#125;
+        zk.getData(&quot;/imooc-create-node&quot;, true, null);
+        countDownLatch.await();
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+        if (event.getType() == Event.EventType.NodeChildrenChanged)&#123;
+            System.out.println(&quot;数据被改变&quot;);
+            countDownLatch.countDown();
+        &#125;
+        System.out.println(&quot;收到了通知&quot; + event);
+    &#125;
+&#125;
+--------------------------------------------------------------------------------
+在运行的情况下 去cmd中 修改
+[zk: localhost:2181(CONNECTED) 1] set /imooc-create-node 11
+--------------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:52:14 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:52:14 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:52:14 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:16204, server: 127.0.0.1/127.0.0.1:2181
+18:52:14 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x1000534afde0001, negotiated timeout = 5000
+收到了通知WatchedEvent state:SyncConnected type:None path:null
+CONNECTED
+数据被改变
+收到了通知WatchedEvent state:SyncConnected type:NodeDataChanged path:/imooc-create-node
+</code></pre>
+<h3 id="用Curator操作ZK"><a href="#用Curator操作ZK" class="headerlink" title="用Curator操作ZK"></a><span style = "color:red">用Curator操作ZK</span></h3><h5 id="原生的Java的API的缺点"><a href="#原生的Java的API的缺点" class="headerlink" title="原生的Java的API的缺点"></a>原生的Java的API的缺点</h5><ul>
+<li>不支持连接超时后的<strong>自动连接</strong></li>
+<li>Watcher<strong>注册一次</strong>后会失效</li>
+<li>不支持<strong>递归</strong>创建节点</li>
+</ul>
+<h5 id="利用Apache-Curator"><a href="#利用Apache-Curator" class="headerlink" title="利用Apache Curator"></a>利用Apache Curator</h5><ul>
+<li>解决了Watcher注册一次后会失效的问题</li>
+<li>API更加<strong>简单易用</strong>，提供了工具类</li>
+</ul>
+<pre><code class="java">com/imooc/curator/CuratorTests.java
+package com.imooc.curator;
+
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+
+/**
+ * 用Curator来操作ZK
+ */
+public class CuratorTests &#123;
+    public static void main(String[] args) throws Exception &#123;
+        String connectString = &quot;127.0.0.1:2181&quot;;
+        RetryPolicy retry = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework client = CuratorFrameworkFactory.newClient(connectString, retry);
+        client.start();
+        String path = &quot;/curator&quot;;
+        String data = &quot;test&quot;;
+        client.create().withMode(CreateMode.PERSISTENT).forPath(path,data.getBytes());
+        byte[] bytes = client.getData().forPath(path);
+        System.out.println(new String(bytes));
+    &#125;
+&#125;
+</code></pre>
+<h6 id="更改高级一点！！！【添加-修改-删除】"><a href="#更改高级一点！！！【添加-修改-删除】" class="headerlink" title="更改高级一点！！！【添加+修改+删除】"></a>更改高级一点！！！【添加+修改+删除】</h6><pre><code class="java">com/imooc/curator/CuratorTests.java
+package com.imooc.curator;
+
+import com.sun.net.httpserver.Authenticator.Retry;
+import java.text.MessageFormat;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.CuratorEvent;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher.Event.EventType;
+
+/**
+ * 描述：     用Curator来操作ZK
+ */
+public class CuratorTests &#123;
+
+    public static void main(String[] args) throws Exception &#123;
+        String connectString = &quot;127.0.0.1:2181&quot;;
+        String path = &quot;/curator2&quot;;
+
+        RetryPolicy retry = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework client = CuratorFrameworkFactory.newClient(connectString, retry);
+        client.start();
+        client.getCuratorListenable().addListener((CuratorFramework c, CuratorEvent event) -&gt; &#123;
+            switch (event.getType()) &#123;
+                case WATCHED:
+                    WatchedEvent watchedEvent = event.getWatchedEvent();
+                    if (watchedEvent.getType() == EventType.NodeDataChanged) &#123;
+                        System.out.println(new String(c.getData().forPath(path)));
+                    &#125;
+            &#125;
+        &#125;);
+        String data = &quot;test&quot;;
+        String data2 = &quot;test2&quot;;
+        //添加
+        client.create().withMode(CreateMode.PERSISTENT).forPath(path, data.getBytes());
+
+        byte[] bytes = client.getData().watched().forPath(path);
+        System.out.println(new String(bytes));
+        //更改
+        client.setData().forPath(path, data2.getBytes());
+        //删除
+        client.delete().forPath(path);
+        Thread.sleep(2000); //保证足够时间运行成功
+    &#125;
+&#125;
+-------------------------------------------------------------------------------------
+19:44:41 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+19:44:41 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+19:44:41 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:32984, server: 127.0.0.1/127.0.0.1:2181
+19:44:41 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x1000534afde0005, negotiated timeout = 40000
+19:44:41 INFO state.ConnectionStateManager: State change: CONNECTED
+test
+test2
 </code></pre>
 
     </div>
