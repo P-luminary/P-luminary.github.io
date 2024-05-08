@@ -2385,6 +2385,357 @@ f2方法被运行了
 <h5 id="悲观锁-和-乐观锁"><a href="#悲观锁-和-乐观锁" class="headerlink" title=" 悲观锁 和 乐观锁"></a><span style = "color:blue"> 悲观锁 和 乐观锁</span></h5><ul>
 <li>从<strong>是否锁住资源</strong>的角度分类</li>
 </ul>
+<h5 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h5><ul>
+<li>如果我不锁住这个资源，别人就会来争抢，就会造成数据结果错误，所以每次悲观锁为了确保结果的正确性，会在每次获取并修改数据时，把数据锁住，让别人无法访问该数据，这样就可以确保数据内容万无一失</li>
+<li>java中悲观锁的实现就是<code>synchronized</code>和<code>Lock</code>相关类</li>
+</ul>
+<h5 id="乐观锁-1"><a href="#乐观锁-1" class="headerlink" title="乐观锁"></a>乐观锁</h5><ul>
+<li>认为自己在处理操作的时候不会有其他线程来干扰，所以并<strong>不会锁住</strong>被操作对象</li>
+<li>在更新的时候，去对比在我修改的期间数据有没有被其他人改变过，如果<strong>没被改变过</strong>，就说明真的是只有我自己在操作，那我就正常去修改数据</li>
+<li>如果数据和我<strong>一开始拿到的不一样</strong>了，说明其他人在这段时间内改过数据，那我就不能继续刚才的更新数据过程了，我会选择放弃、报错、重试等策略</li>
+<li>乐观锁的实现一般都是利用<strong>CAS</strong>算法来实现的</li>
+</ul>
+<h6 id="在数据库中"><a href="#在数据库中" class="headerlink" title="在数据库中"></a>在数据库中</h6><ul>
+<li><strong>select for update</strong>就是悲观锁</li>
+<li>用<strong>version</strong>控制数据库就是乐观锁</li>
+</ul>
+<h6 id="经典例子"><a href="#经典例子" class="headerlink" title="经典例子"></a>经典例子</h6><pre><code class="mysql">添加一个字段lock_version
+先查询这个更新语句的vesion：SELECT * FROM table
+然后
+UPDATE SET num = 2, 
+version = version + 1 WHERE version = 1 AND id = 5
+如果version被更新了等于2，不一样就会更新出错，这就是乐观锁的原理
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/a6265784dee5e723d22bfceddca39a9a2afe91b8/data/%E4%B9%90%E8%A7%82%E9%94%81%E5%92%8C%E6%82%B2%E8%A7%82%E9%94%81.jpg"></p>
+<h5 id="自旋锁-和-非自旋锁"><a href="#自旋锁-和-非自旋锁" class="headerlink" title="自旋锁 和 非自旋锁"></a><span style = "color:blue">自旋锁 和 非自旋锁</span></h5><ul>
+<li>阻塞或唤醒一个Java线程需要操作系统切换CPU状态来完成，这种状态转换需要耗费处理器时间</li>
+<li>如果同步代码块的内容过于简单，<strong>状态转换消耗的时间有可能比用户代码执行的时间还要长</strong></li>
+<li>在许多场景中，同步资源的锁定时间很短，为了这一小段时间去切换线程，线程挂起和恢复线程的花费可能会让系统<strong>得不偿失</strong></li>
+<li>如果物理机器有多个处理器，能够让两个或以上的线程同时并行执行，我们就可以让后面那个请求锁的线程不放弃CPU的执行时间，看看持有锁的线程是否很快就会释放锁 </li>
+<li>而为了让当前线程“<strong>稍等一下</strong>”，我们需要让当前线程进行自旋，如果在自旋完成后前面锁定同步资源资源的线程已经释放了锁，那么当前线程就可以不必阻塞而是直接获取同步资源，从而<strong>避免切换线程的开销</strong>，这就是自旋锁。</li>
+</ul>
+<h5 id="自旋锁的缺点"><a href="#自旋锁的缺点" class="headerlink" title="自旋锁的缺点"></a>自旋锁的缺点</h5><ul>
+<li>如果锁被占用的时间很长，那么自旋的线程只会白浪费处理器资源</li>
+<li>在自旋的过程中，一直消耗CPU，所以虽然自旋锁的起始开销低于悲观锁，但是随着自旋时间的增长，开销也是线性增长的</li>
+</ul>
+<h5 id="可重入锁-和-非可重入锁"><a href="#可重入锁-和-非可重入锁" class="headerlink" title="可重入锁 和 非可重入锁"></a><span style = "color:blue">可重入锁 和 非可重入锁</span></h5><ul>
+<li><p>什么是可重入 [摇一个号拿N个牌]</p>
+</li>
+<li><p>好处 [避免死锁]</p>
+</li>
+</ul>
+<h5 id="可中断锁-和-不可中断锁"><a href="#可中断锁-和-不可中断锁" class="headerlink" title="可中断锁 和 不可中断锁"></a><span style = "color:blue">可中断锁 和 不可中断锁</span></h5><ul>
+<li>可中断锁 [可以随时中断]</li>
+</ul>
+<h3 id="死锁相关"><a href="#死锁相关" class="headerlink" title="死锁相关"></a>死锁相关</h3><h5 id="写一个必然死锁的例子？"><a href="#写一个必然死锁的例子？" class="headerlink" title="写一个必然死锁的例子？"></a>写一个必然死锁的例子？</h5><h6 id="什么是死锁？"><a href="#什么是死锁？" class="headerlink" title="什么是死锁？"></a>什么是死锁？</h6><ul>
+<li><p>发生在<strong>并发</strong>中</p>
+</li>
+<li><p><strong>互不相让</strong>：当两个(或更多)线程(或进程)相互持有对方所需要的资源，又不主动释放，导致所有人都无法继续前进，导致程序陷入无尽的阻塞，这就是死锁</p>
+</li>
+<li><p>一图胜千言</p>
+</li>
+<li><p>线程A持有锁1但试图获取锁2 线程B持有锁2但视图获取锁1</p>
+</li>
+</ul>
+<h5 id="多个线程造成死锁的情况"><a href="#多个线程造成死锁的情况" class="headerlink" title="多个线程造成死锁的情况"></a>多个线程造成死锁的情况</h5><ul>
+<li>如果多个线程之间的依赖关系是<strong>环形</strong>，存在环路的锁的依赖关系，那么也可能会发生死锁</li>
+</ul>
+<h5 id="死锁的影响"><a href="#死锁的影响" class="headerlink" title="死锁的影响"></a>死锁的影响</h5><ul>
+<li>死锁的影响在不同系统中是不一样的，这取决于系统对死锁的处理能力<ul>
+<li><strong>数据库</strong>中：检测并放弃事务</li>
+<li><strong>JVM</strong>中：无法自动处理</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ce81bd17386cbcc3d04b5ef352a1c492ec9b0668/data/%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%BB%E9%94%81.jpg"></p>
+<h5 id="几率不高但危害大"><a href="#几率不高但危害大" class="headerlink" title="几率不高但危害大"></a>几率不高但危害大</h5><ul>
+<li>不一定发生，但是遵守<strong>墨菲定律</strong></li>
+<li>一旦发生，多是<strong>高并发</strong>场景，影响用户多</li>
+<li>整个<strong>系统崩溃</strong>、子系统崩溃、性能降低</li>
+<li>压力测试<strong>无法找出</strong>所有潜在的死锁</li>
+</ul>
+<pre><code class="java">deadlock/DeadLock.java
+package deadlock;
+
+/**
+ * 描述：     必然发生死锁
+ */
+public class DeadLock implements Runnable &#123;
+
+    public int flag;
+
+    static Object o1 = new Object();
+    static Object o2 = new Object();
+
+    public void run() &#123;
+        System.out.println(&quot;开始执行&quot;);
+        if (flag == 1) &#123;
+            synchronized (o1) &#123;
+                try &#123;
+                    Thread.sleep(500);
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+                synchronized (o2) &#123;
+                    System.out.println(&quot;成功获取到了两把锁&quot;);
+                &#125;
+            &#125;
+        &#125;
+        if (flag == 2) &#123;
+            synchronized (o2) &#123;
+                try &#123;
+                    Thread.sleep(500);
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+                synchronized (o1) &#123;
+                    System.out.println(&quot;成功获取到了两把锁&quot;);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        DeadLock r1 = new DeadLock();
+        DeadLock r2 = new DeadLock();
+        r1.flag = 1;
+        r2.flag = 2;
+        new Thread(r1).start();
+        new Thread(r2).start();
+    &#125;
+&#125;
+====================================== 分析 =======================================
+★ 当类的对象flag=1时(T1),先锁定O1,睡眠500毫秒，然后锁定O2;
+★ 而T1在睡眠的时候另一个flag=2的对象(T2)线程启动，先锁定O2，睡眠500毫秒，等待T1释放O1;
+★ T1睡眠结束后需要锁定O2才能继续执行，而此时O2已被T2锁定
+★ T2睡眠结束后需要锁定O1才能继续执行，而此时O1已被T1锁定
+★ T1、T2相互等待，都需要对方锁定的资源才能继续执行，从而死锁
+</code></pre>
+<h3 id="哲学家就餐问题？"><a href="#哲学家就餐问题？" class="headerlink" title="哲学家就餐问题？"></a>哲学家就餐问题？</h3><ul>
+<li>先拿起左手的筷子</li>
+<li>然后拿起右手的筷子</li>
+<li>如果筷子被人使用了，那就等别人用完</li>
+</ul>
+<pre><code class="java">while(true)&#123; //伪代码
+    think();
+    pick_up_left_fork();
+    pick_up_right_fork();
+    eat();
+    put_down_right_fork();
+    put_down_left_fork();
+&#125;
+</code></pre>
+<pre><code class="java">package deadlock;
+
+/**
+ * 描述：     哲学家就餐问题导致的死锁
+ */
+public class DiningPhilosophers &#123;
+
+    public static class Philosopher implements Runnable &#123;
+
+        private Object leftChopstick;
+
+        public Philosopher(Object leftChopstick, Object rightChopstick) &#123;
+            this.leftChopstick = leftChopstick;
+            this.rightChopstick = rightChopstick;
+        &#125;
+
+        private Object rightChopstick;
+
+        @Override
+        public void run() &#123;
+            try &#123;
+                while (true) &#123;
+                    doAction(&quot;Thinking&quot;);
+                    synchronized (leftChopstick) &#123;
+                        doAction(&quot;Picked up left chopstick&quot;);
+                        synchronized (rightChopstick) &#123;
+                            doAction(&quot;Picked up right chopstick - eating&quot;);
+                            doAction(&quot;Put down right chopstick&quot;);
+                        &#125;
+                        doAction(&quot;Put down left chopstick&quot;);
+                    &#125;
+                &#125;
+            &#125; catch (InterruptedException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+        private void doAction(String action) throws InterruptedException &#123;
+            System.out.println(Thread.currentThread().getName() + &quot; &quot; + action);
+            Thread.sleep((long) (Math.random() * 10));
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;//五个哲学家方便管理
+        Philosopher[] philosophers = new Philosopher[5];
+        Object[] chopsticks = new Object[philosophers.length];
+        for (int i = 0; i &lt; chopsticks.length; i++) &#123;
+            chopsticks[i] = new Object();
+        &#125;
+        for (int i = 0; i &lt; philosophers.length; i++) &#123;
+            Object leftChopstick = chopsticks[i]; //从0开始 i为5 所以底下要加1 但是越界就取余
+            Object rightChopstick = chopsticks[(i + 1) % chopsticks.length];
+            //领导调节(检测与恢复策略) [定期巡视命令哲学家] 让最后一个 跟别人不一样 
+            //别人都是先左后右面 它是先后面再左边 避免了环路的形成
+            //直接避免死锁发生！！！！！
+            if (i == philosophers.length - 1) &#123;
+                philosophers[i] = new Philosopher(rightChopstick, leftChopstick);
+            &#125; else &#123;
+                philosophers[i] = new Philosopher(leftChopstick, rightChopstick);
+            &#125;
+            new Thread(philosophers[i], &quot;哲学家&quot; + (i + 1) + &quot;号&quot;).start();
+        &#125;
+    &#125;
+&#125;
+=============================================================================
+哲学家4号 Thinking
+哲学家5号 Thinking
+哲学家3号 Thinking
+哲学家1号 Thinking
+哲学家2号 Thinking
+哲学家2号 Picked up left chopstick
+哲学家3号 Picked up left chopstick
+哲学家1号 Picked up left chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+哲学家4号 Put down right chopstick
+哲学家4号 Put down left chopstick
+哲学家4号 Thinking
+哲学家3号 Picked up right chopstick - eating
+哲学家3号 Put down right chopstick
+哲学家3号 Put down left chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+哲学家4号 Put down right chopstick
+哲学家4号 Put down left chopstick
+哲学家3号 Thinking
+哲学家2号 Picked up right chopstick - eating
+哲学家4号 Thinking
+哲学家2号 Put down right chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+.............................
+发生死锁的时候哲学家都拿着左边的筷子
+原理：Thread.sleep((long) (Math.random() * 10));
+random到了一个更大的数
+</code></pre>
+<h5 id="多种解决策略"><a href="#多种解决策略" class="headerlink" title="多种解决策略"></a>多种解决策略</h5><ul>
+<li>服务员检查(避免策略) [提前看一看是否发生死锁]</li>
+<li><strong>改变一个哲学家拿叉子的顺序</strong>(避免策略)</li>
+<li>餐票(避免策略)</li>
+<li>领导调节(检测与恢复策略) [定期巡视命令哲学家]</li>
+</ul>
+<h5 id="实际工程中如何避免死锁"><a href="#实际工程中如何避免死锁" class="headerlink" title="实际工程中如何避免死锁"></a>实际工程中如何避免死锁</h5><h6 id="①-设置超时时间"><a href="#①-设置超时时间" class="headerlink" title="① 设置超时时间"></a>① 设置<strong>超时</strong>时间</h6><ul>
+<li>Lock的<strong>tryLock</strong>(long timeout, TImeUnit unit)</li>
+<li><strong>synchronized</strong>不具备尝试锁的能力</li>
+<li>造成超时的可能性很多：发生了死锁、线程陷入死循环、线程执行很慢</li>
+<li>获取锁失败：打日志、发报警邮件、<strong>重启</strong>等</li>
+<li>代码演示：<strong>退一步海阔天空</strong></li>
+</ul>
+<pre><code class="java">package deadlock;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 描述：     用tryLock来避免死锁
+ */
+public class TryLockDeadlock implements Runnable &#123;
+
+    int flag = 1;
+    static Lock lock1 = new ReentrantLock();
+    static Lock lock2 = new ReentrantLock();
+
+    public static void main(String[] args) &#123;
+        TryLockDeadlock r1 = new TryLockDeadlock();
+        TryLockDeadlock r2 = new TryLockDeadlock();
+        r1.flag = 1;
+        r2.flag = 0;
+        new Thread(r1).start();
+        new Thread(r2).start();
+    &#125;
+
+    @Override
+    public void run() &#123;
+        for (int i = 0; i &lt; 100; i++) &#123;
+            if (flag == 1) &#123;
+                try &#123;
+                    if (lock1.tryLock(800, TimeUnit.MILLISECONDS)) &#123;
+                        System.out.println(&quot;线程1获取到了锁1&quot;);
+                        Thread.sleep(new Random().nextInt(1000));
+                        if (lock2.tryLock(800, TimeUnit.MILLISECONDS)) &#123;
+                            System.out.println(&quot;线程1获取到了锁2&quot;);
+                            System.out.println(&quot;线程1成功获取到了两把锁&quot;);
+                            lock2.unlock();
+                            lock1.unlock();
+                            break;
+                        &#125; else &#123;
+                            System.out.println(&quot;线程1尝试获取锁2失败，已重试&quot;);
+                            lock1.unlock();
+                            Thread.sleep(new Random().nextInt(1000));
+                        &#125;
+                    &#125; else &#123;
+                        System.out.println(&quot;线程1获取锁1失败，已重试&quot;);
+                    &#125;
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+            if (flag == 0) &#123;
+                try &#123;
+                    if (lock2.tryLock(3000, TimeUnit.MILLISECONDS)) &#123;
+                        System.out.println(&quot;线程2获取到了锁2&quot;);
+
+                        Thread.sleep(new Random().nextInt(1000));
+                        if (lock1.tryLock(3000, TimeUnit.MILLISECONDS)) &#123;
+                            System.out.println(&quot;线程2获取到了锁1&quot;);
+                            System.out.println(&quot;线程2成功获取到了两把锁&quot;);
+                            lock1.unlock();
+                            lock2.unlock();
+                            break;
+                        &#125; else &#123;
+                            System.out.println(&quot;线程2尝试获取锁1失败，已重试&quot;);
+                            lock2.unlock();
+                            Thread.sleep(new Random().nextInt(1000));
+                        &#125;
+                    &#125; else &#123;
+                        System.out.println(&quot;线程2获取锁2失败，已重试&quot;);
+                    &#125;
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+====================================================================================
+线程1获取到了锁1
+线程2获取到了锁2
+线程1尝试获取锁2失败，已重试 【正是有了线程1的释放 才让线程2拿到了锁1】
+线程2获取到了锁1
+线程2成功获取到了两把锁
+线程1获取到了锁1
+线程1获取到了锁2
+线程1成功获取到了两把锁
+</code></pre>
+<h6 id="②-多使用并发类而不是自己设置锁"><a href="#②-多使用并发类而不是自己设置锁" class="headerlink" title="② 多使用并发类而不是自己设置锁"></a>② 多使用并发类而不是自己设置锁</h6><h6 id="③-尽量降低锁的使用粒度：用不同的锁而不是一个锁"><a href="#③-尽量降低锁的使用粒度：用不同的锁而不是一个锁" class="headerlink" title="③ 尽量降低锁的使用粒度：用不同的锁而不是一个锁"></a>③ 尽量降低锁的使用粒度：用不同的锁而不是一个锁</h6><h6 id="④-如果能使用同步代码块，就不使用同步方法：自己锁定锁对象"><a href="#④-如果能使用同步代码块，就不使用同步方法：自己锁定锁对象" class="headerlink" title="④ 如果能使用同步代码块，就不使用同步方法：自己锁定锁对象"></a>④ 如果能使用同步代码块，就不使用同步方法：自己锁定锁对象</h6><h6 id="⑤-给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践"><a href="#⑤-给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践" class="headerlink" title="⑤ 给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践"></a>⑤ 给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践</h6><h3 id="Hashmap为什么-线程-不安全？"><a href="#Hashmap为什么-线程-不安全？" class="headerlink" title="Hashmap为什么[线程]不安全？"></a>Hashmap为什么[线程]不安全？</h3><ul>
+<li><p>i++</p>
+<ul>
+<li>第一个步骤是<strong>读取</strong></li>
+<li>第二个步骤是<strong>增加</strong></li>
+<li>第三个步骤是<strong>保存</strong></li>
+</ul>
+<p>有可能会发生线程不安全的情况<br><img src="https://raw.githubusercontent.com/P-luminary/images/ae6685b2f5be7812a77134895bdd7c4fe843933f/data/HashMap%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%AE%89%E5%85%A8.jpg"></p>
+</li>
+<li><p>同时put碰撞导致数据丢失</p>
+</li>
+<li><p>可见性问题无法保证</p>
+</li>
+</ul>
 
     </div>
 
