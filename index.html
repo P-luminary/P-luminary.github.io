@@ -1016,6 +1016,1007 @@ application-prod.yml
 server:
   port: 8130
 </code></pre>
+<h3 id="优雅的返回封装结果"><a href="#优雅的返回封装结果" class="headerlink" title="优雅的返回封装结果"></a>优雅的返回封装结果</h3><pre><code class="java">com/imooc/user/controller/HelloController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.IMOOCJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    public Object hello()&#123;
+        logger.debug(&quot;debug: hello~&quot;);
+        logger.info(&quot;info: hello~&quot;);
+        logger.warn(&quot;warn: hello~&quot;);
+        logger.error(&quot;error: hello~&quot;);
+
+//        return &quot;hello&quot;;
+//        return IMOOCJSONResult.ok();
+//        return IMOOCJSONResult.ok(&quot;hello!&quot;);
+        return IMOOCJSONResult.errorMsg(&quot;您的信息有误&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/grace/result/IMOOCJSONResult.java
+package com.imooc.grace.result;
+
+/**
+ * 
+ * @Title: IMOOCJSONResult.java
+ * @Package com.imooc.utils
+ * @Description: 自定义响应数据结构
+ *                 本类可提供给 H5/ios/安卓/公众号/小程序 使用
+ *                 前端接受此类数据（json object)后，可自行根据业务去实现相关功能
+ * 
+ *                 200：表示成功
+ *                 500：表示错误，错误信息在msg字段中
+ *                 501：bean验证错误，不管多少个错误都以map形式返回
+ *                 502：拦截器拦截到用户token出错
+ *                 555：异常抛出信息
+ *                 556: 用户qq校验异常
+ *                 557: 校验用户是否在CAS登录，用户门票的校验
+ * @Copyright: Copyright (c) 2020
+ * @Company: www.imooc.com
+ * @author 慕课网 - 风间影月
+ * @version V1.0
+ * 这样太麻烦了 直接用枚举类
+ */
+public class IMOOCJSONResult &#123;
+
+    // 响应业务状态
+    private Integer status;
+
+    // 响应消息
+    private String msg;
+
+    // 响应中的数据
+    private Object data;
+    
+    private String ok;    // 不使用
+
+    public static IMOOCJSONResult build(Integer status, String msg, Object data) &#123;
+        return new IMOOCJSONResult(status, msg, data);
+    &#125;
+
+    public static IMOOCJSONResult build(Integer status, String msg, Object data, String ok) &#123;
+        return new IMOOCJSONResult(status, msg, data, ok);
+    &#125;
+    
+    public static IMOOCJSONResult ok(Object data) &#123;
+        return new IMOOCJSONResult(data);
+    &#125;
+
+    public static IMOOCJSONResult ok() &#123;
+        return new IMOOCJSONResult(null);
+    &#125;
+    
+    public static IMOOCJSONResult errorMsg(String msg) &#123;
+        return new IMOOCJSONResult(500, msg, null);
+    &#125;
+
+    public static IMOOCJSONResult errorUserTicket(String msg) &#123;
+        return new IMOOCJSONResult(557, msg, null);
+    &#125;
+    
+    public static IMOOCJSONResult errorMap(Object data) &#123;
+        return new IMOOCJSONResult(501, &quot;error&quot;, data);
+    &#125;
+    
+    public static IMOOCJSONResult errorTokenMsg(String msg) &#123;
+        return new IMOOCJSONResult(502, msg, null);
+    &#125;
+    
+    public static IMOOCJSONResult errorException(String msg) &#123;
+        return new IMOOCJSONResult(555, msg, null);
+    &#125;
+    
+    public static IMOOCJSONResult errorUserQQ(String msg) &#123;
+        return new IMOOCJSONResult(556, msg, null);
+    &#125;
+
+    public IMOOCJSONResult() &#123;
+
+    &#125;
+
+    public IMOOCJSONResult(Integer status, String msg, Object data) &#123;
+        this.status = status;
+        this.msg = msg;
+        this.data = data;
+    &#125;
+    
+    public IMOOCJSONResult(Integer status, String msg, Object data, String ok) &#123;
+        this.status = status;
+        this.msg = msg;
+        this.data = data;
+        this.ok = ok;
+    &#125;
+
+    public IMOOCJSONResult(Object data) &#123;
+        this.status = 200;
+        this.msg = &quot;OK&quot;;
+        this.data = data;
+    &#125; Getter+Setter
+</code></pre>
+<h6 id="这样太麻烦而且观察起来不方便-升级一下变成枚举类-更加优雅！"><a href="#这样太麻烦而且观察起来不方便-升级一下变成枚举类-更加优雅！" class="headerlink" title="这样太麻烦而且观察起来不方便 升级一下变成枚举类 更加优雅！"></a>这样太麻烦而且观察起来不方便 升级一下变成枚举类 更加优雅！</h6><pre><code class="java">com/imooc/user/controller/HelloController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.IMOOCJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    public Object hello()&#123;
+        logger.debug(&quot;debug: hello~&quot;);
+        logger.info(&quot;info: hello~&quot;);
+        logger.warn(&quot;warn: hello~&quot;);
+        logger.error(&quot;error: hello~&quot;);
+
+//        return &quot;hello&quot;;
+//        return IMOOCJSONResult.ok();
+//        return IMOOCJSONResult.ok(&quot;hello!&quot;);
+//        return IMOOCJSONResult.errorMsg(&quot;您的信息有误&quot;);
+        return GraceJSONResult.errorCustom(ResponseStatusEnum.NO_AUTH);
+    &#125;
+&#125;
+package com.imooc.user.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.IMOOCJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    public Object hello()&#123;
+        logger.debug(&quot;debug: hello~&quot;);
+        logger.info(&quot;info: hello~&quot;);
+        logger.warn(&quot;warn: hello~&quot;);
+        logger.error(&quot;error: hello~&quot;);
+
+//        return &quot;hello&quot;;
+//        return IMOOCJSONResult.ok();
+//        return IMOOCJSONResult.ok(&quot;hello!&quot;);
+//        return IMOOCJSONResult.errorMsg(&quot;您的信息有误&quot;);
+        return GraceJSONResult.errorCustom(ResponseStatusEnum.NO_AUTH);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/grace/result/GraceJSONResult.java
+package com.imooc.grace.result;
+
+import java.util.Map;
+
+/**
+ * 自定义响应数据类型枚举升级版本
+ *
+ * @Title: IMOOCJSONResult.java
+ * @Package com.imooc.utils
+ * @Description: 自定义响应数据结构
+ *                 本类可提供给 H5/ios/安卓/公众号/小程序 使用
+ *                 前端接受此类数据（json object)后，可自行根据业务去实现相关功能
+ *
+ * @Copyright: Copyright (c) 2020
+ * @Company: www.imooc.com
+ * @author 慕课网 - 风间影月
+ * @version V2.0
+ */
+public class GraceJSONResult &#123;
+
+    // 响应业务状态码
+    private Integer status;
+
+    // 响应消息
+    private String msg;
+
+    // 是否成功
+    private Boolean success;
+
+    // 响应数据，可以是Object，也可以是List或Map等
+    private Object data;
+
+    /**
+     * 成功返回，带有数据的，直接往OK方法丢data数据即可
+     * @param data
+     * @return
+     */
+    public static GraceJSONResult ok(Object data) &#123;
+        return new GraceJSONResult(data);
+    &#125;
+    /**
+     * 成功返回，不带有数据的，直接调用ok方法，data无须传入（其实就是null）
+     * @return
+     */
+    public static GraceJSONResult ok() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.SUCCESS);
+    &#125;
+    public GraceJSONResult(Object data) &#123;
+        this.status = ResponseStatusEnum.SUCCESS.status();
+        this.msg = ResponseStatusEnum.SUCCESS.msg();
+        this.success = ResponseStatusEnum.SUCCESS.success();
+        this.data = data;
+    &#125;
+
+
+    /**
+     * 错误返回，直接调用error方法即可，当然也可以在ResponseStatusEnum中自定义错误后再返回也都可以
+     * @return
+     */
+    public static GraceJSONResult error() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED);
+    &#125;
+
+    /**
+     * 错误返回，map中包含了多条错误信息，可以用于表单验证，把错误统一的全部返回出去
+     * @param map
+     * @return
+     */
+    public static GraceJSONResult errorMap(Map map) &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED, map);
+    &#125;
+
+    /**
+     * 错误返回，直接返回错误的消息
+     * @param msg
+     * @return
+     */
+    public static GraceJSONResult errorMsg(String msg) &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED, msg);
+    &#125;
+
+    /**
+     * 错误返回，token异常，一些通用的可以在这里统一定义
+     * @return
+     */
+    public static GraceJSONResult errorTicket() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.TICKET_INVALID);
+    &#125;
+
+    /**
+     * 自定义错误范围，需要传入一个自定义的枚举，可以到[ResponseStatusEnum.java[中自定义后再传入
+     * @param responseStatus
+     * @return
+     */
+    public static GraceJSONResult errorCustom(ResponseStatusEnum responseStatus) &#123;
+        return new GraceJSONResult(responseStatus);
+    &#125;
+    public static GraceJSONResult exception(ResponseStatusEnum responseStatus) &#123;
+        return new GraceJSONResult(responseStatus);
+    &#125;
+
+    public GraceJSONResult(ResponseStatusEnum responseStatus) &#123;
+        this.status = responseStatus.status();
+        this.msg = responseStatus.msg();
+        this.success = responseStatus.success();
+    &#125;
+    public GraceJSONResult(ResponseStatusEnum responseStatus, Object data) &#123;
+        this.status = responseStatus.status();
+        this.msg = responseStatus.msg();
+        this.success = responseStatus.success();
+        this.data = data;
+    &#125;
+    public GraceJSONResult(ResponseStatusEnum responseStatus, String msg) &#123;
+        this.status = responseStatus.status();
+        this.msg = msg;
+        this.success = responseStatus.success();
+    &#125;Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/grace/result/ResponseStatusEnum.java
+package com.imooc.grace.result;
+
+/**
+ * 响应结果枚举，用于提供给GraceJSONResult返回给前端的
+ * 本枚举类中包含了很多的不同的状态码供使用，可以自定义
+ * 便于更优雅的对状态码进行管理，一目了然
+ */
+public enum ResponseStatusEnum &#123;
+
+    SUCCESS(200, true, &quot;操作成功！&quot;),
+    FAILED(500, false, &quot;操作失败！&quot;),
+
+    // 50x
+    UN_LOGIN(501,false,&quot;请登录后再继续操作！&quot;),
+    TICKET_INVALID(502,false,&quot;会话失效，请重新登录！&quot;),
+    NO_AUTH(503,false,&quot;您的权限不足，无法继续操作！&quot;),
+    MOBILE_ERROR(504,false,&quot;短信发送失败，请稍后重试！&quot;),
+    SMS_NEED_WAIT_ERROR(505,false,&quot;短信发送太快啦~请稍后再试！&quot;),
+    SMS_CODE_ERROR(506,false,&quot;验证码过期或不匹配，请稍后再试！&quot;),
+    USER_FROZEN(507,false,&quot;用户已被冻结，请联系管理员！&quot;),
+    USER_UPDATE_ERROR(508,false,&quot;用户信息更新失败，请联系管理员！&quot;),
+    USER_INACTIVE_ERROR(509,false,&quot;请前往[账号设置]修改信息激活后再进行后续操作！&quot;),
+    FILE_UPLOAD_NULL_ERROR(510,false,&quot;文件不能为空，请选择一个文件再上传！&quot;),
+    FILE_UPLOAD_FAILD(511,false,&quot;文件上传失败！&quot;),
+    FILE_FORMATTER_FAILD(512,false,&quot;文件图片格式不支持！&quot;),
+    FILE_MAX_SIZE_ERROR(513,false,&quot;仅支持500kb大小以下的图片上传！&quot;),
+    FILE_NOT_EXIST_ERROR(514,false,&quot;你所查看的文件不存在！&quot;),
+    USER_STATUS_ERROR(515,false,&quot;用户状态参数出错！&quot;),
+    USER_NOT_EXIST_ERROR(516,false,&quot;用户不存在！&quot;),
+
+    // 自定义系统级别异常 54x
+    SYSTEM_INDEX_OUT_OF_BOUNDS(541, false, &quot;系统错误，数组越界！&quot;),
+    SYSTEM_ARITHMETIC_BY_ZERO(542, false, &quot;系统错误，无法除零！&quot;),
+    SYSTEM_NULL_POINTER(543, false, &quot;系统错误，空指针！&quot;),
+    SYSTEM_NUMBER_FORMAT(544, false, &quot;系统错误，数字转换异常！&quot;),
+    SYSTEM_PARSE(545, false, &quot;系统错误，解析异常！&quot;),
+    SYSTEM_IO(546, false, &quot;系统错误，IO输入输出异常！&quot;),
+    SYSTEM_FILE_NOT_FOUND(547, false, &quot;系统错误，文件未找到！&quot;),
+    SYSTEM_CLASS_CAST(548, false, &quot;系统错误，类型强制转换错误！&quot;),
+    SYSTEM_PARSER_ERROR(549, false, &quot;系统错误，解析出错！&quot;),
+    SYSTEM_DATE_PARSER_ERROR(550, false, &quot;系统错误，日期解析出错！&quot;),
+
+    // admin 管理系统 56x
+    ADMIN_USERNAME_NULL_ERROR(561, false, &quot;管理员登录名不能为空！&quot;),
+    ADMIN_USERNAME_EXIST_ERROR(562, false, &quot;管理员登录名已存在！&quot;),
+    ADMIN_NAME_NULL_ERROR(563, false, &quot;管理员负责人不能为空！&quot;),
+    ADMIN_PASSWORD_ERROR(564, false, &quot;密码不能为空后者两次输入不一致！&quot;),
+    ADMIN_CREATE_ERROR(565, false, &quot;添加管理员失败！&quot;),
+    ADMIN_PASSWORD_NULL_ERROR(566, false, &quot;密码不能为空！&quot;),
+    ADMIN_NOT_EXIT_ERROR(567, false, &quot;管理员不存在或密码错误！&quot;),
+    ADMIN_FACE_NULL_ERROR(568, false, &quot;人脸信息不能为空！&quot;),
+    ADMIN_FACE_LOGIN_ERROR(569, false, &quot;人脸识别失败，请重试！&quot;),
+    CATEGORY_EXIST_ERROR(570, false, &quot;文章分类已存在，请换一个分类名！&quot;),
+
+    // 媒体中心 相关错误 58x
+    ARTICLE_COVER_NOT_EXIST_ERROR(580, false, &quot;文章封面不存在，请选择一个！&quot;),
+    ARTICLE_CATEGORY_NOT_EXIST_ERROR(581, false, &quot;请选择正确的文章领域！&quot;),
+    ARTICLE_CREATE_ERROR(582, false, &quot;创建文章失败，请重试或联系管理员！&quot;),
+    ARTICLE_QUERY_PARAMS_ERROR(583, false, &quot;文章列表查询参数错误！&quot;),
+    ARTICLE_DELETE_ERROR(584, false, &quot;文章删除失败！&quot;),
+    ARTICLE_WITHDRAW_ERROR(585, false, &quot;文章撤回失败！&quot;),
+    ARTICLE_REVIEW_ERROR(585, false, &quot;文章审核出错！&quot;),
+    ARTICLE_ALREADY_READ_ERROR(586, false, &quot;文章重复阅读！&quot;),
+
+    // 人脸识别错误代码
+    FACE_VERIFY_TYPE_ERROR(600, false, &quot;人脸比对验证类型不正确！&quot;),
+    FACE_VERIFY_LOGIN_ERROR(601, false, &quot;人脸登录失败！&quot;),
+
+    // 系统错误，未预期的错误 555
+    SYSTEM_ERROR(555, false, &quot;系统繁忙，请稍后再试！&quot;),
+    SYSTEM_OPERATION_ERROR(556, false, &quot;操作失败，请重试或联系管理员&quot;),
+    SYSTEM_RESPONSE_NO_INFO(557, false, &quot;&quot;);
+
+
+    // 响应业务状态
+    private Integer status;
+    // 调用是否成功
+    private Boolean success;
+    // 响应消息，可以为成功或者失败的消息
+    private String msg;
+
+    ResponseStatusEnum(Integer status, Boolean success, String msg) &#123;
+        this.status = status;
+        this.success = success;
+        this.msg = msg;
+    &#125;
+
+    public Integer status() &#123;
+        return status;
+    &#125;
+    public Boolean success() &#123;
+        return success;
+    &#125;
+    public String msg() &#123;
+        return msg;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">&#123;
+    &quot;status&quot;: 200,
+    &quot;msg&quot;: &quot;操作成功！&quot;,
+    &quot;success&quot;: true,
+    &quot;data&quot;: null
+&#125;
+</code></pre>
+<h3 id="配置数据库逆向生成实体类"><a href="#配置数据库逆向生成实体类" class="headerlink" title="配置数据库逆向生成实体类"></a>配置数据库逆向生成实体类</h3><h6 id="引入mybatis-generator-database-新建工程项目"><a href="#引入mybatis-generator-database-新建工程项目" class="headerlink" title="引入mybatis-generator-database[新建工程项目]"></a>引入mybatis-generator-database[新建工程项目]</h6><pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-generator-database&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+
+    &lt;dependencies&gt;
+
+        &lt;!-- 引入log4j日志依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-log4j&lt;/artifactId&gt;
+            &lt;version&gt;1.3.8.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- 阿里开源数据源 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;druid&lt;/artifactId&gt;
+            &lt;version&gt;1.1.0&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;druid-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.1.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;5.1.41&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--mybatis--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.3.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--mapper--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;tk.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mapper-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.2.4&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--pagehelper--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.pagehelper&lt;/groupId&gt;
+            &lt;artifactId&gt;pagehelper-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- mybatis 逆向生成工具  --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.generator&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-generator-core&lt;/artifactId&gt;
+            &lt;version&gt;1.3.2&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+            &lt;optional&gt;true&lt;/optional&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<h3 id="整合Mybatis"><a href="#整合Mybatis" class="headerlink" title="整合Mybatis"></a>整合Mybatis</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/xiaoheihai666/article/details/125936493">dependencymanagement 无法引入包依赖-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/stKAnic/article/details/121380871?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-4-121380871-blog-121295199.235%5Ev43%5Epc_blog_bottom_relevance_base6&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-4-121380871-blog-121295199.235%5Ev43%5Epc_blog_bottom_relevance_base6">关于Maven依赖dependency无法引入的问题_<dependencymanagement> 无法引入包-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_46411355/article/details/131312807">Maven配置仓库、阿里云镜像、环境变量（史上最全最详细）_maven配置阿里云镜像-CSDN博客</a></p>
+<pre><code class="java">将mybatis-generator-database中的pojo[AppUser+Fans]复制转移到imooc-news-dev-model com/imooc/pojo中
+将mybatis-generator-database中的com/imooc/user/mapper[AppUserMapper、FansMapper]复制转移到imooc-news-service-user com/imooc/user/mapper中
+所有的服务都是要实现API的
+将mybatis-generator-database中的com/imooc/my/mapper[MyMapper]复制转移到imooc-news-dev-service-api com/imooc/my/mapper中
+将..database中的resources的mapper[AppUserMapper.xml、FansMapper.xml]转移到...service-user的resources的mapper中
+</code></pre>
+<pre><code class="yaml">imooc-news-dev-service-user中的resources的application.yml
+############################################################
+#
+# 用户微服务
+# web访问端口号  约定：8003
+#
+############################################################
+server:
+# port: 8003
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-user
+  datasource: # 数据源的相关配置
+    type: com.zaxxer.hikari.HikariDataSource          # 数据源类型：HikariCP
+    driver-class-name: com.mysql.jdbc.Driver          # mysql驱动
+    url: jdbc:mysql://localhost:3306/imooc-news-dev?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true
+    username: root
+    password: root
+    hikari:
+      connection-timeout: 30000       # 等待连接池分配连接的最大时长（毫秒），超过这个时长还没可用的连接则发生SQLException， 默认:30秒
+      minimum-idle: 5                 # 最小连接数
+      maximum-pool-size: 20           # 最大连接数
+      auto-commit: true               # 自动提交
+      idle-timeout: 600000            # 连接超时的最大时长（毫秒），超时则被释放（retired），默认:10分钟
+      pool-name: DateSourceHikariCP     # 连接池名字
+      max-lifetime: 1800000           # 连接的生命时长（毫秒），超时而且没被使用则被释放（retired），默认:30分钟 1800000ms
+      connection-test-query: SELECT 1
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+############################################################
+#
+# mybatis 配置
+#
+############################################################
+mybatis:
+  type-aliases-package: com.imooc.pojo          # 所有POJO类所在包路径
+  mapper-locations: classpath:mapper/*.xml      # mapper映射文件
+
+############################################################
+#
+# mybatis mapper 配置
+#
+############################################################
+# 通用 Mapper 配置
+mapper:
+  mappers: com.imooc.my.mapper.MyMapper
+  not-empty: false    # 在进行数据库操作的的时候，判断表达式 username != null, 是否追加 username != &#39;&#39;
+  identity: MYSQL
+# 分页插件配置
+pagehelper:
+  helperDialect: mysql
+  supportMethodsArguments: true
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/hkdhkdhkd/article/details/113869035">【解决】SLF4J: Class path contains multiple SLF4J bindings._启动metastore时slf4j: class path contains multiple sl-CSDN博客</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/huifeidezhuzai/p/16352608.html">整合MongoDB踩坑记录及解决方法 - 会飞的猪仔 - 博客园 (cnblogs.com)</a></p>
+<pre><code class="java">com/imooc/user/Application.java
+package com.imooc.user;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
+@MapperScan(basePackages = &quot;com.imooc.user.mapper&quot;)
+@ComponentScan(&quot;com.imooc&quot;)
+public class Application &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Swagger2接口文檔工具的使用"><a href="#Swagger2接口文檔工具的使用" class="headerlink" title="Swagger2接口文檔工具的使用"></a>Swagger2接口文檔工具的使用</h3><h6 id="imooc-news-dev-service-api-1"><a href="#imooc-news-dev-service-api-1" class="headerlink" title="imooc-news-dev-service-api"></a>imooc-news-dev-service-api</h6><pre><code class="xml">&lt;!-- swagger2 配置 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger2&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;springfox-swagger2.version&#125;&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.springfox&lt;/groupId&gt;
+            &lt;artifactId&gt;springfox-swagger-ui&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;springfox-swagger2.version&#125;&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.xiaoymin&lt;/groupId&gt;
+            &lt;artifactId&gt;swagger-bootstrap-ui&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;swagger-bootstrap-ui.version&#125;&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">com/imooc/api/config/Swagger2.java
+package com.imooc.api.config;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.RequestHandler;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@Configuration //Springboot啓動的時候會被掃描到并且加載
+@EnableSwagger2
+public class Swagger2 &#123;
+
+    //    http://localhost:8088/swagger-ui.html     原路径
+//http://user.imoocnews.com:8003/swagger-ui.htm
+    //    http://localhost:8088/doc.html            新路径
+//http://user.imoocnews.com:8003/doc.html
+
+    // 配置swagger2核心配置 docket
+    @Bean
+    public Docket createRestApi() &#123;
+        Predicate&lt;RequestHandler&gt; adminPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.admin.controller&quot;);
+//        Predicate&lt;RequestHandler&gt; articlePredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.article.controller&quot;);
+        Predicate&lt;RequestHandler&gt; userPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.user.controller&quot;);
+        Predicate&lt;RequestHandler&gt; filesPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.files.controller&quot;);
+
+        return new Docket(DocumentationType.SWAGGER_2)  // 指定api类型为swagger2
+                .apiInfo(apiInfo())                 // 用于定义api文档汇总信息
+                .select()
+                .apis(Predicates.or(userPredicate, adminPredicate, filesPredicate))
+//                .apis(Predicates.or(adminPredicate, articlePredicate, userPredicate, filesPredicate))
+                .paths(PathSelectors.any())         // 所有controller
+                .build();
+    &#125;
+
+    private ApiInfo apiInfo() &#123;
+        return new ApiInfoBuilder()
+                .title(&quot;慕课新闻·自媒体接口api&quot;)                       // 文档页标题
+                .contact(new Contact(&quot;imooc&quot;,
+                        &quot;https://www.imooc.com&quot;,
+                        &quot;abc@imooc.com&quot;))                   // 联系人信息
+                .description(&quot;专为慕课新闻·自媒体平台提供的api文档&quot;)      // 详细信息
+                .version(&quot;1.0.1&quot;)                               // 文档版本号
+                .termsOfServiceUrl(&quot;https://www.imooc.com&quot;)     // 网站地址
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/api/controller/user/HelloControllerApi.java
+package com.imooc.api.controller.user;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Api(value = &quot;controller的標題&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+public interface HelloControllerApi &#123;
+    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;/hello&quot;)
+    public Object hello();
+&#125;
+</code></pre>
+<p>[maven-之Lifecycle详解_maven lifecycle-CSDN博客](<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_39505065/article/details/102915403#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86">https://blog.csdn.net/qq_39505065/article/details/102915403#第三部分</a> PS)</p>
+<blockquote>
+<p>Maven中的Lifecycle的install是什麽 ？<br>将包安装到本地存储库中，作为本地其他项目的依赖项</p>
+</blockquote>
+<h3 id="梳理短信登錄注冊流程"><a href="#梳理短信登錄注冊流程" class="headerlink" title="梳理短信登錄注冊流程"></a>梳理短信登錄注冊流程</h3><ul>
+<li>短信登录注册</li>
+<li>短信验证码发送与限制</li>
+<li>分布式会话</li>
+<li>用户信息完善，OSS&#x2F;FastDFS文件上传</li>
+<li>AOP日志监控</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/87e42b65e3e64f84efebcf347d7bd0180b448627/data/%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E6%B3%A8%E5%86%8C%E6%B5%81%E7%A8%8B.png"></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e4dcd13c468e5883cfd3187c6c2800cf2bc4168f/data/%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E6%B3%A8%E5%86%8C2.png"></p>
+<pre><code class="xml">aliyun.properties
+#这里需要去阿里云上购买短信验证
+aliyun.accessKeyID=
+aliyun.accessKeySecret=
+</code></pre>
+<pre><code class="xml">【imooc-news-dev-common】
+pom.xml
+加入springboot依赖包
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+&lt;!--
+    imooc-news-dev-common:
+    通用工程
+    包含了一些工具类,枚举类,封装的一些公共方法以及一些第三方组件等
+--&gt;
+    &lt;artifactId&gt;imooc-news-dev-common&lt;/artifactId&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;!--    引入SpringBoot依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-configuration-processor&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!--  第三方云厂商相关依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-core&lt;/artifactId&gt;
+            &lt;version&gt;4.5.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/utils/extend/AliyunResource.java
+package com.imooc.utils.extend;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+
+@Component
+@PropertySource(&quot;classpath:aliyun.properties&quot;)
+@ConfigurationProperties(prefix = &quot;aliyun&quot;) //这里是前缀
+public class AliyunResource &#123;
+    private String accessKeyID;
+    private String accessKeySecret;
+
+    public String getAccessKeyID() &#123;
+        return accessKeyID;
+    &#125;
+
+    public void setAccessKeyID(String accessKeyID) &#123;
+        this.accessKeyID = accessKeyID;
+    &#125;
+
+    public String getAccessKeySecret() &#123;
+        return accessKeySecret;
+    &#125;
+
+    public void setAccessKeySecret(String accessKeySecret) &#123;
+        this.accessKeySecret = accessKeySecret;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/utils/SMSUtils.java
+package com.imooc.utils;
+
+import com.aliyuncs.CommonRequest;
+import com.aliyuncs.CommonResponse;
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.IAcsClient;
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.exceptions.ServerException;
+import com.aliyuncs.http.MethodType;
+import com.aliyuncs.profile.DefaultProfile;
+import com.imooc.utils.extend.AliyunResource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component //工具类 可以作为组件
+public class SMSUtils &#123;
+    @Autowired
+    public AliyunResource aliyunResource;
+    public void sendSMS(String mobile, String code) &#123;
+        DefaultProfile profile = DefaultProfile.getProfile(&quot;cn-hangzhou&quot;,
+                aliyunResource.getAccessKeyID(),
+                aliyunResource.getAccessKeySecret());
+        IAcsClient client = new DefaultAcsClient(profile);
+
+        CommonRequest request = new CommonRequest();
+        request.setSysMethod(MethodType.POST);
+        request.setSysDomain(&quot;dysmsapi.aliyuncs.com&quot;);
+        request.setSysVersion(&quot;2017-05-25&quot;);
+        request.setSysAction(&quot;SendSms&quot;);
+        request.putQueryParameter(&quot;RegionId&quot;, &quot;cn-hangzhou&quot;);
+        //给对方发送的手机号
+        request.putQueryParameter(&quot;PhoneNumbers&quot;, mobile);
+        request.putQueryParameter(&quot;SignName&quot;, &quot;风间影月&quot;);//控制台可以添加签名
+        request.putQueryParameter(&quot;TemplateCode&quot;, &quot;SMS_183761535&quot;);
+        request.putQueryParameter(&quot;TemplateParam&quot;, &quot;&#123;\&quot;code\&quot;:\&quot;&quot; + code + &quot;\&quot;&#125;&quot;);//JSON对象字符串
+
+        try &#123;
+            CommonResponse response = client.getCommonResponse(request);
+            System.out.println(response.getData());
+        &#125; catch (ServerException e) &#123;
+            e.printStackTrace();
+        &#125; catch (ClientException e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/api/controller/user/PassportControllerApi.java[接口]
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Api(value = &quot;用户注册登录&quot;,tags = &#123;&quot;用户注册登录的Controller&quot;&#125;)
+public interface PassportControllerApi &#123;
+    @ApiOperation(value = &quot;获得短信验证码&quot;,notes = &quot;获得短信验证码&quot;,httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;/getSMSCode&quot;)
+    public GraceJSONResult getSMSCode();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/user/controller/PassportController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.api.controller.user.PassportControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.SMSUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class PassportController implements PassportControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(PassportController.class);
+
+    @Autowired
+    private SMSUtils smsUtils;
+
+    @Override
+    public GraceJSONResult getSMSCode()&#123;
+        String random = &quot;123456789&quot;;
+        smsUtils.sendSMS(&quot;15027597319&quot;,random);
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/grace/result/GraceJSONResult.java
+package com.imooc.grace.result;
+
+import java.util.Map;
+
+/**
+ * 自定义响应数据类型枚举升级版本
+ *
+ * @Title: IMOOCJSONResult.java
+ * @Package com.imooc.utils
+ * @Description: 自定义响应数据结构
+ *                 本类可提供给 H5/ios/安卓/公众号/小程序 使用
+ *                 前端接受此类数据（json object)后，可自行根据业务去实现相关功能
+ *
+ * @Copyright: Copyright (c) 2020
+ * @Company: www.imooc.com
+ * @author 慕课网 - 风间影月
+ * @version V2.0
+ */
+public class GraceJSONResult &#123;
+
+    // 响应业务状态码
+    private Integer status;
+
+    // 响应消息
+    private String msg;
+
+    // 是否成功
+    private Boolean success;
+
+    // 响应数据，可以是Object，也可以是List或Map等
+    private Object data;
+
+    /**
+     * 成功返回，带有数据的，直接往OK方法丢data数据即可
+     * @param data
+     * @return
+     */
+    public static GraceJSONResult ok(Object data) &#123;
+        return new GraceJSONResult(data);
+    &#125;
+    /**
+     * 成功返回，不带有数据的，直接调用ok方法，data无须传入（其实就是null）
+     * @return
+     */
+    public static GraceJSONResult ok() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.SUCCESS);
+    &#125;
+    public GraceJSONResult(Object data) &#123;
+        this.status = ResponseStatusEnum.SUCCESS.status();
+        this.msg = ResponseStatusEnum.SUCCESS.msg();
+        this.success = ResponseStatusEnum.SUCCESS.success();
+        this.data = data;
+    &#125;
+
+
+    /**
+     * 错误返回，直接调用error方法即可，当然也可以在ResponseStatusEnum中自定义错误后再返回也都可以
+     * @return
+     */
+    public static GraceJSONResult error() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED);
+    &#125;
+
+    /**
+     * 错误返回，map中包含了多条错误信息，可以用于表单验证，把错误统一的全部返回出去
+     * @param map
+     * @return
+     */
+    public static GraceJSONResult errorMap(Map map) &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED, map);
+    &#125;
+
+    /**
+     * 错误返回，直接返回错误的消息
+     * @param msg
+     * @return
+     */
+    public static GraceJSONResult errorMsg(String msg) &#123;
+        return new GraceJSONResult(ResponseStatusEnum.FAILED, msg);
+    &#125;
+
+    /**
+     * 错误返回，token异常，一些通用的可以在这里统一定义
+     * @return
+     */
+    public static GraceJSONResult errorTicket() &#123;
+        return new GraceJSONResult(ResponseStatusEnum.TICKET_INVALID);
+    &#125;
+
+    /**
+     * 自定义错误范围，需要传入一个自定义的枚举，可以到[ResponseStatusEnum.java[中自定义后再传入
+     * @param responseStatus
+     * @return
+     */
+    public static GraceJSONResult errorCustom(ResponseStatusEnum responseStatus) &#123;
+        return new GraceJSONResult(responseStatus);
+    &#125;
+    public static GraceJSONResult exception(ResponseStatusEnum responseStatus) &#123;
+        return new GraceJSONResult(responseStatus);
+    &#125;
+
+    public GraceJSONResult(ResponseStatusEnum responseStatus) &#123;
+        this.status = responseStatus.status();
+        this.msg = responseStatus.msg();
+        this.success = responseStatus.success();
+    &#125;
+    public GraceJSONResult(ResponseStatusEnum responseStatus, Object data) &#123;
+        this.status = responseStatus.status();
+        this.msg = responseStatus.msg();
+        this.success = responseStatus.success();
+        this.data = data;
+    &#125;
+    public GraceJSONResult(ResponseStatusEnum responseStatus, String msg) &#123;
+        this.status = responseStatus.status();
+        this.msg = msg;
+        this.success = responseStatus.success();
+    &#125;
+
+    public GraceJSONResult() &#123;
+    &#125;
+
+    public Integer getStatus() &#123;
+        return status;
+    &#125;
+
+    public void setStatus(Integer status) &#123;
+        this.status = status;
+    &#125;
+
+    public String getMsg() &#123;
+        return msg;
+    &#125;
+
+    public void setMsg(String msg) &#123;
+        this.msg = msg;
+    &#125;
+
+    public Object getData() &#123;
+        return data;
+    &#125;
+
+    public void setData(Object data) &#123;
+        this.data = data;
+    &#125;
+
+    public Boolean getSuccess() &#123;
+        return success;
+    &#125;
+
+    public void setSuccess(Boolean success) &#123;
+        this.success = success;
+    &#125;
+&#125;
+</code></pre>
+<p>3-4</p>
 
             
         </div>
@@ -1030,7 +2031,7 @@ server:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -4234,7 +5235,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -6509,7 +7510,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -9439,7 +10440,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -11506,7 +12507,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -16533,7 +17534,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -19842,7 +20843,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -22601,7 +23602,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
