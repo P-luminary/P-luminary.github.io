@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -1996,7 +1996,76 @@ public class GraceJSONResult &#123;
     &#125;
 &#125;
 </code></pre>
-<p>3-4</p>
+<h3 id="安装配置整合Redis"><a href="#安装配置整合Redis" class="headerlink" title="安装配置整合Redis"></a>安装配置整合Redis</h3><pre><code class="mysql">通过Xftp7把redis-5.0.7.tar.gz传入到服务器
+[root@iZbp1dssknxftmjczbtpndZ ~]# tar -zxvf redis-5.0.7.tar.gz 
+[root@iZbp1dssknxftmjczbtpndZ ~]# ls
+apache-zookeeper-3.6.0-bin         rabbitmq-server-3.8.2-1.el7.noarch.rpm
+apache-zookeeper-3.6.0-bin.tar.gz  redis-5.0.7
+erlang-22.3-1.el7.x86_64.rpm       redis-5.0.7.tar.gz
+[root@iZbp1dssknxftmjczbtpndZ ~]# cd redis-5.0.7
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# ll
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# yum install gcc-c++
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# make
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# cd /usr/local/
+[root@iZbp1dssknxftmjczbtpndZ local]# ll
+[root@iZbp1dssknxftmjczbtpndZ local]# pwd
+/usr/local
+[root@iZbp1dssknxftmjczbtpndZ local]# cd redis/
+[root@iZbp1dssknxftmjczbtpndZ redis]# ll
+total 4
+drwxr-xr-x 2 root root 4096 May 15 11:19 bin
+[root@iZbp1dssknxftmjczbtpndZ redis]# cd bin
+[root@iZbp1dssknxftmjczbtpndZ bin]# ll
+total 32772
+-rwxr-xr-x 1 root root 4366880 May 15 11:04 redis-benchmark
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-check-aof
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-check-rdb
+-rwxr-xr-x 1 root root 4807952 May 15 11:04 redis-cli
+-rw-r--r-- 1 root root       0 May 15 11:19 redis.conf
+lrwxrwxrwx 1 root root      12 May 15 11:04 redis-sentinel -&gt; redis-server
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-server
+[root@iZbp1dssknxftmjczbtpndZ redis]# cd
+[root@iZbp1dssknxftmjczbtpndZ ~]# cd redis-5.0.7
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# ls
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# cp redis.conf /usr/local/redis/bin/
+cp: overwrite ‘/usr/local/redis/bin/redis.conf’? y
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# cd /usr/local/redis/bin/
+[root@iZbp1dssknxftmjczbtpndZ bin]# ll
+total 32836
+-rwxr-xr-x 1 root root 4366880 May 15 11:04 redis-benchmark
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-check-aof
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-check-rdb
+-rwxr-xr-x 1 root root 4807952 May 15 11:04 redis-cli
+-rw-r--r-- 1 root root   61797 May 15 11:28 redis.conf
+lrwxrwxrwx 1 root root      12 May 15 11:04 redis-sentinel -&gt; redis-server
+-rwxr-xr-x 1 root root 8125288 May 15 11:04 redis-server
+[root@iZbp1dssknxftmjczbtpndZ bin]# vim redis.conf
+在里面 /bind 直接搜索
+把bind 127.0.0.1修改成 0.0.0.0在任何地方都可以进行操作修改
+在里面 /dae
+把daemonize no 改成 daemonize yes[后台启动]
+在里面 /require
+把requirepass foobared 这里是设置密码 requirepass XXXX
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-server redis.conf
+32421:C 15 May 2024 11:35:36.687 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+32421:C 15 May 2024 11:35:36.687 # Redis version=5.0.7, bits=64, commit=00000000, modified=0, pid=32421, just started
+32421:C 15 May 2024 11:35:36.687 # Configuration loaded
+[root@iZbp1dssknxftmjczbtpndZ bin]# ps -ef|grep redis
+root     32422     1  0 11:35 ?        00:00:00 ./redis-server 0.0.0.0:6379
+root     32456 25226  0 11:35 pts/0    00:00:00 grep --color=auto redis
+【此时说明已经成功启动Redis】
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli
+127.0.0.1:6379&gt; ping
+PONG
+127.0.0.1:6379&gt; keys *
+(empty list or set)
+127.0.0.1:6379&gt; set name imooc
+OK
+127.0.0.1:6379&gt; get name
+&quot;imooc&quot;
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli -p 6379 shutdown
+</code></pre>
+<p>3-5</p>
 
     </div>
 
