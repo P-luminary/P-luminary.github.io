@@ -1685,11 +1685,13 @@ public interface HelloControllerApi &#123;
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/87e42b65e3e64f84efebcf347d7bd0180b448627/data/%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E6%B3%A8%E5%86%8C%E6%B5%81%E7%A8%8B.png"></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/e4dcd13c468e5883cfd3187c6c2800cf2bc4168f/data/%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E6%B3%A8%E5%86%8C2.png"></p>
-<pre><code class="xml">aliyun.properties
-#这里需要去阿里云上购买短信验证
+<pre><code class="xml">
+aliyun.properties
+#这里需要去阿里云上购买短信验证 [电脑aliyun_Key.txt有]
 aliyun.accessKeyID=
 aliyun.accessKeySecret=
 </code></pre>
+<p><a target="_blank" rel="noopener" href="https://next.api.aliyun.com/api/Dysmsapi/2017-05-25/SendSms?params=%7B%22SignName%22:%22%E5%B0%8F%E6%BD%98%E7%A7%91%E6%8A%80%22,%22TemplateCode%22:%22SMS_467115116%22,%22PhoneNumbers%22:%2215027597319%22,%22TemplateParam%22:%22%7B%22code%22:%221234%22%7D%22%7D">SendSms_短信服务_API调试-阿里云OpenAPI开发者门户 (aliyun.com)</a><br><a target="_blank" rel="noopener" href="https://next.api.aliyun.com/api-tools/demo/Dysmsapi/db7e1211-14e0-4b7b-9011-037dfb85d42e">短信发送并查询示例_短信服务_示例中心-阿里云OpenAPI开发者门户 (aliyun.com)</a><br><a target="_blank" rel="noopener" href="https://ram.console.aliyun.com/manage/ak">RAM 访问控制 (aliyun.com)</a><br><a target="_blank" rel="noopener" href="https://dysms.console.aliyun.com/overview">短信服务 (aliyun.com)</a><br><a target="_blank" rel="noopener" href="https://ecs.console.aliyun.com/server/i-bp1dssknxftmjczbtpnd/detail?regionId=cn-hangzhou">云服务器管理控制台 (aliyun.com)</a></p>
 <pre><code class="xml">【imooc-news-dev-common】
 pom.xml
 加入springboot依赖包
@@ -1781,6 +1783,8 @@ import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.imooc.utils.extend.AliyunResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -1788,6 +1792,7 @@ import org.springframework.stereotype.Component;
 public class SMSUtils &#123;
     @Autowired
     public AliyunResource aliyunResource;
+    final static Logger logger = LoggerFactory.getLogger(SMSUtils.class);
     public void sendSMS(String mobile, String code) &#123;
         DefaultProfile profile = DefaultProfile.getProfile(&quot;cn-hangzhou&quot;,
                 aliyunResource.getAccessKeyID(),
@@ -1802,24 +1807,26 @@ public class SMSUtils &#123;
         request.putQueryParameter(&quot;RegionId&quot;, &quot;cn-hangzhou&quot;);
         //给对方发送的手机号
         request.putQueryParameter(&quot;PhoneNumbers&quot;, mobile);
-        request.putQueryParameter(&quot;SignName&quot;, &quot;风间影月&quot;);//控制台可以添加签名
-        request.putQueryParameter(&quot;TemplateCode&quot;, &quot;SMS_183761535&quot;);
+        request.putQueryParameter(&quot;SignName&quot;, &quot;小潘科技&quot;);//控制台可以添加签名
+        request.putQueryParameter(&quot;TemplateCode&quot;, &quot;SMS_467115116&quot;);
         request.putQueryParameter(&quot;TemplateParam&quot;, &quot;&#123;\&quot;code\&quot;:\&quot;&quot; + code + &quot;\&quot;&#125;&quot;);//JSON对象字符串
-
         try &#123;
             CommonResponse response = client.getCommonResponse(request);
             System.out.println(response.getData());
+            // 打印阿里云API的响应结果
+            logger.info(&quot;Aliyun SMS API response: &quot; + response.getData());
         &#125; catch (ServerException e) &#123;
             e.printStackTrace();
+            logger.error(&quot;ServerException: &quot; + e.getMessage());
         &#125; catch (ClientException e) &#123;
             e.printStackTrace();
+            logger.error(&quot;ClientException: &quot; + e.getMessage());
         &#125;
     &#125;
 &#125;
 </code></pre>
 <pre><code class="java">com/imooc/api/controller/user/PassportControllerApi.java[接口]
 package com.imooc.api.controller.user;
-
 
 import com.imooc.grace.result.GraceJSONResult;
 import io.swagger.annotations.Api;
@@ -1836,30 +1843,42 @@ public interface PassportControllerApi &#123;
 <pre><code class="java">com/imooc/user/controller/PassportController.java
 package com.imooc.user.controller;
 
-import com.imooc.api.controller.user.HelloControllerApi;
+
 import com.imooc.api.controller.user.PassportControllerApi;
 import com.imooc.grace.result.GraceJSONResult;
-import com.imooc.grace.result.ResponseStatusEnum;
 import com.imooc.utils.SMSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping(&quot;passport&quot;)
 public class PassportController implements PassportControllerApi &#123;
     final static Logger logger = LoggerFactory.getLogger(PassportController.class);
 
     @Autowired
     private SMSUtils smsUtils;
+    // 这里去除的原因是因为新建了一个BaseController 在里面有信息 且在这加个extends
+    //    @Autowired
+    //    private RedisOperator redis;
 
     @Override
     public GraceJSONResult getSMSCode()&#123;
-        String random = &quot;123456789&quot;;
-        smsUtils.sendSMS(&quot;15027597319&quot;,random);
+        // 生成6位随机验证码
+        String random = String.valueOf((int)((Math.random() * 9 + 1) * 100000));
+        // 打印生成的验证码以便调试
+        logger.info(&quot;Generated SMS code: &quot; + random);
+//        String random = ((Math.random() * 9 + 1) * 100000) + &quot;&quot;;
+        smsUtils.sendSMS(&quot;15027597319&quot;,random);//可以用MyInfo.getMobile代替
+        // 记录发送短信的结果（添加日志）
+        logger.info(&quot;SMS sent to 15027597000 with code: &quot; + random);
+
         return GraceJSONResult.ok();
     &#125;
 &#125;
+、
 </code></pre>
 <pre><code class="java">com/imooc/grace/result/GraceJSONResult.java
 package com.imooc.grace.result;
@@ -2026,15 +2045,15 @@ erlang-22.3-1.el7.x86_64.rpm       redis-5.0.7.tar.gz
 [root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# ll
 [root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# yum install gcc-c++
 [root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# make
-[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# cd /usr/local/
+[root@iZbp1dssknxftmjczbtpndZ redis-5.0.7]# cd /usr/local/ ★
 [root@iZbp1dssknxftmjczbtpndZ local]# ll
 [root@iZbp1dssknxftmjczbtpndZ local]# pwd
 /usr/local
-[root@iZbp1dssknxftmjczbtpndZ local]# cd redis/
+[root@iZbp1dssknxftmjczbtpndZ local]# cd redis/ ★
 [root@iZbp1dssknxftmjczbtpndZ redis]# ll
 total 4
 drwxr-xr-x 2 root root 4096 May 15 11:19 bin
-[root@iZbp1dssknxftmjczbtpndZ redis]# cd bin
+[root@iZbp1dssknxftmjczbtpndZ redis]# cd bin ★
 [root@iZbp1dssknxftmjczbtpndZ bin]# ll
 total 32772
 -rwxr-xr-x 1 root root 4366880 May 15 11:04 redis-benchmark
@@ -2066,7 +2085,7 @@ lrwxrwxrwx 1 root root      12 May 15 11:04 redis-sentinel -&gt; redis-server
 把daemonize no 改成 daemonize yes[后台启动]
 在里面 /require
 把requirepass foobared 这里是设置密码 requirepass XXXX
-[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-server redis.conf
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-server redis.conf ★
 32421:C 15 May 2024 11:35:36.687 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
 32421:C 15 May 2024 11:35:36.687 # Redis version=5.0.7, bits=64, commit=00000000, modified=0, pid=32421, just started
 32421:C 15 May 2024 11:35:36.687 # Configuration loaded
@@ -2074,7 +2093,7 @@ lrwxrwxrwx 1 root root      12 May 15 11:04 redis-sentinel -&gt; redis-server
 root     32422     1  0 11:35 ?        00:00:00 ./redis-server 0.0.0.0:6379
 root     32456 25226  0 11:35 pts/0    00:00:00 grep --color=auto redis
 【此时说明已经成功启动Redis】
-[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli ★
 127.0.0.1:6379&gt; ping
 PONG
 127.0.0.1:6379&gt; keys *
@@ -2084,8 +2103,502 @@ OK
 127.0.0.1:6379&gt; get name
 &quot;imooc&quot;
 [root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli -p 6379 shutdown
+
+★直接进入redis文件内★
+[root@iZbp1dssknxftmjczbtpndZ ~]# cd /usr/local/redis/bin       //进入文件内
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-server redis.conf   //启动
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./redis-cli                 //测试
+★★
 </code></pre>
-<p>3-5</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/hu4545/article/details/126174419">Linux下Redis服务启动与关闭_linux 关闭redis-CSDN博客</a></p>
+<h3 id="安装配置整合Redis-2"><a href="#安装配置整合Redis-2" class="headerlink" title="安装配置整合Redis-2"></a>安装配置整合Redis-2</h3><blockquote>
+<p>下载并安装好 Redis Desktop Manager<br>新连接设置<br>名字：redis-imooc-news 47.98.225.105<br>地址：47.98.225.105：6379</p>
+</blockquote>
+<pre><code class="xml">加一下redis的依赖
+imooc-news-dev-common
+pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+&lt;!--
+    imooc-news-dev-common:
+    通用工程
+    包含了一些工具类,枚举类,封装的一些公共方法以及一些第三方组件等
+--&gt;
+    &lt;artifactId&gt;imooc-news-dev-common&lt;/artifactId&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;!--    引入SpringBoot依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-configuration-processor&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- 引入 redis 依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+            &lt;version&gt;2.0.4.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.squareup.okhttp3&lt;/groupId&gt;
+            &lt;artifactId&gt;okhttp&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- jackson --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
+            &lt;artifactId&gt;jackson-core&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
+            &lt;artifactId&gt;jackson-annotations&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
+            &lt;artifactId&gt;jackson-databind&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- apache 工具类 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-codec&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-codec&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-lang3&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-fileupload&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-fileupload&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- google 工具类 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.google.guava&lt;/groupId&gt;
+            &lt;artifactId&gt;guava&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- joda-time 时间工具 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;joda-time&lt;/groupId&gt;
+            &lt;artifactId&gt;joda-time&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;!--  第三方云厂商相关依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-core&lt;/artifactId&gt;
+            &lt;version&gt;4.5.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/utils/RedisOperator.java
+package com.imooc.utils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * @Title: Redis 工具类
+ * @author 风间影月
+ */
+@Component
+public class RedisOperator &#123;
+    
+    @Resource
+    private StringRedisTemplate redisTemplate;
+
+    // Key（键），简单的key-value操作
+
+    /**
+     * 判断key是否存在
+     * @param key
+     * @return
+     */
+    public boolean keyIsExist(String key) &#123;
+        return redisTemplate.hasKey(key);
+    &#125;
+
+    /**
+     * 实现命令：TTL key，以秒为单位，返回给定 key的剩余生存时间(TTL, time to live)。
+     * 
+     * @param key
+     * @return
+     */
+    public long ttl(String key) &#123;
+        return redisTemplate.getExpire(key);
+    &#125;
+    
+    /**
+     * 实现命令：expire 设置过期时间，单位秒
+     * 
+     * @param key
+     * @return
+     */
+    public void expire(String key, long timeout) &#123;
+        redisTemplate.expire(key, timeout, TimeUnit.SECONDS);
+    &#125;
+    
+    /**
+     * 实现命令：increment key，增加key一次
+     * 
+     * @param key
+     * @return
+     */
+    public long increment(String key, long delta) &#123;
+        return redisTemplate.opsForValue().increment(key, delta);
+    &#125;
+
+    /**
+     * 实现命令：decrement key，减少key一次
+     *
+     * @param key
+     * @return
+     */
+    public long decrement(String key, long delta) &#123;
+        return redisTemplate.opsForValue().decrement(key, delta);
+    &#125;
+
+    /**
+     * 实现命令：KEYS pattern，查找所有符合给定模式 pattern的 key
+     */
+    public Set&lt;String&gt; keys(String pattern) &#123;
+        return redisTemplate.keys(pattern);
+    &#125;
+
+    /**
+     * 实现命令：DEL key，删除一个key
+     * 
+     * @param key
+     */
+    public void del(String key) &#123;
+        redisTemplate.delete(key);
+    &#125;
+
+    // String（字符串）
+
+    /**
+     * 实现命令：SET key value，设置一个key-value（将字符串值 value关联到 key）
+     * 
+     * @param key
+     * @param value
+     */
+    public void set(String key, String value) &#123;
+        redisTemplate.opsForValue().set(key, value);
+    &#125;
+
+    /**
+     * 实现命令：SET key value EX seconds，设置key-value和超时时间（秒）
+     * 
+     * @param key
+     * @param value
+     * @param timeout
+     *            （以秒为单位）
+     */
+    public void set(String key, String value, long timeout) &#123;
+        redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+    &#125;
+
+    /**
+     * 如果key不存在，则设置，如果存在，则报错
+     * @param key
+     * @param value
+     */
+    public void setnx60s(String key, String value) &#123;
+        redisTemplate.opsForValue().setIfAbsent(key, value, 60, TimeUnit.SECONDS);
+    &#125;
+
+    /**
+     * 如果key不存在，则设置，如果存在，则报错
+     * @param key
+     * @param value
+     */
+    public void setnx(String key, String value) &#123;
+        redisTemplate.opsForValue().setIfAbsent(key, value);
+    &#125;
+
+    /**
+     * 实现命令：GET key，返回 key所关联的字符串值。
+     * 
+     * @param key
+     * @return value
+     */
+    public String get(String key) &#123;
+        return (String)redisTemplate.opsForValue().get(key);
+    &#125;
+
+    /**
+     * 批量查询，对应mget
+     * @param keys
+     * @return
+     */
+    public List&lt;String&gt; mget(List&lt;String&gt; keys) &#123;
+        return redisTemplate.opsForValue().multiGet(keys);
+    &#125;
+
+    /**
+     * 批量查询，管道pipeline
+     * @param keys
+     * @return
+     */
+    public List&lt;Object&gt; batchGet(List&lt;String&gt; keys) &#123;
+
+//        nginx -&gt; keepalive
+//        redis -&gt; pipeline
+
+        List&lt;Object&gt; result = redisTemplate.executePipelined(new RedisCallback&lt;String&gt;() &#123;
+            @Override
+            public String doInRedis(RedisConnection connection) throws DataAccessException &#123;
+                StringRedisConnection src = (StringRedisConnection)connection;
+
+                for (String k : keys) &#123;
+                    src.get(k);
+                &#125;
+                return null;
+            &#125;
+        &#125;);
+
+        return result;
+    &#125;
+
+
+    // Hash（哈希表）
+
+    /**
+     * 实现命令：HSET key field value，将哈希表 key中的域 field的值设为 value
+     * 
+     * @param key
+     * @param field
+     * @param value
+     */
+    public void hset(String key, String field, Object value) &#123;
+        redisTemplate.opsForHash().put(key, field, value);
+    &#125;
+
+    /**
+     * 实现命令：HGET key field，返回哈希表 key中给定域 field的值
+     * 
+     * @param key
+     * @param field
+     * @return
+     */
+    public String hget(String key, String field) &#123;
+        return (String) redisTemplate.opsForHash().get(key, field);
+    &#125;
+
+    /**
+     * 实现命令：HDEL key field [field ...]，删除哈希表 key 中的一个或多个指定域，不存在的域将被忽略。
+     * 
+     * @param key
+     * @param fields
+     */
+    public void hdel(String key, Object... fields) &#123;
+        redisTemplate.opsForHash().delete(key, fields);
+    &#125;
+
+    /**
+     * 实现命令：HGETALL key，返回哈希表 key中，所有的域和值。
+     * 
+     * @param key
+     * @return
+     */
+    public Map&lt;Object, Object&gt; hgetall(String key) &#123;
+        return redisTemplate.opsForHash().entries(key);
+    &#125;
+
+    // List（列表）
+
+    /**
+     * 实现命令：LPUSH key value，将一个值 value插入到列表 key的表头
+     * 
+     * @param key
+     * @param value
+     * @return 执行 LPUSH命令后，列表的长度。
+     */
+    public long lpush(String key, String value) &#123;
+        return redisTemplate.opsForList().leftPush(key, value);
+    &#125;
+
+    /**
+     * 实现命令：LPOP key，移除并返回列表 key的头元素。
+     * 
+     * @param key
+     * @return 列表key的头元素。
+     */
+    public String lpop(String key) &#123;
+        return (String)redisTemplate.opsForList().leftPop(key);
+    &#125;
+
+    /**
+     * 实现命令：RPUSH key value，将一个值 value插入到列表 key的表尾(最右边)。
+     * 
+     * @param key
+     * @param value
+     * @return 执行 LPUSH命令后，列表的长度。
+     */
+    public long rpush(String key, String value) &#123;
+        return redisTemplate.opsForList().rightPush(key, value);
+    &#125;
+&#125;
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/337066868">Spring Boot集成Redis的坑，踩了！ - 知乎 (zhihu.com)</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_45590494/article/details/114444371">@Autowired和@Resource注解的区别和联系（十分详细，不看后悔）_为什么@resource和@autowired 注入的对象不一样-CSDN博客</a></p>
+<blockquote>
+<p>妈的有个超级大bug 整我一下午，<br>@Component public class RedisOperator {<br>@Autowired private StringRedisTemplate redisTemplate;}<br> 报错信息 Could not autowire. No beans of ‘StringRedisTemplate’ type found.</p>
+<p>在这里不要本末倒置 回归最原始的报错 那就是pom.xml中的导包依赖问题<br>有的时候直接复制的项目中的成熟依赖 根据时代的不同可能会导致丢失无法下载依赖<br>这时要去百度Maven库手动下载 并且手动添加 然后手动导入Project Structure → Libraries 手动导入自己需要的包[记住包的版本 也要在依赖里面体现 &lt; version &gt;]，而且如果有红色波浪线的包可以删除 再重新导入即可</p>
+</blockquote>
+<h3 id="完善发送短信接口"><a href="#完善发送短信接口" class="headerlink" title="完善发送短信接口"></a>完善发送短信接口</h3><pre><code class="java">com/imooc/api/controller/user/PassportControllerApi.java
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import javax.servlet.http.HttpServletRequest;
+
+@Api(value = &quot;用户注册登录&quot;,tags = &#123;&quot;用户注册登录的Controller&quot;&#125;)
+public interface PassportControllerApi &#123;
+    @ApiOperation(value = &quot;获得短信验证码&quot;,notes = &quot;获得短信验证码&quot;,httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;/getSMSCode&quot;)
+    public GraceJSONResult getSMSCode(String mobile, HttpServletRequest request);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/user/controller/PassportController.java
+package com.imooc.user.controller;
+
+
+import com.imooc.api.controller.user.BaseController;
+import com.imooc.api.controller.user.PassportControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.utils.RedisOperator;
+import com.imooc.utils.SMSUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.imooc.utils.IPUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping(&quot;passport&quot;)
+public class PassportController extends BaseController implements PassportControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(PassportController.class);
+
+    @Autowired
+    private SMSUtils smsUtils;
+// 这里去除的原因是因为新建了一个BaseController 在里面有信息 且在这加个extends
+//    @Autowired
+//    private RedisOperator redis;
+
+    @Override
+    public GraceJSONResult getSMSCode(String mobile, HttpServletRequest request)&#123;
+        String userIp = IPUtil.getRequestIp(request);
+        //根据用户的ip进行限制,限制用户在60秒内只能获得一次验证码
+//        redis.setnx60s(&quot;smscode&quot;+ip);
+        redis.setnx60s(MOBILE_SMSCODE + &quot;:&quot;+userIp,userIp);
+
+        //生成随机验证码并且发送短信
+        String random = ((Math.random() * 9 + 1) * 100000) + &quot;&quot;;
+        smsUtils.sendSMS(&quot;15027597319&quot;,random);//可以用MyInfo.getMobile代替
+
+        //把验证码存入redis,用于后续进行验证
+        redis.set(MOBILE_SMSCODE+&quot;:&quot;+mobile, random, 30*60);
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/api/controller/user/BaseController.java
+package com.imooc.api.controller.user;
+
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+public class BaseController &#123;
+   @Autowired
+    public RedisOperator redis;
+    public static final String MOBILE_SMSCODE = &quot;mobile:smscode&quot;;
+
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/utils/IPUtil.java
+package com.imooc.utils;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * 用户获得用户ip的工具类
+ */
+public class IPUtil &#123;
+
+    /**
+     * 获取请求IP:
+     * 用户的真实IP不能使用request.getRemoteAddr()
+     * 这是因为可能会使用一些代理软件，这样ip获取就不准确了
+     * 此外我们如果使用了多级（LVS/Nginx）反向代理的话，ip需要从X-Forwarded-For中获得第一个非unknown的IP才是用户的有效ip。
+     * @param request
+     * @return
+     */
+    public static String getRequestIp(HttpServletRequest request) &#123;
+        String ip = request.getHeader(&quot;x-forwarded-for&quot;);
+        if (ip == null || ip.length() == 0 || &quot;unknown&quot;.equalsIgnoreCase(ip)) &#123;
+            ip = request.getHeader(&quot;Proxy-Client-IP&quot;);
+        &#125;
+        if (ip == null || ip.length() == 0 || &quot;unknown&quot;.equalsIgnoreCase(ip)) &#123;
+            ip = request.getHeader(&quot;WL-Proxy-Client-IP&quot;);
+        &#125;
+        if (ip == null || ip.length() == 0 || &quot;unknown&quot;.equalsIgnoreCase(ip)) &#123;
+            ip = request.getHeader(&quot;HTTP_CLIENT_IP&quot;);
+        &#125;
+        if (ip == null || ip.length() == 0 || &quot;unknown&quot;.equalsIgnoreCase(ip)) &#123;
+            ip = request.getHeader(&quot;HTTP_X_FORWARDED_FOR&quot;);
+        &#125;
+        if (ip == null || ip.length() == 0 || &quot;unknown&quot;.equalsIgnoreCase(ip)) &#123;
+            ip = request.getRemoteAddr();
+        &#125;
+        return ip;
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/sms/getting-started/use-sms-console-1?spm=a2c4g.11186623.0.0.70707f5cATZOcJ">快速使用 在控制台发送短信_短信服务(SMS)-阿里云帮助中心 (aliyun.com)</a></p>
+</blockquote>
+<h3 id="联调前端发送短信-解决跨域问题"><a href="#联调前端发送短信-解决跨域问题" class="headerlink" title="联调前端发送短信, 解决跨域问题"></a>联调前端发送短信, 解决跨域问题</h3><p>3-7</p>
 
             
         </div>
@@ -2100,7 +2613,7 @@ OK
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -5150,7 +5663,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -5304,7 +5817,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -7579,7 +8092,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -10509,7 +11022,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -17603,7 +18116,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -20912,7 +21425,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -21410,7 +21923,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#1bccbc>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
@@ -23671,7 +24184,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
