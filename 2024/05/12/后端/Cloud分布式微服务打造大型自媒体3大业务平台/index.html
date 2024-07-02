@@ -3555,12 +3555,498 @@ spring:
 再UserServiceimpl.java中
 appUserMapper.insert(user);
 
-当如果把app_user数据库离的active_status 的0变成2 就会被冻结【UserStat】
+当如果把app_user数据库离的active_status 的0变成2 就会被冻结【UserStatus】
 &#123;
 &quot;status&quot;: 507,
 &quot;msg&quot;: &quot;用户已被冻结，请联系管理员！&quot;,
 &quot;success&quot;: false,
 &quot;data&quot;: null
+&#125;
+</code></pre>
+<h3 id="设置会话与cookie信息【注册登录】"><a href="#设置会话与cookie信息【注册登录】" class="headerlink" title="设置会话与cookie信息【注册登录】"></a>设置会话与cookie信息【注册登录】</h3><pre><code class="java">service-user  com/imooc/user/controller/PassportController.java
+...
+ // 3.保存用户分布式会话的相关操作
+        int userActiveStatus = user.getActiveStatus();
+        if (userActiveStatus != UserStatus.FROZEN.type)&#123;
+            String uToken = UUID.randomUUID().toString();
+            redis.set(REDIS_USER_TOKEN+&quot;:&quot;+user.getId(),uToken);//BaseController里面 保存token到redis
+            //保存用户id和token到cookie中 设计一个request response 回到PassportControllerApi
+
+        &#125;
+        return GraceJSONResult.ok(user);
+    &#125;
+...
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java [增加一个setCookie]
+package com.imooc.api;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public abstract class BaseController &#123;
+   @Autowired
+    public RedisOperator redis;
+    public static final String MOBILE_SMSCODE = &quot;mobile:smscode&quot;;
+    public static final String REDIS_USER_TOKEN = &quot;redis_user_token&quot;;//ctrl+shift+u直接大写
+    public static final Integer COOKIE_MONTH = 30 * 24 * 60 * 60;
+
+    /**可以公用 就放到BaseController里面
+     * 在任何controller中都可以调用和使用
+     * 获取BO中的错误信息
+     *
+     * @param result
+     * @return
+     */
+    public Map&lt;String, String&gt; getErrors(BindingResult result)&#123;
+        //对应着RegistLoginBO的信息
+        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+        List&lt;FieldError&gt; errorList = result.getFieldErrors();
+        for (FieldError error : errorList)&#123;
+            //发生验证错误所对应的某个属性
+            String field = error.getField();
+            //验证的错误信息
+            String msg = error.getDefaultMessage();
+            map.put(field, msg);
+        &#125;
+        return map;
+    &#125;
+
+/*    public void setCookie(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String cookieName,
+                          String cookieValue,
+                          Integer maxAge)&#123;
+        try &#123;
+            cookieValue = URLEncoder.encode(cookieValue, &quot;utf-8&quot;);
+            Cookie cookie = new Cookie(cookieName,cookieValue);
+            cookie.setMaxAge(maxAge);
+            cookie.setDomain(&quot;imoocnews.com&quot;);
+            cookie.setPath(&quot;/&quot;);//都用cookie
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125; */
+
+   public void setCookie(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String cookieName,
+                          String cookieValue,
+                          Integer maxAge)&#123;
+        try &#123;
+            cookieValue = URLEncoder.encode(cookieValue, &quot;utf-8&quot;);
+//            Cookie cookie = new Cookie(cookieName,cookieValue);
+//            cookie.setMaxAge(maxAge);
+//            cookie.setDomain(&quot;imoocnews.com&quot;);
+//            cookie.setPath(&quot;/&quot;);//都用cookie
+            setCookieValue(request, response, cookieName, cookieValue, maxAge);
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+
+    public void setCookieValue(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String cookieName,
+                          String cookieValue,
+                          Integer maxAge)&#123;
+            Cookie cookie = new Cookie(cookieName,cookieValue);
+            cookie.setMaxAge(maxAge);
+            cookie.setDomain(&quot;imoocnews.com&quot;);
+            cookie.setPath(&quot;/&quot;);//都用cookie
+            response.addCookie(cookie);//把cookie传入
+        &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/user/PassportControllerApi.java
+package com.imooc.api.controller.user;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.RegistLoginBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid; //用户需求验证
+
+@Api(value = &quot;用户注册登录&quot;,tags = &#123;&quot;用户注册登录的Controller&quot;&#125;)
+@RequestMapping(&quot;passport&quot;)
+public interface PassportControllerApi &#123;
+    @ApiOperation(value = &quot;获得短信验证码&quot;,notes = &quot;获得短信验证码&quot;,httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;/getSMSCode&quot;)
+    public GraceJSONResult getSMSCode(@RequestParam String mobile, HttpServletRequest request);
+
+    @ApiOperation(value = &quot;一键注册登录接口&quot;,notes = &quot;一键注册登录接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/doLogin&quot;) //表单里面用post  RequestBody后面传过来的东西和json对象对应
+    public GraceJSONResult doLogin(@RequestBody @Valid RegistLoginBO registLoginBO
+            , BindingResult result, HttpServletRequest request, HttpServletResponse response);
+    //完成之后 去BaseController里面写一个setCookie()方便都可以用
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/PassportController.java
+    @Override
+    public GraceJSONResult doLogin(RegistLoginBO registLoginBO, BindingResult result, HttpServletRequest request, HttpServletResponse response) &#123;
+        //0.判断BindingResult中是否保存了错误的验证信息 如果有则需要返回
+        if (result.hasErrors())&#123;
+            Map&lt;String, String&gt; map = getErrors(result);
+            return GraceJSONResult.errorMap(map);
+        &#125;
+        String mobile = registLoginBO.getMobile();
+        String smsCode = registLoginBO.getSmsCode();
+
+        //1.校验验证码是否匹配[在redis中去获取]
+        String redisSMSCode = redis.get(MOBILE_SMSCODE + &quot;:&quot; + mobile); //为空||不同值
+        if (StringUtils.isBlank(redisSMSCode) || !redisSMSCode.equalsIgnoreCase(smsCode)) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.SMS_CODE_ERROR);
+        &#125;
+
+        //2.查询数据库,判断该用户注册
+        AppUser user = userService.queryMobileIsExist(mobile);
+        if (user != null &amp;&amp; user.getActiveStatus() == UserStatus.FROZEN.type)&#123;
+            //如果用户不为空，并且状态为冻结，则直接抛出异常，禁止登录
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.USER_FROZEN);
+        &#125;else if (user == null)&#123;
+            //如果用户没有注册过，则为null，需要注册信息入库
+            user = userService.createUser(mobile);
+        &#125;
+
+        // 3.保存用户分布式会话的相关操作
+        int userActiveStatus = user.getActiveStatus();
+        if (userActiveStatus != UserStatus.FROZEN.type)&#123;
+            String uToken = UUID.randomUUID().toString();
+            redis.set(REDIS_USER_TOKEN+&quot;:&quot;+user.getId(),uToken);//BaseController里面 保存token到redis
+
+            //保存用户id和token到cookie中 设计一个request response 回到PassportControllerApi
+            setCookie(request, response,&quot;uToken&quot;,uToken,COOKIE_MONTH);
+            setCookie(request, response,&quot;uid&quot;,user.getId(),COOKIE_MONTH);
+        &#125;
+        // 4.用户登录或注册成功以后，需要删除redis中的短信验证码，验证码只能使用一次，用过则作废
+        redis.del(MOBILE_SMSCODE + &quot;:&quot; + mobile);
+        // 5.返回用户状态 返回前端看
+        return GraceJSONResult.ok(userActiveStatus);
+    &#125;
+</code></pre>
+<h3 id="资源属性与常量绑定-优雅"><a href="#资源属性与常量绑定-优雅" class="headerlink" title="资源属性与常量绑定 [优雅]"></a>资源属性与常量绑定 [优雅]</h3><pre><code class="java">把这种属性放到常量文件里进行绑定  cookie.setDomain(&quot;imoocnews.com&quot;);
+service-api  com/imooc/api/BaseController.java
+public abstract class BaseController &#123;
+    @Autowired
+    public RedisOperator redis;
+    public static final String MOBILE_SMSCODE = &quot;mobile:smscode&quot;;
+    public static final String REDIS_USER_TOKEN = &quot;redis_user_token&quot;;//ctrl+shift+u直接大写
+    public static final Integer COOKIE_MONTH = 30 * 24 * 60 * 60;
+ ★ @Value(&quot;$&#123;website.domain-name&#125;&quot;) ★★
+ ★ public String DOMAIN_NAME; ★★
+...
+ public void setCookie(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String cookieName,
+                          String cookieValue,
+                          Integer maxAge) &#123;
+        try &#123;
+            cookieValue = URLEncoder.encode(cookieValue, &quot;utf-8&quot;);
+//            Cookie cookie = new Cookie(cookieName,cookieValue);
+//            cookie.setMaxAge(maxAge);
+//            cookie.setDomain(&quot;imoocnews.com&quot;);
+//            cookie.setPath(&quot;/&quot;);//都用cookie
+            setCookieValue(request, response, cookieName, cookieValue, maxAge);
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+
+    public void setCookieValue(HttpServletRequest request,
+                               HttpServletResponse response,
+                               String cookieName,
+                               String cookieValue,
+                               Integer maxAge) &#123;
+        Cookie cookie = new Cookie(cookieName, cookieValue);
+        cookie.setMaxAge(maxAge);
+//        cookie.setDomain(&quot;imoocnews.com&quot;);
+        cookie.setDomain(DOMAIN_NAME);
+        cookie.setPath(&quot;/&quot;);//都用cookie
+        response.addCookie(cookie);//把cookie传入
+    &#125;
+...
+================================================================================
+application-dev.yml
+server:
+  port: 8003
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+
+# setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+</code></pre>
+<h3 id="查询用户账户信息"><a href="#查询用户账户信息" class="headerlink" title="查询用户账户信息"></a>查询用户账户信息</h3><pre><code class="java">service-api  com/imooc/api/controller/user/UserControllerApi.java
+package com.imooc.api.controller.user;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.RegistLoginBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+@Api(value = &quot;用户信息相关Controller&quot;,tags = &#123;&quot;用户信息相关Controller&quot;&#125;)
+@RequestMapping(&quot;user&quot;)
+public interface UserControllerApi &#123;
+    @ApiOperation(value = &quot;获得用户账户信息&quot;,notes = &quot;获得用户账户信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getAccountInfo&quot;)
+    public GraceJSONResult getAccountInfo(@RequestParam String userId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.api.controller.user.UserControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.RegistLoginBO;
+import com.imooc.pojo.vo.UserAccountInfoVO;
+import com.imooc.user.service.impl.UserService;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@RestController
+public class UserController implements UserControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    public GraceJSONResult getAccountInfo(String userId) &#123;
+        // 0. 判断参数不为空
+        if (StringUtils.isBlank(userId))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.UN_LOGIN);
+        &#125;
+
+        // 1. 根据userId查询用户的信息 UserService+impl
+        AppUser user = getUser(userId);
+        // 2. 返回用户信息
+        UserAccountInfoVO accountInfoVO = new UserAccountInfoVO();
+        BeanUtils.copyProperties(user, accountInfoVO); //拷贝信息
+        return GraceJSONResult.ok(accountInfoVO);
+    &#125;
+    private AppUser getUser(String userId)&#123;
+        // TODO 本方法后续公用，并且扩展
+        AppUser user = userService.getUser(userId);
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/UserService.java
+package com.imooc.user.service.impl;
+
+import com.imooc.pojo.AppUser;
+
+public interface UserService &#123;
+    /**
+     * 判断用户是否存在，如果存在返回user信息
+     */
+    public AppUser queryMobileIsExist(String mobile);
+
+    /**
+     * 创建用户，新增用户记录到数据库
+     */
+    public AppUser createUser(String mobile);
+
+    /**
+     * 根据用户主键id查询用户信息
+     * @param userId
+     * @return
+     */
+    public AppUser getUser(String userId);
+&#125;
+====================================================================
+service-user  com/imooc/user/service/UserServiceimpl.java
+     @Override
+    public AppUser getUser(String userId) &#123;
+        return appUserMapper.selectByPrimaryKey(userId);
+    &#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/UserAccountInfoVO.java
+public class UserAccountInfoVO &#123;
+    private String id;
+    private String mobile;
+    private String nickname;
+    private String face;
+    private String realname;
+    private String email;
+    private Integer sex;
+    private Date birthday;
+    private String province;
+    private String city;
+    private String district;
+&#125;Getter + Setter
+</code></pre>
+<h3 id="信息校验"><a href="#信息校验" class="headerlink" title="信息校验"></a>信息校验</h3><pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.api.controller.user.UserControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.RegistLoginBO;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import com.imooc.pojo.vo.UserAccountInfoVO;
+import com.imooc.user.service.impl.UserService;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+
+@RestController
+public class UserController extends BaseController implements UserControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    public GraceJSONResult getAccountInfo(String userId) &#123;
+        // 0. 判断参数不为空
+        if (StringUtils.isBlank(userId))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.UN_LOGIN);
+        &#125;
+
+        // 1. 根据userId查询用户的信息 UserService+impl
+        AppUser user = getUser(userId);
+        // 2. 返回用户信息
+        UserAccountInfoVO accountInfoVO = new UserAccountInfoVO();
+        BeanUtils.copyProperties(user, accountInfoVO); //拷贝信息
+        return GraceJSONResult.ok(accountInfoVO);
+    &#125;
+
+    private AppUser getUser(String userId)&#123;
+        // TODO 本方法后续公用，并且扩展
+        AppUser user = userService.getUser(userId);
+        return user;
+    &#125;
+
+    @Override
+    public GraceJSONResult updateUserInfo(UpdateUserInfoBO updateUserInfoBO, BindingResult result) &#123;
+        // 0.校验BO
+        if (result.hasErrors())&#123;
+            Map&lt;String, String&gt; map = getErrors(result);
+            return GraceJSONResult.errorMap(map);
+        &#125;
+        // 1.执行更新操作
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/user/UserControllerApi.java
+package com.imooc.api.controller.user;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.RegistLoginBO;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+@Api(value = &quot;用户信息相关Controller&quot;,tags = &#123;&quot;用户信息相关Controller&quot;&#125;)
+@RequestMapping(&quot;user&quot;)
+public interface UserControllerApi &#123;
+    @ApiOperation(value = &quot;获得用户账户信息&quot;,notes = &quot;获得用户账户信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getAccountInfo&quot;)
+    public GraceJSONResult getAccountInfo(@RequestParam String userId);
+
+    @ApiOperation(value = &quot;修改/完善用户信息&quot;,notes = &quot;修改/完善用户信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/updateUserInfo&quot;)
+    public GraceJSONResult updateUserInfo(@RequestBody @Valid UpdateUserInfoBO updateUserInfoBO,
+                                          BindingResult result);
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/bo/UpdateUserInfoBO.java
+public class UpdateUserInfoBO &#123;
+
+    @NotBlank(message = &quot;用户ID不能为空&quot;)
+    private String id;
+
+    @NotBlank(message = &quot;用户昵称不能为空&quot;)
+    @Length(max = 12, message = &quot;用户昵称不能超过12位&quot;)
+    private String nickname;
+
+    @NotBlank(message = &quot;用户头像不能为空&quot;)
+    private String face;
+
+    @NotBlank(message = &quot;真实姓名不能为空&quot;)
+    private String realname;
+
+    @Email
+    @NotBlank(message = &quot;邮件不能为空&quot;)
+    private String email;
+
+    @NotNull(message = &quot;请选择一个性别&quot;)
+    @Min(value = 0, message = &quot;性别选择不正确&quot;)
+    @Max(value = 1, message = &quot;性别选择不正确&quot;)
+    private Integer sex;
+
+    @NotNull(message = &quot;请选择生日日期&quot;)
+    @JsonFormat(timezone = &quot;GMT+8&quot;, pattern = &quot;yyyy-MM-dd&quot;) // 解决前端日期字符串传到后端后，转换为Date类型
+    private Date birthday;
+
+    @NotBlank(message = &quot;请选择所在城市&quot;)
+    private String province;
+
+    @NotBlank(message = &quot;请选择所在城市&quot;)
+    private String city;
+
+    @NotBlank(message = &quot;请选择所在城市&quot;)
+    private String district;
 &#125;
 </code></pre>
 
