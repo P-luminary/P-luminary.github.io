@@ -905,8 +905,6 @@ npm run dev
 
 DONE  Compiled successfully in 1780ms 18:41:21
 I  Your application is running here: http://localhost:8080
-
-
 </code></pre>
 
             
@@ -922,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#ff7d73>
                 前端
             </a>
         </span>
@@ -4872,7 +4870,323 @@ public class UpdateUserInfoBO &#123;
     private String district;
 &#125;
 </code></pre>
-<h3 id="激活用户信息入库"><a href="#激活用户信息入库" class="headerlink" title="激活用户信息入库"></a>激活用户信息入库</h3>
+<h3 id="激活用户信息入库"><a href="#激活用户信息入库" class="headerlink" title="激活用户信息入库"></a>激活用户信息入库</h3><pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+@Override
+    public GraceJSONResult updateUserInfo(UpdateUserInfoBO updateUserInfoBO, BindingResult result) &#123;
+        // 0.校验BO
+        if (result.hasErrors())&#123;
+            Map&lt;String, String&gt; map = getErrors(result);
+            return GraceJSONResult.errorMap(map);
+        &#125;
+        // 1.执行更新操作
+        userService.updateUserInfo(updateUserInfoBO);
+        return GraceJSONResult.ok();
+        //调用UserService把独有信息传入
+    &#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/UserService.java
+package com.imooc.user.service.impl;
+
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+
+public interface UserService &#123;
+    /**
+     * 判断用户是否存在，如果存在返回user信息
+     */
+    public AppUser queryMobileIsExist(String mobile);
+
+    /**
+     * 创建用户，新增用户记录到数据库
+     */
+    public AppUser createUser(String mobile);
+
+    /**
+     * 根据用户主键id查询用户信息
+     * @param userId
+     * @return
+     */
+    public AppUser getUser(String userId);
+
+    /**
+     * 用户修改信息，完善资料，并且激活
+     * @param updateUserInfoBO
+     */
+    public void updateUserInfo(UpdateUserInfoBO updateUserInfoBO);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/UserServiceimpl.java
+@Override
+    public void updateUserInfo(UpdateUserInfoBO updateUserInfoBO)&#123;
+        String userId = updateUserInfoBO.getId();
+        AppUser userInfo = new AppUser();
+        BeanUtils.copyProperties(updateUserInfoBO, userInfo);
+        userInfo.setUpdatedTime(new Date());
+        userInfo.setActiveStatus(UserStatus.ACTIVE.type);
+        //appUserMapper.updateByPrimaryKey()//数据中现有的数据覆盖为空的
+        int result = appUserMapper.updateByPrimaryKeySelective(userInfo);
+        if (result != 1)&#123;
+            //更新操作有问题
+            GraceException.display(ResponseStatusEnum.USER_UPDATE_ERROR);
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="查询并展示用户基本信息"><a href="#查询并展示用户基本信息" class="headerlink" title="查询并展示用户基本信息"></a>查询并展示用户基本信息</h3><pre><code class="java">service-api  com/imooc/api/controller/user/UserControllerApi.java
+package com.imooc.api.controller.user;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.RegistLoginBO;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+@Api(value = &quot;用户信息相关Controller&quot;,tags = &#123;&quot;用户信息相关Controller&quot;&#125;)
+@RequestMapping(&quot;user&quot;)
+public interface UserControllerApi &#123;
+
+    @ApiOperation(value = &quot;获得用户基本信息&quot;,notes = &quot;获得用户基本信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getUserInfo&quot;)
+    public GraceJSONResult getUserInfo(@RequestParam String userId);
+    @ApiOperation(value = &quot;获得用户账户信息&quot;,notes = &quot;获得用户账户信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getAccountInfo&quot;)
+    public GraceJSONResult getAccountInfo(@RequestParam String userId);
+
+    @ApiOperation(value = &quot;修改/完善用户信息&quot;,notes = &quot;修改/完善用户信息&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/updateUserInfo&quot;)
+    public GraceJSONResult updateUserInfo(@RequestBody @Valid UpdateUserInfoBO updateUserInfoBO,BindingResult result);
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/AppUserVO.java
+public class AppUserVO &#123;
+    private String id;
+    private String nickname;
+    private String face;
+    private Integer activeStatus;
+&#125;Getter+Setter
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+@RestController
+public class UserController extends BaseController implements UserControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(UserController.class);
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    public GraceJSONResult getUserInfo(String userId) &#123;
+        //重写接口进行解耦!!
+        // 0. 判断参数不为空
+        if (StringUtils.isBlank(userId))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.UN_LOGIN);
+        &#125;
+        // 1. 根据userId查询用户的信息 UserService+impl
+        AppUser user = getUser(userId);
+        // 2. 返回用户信息
+        AppUserVO userVO = new AppUserVO();
+        BeanUtils.copyProperties(user, userVO); //拷贝信息
+        return GraceJSONResult.ok(userVO);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="浏览器存储介质"><a href="#浏览器存储介质" class="headerlink" title="浏览器存储介质"></a>浏览器存储介质</h3><ul>
+<li><h6 id="Cookie"><a href="#Cookie" class="headerlink" title="Cookie"></a>Cookie</h6></li>
+<li><h6 id="SessionStorage"><a href="#SessionStorage" class="headerlink" title="SessionStorage"></a><span style = "color:red">SessionStorage</span></h6></li>
+<li><h6 id="localStorage"><a href="#localStorage" class="headerlink" title="localStorage"></a>localStorage</h6></li>
+</ul>
+<h3 id="缓存用户信息-用Redis减轻数据库压力"><a href="#缓存用户信息-用Redis减轻数据库压力" class="headerlink" title="缓存用户信息 [用Redis减轻数据库压力]"></a>缓存用户信息 [用Redis减轻数据库压力]</h3><pre><code class="java">service-api  com/imooc/api/BaseController.java
+//REDIS_USER_INFO添加进来
+public abstract class BaseController &#123;
+    @Autowired
+    public RedisOperator redis;
+    public static final String MOBILE_SMSCODE = &quot;mobile:smscode&quot;;
+    public static final String REDIS_USER_TOKEN = &quot;redis_user_token&quot;;//ctrl+shift+u直接大写
+    public static final String REDIS_USER_INFO = &quot;redis_user_info&quot;;//ctrl+shift+u直接大写
+    public static final Integer COOKIE_MONTH = 30 * 24 * 60 * 60;
+    @Value(&quot;$&#123;website.domain-name&#125;&quot;)
+    public String DOMAIN_NAME;
+
+    /**
+     * 可以公用 就放到BaseController里面
+     * 在任何controller中都可以调用和使用
+     * 获取BO中的错误信息
+     *
+     * @param result
+     * @return
+     */
+    public Map&lt;String, String&gt; getErrors(BindingResult result) &#123;
+        //对应着RegistLoginBO的信息
+        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+        List&lt;FieldError&gt; errorList = result.getFieldErrors();
+        for (FieldError error : errorList) &#123;
+            //发生验证错误所对应的某个属性
+            String field = error.getField();
+            //验证的错误信息
+            String msg = error.getDefaultMessage();
+            map.put(field, msg);
+        &#125;
+        return map;
+    &#125;
+
+    public void setCookie(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String cookieName,
+                          String cookieValue,
+                          Integer maxAge) &#123;
+        try &#123;
+            cookieValue = URLEncoder.encode(cookieValue, &quot;utf-8&quot;);
+//            Cookie cookie = new Cookie(cookieName,cookieValue);
+//            cookie.setMaxAge(maxAge);
+//            cookie.setDomain(&quot;imoocnews.com&quot;);
+//            cookie.setPath(&quot;/&quot;);//都用cookie
+            setCookieValue(request, response, cookieName, cookieValue, maxAge);
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+
+    public void setCookieValue(HttpServletRequest request,
+                               HttpServletResponse response,
+                               String cookieName,
+                               String cookieValue,
+                               Integer maxAge) &#123;
+        Cookie cookie = new Cookie(cookieName, cookieValue);
+        cookie.setMaxAge(maxAge);
+//        cookie.setDomain(&quot;imoocnews.com&quot;);
+        cookie.setDomain(DOMAIN_NAME);
+        cookie.setPath(&quot;/&quot;);//都用cookie
+        response.addCookie(cookie);//把cookie传入
+    &#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+ private AppUser getUser(String userId)&#123;
+        //查询判断redis中是否包含用户信息 若有则直接返回就不去查询数据库了
+        String userJson = redis.get(REDIS_USER_INFO + &quot;:&quot; + userId);
+        AppUser user = null;
+        if (StringUtils.isNotBlank(userJson))&#123;
+            //字符串转换成json对象  要提取user 所以要一开始赋值null
+            user = JsonUtils.jsonToPojo(userJson, AppUser.class);
+        &#125; else &#123;
+            // TODO 本方法后续公用，并且扩展
+            user = userService.getUser(userId);
+            // 由于用户信息不怎么会变动,对于一些千万级别网站来说,这类信息不会直接去查询数据库
+            // 可以完全依靠Redis,直接把查询后的数据存入到Redis中
+            // set里面设置一个key去BaseController里设置  ↓user变成jason转换类
+            redis.set(REDIS_USER_INFO + &quot;:&quot; + userId, JsonUtils.objectToJson(user));
+        &#125;
+
+        return user;
+    &#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/UserServiceimpl.java
+package com.imooc.user.service;
+
+import com.imooc.enums.Sex;
+import com.imooc.enums.UserStatus;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import com.imooc.user.mapper.AppUserMapper;
+import com.imooc.user.service.impl.UserService;
+import com.imooc.utils.DesensitizationUtil;
+import com.imooc.utils.JsonUtils;
+import com.imooc.utils.RedisOperator;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+import com.imooc.utils.DateUtil;
+
+import java.util.Date;
+
+@Service
+public class UserServiceimpl implements UserService &#123;
+    @Autowired
+    public AppUserMapper appUserMapper; //基本的CRUD都可以
+
+    @Autowired
+    public Sid sid;
+    public static final String REDIS_USER_INFO = &quot;redis_user_info&quot;;//ctrl+shift+u直接大写
+
+
+    @Autowired
+    public RedisOperator redis;
+
+    private static final String USER_FACE0 = &quot;https://raw.githubusercontent.com/P-luminary/images/10d94134b65e13cc8ec9b8a9aeae4f958921cab7/data/Imooc_Cat.jpg&quot;;
+    private static final String USER_FACE1 = &quot;https://raw.githubusercontent.com/P-luminary/images/875ad52658686e6cc3a8e0cd75d2a324a3d742a9/data/Imooc_Girl.jpg&quot;;
+    @Override
+    public AppUser queryMobileIsExist(String mobile) &#123;
+        Example userExample = new Example(AppUser.class);
+        Example.Criteria userCriteria = userExample.createCriteria();
+        userCriteria.andEqualTo(&quot;mobile&quot;, mobile);
+        AppUser user = appUserMapper.selectOneByExample(userExample);
+        return user;
+    &#125;
+
+    @Transactional //对整个类的方法，事务起作用。无异常时正常提交，有异常时数据回滚
+    @Override
+    public AppUser createUser(String mobile) &#123;
+        /**
+         * 互联网项目都要考虑可扩展性
+         * 如果未来的业务激增，那么就需要分表分库
+         * 那么数据库表主键id必须保证全局(全库)唯一,不得重复
+         */
+        String userId = sid.nextShort();
+        AppUser user = new AppUser();
+        user.setId(userId);
+        user.setMobile(mobile);
+        user.setNickname(&quot;用户：&quot; + DesensitizationUtil.commonDisplay(mobile)); //給手机号加** 是脱敏操作
+        user.setFace(USER_FACE1);
+        user.setBirthday(DateUtil.stringToDate(&quot;2024-06-29&quot;)); //字符串转换Date类型
+        user.setSex(Sex.secret.type);
+        user.setActiveStatus(UserStatus.INACTIVE.type);//是否激活
+        user.setTotalIncome(0);//收入
+        user.setCreatedTime(new Date());
+        user.setUpdatedTime(new Date());
+        appUserMapper.insert(user);
+        return user;
+    &#125;
+
+    @Override
+    public AppUser getUser(String userId) &#123;
+        return appUserMapper.selectByPrimaryKey(userId);
+    &#125;
+
+    @Override
+    public void updateUserInfo(UpdateUserInfoBO updateUserInfoBO)&#123;
+        String userId = updateUserInfoBO.getId();
+        AppUser userInfo = new AppUser();
+        BeanUtils.copyProperties(updateUserInfoBO, userInfo);
+
+        userInfo.setUpdatedTime(new Date());
+        userInfo.setActiveStatus(UserStatus.ACTIVE.type);
+        //appUserMapper.updateByPrimaryKey()//数据中现有的数据覆盖为空的
+        int result = appUserMapper.updateByPrimaryKeySelective(userInfo);
+        if (result != 1)&#123;
+            //更新操作有问题
+            GraceException.display(ResponseStatusEnum.USER_UPDATE_ERROR);
+        &#125;
+        // 再次查询用户的最新信息,放入redis中
+        AppUser user = getUser(userId);
+        redis.set(REDIS_USER_INFO + &quot;:&quot; + userId, JsonUtils.objectToJson(user));
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Redis里面 redis_user_info
+&#123;&quot;id&quot;:&quot;240629F21AK1BHX4&quot;,&quot;mobile&quot;:&quot;15027597319&quot;,&quot;nickname&quot;:&quot;15027597319&quot;,&quot;face&quot;:&quot;https://raw.githubusercontent.com/P-luminary/images/875ad52658686e6cc3a8e0cd75d2a324a3d742a9/data/Imooc_Girl.jpg&quot;,&quot;realname&quot;:&quot;小宝宝的小潘潘2&quot;,&quot;email&quot;:&quot;390415030@qq.com&quot;,&quot;sex&quot;:1,&quot;birthday&quot;:1720195200000,&quot;province&quot;:&quot;河北&quot;,&quot;city&quot;:&quot;唐山市&quot;,&quot;district&quot;:&quot;丰润区&quot;,&quot;activeStatus&quot;:1,&quot;totalIncome&quot;:0,&quot;createdTime&quot;:1719661387000,&quot;updatedTime&quot;:1720281759000&#125;
+</code></pre>
+<p>3-22</p>
+<p>&#96;</p>
+
             
         </div>
     </div>
@@ -4886,7 +5200,7 @@ public class UpdateUserInfoBO &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -7936,7 +8250,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -8090,7 +8404,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -13295,7 +13609,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -15362,7 +15676,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -24200,7 +24514,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#00bcd4>
                 软考
             </a>
         </span>
