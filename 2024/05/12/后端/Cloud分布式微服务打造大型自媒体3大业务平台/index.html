@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -4363,7 +4363,524 @@ public class UserServiceimpl implements UserService &#123;
 <pre><code class="java">Redis里面 redis_user_info
 &#123;&quot;id&quot;:&quot;240629F21AK1BHX4&quot;,&quot;mobile&quot;:&quot;15027597319&quot;,&quot;nickname&quot;:&quot;15027597319&quot;,&quot;face&quot;:&quot;https://raw.githubusercontent.com/P-luminary/images/875ad52658686e6cc3a8e0cd75d2a324a3d742a9/data/Imooc_Girl.jpg&quot;,&quot;realname&quot;:&quot;小宝宝的小潘潘2&quot;,&quot;email&quot;:&quot;390415030@qq.com&quot;,&quot;sex&quot;:1,&quot;birthday&quot;:1720195200000,&quot;province&quot;:&quot;河北&quot;,&quot;city&quot;:&quot;唐山市&quot;,&quot;district&quot;:&quot;丰润区&quot;,&quot;activeStatus&quot;:1,&quot;totalIncome&quot;:0,&quot;createdTime&quot;:1719661387000,&quot;updatedTime&quot;:1720281759000&#125;
 </code></pre>
-<p>3-22</p>
+<h3 id="双写数据不一致的情况-redis故障没有写入新数据"><a href="#双写数据不一致的情况-redis故障没有写入新数据" class="headerlink" title="双写数据不一致的情况 [redis故障没有写入新数据]"></a>双写数据不一致的情况 [redis故障没有写入新数据]</h3><h6 id="如何双写一致-缓存双删"><a href="#如何双写一致-缓存双删" class="headerlink" title="如何双写一致 缓存双删"></a>如何双写一致 缓存双删</h6><blockquote>
+<p>用户先把老Redis中的数据删除 然后再把修改值放入数据库 然后数据库再导入redis 就可以保证双写一致<br>但是要保证数据库放入Redis之前 后期用户请求要再其之后 [进行休眠] &#x3D;&gt;缓存双删</p>
+</blockquote>
+<pre><code class="java">service-user  com/imooc/user/service/UserServiceimpl.java  @Override
+    public void updateUserInfo(UpdateUserInfoBO updateUserInfoBO)&#123;
+        String userId = updateUserInfoBO.getId();
+        // 保证双写一致,先删除redis中的数据,后更新数据库
+//        redis.del(REDIS_USER_INFO + &quot;:&quot; + userId);
+
+        AppUser userInfo = new AppUser();
+        BeanUtils.copyProperties(updateUserInfoBO, userInfo);
+
+        userInfo.setUpdatedTime(new Date());
+        userInfo.setActiveStatus(UserStatus.ACTIVE.type);
+        //appUserMapper.updateByPrimaryKey()//数据中现有的数据覆盖为空的
+        int result = appUserMapper.updateByPrimaryKeySelective(userInfo);
+        if (result != 1)&#123;
+            //更新操作有问题
+            GraceException.display(ResponseStatusEnum.USER_UPDATE_ERROR);
+        &#125;
+        // 再次查询用户的最新信息,放入redis中
+        AppUser user = getUser(userId);
+        redis.set(REDIS_USER_INFO + &quot;:&quot; + userId, JsonUtils.objectToJson(user));
+
+        // 缓存双删策略 [不处理可能会缓存击穿]
+        try &#123;
+            Thread.sleep(100);
+            redis.del(REDIS_USER_INFO + &quot;:&quot; + userId);
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+</code></pre>
+<h3 id="CAP理论-只能满足其中一、二"><a href="#CAP理论-只能满足其中一、二" class="headerlink" title="CAP理论 [只能满足其中一、二]"></a>CAP理论 [只能满足其中一、二]</h3><h5 id="分布式系统都存在CAP情况"><a href="#分布式系统都存在CAP情况" class="headerlink" title="分布式系统都存在CAP情况"></a>分布式系统都存在CAP情况</h5><h4 id="定理"><a href="#定理" class="headerlink" title="定理"></a>定理</h4><h5 id="CAP的重要性"><a href="#CAP的重要性" class="headerlink" title="CAP的重要性"></a>CAP的重要性</h5><p>分布式不可能同时满足三个条件 【先满足P再去考虑A或C】</p>
+<h5 id="CAP理论是什么？"><a href="#CAP理论是什么？" class="headerlink" title="CAP理论是什么？"></a>CAP理论是什么？</h5><ul>
+<li><span style = "color:red"><strong>C</strong>(Consistency, 一致性)</span>：读操作是否总能读到前一个写操作的结果 [某节点获得的数据都是一样的] 在本项目中一致性位于Session Storage</li>
+<li><span style = "color:red"><strong>A</strong>(Availability, 可用性)</span>：非故障节点应该在合理的时间内作出合理的响应(不是错误或超时的响应),但是可能<strong>不是最新的数据</strong>。 [某个挂掉了 其他还可以用]</li>
+<li><span style = "color:red"><strong>P</strong>(Partition tolerance, 分区容错)</span>：当出现网络分区现象后，系统能够继续运行。分区容错性</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/793eb4ab3003af82869b186bcc016fcb8c2c2f5b/data/CAP%E5%AE%9A%E7%90%86.jpg"></p>
+<h5 id="CAP如何选择？"><a href="#CAP如何选择？" class="headerlink" title="CAP如何选择？"></a>CAP如何选择？</h5><ul>
+<li><strong>CP</strong>[支付宝]或者<strong>AP</strong>[超级跑跑系统维护]</li>
+<li>在什么场合，可用性高于一致性？<ul>
+<li>网页必须要保障<strong>可用性</strong>(一定能看到最重要 是不是最新的不重要)和<strong>分区容错</strong></li>
+<li>支付的时候一定要保障<strong>一致性</strong>(我可以保证不可用 但我不允许余额不一致)和<strong>分区容错</strong></li>
+</ul>
+</li>
+<li>合适的才是最好的</li>
+<li><strong>CP</strong>：Redis【保证数据一致性 一定要满足C】</li>
+<li><strong>AP</strong>：会采用弱一致性 淘宝下单只需要知道下单就好 数量一致性商家可以慢慢调整</li>
+<li><strong>CA</strong>：单体存在架构、关系型架构</li>
+</ul>
+<p>在本项目中如果采用弱一致性：可以不把用户存到session Storage 直接显示</p>
+<h3 id="集群、分布式、微服务的区别"><a href="#集群、分布式、微服务的区别" class="headerlink" title="集群、分布式、微服务的区别"></a>集群、分布式、微服务的区别</h3><h5 id="集群和分布式的区别"><a href="#集群和分布式的区别" class="headerlink" title="集群和分布式的区别"></a>集群和分布式的区别</h5><ul>
+<li>分布式：一个业务分拆<strong>多个子业务</strong>，部署在不同的服务器上 [服务器之间要通信]</li>
+<li>集群：<strong>同一个</strong>业务，部署在多个服务器上 [五台机器可以不通信]</li>
+</ul>
+<h5 id="集群和微服务的区别"><a href="#集群和微服务的区别" class="headerlink" title="集群和微服务的区别"></a>集群和微服务的区别</h5><ul>
+<li>集群：分散<strong>压力</strong></li>
+<li>微服务：分散<strong>压力</strong></li>
+</ul>
+<h5 id="微服务和分布式的区别"><a href="#微服务和分布式的区别" class="headerlink" title="微服务和分布式的区别"></a>微服务和分布式的区别</h5><ul>
+<li><p>微服务是<strong>架构设计</strong>方式 [逻辑架构]</p>
+</li>
+<li><p>分布式是<strong>系统部署</strong>方式 [物理架构]</p>
+</li>
+<li><p>微服务：是一种架构方式 [大的服务拆成小的服务 每个服务独立开发测试]</p>
+</li>
+<li><p>分布式：主要强调部署的方式</p>
+</li>
+</ul>
+<h3 id="用户会话拦截器-必须用户登陆后才可以用其他界面"><a href="#用户会话拦截器-必须用户登陆后才可以用其他界面" class="headerlink" title="用户会话拦截器 [必须用户登陆后才可以用其他界面]"></a>用户会话拦截器 [必须用户登陆后才可以用其他界面]</h3><pre><code class="java">service-api  com/imooc/api/interceptors/UserTokenInterceptor.java
+package com.imooc.api.interceptors;
+
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.IPUtil;
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class UserTokenInterceptor extends BaseInterceptor implements HandlerInterceptor &#123;
+
+    /**
+     * 拦截请求，访问controller之前
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        // 有些接口同时会給安卓 H5等 所以不去cookie拿
+        String userId = request.getHeader(&quot;headerUserId&quot;);
+        String userToken = request.getHeader(&quot;headerUserToken&quot;);
+
+        // 判断是否放行
+        boolean run = verifyUserIdToken(userId, userToken, REDIS_USER_TOKEN);
+
+        /**
+         * false：请求被拦截
+         * true：请求通过验证，放行
+         */
+        return true;
+    &#125;
+
+
+    /**
+     * 请求访问到controller之后，渲染视图之前
+     * @param request
+     * @param response
+     * @param handler
+     * @param modelAndView
+     * @throws Exception
+     */
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+
+    &#125;
+
+    /**
+     * 请求访问到controller之后，渲染视图之后
+     * @param request
+     * @param response
+     * @param handler
+     * @param ex
+     * @throws Exception
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.imooc.api.interceptors;
+
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+public class BaseInterceptor &#123;
+    @Autowired
+    private RedisOperator redis;
+    public static final String REDIS_USER_TOKEN = &quot;redis_user_token&quot;;//ctrl+shift+u直接大写
+
+    public boolean verifyUserIdToken(String id,
+                                     String token,
+                                     String redisKeyPrefix)&#123; //redis..前缀
+        if (StringUtils.isNotBlank(id) &amp;&amp; StringUtils.isNotBlank(token))&#123;
+            String redisToken = redis.get(redisKeyPrefix + &quot;:&quot; + id);
+            if (StringUtils.isBlank(id))&#123;
+                GraceException.display(ResponseStatusEnum.UN_LOGIN);
+                return false;
+            &#125; else &#123;
+                if (!redisToken.equalsIgnoreCase(token))&#123;//是否和传入token一致
+                    GraceException.display(ResponseStatusEnum.TICKET_INVALID);
+                    return false;
+                &#125;
+            &#125;
+        &#125;else &#123;
+            GraceException.display(ResponseStatusEnum.UN_LOGIN);
+            return false;
+        &#125;
+        return true;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;);
+    &#125;
+&#125;
+/*
+在你的 Spring 应用程序中，InterceptorConfig 类中的 @Bean 注解用于定义 PassportInterceptor 和 UserTokenInterceptor 的 bean。这使这些拦截器对象在 Spring 上下文中可用，以便进行依赖注入。
+
+删除 @Bean 注解后会出现错误 Autowired members must be defined in valid Spring bean (@Component|@Service|...)，这是因为 BaseInterceptor 类中有一个需要由 Spring 注入的依赖 (RedisOperator redis)。要让 Spring 执行依赖注入，包含 @Autowired 注解的类必须是一个由 Spring 管理的 bean，可以通过 @Component、@Service、@Controller 等注解或在配置类中通过 @Bean 来定义。
+
+这里是对 @Bean 的作用以及为什么删除它会导致错误的详细解释：
+
+使用 @Bean 定义 Bean：
+在 InterceptorConfig 类中，@Bean 注解定义了 PassportInterceptor 和 UserTokenInterceptor 作为 Spring 的 bean。这使得它们在整个应用程序中可用于依赖注入。
+
+依赖注入的要求：
+BaseInterceptor 类中使用了 @Autowired 注解来注入 RedisOperator。要使这个注入有效，BaseInterceptor 必须是一个 Spring 管理的 bean。而 @Bean 注解在配置类中定义了这些拦截器，使得 Spring 可以管理它们，并在需要时进行依赖注入。
+
+如果删除了 @Bean 注解，PassportInterceptor 和 UserTokenInterceptor 将不再是 Spring 管理的 bean，从而导致在它们内部或相关联的类（如 BaseInterceptor）中的依赖无法被注入。这就是为什么删除 @Bean 注解后会出现 Autowired members must be defined in valid Spring bean (@Component|@Service|...) 错误的原因。
+*/
+</code></pre>
+<h3 id="用户状态激活拦截器"><a href="#用户状态激活拦截器" class="headerlink" title="用户状态激活拦截器"></a>用户状态激活拦截器</h3><pre><code class="java">service-api  com/imooc/api/interceptors/UseActiveInterceptor.java
+package com.imooc.api.interceptors;
+
+import com.imooc.enums.UserStatus;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AppUser;
+import com.imooc.utils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * 用户激活状态检测拦截器
+ * 发文章，修改文章，删除文章，发表评论，查看评论等
+ * 这些接口都是要在用户激活后才能进行操作
+ * 否则需要提示用户前往[账号设置]去修改信息
+ */
+    public class UseActiveInterceptor extends BaseInterceptor implements HandlerInterceptor &#123;
+
+    /**
+     * 拦截请求，访问controller之前
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        // 有些接口同时会給安卓 H5等 所以不去cookie拿
+        String userId = request.getHeader(&quot;headerUserId&quot;);
+        String userJson = redis.get(REDIS_USER_INFO + &quot;:&quot; + userId);
+        AppUser user = null;
+        if (StringUtils.isNotBlank(userJson))&#123;
+            user = JsonUtils.jsonToPojo(userJson, AppUser.class);
+        &#125; else &#123;
+            GraceException.display(ResponseStatusEnum.UN_LOGIN);
+        &#125;
+        if (user.getActiveStatus() == null || user.getActiveStatus() != UserStatus.ACTIVE.type)&#123;
+            GraceException.display(ResponseStatusEnum.USER_INACTIVE_ERROR);
+            return false;
+            //随后去拦截器里进行@Bean注册 [下下个代码就是]
+        &#125;
+
+        /**
+         * false：请求被拦截
+         * true：请求通过验证，放行
+         */
+        return true;
+    &#125;
+
+    /**
+     * 请求访问到controller之后，渲染视图之前
+     * @param request
+     * @param response
+     * @param handler
+     * @param modelAndView
+     * @throws Exception
+     */
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+    &#125;
+    /**
+     * 请求访问到controller之后，渲染视图之后
+     * @param request
+     * @param response
+     * @param handler
+     * @param ex
+     * @throws Exception
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/PassportController.java
+//[加一行redis.set(REDIS_USER_INFO+&quot;:&quot;+user.getId(), JsonUtils.objectToJson(user));]
+@Override
+    public GraceJSONResult doLogin(RegistLoginBO registLoginBO, BindingResult result, HttpServletRequest request, HttpServletResponse response) &#123;
+        //0.判断BindingResult中是否保存了错误的验证信息 如果有则需要返回
+        if (result.hasErrors())&#123;
+            Map&lt;String, String&gt; map = getErrors(result);
+            return GraceJSONResult.errorMap(map);
+        &#125;
+        String mobile = registLoginBO.getMobile();
+        String smsCode = registLoginBO.getSmsCode();
+
+        //1.校验验证码是否匹配[在redis中去获取]
+        String redisSMSCode = redis.get(MOBILE_SMSCODE + &quot;:&quot; + mobile); //为空||不同值
+        if (StringUtils.isBlank(redisSMSCode) || !redisSMSCode.equalsIgnoreCase(smsCode)) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.SMS_CODE_ERROR);
+        &#125;
+
+        //2.查询数据库,判断该用户注册
+        AppUser user = userService.queryMobileIsExist(mobile);
+        if (user != null &amp;&amp; user.getActiveStatus() == UserStatus.FROZEN.type)&#123;
+            //如果用户不为空，并且状态为冻结，则直接抛出异常，禁止登录
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.USER_FROZEN);
+        &#125;else if (user == null)&#123;
+            //如果用户没有注册过，则为null，需要注册信息入库
+            user = userService.createUser(mobile);
+        &#125;
+
+        // 3.保存用户分布式会话的相关操作
+        int userActiveStatus = user.getActiveStatus();
+        if (userActiveStatus != UserStatus.FROZEN.type)&#123;
+            String uToken = UUID.randomUUID().toString();
+            redis.set(REDIS_USER_TOKEN+&quot;:&quot;+user.getId(),uToken);//BaseController里面 保存token到redis
+            redis.set(REDIS_USER_INFO+&quot;:&quot;+user.getId(), JsonUtils.objectToJson(user));
+
+            //保存用户id和token到cookie中 设计一个request response 回到PassportControllerApi
+            setCookie(request, response,&quot;utoken&quot;,uToken,COOKIE_MONTH);
+            setCookie(request, response,&quot;uid&quot;,user.getId(),COOKIE_MONTH);
+        &#125;
+        // 4.用户登录或注册成功以后，需要删除redis中的短信验证码，验证码只能使用一次，用过则作废
+//        redis.del(MOBILE_SMSCODE + &quot;:&quot; + mobile);
+        // 5.返回用户状态 返回前端看
+        return GraceJSONResult.ok(userActiveStatus);
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UseActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UseActiveInterceptor useActiveInterceptor()&#123;
+        return new UseActiveInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;);
+//        registry.addInterceptor(userTokenInterceptor())
+//                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP警告日志监控与sql打印-切面AOP通知编程"><a href="#AOP警告日志监控与sql打印-切面AOP通知编程" class="headerlink" title="AOP警告日志监控与sql打印 [切面AOP通知编程]"></a>AOP警告日志监控与sql打印 [切面AOP通知编程]</h3><pre><code class="xml">dev-common 引入aop依赖
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/aspect/ServiceLogAspect.java
+package com.imooc.api.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+public class ServiceLogAspect &#123;
+    final static Logger logger = LoggerFactory.getLogger(ServiceLogAspect.class);
+    /**
+     * AOP通知：
+     * 1.前置通知
+     * 2.后置通知
+     * 3.环绕通知 ★★
+     * 4.异常通知
+     * 5.最终通知
+     */
+    //*是返回所有类型 匹配包的位置 *.* = 任意文件.任意后缀  (..)是任意类和任意方法
+    @Around(&quot;execution(* com.imooc.*.service.impl..*.*(..))&quot;)
+    public Object recordTimeOfService(ProceedingJoinPoint joinPoint) throws Throwable &#123;
+        logger.info(&quot;==== 开始执行 &#123;&#125;.&#123;&#125; ====&quot;,
+                joinPoint.getTarget().getClass(),
+                joinPoint.getSignature().getName());
+        long start = System.currentTimeMillis();
+        Object result = joinPoint.proceed();
+        long end = System.currentTimeMillis();
+        long takeTime = end - start;
+        if (takeTime &gt; 3000)&#123;
+            logger.error(&quot;当前执行耗时：&#123;&#125;&quot;,takeTime);
+        &#125;else if (takeTime &gt; 2000)&#123;
+            logger.warn(&quot;当前执行耗时：&#123;&#125;&quot;,takeTime);
+        &#125;else &#123;
+            logger.info(&quot;当前执行耗时：&#123;&#125;&quot;,takeTime);
+        &#125;
+        return result;
+    &#125;
+&#125;
+====================================================================
+http://writer.imoocnews.com:9090/imooc-news/writer/accountInfo.html
+提交信息 看后台Terminal
+</code></pre>
+<pre><code class="yml">service-user  application-dev.yml #增加一个open mybatis log in dev
+  server:
+  port: 8003
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+# open mybatis log in dev
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+
+===================================================================
+如果在未来发生sql错误可以通过sql输出来找到sql语句从而放入运行检查错误 (21 28行)
+JDBC Connection [HikariProxyConnection@2054571226 wrapping org.mariadb.jdbc.MariaDbConnection@4b4b68f8] will not be managed by Spring
+==&gt;  Preparing: UPDATE app_user SET nickname = ?,face = ?,realname = ?,email = ?,sex = ?,birthday = ?,province = ?,city = ?,district = ?,active_status = ?,updated_time = ? WHERE id = ? 
+==&gt; Parameters: 15027597319(String), https://raw.githubusercontent.com/P-luminary/images/875ad52658686e6cc3a8e0cd75d2a324a3d742a9/data/Imooc_Girl.jpg(String), 小宝宝的小潘潘(String), 390415030@qq.com(String), 1(Integer), 2024-07-06 00:00:00.0(Timestamp), 河北(String), 唐山市(String), 丰润区(String), 1(Integer), 2024-07-07 22:41:09.862(Timestamp), 240629F21AK1BHX4(String)
+&lt;==    Updates: 1
+Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@9176eb0]
+Creating a new SqlSession
+SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@65bd9477] was not registered for synchronization because synchronization is not active
+JDBC Connection [HikariProxyConnection@1798162927 wrapping org.mariadb.jdbc.MariaDbConnection@4b4b68f8] will not be managed by Spring
+==&gt;  Preparing: SELECT id,mobile,nickname,face,realname,email,sex,birthday,province,city,district,active_status,total_income,created_time,updated_time FROM app_user WHERE id = ? 
+==&gt; Parameters: 240629F21AK1BHX4(String)
+&lt;==    Columns: id, mobile, nickname, face, realname, email, sex, birthday, province, city, district, active_status, total_income, created_time, updated_time
+&lt;==        Row: 240629F21AK1BHX4, 15027597319, 15027597319, https://raw.githubusercontent.com/P-luminary/images/875ad52658686e6cc3a8e0cd75d2a324a3d742a9/data/Imooc_Girl.jpg, 小宝宝的小潘潘, 390415030@qq.com, 1, 2024-07-06, 河北, 唐山市, 丰润区, 1, 0, 2024-06-29 19:43:07.0, 2024-07-07 22:41:09.0
+&lt;==      Total: 1
+Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@65bd9477]
+41:10.009 [http-nio-8003-exec-3] INFO  io.lettuce.core.EpollProvider - Starting without optional epoll library
+41:10.010 [http-nio-8003-exec-3] INFO  io.lettuce.core.KqueueProvider - Starting without optional kqueue library
+41:10.460 [http-nio-8003-exec-3] INFO  c.imooc.api.aspect.ServiceLogAspect - 当前执行耗时：601
+</code></pre>
+<h3 id="退出登录、注销会话"><a href="#退出登录、注销会话" class="headerlink" title="退出登录、注销会话"></a>退出登录、注销会话</h3><pre><code class="java">service-api  com/imooc/api/controller/user/PassportControllerApi.java
+//用户登录信息的redis和cookies清除
+package com.imooc.api.controller.user;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.RegistLoginBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid; //用户需求验证
+
+@Api(value = &quot;用户注册登录&quot;,tags = &#123;&quot;用户注册登录的Controller&quot;&#125;)
+@RequestMapping(&quot;passport&quot;)
+public interface PassportControllerApi &#123;
+    @ApiOperation(value = &quot;获得短信验证码&quot;,notes = &quot;获得短信验证码&quot;,httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;/getSMSCode&quot;)
+    public GraceJSONResult getSMSCode(@RequestParam String mobile, HttpServletRequest request);
+
+    @ApiOperation(value = &quot;一键注册登录接口&quot;,notes = &quot;一键注册登录接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/doLogin&quot;) //表单里面用post  RequestBody后面传过来的东西和json对象对应
+    public GraceJSONResult doLogin(@RequestBody @Valid RegistLoginBO registLoginBO
+            , BindingResult result, HttpServletRequest request, HttpServletResponse response);
+    //完成之后 去BaseController里面写一个setCookie()方便都可以用
+
+    @ApiOperation(value = &quot;用户退出登录&quot;,notes = &quot;用户退出登录&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/logout&quot;)
+    public GraceJSONResult logout(@RequestParam String userId,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response);
+&#125;
+</code></pre>
+<pre><code class="java">service-usecom/imooc/user/controller/PassportController.java
+@Override
+    public GraceJSONResult logout(String userId,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response)&#123;
+        redis.del(REDIS_USER_TOKEN + &quot;:&quot; + userId);
+        //USER_INFO可以不用删 可能后面会查询 没有清除cookie只有重新设置时间为0
+        setCookie(request, response, &quot;utoken&quot;,&quot;&quot;,COOKIE_DELETE);
+        setCookie(request, response, &quot;uid&quot;,&quot;&quot;,COOKIE_DELETE);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
 <p>&#96;</p>
 
     </div>
