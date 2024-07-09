@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -4869,7 +4869,7 @@ public interface PassportControllerApi &#123;
                                   HttpServletResponse response);
 &#125;
 </code></pre>
-<pre><code class="java">service-usecom/imooc/user/controller/PassportController.java
+<pre><code class="java">service-user  com/imooc/user/controller/PassportController.java
 @Override
     public GraceJSONResult logout(String userId,
                                   HttpServletRequest request,
@@ -4881,6 +4881,245 @@ public interface PassportControllerApi &#123;
         return GraceJSONResult.ok();
     &#125;
 </code></pre>
+<h3 id="FastDFS架构原理与上传下载流程解析"><a href="#FastDFS架构原理与上传下载流程解析" class="headerlink" title="FastDFS架构原理与上传下载流程解析"></a>FastDFS架构原理与上传下载流程解析</h3><h5 id="文件服务器"><a href="#文件服务器" class="headerlink" title="文件服务器"></a>文件服务器</h5><ul>
+<li><p>传统服务器存储</p>
+</li>
+<li><h5 id="FastDFS"><a href="#FastDFS" class="headerlink" title="FastDFS"></a>FastDFS</h5></li>
+<li><p>OSS</p>
+</li>
+<li><p>GridFS</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/584d8cb5b41ffa10cb9b5303c13b5782e1130889/data/FastDFS%E6%9E%B6%E6%9E%84.png"></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f4d7477aa2b6843ddfb11af2cbbe2424a25e4b39/data/FastDFS%E4%B8%8A%E4%BC%A0%E4%B8%8B%E8%BD%BD%E8%BF%87%E7%A8%8B.png"></p>
+<h3 id="配置FastDFS环境准备工作"><a href="#配置FastDFS环境准备工作" class="headerlink" title="配置FastDFS环境准备工作"></a>配置FastDFS环境准备工作</h3><h6 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h6><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Centos</td>
+<td>7.x</td>
+</tr>
+<tr>
+<td>libfastcommon-1.0.42.tar.gz</td>
+<td>FastDFS分离出的一些公用函数包</td>
+</tr>
+<tr>
+<td>FastDFS</td>
+<td>FastDFS本体</td>
+</tr>
+<tr>
+<td>fastdfs-nginx-module-1.22.tar.gz</td>
+<td>FastDFS和nginx的关联模块</td>
+</tr>
+<tr>
+<td>nginx</td>
+<td>nginx1.15.4</td>
+</tr>
+</tbody></table>
+<h6 id="它跟我说要准备两个虚拟机-tracker-和-storage-版本都是CentOS-7-x"><a href="#它跟我说要准备两个虚拟机-tracker-和-storage-版本都是CentOS-7-x" class="headerlink" title="它跟我说要准备两个虚拟机[tracker 和 storage 版本都是CentOS 7.x]"></a>它跟我说要准备两个虚拟机[tracker 和 storage 版本都是CentOS 7.x]</h6><pre><code class="java">//创建一个FastDFS文件夹
+[imooc@imooc FastDFS]$ ll
+总用量 1980
+-rw-rw-r--. 1 imooc imooc  800157 7月   9 15:53 fastdfs-6.04.tar.gz
+-rw-rw-r--. 1 imooc imooc   19952 7月   9 15:53 fastdfs-nginx-module-1.22.tar.gz
+-rw-rw-r--. 1 imooc imooc  164704 7月   9 15:53 libfastcommon-1.0.42.tar.gz
+-rw-rw-r--. 1 imooc imooc 1032630 7月   9 15:53 nginx-1.16.1.tar.gz
+[imooc@imooc FastDFS]$ tar -zxvf libfastcommon-1.0.42.tar.gz 
+[imooc@imooc FastDFS]$ cd libfastcommon-1.0.42/
+[imooc@imooc libfastcommon-1.0.42]$ ll
+总用量 32
+drwxrwxr-x. 2 imooc imooc   114 12月  5 2019 doc
+-rw-rw-r--. 1 imooc imooc 10054 12月  5 2019 HISTORY
+-rw-rw-r--. 1 imooc imooc   674 12月  5 2019 INSTALL
+-rw-rw-r--. 1 imooc imooc  1607 12月  5 2019 libfastcommon.spec
+-rwxrwxr-x. 1 imooc imooc  3253 12月  5 2019 make.sh
+drwxrwxr-x. 2 imooc imooc   191 12月  5 2019 php-fastcommon
+-rw-rw-r--. 1 imooc imooc  2776 12月  5 2019 README
+drwxrwxr-x. 3 imooc imooc  4096 12月  5 2019 src
+[imooc@imooc libfastcommon-1.0.42]$ ./make.sh
+[imooc@imooc libfastcommon-1.0.42]$ sudo ./make.sh install
+//安装解压包的本体
+[imooc@imooc FastDFS]$ tar -zxvf fastdfs-6.04.tar.gz 
+[imooc@imooc FastDFS]$ cd fastdfs-6.04/
+[imooc@imooc fastdfs-6.04]$ ./make.sh
+[imooc@imooc fastdfs-6.04]$ sudo ./make.sh install
+[imooc@imooc fastdfs-6.04]$ cd /usr/bin
+[imooc@imooc bin]$ ls fdfs_*
+fdfs_appender_test   fdfs_download_file        fdfs_test
+fdfs_appender_test1  fdfs_file_info            fdfs_test1
+fdfs_append_file     fdfs_monitor              fdfs_trackerd
+fdfs_crc32           fdfs_regenerate_filename  fdfs_upload_appender
+fdfs_delete_file     fdfs_storaged             fdfs_upload_file
+[imooc@imooc bin]$ cd /etc/fdfs/
+[imooc@imooc fdfs]$ ll
+总用量 28 //这些都是配置文件 如果要修改则需要拷贝一份新鲜的
+-rw-r--r--. 1 root root  1834 7月   9 16:02 client.conf.sample
+-rw-r--r--. 1 root root 10085 7月   9 16:02 storage.conf.sample
+-rw-r--r--. 1 root root   527 7月   9 16:02 storage_ids.conf.sample
+-rw-r--r--. 1 root root  8038 7月   9 16:02 tracker.conf.sample
+
+[imooc@imooc FastDFS]$ cd fastdfs-6.04/
+[imooc@imooc fastdfs-6.04]$ cd conf/
+[imooc@imooc conf]$ ll
+总用量 88
+-rw-rw-r--. 1 imooc imooc 23981 12月  5 2019 anti-steal.jpg
+-rw-rw-r--. 1 imooc imooc  1834 12月  5 2019 client.conf
+-rw-rw-r--. 1 imooc imooc   955 12月  5 2019 http.conf
+-rw-rw-r--. 1 imooc imooc 31172 12月  5 2019 mime.types
+-rw-rw-r--. 1 imooc imooc 10085 12月  5 2019 storage.conf
+-rw-rw-r--. 1 imooc imooc   527 12月  5 2019 storage_ids.conf
+-rw-rw-r--. 1 imooc imooc  8038 12月  5 2019 tracker.conf
+//拷贝到etc下  安装前的准备工作
+[imooc@imooc conf]$ sudo cp * /etc/fdfs/
+[imooc@imooc conf]$ cd /etc/fdfs
+[imooc@imooc fdfs]$ ll
+总用量 116
+-rw-r--r--. 1 root root 23981 7月   9 16:06 anti-steal.jpg
+-rw-r--r--. 1 root root  1834 7月   9 16:06 client.conf
+-rw-r--r--. 1 root root  1834 7月   9 16:02 client.conf.sample
+-rw-r--r--. 1 root root   955 7月   9 16:06 http.conf
+-rw-r--r--. 1 root root 31172 7月   9 16:06 mime.types
+-rw-r--r--. 1 root root 10085 7月   9 16:06 storage.conf
+-rw-r--r--. 1 root root 10085 7月   9 16:02 storage.conf.sample
+-rw-r--r--. 1 root root   527 7月   9 16:06 storage_ids.conf
+-rw-r--r--. 1 root root   527 7月   9 16:02 storage_ids.conf.sample
+-rw-r--r--. 1 root root  8038 7月   9 16:06 tracker.conf
+-rw-r--r--. 1 root root  8038 7月   9 16:02 tracker.conf.sample
+</code></pre>
+<h3 id="配置tracker服务-一个虚拟机"><a href="#配置tracker服务-一个虚拟机" class="headerlink" title="配置tracker服务 [一个虚拟机]"></a>配置tracker服务 [一个虚拟机]</h3><pre><code class="java">//根据配置文件去区分是哪个服务
+[imooc@imooc fdfs]$ cd /etc/fdfs
+[imooc@imooc fdfs]$ ll
+总用量 116
+-rw-r--r--. 1 root root 23981 7月   9 16:06 anti-steal.jpg
+-rw-r--r--. 1 root root  1834 7月   9 16:06 client.conf
+-rw-r--r--. 1 root root  1834 7月   9 16:02 client.conf.sample
+-rw-r--r--. 1 root root   955 7月   9 16:06 http.conf
+-rw-r--r--. 1 root root 31172 7月   9 16:06 mime.types
+-rw-r--r--. 1 root root 10085 7月   9 16:06 storage.conf
+-rw-r--r--. 1 root root 10085 7月   9 16:02 storage.conf.sample
+-rw-r--r--. 1 root root   527 7月   9 16:06 storage_ids.conf
+-rw-r--r--. 1 root root   527 7月   9 16:02 storage_ids.conf.sample
+-rw-r--r--. 1 root root  8038 7月   9 16:06 tracker.conf
+-rw-r--r--. 1 root root  8038 7月   9 16:02 tracker.conf.sample
+[imooc@imooc fdfs]$ sudo vim tracker.conf  
+//里面的port=22122 bind_addr= 计算机节点 这些不动
+//修改里面的base_path=/home/yuqing/fastdfs 
+    //修改为→ /usr/local/fastdfs/tracker
+[imooc@imooc fdfs]$ mkdir /usr/local/fastdfs/tracker -p //-p后面文件夹做递归创建
+[imooc@imooc fdfs]$ sudo /usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf //当成配置文件加进去 ★★★★
+[imooc@imooc fdfs]$ ps -ef|grep tracker
+root       6254      1  0 18:31 ?        00:00:00 /usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf
+imooc      6268   3011  0 18:31 pts/0    00:00:00 grep --color=auto tracker
+</code></pre>
+<h3 id="配置storage服务-另一个虚拟机"><a href="#配置storage服务-另一个虚拟机" class="headerlink" title="配置storage服务 [另一个虚拟机]"></a>配置storage服务 [另一个虚拟机]</h3><pre><code class="java">[storage@imooc fdfs]$ cd /etc/fdfs/
+[storage@imooc fdfs]$ sudo vim storage.conf
+//[修改后] group_name=imooc 
+//[修改后] bath_path=/usr/local/fastdfs/storage
+[storage@imooc fdfs]$ sudo mkdir /usr/local/fastdfs/storage -p
+[storage@imooc fdfs]$ cd /usr/local/
+[storage@imooc local]$ ll
+[storage@imooc local]$ cd fastdfs/
+[storage@imooc fastdfs]$ ll
+[storage@localhost fastdfs]$ ll
+总用量 0
+drwxr-xr-x. 2 root root 6 7月   9 18:38 storage
+[storage@localhost fastdfs]$ cd /etc/fdfs/  //接着修改storage
+[storage@imooc fdfs]$ sudo vim storage.conf
+//[修改后] store_path0=/usr/local/fastdfs/storage
+//配置到tracker的ip地址[修改后] tracker_server=192.168.170.135:22122
+/ ‘/8888’  http.server_port=8888 是web的相关端口号
+[storage@localhost fdfs]$ sudo /usr/bin/fdfs_storaged /etc/fdfs/storage.conf //★★★★
+★一定要先启动tracker 再去启动storage 不然service发不过去★
+</code></pre>
+<pre><code class="java">//配置客户端做上传动作
+[imooc@imooc ~]$ cd /etc/fdfs
+[storage@localhost fdfs]$ pwd
+/etc/fdfs
+[storage@localhost fdfs]$ sudo vim client.conf
+//[修改后]base_path=/usr/local/fastdfs/client
+[storage@localhost fdfs]$ sudo mkdir /usr/local/fastdfs/client
+[storage@localhost fdfs]$ cd /usr/local/fastdfs
+[storage@localhost fastdfs]$ ll
+总用量 0
+drwxr-xr-x. 2 root root  6 7月   9 19:26 client
+drwxr-xr-x. 4 root root 30 7月   9 19:04 storage
+[storage@localhost fastdfs]$ cd /etc/fdfs/
+[storage@localhost fdfs]$ sudo vim client.conf
+//[修改后]tracker_server=192.168.170.135:22122
+[storage@localhost fdfs]$ cd /usr/bin
+[storage@localhost bin]$ ls fdfs*
+fdfs_appender_test   fdfs_download_file        fdfs_test
+fdfs_appender_test1  fdfs_file_info            fdfs_test1
+fdfs_append_file     fdfs_monitor              fdfs_trackerd
+fdfs_crc32           fdfs_regenerate_filename  fdfs_upload_appender
+fdfs_delete_file     fdfs_storaged             fdfs_upload_file
+//fdfs_test在命令行去测试
+[storage@localhost bin]$ cd /home/
+[storage@localhost home]$ cd /usr/local/fastdfs/storage/
+[storage@localhost storage]$ cd data
+[storage@localhost data]$ cd 00
+[storage@localhost data]$ ll   【里面很多十六进制数据】
+[storage@localhost data]$ cd 00 
+[storage@localhost data]$ ll   //【里面没有数据 上传图片到这里查看是否成功】
+///home/storage 这里有一张测试图片log.png [自行添加]
+[storage@localhost 00]$ pwd
+/usr/local/fastdfs/storage/data/00/00
+[storage@localhost 00]$ cd /etc/fdfs
+[storage@localhost ~]$ cd /etc/fdfs/
+[storage@localhost fdfs]$ cd /usr/bin/
+[storage@localhost bin]$ ls fdfs*
+fdfs_appender_test   fdfs_download_file      //fdfs_test
+fdfs_appender_test1  fdfs_file_info            fdfs_test1
+fdfs_append_file     fdfs_monitor              fdfs_trackerd
+fdfs_crc32           fdfs_regenerate_filename  fdfs_upload_appender
+fdfs_delete_file     fdfs_storaged             fdfs_upload_file
+[storage@localhost bin]$ ./fdfs_test /etc/fdfs/client.conf upload /home/storage/log.png 
+/*
+This is FastDFS client test program v6.04
+
+Copyright (C) 2008, Happy Fish / YuQing
+
+FastDFS may be copied only under the terms of the GNU General
+Public License V3, which may be found in the FastDFS source kit.
+Please visit the FastDFS Home Page http://www.fastken.com/ 
+for more detail.
+
+[2024-07-09 19:39:25] DEBUG - base_path=/usr/local/fastdfs/client, connect_timeout=10, network_timeout=60, tracker_server_count=1, anti_steal_token=0, anti_steal_secret_key length=0, use_connection_pool=0, g_connection_pool_max_idle_time=3600s, use_storage_id=0, storage server id count: 0
+
+tracker_query_storage_store_list_without_group: 
+    server 1. group_name=, ip_addr=192.168.170.136, port=23000
+
+group_name=imooc【企业简写】, ip_addr=192.168.170.136, port=23000
+storage_upload_by_filename
+group_name=imooc, remote_filename=M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png 
+【remote_filename：重组路径】【因为还没有发布文件服务 所以无法直接查看文件】
+source ip address: 192.168.170.136
+file timestamp=2024-07-09 19:39:25
+file size=12618
+file crc32=630904148
+example file url: http://192.168.170.136/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
+storage_upload_slave_by_filename
+group_name=imooc, remote_filename=M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png
+source ip address: 192.168.170.136
+file timestamp=2024-07-09 19:39:25
+file size=12618
+file crc32=630904148
+example file url: http://192.168.170.136/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png
+ */
+[storage@localhost bin]$ cd /usr/local/fastdfs/storage/data/
+[storage@localhost data]$ cd 00
+[storage@localhost 00]$ cd 00
+[storage@localhost 00]$ ll
+总用量 40
+-rw-r--r--. 1 root root 12618 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png
+-rw-r--r--. 1 root root    49 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png-m
+-rw-r--r--. 1 root root 12618 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
+-rw-r--r--. 1 root root    49 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png-m
+</code></pre>
+<p>4-5</p>
 <p>&#96;</p>
 
     </div>
