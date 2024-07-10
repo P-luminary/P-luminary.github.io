@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -5830,7 +5830,7 @@ fdfs_delete_file     fdfs_storaged             fdfs_upload_file
 //修改里面的base_path=/home/yuqing/fastdfs 
     //修改为→ /usr/local/fastdfs/tracker
 [imooc@imooc fdfs]$ mkdir /usr/local/fastdfs/tracker -p //-p后面文件夹做递归创建
-[imooc@imooc fdfs]$ sudo /usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf //当成配置文件加进去 ★★★★
+[imooc@imooc fdfs]$ sudo /usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf //当成配置文件加进去 ★★★★★★★★★★★★★★★★★★
 [imooc@imooc fdfs]$ ps -ef|grep tracker
 root       6254      1  0 18:31 ?        00:00:00 /usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf
 imooc      6268   3011  0 18:31 pts/0    00:00:00 grep --color=auto tracker
@@ -5940,7 +5940,314 @@ example file url: http://192.168.170.136/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiW
 -rw-r--r--. 1 root root 12618 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
 -rw-r--r--. 1 root root    49 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png-m
 </code></pre>
-<p>4-5</p>
+<h3 id="安装Nginx提供Web服务-通过浏览器访问到文件"><a href="#安装Nginx提供Web服务-通过浏览器访问到文件" class="headerlink" title="安装Nginx提供Web服务 [通过浏览器访问到文件]"></a>安装Nginx提供Web服务 [通过浏览器访问到文件]</h3><h6 id="Nginx是反向代理服务器可以做集群-也可以控制多个虚拟主机"><a href="#Nginx是反向代理服务器可以做集群-也可以控制多个虚拟主机" class="headerlink" title="Nginx是反向代理服务器可以做集群 也可以控制多个虚拟主机"></a>Nginx是反向代理服务器可以做集群 也可以控制多个虚拟主机</h6><pre><code class="java">-rw-rw-r--. 1 storage storage 142245547 7月  10 15:32 jdk-7u75-linux-x64.tar.gz
+-rw-rw-r--. 1 storage storage   1032630 7月  10 15:33 nginx-1.16.1.tar.gz
+//[storage@localhost ~]$ sudo yum install gcc-c++
+已加载插件：fastestmirror, langpacks
+Determining fastest mirrors
+//[storage@localhost ~]$ sudo yum install -y pcre pcre-devel
+已加载插件：fastestmirror, langpacks
+Loading mirror speeds from cached hostfile
+//[storage@localhost ~]$ sudo yum install -y zlib zlib-devel
+已加载插件：fastestmirror, langpacks
+Loading mirror speeds from cached hostfile
+//[storage@localhost ~]$ sudo yum install -y openssl openssl-devel
+已加载插件：fastestmirror, langpacks
+Loading mirror speeds from cached hostfile
+//[storage@localhost ~]$ tar -zxvf nginx-1.16.1.tar.gz
+nginx-1.16.1.tar.gz
+//[storage@localhost ~]$ cd nginx-1.16.1.tar.gz
+[storage@localhost nginx-1.16.1]$ sudo mkdir /var/temp/nginx -p
+//创建所需的临时目录：
+sudo mkdir -p /var/temp/nginx/client
+sudo mkdir -p /var/temp/nginx/proxy
+sudo mkdir -p /var/temp/nginx/fastcgi
+sudo mkdir -p /var/temp/nginx/uwsgi
+sudo mkdir -p /var/temp/nginx/scgi
+[storage@localhost nginx-1.16.1]$ ./configure \  //【预配置】
+&gt; --prefix=/usr/local/nginx \
+&gt; --pid-path=/var/run/nginx/nginx.pid \
+&gt; --lock-path=/var/lock/nginx.lock \
+&gt; --error-log-path=/var/log/nginx/error.log \
+&gt; --http-log-path=/var/log/nginx/access.log \
+&gt; --with-http_gzip_static_module \
+&gt; --http-client-body-temp-path=/var/temp/nginx/client \
+&gt; --http-proxy-temp-path=/var/temp/nginx/proxy \
+&gt; --http-fastcgi-temp-path=/var/temp/nginx/fastcgi \
+&gt; --http-uwsgi-temp-path=/var/temp/nginx/uwsgi \
+&gt; --http-scgi-temp-path=/var/temp/nginx/scgi
+[storage@localhost nginx-1.16.1]$ make  //【编译】
+/*
+如果镜像出了问题 一定要换一下镜像配置
+1. 编辑 CentOS 的 YUM 配置文件：
+编辑 /etc/yum.repos.d/CentOS-Base.repo 文件：
+
+复制代码
+sudo vi /etc/yum.repos.d/CentOS-Base.repo
+
+2. 使用以下内容更新 CentOS-Base.repo 文件：
+复制代码
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://vault.centos.org/7.9.2009/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+*/
+[storage@localhost nginx-1.16.1]$ sudo make install
+[storage@localhost nginx-1.16.1]$ cd /usr/local
+[storage@localhost local]$ ll
+总用量 0
+drwxr-xr-x. 2 root root  6 4月  11 2018 bin
+drwxr-xr-x. 2 root root  6 4月  11 2018 etc
+drwxr-xr-x. 4 root root 35 7月   9 19:26 fastdfs
+drwxr-xr-x. 2 root root  6 4月  11 2018 games
+drwxr-xr-x. 2 root root  6 4月  11 2018 include
+drwxr-xr-x. 2 root root  6 4月  11 2018 lib
+drwxr-xr-x. 2 root root  6 4月  11 2018 lib64
+drwxr-xr-x. 2 root root  6 4月  11 2018 libexec
+drwxr-xr-x. 5 root root 42 7月  10 16:55 nginx
+drwxr-xr-x. 2 root root  6 4月  11 2018 sbin
+drwxr-xr-x. 5 root root 49 7月   9 17:16 share
+drwxr-xr-x. 2 root root  6 4月  11 2018 src
+[storage@localhost local]$ cd nginx/
+[storage@localhost nginx]$ ll
+总用量 4
+drwxr-xr-x. 2 root root 4096 7月  10 16:55 conf
+drwxr-xr-x. 2 root root   40 7月  10 16:55 html
+drwxr-xr-x. 2 root root   19 7月  10 16:55 sbin
+[storage@localhost nginx]$ cd sbin/
+[storage@localhost sbin]$ ll
+总用量 3768
+-rwxr-xr-x. 1 root root 3857144 7月  10 16:55 nginx
+[storage@localhost sbin]$ sudo ./nginx
+[storage@localhost sbin]$ ps -ef|grep nginx
+root       6642      1  0 16:58 ?        00:00:00 nginx: master process ./nginx
+nobody     6643   6642  0 16:58 ?        00:00:00 nginx: worker process
+storage    6651   2975  0 16:58 pts/0    00:00:00 grep --color=auto nginx
+
+// 在浏览器输入：http://192.168.170.136/ 【如果没显示应该是虚拟机的防火墙拦截 可以禁止防火墙】
+Welcome to nginx!
+If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
+
+For online documentation and support please refer to nginx.org.
+Commercial support is available at nginx.com.
+
+Thank you for using nginx.
+
+[storage@localhost nginx]$ cd html
+[storage@localhost html]$ ll
+总用量 8
+-rw-r--r--. 1 root root 494 7月  10 16:55 50x.html
+-rw-r--r--. 1 root root 612 7月  10 16:55 index.html
+
+[storage@localhost html]$ sudo ../sbin/nginx -t //【测试刚刚的步骤是否正确】
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+</code></pre>
+<h3 id="整合Nginx实现文件服务器"><a href="#整合Nginx实现文件服务器" class="headerlink" title="整合Nginx实现文件服务器"></a>整合Nginx实现文件服务器</h3><pre><code class="java">[storage@localhost FastDFS]$ tar -zxvf fastdfs-nginx-module-1.22.tar.gz 
+fastdfs-nginx-module-1.22/
+fastdfs-nginx-module-1.22/HISTORY
+fastdfs-nginx-module-1.22/INSTALL
+fastdfs-nginx-module-1.22/src/
+fastdfs-nginx-module-1.22/src/common.c
+fastdfs-nginx-module-1.22/src/common.h
+fastdfs-nginx-module-1.22/src/config
+fastdfs-nginx-module-1.22/src/mod_fastdfs.conf
+fastdfs-nginx-module-1.22/src/ngx_http_fastdfs_module.c
+[storage@localhost FastDFS]$ cd fastdfs-nginx-module-1.22/
+[storage@localhost fastdfs-nginx-module-1.22]$ ll
+总用量 8
+-rw-rw-r--. 1 storage storage 3036 11月 19 2019 HISTORY
+-rw-rw-r--. 1 storage storage 2001 11月 19 2019 INSTALL
+drwxrwxr-x. 2 storage storage  109 11月 19 2019 src
+[storage@localhost fastdfs-nginx-module-1.22]$ cd src/
+[storage@localhost src]$ sudo cp mod_fastdfs.conf /etc/fdfs/
+[storage@localhost ~]$ cd /etc/fdfs/
+[storage@localhost fdfs]$ sudo vim mod_fastdfs.conf 
+//【布置存储路径】
+/*
+store_path0=/usr/local/fastdfs/storage
+tracker_server=192.168.170.135:22122
+group_name=imooc
+url_have_group_name = true
+base_path=/usr/local/fastdfs/tmp
+*/
+[storage@localhost FastDFS]$ cd fastdfs-nginx-module-1.22/
+[storage@localhost fastdfs-nginx-module-1.22]$ cd src/
+[storage@localhost src]$ vim config
+/local 把带有local的都删掉
+[storage@localhost ~]$ cd nginx-1.16.1/
+ [storage@localhost nginx-1.16.1]$ 
+./configure \
+&gt; --prefix=/usr/local/nginx \
+&gt; --pid-path=/var/run/nginx/nginx.pid \
+&gt; --lock-path=/var/lock/nginx.lock \
+&gt; --error-log-path=/var/log/nginx/error.log \
+&gt; --http-log-path=/var/log/nginx/access.log \
+&gt; --with-http_gzip_static_module \
+&gt; --http-client-body-temp-path=/var/temp/nginx/client \
+&gt; --http-proxy-temp-path=/var/temp/nginx/proxy \
+&gt; --http-fastcgi-temp-path=/var/temp/nginx/fastcgi \
+&gt; --http-uwsgi-temp-path=/var/temp/nginx/uwsgi \
+&gt; --http-scgi-temp-path=/var/temp/nginx/scgi \
+&gt; --add-module=/home/storage/FastDFS/fastdfs-nginx-module-1.22/src
+[storage@localhost nginx-1.16.1]$ sudo make &amp;&amp; sudo make install
+[storage@localhost nginx-1.16.1]$ cd /usr/local/nginx/
+[storage@localhost nginx]$ cd conf/
+[storage@localhost conf]$ sudo vim nginx.conf
+/*
+server &#123;
+        listen       8888;
+        server_name  localhost;
+        location ~/group[0-9]/ &#123;
+        ngx_fastdfs_module;
+        &#125;
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / &#123;
+            root   html;
+            index  index.html index.htm;
+        &#125;
+
+*/
+[storage@localhost conf]$ vim /etc/fdfs/tracker.conf
+/http.service_port:8080
+[storage@localhost conf]$ vim nginx.conf //★★
+/*
+server &#123;
+        listen       8888;
+        server_name  localhost;
+        location /imooc/M00 &#123;
+            ngx_fastdfs_module;
+        &#125;
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / &#123;
+            root   html;
+            index  index.html index.htm;
+        &#125;
+&#125;
+*/
+[storage@localhost conf]$ sudo ../sbin/nginx -t //测试一下有无问题
+ngx_http_fastdfs_set pid=6143
+nginx: the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test is successful
+[storage@localhost conf]$ sudo ../sbin/nginx -s reload //重新加载
+ngx_http_fastdfs_set pid=6436
+
+[storage@localhost conf]$ cd /usr/local/fastdfs/storage/
+[storage@localhost storage]$ cd data
+[storage@localhost data]$ cd 00/00
+总用量 40
+-rw-r--r--. 1 root root 12618 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png
+-rw-r--r--. 1 root root    49 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457_big.png-m
+-rw-r--r--. 1 root root 12618 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
+-rw-r--r--. 1 root root    49 7月   9 19:39 wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png-m
+http://192.168.170.136:8888/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
+
+
+//查看错误日志 ★★★【sudo tail -n 50 /var/log/nginx/error.log】★★★
+/*
+2. 重新加载 systemd 并启动 Nginx
+重新加载 systemd：
+复制代码
+sudo systemctl daemon-reload
+启动 Nginx：
+
+sh
+复制代码
+sudo systemctl start nginx
+设置开机自启动：
+
+sh
+复制代码
+sudo systemctl enable nginx
+检查 Nginx 服务状态：
+
+sh
+复制代码
+sudo systemctl status nginx
+*/
+[storage@localhost conf]$ sudo vim /etc/fdfs/tracker.conf
+[storage@localhost conf]$ sudo vim /etc/fdfs/storage.conf
+
+[storage@localhost conf]$ cd /usr/local/nginx/conf/
+[storage@localhost conf]$ sudo ../sbin/nginx -s stop
+ngx_http_fastdfs_set pid=12586
+[storage@localhost conf]$ sudo ../sbin/nginx
+ngx_http_fastdfs_set pid=12605
+[storage@localhost conf]$ sudo ../sbin/nginx -s reload
+
+/*
+FastDFS输出报告位置：
+sudo tail -n 50 /usr/local/fastdfs/storage/logs/storaged.log
+
+
+启动 Tracker 服务器：
+sudo systemctl start fdfs_trackerd
+检查 Tracker 服务器状态：
+sudo systemctl status fdfs_trackerd
+确认 Tracker 服务器监听端口：
+sudo netstat -tuln | grep :22122
+*/
+//草！好几个小时的含泪史 一定要先开tracker端！！！
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+★★★★★一定要先启动tracker 再去启动storage 不然service发不过去★★★★★
+
+/*
+首先，重新启动 FastDFS 的 tracker 和 storage 服务：
+
+bash
+复制代码
+# 重启 tracker 服务
+sudo systemctl restart fdfs_trackerd
+
+# 重启 storage 服务
+sudo systemctl restart fdfs_storaged
+2. 重启 Nginx 服务
+接下来，重新启动 Nginx 服务，确保它能够加载新的配置并生效：
+
+bash
+复制代码
+sudo systemctl restart nginx
+3. 验证服务状态
+重新启动服务后，可以通过以下方式验证它们的运行状态：
+
+检查 FastDFS 服务状态：
+
+bash
+复制代码
+sudo systemctl status fdfs_trackerd
+sudo systemctl status fdfs_storaged
+检查 Nginx 服务状态：
+
+bash
+复制代码
+sudo systemctl status nginx
+*/
+
+http://192.168.170.136:8888/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
+</code></pre>
 <p>&#96;</p>
 
             
@@ -5956,7 +6263,7 @@ example file url: http://192.168.170.136/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiW
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -9006,7 +9313,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -9160,7 +9467,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -14365,7 +14672,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -16432,7 +16739,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -21459,7 +21766,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -24768,7 +25075,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -25270,7 +25577,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
