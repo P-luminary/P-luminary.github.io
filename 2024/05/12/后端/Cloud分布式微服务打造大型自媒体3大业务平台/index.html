@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -5305,7 +5305,7 @@ server &#123;
 */
 [storage@localhost conf]$ vim /etc/fdfs/tracker.conf
 /http.service_port:8080
-[storage@localhost conf]$ vim nginx.conf //★★
+[storage@localhost conf]$ sudo vim nginx.conf //★★★★★★
 /*
 server &#123;
         listen       8888;
@@ -5427,6 +5427,516 @@ sudo systemctl status nginx
 
 http://192.168.170.136:8888/imooc/M00/00/00/wKiqiGaNIW2AMDeaAAAxSiWa1VQ457.png
 </code></pre>
+<h3 id="创建文件服务module-文件上传"><a href="#创建文件服务module-文件上传" class="headerlink" title="创建文件服务module [文件上传]"></a>创建文件服务module [文件上传]</h3><pre><code class="xml">【新建一个module imooc-news-dev-service-files】
+pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;artifactId&gt;imooc-news-dev-service-files&lt;/artifactId&gt;
+&lt;!--
+    imooc-news-dev-service-files
+    文件服务，文件相关的操作都在此文件中进行
+    文件上传   文件下载
+    fastdfs  oss  gridfs
+--&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- 文件上传fdfs工具包 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.tobato&lt;/groupId&gt;
+            &lt;artifactId&gt;fastdfs-client&lt;/artifactId&gt;
+            &lt;version&gt;1.27.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="yaml">application.yuml
+############################################################
+#
+# 用户微服务
+# web访问端口号  约定：8003
+#
+############################################################
+server:
+# port: 8003
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-file
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 512000 #请求文件大小限制为500kb
+      max-request-size: 512000
+</code></pre>
+<pre><code class="yaml">application-dev.yuml
+server:
+  port: 8004
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/controller/HelloController.java
+package com.imooc.files.controller;
+
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+
+    public Object hello()&#123;
+        return GraceJSONResult.ok(&quot;Hello World!&quot;);
+    &#125;
+&#125;
+
+
+
+
+service-files  com/imooc/files/Application.java
+package com.imooc.files;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class) //排除数据源
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+-----------------------------------------------------------------------
+http://localhost:8004/hello
+&#123;
+    &quot;status&quot;: 200,
+    &quot;msg&quot;: &quot;操作成功！&quot;,
+    &quot;success&quot;: true,
+    &quot;data&quot;: &quot;Hello World!&quot;
+&#125;
+</code></pre>
+<h3 id="整合fdfs与service实现-文件上传"><a href="#整合fdfs与service实现-文件上传" class="headerlink" title="整合fdfs与service实现 [文件上传]"></a>整合fdfs与service实现 [文件上传]</h3><pre><code class="java">service-api  com/imooc/files/service/impl/UploaderServiceImpl.java
+package com.imooc.files.service.impl;
+
+import com.github.tobato.fastdfs.domain.fdfs.StorePath;
+import com.github.tobato.fastdfs.service.FastFileStorageClient;
+import com.imooc.files.service.UploaderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+@Service
+public class UploaderServiceImpl implements UploaderService &#123;
+    //注入客户端
+    @Autowired
+    public FastFileStorageClient fastFileStorageClient;
+
+    @Override
+    public String uploadFdfs(MultipartFile file, String fileExtName) throws IOException &#123;
+        StorePath storePath = fastFileStorageClient.uploadFile(file.getInputStream(), file.getSize(), fileExtName, null);
+        return storePath.getFullPath();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/files/service/UploaderService.java
+package com.imooc.files.service;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+public interface UploaderService &#123;
+    public String uploadFdfs(MultipartFile file, String fileExtName) throws IOException;
+&#125;
+</code></pre>
+<pre><code class="yaml">application.yml
+############################################################
+#
+# 用户微服务
+# web访问端口号  约定：8003
+#
+############################################################
+server:
+# port: 8003
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-file
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 512000 #请求文件大小限制为500kb
+      max-request-size: 512000
+
+############################################################
+#
+# fdfs配置信息
+#
+############################################################
+fdfs:
+  connect-timeout: 30
+  so-timeout: 30
+  tracker-list: 192.168.170.135:22122
+</code></pre>
+<h3 id="实现fastdfs图片存储-文件上传"><a href="#实现fastdfs图片存储-文件上传" class="headerlink" title="实现fastdfs图片存储 [文件上传]"></a>实现fastdfs图片存储 [文件上传]</h3><pre><code class="java">service-api  com/imooc/api/controller/files/FileUploadControllerApi.java
+package com.imooc.api.controller.files;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+@Api(value = &quot;文件上传的controller&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+@RequestMapping(&quot;fs&quot;)
+public interface FileUploadControllerApi &#123;
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadFace&quot;)
+    public GraceJSONResult uploadFace(@RequestParam String userId, MultipartFile file) throws Exception;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/controller/FileUploadController.java
+package com.imooc.files.controller;
+
+
+import com.imooc.api.controller.files.FileUploadControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.files.service.UploaderService;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class FileUploadController implements FileUploadControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FileUploadController.class);
+
+    @Autowired
+    private UploaderService uploaderService;
+
+    @Override
+    public GraceJSONResult uploadFace(String userId,
+                                      MultipartFile file) throws Exception &#123;
+        String path = &quot;&quot;;
+        if (file != null)&#123;
+        // 获得文件上传的名称
+            String fileName = file.getOriginalFilename();
+            //判断文件名不能为空
+            if (StringUtils.isNotBlank(fileName))&#123;
+                String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                //获得后缀名
+                String suffix = fileNameArr[fileNameArr.length - 1];
+                //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                )&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
+                &#125;
+                // 执行上传
+                path = uploaderService.uploadFdfs(file, suffix);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+            &#125;
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+        &#125;
+        logger.info(&quot;path = &quot; + path);
+        return GraceJSONResult.ok(path);
+    &#125;
+&#125;
+//此时去上传图片会报错 报跨域异常错误
+//需要在用户service-user里的Application 
+//@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+//贴到com/imooc/files/Application.java
+
+此时再次 http://writer.imoocnews.com:9090/imooc-news/writer/accountInfo.html
+提交头像
+Console：
+06:09.827 [http-nio-8004-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet &#39;dispatcherServlet&#39;
+06:09.827 [http-nio-8004-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet &#39;dispatcherServlet&#39;
+06:09.832 [http-nio-8004-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+06:09.882 [http-nio-8004-exec-2] INFO  c.imooc.api.aspect.ServiceLogAspect - ==== 开始执行 class com.imooc.files.service.impl.UploaderServiceImpl.uploadFdfs ====
+06:09.937 [http-nio-8004-exec-2] INFO  c.imooc.api.aspect.ServiceLogAspect - 当前执行耗时：55
+06:09.937 [http-nio-8004-exec-2] INFO  c.i.f.c.FileUploadController - path = imooc/M00/00/00/wKiqiGaPrpKAEt22AAAeb3kUsrg507.png
+
+http://192.168.170.136:8888/imooc/M00/00/00/wKiqiGaPrpKAEt22AAAeb3kUsrg507.png
+此时就可以看到Cat的图片了！
+</code></pre>
+<h3 id="完善用户头像上传"><a href="#完善用户头像上传" class="headerlink" title="完善用户头像上传"></a>完善用户头像上传</h3><pre><code class="java">【在用户返回的时候写死路径+path】
+return GraceJSONResult.ok(&quot;http://192.168.170.136:8888/&quot;path);
+
+给它包装一下 FileResource写一下
+service-files  com/imooc/files/controller/FileUploadController.java
+package com.imooc.files.controller;
+
+
+import com.imooc.api.controller.files.FileUploadControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.files.FileResource;
+import com.imooc.files.service.UploaderService;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class FileUploadController implements FileUploadControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FileUploadController.class);
+
+    @Autowired
+    private UploaderService uploaderService;
+
+    @Autowired
+    private FileResource fileResource;
+
+    @Override
+    public GraceJSONResult uploadFace(String userId,
+                                      MultipartFile file) throws Exception &#123;
+        String path = &quot;&quot;;
+        if (file != null)&#123;
+        // 获得文件上传的名称
+            String fileName = file.getOriginalFilename();
+            //判断文件名不能为空
+            if (StringUtils.isNotBlank(fileName))&#123;
+                String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                //获得后缀名
+                String suffix = fileNameArr[fileNameArr.length - 1];
+                //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                )&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
+                &#125;
+                // 执行上传
+                path = uploaderService.uploadFdfs(file, suffix);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+            &#125;
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+        &#125;
+        logger.info(&quot;path = &quot; + path);
+
+        String finalPath = &quot;&quot;;
+        if (StringUtils.isNotBlank(path))&#123;
+            finalPath = fileResource.getHost() + path;
+        &#125;  else&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_FAILD);
+        &#125;
+        return GraceJSONResult.ok(finalPath);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/FileResource.java
+package com.imooc.files;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+
+@Component
+@PropertySource(&quot;classpath:file-$&#123;spring.profiles.active&#125;.properties &quot;) //这个是在application.yml里面的 自动匹配
+@ConfigurationProperties(prefix = &quot;file&quot;)
+public class FileResource &#123;
+    private String host;
+
+    public String getHost() &#123;
+        return host;
+    &#125;
+
+    public void setHost(String host) &#123;
+        this.host = host;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="mysql">file-dev.properties
+# fastdfs storage 节点地址(nginx整合的web服务)
+file.host=http://192.168.170.136:8888/
+
+
+application.yml
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-file
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 512000 #请求文件大小限制为500kb
+      max-request-size: 512000
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+此时拦截器也要加一层
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UseActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UseActiveInterceptor useActiveInterceptor()&#123;
+        return new UseActiveInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;);
+//        registry.addInterceptor(userTokenInterceptor())
+//                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h3 id="图片大小控制的统一异常处理"><a href="#图片大小控制的统一异常处理" class="headerlink" title="图片大小控制的统一异常处理"></a>图片大小控制的统一异常处理</h3><pre><code class="java">dev-common  com/imooc/exception/GraceExceptionHandler.java
+package com.imooc.exception;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+/**
+ * 统一异常拦截处理
+ * 可以针对异常的类型进行捕获 然后返回json信息到前端
+ */
+@ControllerAdvice
+public class GraceExceptionHandler &#123;
+    @ExceptionHandler(MyCustomException.class)
+    //只要是这个类的异常都会进入下面的方法
+    @ResponseBody
+    public GraceJSONResult returnMyException(MyCustomException e)&#123;
+        e.printStackTrace(); //打印信息
+        return GraceJSONResult.exception(e.getResponseStatusEnum());
+    &#125;
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseBody
+    public GraceJSONResult returnMaxUploadSizeExceededException(MaxUploadSizeExceededException e)&#123;
+        e.printStackTrace(); //打印信息
+        return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_MAX_SIZE_ERROR);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="第三方云存储解决方案-【阿里OSS】"><a href="#第三方云存储解决方案-【阿里OSS】" class="headerlink" title="第三方云存储解决方案 【阿里OSS】"></a>第三方云存储解决方案 【阿里OSS】</h3><h5 id="FastDFS-中小型公司使用"><a href="#FastDFS-中小型公司使用" class="headerlink" title="FastDFS [中小型公司使用]"></a>FastDFS [中小型公司使用]</h5><ul>
+<li>水平扩容</li>
+<li>运维复杂</li>
+<li>开发复杂【增加图片效果 &amp; 人脸识别等】</li>
+</ul>
+<h5 id="云存储阿里OSS"><a href="#云存储阿里OSS" class="headerlink" title="云存储阿里OSS"></a><span style = "color:red">云存储阿里OSS</span></h5><ul>
+<li>SDK使用简单 [Java对接]</li>
+<li>提供强大的文件处理功能</li>
+<li>零运维成本</li>
+<li>图形化管理控制台</li>
+<li>CDN加速</li>
+<li>降低风险管理成本</li>
+</ul>
 <p>&#96;</p>
 
     </div>
