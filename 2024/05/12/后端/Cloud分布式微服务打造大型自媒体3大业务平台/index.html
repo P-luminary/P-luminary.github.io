@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -5937,6 +5937,612 @@ public class GraceExceptionHandler &#123;
 <li>CDN加速</li>
 <li>降低风险管理成本</li>
 </ul>
+<p><a target="_blank" rel="noopener" href="https://common-buy.aliyun.com/?commodityCode=ossbag&spm=5176.28061389.commonbuy2container.oss_rc_dp_cn_ZjqTabLinks_2.3949778b3uJsQM&regionId=cn-inland-common&accounttraceid=f8f4fe13a682404d8cab9b0254ae864ddivk">对象存储 OSS 资源包 (aliyun.com)</a>[购买 <strong><u>标准-本地冗余存储</u></strong> ＋ <u><strong>下行流量</strong></u> ]</p>
+<h3 id="控制台的基本配置使用-【阿里OSS】"><a href="#控制台的基本配置使用-【阿里OSS】" class="headerlink" title="控制台的基本配置使用 【阿里OSS】"></a>控制台的基本配置使用 【阿里OSS】</h3><p><a target="_blank" rel="noopener" href="https://oss.console.aliyun.com/overview">OSS管理控制台 (aliyun.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://billing-cost.console.aliyun.com/home/myfreetier?spm=5176.29188366.free-tier.4.47553e4dvJ4jbs">费用与成本 (aliyun.com)我的试用</a></p>
+<ul>
+<li>对象存储OSS → Bucket列表 → 创建Bucket → 存储冗余类型:<u>本地冗余存储</u> → 读写权限:<u>公共读</u></li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://oss.console.aliyun.com/bucket/oss-cn-shanghai/iimooc-news-dev/object">OSS管理控制台 (aliyun.com)</a></p>
+<ul>
+<li>创建成功后进入<u>iimooc-news-dev&#x2F;object</u> → 文件管理 → 文件列表 →<br><a target="_blank" rel="noopener" href="https://iimooc-news-dev.oss-cn-shanghai.aliyuncs.com/log.png">https://iimooc-news-dev.oss-cn-shanghai.aliyuncs.com/log.png</a></li>
+</ul>
+<pre><code class="xml">dev-common  pom.xml
+&lt;dependency&gt;
+  &lt;groupId&gt;com.aliyun.oss&lt;/groupId&gt;
+  &lt;artifactId&gt;aliyun-sdk-oss&lt;/artifactId&gt;
+  &lt;version&gt;3.10.2&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<ul>
+<li>对象存储OSS → SDK文档 → <strong>上传网络流</strong></li>
+<li>对象存储OSS → iimooc-news-dev → 概览 → 访问端口: 外网访问 <u>oss-cn-shanghai.aliyuncs.com</u></li>
+</ul>
+<h3 id="SDK的使用与项目整合"><a href="#SDK的使用与项目整合" class="headerlink" title="SDK的使用与项目整合"></a>SDK的使用与项目整合</h3><pre><code class="java">service-file  com/imooc/files/service/UploaderService.java
+package com.imooc.files.service;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+public interface UploaderService &#123;
+    /**
+     * 使用fastdfs 上传文件
+     */
+    public String uploadFdfs(MultipartFile file, String fileExtName) throws IOException;
+
+    /**
+     * 使用OSS 上传文件
+     */
+    public String uploadOSS(MultipartFile file,String userId, String fileExtName) throws IOException;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/service/impl/UploaderServiceImpl.java
+package com.imooc.files.service.impl;
+
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import com.github.tobato.fastdfs.domain.fdfs.StorePath;
+import com.github.tobato.fastdfs.service.FastFileStorageClient;
+import com.imooc.files.resource.FileResource;
+import com.imooc.files.service.UploaderService;
+import com.imooc.utils.extend.AliyunResource;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+@Service
+public class UploaderServiceImpl implements UploaderService &#123;
+    //注入客户端
+    @Autowired
+    public FastFileStorageClient fastFileStorageClient;
+    @Autowired
+    public FileResource fileResource;
+    @Autowired
+    public AliyunResource aliyunResource;
+    @Autowired
+    public Sid sid;
+
+    @Override
+    public String uploadFdfs(MultipartFile file, String fileExtName) throws IOException &#123;
+        StorePath storePath = fastFileStorageClient.uploadFile(file.getInputStream(), file.getSize(), fileExtName, null);
+        return storePath.getFullPath();
+    &#125;
+
+    @Override
+    public String uploadOSS(MultipartFile file, String userId, String fileExtName) throws IOException &#123;
+        // Endpoint以杭州为例，其它Region请按实际情况填写。
+        // 外网访问：oss-cn-shanghai.aliyuncs.com
+        String endpoint = fileResource.getEndpoint();
+        // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
+        String accessKeyId = aliyunResource.getAccessKeyID();
+        String accessKeySecret = aliyunResource.getAccessKeySecret();
+
+        // 创建OSSClient实例。
+        OSS ossClient = new OSSClientBuilder().build(endpoint,
+                accessKeyId,
+                accessKeySecret);
+        //  images/abc/10010/cat.png  路径不全 所以需要myObjectName拼接
+        String fileName = sid.nextShort();
+        String myObjectName = fileResource.getObjectName()
+                + &quot;/&quot; + userId + &quot;/&quot; + fileName + &quot;.&quot; + fileExtName;
+
+        // 上传网络流。
+        InputStream inputStream = file.getInputStream();
+        ossClient.putObject(fileResource.getBucketName(),
+                myObjectName,
+                inputStream);
+
+        // 关闭OSSClient。
+        ossClient.shutdown();
+        return myObjectName;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/resource/FileResource.java
+package com.imooc.files.resource;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+
+@Component
+@PropertySource(&quot;classpath:file-$&#123;spring.profiles.active&#125;.properties &quot;) //这个是在application.yml里面的 自动匹配
+@ConfigurationProperties(prefix = &quot;file&quot;)
+public class FileResource &#123;
+    private String host;
+    private String endpoint;
+    private String BucketName;
+    private String objectName;
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="mysql">file-dev.properties
+# fastdfs storage ????(nginx???web??)
+file.host=http://192.168.170.136:8888/
+
+# aliyun OSS
+file.endpoint=oss-cn-shanghai.aliyuncs.com
+
+file.BucketName=iimooc-news-dev
+
+# url name
+file.objectName=images/abc
+</code></pre>
+<h3 id="OSS整合实现文件上传"><a href="#OSS整合实现文件上传" class="headerlink" title="OSS整合实现文件上传"></a>OSS整合实现文件上传</h3><pre><code class="java"> // OSS执行上传
+//  path = uploaderService.uploadOSS(file, userId, suffix);
+
+service-files  com/imooc/files/controller/FileUploadController.java
+package com.imooc.files.controller;
+
+
+import com.imooc.api.controller.files.FileUploadControllerApi;
+import com.imooc.files.resource.FileResource;
+import com.imooc.files.service.UploaderService;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class FileUploadController implements FileUploadControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FileUploadController.class);
+
+    @Autowired
+    private UploaderService uploaderService;
+
+    @Autowired
+    private FileResource fileResource;
+
+    @Override
+    public GraceJSONResult uploadFace(String userId,
+                                      MultipartFile file) throws Exception &#123;
+        String path = &quot;&quot;;
+        if (file != null)&#123;
+        // 获得文件上传的名称
+            String fileName = file.getOriginalFilename();
+            //判断文件名不能为空
+            if (StringUtils.isNotBlank(fileName))&#123;
+                String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                //获得后缀名
+                String suffix = fileNameArr[fileNameArr.length - 1];
+                //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                )&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
+                &#125;
+                // fdfs执行上传
+//                path = uploaderService.uploadFdfs(file, suffix);
+                // OSS执行上传
+                path = uploaderService.uploadOSS(file, userId, suffix);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+            &#125;
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+        &#125;
+        logger.info(&quot;path = &quot; + path);
+
+        String finalPath = &quot;&quot;;
+        if (StringUtils.isNotBlank(path))&#123;
+            finalPath = fileResource.getHost() + path;
+        &#125;  else&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_FAILD);
+        &#125;
+        return GraceJSONResult.ok(finalPath);
+    &#125;
+&#125;
+
+=================================================================================
+http://writer.imoocnews.com:9090/imooc-news/writer/accountInfo.html
+此时更改头像上传后 头像会在OSS服务器的文件里面显示
+</code></pre>
+<pre><code class="mysql">file-dev.properties / file-prod.properties
+# fastdfs storage ????(nginx???web??)
+file.host=http://192.168.170.136:8888/
+
+# aliyun OSS
+file.endpoint=oss-cn-shanghai.aliyuncs.com
+
+file.BucketName=iimooc-news-dev
+
+# url name
+file.objectName=images/abc
+
+file.ossHost=https://iimooc-news-dev.oss-cn-shanghai.aliyuncs.com/
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/resource/FileResource.java
+@Component
+@PropertySource(&quot;classpath:file-$&#123;spring.profiles.active&#125;.properties &quot;) //这个是在application.yml里面的 自动匹配
+@ConfigurationProperties(prefix = &quot;file&quot;)
+public class FileResource &#123;
+    private String host;
+    private String endpoint;
+    private String BucketName;
+    private String objectName;
+    private String OssHost;
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/controller/FileUploadController.java
+    //用OSS执行上传 而不是 fdfs执行上传
+package com.imooc.files.controller;
+
+
+import com.imooc.api.controller.files.FileUploadControllerApi;
+import com.imooc.files.resource.FileResource;
+import com.imooc.files.service.UploaderService;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class FileUploadController implements FileUploadControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FileUploadController.class);
+
+    @Autowired
+    private UploaderService uploaderService;
+
+    @Autowired
+    private FileResource fileResource;
+
+    @Override
+    public GraceJSONResult uploadFace(String userId,
+                                      MultipartFile file) throws Exception &#123;
+        String path = &quot;&quot;;
+        if (file != null)&#123;
+        // 获得文件上传的名称
+            String fileName = file.getOriginalFilename();
+            //判断文件名不能为空
+            if (StringUtils.isNotBlank(fileName))&#123;
+                String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                //获得后缀名
+                String suffix = fileNameArr[fileNameArr.length - 1];
+                //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                )&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
+                &#125;
+                // fdfs执行上传
+//                path = uploaderService.uploadFdfs(file, suffix);
+                // OSS执行上传
+                path = uploaderService.uploadOSS(file, userId, suffix);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+            &#125;
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+        &#125;
+        logger.info(&quot;path = &quot; + path);
+
+        String finalPath = &quot;&quot;;
+        if (StringUtils.isNotBlank(path))&#123;
+//            finalPath = fileResource.getHost() + path;
+            finalPath = fileResource.getOssHost() + path;
+        &#125;  else&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_FAILD);
+        &#125;
+        return GraceJSONResult.ok(finalPath);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="图片自动审核-【阿里内容安全】"><a href="#图片自动审核-【阿里内容安全】" class="headerlink" title="图片自动审核 【阿里内容安全】"></a>图片自动审核 【阿里内容安全】</h3><h6 id="多媒体内容风险智能识别服务，降低色情、暴力、恐怖-由于太贵了就不买了-1000多呢"><a href="#多媒体内容风险智能识别服务，降低色情、暴力、恐怖-由于太贵了就不买了-1000多呢" class="headerlink" title="多媒体内容风险智能识别服务，降低色情、暴力、恐怖 (由于太贵了就不买了 1000多呢)"></a>多媒体内容风险智能识别服务，降低色情、暴力、恐怖 (<u>由于太贵了就不买了 1000多呢</u>)</h6><pre><code class="xml">dev-common  pom.xml
+ &lt;!-- 第三方云厂商相关的依赖 --&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-core&lt;/artifactId&gt;
+            &lt;version&gt;4.5.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun.oss&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-sdk-oss&lt;/artifactId&gt;
+            &lt;version&gt;3.10.2&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-green&lt;/artifactId&gt;
+            &lt;version&gt;3.5.1&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+            &lt;version&gt;1.2.51&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-codec&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-codec&lt;/artifactId&gt;
+            &lt;version&gt;1.10&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-io&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-io&lt;/artifactId&gt;
+            &lt;version&gt;2.4&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">dev-common  com/imooc/utils/extend/AliImageReviewUtils.java
+package com.imooc.utils.extend;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.IAcsClient;
+import com.aliyuncs.green.model.v20180509.ImageSyncScanRequest;
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.HttpResponse;
+import com.aliyuncs.http.MethodType;
+import com.aliyuncs.http.ProtocolType;
+import com.aliyuncs.profile.DefaultProfile;
+import com.aliyuncs.profile.IClientProfile;
+import com.imooc.enums.ArticleReviewLevel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.UUID;
+
+@Component
+public class AliImageReviewUtils &#123;
+
+//    文档地址：https://help.aliyun.com/document_detail/70292.html?spm=a2c4g.11186623.2.49.6f9c75fdjaW30p#reference-fzy-ztm-v2b
+
+    @Autowired
+    private AliyunResource aliyunResource;
+
+    public boolean reviewImage(String imgUrl) throws Exception &#123;
+        IClientProfile profile = DefaultProfile
+                .getProfile(&quot;cn-shanghai&quot;, &quot;LTAI4GKr5FyxhJViuMkRmptP&quot;, &quot;7oGFsKDwbn5Ek8iSrsPkSsT95pAmkG&quot;);
+        DefaultProfile
+                .addEndpoint(&quot;cn-shanghai&quot;, &quot;cn-shanghai&quot;, &quot;Green&quot;, &quot;green.cn-shanghai.aliyuncs.com&quot;);
+        IAcsClient client = new DefaultAcsClient(profile);
+
+        ImageSyncScanRequest imageSyncScanRequest = new ImageSyncScanRequest();
+        // 指定api返回格式
+        imageSyncScanRequest.setAcceptFormat(FormatType.JSON);
+        // 指定请求方法
+        imageSyncScanRequest.setMethod(MethodType.POST);
+        imageSyncScanRequest.setEncoding(&quot;utf-8&quot;);
+        //支持http和https
+        imageSyncScanRequest.setProtocol(ProtocolType.HTTP);
+
+
+        JSONObject httpBody = new JSONObject();
+        /**
+         * 设置要检测的场景, 计费是按照该处传递的场景进行
+         * 一次请求中可以同时检测多张图片，每张图片可以同时检测多个风险场景，计费按照场景计算
+         * 例如：检测2张图片，场景传递porn、terrorism，计费会按照2张图片鉴黄，2张图片暴恐检测计算
+         * porn: porn表示色情场景检测
+         * logo: 商标
+         * 其他详见官方文档
+         */
+        httpBody.put(&quot;scenes&quot;, Arrays.asList(&quot;terrorism&quot;));
+
+        /**
+         * 设置待检测图片， 一张图片一个task
+         * 多张图片同时检测时，处理的时间由最后一个处理完的图片决定
+         * 通常情况下批量检测的平均rt比单张检测的要长, 一次批量提交的图片数越多，rt被拉长的概率越高
+         * 这里以单张图片检测作为示例, 如果是批量图片检测，请自行构建多个task
+         */
+        JSONObject task = new JSONObject();
+        task.put(&quot;dataId&quot;, UUID.randomUUID().toString());
+
+        //设置图片链接
+        task.put(&quot;url&quot;, imgUrl);
+        task.put(&quot;time&quot;, new Date());
+        httpBody.put(&quot;tasks&quot;, Arrays.asList(task));
+
+        imageSyncScanRequest.setHttpContent(org.apache.commons.codec.binary.StringUtils.getBytesUtf8(httpBody.toJSONString()),
+                &quot;UTF-8&quot;, FormatType.JSON);
+
+        /**
+         * 请设置超时时间, 服务端全链路处理超时时间为10秒，请做相应设置
+         * 如果您设置的ReadTimeout小于服务端处理的时间，程序中会获得一个read timeout异常
+         */
+        imageSyncScanRequest.setConnectTimeout(3000);
+        imageSyncScanRequest.setReadTimeout(10000);
+        HttpResponse httpResponse = null;
+        try &#123;
+            httpResponse = client.doAction(imageSyncScanRequest);
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        //服务端接收到请求，并完成处理返回的结果
+        if (httpResponse != null &amp;&amp; httpResponse.isSuccess()) &#123;
+            JSONObject scrResponse = JSON.parseObject(org.apache.commons.codec.binary.StringUtils.newStringUtf8(httpResponse.getHttpContent()));
+            System.out.println(JSON.toJSONString(scrResponse, true));
+            int requestCode = scrResponse.getIntValue(&quot;code&quot;);
+            //每一张图片的检测结果
+            JSONArray taskResults = scrResponse.getJSONArray(&quot;data&quot;);
+            if (200 == requestCode) &#123;
+                for (Object taskResult : taskResults) &#123;
+                    //单张图片的处理结果
+                    int taskCode = ((JSONObject) taskResult).getIntValue(&quot;code&quot;);
+                    //图片要检测的场景的处理结果, 如果是多个场景，则会有每个场景的结果
+                    JSONArray sceneResults = ((JSONObject) taskResult).getJSONArray(&quot;results&quot;);
+                    if (200 == taskCode) &#123;
+                        Object sceneResult = sceneResults.get(0);
+//                        for (Object sceneResult : sceneResults) &#123;
+                        String scene = ((JSONObject) sceneResult).getString(&quot;scene&quot;);
+                        String suggestion = ((JSONObject) sceneResult).getString(&quot;suggestion&quot;);
+                        //根据scene和suggetion做相关处理
+                        //do something
+                        System.out.println(&quot;scene = [&quot; + scene + &quot;]&quot;);
+                        System.out.println(&quot;suggestion = [&quot; + suggestion + &quot;]&quot;);
+
+                        return suggestion.equalsIgnoreCase(ArticleReviewLevel.PASS.type) ? true : false;
+//                        &#125;
+                    &#125; else &#123;
+                        //单张图片处理失败, 原因视具体的情况详细分析
+                        System.out.println(&quot;task process fail. task response:&quot; + JSON.toJSONString(taskResult));
+                        return false;
+                    &#125;
+                &#125;
+            &#125; else &#123;
+                /**
+                 * 表明请求整体处理失败，原因视具体的情况详细分析
+                 */
+                System.out.println(&quot;the whole image scan request failed. response:&quot; + JSON.toJSONString(scrResponse));
+                return false;
+            &#125;
+        &#125;
+        return false;
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">dev-common  com/imooc/enums/ArticleReviewLevel.java
+package com.imooc.enums;
+
+/**
+ * @Desc: 文章自动审核结果 枚举
+ */
+public enum ArticleReviewLevel &#123;
+    PASS(&quot;pass&quot;, &quot;自动审核通过&quot;),
+    BLOCK(&quot;block&quot;, &quot;自动审核不通过&quot;),
+    REVIEW(&quot;review&quot;, &quot;建议人工复审&quot;);
+
+    public final String type;
+    public final String value;
+
+    ArticleReviewLevel(String type, String value) &#123;
+        this.type = type;
+        this.value = value;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/controller/FileUploadController.java
+package com.imooc.files.controller;
+
+import com.imooc.api.controller.files.FileUploadControllerApi;
+import com.imooc.files.resource.FileResource;
+import com.imooc.files.service.UploaderService;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.extend.AliImageReviewUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class FileUploadController implements FileUploadControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FileUploadController.class);
+
+    @Autowired
+    private UploaderService uploaderService;
+
+    @Autowired
+    private FileResource fileResource;
+
+    @Autowired
+    private AliImageReviewUtils aliImageReviewUtils;
+
+    @Override
+    public GraceJSONResult uploadFace(String userId,
+                                      MultipartFile file) throws Exception &#123;
+        String path = &quot;&quot;;
+        if (file != null)&#123;
+        // 获得文件上传的名称
+            String fileName = file.getOriginalFilename();
+            //判断文件名不能为空
+            if (StringUtils.isNotBlank(fileName))&#123;
+                String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                //获得后缀名
+                String suffix = fileNameArr[fileNameArr.length - 1];
+                //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                )&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
+                &#125;
+                // fdfs执行上传     要让外面得以访问 ①需要把内网的环境发布到公网 [内网穿透]  ②路由器端口映射到外网  ③fastdfs安装到公网里
+//                path = uploaderService.uploadFdfs(file, suffix);
+                // OSS执行上传
+                path = uploaderService.uploadOSS(file, userId, suffix);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+            &#125;
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_NULL_ERROR);
+        &#125;
+        logger.info(&quot;path = &quot; + path);
+
+        String finalPath = &quot;&quot;;
+        if (StringUtils.isNotBlank(path))&#123;
+//            finalPath = fileResource.getHost() + path;
+            finalPath = fileResource.getOssHost() + path;
+        &#125;  else&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_UPLOAD_FAILD);
+        &#125;
+           return GraceJSONResult.ok(finalPath);
+       // return GraceJSONResult.ok(doAliImageReview(finalPath)); //这里加了图片审核咯
+    &#125;
+
+    /**
+     * fastdfs 默认存在于内网，无法被阿里云内容管理服务检查到
+     * 需要配置到公网才行：
+     * 1. 内网穿透，natppp/花生壳/ngrok
+     * 2. 路由配置端口映射
+     * 3. fdfs 发布到云服务器
+     */
+
+   /* 功能实现不了图片识别 因为没有开通内容安全需要企业认证
+     public static final String FAILED_IMAGE_URL = &quot;https://iimooc-news-dev.oss-cn-shanghai.aliyuncs.com/images/abc/240629F21AK1BHX4/Review_Failed.png&quot;; //这里保存审核失败的照片 提前上传到Oss里直接用
+    private String doAliImageReview(String pendingImageUrl)&#123;
+        boolean result = false;
+        try &#123;
+            result = aliImageReviewUtils.reviewImage(pendingImageUrl);
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+        if (!result)&#123;
+            return FAILED_IMAGE_URL;
+        &#125;
+        return pendingImageUrl;
+    &#125;
+&#125;
+*/
+</code></pre>
+<h3 id="创建阿里云子账号-【阿里内容安全】"><a href="#创建阿里云子账号-【阿里内容安全】" class="headerlink" title="创建阿里云子账号 【阿里内容安全】"></a>创建阿里云子账号 【阿里内容安全】</h3><p><a target="_blank" rel="noopener" href="https://ram.console.aliyun.com/users">RAM访问控制 → 用户</a><br>[实在不行了 凑合着搞一下吧 功能实现不了图片识别 因为没有开通内容安全需要企业认证]</p>
+<blockquote>
+<p>登录名称：imooc-news-dev<br>显示名称：用于内容审核<br>√  OpenAPI访问调用<br>AccessKey ID：LTAI5tDAogErAXdm6mzTQHBz<br>AccessKeySeret：caZEHjbz2mPA6KOUEPmMJgadbRy6FC</p>
+<p>点击左侧列表下方 授权 → 新增授权 【授权主体：用于内容审核      权限策略：搜：green   … 管理内容安全的权限】</p>
+</blockquote>
+<h3 id="构建admin服务"><a href="#构建admin服务" class="headerlink" title="构建admin服务"></a>构建admin服务</h3><ul>
+<li>构建admin管理服务</li>
+<li>文章分类管理</li>
+<li>友情连接管理</li>
+<li>用户账号管理</li>
+<li>文章内容人工审核 [放在文章上传后的自动审核]</li>
+<li>admin管理人员账号分配 [用户人脸分配]</li>
+</ul>
+<p>5-1</p>
 <p>&#96;</p>
 
     </div>
