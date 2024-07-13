@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -2433,6 +2433,7 @@ public class RedisOperator &#123;
 <p>妈的有个超级大bug 整我一下午，<br>@Component public class RedisOperator {<br>@Autowired private StringRedisTemplate redisTemplate;}<br> 报错信息 Could not autowire. No beans of ‘StringRedisTemplate’ type found.</p>
 <p>在这里不要本末倒置 回归最原始的报错 那就是pom.xml中的导包依赖问题<br>有的时候直接复制的项目中的成熟依赖 根据时代的不同可能会导致丢失无法下载依赖<br>这时要去百度Maven库手动下载 并且手动添加 然后手动导入Project Structure → Libraries 手动导入自己需要的包[记住包的版本 也要在依赖里面体现 &lt; version &gt;]，而且如果有红色波浪线的包可以删除 再重新导入即可</p>
 </blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/arjelarxfc/article/details/78806384">Spring里遇到的一个问题，autowired时报找不到bean定义_autowired找不到bean-CSDN博客</a></p>
 <h3 id="完善发送短信接口"><a href="#完善发送短信接口" class="headerlink" title="完善发送短信接口"></a>完善发送短信接口</h3><pre><code class="java">com/imooc/api/controller/user/PassportControllerApi.java
 package com.imooc.api.controller.user;
 
@@ -6542,6 +6543,431 @@ public class FileUploadController implements FileUploadControllerApi &#123;
 <li>文章内容人工审核 [放在文章上传后的自动审核]</li>
 <li>admin管理人员账号分配 [用户人脸]</li>
 </ul>
+<pre><code class="xml">service-admin  pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;artifactId&gt;imooc-news-dev-service-admin&lt;/artifactId&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">service-admin  logback-spring.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+
+&lt;configuration&gt;
+    &lt;!-- 指定日志文件的存储地址，使用绝对路径 --&gt;
+&lt;!--    &lt;property name=&quot;LOG_HOME&quot; value=&quot;/workspaces/logs/imooc-news-dev/service-admin&quot;/&gt;--&gt;
+    &lt;property name=&quot;LOG_HOME&quot; value=&quot;C:/Users/Pluminary/Desktop/imooc-news-admin&quot;/&gt;
+
+    &lt;!-- Console 输出设置 --&gt;
+    &lt;appender name=&quot;CONSOLE&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder&gt;
+            &lt;!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符--&gt;
+            &lt;pattern&gt;%white(%d&#123;mm:ss.SSS&#125;) %green([%thread]) %cyan(%-5level) %yellow(%logger&#123;36&#125;) %magenta(-) %black(%msg%n)&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 按照每天生成日志文件 --&gt;
+    &lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;!-- 日志文件输出的文件名 --&gt;
+            &lt;fileNamePattern&gt;$&#123;LOG_HOME&#125;/service-admin.%d&#123;yyyy-MM-dd&#125;.log&lt;/fileNamePattern&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!--&lt;logger name=&quot;org.apache.ibatis.cache.decorators.LoggingCache&quot; level=&quot;DEBUG&quot; additivity=&quot;false&quot;&gt;--&gt;
+        &lt;!--&lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;--&gt;
+    &lt;!--&lt;/logger&gt;--&gt;
+
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;appender-ref ref=&quot;FILE&quot;/&gt;
+        &lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">service-admin:8005
+package com.imooc.admin;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
+@MapperScan(basePackages = &quot;com.imooc.user.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/HelloController.java
+package com.imooc.admin.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.RedisOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+
+    public Object hello() &#123;
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+----------------------------------------------------------------------------
+http://admin.imoocnews.com:8005/hello
+
+application-dev.yml
+server:
+  port: 8005
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+</code></pre>
+<h3 id="表设计与账号预分配-【admin账号】"><a href="#表设计与账号预分配-【admin账号】" class="headerlink" title="表设计与账号预分配 【admin账号】"></a>表设计与账号预分配 【admin账号】</h3><pre><code class="xml">service-admin  pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-openfeign&lt;/artifactId&gt;
+            &lt;version&gt;2.1.1.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/PWDTest.java
+package com.imooc.admin.controller;
+
+import org.springframework.security.crypto.bcrypt.BCrypt;
+
+public class PWDTest &#123;
+    public static void main(String[] args) &#123;
+        String pwd = BCrypt.hashpw(&quot;admin&quot;, BCrypt.gensalt());//加盐
+        System.out.println(pwd);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="持久层查询管理员-【admin账号】"><a href="#持久层查询管理员-【admin账号】" class="headerlink" title="持久层查询管理员 【admin账号】"></a>持久层查询管理员 【admin账号】</h3><p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/login.html">http://admin.imoocnews.com:9090/imooc-news/admin/login.html</a><br><a target="_blank" rel="noopener" href="https://www.runoob.com/w3cnote/windows-finds-port-usage.html">Windows下如何查看某个端口被谁占用 | 菜鸟教程 (runoob.com)</a></p>
+<pre><code class="java">//更改一下mybatis-generator-database里面的generatorConfig-admin.xml
+数据库表为：admin_user
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE generatorConfiguration
+        PUBLIC &quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd&quot;&gt;
+
+&lt;generatorConfiguration&gt;
+    &lt;context id=&quot;MysqlContext&quot; targetRuntime=&quot;MyBatis3Simple&quot; defaultModelType=&quot;flat&quot;&gt;
+        &lt;property name=&quot;beginningDelimiter&quot; value=&quot;`&quot;/&gt;
+        &lt;property name=&quot;endingDelimiter&quot; value=&quot;`&quot;/&gt;
+
+        &lt;!-- 通用mapper所在目录 --&gt;
+        &lt;plugin type=&quot;tk.mybatis.mapper.generator.MapperPlugin&quot;&gt;
+            &lt;property name=&quot;mappers&quot; value=&quot;com.imooc.my.mapper.MyMapper&quot;/&gt;
+        &lt;/plugin&gt;
+
+        &lt;jdbcConnection driverClass=&quot;com.mysql.jdbc.Driver&quot;
+                        connectionURL=&quot;jdbc:mysql://localhost:3306/imooc-news-dev&quot;
+                        userId=&quot;root&quot;
+                        password=&quot;root&quot;&gt;
+        &lt;/jdbcConnection&gt;
+
+        &lt;!-- 对应生成的pojo所在包 --&gt;
+        &lt;javaModelGenerator targetPackage=&quot;com.imooc.pojo&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot;/&gt;
+
+        &lt;!-- 对应生成的mapper所在目录 --&gt;
+        &lt;sqlMapGenerator targetPackage=&quot;mapper.admin&quot; targetProject=&quot;mybatis-generator-database/src/main/resources&quot;/&gt;
+
+        &lt;!-- 配置mapper对应的java映射 --&gt;
+        &lt;javaClientGenerator targetPackage=&quot;com.imooc.admin.mapper&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot; type=&quot;XMLMAPPER&quot;/&gt;
+
+        &lt;!-- 数据库表 --&gt;
+        &lt;table tableName=&quot;admin_user&quot;&gt;&lt;/table&gt;
+
+    &lt;/context&gt;
+&lt;/generatorConfiguration&gt;
+</code></pre>
+<pre><code class="java">mybatis-generator-database的把AdminUser拷贝到dev-model的com/imooc/pojo下
+mybatis-generator-database的把AdminUserMapper拷贝到service-admin的resources mapper/AdminUserMapper.xml
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+
+public interface AdminUserService &#123;
+    /**
+     * 获得管理员的用户信息
+     * @param username
+     * @return
+     */
+    public AdminUser queryAdminByUsername(String username);
+&#125;
+
+
+
+service-admin  com/imooc/admin/service/impl/AdminUserServiceImpl.java
+package com.imooc.admin.service.impl;
+
+import com.imooc.admin.mapper.AdminUserMapper;
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.pojo.AdminUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import tk.mybatis.mapper.entity.Example;
+
+public class AdminUserServiceImpl implements AdminUserService &#123;
+    @Autowired
+    public AdminUserMapper adminUserMapper;
+    @Override
+    public AdminUser queryAdminByUsername(String username) &#123;
+        Example adminExample = new Example(AdminUser.class);
+        Example.Criteria Criteria = adminExample.createCriteria();
+        Criteria.andEqualTo(&quot;username&quot;,username);
+        AdminUser admin = adminUserMapper.selectOneByExample(adminExample);
+        return admin;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/mapper/AdminUserMapper.java
+package com.imooc.admin.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.AdminUser;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface AdminUserMapper extends MyMapper&lt;AdminUser&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  mapper/AdminUserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.admin.mapper.AdminUserMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.AdminUser&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;username&quot; property=&quot;username&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;password&quot; property=&quot;password&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;face_id&quot; property=&quot;faceId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;admin_name&quot; property=&quot;adminName&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;created_time&quot; property=&quot;createdTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+    &lt;result column=&quot;updated_time&quot; property=&quot;updatedTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="用户名密码登录-【admin账号】"><a href="#用户名密码登录-【admin账号】" class="headerlink" title="用户名密码登录 【admin账号】"></a>用户名密码登录 【admin账号】</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/arjelarxfc/article/details/78806384">Spring里遇到的一个问题，autowired时报找不到bean定义_autowired找不到bean-CSDN博客</a></p>
+<h6 id="其次上述问题一定要去找Controller-Service-ServiceImpl-和-启动类里面的有没有正确扫描包-MapperScan-basePackages-x3D-“com-imooc-admin-mapper”"><a href="#其次上述问题一定要去找Controller-Service-ServiceImpl-和-启动类里面的有没有正确扫描包-MapperScan-basePackages-x3D-“com-imooc-admin-mapper”" class="headerlink" title="其次上述问题一定要去找Controller Service ServiceImpl 和 启动类里面的有没有正确扫描包@MapperScan(basePackages &#x3D; “com.imooc.admin.mapper”)"></a>其次上述问题一定要去找Controller Service ServiceImpl 和 启动类里面的有没有正确扫描包@MapperScan(basePackages &#x3D; “com.imooc.admin.mapper”)</h6><pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
+package com.imooc.admin.controller;
+
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.admin.AdminMngControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.utils.RedisOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+
+@RestController
+public class AdminMngController extends BaseController implements AdminMngControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(AdminMngController.class);
+
+    @Autowired
+    private AdminUserService adminUserService;
+
+    @Autowired
+    private RedisOperator redis;
+
+    @Override
+    public Object adminLogin(AdminLoginBO adminLoginBO, HttpServletRequest request, HttpServletResponse response) &#123;
+        // 0. TODO 验证BO中的用户名和密码不为空
+
+        // 1.查询admin用户的信息
+        AdminUser admin = adminUserService.queryAdminByUsername(adminLoginBO.getUsername());
+        // 2.判断admin不为空，如果为空则登录失败
+        if (admin == null) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+        // 3.判断密码是否匹配
+        boolean isPwdMath = BCrypt.checkpw(adminLoginBO.getPassword(), admin.getPassword());
+        if (isPwdMath)&#123;
+            doLoginSettings(admin,request,response);
+            return GraceJSONResult.ok();
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+    &#125;
+
+    /**
+     * 用于admin用户登录过后的基本信息设置
+     */
+    private void doLoginSettings(AdminUser admin, HttpServletRequest request, HttpServletResponse response)&#123;
+        // 保存token放入到redis中
+        String token = UUID.randomUUID().toString();
+        redis.set(REDIS_ADMIN_TOKEN + &quot;:&quot; + admin.getId(),token);
+
+        // 保存admin登录基本token信息到cookie中
+        setCookie(request, response, &quot;atoken&quot;, token, COOKIE_MONTH);
+        setCookie(request, response, &quot;aid&quot;, admin.getId(), COOKIE_MONTH);
+        setCookie(request, response, &quot;aname&quot;, admin.getAdminName(), COOKIE_MONTH);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+
+public interface AdminUserService &#123;
+    /**
+     * 获得管理员的用户信息
+     * @param username
+     * @return
+     */
+    public AdminUser queryAdminByUsername(String username);
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/AdminUserServiceImpl.java
+package com.imooc.admin.service.impl;
+
+import com.imooc.admin.mapper.AdminUserMapper;
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.pojo.AdminUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
+
+@Service
+public class AdminUserServiceImpl implements AdminUserService &#123;
+    @Autowired
+    public AdminUserMapper adminUserMapper;
+    @Override
+    public AdminUser queryAdminByUsername(String username) &#123;
+        Example adminExample = new Example(AdminUser.class);
+        Example.Criteria Criteria = adminExample.createCriteria();
+        Criteria.andEqualTo(&quot;username&quot;,username);
+        AdminUser admin = adminUserMapper.selectOneByExample(adminExample);
+        return admin;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/mapper/AdminUserMapper.java
+package com.imooc.admin.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.AdminUser;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface AdminUserMapper extends MyMapper&lt;AdminUser&gt; &#123;
+&#125;
+
+
+service-admin  resources/mapper/AdminUserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.admin.mapper.AdminUserMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.AdminUser&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;username&quot; property=&quot;username&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;password&quot; property=&quot;password&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;face_id&quot; property=&quot;faceId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;admin_name&quot; property=&quot;adminName&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;created_time&quot; property=&quot;createdTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+    &lt;result column=&quot;updated_time&quot; property=&quot;updatedTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/Application.java
+package com.imooc.admin;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
+@MapperScan(basePackages = &quot;com.imooc.admin.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="mysql">service-admin  application-dev.yml
+server:
+  port: 8005
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+## setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+
+## open mybatis log in dev
+#mybatis:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#
+</code></pre>
+<p>5-5</p>
 <p>&#96;</p>
 
     </div>
