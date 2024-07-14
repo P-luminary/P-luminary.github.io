@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -6860,6 +6860,8 @@ public class AdminMngController extends BaseController implements AdminMngContro
         setCookie(request, response, &quot;aname&quot;, admin.getAdminName(), COOKIE_MONTH);
     &#125;
 &#125;
+---------------------------------------------------------------------------------
+http://admin.imoocnews.com:9090/imooc-news/admin/login.html
 </code></pre>
 <pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
 package com.imooc.admin.service;
@@ -6967,7 +6969,654 @@ website:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 #
 </code></pre>
-<p>5-5</p>
+<h3 id="校验admin账号唯一-【admin账号】"><a href="#校验admin账号唯一-【admin账号】" class="headerlink" title="校验admin账号唯一 【admin账号】"></a>校验admin账号唯一 【admin账号】</h3><p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/adminMng.html">http://admin.imoocnews.com:9090/imooc-news/admin/adminMng.html</a></p>
+<pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
+
+  @Override
+    public Object adminLogin(String username) &#123;
+        checkAdminExist(username);
+        return GraceJSONResult.ok();
+    &#125;
+    private void checkAdminExist(String username)&#123;
+        AdminUser admin = adminUserService.queryAdminByUsername(username);
+        if (admin != null)&#123;
+            GraceException.display(ResponseStatusEnum.ADMIN_USERNAME_EXIST_ERROR);
+        &#125;
+
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/AdminMngControllerApi.java
+package com.imooc.api.controller.admin;
+
+import com.imooc.pojo.bo.AdminLoginBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;管理员admin维护&quot;,tags = &#123;&quot;管理员admin维护的Controller&quot;&#125;)
+@RequestMapping(&quot;adminMng&quot;)
+public interface AdminMngControllerApi &#123;
+    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminLogin&quot;)
+    public Object adminLogin(@RequestBody AdminLoginBO adminLoginBO,
+                             HttpServletRequest request,
+                             HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;,notes = &quot;查询admin用户名是否存在&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminIsExist&quot;)
+    public Object adminLogin(@RequestParam String username); //传回来
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UseActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UseActiveInterceptor useActiveInterceptor()&#123;
+        return new UseActiveInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;);
+
+        //        registry.addInterceptor(userTokenInterceptor())
+//                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h3 id="创建admin账号-【admin账号】"><a href="#创建admin账号-【admin账号】" class="headerlink" title="创建admin账号 【admin账号】"></a>创建admin账号 【admin账号】</h3><p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/userList.html">用户管理 | 运营管理平台 (imoocnews.com)</a><br><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/adminMng.html">http://admin.imoocnews.com:9090/imooc-news/admin/adminMng.html</a></p>
+<pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
+package com.imooc.admin.controller;
+
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.admin.AdminMngControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+
+@RestController
+public class AdminMngController extends BaseController implements AdminMngControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(AdminMngController.class);
+
+    @Autowired
+    private AdminUserService adminUserService;
+
+    @Autowired
+    private RedisOperator redis;
+
+    @Override
+    public GraceJSONResult adminLogin(AdminLoginBO adminLoginBO, HttpServletRequest request, HttpServletResponse response) &#123;
+        // 0. TODO 验证BO中的用户名和密码不为空
+
+        // 1.查询admin用户的信息
+        AdminUser admin = adminUserService.queryAdminByUsername(adminLoginBO.getUsername());
+        // 2.判断admin不为空，如果为空则登录失败
+        if (admin == null) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+        // 3.判断密码是否匹配
+        boolean isPwdMath = BCrypt.checkpw(adminLoginBO.getPassword(), admin.getPassword());
+        if (isPwdMath)&#123;
+            doLoginSettings(admin,request,response);
+            return GraceJSONResult.ok();
+        &#125;else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+    &#125;
+
+
+    /**
+     * 用于admin用户登录过后的基本信息设置
+     */
+    private void doLoginSettings(AdminUser admin, HttpServletRequest request, HttpServletResponse response)&#123;
+        // 保存token放入到redis中
+        String token = UUID.randomUUID().toString();
+        redis.set(REDIS_ADMIN_TOKEN + &quot;:&quot; + admin.getId(),token);
+
+        // 保存admin登录基本token信息到cookie中
+        setCookie(request, response, &quot;atoken&quot;, token, COOKIE_MONTH);
+        setCookie(request, response, &quot;aid&quot;, admin.getId(), COOKIE_MONTH);
+        setCookie(request, response, &quot;aname&quot;, admin.getAdminName(), COOKIE_MONTH);
+    &#125;
+
+
+    @Override
+    public GraceJSONResult adminLogin(String username) &#123;
+        checkAdminExist(username);
+        return GraceJSONResult.ok();
+    &#125;
+
+    private void checkAdminExist(String username)&#123;
+        AdminUser admin = adminUserService.queryAdminByUsername(username);
+        if (admin != null)&#123;
+            GraceException.display(ResponseStatusEnum.ADMIN_USERNAME_EXIST_ERROR);
+        &#125;
+
+    &#125;
+
+    @Override
+    public GraceJSONResult addNewAdmin(NewAdminBO newAdminBO,HttpServletRequest request,HttpServletResponse response) &#123;
+        // 0. TODO 验证BO中的用户名和密码不为空
+
+        // 1. base64不为空，则代表人脸入库，否则需要用户输入密码和确认密码
+        if (StringUtils.isBlank(newAdminBO.getImg64()))&#123;
+            if (StringUtils.isBlank(newAdminBO.getPassword()) || StringUtils.isBlank(newAdminBO.getConfirmPassword()))&#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_PASSWORD_NULL_ERROR);
+            &#125;
+        &#125;
+        // 2. 密码不为空，则必须判断两次输入一致
+        if (StringUtils.isNotBlank(newAdminBO.getPassword())) &#123;
+            if (!newAdminBO.getPassword().equalsIgnoreCase(newAdminBO.getConfirmPassword())) &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_PASSWORD_ERROR);
+            &#125;
+        &#125;
+        // 3. 校验用户名唯一
+        checkAdminExist(newAdminBO.getUsername());
+
+        // 4.调用service存入admin信息
+        adminUserService.createAdminUser(newAdminBO);
+        return GraceJSONResult.ok();
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/AdminMngControllerApi.java
+package com.imooc.api.controller.admin;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;管理员admin维护&quot;,tags = &#123;&quot;管理员admin维护的Controller&quot;&#125;)
+@RequestMapping(&quot;adminMng&quot;)
+public interface AdminMngControllerApi &#123;
+    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminLogin&quot;)
+    public GraceJSONResult adminLogin(@RequestBody AdminLoginBO adminLoginBO,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;,notes = &quot;查询admin用户名是否存在&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminIsExist&quot;)
+    public GraceJSONResult adminLogin(@RequestParam String username); //传回来
+
+    @ApiOperation(value = &quot;创建admin&quot;,notes = &quot;创建admin&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/addNewAdmin&quot;)
+    public GraceJSONResult addNewAdmin(@RequestBody NewAdminBO newAdminBO,HttpServletRequest request,HttpServletResponse response); //传回来
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/AdminUserServiceImpl.java
+package com.imooc.admin.service.impl;
+
+import com.imooc.admin.mapper.AdminUserMapper;
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+
+@Service
+public class AdminUserServiceImpl implements AdminUserService &#123;
+    @Autowired
+    public AdminUserMapper adminUserMapper;
+    @Autowired
+    public Sid sid;
+    @Override
+    public AdminUser queryAdminByUsername(String username) &#123;
+        Example adminExample = new Example(AdminUser.class);
+        Example.Criteria Criteria = adminExample.createCriteria();
+        Criteria.andEqualTo(&quot;username&quot;,username);
+        AdminUser admin = adminUserMapper.selectOneByExample(adminExample);
+        return admin;
+    &#125;
+
+    @Override
+    public void createAdminUser(NewAdminBO newAdminBO) &#123;
+        String adminId = sid.nextShort(); //获得主键
+        AdminUser adminUser = new AdminUser();
+        adminUser.setId(adminId);
+        adminUser.setUsername(newAdminBO.getUsername());
+        adminUser.setAdminName(newAdminBO.getAdminName());
+        // 如果密码不为空 则密码需要加密 存入数据库
+        if (StringUtils.isNotBlank(newAdminBO.getPassword()))&#123;
+            String pwd = BCrypt.hashpw(newAdminBO.getPassword(), BCrypt.gensalt());
+            adminUser.setPassword(pwd);
+        &#125;
+
+        // 如果人脸上传以后，则有faceId，需要和admin信息关联存储入库
+        if (StringUtils.isNotBlank(newAdminBO.getFaceId()))&#123;
+            adminUser.setFaceId(newAdminBO.getFaceId());
+        &#125;
+        adminUser.setCreatedTime(new Date());
+        adminUser.setUpdatedTime(new Date());
+
+        int insert = adminUserMapper.insert(adminUser);
+        if (insert != 1)&#123;
+            GraceException.display(ResponseStatusEnum.ADMIN_CREATE_ERROR);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/admin/service/AdminUserService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+
+public interface AdminUserService &#123;
+    /**
+     * 获得管理员的用户信息
+     * @param username
+     * @return
+     */
+    public AdminUser queryAdminByUsername(String username);
+
+    /**
+     * 新增管理员
+     *
+     * @param newAdminBO
+     */
+    public void createAdminUser(NewAdminBO newAdminBO);
+&#125;
+</code></pre>
+<h3 id="查看admin列表-【admin账号】-分页查询"><a href="#查看admin列表-【admin账号】-分页查询" class="headerlink" title="查看admin列表 【admin账号】(分页查询)"></a>查看admin列表 【admin账号】(分页查询)</h3><pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
+ @Override
+    public GraceJSONResult getAdminList(Integer page, Integer pageSize) &#123;
+        if (page == null)&#123;
+            page = COMMON_START_PAGE;
+        &#125;
+        if (pageSize == null)&#123;//由于是固定数值 可以去basecontroller加一下
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+        adminUserService.queryAdminList(page, pageSize);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+
+public interface AdminUserService &#123;
+    /**
+     * 获得管理员的用户信息
+     * @param username
+     * @return
+     */
+    public AdminUser queryAdminByUsername(String username);
+
+    /**
+     * 新增管理员
+     *
+     * @param newAdminBO
+     */
+    public void createAdminUser(NewAdminBO newAdminBO);
+
+
+    /**
+     * 分页查询admin列表
+     * @param page
+     * @param pageSize
+     */
+    public void queryAdminList(Integer page, Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/AdminUserServiceImpl.java
+@Override
+    public void queryAdminList(Integer page, Integer pageSize) &#123;
+        Example adminExample = new Example(AdminUser.class);
+        adminExample.orderBy(&quot;createdTime&quot;).asc();
+        PageHelper.startPage(page, pageSize);
+        List&lt;AdminUser&gt; adminUserList = adminUserMapper.selectByExample(adminExample);
+        System.out.println(adminUserList);
+    &#125; //下面一节会有改动
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/Swagger2.java
+package com.imooc.api.config;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.RequestHandler;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@Configuration //Springboot啓動的時候會被掃描到并且加載
+@EnableSwagger2
+public class Swagger2 &#123;
+
+    //    http://localhost:8088/swagger-ui.html     原路径
+    //    http://localhost:8088/doc.html            新路径
+
+    // 配置swagger2核心配置 docket
+    @Bean
+    public Docket createRestApi() &#123;
+        Predicate&lt;RequestHandler&gt; adminPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.admin.controller&quot;);
+//        Predicate&lt;RequestHandler&gt; articlePredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.article.controller&quot;);
+        Predicate&lt;RequestHandler&gt; userPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.user.controller&quot;);
+        Predicate&lt;RequestHandler&gt; filesPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.files.controller&quot;);
+
+        return new Docket(DocumentationType.SWAGGER_2)  // 指定api类型为swagger2
+                .apiInfo(apiInfo())                 // 用于定义api文档汇总信息
+                .select()
+                .apis(Predicates.or(userPredicate, adminPredicate, filesPredicate))
+//                .apis(Predicates.or(adminPredicate, articlePredicate, userPredicate, filesPredicate))
+                .paths(PathSelectors.any())         // 所有controller
+                .build();
+    &#125;
+
+    private ApiInfo apiInfo() &#123;
+        return new ApiInfoBuilder()
+                .title(&quot;慕课新闻·自媒体接口api&quot;)                       // 文档页标题
+                .contact(new Contact(&quot;imooc&quot;,
+                        &quot;https://www.imooc.com&quot;,
+                        &quot;abc@imooc.com&quot;))                   // 联系人信息
+                .description(&quot;专为慕课新闻·自媒体平台提供的api文档&quot;)      // 详细信息
+                .version(&quot;1.0.1&quot;)                               // 文档版本号
+                .termsOfServiceUrl(&quot;https://www.imooc.com&quot;)     // 网站地址
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/AdminMngControllerApi.java
+package com.imooc.api.controller.admin;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;管理员admin维护&quot;,tags = &#123;&quot;管理员admin维护的Controller&quot;&#125;)
+@RequestMapping(&quot;adminMng&quot;)
+public interface AdminMngControllerApi &#123;
+    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminLogin&quot;)
+    public GraceJSONResult adminLogin(@RequestBody AdminLoginBO adminLoginBO,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;,notes = &quot;查询admin用户名是否存在&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminIsExist&quot;)
+    public GraceJSONResult adminLogin(@RequestParam String username); //传回来
+
+    @ApiOperation(value = &quot;创建admin&quot;,notes = &quot;创建admin&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/addNewAdmin&quot;)
+    public GraceJSONResult addNewAdmin(@RequestBody NewAdminBO newAdminBO,HttpServletRequest request,HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin列表&quot;,notes = &quot;查询admin列表&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getAdminList&quot;)
+    public GraceJSONResult getAdminList(@ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;,  required = false) @RequestParam Integer page,
+                                        @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页查询每一页显示的条数&quot;, required = false) @RequestParam Integer pageSize);
+&#125;
+
+-----------------------------------------------------------------
+http://admin.imoocnews.com:8005/doc.html
+</code></pre>
+<h3 id="封装PagedGridResult分页数据-调试分页接口-【admin账号】"><a href="#封装PagedGridResult分页数据-调试分页接口-【admin账号】" class="headerlink" title="封装PagedGridResult分页数据_调试分页接口 【admin账号】"></a><span style = "color:red">封装<del>PagedGridResult</del></span>分页数据_调试分页接口 【admin账号】</h3><pre><code class="java">service-admin  com/imooc/admin/service/impl/AdminUserServiceImpl.java
+    @Override
+    public PagedGridResult queryAdminList(Integer page, Integer pageSize) &#123;
+        Example adminExample = new Example(AdminUser.class);
+        adminExample.orderBy(&quot;createdTime&quot;).asc();
+        PageHelper.startPage(page, pageSize);
+        List&lt;AdminUser&gt; adminUserList = adminUserMapper.selectByExample(adminExample);
+        return setterPagedGrid(adminUserList, page);
+    &#125;
+
+    private PagedGridResult setterPagedGrid( List&lt;?&gt; adminUserList, Integer page)&#123; //类型是? 后期不确定是什么泛型
+        PageInfo&lt;?&gt; pageList = new PageInfo&lt;&gt;(adminUserList);
+        PagedGridResult gridResult = new PagedGridResult();
+        gridResult.setRows(adminUserList);
+        gridResult.setPage(page);
+        gridResult.setRecords(pageList.getPages());
+        gridResult.setTotal(pageList.getTotal());
+        return gridResult;
+
+    &#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.utils.PagedGridResult;
+
+public interface AdminUserService &#123;
+    /**
+     * 获得管理员的用户信息
+     * @param username
+     * @return
+     */
+    public AdminUser queryAdminByUsername(String username);
+
+    /**
+     * 新增管理员
+     *
+     * @param newAdminBO
+     */
+    public void createAdminUser(NewAdminBO newAdminBO);
+
+
+    /**
+     * 分页查询admin列表
+     * @param page
+     * @param pageSize
+     */
+    public PagedGridResult queryAdminList(Integer page, Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">dev-common  com/imooc/utils/PagedGridResult.java
+package com.imooc.utils;
+
+import java.util.List;
+
+/**
+ * 
+ * @Title: PagedGridResult.java
+ * @Package com.imooc.utils
+ * @Description: 用来返回分页Grid的数据格式
+ * Copyright: Copyright (c) 2019
+ */
+public class PagedGridResult &#123;
+    
+    private int page;            // 当前页数
+    private long total;            // 总页数
+    private long records;        // 总记录数
+    private List&lt;?&gt; rows;        // 每行显示的内容
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+//拦截器新增地址
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UseActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UseActiveInterceptor useActiveInterceptor()&#123;
+        return new UseActiveInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;);
+        registry.addInterceptor(userTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
+                .addPathPatterns(&quot;/adminMng/adminIsExist&quot;)
+                .addPathPatterns(&quot;/adminMng/addNewAdmin&quot;)
+                .addPathPatterns(&quot;/adminMng/getAdminList&quot;);
+
+    &#125;
+&#125;
+</code></pre>
+<h3 id="账号注销-【admin账号】-删掉redis和cookie数据"><a href="#账号注销-【admin账号】-删掉redis和cookie数据" class="headerlink" title="账号注销 【admin账号】(删掉redis和cookie数据)"></a>账号注销 【admin账号】(删掉redis和cookie数据)</h3><pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
+ @Override
+    public GraceJSONResult adminLogout(String adminId, HttpServletRequest request, HttpServletResponse response) &#123;
+        // 从redis中删除admin的会话token
+        redis.del(REDIS_ADMIN_TOKEN + &quot;:&quot; + adminId);
+        // 从cookie删除admin登录的相关信息数据
+        deleteCookie(request, response,&quot;atoken&quot;);
+        deleteCookie(request, response,&quot;aid&quot;);
+        deleteCookie(request, response,&quot;aname&quot;);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/AdminMngControllerApi.java
+package com.imooc.api.controller.admin;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;管理员admin维护&quot;,tags = &#123;&quot;管理员admin维护的Controller&quot;&#125;)
+@RequestMapping(&quot;adminMng&quot;)
+public interface AdminMngControllerApi &#123;
+    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminLogin&quot;)
+    public GraceJSONResult adminLogin(@RequestBody AdminLoginBO adminLoginBO,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;,notes = &quot;查询admin用户名是否存在&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminIsExist&quot;)
+    public GraceJSONResult adminLogin(@RequestParam String username); //传回来
+
+    @ApiOperation(value = &quot;创建admin&quot;,notes = &quot;创建admin&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/addNewAdmin&quot;)
+    public GraceJSONResult addNewAdmin(@RequestBody NewAdminBO newAdminBO,HttpServletRequest request,HttpServletResponse response);
+
+    @ApiOperation(value = &quot;查询admin列表&quot;,notes = &quot;查询admin列表&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getAdminList&quot;)
+    public GraceJSONResult getAdminList(@ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;,  required = false) @RequestParam Integer page,
+                                        @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页查询每一页显示的条数&quot;, required = false) @RequestParam Integer pageSize);
+
+    @ApiOperation(value = &quot;admin退出登录&quot;,notes = &quot;admin退出登录&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/adminLogout&quot;)
+    public GraceJSONResult adminLogout(@RequestParam String adminId,HttpServletRequest request,HttpServletResponse response );
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java
+public void setCookieValue(HttpServletRequest request,
+                               HttpServletResponse response,
+                               String cookieName,
+                               String cookieValue,
+                               Integer maxAge) &#123;
+        Cookie cookie = new Cookie(cookieName, cookieValue);
+        cookie.setMaxAge(maxAge);
+//        cookie.setDomain(&quot;imoocnews.com&quot;);
+        cookie.setDomain(DOMAIN_NAME);
+        cookie.setPath(&quot;/&quot;);//都用cookie
+        response.addCookie(cookie);//把cookie传入
+    &#125;
+
+    public void deleteCookie(HttpServletRequest request,HttpServletResponse response,String cookieName)&#123;
+        try &#123;
+            String deleteValue = URLEncoder.encode(&quot;&quot;, &quot;utf-8&quot;);
+            setCookieValue(request, response, cookieName, deleteValue, COOKIE_DELETE);
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+</code></pre>
+<p>5-10</p>
 <p>&#96;</p>
 
     </div>
