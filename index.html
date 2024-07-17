@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#00bcd4>
                 前端
             </a>
         </span>
@@ -8321,8 +8321,9 @@ public class PagedGridResult &#123;
 //拦截器新增地址
 package com.imooc.api.config;
 
+import com.imooc.api.interceptors.AdminTokenInterceptor;
 import com.imooc.api.interceptors.PassportInterceptor;
-import com.imooc.api.interceptors.UseActiveInterceptor;
+import com.imooc.api.interceptors.UserActiveInterceptor;
 import com.imooc.api.interceptors.UserTokenInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8340,9 +8341,15 @@ public class InterceptorConfig implements WebMvcConfigurer &#123;
         return new UserTokenInterceptor();
     &#125;
     @Bean
-    public UseActiveInterceptor useActiveInterceptor()&#123;
-        return new UseActiveInterceptor();
+    public UserActiveInterceptor userActiveInterceptor() &#123;
+        return new UserActiveInterceptor();
     &#125;
+
+    @Bean
+    public AdminTokenInterceptor adminTokenInterceptor() &#123;
+        return new AdminTokenInterceptor();
+    &#125;
+
 
     @Override
     public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
@@ -8352,7 +8359,7 @@ public class InterceptorConfig implements WebMvcConfigurer &#123;
                 .addPathPatterns(&quot;/user/getAccountInfo&quot;)
                 .addPathPatterns(&quot;/user/updateUserId&quot;)
                 .addPathPatterns(&quot;/fs/uploadFace&quot;);
-        registry.addInterceptor(userTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
+        registry.addInterceptor(adminTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
                 .addPathPatterns(&quot;/adminMng/adminIsExist&quot;)
                 .addPathPatterns(&quot;/adminMng/addNewAdmin&quot;)
                 .addPathPatterns(&quot;/adminMng/getAdminList&quot;);
@@ -8360,21 +8367,237 @@ public class InterceptorConfig implements WebMvcConfigurer &#123;
     &#125;
 &#125;
 </code></pre>
+<pre><code class="java">service-api  com/imooc/api/interceptors/AdminTokenInterceptor.java
+package com.imooc.api.interceptors;
+
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import static com.imooc.api.BaseController.REDIS_ADMIN_TOKEN;
+
+public class AdminTokenInterceptor extends BaseInterceptor implements HandlerInterceptor &#123;
+
+    /**
+     * 拦截请求，在访问controller调用之前
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+
+        String adminUserId = request.getHeader(&quot;adminUserId&quot;);
+        String adminUserToken = request.getHeader(&quot;adminUserToken&quot;);
+
+        System.out.println(&quot;=====================================================================&quot;);
+        System.out.println(&quot;AdminTokenInterceptor - adminUserId = &quot; + adminUserId);
+        System.out.println(&quot;AdminTokenInterceptor - adminUserToken = &quot; + adminUserToken);
+        System.out.println(&quot;=====================================================================&quot;);
+
+        boolean run = verifyUserIdToken(adminUserId, adminUserToken, REDIS_ADMIN_TOKEN);
+        return run;
+    &#125;
+
+    /**
+     * 请求访问controller之后，渲染视图之前
+     * @param request
+     * @param response
+     * @param handler
+     * @param modelAndView
+     * @throws Exception
+     */
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+
+    &#125;
+
+    /**
+     * 请求访问controller之后，渲染视图之后
+     * @param request
+     * @param response
+     * @param handler
+     * @param ex
+     * @throws Exception
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+
+    &#125;
+&#125;
+</code></pre>
 <h3 id="账号注销-【admin账号】-删掉redis和cookie数据"><a href="#账号注销-【admin账号】-删掉redis和cookie数据" class="headerlink" title="账号注销 【admin账号】(删掉redis和cookie数据)"></a>账号注销 【admin账号】(删掉redis和cookie数据)</h3><pre><code class="java">service-admin  com/imooc/admin/controller/AdminMngController.java
- @Override
-    public GraceJSONResult adminLogout(String adminId, HttpServletRequest request, HttpServletResponse response) &#123;
-        // 从redis中删除admin的会话token
-        redis.del(REDIS_ADMIN_TOKEN + &quot;:&quot; + adminId);
-        // 从cookie删除admin登录的相关信息数据
-        deleteCookie(request, response,&quot;atoken&quot;);
-        deleteCookie(request, response,&quot;aid&quot;);
-        deleteCookie(request, response,&quot;aname&quot;);
+package com.imooc.admin.controller;
+
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.admin.AdminMngControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.enums.FaceVerifyType;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.utils.FaceVerifyUtils;
+import com.imooc.utils.PagedGridResult;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+
+@RestController
+public class AdminMngController extends BaseController implements AdminMngControllerApi &#123;
+
+    final static Logger logger = LoggerFactory.getLogger(AdminMngController.class);
+
+    @Autowired
+    private RedisOperator redis;
+
+    @Autowired
+    private AdminUserService adminUserService;
+
+    @Autowired
+    private FaceVerifyUtils faceVerifyUtils;
+
+    @Override
+    public GraceJSONResult adminLogin(AdminLoginBO adminLoginBO,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response) &#123;
+        // 0. TODO 验证BO中的用户名和密码不为空
+
+        // 1. 查询admin用户的信息
+        AdminUser admin = adminUserService.queryAdminByUsername(adminLoginBO.getUsername());
+        // 2. 判断admin不为空，如果为空则登录失败
+        if (admin == null) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+
+        // 3. 判断密码是否匹配
+        boolean isPwdMatch = BCrypt.checkpw(adminLoginBO.getPassword(), admin.getPassword());
+        if (isPwdMatch) &#123;
+            doLoginSettings(admin, request, response);
+            return GraceJSONResult.ok();
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_NOT_EXIT_ERROR);
+        &#125;
+    &#125;
+
+
+    /**
+     * 用于admin用户登录过后的基本信息设置
+     * @param admin
+     * @param request
+     * @param response
+     */
+    private void doLoginSettings(AdminUser admin,
+                                 HttpServletRequest request,
+                                 HttpServletResponse response) &#123;
+        // 保存token放入到redis中
+        String token = UUID.randomUUID().toString();
+        redis.set(REDIS_ADMIN_TOKEN + &quot;:&quot; + admin.getId(), token);
+
+        // 保存admin登录基本token信息到cookie中
+        setCookie(request, response, &quot;atoken&quot;, token, COOKIE_MONTH);
+        setCookie(request, response, &quot;aid&quot;, admin.getId(), COOKIE_MONTH);
+        setCookie(request, response, &quot;aname&quot;, admin.getAdminName(), COOKIE_MONTH);
+    &#125;
+
+    @Override
+    public GraceJSONResult adminIsExist(String username) &#123;
+        checkAdminExist(username);
         return GraceJSONResult.ok();
     &#125;
+
+    private void checkAdminExist(String username) &#123;
+        AdminUser admin = adminUserService.queryAdminByUsername(username);
+
+        if (admin != null) &#123;
+            GraceException.display(ResponseStatusEnum.ADMIN_USERNAME_EXIST_ERROR);
+        &#125;
+    &#125;
+
+    @Override
+    public GraceJSONResult addNewAdmin(NewAdminBO newAdminBO,
+                                       HttpServletRequest request,
+                                       HttpServletResponse response) &#123;
+
+        // 0. TODO 验证BO中的用户名和密码不为空
+
+        // 1. base64不为空，则代表人脸入库，否则需要用户输入密码和确认密码
+        if (StringUtils.isBlank(newAdminBO.getImg64())) &#123;
+            if (StringUtils.isBlank(newAdminBO.getPassword()) ||
+                    StringUtils.isBlank(newAdminBO.getConfirmPassword())
+            ) &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_PASSWORD_NULL_ERROR);
+            &#125;
+        &#125;
+
+        // 2. 密码不为空，则必须判断两次输入一致
+        if (StringUtils.isNotBlank(newAdminBO.getPassword())) &#123;
+            if (!newAdminBO.getPassword()
+                    .equalsIgnoreCase(newAdminBO.getConfirmPassword())) &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.ADMIN_PASSWORD_ERROR);
+            &#125;
+        &#125;
+
+        // 3. 校验用户名唯一
+        checkAdminExist(newAdminBO.getUsername());
+
+        // 4. 调用service存入admin信息
+        adminUserService.createAdminUser(newAdminBO);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult getAdminList(Integer page, Integer pageSize) &#123;
+
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        PagedGridResult result = adminUserService.queryAdminList(page, pageSize);
+        return GraceJSONResult.ok(result);
+    &#125;
+
+    @Override
+    public GraceJSONResult adminLogout(String adminId,
+                                       HttpServletRequest request,
+                                       HttpServletResponse response) &#123;
+
+        // 从redis中删除admin的会话token
+        redis.del(REDIS_ADMIN_TOKEN + &quot;:&quot; + adminId);
+
+        // 从cookie中清理adming登录的相关信息
+        deleteCookie(request, response, &quot;atoken&quot;);
+        deleteCookie(request, response, &quot;aid&quot;);
+        deleteCookie(request, response, &quot;aname&quot;);
+
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
 </code></pre>
 <pre><code class="java">service-api  com/imooc/api/controller/admin/AdminMngControllerApi.java
 package com.imooc.api.controller.admin;
-
 
 import com.imooc.grace.result.GraceJSONResult;
 import com.imooc.pojo.bo.AdminLoginBO;
@@ -8387,31 +8610,40 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Api(value = &quot;管理员admin维护&quot;,tags = &#123;&quot;管理员admin维护的Controller&quot;&#125;)
+@Api(value = &quot;管理员admin维护&quot;, tags = &#123;&quot;管理员admin维护的controller&quot;&#125;)
 @RequestMapping(&quot;adminMng&quot;)
 public interface AdminMngControllerApi &#123;
-    @ApiOperation(value = &quot;hello方法的接口&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+
+    @ApiOperation(value = &quot;hello方法的接口&quot;, notes = &quot;hello方法的接口&quot;, httpMethod = &quot;POST&quot;)
     @PostMapping(&quot;/adminLogin&quot;)
     public GraceJSONResult adminLogin(@RequestBody AdminLoginBO adminLoginBO,
                                       HttpServletRequest request,
                                       HttpServletResponse response);
 
-    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;,notes = &quot;查询admin用户名是否存在&quot;,httpMethod = &quot;POST&quot;)
+    @ApiOperation(value = &quot;查询admin用户名是否存在&quot;, notes = &quot;查询admin用户名是否存在&quot;, httpMethod = &quot;POST&quot;)
     @PostMapping(&quot;/adminIsExist&quot;)
-    public GraceJSONResult adminLogin(@RequestParam String username); //传回来
+    public GraceJSONResult adminIsExist(@RequestParam String username);
 
-    @ApiOperation(value = &quot;创建admin&quot;,notes = &quot;创建admin&quot;,httpMethod = &quot;POST&quot;)
+    @ApiOperation(value = &quot;创建admin&quot;, notes = &quot;创建admin&quot;, httpMethod = &quot;POST&quot;)
     @PostMapping(&quot;/addNewAdmin&quot;)
-    public GraceJSONResult addNewAdmin(@RequestBody NewAdminBO newAdminBO,HttpServletRequest request,HttpServletResponse response);
+    public GraceJSONResult addNewAdmin(@RequestBody NewAdminBO newAdminBO,
+                                       HttpServletRequest request,
+                                       HttpServletResponse response);
 
-    @ApiOperation(value = &quot;查询admin列表&quot;,notes = &quot;查询admin列表&quot;,httpMethod = &quot;POST&quot;)
+    @ApiOperation(value = &quot;查询admin列表&quot;, notes = &quot;查询admin列表&quot;, httpMethod = &quot;POST&quot;)
     @PostMapping(&quot;/getAdminList&quot;)
-    public GraceJSONResult getAdminList(@ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;,  required = false) @RequestParam Integer page,
-                                        @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页查询每一页显示的条数&quot;, required = false) @RequestParam Integer pageSize);
+    public GraceJSONResult getAdminList(
+            @ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;, required = false)
+            @RequestParam Integer page,
+            @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页查询每一页显示的条数&quot;, required = false)
+            @RequestParam Integer pageSize);
 
-    @ApiOperation(value = &quot;admin退出登录&quot;,notes = &quot;admin退出登录&quot;,httpMethod = &quot;POST&quot;)
+    @ApiOperation(value = &quot;admin退出登录&quot;, notes = &quot;admin退出登录&quot;, httpMethod = &quot;POST&quot;)
     @PostMapping(&quot;/adminLogout&quot;)
-    public GraceJSONResult adminLogout(@RequestParam String adminId,HttpServletRequest request,HttpServletResponse response );
+    public GraceJSONResult adminLogout(@RequestParam String adminId,
+                                       HttpServletRequest request,
+                                       HttpServletResponse response);
+                                        HttpServletResponse response);
 &#125;
 </code></pre>
 <pre><code class="java">service-api  com/imooc/api/BaseController.java
@@ -8684,6 +8916,262 @@ Successfully added user: &#123; &quot;user&quot; : &quot;root&quot;, &quot;roles
 &gt; 
 #后面关闭连接 编辑数据库 新增密码登录 root root
 </code></pre>
+<h3 id="整合SpringBoot-【GridFS】"><a href="#整合SpringBoot-【GridFS】" class="headerlink" title="整合SpringBoot 【GridFS】"></a>整合SpringBoot 【GridFS】</h3><pre><code class="xml">&lt;!-- 引入 mongodb 依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mongodb&lt;/groupId&gt;
+            &lt;artifactId&gt;mongodb-driver&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/files/FileUploadControllerApi.java
+package com.imooc.api.controller.files;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+@Api(value = &quot;文件上传的controller&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+@RequestMapping(&quot;fs&quot;)
+public interface FileUploadControllerApi &#123;
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadFace&quot;)
+    public GraceJSONResult uploadFace(@RequestParam String userId, MultipartFile file) throws Exception;
+
+    //不可以通过swagger2调用的
+    /**
+     * 文件上传到mongodb的gridfs中
+     * @param newAdminBO
+     * @return
+     * @throws Exception
+     */
+    @PostMapping(&quot;/uploadToGridFS&quot;)
+    public GraceJSONResult uploadToGridFS(@RequestBody NewAdminBO newAdminBO) throws Exception;
+&#125;
+</code></pre>
+<pre><code class="yaml">service-files  application.yml
+  data:
+    mongodb:
+      uri: mongodb://root:root@192.168.170.135:27017
+      database: imooc-news
+</code></pre>
+<h3 id="实现人脸入库-【GridFS】"><a href="#实现人脸入库-【GridFS】" class="headerlink" title="实现人脸入库 【GridFS】"></a>实现人脸入库 【GridFS】</h3><pre><code class="java">service-files  com/imooc/files/controller/FileUploadController.java
+
+...
+ @Autowired
+    private GridFSBucket gridFSBucket;
+...
+
+ @Override
+    public GraceJSONResult uploadToGridFS(NewAdminBO newAdminBO) throws Exception &#123;
+        // 获得图片的base64字符串
+        String file64 = newAdminBO.getImg64();
+        // 将base64字符串转换为byte数组
+        byte[] bytes = new BASE64Decoder().decodeBuffer(file64.trim());
+        // 转换为输入流
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+        //上传到gridfs中
+        ObjectId fileId = gridFSBucket.uploadFromStream(newAdminBO.getUsername() + &quot;.png&quot;, inputStream);
+        // 获取文件在gridfs中的主键id
+        String fileIdStr = fileId.toString();
+        // 下次提交的时候会提交到后端
+        return GraceJSONResult.ok(fileIdStr);
+    &#125;
+
+http://admin.imoocnews.com:9090/imooc-news/admin/adminMng.html
+注册并且提交人脸信息
+去Navicat → MongoDB → imooc-news → GridFS存储桶 → fs → admin456.png
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/controller/FileUploadController.java
+...
+    @Override
+    public GraceJSONResult uploadToGridFS(NewAdminBO newAdminBO) throws Exception &#123;
+        // 获得图片的base64字符串
+        String file64 = newAdminBO.getImg64();
+        // 将base64字符串转换为byte数组
+        byte[] bytes = new BASE64Decoder().decodeBuffer(file64.trim());
+        // 转换为输入流
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+        //上传到gridfs中
+        ObjectId fileId = gridFSBucket.uploadFromStream(newAdminBO.getUsername() + &quot;.png&quot;, inputStream);
+        // 获取文件在gridfs中的主键id
+        String fileIdStr = fileId.toString();
+        // 下次提交的时候会提交到后端
+        return GraceJSONResult.ok(fileIdStr);
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/files/FileUploadControllerApi.java
+package com.imooc.api.controller.files;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+@Api(value = &quot;文件上传的controller&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+@RequestMapping(&quot;fs&quot;)
+public interface FileUploadControllerApi &#123;
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadFace&quot;)
+    public GraceJSONResult uploadFace(@RequestParam String userId, MultipartFile file) throws Exception;
+
+    //不可以通过swagger2调用的
+
+    /**
+     * 文件上传到mongodb的gridfs中
+     * @param newAdminBO
+     * @return
+     * @throws Exception
+     */
+    @PostMapping(&quot;/uploadToGridFS&quot;)
+    public GraceJSONResult uploadToGridFS(@RequestBody NewAdminBO newAdminBO) throws Exception;
+&#125;
+</code></pre>
+<pre><code class="java">service-files  com/imooc/files/GridFSConfig.java
+package com.imooc.files;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
+@Component //可以被容器访问到
+public class GridFSConfig &#123;
+    @Value(&quot;$&#123;spring.data.mongodb.database&#125;&quot;)
+    private String mongodb;
+
+    @Bean
+    public GridFSBucket gridFSBucket(MongoClient mongoClient)&#123;
+        MongoDatabase mongoDatabase = mongoClient.getDatabase(mongodb);
+        GridFSBucket bucket = GridFSBuckets.create(mongoDatabase);//存入mongodatabase
+        return bucket;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="查看admin人脸信息-【GridFS】"><a href="#查看admin人脸信息-【GridFS】" class="headerlink" title="查看admin人脸信息 【GridFS】"></a>查看admin人脸信息 【GridFS】</h3><pre><code class="java">service-files  com/imooc/files/controller/FileUploaderController.java
+ @Override
+    public GraceJSONResult uploadToGridFS(NewAdminBO newAdminBO)
+            throws Exception &#123;
+
+        // 获得图片的base64字符串
+        String file64 = newAdminBO.getImg64();
+
+        // 将base64字符串转换为byte数组
+        byte[] bytes = new BASE64Decoder().decodeBuffer(file64.trim());
+
+        // 转换为输入流
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+
+        // 上传到gridfs中
+        ObjectId fileId = gridFSBucket.uploadFromStream(newAdminBO.getUsername() + &quot;.png&quot;, inputStream);
+
+        // 获得文件在gridfs中的主键id
+        String fileIdStr = fileId.toString();
+
+        return GraceJSONResult.ok(fileIdStr);
+    &#125;
+
+    @Override
+    public void readInGridFS(String faceId,
+                             HttpServletRequest request,
+                             HttpServletResponse response) throws Exception &#123;
+
+        // 0. 判断参数
+        if (StringUtils.isBlank(faceId) || faceId.equalsIgnoreCase(&quot;null&quot;)) &#123;
+            GraceException.display(ResponseStatusEnum.FILE_NOT_EXIST_ERROR);
+        &#125;
+
+        // 1. 从gridfs中读取
+        File adminFace = readGridFSByFaceId(faceId);
+
+        // 2. 把人脸图片输出到浏览器
+        FileUtils.downloadFileByStream(response, adminFace);
+    &#125;
+
+    private File readGridFSByFaceId(String faceId) throws Exception &#123;
+
+        GridFSFindIterable gridFSFiles
+                = gridFSBucket.find(Filters.eq(&quot;_id&quot;, new ObjectId(faceId)));
+
+        GridFSFile gridFS = gridFSFiles.first();
+
+        if (gridFS == null) &#123;
+            GraceException.display(ResponseStatusEnum.FILE_NOT_EXIST_ERROR);
+        &#125;
+
+        String fileName = gridFS.getFilename();
+        System.out.println(fileName);
+
+        // 获取文件流，保存文件到本地或者服务器的临时目录
+        File fileTemp = new File(&quot;/workspace/temp_face&quot;);
+        if (!fileTemp.exists()) &#123;
+            fileTemp.mkdirs();
+        &#125;
+
+        File myFile = new File(&quot;/workspace/temp_face/&quot; + fileName);
+
+        // 创建文件输出流
+        OutputStream os = new FileOutputStream(myFile);
+        // 下载到服务器或者本地
+        gridFSBucket.downloadToStream(new ObjectId(faceId), os);
+
+        return myFile;
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/files/FileUploaderControllerApi.java
+package com.imooc.api.controller.files;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.NewAdminBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;文件上传的controller&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+@RequestMapping(&quot;fs&quot;)
+public interface FileUploaderControllerApi &#123;
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;hello方法的接口&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadFace&quot;)
+    public GraceJSONResult uploadFace(@RequestParam String userId, MultipartFile file) throws Exception;
+
+    //不可以通过swagger2调用的
+
+    /**
+     * 文件上传到mongodb的gridfs中
+     * @param newAdminBO
+     * @return
+     * @throws Exception
+     */
+    @PostMapping(&quot;/uploadToGridFS&quot;)
+    public GraceJSONResult uploadToGridFS(@RequestBody NewAdminBO newAdminBO) throws Exception;
+
+    @GetMapping(&quot;/readInGridFS&quot;)
+    public void readInGridFS(String faceId, HttpServletRequest request, HttpServletResponse response) throws Exception;
+&#125;
+
+//AdminCookieToken也可以获得faceId
+</code></pre>
+<p>&#96;</p>
 
             
         </div>
@@ -8698,7 +9186,7 @@ Successfully added user: &#123; &quot;user&quot; : &quot;root&quot;, &quot;roles
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -11748,7 +12236,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -11902,7 +12390,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -14177,7 +14665,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -19174,7 +19662,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -24201,7 +24689,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -27510,7 +27998,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -28012,7 +28500,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#879cff>
                 软考
             </a>
         </span>
