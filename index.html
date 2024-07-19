@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -10041,8 +10041,551 @@ public interface FriendLinkRepository extends MongoRepository&lt;FriendLinkMO, S
     // 内置提供了很多方法 find.. delete...
 &#125;
 </code></pre>
-<p>5-27</p>
-<p>&#96;</p>
+<h3 id="友情链接查询列表-【MongoDB】"><a href="#友情链接查询列表-【MongoDB】" class="headerlink" title="友情链接查询列表 【MongoDB】"></a>友情链接查询列表 【MongoDB】</h3><h6 id="Document-“FriendLink”-x2F-x2F-文件起别名-记得要在MongoDB里面找这个-下面搜索的都在这个文件里面"><a href="#Document-“FriendLink”-x2F-x2F-文件起别名-记得要在MongoDB里面找这个-下面搜索的都在这个文件里面" class="headerlink" title="@Document(“FriendLink”) &#x2F;&#x2F;文件起别名 记得要在MongoDB里面找这个 下面搜索的都在这个文件里面"></a>@Document(“FriendLink”) &#x2F;&#x2F;文件起别名 记得要在MongoDB里面找这个 下面搜索的都在这个文件里面</h6><pre><code class="java">service-api  com/imooc/api/controller/admin/FriendLinkControllerApi.java
+package com.imooc.api.controller.admin;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.AdminLoginBO;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.pojo.bo.SaveFriendLinkBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Api(value = &quot;首页友情连接维护&quot;, tags = &#123;&quot;首页友情连接维护&quot;&#125;)
+@RequestMapping(&quot;friendLinkMng&quot;)
+public interface FriendLinkControllerApi &#123;
+
+    @ApiOperation(value = &quot;新增或者修改友情连接&quot;, notes = &quot;新增或者修改友情连接&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/saveOrUpdateFriendLink&quot;)
+    public GraceJSONResult saveOrUpdateFriendLink(@RequestBody SaveFriendLinkBO saveFriendLinkBO,
+                                      BindingResult result);
+    @ApiOperation(value = &quot;查询改友情连接列表&quot;, notes = &quot;查询改友情连接列表&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getFriendLinkList&quot;)
+    public GraceJSONResult getFriendLinkList();
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/FriendLinkController.java
+package com.imooc.admin.controller;
+
+import com.imooc.admin.repository.FriendLinkRepository;
+import com.imooc.admin.service.FriendLinkService;
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.admin.FriendLinkControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.SaveFriendLinkBO;
+import com.imooc.pojo.mo.FriendLinkMO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+import java.util.Map;
+
+@RestController
+public class FriendLinkController extends BaseController implements FriendLinkControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(FriendLinkController.class);
+    @Autowired
+    private FriendLinkService friendLinkService;
+
+    @Override
+    public GraceJSONResult saveOrUpdateFriendLink(SaveFriendLinkBO saveFriendLinkBO, BindingResult result) &#123;
+        if (result.hasErrors())&#123;
+            Map&lt;String, String&gt; map = getErrors(result);
+            return GraceJSONResult.errorMap(map);
+        &#125;
+
+//      saveFriendLinkBO -&gt; ***Mo  MongoDB校验的对象
+        FriendLinkMO friendLinkMO = new FriendLinkMO();
+        BeanUtils.copyProperties(saveFriendLinkBO,friendLinkMO);
+        friendLinkMO.setCreateTime(new Date());
+        friendLinkMO.setUpdateTime(new Date());
+
+        friendLinkService.saveOrUpdateFriendLink(friendLinkMO);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult getFriendLinkList() &#123; 
+//【用了FriendLinkRepository里面的】extends MongoRepository 中的简单增删改查 
+// 里面的删除是逻辑删除
+        return GraceJSONResult.ok(friendLinkService.queryAllFriendLinkList());
+    &#125;
+&#125;
+// http://admin.imoocnews.com:9090/imooc-news/admin/friendLinks.html
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/FriendLinkService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.pojo.mo.FriendLinkMO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.List;
+
+public interface FriendLinkService &#123;
+    /**
+     * 新增或者更新友情链接
+     */
+    public void saveOrUpdateFriendLink(FriendLinkMO friendLinkMO);
+
+    /**
+     * 查询友情链接
+     */
+    public List&lt;FriendLinkMO&gt; queryAllFriendLinkList();
+
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/FriendLinkServiceImpl.java
+package com.imooc.admin.service.impl;
+
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.imooc.admin.mapper.AdminUserMapper;
+import com.imooc.admin.repository.FriendLinkRepository;
+import com.imooc.admin.service.AdminUserService;
+import com.imooc.admin.service.FriendLinkService;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AdminUser;
+import com.imooc.pojo.bo.NewAdminBO;
+import com.imooc.pojo.mo.FriendLinkMO;
+import com.imooc.utils.PagedGridResult;
+import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+public class FriendLinkServiceImpl implements FriendLinkService &#123;
+
+    @Autowired
+    private FriendLinkRepository friendLinkRepository;
+    @Override
+    public void saveOrUpdateFriendLink(FriendLinkMO friendLinkMO) &#123;
+        friendLinkRepository.save(friendLinkMO); //有id更新 无id直接保存
+    &#125;
+
+    @Override
+    public List&lt;FriendLinkMO&gt; queryAllFriendLinkList() &#123;
+//        Pageable pageable = PageRequest.of(1,10);
+//        friendLinkRepository.findAll(pageable);
+        return friendLinkRepository.findAll();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="友情链接删除-【MongoDB】-增加真实删除"><a href="#友情链接删除-【MongoDB】-增加真实删除" class="headerlink" title="友情链接删除 【MongoDB】[增加真实删除]"></a>友情链接删除 【MongoDB】[增加真实删除]</h3><pre><code class="java">service-api  com/imooc/api/controller/admin/FriendLinkControllerApi.java
+...
+/*
+@Api(value = &quot;首页友情连接维护&quot;, tags = &#123;&quot;首页友情连接维护&quot;&#125;)
+@RequestMapping(&quot;friendLinkMng&quot;)
+public interface FriendLinkControllerApi &#123;
+
+    @ApiOperation(value = &quot;新增或者修改友情连接&quot;, notes = &quot;新增或者修改友情连接&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/saveOrUpdateFriendLink&quot;)
+    public GraceJSONResult saveOrUpdateFriendLink(@RequestBody SaveFriendLinkBO saveFriendLinkBO,
+                                      BindingResult result);
+    @ApiOperation(value = &quot;查询改友情连接列表&quot;, notes = &quot;查询改友情连接列表&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/getFriendLinkList&quot;)
+    public GraceJSONResult getFriendLinkList();
+*/
+    @ApiOperation(value = &quot;删除改友情连接列表&quot;, notes = &quot;删除改友情连接列表&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/delete&quot;)
+    public GraceJSONResult delete(@RequestParam String linkId);
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/FriendLinkController.java
+@Override
+    public GraceJSONResult delete(String linkId) &#123;
+        friendLinkService.delete(linkId);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/FriendLinkService.java
+    /**
+     * 删除友情链接
+     */
+    public void delete(String linkId);
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/AdminUserService.java
+@Override
+    public void delete(String linkId) &#123;
+        friendLinkRepository.deleteById(linkId);
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java 【增加友链拦截器】
+/*
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.AdminTokenInterceptor;
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UserActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UserActiveInterceptor userActiveInterceptor() &#123;
+        return new UserActiveInterceptor();
+    &#125;
+
+    @Bean
+    public AdminTokenInterceptor adminTokenInterceptor() &#123;
+        return new AdminTokenInterceptor();
+    &#125;
+
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;);
+        registry.addInterceptor(adminTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
+                .addPathPatterns(&quot;/adminMng/adminIsExist&quot;)
+                .addPathPatterns(&quot;/adminMng/addNewAdmin&quot;)
+                .addPathPatterns(&quot;/adminMng/getAdminList&quot;)
+                .addPathPatterns(&quot;/fs/uploadToGridFS&quot;)
+*/
+                .addPathPatterns(&quot;/friendLinkMng/saveOrUpdateFriendLink&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/getFriendLinkList&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/delete&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="【作业】文章分类管理-新增或修改分类、查询分类列表、用户端查询分类列表"><a href="#【作业】文章分类管理-新增或修改分类、查询分类列表、用户端查询分类列表" class="headerlink" title="【作业】文章分类管理 [新增或修改分类、查询分类列表、用户端查询分类列表]"></a>【作业】文章分类管理 <del>[新增或修改分类、查询分类列表、用户端查询分类列表]</del></h3><p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/categoryMng.html">http://admin.imoocnews.com:9090/imooc-news/admin/categoryMng.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/justry_deng/article/details/80972817">@RequestBody的使用-CSDN博客</a></p>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/CategoryMngControllerApi.java
+package com.imooc.api.controller.admin;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.SaveCatrgoryBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+@Api(value = &quot;文章分类维护&quot;, tags = &#123;&quot;文章分类维护controller&quot;&#125;)
+@RequestMapping(&quot;categoryMng&quot;)
+public interface CategoryMngControllerApi &#123;
+    @PostMapping(&quot;saveOrUpdateCategory&quot;)
+    @ApiOperation(value = &quot;新增或修改分类&quot;, notes = &quot;新增或修改分类&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult saveOrUpdateCategory(@RequestBody @Valid SaveCatrgoryBO saveCatrgoryBO,
+                                                BindingResult result);
+    @PostMapping(&quot;getCatList&quot;)
+    @ApiOperation(value = &quot;查询分类列表&quot;, notes = &quot;查询分类列表&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult getCatList();
+
+    @GetMapping(&quot;getCats&quot;)
+    @ApiOperation(value = &quot;用户端查询分类列表&quot;, notes = &quot;用户端查询分类列表&quot;, httpMethod = &quot;GET&quot;)
+    public GraceJSONResult getCats();
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/CategoryMngController.java
+package com.imooc.admin.controller;
+
+import com.imooc.admin.service.CategoryService;
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.admin.CategoryMngControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.SaveCatrgoryBO;
+import com.imooc.utils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+public class CategoryMngController extends BaseController implements CategoryMngControllerApi &#123;
+
+    final static Logger logger = LoggerFactory.getLogger(CategoryMngController.class);
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Override
+    public GraceJSONResult saveOrUpdateCategory(SaveCatrgoryBO saveCatrgoryBO, BindingResult result) &#123;
+        if (result.hasErrors())&#123;
+        // 判断BindingResult是否保存错误的验证信息，如果有，则直接return
+            Map&lt;String, String&gt; errorMap = getErrors(result);
+            return GraceJSONResult.errorMap(errorMap);
+        &#125;
+        Category newCat = new Category();
+        BeanUtils.copyProperties(saveCatrgoryBO,newCat);
+        // id为空新增，不为空修改
+        if (saveCatrgoryBO.getId() == null)&#123;
+            //查询新增的分类名称不能重复存在
+            boolean isExist = categoryService.queryCatIsExist(newCat.getName(), null);
+            if (!isExist)&#123;
+                //新增到数据库
+                categoryService.createCategory(newCat);
+            &#125;else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.CATEGORY_EXIST_ERROR);
+            &#125;
+        &#125;else &#123;
+            //查询修改的分类名称不能重复存在
+            boolean isExist = categoryService.queryCatIsExist(newCat.getName(), saveCatrgoryBO.getOldName());
+            if (!isExist)&#123;
+                //修改到数据库
+                categoryService.modifyCategory(newCat);
+            &#125; else &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.CATEGORY_EXIST_ERROR);
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult getCatList() &#123;
+        List&lt;Category&gt; categoryList = categoryService.queryCategoryList();
+        return GraceJSONResult.ok(categoryList);
+    &#125;
+
+    @Override
+    public GraceJSONResult getCats() &#123;
+        // 先从redis中查询，如果有，则返回，如果没有，则查询数据库库后先放缓存，放返回
+        String allCatJson = redis.get(REDIS_ALL_CATEGORY);
+
+        List&lt;Category&gt; categoryList = null;
+        if (StringUtils.isBlank(allCatJson)) &#123;
+            categoryList = categoryService.queryCategoryList();
+            redis.set(REDIS_ALL_CATEGORY, JsonUtils.objectToJson(categoryList));
+        &#125; else &#123;
+            categoryList = JsonUtils.jsonToList(allCatJson, Category.class);
+        &#125;
+
+        return GraceJSONResult.ok(categoryList);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/CategoryService.java
+package com.imooc.admin.service;
+
+import com.imooc.pojo.Category;
+import java.util.List;
+
+public interface CategoryService &#123;
+
+    /**
+     * 新增文章分类
+     */
+    public void createCategory(Category category);
+
+    /**
+     * 修改文章分类列表
+     */
+    public void modifyCategory(Category category);
+
+    /**
+     * 查询分类名是否已经存在
+     */
+    public boolean queryCatIsExist(String catName, String oldCatName);
+
+    /**
+     * 获得文章分类列表
+     */
+    public List&lt;Category&gt; queryCategoryList();
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/CategoryServiceImpl.java
+package com.imooc.admin.service.impl;
+
+import com.imooc.admin.mapper.CategoryMapper;
+import com.imooc.admin.service.CategoryService;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.Category;
+import com.imooc.utils.RedisOperator;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.List;
+
+import static com.imooc.api.BaseController.REDIS_ALL_CATEGORY;
+
+
+@Service
+public class CategoryServiceImpl implements CategoryService &#123;
+    @Autowired
+    public CategoryMapper categoryMapper;
+    @Autowired
+    public RedisOperator redis;
+
+    @Transactional
+    @Override
+    public void createCategory(Category category) &#123;
+// 分类不会很多，所以id不需要自增，这个表的数据也不会多到几万甚至分表，数据都会集中在一起
+        int result = categoryMapper.insert(category);
+        if (result != 1)&#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+            /**
+             * 不建议如下做法：
+             * 1. 查询redis中的categoryList
+             * 2. 转化categoryList为list类型
+             * 3. 在categoryList中add一个当前的category
+             * 4. 再次转换categoryList为json，并存入redis中
+             */
+            // 直接使用redis删除缓存即可，用户端在查询的时候会直接查库，再把最新的数据放入到缓存中
+            redis.del(REDIS_ALL_CATEGORY);
+        &#125;
+    &#125;
+
+    @Transactional
+    @Override
+    public void modifyCategory(Category category) &#123;
+        int result = categoryMapper.updateByPrimaryKey(category);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+        &#125;
+        // 直接使用redis删除缓存即可，用户端在查询的时候会直接查库，再把最新的数据放入到缓存中
+        redis.del(REDIS_ALL_CATEGORY);
+    &#125;
+
+    @Override
+    public boolean queryCatIsExist(String catName, String oldCatName) &#123;
+        Example example = new Example(Category.class);
+        Example.Criteria catCriteria = example.createCriteria();
+        catCriteria.andEqualTo(&quot;name&quot;, catName);
+        if (StringUtils.isNotBlank(oldCatName)) &#123;
+            catCriteria.andNotEqualTo(&quot;name&quot;, oldCatName);
+        &#125;
+
+        List&lt;Category&gt; catList = categoryMapper.selectByExample(example);
+
+        boolean isExist = false;
+        if (catList != null &amp;&amp; !catList.isEmpty() &amp;&amp; catList.size() &gt; 0) &#123;
+            isExist = true;
+        &#125;
+
+        return isExist;
+    &#125;
+
+    @Override
+    public List&lt;Category&gt; queryCategoryList() &#123;
+        return categoryMapper.selectAll();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/mapper/CategoryMapper.java
+package com.imooc.admin.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Category;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CategoryMapper extends MyMapper&lt;Category&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="xml">service-admin  resources/mapper/CategoryMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.admin.mapper.CategoryMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Category&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;name&quot; property=&quot;name&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;tag_color&quot; property=&quot;tagColor&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java
+public abstract class BaseController &#123;
+    @Autowired
+    public RedisOperator redis;
+    public static final String MOBILE_SMSCODE = &quot;mobile:smscode&quot;;
+    public static final String REDIS_USER_TOKEN = &quot;redis_user_token&quot;;//ctrl+shift+u直接大写
+    public static final String REDIS_USER_INFO = &quot;redis_user_info&quot;;//ctrl+shift+u直接大写
+    public static final String REDIS_ADMIN_TOKEN = &quot;redis_admin_token&quot;;//ctrl+shift+u直接大写
+    public static final String REDIS_ALL_CATEGORY = &quot;redis_all_category&quot;;
+
+    public static final String REDIS_WRITER_FANS_COUNTS = &quot;redis_writer_fans_counts&quot;;
+    public static final String REDIS_MY_FOLLOW_COUNTS = &quot;redis_my_follow_counts&quot;;
+
+    public static final String REDIS_ARTICLE_READ_COUNTS = &quot;redis_article_read_counts&quot;;
+    public static final String REDIS_ALREADY_READ = &quot;redis_already_read&quot;;
+
+    public static final String REDIS_ARTICLE_COMMENT_COUNTS = &quot;redis_article_comment_counts&quot;;
+
+    @Value(&quot;$&#123;website.domain-name&#125;&quot;)
+    public String DOMAIN_NAME;
+    public static final Integer COOKIE_MONTH = 30 * 24 * 60 * 60;
+    public static final Integer COOKIE_DELETE = 0;
+
+    public static final Integer COMMON_START_PAGE = 1;
+    public static final Integer COMMON_PAGE_SIZE = 10;
+&#125;...
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Category.java
+package com.imooc.pojo;
+
+import javax.persistence.Column;
+import javax.persistence.Id;
+
+public class Category &#123;
+    @Id
+    private Integer id;
+
+    /**
+     * 分类名，比如：科技，人文，历史，汽车等等
+     */
+    private String name;
+
+    /**
+     * 标签颜色
+     */
+    @Column(name = &quot;tag_color&quot;)
+    private String tagColor;
+&#125;Getter + Setter
+</code></pre>
 
             
         </div>
@@ -10057,7 +10600,7 @@ public interface FriendLinkRepository extends MongoRepository&lt;FriendLinkMO, S
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13107,7 +13650,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -13261,7 +13804,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -15536,7 +16079,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -18466,7 +19009,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -20533,7 +21076,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -25560,7 +26103,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -28869,7 +29412,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
