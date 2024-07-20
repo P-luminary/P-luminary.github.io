@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -9765,6 +9765,331 @@ public class Category &#123;
     private String tagColor;
 &#125;Getter + Setter
 </code></pre>
+<h3 id="查询用户列表-设置时间日期转换配置-【用户管理】"><a href="#查询用户列表-设置时间日期转换配置-【用户管理】" class="headerlink" title="查询用户列表_设置时间日期转换配置 【用户管理】"></a>查询用户列表_设置时间日期转换配置 【用户管理】</h3><pre><code class="java">service-api  com/imooc/api/controller/user/AppUserMngControllerApi.java
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Date;
+
+@Api(value = &quot;用户管理相关的接口定义&quot;,tags = &#123;&quot;用户管理相关功能的controller&quot;&#125;)
+@RequestMapping(&quot;appUser&quot;)
+public interface AppUserMngControllerApi &#123;
+    @ApiOperation(value = &quot;查询所有网站用户&quot;,notes = &quot;查询所有网站用户&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;queryAll&quot;)
+    public GraceJSONResult queryAll(@RequestParam String nickname,
+                                    @RequestParam Integer status,
+                                    @RequestParam Date startDate,
+                                    @RequestParam Date endDate,
+                                    @RequestParam Integer page,
+                                    @RequestParam Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/AppUserMngController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.user.AppUserMngControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.RedisOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+
+@RestController
+public class AppUserMngController extends BaseController implements AppUserMngControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(AppUserMngController.class);
+// 字符串无法直接转换成Date类型 需要工具类转换 DateConverterConfig com/imooc/api/config/DateConverterConfig.java
+
+    @Override
+    public GraceJSONResult queryAll(String nickname, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize) &#123;
+        System.out.println(startDate);
+        System.out.println(endDate);
+        if (page == null)&#123;
+            page = COMMON_START_PAGE;
+        &#125;
+        if (pageSize == null)&#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+// http://admin.imoocnews.com:9090/imooc-news/admin/userList.html
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/DateConverterConfig.java
+package com.imooc.api.config;
+
+
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * 请求路径url中的参数进行时间日期类型的转换，字符串-&gt;日期Date
+ */
+@Configuration
+public class DateConverterConfig implements Converter&lt;String, Date&gt; &#123;
+
+    private static final List&lt;String&gt; formatterList = new ArrayList&lt;&gt;(4);
+    static&#123;
+        formatterList.add(&quot;yyyy-MM&quot;);
+        formatterList.add(&quot;yyyy-MM-dd&quot;);
+        formatterList.add(&quot;yyyy-MM-dd hh:mm&quot;);
+        formatterList.add(&quot;yyyy-MM-dd hh:mm:ss&quot;);
+    &#125;
+
+    @Override
+    public Date convert(String source) &#123;
+        String value = source.trim();
+        if (&quot;&quot;.equals(value)) &#123;
+            return null;
+        &#125;
+        if(source.matches(&quot;^\\d&#123;4&#125;-\\d&#123;1,2&#125;$&quot;))&#123;
+            return parseDate(source, formatterList.get(0));
+        &#125;else if(source.matches(&quot;^\\d&#123;4&#125;-\\d&#123;1,2&#125;-\\d&#123;1,2&#125;$&quot;))&#123;
+            return parseDate(source, formatterList.get(1));
+        &#125;else if(source.matches(&quot;^\\d&#123;4&#125;-\\d&#123;1,2&#125;-\\d&#123;1,2&#125; &#123;1&#125;\\d&#123;1,2&#125;:\\d&#123;1,2&#125;$&quot;))&#123;
+            return parseDate(source, formatterList.get(2));
+        &#125;else if(source.matches(&quot;^\\d&#123;4&#125;-\\d&#123;1,2&#125;-\\d&#123;1,2&#125; &#123;1&#125;\\d&#123;1,2&#125;:\\d&#123;1,2&#125;:\\d&#123;1,2&#125;$&quot;))&#123;
+            return parseDate(source, formatterList.get(3));
+        &#125;else &#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_DATE_PARSER_ERROR);
+        &#125;
+        return null;
+    &#125;
+
+    /**
+     * 日期转换方法
+     * @param dateStr
+     * @param formatter
+     * @return
+     */
+    public Date parseDate(String dateStr, String formatter) &#123;
+        Date date=null;
+        try &#123;
+            DateFormat dateFormat = new SimpleDateFormat(formatter);
+            date = dateFormat.parse(dateStr);
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+        return date;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="查询用户列表-实现service与联调-【用户管理】"><a href="#查询用户列表-实现service与联调-【用户管理】" class="headerlink" title="查询用户列表_实现service与联调 【用户管理】"></a>查询用户列表_实现service与联调 【用户管理】</h3><pre><code class="java">service-user  com/imooc/user/service/AppUserMngService.java
+package com.imooc.user.service;
+
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+
+public interface AppUserMngService &#123;
+    /**
+     * 查询管理员列表
+     * @param nickname
+     * @param status
+     * @param startDate
+     * @param endDate
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    public PagedGridResult queryAllUserList(String nickname, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/service/BaseService.java
+package com.imooc.api.service;
+
+import com.github.pagehelper.PageInfo;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.List;
+
+public class BaseService &#123;
+    public PagedGridResult setterPagedGrid(List&lt;?&gt; list, Integer page)&#123; //类型是? 后期不确定是什么泛型
+        PageInfo&lt;?&gt; pageList = new PageInfo&lt;&gt;(list);
+        PagedGridResult gridResult = new PagedGridResult();
+        gridResult.setRows(list);
+        gridResult.setPage(page);
+        gridResult.setRecords(pageList.getTotal());
+        gridResult.setTotal(pageList.getPages());
+        return gridResult;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/AppUserMngServiceImpl.java
+package com.imooc.user.service.impl;
+
+import com.github.pagehelper.PageHelper;
+import com.imooc.api.service.BaseService;
+import com.imooc.enums.Sex;
+import com.imooc.enums.UserStatus;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import com.imooc.user.mapper.AppUserMapper;
+import com.imooc.user.service.AppUserMngService;
+import com.imooc.user.service.UserService;
+import com.imooc.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+public class AppUserMngServiceImpl extends BaseService implements AppUserMngService &#123;
+    @Autowired
+    public AppUserMapper appUserMapper;
+
+    @Override
+    public PagedGridResult queryAllUserList(String nickname, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize) &#123;
+        Example example = new Example(AppUser.class);
+        example.orderBy(&quot;createdTime&quot;).desc();
+        Example.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(nickname)) &#123;
+            criteria.andLike(&quot;nickname&quot;, &quot;%&quot; + nickname + &quot;%&quot;);
+        &#125;
+        if (UserStatus.isUserStatusValid(status))&#123;
+            criteria.andEqualTo(&quot;activeStatus&quot;, status); //对比状态
+        &#125;
+        if (startDate != null)&#123;
+            criteria.andGreaterThanOrEqualTo(&quot;createdTime&quot;, startDate);//数据库和传入参数对比
+        &#125;
+        if (endDate != null)&#123;
+            criteria.andLessThanOrEqualTo(&quot;endTime&quot;, endDate);//数据库和传入参数对比
+        &#125;
+        PageHelper.startPage(page, pageSize);
+        List&lt;AppUser&gt; list = appUserMapper.selectByExample(example);
+
+        return setterPagedGrid(list,page);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="查询用户账户-冻结与解封-【用户管理】"><a href="#查询用户账户-冻结与解封-【用户管理】" class="headerlink" title="查询用户账户_冻结与解封 【用户管理】"></a>查询用户账户_冻结与解封 【用户管理】</h3><pre><code class="java">service-api  com/imooc/api/controller/user/AppUserMngControllerApi.java
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Date;
+
+@Api(value = &quot;用户管理相关的接口定义&quot;,tags = &#123;&quot;用户管理相关功能的controller&quot;&#125;)
+@RequestMapping(&quot;appUser&quot;)
+public interface AppUserMngControllerApi &#123;
+    @ApiOperation(value = &quot;查询所有网站用户&quot;,notes = &quot;查询所有网站用户&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;queryAll&quot;)
+    public GraceJSONResult queryAll(@RequestParam String nickname,
+                                    @RequestParam Integer status,
+                                    @RequestParam Date startDate,
+                                    @RequestParam Date endDate,
+                                    @RequestParam Integer page,
+                                    @RequestParam Integer pageSize);
+
+    @ApiOperation(value = &quot;查看用户详情&quot;,notes = &quot;查看用户详情&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;userDetail&quot;)
+    public GraceJSONResult userDetail(@RequestParam String userId);
+
+    @ApiOperation(value = &quot;冻结用户或者解冻用户&quot;,notes = &quot;冻结用户或者解冻用户&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;freezeUserOrNot&quot;)
+    public GraceJSONResult freezeUserOrNot(@RequestParam String userId,@RequestParam Integer doStatus);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/AppUserMngController.java
+@RestController
+public class AppUserMngController extends BaseController implements AppUserMngControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(AppUserMngController.class);
+    
+    @Autowired
+    private AppUserMngService appUserMngService;
+    @Autowired
+    private UserService userService;
+......
+    
+     @Override
+    public GraceJSONResult freezeUserOrNot(String userId, Integer doStatus) &#123;
+        if (!UserStatus.isUserStatusValid(doStatus))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.USER_STATUS_ERROR);
+        &#125;
+        appUserMngService.freezeUserOrNot(userId, doStatus);
+        //若冻结后 用户处于登录状态 还可以进行操作 所以要刷新用户状态
+        //方法①：删除用户会话，从而保证用户需要重新登陆以后再来刷新她的会话状态
+        redis.del(REDIS_USER_INFO + &quot;:&quot; + userId);
+        //方法②：查询最新用户的信息，重新放入redis中，做一次更新
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/AppUserMngService.java
+package com.imooc.user.service;
+
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.bo.UpdateUserInfoBO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+
+public interface AppUserMngService &#123;
+    /**
+     * 查询管理员列表
+     */
+    public PagedGridResult queryAllUserList(String nickname, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize);
+
+    /**
+     * 冻结用户账号或者解除冻结
+     */
+    public void freezeUserOrNot(String userId, Integer doStatus);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/AppUserMngServiceImpl.java
+    @Transactional
+    @Override
+    public void freezeUserOrNot(String userId, Integer doStatus) &#123;
+        AppUser user = new AppUser();
+        user.setId(userId);
+        user.setActiveStatus(doStatus);
+        appUserMapper.updateByPrimaryKeySelective(user);
+    &#125;
+</code></pre>
+<p>6-1</p>
+<p>&#96;</p>
 
     </div>
 
