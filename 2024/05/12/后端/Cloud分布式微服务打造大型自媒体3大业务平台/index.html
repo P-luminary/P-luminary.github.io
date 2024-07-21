@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -5702,8 +5702,8 @@ public class FileUploadController implements FileUploadControllerApi &#123;
                 String suffix = fileNameArr[fileNameArr.length - 1];
                 //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
                 if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
                 )&#123;
                     return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
                 &#125;
@@ -5782,8 +5782,8 @@ public class FileUploadController implements FileUploadControllerApi &#123;
                 String suffix = fileNameArr[fileNameArr.length - 1];
                 //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
                 if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
                 )&#123;
                     return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
                 &#125;
@@ -6116,8 +6116,8 @@ public class FileUploadController implements FileUploadControllerApi &#123;
                 String suffix = fileNameArr[fileNameArr.length - 1];
                 //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
                 if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
                 )&#123;
                     return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
                 &#125;
@@ -6214,8 +6214,8 @@ public class FileUploadController implements FileUploadControllerApi &#123;
                 String suffix = fileNameArr[fileNameArr.length - 1];
                 //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
                 if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
                 )&#123;
                     return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
                 &#125;
@@ -6477,8 +6477,8 @@ public class FileUploadController implements FileUploadControllerApi &#123;
                 String suffix = fileNameArr[fileNameArr.length - 1];
                 //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
                 if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
-                        suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                        !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
                 )&#123;
                     return GraceJSONResult.errorCustom(ResponseStatusEnum.FILE_FORMATTER_FAILD);
                 &#125;
@@ -10088,8 +10088,934 @@ public interface AppUserMngService &#123;
         appUserMapper.updateByPrimaryKeySelective(user);
     &#125;
 </code></pre>
-<p>6-1</p>
-<p>&#96;</p>
+<h3 id="梳理文章article表结构-【文章服务】"><a href="#梳理文章article表结构-【文章服务】" class="headerlink" title="梳理文章article表结构 【文章服务】"></a>梳理文章article表结构 【文章服务】</h3><ul>
+<li><strong>构建文章服务</strong></li>
+<li><strong>作者中心发表文章</strong></li>
+<li><strong>作者中心内容管理</strong></li>
+<li><strong>自动审核<del>[阿里客户端]</del>，手动审核</strong></li>
+</ul>
+<h3 id="构建文章服务工程-【文章服务】"><a href="#构建文章服务工程-【文章服务】" class="headerlink" title="构建文章服务工程 【文章服务】"></a>构建文章服务工程 【文章服务】</h3><blockquote>
+<p>新创建一个Module<br>GroupId：com.imooc<br>ArtifactId：imooc-news-dev-service-article<br>pom参考service-admin移植  resources里的所有文件(除mapper)也要移植</p>
+</blockquote>
+<pre><code class="xml">service-article  pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;artifactId&gt;imooc-news-dev-service-article&lt;/artifactId&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">resources logback-spring.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+
+&lt;configuration&gt;
+    &lt;!-- 指定日志文件的存储地址，使用绝对路径 --&gt;
+&lt;!--    &lt;property name=&quot;LOG_HOME&quot; value=&quot;/workspaces/logs/imooc-news-dev/service-article&quot;/&gt;--&gt;
+    &lt;property name=&quot;LOG_HOME&quot; value=&quot;C:/Users/Pluminary/Desktop/imooc-news-article&quot;/&gt;
+
+    &lt;!-- Console 输出设置 --&gt;
+    &lt;appender name=&quot;CONSOLE&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder&gt;
+            &lt;!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符--&gt;
+            &lt;pattern&gt;%white(%d&#123;mm:ss.SSS&#125;) %green([%thread]) %cyan(%-5level) %yellow(%logger&#123;36&#125;) %magenta(-) %black(%msg%n)&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 按照每天生成日志文件 --&gt;
+    &lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;!-- 日志文件输出的文件名 --&gt;
+            &lt;fileNamePattern&gt;$&#123;LOG_HOME&#125;/service-article.%d&#123;yyyy-MM-dd&#125;.log&lt;/fileNamePattern&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!--&lt;logger name=&quot;org.apache.ibatis.cache.decorators.LoggingCache&quot; level=&quot;DEBUG&quot; additivity=&quot;false&quot;&gt;--&gt;
+        &lt;!--&lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;--&gt;
+    &lt;!--&lt;/logger&gt;--&gt;
+
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;appender-ref ref=&quot;FILE&quot;/&gt;
+        &lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/Application.java
+package com.imooc.article;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication
+@MapperScan(basePackages = &quot;com.imooc.article.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/HelloController.java
+package com.imooc.article.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+
+    public Object hello() &#123;
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+
+========================================================================
+http://localhost:8001/hello
+&#123;
+    &quot;status&quot;: 200,
+    &quot;msg&quot;: &quot;操作成功！&quot;,
+    &quot;success&quot;: true,
+    &quot;data&quot;: null
+&#125;
+</code></pre>
+<pre><code class="yaml">service-article  application-dev
+server:
+  port: 8001
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+## setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+
+## open mybatis log in dev
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+</code></pre>
+<pre><code class="yaml">############################################################
+#
+# admin用户微服务
+# web访问端口号  约定：8001
+#
+############################################################
+server:
+# port: 8003
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-article
+  datasource: # 数据源的相关配置
+    type: com.zaxxer.hikari.HikariDataSource          # 数据源类型：HikariCP
+    driver-class-name: org.mariadb.jdbc.Driver       # mysql驱动
+    url: jdbc:mysql://localhost:3306/imooc-news-dev?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;sessionVariables=tx_isolation=&#39;READ-COMMITTED&#39;
+    username: root
+    password: root
+    hikari:
+      connection-timeout: 30000       # 等待连接池分配连接的最大时长（毫秒），超过这个时长还没可用的连接则发生SQLException， 默认:30秒
+      minimum-idle: 5                 # 最小连接数
+      maximum-pool-size: 20           # 最大连接数
+      auto-commit: true               # 自动提交
+      idle-timeout: 600000            # 连接超时的最大时长（毫秒），超时则被释放（retired），默认:10分钟
+      pool-name: DateSourceHikariCP     # 连接池名字
+      max-lifetime: 1800000           # 连接的生命时长（毫秒），超时而且没被使用则被释放（retired），默认:30分钟 1800000ms
+      connection-test-query: SELECT 1
+      data-source-properties:
+        tx_isolation: &#39;READ-COMMITTED&#39;
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  data:
+    mongodb:
+      uri: mongodb://root:root@192.168.170.135:27017
+      database: imooc-news
+############################################################
+#
+# mybatis 配置
+#
+############################################################
+mybatis:
+  type-aliases-package: com.imooc.pojo          # 所有POJO类所在包路径
+  mapper-locations: classpath:mapper/*.xml      # mapper映射文件
+
+############################################################
+#
+# mybatis mapper 配置
+#
+############################################################
+# 通用 Mapper 配置
+mapper:
+  mappers: com.imooc.my.mapper.MyMapper
+  not-empty: false    # 在进行数据库操作的的时候，判断表达式 username != null, 是否追加 username != &#39;&#39;
+  identity: MYSQL
+# 分页插件配置
+pagehelper:
+  helperDialect: mysql
+  supportMethodsArguments: true
+</code></pre>
+<h3 id="summernote与多文件上传需求-【发头条】"><a href="#summernote与多文件上传需求-【发头条】" class="headerlink" title="summernote与多文件上传需求 【发头条】"></a>summernote与多文件上传需求 【发头条】</h3><p><a target="_blank" rel="noopener" href="https://summernote.org/">https://summernote.org/</a></p>
+<pre><code class="html">【前端工程里面的】createArticle.html
+...
+&lt;script src=&quot;libs/vue.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;libs/axios.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;link href=&quot;./libs/bootstrap/css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+&lt;script src=&quot;./libs/jquery-3.4.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;libs/layDate-v5.0.9/laydate/laydate.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./libs/bootstrap/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+&lt;link href=&quot;./libs/summernote/dist/summernote.css&quot; rel=&quot;stylesheet&quot;&gt;
+&lt;script src=&quot;./libs/summernote/dist/summernote.js&quot;&gt;&lt;/script&gt;
+&lt;!-- 中文汉化 --&gt;
+&lt;script src=&quot;libs/summernote/lang/summernote-zh-CN.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;js/app.js&quot;&gt;&lt;/script&gt;
+
+&lt;script type=&quot;text/javascript&quot;&gt;
+
+......
+&lt;!-- 富文本编辑器 --&gt;
+        &lt;div id=&quot;editor2&quot; class=&quot;editor-container&quot;&gt;
+
+            &lt;div class=&quot;article-title-wrapper&quot;&gt;
+                &lt;input id=&quot;title&quot; class=&quot;article-title&quot; placeholder=&quot;请输入文字标题（6-30长度）&quot; v-model=&quot;articleTitle&quot; maxlength=&quot;30&quot;/&gt;
+            &lt;/div&gt;
+
+            &lt;div class=&quot;article-content-wrapper&quot;&gt;
+                &lt;div id=&quot;summernote&quot; class=&quot;summernote&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div class=&quot;other-info&quot;&gt;
+                &lt;div class=&quot;cover-wrapper&quot;&gt;
+                    &lt;div class=&quot;cover&quot;&gt;文章领域&lt;/div&gt;
+                    &lt;div class=&quot;choose-type&quot;&gt;
+                        &lt;!-- &lt;select v-model=&quot;articleCategory&quot;&gt;
+                            &lt;option value=&quot;0&quot;&gt;请选择&lt;/option&gt;
+                            &lt;option value=&quot;1&quot;&gt;汽车&lt;/option&gt;
+                            &lt;option value=&quot;2&quot;&gt;科技&lt;/option&gt;
+                            &lt;option value=&quot;3&quot;&gt;历史&lt;/option&gt;
+                        &lt;/select&gt; --&gt;
+
+                        &lt;select v-model=&quot;articleCategory&quot;&gt;
+                            &lt;option :value=&quot;cat.id&quot; v-for=&quot;(cat, index) in catList&quot; v-key=&quot;index&quot;&gt;&#123;&#123;cat.name&#125;&#125;&lt;/option&gt;
+                        &lt;/select&gt;
+                        
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;cover-wrapper&quot;&gt;
+                    &lt;div class=&quot;cover&quot;&gt;文章封面&lt;/div&gt;
+                    &lt;div class=&quot;choose-type&quot;&gt;
+                        &lt;div&gt;&lt;input type=&quot;radio&quot; name=&quot;articleType&quot; v-model=&quot;articleType&quot; value=&quot;1&quot; checked/&gt;&lt;span class=&quot;choose-words&quot;&gt;单封面&lt;/span&gt;&lt;/div&gt;
+                        &lt;div style=&quot;margin-left: 30px;&quot;&gt;&lt;input type=&quot;radio&quot; v-model=&quot;articleType&quot; value=&quot;2&quot; name=&quot;articleType&quot;/&gt;&lt;span class=&quot;choose-words&quot;&gt;无封面&lt;/span&gt;&lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;cover-wrapper&quot; v-show=&quot;articleType==1&quot;&gt;
+                    &lt;div class=&quot;cover&quot;&gt;&lt;/div&gt;
+                    &lt;div class=&quot;choose-cover&quot;&gt;
+                        &lt;div class=&quot;uploader-comp&quot;&gt;
+                            &lt;div id=&quot;block-choose&quot; class=&quot;block-choose&quot; :style=&quot;coverStyle&quot;&gt;
+                                &lt;img src=&quot;./img/icon-go-upload.png&quot; style=&quot;width: 20px; height: 20px; align-self: center;&quot; v-show=&quot;articleCover == &#39;&#39; || articleCover == null&quot;/&gt;
+                            &lt;/div&gt;
+                            &lt;input type=&quot;file&quot; @change=&quot;uploadCover&quot; @mouseover=&quot;mouseOver&quot; @mouseout=&quot;mouseOut&quot; id=&quot;inputPic&quot; class=&quot;inputPic&quot; accept=&quot;image/jpeg,image/jpg,image/png&quot;&gt;
+                        &lt;/div&gt;
+                        &lt;div style=&quot;margin-top: 10px; color: #9b9d9e;&quot;&gt;请上传JPG、JPEG、PNG格式的封面图噢~&lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div class=&quot;publish-bottom&quot;&gt;
+                &lt;div class=&quot;buttons&quot;&gt;
+                    &lt;button class=&quot;white-btn&quot; type=&quot;button&quot; @click=&quot;goBack&quot;&gt;返回&lt;/button&gt;
+                    &lt;button class=&quot;white-btn&quot; type=&quot;button&quot; @click=&quot;preview&quot;&gt;预览&lt;/button&gt;
+                    &lt;!-- &lt;button class=&quot;white-btn&quot; type=&quot;button&quot; @click=&quot;save&quot;&gt;保存草稿&lt;/button&gt; --&gt;
+                    &lt;!-- FIXME: 计算剩余时间，使用RMQ延时队列，或分布式定时任务 --&gt;
+                    &lt;button class=&quot;white-btn&quot; type=&quot;button&quot; @click=&quot;doTiming&quot;&gt;&#123;&#123;appointWords&#125;&#125;&lt;/button&gt;
+                    
+                    &lt;input type=&quot;text&quot; class=&quot;timing-date-picker&quot; placeholder=&quot;定时日期&quot; id=&quot;choose-date&quot; v-show=&quot;isAppoint==1&quot; readonly&gt;
+
+                    &lt;button class=&quot;red-btn&quot; type=&quot;button&quot; @click=&quot;publish&quot;&gt;发布文章&lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+......
+// 初始化编辑器
+            $(&#39;#summernote&#39;).summernote(&#123;
+                placeholder: &#39;请输入正文...&#39;,
+                lang: &#39;zh-CN&#39;,
+                height: 600,
+                width: 800,
+                border: 0,
+                // disableDragAndDrop: true, // 禁止文件拖放
+                toolbar: [
+                    [&#39;style&#39;, [&#39;style&#39;]],
+                    [&#39;font&#39;, [&#39;bold&#39;, &#39;underline&#39;, &#39;clear&#39;]],
+                    [&#39;color&#39;, [&#39;color&#39;]],
+                    [&#39;para&#39;, [&#39;ul&#39;, &#39;ol&#39;, &#39;paragraph&#39;]],
+                    [&#39;table&#39;, [&#39;table&#39;]],
+                    [&#39;insert&#39;, [&#39;link&#39;, &#39;picture&#39;]],
+                    [&#39;view&#39;, [&#39;fullscreen&#39;, &#39;codeview&#39;, &#39;help&#39;]]
+                ],
+</code></pre>
+<h3 id="实现多文件上传uploadSomeFiles-【发头条】"><a href="#实现多文件上传uploadSomeFiles-【发头条】" class="headerlink" title="实现多文件上传uploadSomeFiles 【发头条】"></a>实现多文件上传<del>uploadSomeFiles</del> 【发头条】</h3><p><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html">媒体号作家中心 | 发文章 (imoocnews.com)</a></p>
+<pre><code class="java">service-api  com/imooc/api/controller/files/FileUploaderControllerApi.java
+package com.imooc.api.controller.files;
+
+@Api(value = &quot;文件上传的controller&quot;,tags = &#123;&quot;xx功能的Controller&quot;&#125;)
+@RequestMapping(&quot;fs&quot;)
+public interface FileUploaderControllerApi &#123;
+    /**
+     * 上传单文件
+     * @param userId
+     * @param file
+     * @return
+     * @throws Exception
+     */
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;上传用户头像&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadFace&quot;)
+    public GraceJSONResult uploadFace(@RequestParam String userId, MultipartFile file) throws Exception;
+
+    /**
+     * 上传多文件
+     * @param userId
+     * @param files
+     * @return
+     * @throws Exception
+     */
+    @ApiOperation(value = &quot;上传用户头像&quot;,notes = &quot;上传用户头像&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/uploadSomeFiles&quot;)  //因为前端createArticle.html 178行 multiForm.append(&#39;files&#39;,f,f.name);
+    public GraceJSONResult uploadSomeFiles(@RequestParam String userId, MultipartFile[] files) throws Exception;
+......
+&#125;
+</code></pre>
+<pre><code class="java">service-file  com/imooc/files/controller/FileUploaderController.java
+......
+@Override
+    public GraceJSONResult uploadSomeFiles(String userId, MultipartFile[] files) throws Exception &#123;
+        // 声明一个list，用于存放多个图片的地址路径，返回到前端
+        List&lt;String&gt; imageUrlList = new ArrayList&lt;&gt;();
+        if (files != null &amp;&amp; files.length &gt; 0)&#123;
+            for (MultipartFile file: files)&#123;
+                String path = &quot;&quot;;
+                if (file != null)&#123;
+                    // 获得文件上传的名称
+                    String fileName = file.getOriginalFilename();
+                    //判断文件名不能为空
+                    if (StringUtils.isNotBlank(fileName))&#123;
+                        String fileNameArr[] = fileName.split(&quot;\\.&quot;);
+                        //获得后缀名
+                        String suffix = fileNameArr[fileNameArr.length - 1];
+                        //防止黑客上传文件攻击服务器 判断后缀符合我们的预定义规范
+                        if (!suffix.equalsIgnoreCase(&quot;png&quot;) &amp;&amp;
+                                !suffix.equalsIgnoreCase(&quot;jpg&quot;) &amp;&amp;
+                                !suffix.equalsIgnoreCase(&quot;jpeg&quot;)
+                        )&#123;
+                           continue;
+                        &#125;
+                        // fdfs执行上传     要让外面得以访问 ①需要把内网的环境发布到公网 [内网穿透]  ②路由器端口映射到外网  ③fastdfs安装到公网里
+                        // path = uploaderService.uploadFdfs(file, suffix);
+                        // OSS执行上传
+                        path = uploaderService.uploadOSS(file, userId, suffix);
+                    &#125;else &#123;
+                        continue;
+                    &#125;
+                &#125;else &#123;
+                    continue;
+                &#125;
+                String finalPath = &quot;&quot;;
+                if (StringUtils.isNotBlank(path))&#123;
+//            finalPath = fileResource.getHost() + path;
+                    finalPath = fileResource.getOssHost() + path;
+                    // FIXME: 放入到imageUrlList之前，需要对图片做一次审核 [doAliImageReview]
+                    imageUrlList.add(finalPath);
+                &#125;  else&#123;
+                    continue;
+                &#125;
+//                return GraceJSONResult.ok(finalPath);
+//        return GraceJSONResult.ok(doAliImageReview(finalPath)); //这里加了图片审核咯
+            &#125;
+        &#125;
+        return GraceJSONResult.ok(imageUrlList);
+    &#125;
+......
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java 
+package com.imooc.api.config;
+//【增加拦截uploadSomeFiles】
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UserActiveInterceptor userActiveInterceptor() &#123;
+        return new UserActiveInterceptor();
+    &#125;
+
+    @Bean
+    public AdminTokenInterceptor adminTokenInterceptor() &#123;
+        return new AdminTokenInterceptor();
+    &#125;
+
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;)
+                .addPathPatterns(&quot;/fs/uploadSomeFiles&quot;);
+
+        registry.addInterceptor(adminTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
+                .addPathPatterns(&quot;/adminMng/adminIsExist&quot;)
+                .addPathPatterns(&quot;/adminMng/addNewAdmin&quot;)
+                .addPathPatterns(&quot;/adminMng/getAdminList&quot;)
+                .addPathPatterns(&quot;/fs/uploadToGridFS&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/saveOrUpdateFriendLink&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/getFriendLinkList&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/delete&quot;)
+                .addPathPatterns(&quot;/categoryMng/saveOrUpdateCategory&quot;)
+                .addPathPatterns(&quot;/categoryMng/getCatList&quot;);
+
+        registry.addInterceptor(userActiveInterceptor())
+                .addPathPatterns(&quot;/fs/uploadSomeFiles&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="获得列表-业务接口解耦与Redis缓存应用-【文章领域】"><a href="#获得列表-业务接口解耦与Redis缓存应用-【文章领域】" class="headerlink" title="获得列表_业务接口解耦与Redis缓存应用 【文章领域】"></a>获得列表_业务接口解耦与Redis缓存应用 【文章领域】</h3><blockquote>
+<p>getCatList 和 getCats 一个是用户端一个是admin 业务体系不一样 所以同样是查询分类列表<br>但是还是应该拆开 使耦合减少 得到高效解耦<br>查询放在Redis里面 效率变高</p>
+<p><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html">媒体号作家中心 | 发文章 (imoocnews.com)</a><br>刷新一下 文章领域就可以找到那些分类<br>Redis里面会有信息 redis_all_category<br>[{“id”:2,”name”:”汽车”,”tagColor”:”#8939bd”},{“id”:3,”name”:”娱乐”,”tagColor”:”#c939aa”},{“id”:5,”name”:”地理”,”tagColor”:”#57394a”},{“id”:6,”name”:”历史”,”tagColor”:”#29ab4a”},{“id”:7,”name”:”科技”,”tagColor”:”#2467bc”},{“id”:9,”name”:”体育”,”tagColor”:”#c98f4a”},{“id”:10,”name”:”搞笑”,”tagColor”:”#68b84a”},{“id”:11,”name”:”技术”,”tagColor”:”#c9394a”},{“id”:12,”name”:”慕课”,”tagColor”:”#682aa8”},{“id”:13,”name”:”技能”,”tagColor”:”#c9394a”},{“id”:14,”name”:”课网”,”tagColor”:”#c9a24a”}]</p>
+</blockquote>
+<pre><code class="java">service-api  com/imooc/api/controller/admin/CategoryMngControllerApi.java
+// 【getCasts】
+package com.imooc.api.controller.admin;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.SaveCatrgoryBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+@Api(value = &quot;文章分类维护&quot;, tags = &#123;&quot;文章分类维护controller&quot;&#125;)
+@RequestMapping(&quot;categoryMng&quot;)
+public interface CategoryMngControllerApi &#123;
+    @PostMapping(&quot;saveOrUpdateCategory&quot;)
+    @ApiOperation(value = &quot;新增或修改分类&quot;, notes = &quot;新增或修改分类&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult saveOrUpdateCategory(@RequestBody @Valid SaveCatrgoryBO saveCatrgoryBO,
+                                                BindingResult result);
+    @PostMapping(&quot;getCatList&quot;)
+    @ApiOperation(value = &quot;查询分类列表&quot;, notes = &quot;查询分类列表&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult getCatList();
+
+    @GetMapping(&quot;getCats&quot;)
+    @ApiOperation(value = &quot;用户端查询分类列表&quot;, notes = &quot;用户端查询分类列表&quot;, httpMethod = &quot;GET&quot;)
+    public GraceJSONResult getCats();
+&#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/CategoryMngController.java
+@Override
+    public GraceJSONResult getCats() &#123;
+        // 先从redis中查询，如果有，则返回，如果没有，则查询数据库库后先放缓存，放返回
+        String allCatJson = redis.get(REDIS_ALL_CATEGORY);
+
+        List&lt;Category&gt; categoryList = null;
+        if (StringUtils.isBlank(allCatJson)) &#123;
+            categoryList = categoryService.queryCategoryList();
+            redis.set(REDIS_ALL_CATEGORY, JsonUtils.objectToJson(categoryList));
+        &#125; else &#123;
+            categoryList = JsonUtils.jsonToList(allCatJson, Category.class);
+        &#125;
+
+        return GraceJSONResult.ok(categoryList);
+    &#125;
+</code></pre>
+<h3 id="admin端维护数据缓存-【文章领域】"><a href="#admin端维护数据缓存-【文章领域】" class="headerlink" title="admin端维护数据缓存 【文章领域】"></a>admin端维护数据缓存 【文章领域】</h3><blockquote>
+<p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/categoryMng.html">文章分类 | 运营管理平台 (imoocnews.com)</a><br>在管理员修改文章类型后 【课网 → 课课】<br><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html">媒体号作家中心 | 发文章 (imoocnews.com)</a><br>回到用户发文章的文章领域类型也会一起修改<br><a target="_blank" rel="noopener" href="http://www.imoocnews.com:9090/imooc-news/portal/index.html">慕课新闻 | 风间影月 (imoocnews.com)</a><br>同时首页上方的栏目框也会修改</p>
+</blockquote>
+<pre><code class="java">service-admin  com/imooc/admin/service/impl/CategoryServiceImpl.java
+@Service
+public class CategoryServiceImpl extends BaseService implements CategoryService &#123;
+    @Autowired
+    public CategoryMapper categoryMapper;
+
+    @Transactional
+    @Override
+    public void createCategory(Category category) &#123;
+// 分类不会很多，所以id不需要自增，这个表的数据也不会多到几万甚至分表，数据都会集中在一起
+        int result = categoryMapper.insert(category);
+        if (result != 1)&#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+            /**
+             * 不建议如下做法：
+             * 1. 查询redis中的categoryList
+             * 2. 转化categoryList为list类型
+             * 3. 在categoryList中add一个当前的category
+             * 4. 再次转换categoryList为json，并存入redis中
+             */
+            // 直接使用redis删除缓存即可，用户端在查询的时候会直接查库，再把最新的数据放入到缓存中
+            redis.del(REDIS_ALL_CATEGORY);
+        &#125;
+    &#125;
+
+    @Transactional
+    @Override
+    public void modifyCategory(Category category) &#123;
+        int result = categoryMapper.updateByPrimaryKey(category);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+        &#125;
+        // 直接使用redis删除缓存即可，用户端在查询的时候会直接查库，再把最新的数据放入到缓存中
+        redis.del(REDIS_ALL_CATEGORY);
+    &#125;
+......
+</code></pre>
+<h3 id="发布文章入库Controller及验证【发头条】"><a href="#发布文章入库Controller及验证【发头条】" class="headerlink" title="发布文章入库Controller及验证【发头条】"></a>发布文章入库Controller及验证【发头条】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/ArticleControllerApi.java
+package com.imooc.api.controller.article;
+
+@Api(value = &quot;文章业务的controller&quot;, tags = &#123;&quot;文章业务的controller&quot;&#125;)
+@RequestMapping(&quot;article&quot;)
+public interface ArticleControllerApi &#123;
+    @PostMapping(&quot;createArticle&quot;)
+    @ApiOperation(value = &quot;用户发文&quot;, notes = &quot;用户发文&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult createArticle(@RequestBody @Valid NewArticleBO newArticleBO, BindingResult result);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+package com.imooc.article.controller;
+
+@RestController
+public class ArticleController extends BaseController implements ArticleControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(ArticleController.class);
+
+    @Override
+    public GraceJSONResult createArticle(NewArticleBO newArticleBO, BindingResult result) &#123;
+            if (result.hasErrors())&#123;
+                // 判断BindingResult是否保存错误的验证信息，如果有，则直接return
+                Map&lt;String, String&gt; errorMap = getErrors(result);
+                return GraceJSONResult.errorMap(errorMap);
+            &#125;
+            // 判断文章封面类型，单图必填，纯文字则设置为空
+            if (newArticleBO.getArticleType() == ArticleCoverType.ONE_IMAGE.type)&#123;
+                if (StringUtils.isBlank(newArticleBO.getArticleCover()))&#123;
+                    return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_CATEGORY_NOT_EXIST_ERROR);
+                &#125;
+            &#125; else if (newArticleBO.getArticleType() == ArticleCoverType.WORDS.type) &#123;
+                newArticleBO.setArticleCover(&quot;&quot;);
+            &#125;
+
+        // 判断分类id是否存在
+        String allCatJson = redis.get(REDIS_ALL_CATEGORY);
+        Category temp = null;
+        if (StringUtils.isBlank(allCatJson)) &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+        &#125; else &#123;
+            List&lt;Category&gt; catList =
+                    JsonUtils.jsonToList(allCatJson, Category.class);
+            for (Category c : catList) &#123;
+                if(c.getId() == newArticleBO.getCategoryId()) &#123;
+                    temp = c;
+                    break;
+                &#125;
+            &#125;
+            if (temp == null) &#123;
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_CATEGORY_NOT_EXIST_ERROR);
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/bo/NewArticleBO.java
+package com.imooc.pojo.bo;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.hibernate.validator.constraints.Length;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
+/**
+ * 用户发文的BO
+ */
+public class NewArticleBO &#123;
+
+    @NotBlank(message = &quot;文章标题不能为空&quot;)
+    @Length(max = 30, message = &quot;文章标题长度不能超过30&quot;)
+    private String title;
+
+    @NotBlank(message = &quot;文章内容不能为空&quot;)
+    @Length(max = 9999, message = &quot;文章内容长度不能超过10000&quot;)
+    private String content;
+
+    @NotNull(message = &quot;请选择文章领域&quot;)
+    private Integer categoryId;
+
+    @NotNull(message = &quot;请选择正确的文章封面类型&quot;)
+    @Min(value = 1, message = &quot;请选择正确的文章封面类型&quot;)
+    @Max(value = 2, message = &quot;请选择正确的文章封面类型&quot;)
+    private Integer articleType;
+    private String articleCover;
+
+    @NotNull(message = &quot;文章发布类型不正确&quot;)
+    @Min(value = 0, message = &quot;文章发布类型不正确&quot;)
+    @Max(value = 1, message = &quot;文章发布类型不正确&quot;)
+    private Integer isAppoint;
+
+    @JsonFormat(timezone = &quot;GMT+8&quot;, pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;) // 前端日期字符串传到后端后，转换为Date类型
+    private Date publishTime;
+
+    @NotBlank(message = &quot;用户未登录&quot;)
+    private String publishUserId;
+&#125;Getter + Setter
+</code></pre>
+<h3 id="发布文章入库Service及联调【也可以定时发布】"><a href="#发布文章入库Service及联调【也可以定时发布】" class="headerlink" title="发布文章入库Service及联调【也可以定时发布】"></a>发布文章入库Service及联调【也可以定时发布】</h3><p><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html">http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html</a><br>发布完成后去数据库article中就会存在数据了</p>
+<pre><code class="xml">generator-datebase  generatorConfig-article.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE generatorConfiguration
+        PUBLIC &quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd&quot;&gt;
+
+&lt;generatorConfiguration&gt;
+    &lt;context id=&quot;MysqlContext&quot; targetRuntime=&quot;MyBatis3Simple&quot; defaultModelType=&quot;flat&quot;&gt;
+        &lt;property name=&quot;beginningDelimiter&quot; value=&quot;`&quot;/&gt;
+        &lt;property name=&quot;endingDelimiter&quot; value=&quot;`&quot;/&gt;
+
+        &lt;!-- 通用mapper所在目录 --&gt;
+        &lt;plugin type=&quot;tk.mybatis.mapper.generator.MapperPlugin&quot;&gt;
+            &lt;property name=&quot;mappers&quot; value=&quot;com.imooc.my.mapper.MyMapper&quot;/&gt;
+        &lt;/plugin&gt;
+
+        &lt;jdbcConnection driverClass=&quot;com.mysql.jdbc.Driver&quot;
+                        connectionURL=&quot;jdbc:mysql://localhost:3306/imooc-news-dev&quot;
+                        userId=&quot;root&quot;
+                        password=&quot;root&quot;&gt;
+        &lt;/jdbcConnection&gt;
+
+        &lt;!-- 对应生成的pojo所在包 --&gt;
+        &lt;javaModelGenerator targetPackage=&quot;com.imooc.pojo&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot;/&gt;
+
+        &lt;!-- 对应生成的mapper所在目录 --&gt;
+        &lt;sqlMapGenerator targetPackage=&quot;mapper.article&quot; targetProject=&quot;mybatis-generator-database/src/main/resources&quot;/&gt;
+
+        &lt;!-- 配置mapper对应的java映射 --&gt;
+        &lt;javaClientGenerator targetPackage=&quot;com.imooc.article.mapper&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot; type=&quot;XMLMAPPER&quot;/&gt;
+
+        &lt;!-- 数据库表 --&gt;
+        &lt;table tableName=&quot;comments&quot;&gt;&lt;/table&gt;
+
+    &lt;/context&gt;
+&lt;/generatorConfiguration&gt;
+</code></pre>
+<pre><code class="java">generator-datebase  com/imooc/mybatis/utils/ArticleGenerator.java
+//[运行时候就会自动生成对应文件 目录是上面的generatorConfig-article.xml]
+package com.imooc.mybatis.utils;
+
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class ArticleGenerator &#123;
+
+    public void generator() throws Exception &#123;
+
+        List&lt;String&gt; warnings = new ArrayList&lt;String&gt;();
+        boolean overwrite = true;
+        //指定 逆向工程配置文件
+        File configFile = new File(&quot;mybatis-generator-database&quot;
+                                            + File.separator
+                                            + &quot;generatorConfig-article.xml&quot;);
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(configFile);
+        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config,
+                callback, warnings);
+        myBatisGenerator.generate(null);
+
+    &#125; 
+    
+    public static void main(String[] args) throws Exception &#123;
+        try &#123;
+            ArticleGenerator generatorSqlmap = new ArticleGenerator();
+            generatorSqlmap.generator();
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  mapper/ArticleMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.ArticleMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Article&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;title&quot; property=&quot;title&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;category_id&quot; property=&quot;categoryId&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;article_type&quot; property=&quot;articleType&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; property=&quot;articleCover&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;is_appoint&quot; property=&quot;isAppoint&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;article_status&quot; property=&quot;articleStatus&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;publish_user_id&quot; property=&quot;publishUserId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;publish_time&quot; property=&quot;publishTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+    &lt;result column=&quot;read_counts&quot; property=&quot;readCounts&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;comment_counts&quot; property=&quot;commentCounts&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;mongo_file_id&quot; property=&quot;mongoFileId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;is_delete&quot; property=&quot;isDelete&quot; jdbcType=&quot;INTEGER&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; property=&quot;createTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+    &lt;result column=&quot;update_time&quot; property=&quot;updateTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+    &lt;result column=&quot;content&quot; property=&quot;content&quot; jdbcType=&quot;LONGVARCHAR&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+package com.imooc.article.service;
+
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+
+import java.util.List;
+
+public interface ArticleService &#123;
+    /**
+     * 发布文章
+     */
+    public void createArticle(NewArticleBO newArticleBO, Category category);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+package com.imooc.article.service.impl;
+
+import com.imooc.api.service.BaseService;
+import com.imooc.article.mapper.ArticleMapper;
+import com.imooc.article.service.ArticleService;
+import com.imooc.enums.ArticleAppointType;
+import com.imooc.enums.ArticleReviewStatus;
+import com.imooc.enums.YesOrNo;
+import com.imooc.exception.GraceException;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.Article;
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+import com.imooc.utils.DateUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+import java.util.List;
+
+import static com.imooc.api.BaseController.REDIS_ALL_CATEGORY;
+
+
+@Service
+public class ArticleServiceImpl extends BaseService implements ArticleService &#123;
+    @Autowired
+    private ArticleMapper articleMapper; //红色波浪线就去ArticleMapper上面加@Repository
+    @Autowired
+    private Sid sid;
+
+    @Transactional
+    @Override
+    public void createArticle(NewArticleBO newArticleBO, Category category) &#123;
+        String articleId = sid.nextShort();
+
+        Article article = new Article();
+        BeanUtils.copyProperties(newArticleBO, article);
+
+        article.setId(articleId);
+        article.setCategoryId(category.getId());
+        article.setArticleStatus(ArticleReviewStatus.REVIEWING.type);
+        article.setCommentCounts(0);
+        article.setReadCounts(0);
+
+        article.setIsDelete(YesOrNo.NO.type);
+        article.setCreateTime(new Date());
+        article.setUpdateTime(new Date());
+
+        if (article.getIsAppoint() == ArticleAppointType.TIMING.type) &#123;
+            article.setPublishTime(newArticleBO.getPublishTime()); //用户可以在前端选择定时发布
+        &#125; else if (article.getIsAppoint() == ArticleAppointType.IMMEDIATELY.type) &#123;
+            article.setPublishTime(new Date());
+        &#125;
+
+        int res = articleMapper.insert(article);
+        if (res != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_CREATE_ERROR);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Article.java
+package com.imooc.pojo;
+
+import javax.persistence.Column;
+import javax.persistence.Id;
+import java.util.Date;
+
+public class Article &#123;
+    @Id
+    private String id;
+
+    /**
+     * 文章标题
+     */
+    private String title;
+
+    /**
+     * 文章所属分类id
+     */
+    @Column(name = &quot;category_id&quot;)
+    private Integer categoryId;
+
+    /**
+     * 文章类型，1：图文（1张封面），2：纯文字
+     */
+    @Column(name = &quot;article_type&quot;)
+    private Integer articleType;
+
+    /**
+     * 文章封面图，article_type=1 的时候展示
+     */
+    @Column(name = &quot;article_cover&quot;)
+    private String articleCover;
+
+    /**
+     * 是否是预约定时发布的文章，1：预约（定时）发布，0：即时发布    在预约时间到点的时候，把1改为0，则发布
+     */
+    @Column(name = &quot;is_appoint&quot;)
+    private Integer isAppoint;
+
+    /**
+     * 文章状态，1：审核中（用户已提交），2：机审结束，等待人工审核，3：审核通过（已发布），4：审核未通过；5：文章撤回（已发布的情况下才能撤回和删除）
+     */
+    @Column(name = &quot;article_status&quot;)
+    private Integer articleStatus;
+
+    /**
+     * 发布者用户id
+     */
+    @Column(name = &quot;publish_user_id&quot;)
+    private String publishUserId;
+
+    /**
+     * 文章发布时间（也是预约发布的时间）
+     */
+    @Column(name = &quot;publish_time&quot;)
+    private Date publishTime;
+
+    /**
+     * 用户累计点击阅读数（喜欢数）（点赞） - 放redis
+     */
+    @Column(name = &quot;read_counts&quot;)
+    private Integer readCounts;
+
+    /**
+     * 文章评论总数。评论防刷，距离上次评论需要间隔时间控制几秒
+     */
+    @Column(name = &quot;comment_counts&quot;)
+    private Integer commentCounts;
+
+    @Column(name = &quot;mongo_file_id&quot;)
+    private String mongoFileId;
+
+    /**
+     * 逻辑删除状态，非物理删除，1：删除，0：未删除
+     */
+    @Column(name = &quot;is_delete&quot;)
+    private Integer isDelete;
+
+    /**
+     * 文章的创建时间
+     */
+    @Column(name = &quot;create_time&quot;)
+    private Date createTime;
+
+    /**
+     * 文章的修改时间
+     */
+    @Column(name = &quot;update_time&quot;)
+    private Date updateTime;
+
+    /**
+     * 文章内容，长度不超过9999，需要在前后端判断
+     */
+    private String content;
+</code></pre>
+<pre><code class="java">
+</code></pre>
 
     </div>
 
