@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -11548,7 +11548,7 @@ public class NewArticleBO &#123;
 &#125;Getter + Setter
 </code></pre>
 <h3 id="发布文章入库Service及联调【也可以定时发布】"><a href="#发布文章入库Service及联调【也可以定时发布】" class="headerlink" title="发布文章入库Service及联调【也可以定时发布】"></a>发布文章入库Service及联调【也可以定时发布】</h3><p><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html">http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html</a><br>发布完成后去数据库article中就会存在数据了</p>
-<pre><code class="xml">generator-datebase  generatorConfig-article.xml
+<pre><code class="xml">generator-datebase  generatorConfig-article.xml [逆向生成]
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;!DOCTYPE generatorConfiguration
         PUBLIC &quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;
@@ -11835,8 +11835,672 @@ public class Article &#123;
      */
     private String content;
 </code></pre>
-<pre><code class="java">
+<h3 id="构建定时任务-定时发布文章【定时任务】"><a href="#构建定时任务-定时发布文章【定时任务】" class="headerlink" title="构建定时任务 定时发布文章【定时任务】"></a>构建定时任务 定时发布文章【定时任务】</h3><p><a target="_blank" rel="noopener" href="https://cron.qqe2.com/">在线Cron表达式生成器 (qqe2.com)</a></p>
+<pre><code class="java">service-article  com/imooc/article/task/TaskPublishArticles.java
+package com.imooc.article.task;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+
+import java.time.LocalDateTime;
+
+@Configuration  // 1.标记配置类，使得springboot容器扫描到
+@EnableScheduling // 2.开启定时任务
+public class TaskPublishArticles &#123;
+    @Scheduled(cron = &quot;0/3 * * * * ? &quot;)
+    private void publishArticles()&#123;
+        System.out.println(&quot;执行定时任务：&quot; + LocalDateTime.now());
+    &#125;
+&#125;
+
+=================================================================
+执行定时任务：2024-07-22T14:34:54.009
+执行定时任务：2024-07-22T14:34:57.013
+执行定时任务：2024-07-22T14:35:00.012
+执行定时任务：2024-07-22T14:35:03.002
+执行定时任务：2024-07-22T14:35:06.001
+执行定时任务：2024-07-22T14:35:09.006
 </code></pre>
+<pre><code class="java">service-article  com/imooc/article/task/TaskPublishArticles.java
+package com.imooc.article.task;
+
+import com.imooc.article.service.ArticleService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+
+import java.time.LocalDateTime;
+
+@Configuration  // 1.标记配置类，使得springboot容器扫描到
+@EnableScheduling // 2.开启定时任务
+public class TaskPublishArticles &#123;
+    @Autowired
+    private ArticleService articleService;
+    // 添加定时任务，注明定时任务的表达式
+    // 【若文章数量庞大 需要RabbitMQ去做优化 后面会讲！】
+    @Scheduled(cron = &quot;0/3 * * * * ? &quot;)
+    private void publishArticles()&#123;
+        System.out.println(&quot;执行定时任务：&quot; + LocalDateTime.now());
+        // 4. 调用文章service，把当前时间应该发布的定时文章，状态改为即时
+        articleService.updateAppointToPublish();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/mapper/ArticleMapperCustom.java
+package com.imooc.article.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Article;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ArticleMapperCustom extends MyMapper&lt;Article&gt; &#123;
+    public void updateAppointToPublish();
+&#125;
+</code></pre>
+<pre><code class="java">service-article resources/mapper/ArticleMapperCustom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.ArticleMapperCustom&quot; &gt;
+    &lt;update id=&quot;updateAppointToPublish&quot;&gt;
+        update
+            article
+        set
+            is_appoint = 0
+        where
+            publish_time &amp;lt;= NOW()
+        and
+            is_appoint = 1
+    &lt;/update&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+package com.imooc.article.service;
+
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+
+import java.util.List;
+
+public interface ArticleService &#123;
+
+    /**
+     * 发布文章
+     */
+    public void createArticle(NewArticleBO newArticleBO, Category category);
+
+    /**
+     * 更新定时发布为即使发布
+     */
+    public void updateAppointToPublish();
+
+&#125;
+</code></pre>
+<pre><code class="java">service-article   com/imooc/article/service/impl/ArticleServiceImpl.java
+
+@Transactional //添加事务[更新操作]
+    @Override
+    public void updateAppointToPublish() &#123;
+        articleMapperCustom.updateAppointToPublish();
+    &#125;
+</code></pre>
+<h3 id="文章列表展示-【内容管理】"><a href="#文章列表展示-【内容管理】" class="headerlink" title="文章列表展示 【内容管理】"></a>文章列表展示 【内容管理】</h3><p>[mybatis中关于example类详解mybatis的Example</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/suizhikuo/p/13191209.html">Criteria]的使用 - 万事俱备就差个程序员 - 博客园 (cnblogs.com)</a></p>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticleControllerApi.java
+@Api(value = &quot;文章业务的controller&quot;, tags = &#123;&quot;文章业务的controller&quot;&#125;)
+@RequestMapping(&quot;article&quot;)
+public interface ArticleControllerApi &#123;
+
+    @PostMapping(&quot;createArticle&quot;)
+    @ApiOperation(value = &quot;用户发文&quot;, notes = &quot;用户发文&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult createArticle(@RequestBody @Valid NewArticleBO newArticleBO, BindingResult result);
+
+    @PostMapping(&quot;queryMyList&quot;) //对应着前端contentMng.html 340行
+    @ApiOperation(value = &quot;查询用户的所有文章列表&quot;, notes = &quot;查询用户的所有文章列表&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult queryMyList(@RequestParam String userId,
+                                       @RequestParam String keyword,
+                                       @RequestParam Integer status,
+                                       @RequestParam Date startDate,
+                                       @RequestParam Date endDate,
+                                       @RequestParam Integer page,
+                                       @RequestParam Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult queryMyList(String userId, String keyword, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize) &#123;
+        if (StringUtils.isBlank(userId))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_QUERY_PARAMS_ERROR);
+        &#125;
+        if (page == null)&#123;
+            page = COMMON_START_PAGE;
+        &#125;
+        if (pageSize == null)&#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+        // 查询我的列表，调用service
+        PagedGridResult grid =  articleService.queryMyArticleList(userId, keyword, status, startDate, endDate, page, pageSize);
+        return GraceJSONResult.ok(grid);
+    &#125;
+=========================================================================
+http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+package com.imooc.article.service;
+
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+import java.util.List;
+
+public interface ArticleService &#123;
+
+    /**
+     * 发布文章
+     */
+    public void createArticle(NewArticleBO newArticleBO, Category category);
+
+    /**
+     * 更新定时发布为即使发布
+     */
+    public void updateAppointToPublish();
+
+    /**
+     * 用户中心-查询我的文章列表
+     */
+    public PagedGridResult queryMyArticleList(String userId, String keyword, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+@Service
+public class ArticleServiceImpl extends BaseService implements ArticleService &#123;
+    @Autowired
+    private ArticleMapper articleMapper; //红色波浪线就去ArticleMapper上面加@Repository
+    @Autowired
+    private ArticleMapperCustom articleMapperCustom;
+    @Autowired
+    private Sid sid;
+     //匹配到前端的一种显示方法
+    @Override
+    public PagedGridResult queryMyArticleList(String userId, String keyword, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize) &#123;
+        Example example = new Example(Article.class);
+        example.orderBy(&quot;createTime&quot;).desc();
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo(&quot;publishUserId&quot;, userId);
+        if (StringUtils.isNotBlank(keyword))&#123;
+            //模糊查询
+            criteria.andLike(&quot;title&quot;, &quot;%&quot;+keyword+&quot;%&quot;);
+        &#125;
+        if (ArticleReviewStatus.isArticleStatusValid(status))&#123;
+            // 有效就匹配 无效就查询所有
+            criteria.andEqualTo(&quot;articleStatus&quot;, status);
+        &#125;
+        // 12是在前端显示审核中
+        if (status != null &amp;&amp; status == 12)&#123;
+            criteria.andEqualTo(&quot;articleStatus&quot;, ArticleReviewStatus.REVIEWING.type)
+                    .orEqualTo(&quot;articleStatus&quot;, ArticleReviewStatus.WAITING_MANUAL.type);
+        &#125;
+        // 逻辑删除
+        criteria.andEqualTo(&quot;isDelete&quot;, YesOrNo.NO.type);
+        if (startDate != null)&#123; //大于等于
+            criteria.andGreaterThanOrEqualTo(&quot;publishTime&quot;, startDate);
+        &#125;
+        if (startDate != null)&#123; //小于等于
+            criteria.andLessThanOrEqualTo(&quot;publishTime&quot;,endDate);
+        &#125;
+        PageHelper.startPage(page, pageSize);
+        List&lt;Article&gt; list = articleMapper.selectByExample(example);
+        return setterPagedGrid(list,page);
+    &#125;
+/*
+ArticleMapper 可以实现 selectByExample 是因为它继承了 MyMapper 接口，而 MyMapper 提供了一些通用的 CRUD 操作，这些操作包括 selectByExample。
+
+selectByExample 是 MyBatis 提供的一种动态查询方法。它允许你根据条件动态地生成 SQL 查询，而不需要手动编写复杂的 SQL 语句。这在实际开发中非常方便，因为你可以通过构建 Example 对象来动态设置查询条件。
+
+ArticleMapper 继承了 MyMapper&lt;Article&gt;，这意味着它自动获得了 MyMapper 中定义的所有方法，包括 selectByExample。MyMapper 是一个通用的 Mapper 接口，封装了常用的数据库操作方法。
+
+Example 和 Criteria
+Example: 用于构建查询条件的对象。在这里，我们创建了一个 Example 对象，用于设置查询的表（Article.class）和排序规则（按 createTime 降序）。
+
+Criteria: 用于添加具体的查询条件。在 Example 对象中创建 Criteria 对象，并使用它来添加各种条件（例如 publishUserId、title、articleStatus、isDelete 等）。
+
+selectByExample
+selectByExample 方法使用 Example 对象中的条件动态生成 SQL 查询，并从数据库中获取符合条件的记录。在这个例子中，我们使用了 articleMapper.selectByExample(example) 来根据构建的 Example 对象进行查询。
+
+Example 详细用法
+Example 和 Criteria 的使用使得我们可以非常灵活地构建查询条件，而不需要直接拼接 SQL 语句。这不仅提高了代码的可读性，还减少了 SQL 注入的风险。
+*/
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/mapper/ArticleMapper.java
+package com.imooc.article.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Article;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ArticleMapper extends MyMapper&lt;Article&gt; &#123;
+&#125;
+</code></pre>
+<h3 id="阿里AI文本检测【内容审核】-机器审核"><a href="#阿里AI文本检测【内容审核】-机器审核" class="headerlink" title="阿里AI文本检测【内容审核】[机器审核]"></a>阿里AI文本检测【内容审核】<del>[机器审核]</del></h3><pre><code class="xml">dev-common pom.xml 
+       &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-core&lt;/artifactId&gt;
+            &lt;version&gt;4.5.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun.oss&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-sdk-oss&lt;/artifactId&gt;
+            &lt;version&gt;3.10.2&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.aliyun&lt;/groupId&gt;
+            &lt;artifactId&gt;aliyun-java-sdk-green&lt;/artifactId&gt;
+            &lt;version&gt;3.5.1&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+            &lt;version&gt;1.2.51&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">dev-common  com/imooc/utils/extend/AliTextReviewUtils.java
+package com.imooc.utils.extend;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.IAcsClient;
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.green.model.v20180509.TextScanRequest;
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.HttpResponse;
+import com.aliyuncs.profile.DefaultProfile;
+import com.aliyuncs.profile.IClientProfile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+
+@Component
+public class AliTextReviewUtils &#123;
+
+    @Autowired
+    private AliyunResource aliyunResource;
+
+    public String reviewTextContent(String content) &#123;
+        IClientProfile profile = DefaultProfile.getProfile(&quot;cn-shanghai&quot;,
+                aliyunResource.getAccessKeyID(),
+                aliyunResource.getAccessKeySecret());
+        IAcsClient client = new DefaultAcsClient(profile);
+        TextScanRequest textScanRequest = new TextScanRequest();
+        textScanRequest.setAcceptFormat(FormatType.JSON); // 指定api返回格式
+        textScanRequest.setHttpContentType(FormatType.JSON);
+        textScanRequest.setMethod(com.aliyuncs.http.MethodType.POST); // 指定请求方法
+        textScanRequest.setEncoding(&quot;UTF-8&quot;);
+        textScanRequest.setRegionId(&quot;cn-shanghai&quot;);
+        List&lt;Map&lt;String, Object&gt;&gt; tasks = new ArrayList&lt;Map&lt;String, Object&gt;&gt;();
+        Map&lt;String, Object&gt; task1 = new LinkedHashMap&lt;String, Object&gt;();
+        task1.put(&quot;dataId&quot;, UUID.randomUUID().toString());
+        /**
+         * 待检测的文本，长度不超过10000个字符
+         */
+//        抵制毒品交易
+//          尼玛
+        task1.put(&quot;content&quot;, content);
+        tasks.add(task1);
+        JSONObject data = new JSONObject();
+
+        /**
+         * 检测场景，文本垃圾检测传递：antispam
+         **/
+        data.put(&quot;scenes&quot;, Arrays.asList(&quot;antispam&quot;));
+        data.put(&quot;tasks&quot;, tasks);
+        System.out.println(JSON.toJSONString(data, true));
+
+        try &#123;
+            textScanRequest.setHttpContent(data.toJSONString().getBytes(&quot;UTF-8&quot;), &quot;UTF-8&quot;, FormatType.JSON);
+            // 请务必设置超时时间
+            textScanRequest.setConnectTimeout(3000);
+            textScanRequest.setReadTimeout(6000);
+
+            HttpResponse httpResponse = client.doAction(textScanRequest);
+            if(httpResponse.isSuccess())&#123;
+                JSONObject scrResponse = JSON.parseObject(new String(httpResponse.getHttpContent(), &quot;UTF-8&quot;));
+                System.out.println(JSON.toJSONString(scrResponse, true));
+                if (200 == scrResponse.getInteger(&quot;code&quot;)) &#123;
+                    JSONArray taskResults = scrResponse.getJSONArray(&quot;data&quot;);
+                    for (Object taskResult : taskResults) &#123;
+                        if(200 == ((JSONObject)taskResult).getInteger(&quot;code&quot;))&#123;
+                            JSONArray sceneResults = ((JSONObject)taskResult).getJSONArray(&quot;results&quot;);
+                            JSONObject sceneResult = (JSONObject)sceneResults.get(0);
+        //                            for (Object sceneResult : sceneResults) &#123;
+                                String scene = sceneResult.getString(&quot;scene&quot;);
+                                String suggestion = sceneResult.getString(&quot;suggestion&quot;);
+                                //根据scene和suggetion做相关处理
+                                //suggestion == pass 未命中垃圾  suggestion == block 命中了垃圾，可以通过label字段查看命中的垃圾分类
+                                System.out.println(&quot;args = [&quot; + scene + &quot;]&quot;);
+                                System.out.println(&quot;args = [&quot; + suggestion + &quot;]&quot;);
+
+        //                            suggestion=pass：文本正常，文章状态改为发布通过
+        //                            review：需要人工审核，需要在后台管理系统中进行人工审核（很多自媒体平台都会采用机审+人工审的方式）
+        //                            block：文本违规，可以直接删除或者做限制处理，审核不通过
+        //                            &#125;
+                                return suggestion;
+                        &#125;else&#123;
+                            System.out.println(&quot;task process fail:&quot; + ((JSONObject)taskResult).getInteger(&quot;code&quot;));
+                            return null;
+                        &#125;
+                    &#125;
+                &#125; else &#123;
+                    System.out.println(&quot;detect not success. code:&quot; + scrResponse.getInteger(&quot;code&quot;));
+                    return null;
+                &#125;
+            &#125;else&#123;
+                System.out.println(&quot;response not success. status:&quot; + httpResponse.getStatus());
+                return null;
+            &#125;
+        &#125; catch (UnsupportedEncodingException e) &#123;
+            e.printStackTrace();
+        &#125; catch (ClientException e) &#123;
+            e.printStackTrace();
+        &#125;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现阿里AI自动审核文章【内容审核】"><a href="#实现阿里AI自动审核文章【内容审核】" class="headerlink" title="实现阿里AI自动审核文章【内容审核】"></a>实现阿里AI自动审核文章【内容审核】</h3><pre><code class="java">【沿用上面的AliTextReviewUtils】
+@Service
+public class ArticleServiceImpl extends BaseService implements ArticleService &#123;
+    @Autowired
+    private ArticleMapper articleMapper; //红色波浪线就去ArticleMapper上面加@Repository
+    @Autowired
+    private ArticleMapperCustom articleMapperCustom;
+    @Autowired
+    private AliTextReviewUtils aliTextReviewUtils;
+    @Autowired
+    private Sid sid;
+
+    @Transactional
+    @Override
+    public void createArticle(NewArticleBO newArticleBO, Category category) &#123;
+        String articleId = sid.nextShort();
+
+        Article article = new Article();
+        BeanUtils.copyProperties(newArticleBO, article);
+
+        article.setId(articleId);
+        article.setCategoryId(category.getId());
+        article.setArticleStatus(ArticleReviewStatus.REVIEWING.type);
+        article.setCommentCounts(0);
+        article.setReadCounts(0);
+
+        article.setIsDelete(YesOrNo.NO.type);
+        article.setCreateTime(new Date());
+        article.setUpdateTime(new Date());
+
+        if (article.getIsAppoint() == ArticleAppointType.TIMING.type) &#123;
+            article.setPublishTime(newArticleBO.getPublishTime()); //用户可以在前端选择定时发布
+        &#125; else if (article.getIsAppoint() == ArticleAppointType.IMMEDIATELY.type) &#123;
+            article.setPublishTime(new Date());
+        &#125;
+
+        int res = articleMapper.insert(article);
+        if (res != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_CREATE_ERROR);
+        &#125;
+
+        /**
+         * FIXME: 我们只检测正常的词汇，非正常词汇大家课后去检测
+         */
+        // 通过阿里智能AI实现对文章文本的自动检测（自动审核）
+//        String reviewTextResult = aliTextReviewUtils.reviewTextContent(newArticleBO.getContent());
+        String reviewTextResult = ArticleReviewLevel.REVIEW.type;
+
+        if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.PASS.type)) &#123;
+            // 修改当前的文章，状态标记为审核通过
+            this.updateArticleStatus(articleId, ArticleReviewStatus.SUCCESS.type);
+        &#125; else if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.REVIEW.type)) &#123;
+            // 修改当前的文章，状态标记为需要人工审核
+            this.updateArticleStatus(articleId, ArticleReviewStatus.WAITING_MANUAL.type);
+        &#125; else if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.BLOCK.type)) &#123;
+            // 修改当前的文章，状态标记为审核未通过
+            this.updateArticleStatus(articleId, ArticleReviewStatus.FAILED.type);
+        &#125;
+    &#125;
+......
+......
+    @Transactional
+    @Override
+    public void updateArticleStatus(String articleId, Integer pendingStatus) &#123;
+        Example example = new Example(Article.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo(&quot;id&quot;,articleId);
+
+        Article pendingArticle = new Article();
+        pendingArticle.setArticleStatus(pendingStatus);
+        int res = articleMapper.updateByExampleSelective(pendingArticle, example);
+        if (res != 1)&#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+package com.imooc.article.service;
+
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+import java.util.List;
+
+public interface ArticleService &#123;
+
+    /**
+     * 发布文章
+     */
+    public void createArticle(NewArticleBO newArticleBO, Category category);
+
+    /**
+     * 更新定时发布为即使发布
+     */
+    public void updateAppointToPublish();
+
+    /**
+     * 用户中心-查询我的文章列表
+     */
+    public PagedGridResult queryMyArticleList(String userId, String keyword, Integer status, Date startDate, Date endDate, Integer page, Integer pageSize);
+
+    /**
+     * 更改文章的状态
+     * @param articleId
+     * @param pendingStatus
+     */
+    public void updateArticleStatus(String articleId, Integer pendingStatus);
+&#125;
+</code></pre>
+<h3 id="admin文章管理列表【内容审核】【作业】"><a href="#admin文章管理列表【内容审核】【作业】" class="headerlink" title="admin文章管理列表【内容审核】【作业】"></a>admin文章管理列表【内容审核】<del>【作业】</del></h3><h5 id="管理员查询用户的所有文章列表"><a href="#管理员查询用户的所有文章列表" class="headerlink" title="管理员查询用户的所有文章列表"></a>管理员查询用户的所有文章列表</h5><pre><code class="java">service-api  com/imooc/api/controller/article/ArticleControllerApi.java
+@PostMapping(&quot;queryAllList&quot;)
+    @ApiOperation(value = &quot;管理员查询用户的所有文章列表&quot;, notes = &quot;管理员查询用户的所有文章列表&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult queryAllList(@RequestParam Integer status,
+                                        @ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;, required = false)
+                                        @RequestParam Integer page,
+                                        @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页的每一页显示的条数&quot;, required = false)
+                                        @RequestParam Integer pageSize);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult queryAllList(Integer status, Integer page, Integer pageSize) &#123;
+        if (page == null)&#123;
+            page = COMMON_START_PAGE;
+        &#125;
+        if (pageSize == null)&#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+        PagedGridResult gridResult = articleService.queryAllArticleListAdmin(status,page,pageSize);
+
+        return GraceJSONResult.ok(gridResult);
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+    /**
+     * 管理员查询文章列表
+     */
+    public PagedGridResult queryAllArticleListAdmin(Integer status, Integer page, Integer pageSize);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+@Override
+    public PagedGridResult queryAllArticleListAdmin(Integer status, Integer page, Integer pageSize) &#123;
+        Example articleExample = new Example(Article.class);
+        articleExample.orderBy(&quot;createTime&quot;).desc();
+        Example.Criteria criteria = articleExample.createCriteria();
+        //这里是检测文章状态 与前端做匹配
+        if (ArticleReviewStatus.isArticleStatusValid(status)) &#123;
+            criteria.andEqualTo(&quot;articleStatus&quot;, status);
+        &#125;
+
+        // 审核中是机审和人审核的两个状态，所以需要单独判断
+        if (status != null &amp;&amp; status == 12) &#123;
+            criteria.andEqualTo(&quot;articleStatus&quot;, ArticleReviewStatus.REVIEWING.type)
+                    .orEqualTo(&quot;articleStatus&quot;, ArticleReviewStatus.WAITING_MANUAL.type);
+        &#125;
+        //isDelete必须是0
+        criteria.andEqualTo(&quot;isDelete&quot;, YesOrNo.NO.type);
+        /**
+         * page: 第几页
+         * pageSize: 每页显示条数
+         */
+        PageHelper.startPage(page, pageSize);
+        List&lt;Article&gt; list = articleMapper.selectByExample(articleExample);
+        return setterPagedGrid(list, page);
+    &#125;
+</code></pre>
+<h3 id="人工审核-【内容审核】"><a href="#人工审核-【内容审核】" class="headerlink" title="人工审核 【内容审核】"></a>人工审核 【内容审核】</h3><p><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/contentReview.html">内容审核 | 运营管理平台 (imoocnews.com)</a> 【[待审核]手动审核通过】</p>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticleControllerApi.java
+    @PostMapping(&quot;doReview&quot;)
+    @ApiOperation(value = &quot;管理员对文章进行审核通过或者失败&quot;, notes = &quot;管理员对文章进行审核通过或者失败&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult doReview(@RequestParam String articleId,
+                                    @RequestParam Integer passOrNot);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult doReview(String articleId, Integer passOrNot) &#123;
+        Integer pendingStatus;
+        if (passOrNot == YesOrNo.YES.type) &#123;
+            // 审核成功
+            pendingStatus = ArticleReviewStatus.SUCCESS.type;
+        &#125; else if (passOrNot == YesOrNo.NO.type) &#123;
+            // 审核失败
+            pendingStatus = ArticleReviewStatus.FAILED.type;
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+        // 保存到数据库，更改文章状态为审核成功或者失败
+        articleService.updateArticleStatus(articleId, pendingStatus);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<h3 id="撤回-删除文章作业-【内容管理】"><a href="#撤回-删除文章作业-【内容管理】" class="headerlink" title="撤回_删除文章作业 【内容管理】"></a>撤回_删除文章作业 【内容管理】</h3><p><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html">媒体号作家中心 | 内容管理 (imoocnews.com)</a><br>[这个是用户撤回和删除噢 而不是管理员的撤回与删除]<br><a target="_blank" rel="noopener" href="http://writer.imoocnews.com:9090/imooc-news/writer/contentMng.html">用户：媒体号作家中心 | 内容管理 (imoocnews.com)</a><br><a target="_blank" rel="noopener" href="http://admin.imoocnews.com:9090/imooc-news/admin/contentReview.html">管理员：内容审核 | 运营管理平台 (imoocnews.com)</a></p>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticleControllerApi.java
+    @PostMapping(&quot;/delete&quot;)
+    @ApiOperation(value = &quot;用户删除文章&quot;, notes = &quot;用户删除文章&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult delete(@RequestParam String userId,
+                                  @RequestParam String articleId);
+
+    @PostMapping(&quot;/withdraw&quot;)
+    @ApiOperation(value = &quot;用户撤回文章&quot;, notes = &quot;用户撤回文章&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult withdraw(@RequestParam String userId,
+                                    @RequestParam String articleId);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult delete(String userId, String articleId) &#123;
+        articleService.deleteArticle(userId,articleId);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult withdraw(String userId, String articleId) &#123;
+        articleService.withdrawArticle(userId, articleId);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+package com.imooc.article.service;
+
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+import java.util.List;
+
+public interface ArticleService &#123;
+
+   /**
+     * 删除文章
+     */
+    public void deleteArticle(String userId, String articleId);
+
+    /**
+     * 撤回文章
+     */
+    public void withdrawArticle(String userId, String articleId);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+ @Transactional
+    @Override
+    public void deleteArticle(String userId, String articleId) &#123;
+        Example articleExample = makeExampleCriteria(userId, articleId);
+
+        Article pending = new Article();
+        pending.setIsDelete(YesOrNo.YES.type);
+
+        int result = articleMapper.updateByExampleSelective(pending, articleExample);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_DELETE_ERROR);
+        &#125;
+    &#125;
+
+    @Transactional
+    @Override
+    public void withdrawArticle(String userId, String articleId) &#123;
+        Example articleExample = makeExampleCriteria(userId, articleId);
+
+        Article pending = new Article();
+        pending.setArticleStatus(ArticleReviewStatus.WITHDRAW.type);
+
+        int result = articleMapper.updateByExampleSelective(pending, articleExample);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_WITHDRAW_ERROR);
+        &#125;
+//        deleteHTML(articleId);
+    &#125;
+
+    private Example makeExampleCriteria(String userId, String articleId) &#123;
+        Example articleExample = new Example(Article.class);
+        Example.Criteria criteria = articleExample.createCriteria();
+        criteria.andEqualTo(&quot;publishUserId&quot;, userId);
+        criteria.andEqualTo(&quot;id&quot;, articleId);
+        return articleExample;
+    &#125;
+</code></pre>
+<p>&#96;</p>
 
             
         </div>
@@ -14901,7 +15565,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -17330,7 +17994,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -20260,7 +20924,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -22327,7 +22991,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -27354,7 +28018,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -30663,7 +31327,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
