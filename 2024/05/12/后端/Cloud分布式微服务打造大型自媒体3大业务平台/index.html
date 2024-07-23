@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -11679,7 +11679,258 @@ public interface ArticleService &#123;
         return articleExample;
     &#125;
 </code></pre>
-<p>&#96;</p>
+<h2 id="首页-作者页面介绍【章节描述】"><a href="#首页-作者页面介绍【章节描述】" class="headerlink" title="首页_作者页面介绍【章节描述】"></a>首页_作者页面介绍【章节描述】</h2><ul>
+<li><strong>开发首页与作家个人展示页</strong></li>
+<li><strong>文章列表、友情链接查询</strong></li>
+<li><strong>粉丝关注与取关</strong></li>
+<li><strong>我的粉丝与粉丝画像</strong></li>
+</ul>
+<h3 id="根据MongoDB字段查询友情链接"><a href="#根据MongoDB字段查询友情链接" class="headerlink" title="根据MongoDB字段查询友情链接"></a>根据MongoDB字段查询友情链接</h3><pre><code class="java">service-api  com/imooc/api/controller/admin/FriendLinkControllerApi.java
+    @ApiOperation(value = &quot;门户端查询友情链接列表&quot;, notes = &quot;门户端查询友情链接列表&quot;, httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;portal/list&quot;)
+    public GraceJSONResult queryPortalAllFriendLinkList();
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/controller/FriendLinkController.java
+    @Override
+    public GraceJSONResult queryPortalAllFriendLinkList() &#123;
+        List&lt;FriendLinkMO&gt; list = friendLinkService.queryPortalAllFriendLinkList();
+        return GraceJSONResult.ok(list);
+    &#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/service/FriendLinkService.java
+    /**
+     * 首页查询友情链接
+     */
+    public List&lt;FriendLinkMO&gt; queryPortalAllFriendLinkList();
+</code></pre>
+<pre><code class="java">service-admin com/imooc/admin/service/impl/FriendLinkServiceImpl.java 
+@Override
+    public List&lt;FriendLinkMO&gt; queryPortalAllFriendLinkList() &#123;
+        return friendLinkRepository.getAllByIsDelete(YesOrNo.NO.type);
+    &#125;
+</code></pre>
+<pre><code class="java">service-admin  com/imooc/admin/repository/FriendLinkRepository.java
+@Repository
+public interface FriendLinkRepository extends MongoRepository&lt;FriendLinkMO, String&gt; &#123; //持久层
+    // 内置提供了很多方法 find.. delete...
+    public List&lt;FriendLinkMO&gt; getAllByIsDelete(Integer isDelete); //后面可以加ANDID
+&#125;
+</code></pre>
+<h3 id="搜索并展示文章列表【首页】"><a href="#搜索并展示文章列表【首页】" class="headerlink" title="搜索并展示文章列表【首页】"></a>搜索并展示文章列表【首页】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/ArticlePortalControllerApi.java
+@Api(value = &quot;门户端文章业务的controller&quot;, tags = &#123;&quot;门户端文章业务的controller&quot;&#125;)
+@RequestMapping(&quot;portal/article&quot;)
+public interface ArticlePortalControllerApi &#123;
+    @ApiOperation(value = &quot;首页查询文章列表&quot;, notes = &quot;首页查询文章列表&quot;, httpMethod = &quot;GET&quot;)
+    @GetMapping(&quot;list&quot;)
+    public GraceJSONResult list(@RequestParam String keyword,
+                                @RequestParam Integer category,
+                                @ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;, required = false)
+                                @RequestParam Integer page,
+                                @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页的每一页显示的条数&quot;, required = false)
+                                @RequestParam Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+@RestController
+public class ArticlePortalController extends BaseController implements ArticlePortalControllerApi &#123;
+
+    final static Logger logger = LoggerFactory.getLogger(ArticlePortalController.class);
+
+    @Autowired
+    private ArticlePortalService articlePortalService;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Override
+    public GraceJSONResult list(String keyword,
+                                Integer category,
+                                Integer page,
+                                Integer pageSize) &#123;
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        PagedGridResult gridResult
+                = articlePortalService.queryIndexArticleList(keyword,
+                category,
+                page,
+                pageSize);
+        return GraceJSONResult.ok(gridResult);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticlePortalServiceImpl.java
+@Service
+public class ArticlePortalServiceImpl extends BaseService implements ArticlePortalService &#123;
+    @Autowired
+    private ArticleMapper articleMapper; //红色波浪线就去ArticleMapper上面加@Repository
+
+
+    @Override
+    public PagedGridResult queryIndexArticleList(String keyword,
+                                                 Integer category,
+                                                 Integer page,
+                                                 Integer pageSize) &#123;
+
+        Example articleExample = new Example(Article.class);
+        articleExample.orderBy(&quot;publishTime&quot;).desc();//使用时间进行排序
+        Example.Criteria criteria = articleExample.createCriteria();
+
+        /**
+         * 查询首页文章的自带隐性查询条件：
+         * isAppoint=即使发布，表示文章已经直接发布的，或者定时任务到点发布的
+         * isDelete=未删除，表示文章只能够显示未删除
+         * articleStatus=审核通过，表示只有文章经过机审/人工审核之后才能展示
+         */
+        criteria.andEqualTo(&quot;isAppoint&quot;, YesOrNo.NO.type);
+        criteria.andEqualTo(&quot;isDelete&quot;, YesOrNo.NO.type);
+        criteria.andEqualTo(&quot;articleStatus&quot;, ArticleReviewStatus.SUCCESS.type);
+
+        if (StringUtils.isNotBlank(keyword)) &#123;
+            criteria.andLike(&quot;title&quot;, &quot;%&quot; + keyword + &quot;%&quot;);
+        &#125;
+        if (category != null) &#123;
+            criteria.andEqualTo(&quot;categoryId&quot;, category);
+        &#125;
+
+        PageHelper.startPage(page, pageSize);
+        List&lt;Article&gt; list = articleMapper.selectByExample(articleExample);
+        System.out.println(keyword);
+        System.out.println(category);
+        return setterPagedGrid(list, page);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticlePortalService.java
+public interface ArticlePortalService &#123;
+
+    /**
+     * 首页查询文章列表
+     */
+    public PagedGridResult queryIndexArticleList(String keyword,
+                                                 Integer category,
+                                                 Integer page,
+                                                 &#125;
+</code></pre>
+<pre><code class="html">index.html
+&lt;!-- 中间容器 --&gt;
+        &lt;div class=&quot;container&quot;&gt;
+            &lt;!-- 文章列表 --&gt;
+            &lt;div id=&quot;articleList&quot; class=&quot;article-list&quot;&gt;
+                &lt;ul&gt;
+                    &lt;li class=&quot;single-article-wrapper&quot; v-for=&quot;(article, index) in articleList&quot; :key=&quot;index&quot;&gt;
+                        &lt;img :src=&quot;article.articleCover&quot; class=&quot;article-cover&quot; v-show=&quot;article.articleType == 1&quot;&gt;
+
+                        &lt;div class=&quot;single-article&quot;&gt;
+                            &lt;div class=&quot;article-title&quot;&gt;
+                                &lt;!-- TODO: 后期改为静态页面跳转 --&gt;
+                                &lt;a :href=&quot;&#39;detail.html?articleId=&#39;+article.id&quot; target=&quot;_blank&quot; class=&quot;link-article-title&quot;&gt;&#123;&#123;article.title&#125;&#125;&lt;/a&gt;
+                            &lt;/div&gt;
+                            &lt;div class=&quot;publisher&quot;&gt;
+                                &lt;div class=&quot;category-tag&quot; :style=&quot;&#123;color: getCatTagColor(article.categoryId), borderColor: getCatTagColor(article.categoryId) &#125;&quot;&gt;&#123;&#123;getCatName(article.categoryId)&#125;&#125;&lt;/div&gt;
+                                &lt;!-- TODO: 这里需要显示用户的昵称以及用户头像 --&gt;
+                                    &lt;img src=&quot;img/face1.png&quot; class=&quot;publisher-face&quot; v-if=&quot;article.publisherVO == null || article.publisherVO == undefined&quot;&gt;
+                                    &lt;div class=&quot;publisher-name&quot; v-if=&quot;article.publisherVO == null || article.publisherVO == undefined&quot;&gt;&amp;nbsp;&amp;nbsp;&#123;&#123;article.publishUserId&#125;&#125;&amp;nbsp;⋅&lt;/div&gt;
+                                
+                                
+                                    &lt;img :src=&quot;article.publisherVO.face&quot; class=&quot;publisher-face&quot; v-if=&quot;article.publisherVO != null &amp;&amp; article.publisherVO != undefined&quot;&gt;
+                                &lt;!--
+                                    &lt;a :href=&quot;&#39;writer.html?writerId=&#39;+article.publisherVO.id&quot; target=&quot;_blank&quot;&gt;
+                                    &lt;div class=&quot;publisher-name&quot; v-if=&quot;article.publisherVO != null &amp;&amp; article.publisherVO != undefined&quot;&gt;&amp;nbsp;&amp;nbsp;&#123;&#123;article.publisherVO.nickname&#125;&#125;&amp;nbsp;⋅&lt;/div&gt;
+                                &lt;/a&gt;
+                                    --&gt;
+
+                                &lt;div class=&quot;article-name&quot;&gt;&amp;nbsp;&#123;&#123;article.readCounts&#125;&#125;阅读&amp;nbsp;⋅&lt;/div&gt;
+                                
+                                &lt;!-- &lt;div class=&quot;publish-time&quot;&gt;&amp;nbsp;&#123;&#123;formatData(article.publishTime)&#125;&#125;&lt;/div&gt; --&gt;
+                                &lt;div class=&quot;publish-time&quot;&gt;&amp;nbsp;&#123;&#123;getDateBeforeNow(article.publishTime)&#125;&#125;&lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/div&gt;
+</code></pre>
+<h3 id="文章列表展示发布者需求【首页】"><a href="#文章列表展示发布者需求【首页】" class="headerlink" title="文章列表展示发布者需求【首页】"></a>文章列表展示发布者需求【首页】</h3><pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+[其他不变加上点代码]
+package com.imooc.article.controller;
+
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.article.ArticleControllerApi;
+import com.imooc.api.controller.article.ArticlePortalControllerApi;
+import com.imooc.article.service.ArticlePortalService;
+import com.imooc.article.service.ArticleService;
+import com.imooc.enums.ArticleCoverType;
+import com.imooc.enums.ArticleReviewStatus;
+import com.imooc.enums.YesOrNo;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.pojo.Article;
+import com.imooc.pojo.Category;
+import com.imooc.pojo.bo.NewArticleBO;
+import com.imooc.utils.JsonUtils;
+import com.imooc.utils.PagedGridResult;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+
+@RestController
+public class ArticlePortalController extends BaseController implements ArticlePortalControllerApi &#123;
+
+    final static Logger logger = LoggerFactory.getLogger(ArticlePortalController.class);
+
+    @Autowired
+    private ArticlePortalService articlePortalService;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Override
+    public GraceJSONResult list(String keyword,
+                                Integer category,
+                                Integer page,
+                                Integer pageSize) &#123;
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        PagedGridResult gridResult
+                = articlePortalService.queryIndexArticleList(keyword,
+                category,
+                page,
+                pageSize);
+   //START
+        List&lt;Article&gt; list = (List&lt;Article&gt;) gridResult.getRows();
+        // 1. 构建发布者id列表
+        Set&lt;String&gt; idset = new HashSet&lt;&gt;();
+        for (Article a : list)&#123;
+//            System.out.println(a.getPublishUserId());
+            idset.add(a.getPublishUserId());
+        &#125;
+        System.out.println(idset.toString());
+        // 2. 发起远程调用(restTemplate)，请求用户服务获得用户(idSet 发布者)列表
+
+        // 3. 拼接两个list，重组文章列表
+   //END
+        return GraceJSONResult.ok(gridResult);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="发起restTemplate请求查询用户服务获得发布者列表【首页】"><a href="#发起restTemplate请求查询用户服务获得发布者列表【首页】" class="headerlink" title="发起restTemplate请求查询用户服务获得发布者列表【首页】"></a>发起restTemplate请求查询用户服务获得发布者列表【首页】</h3><p>&#96;</p>
 
     </div>
 
