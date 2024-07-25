@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -12569,8 +12569,654 @@ public interface ArticlePortalService &#123;
         return criteria;
     &#125;
 </code></pre>
-<p>7-9</p>
-<p>&#96;</p>
+<h4 id="关注与取关-redis单线程计数统计-【粉丝关注】"><a href="#关注与取关-redis单线程计数统计-【粉丝关注】" class="headerlink" title="关注与取关_redis单线程计数统计 【粉丝关注】"></a>关注与取关_redis单线程计数统计 【粉丝关注】</h4><blockquote>
+<p>阅读数可以用数据库COUNT* 但是压力会很大 若很多人一起刷新会音响很大<br>用redis 数量累加累减 单线程安全<br>减少数据库压力</p>
+</blockquote>
+<pre><code class="mysql">【注意 redis我安装到了本地计算机里面 D:\Redis-x64-3.0.504】
+打开redis-cli.exe
+127.0.0.1:6379&gt; keys *
+1) &quot;redis_all_category&quot;
+2) &quot;redis_admin_token:1001&quot;
+3) &quot;redis_user_info:1001&quot;
+4) &quot;redis_user_info:200628AFYM7AGWPH&quot;
+5) &quot;redis_user_token:240629F21AK1BHX4&quot;
+6) &quot;redis_user_info:240629F21AK1BHX4&quot;
+7) &quot;redis_user_token:200628AFYM7AGWPH&quot;
+127.0.0.1:6379&gt; INCR 1001:fans #【增加】
+(integer) 1
+127.0.0.1:6379&gt; INCR 1001:fans
+(integer) 2
+127.0.0.1:6379&gt; INCR 1001:fans
+(integer) 3
+127.0.0.1:6379&gt; get 1001:fans #【获取】
+&quot;3&quot;
+127.0.0.1:6379&gt; DECR 1001:fans #【减少】
+(integer) 2
+127.0.0.1:6379&gt; DECR 1001:fans
+(integer) 1
+127.0.0.1:6379&gt; incr 1001:follows #【关注的粉丝】
+(integer) 1
+127.0.0.1:6379&gt; get 1001:follows
+&quot;1&quot;
+</code></pre>
+<h3 id="查询用户关注状态【粉丝关注】"><a href="#查询用户关注状态【粉丝关注】" class="headerlink" title="查询用户关注状态【粉丝关注】"></a>查询用户关注状态【粉丝关注】</h3><pre><code class="java">service-api  com/imooc/api/controller/user/MyFansControllerApi.java
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
+
+@Api(value = &quot;粉丝管理&quot;,tags = &#123;&quot;粉丝管理功能的controller&quot;&#125;)
+@RequestMapping(&quot;fans&quot;)
+public interface MyFansControllerApi &#123;
+    @ApiOperation(value = &quot;查询当前用户是否关注作家&quot;,notes = &quot;查询当前用户是否关注作家&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/isMeFollowThisWriter&quot;)
+    public GraceJSONResult isMeFollowThisWriter(@RequestParam String writerId, @RequestParam String fanId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/MyFansController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.api.controller.user.MyFansControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.user.service.MyFansService;
+import com.imooc.utils.RedisOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class MyFansController extends BaseController implements MyFansControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(MyFansController.class);
+
+    @Autowired
+    private MyFansService myFansService;
+
+    @Override
+    public GraceJSONResult isMeFollowThisWriter(String writerId, String fanId) &#123;
+        boolean res = myFansService.isMeFollowThisWriter(writerId,fanId);
+        return GraceJSONResult.ok(res);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/MyFansService.java
+package com.imooc.user.service;
+
+import com.imooc.utils.PagedGridResult;
+
+import java.util.Date;
+
+public interface MyFansService &#123;
+    /**
+     * 查询当前用户是否关注作家
+     */
+    public boolean isMeFollowThisWriter(String writerId, String fanId);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/MyFansServiceImpl.java
+package com.imooc.user.service.impl;
+
+import com.github.pagehelper.PageHelper;
+import com.imooc.api.service.BaseService;
+import com.imooc.enums.UserStatus;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.Fans;
+import com.imooc.user.mapper.AppUserMapper;
+import com.imooc.user.mapper.FansMapper;
+import com.imooc.user.service.AppUserMngService;
+import com.imooc.user.service.MyFansService;
+import com.imooc.utils.PagedGridResult;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+public class MyFansServiceImpl extends BaseService implements MyFansService &#123;
+    @Autowired
+    public FansMapper fansMapper;
+
+
+    @Override
+    public boolean isMeFollowThisWriter(String writerId, String fanId) &#123;
+        Fans fan = new Fans();
+        fan.setFanId(fanId);
+        fan.setWriterId(writerId);
+        int count = fansMapper.selectCount(fan); //前期先放在数据库里
+        return count &gt; 0 ? true : false;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/mapper/FansMapper.java
+package com.imooc.user.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Fans;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface FansMapper extends MyMapper&lt;Fans&gt; &#123;
+&#125;
+</code></pre>
+<h3 id="用户关注-粉丝累加-amp-amp-粉丝累减"><a href="#用户关注-粉丝累加-amp-amp-粉丝累减" class="headerlink" title="用户关注_粉丝累加 &amp;&amp; 粉丝累减"></a>用户关注_粉丝累加 &amp;&amp; 粉丝累减</h3><pre><code class="java">service-api  com/imooc/api/controller/user/MyFansControllerApi.java
+package com.imooc.api.controller.user;
+
+
+import com.imooc.grace.result.GraceJSONResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.*;
+
+@Api(value = &quot;粉丝管理&quot;,tags = &#123;&quot;粉丝管理功能的controller&quot;&#125;)
+@RequestMapping(&quot;fans&quot;)
+public interface MyFansControllerApi &#123;
+    @ApiOperation(value = &quot;用户关注作家，成为粉丝&quot;,notes = &quot;用户关注作家，成为粉丝&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/follow&quot;)
+    public GraceJSONResult follow(@RequestParam String writerId, @RequestParam String fanId);
+    
+    @ApiOperation(value = &quot;取消关注，作家损失粉丝&quot;,notes = &quot;取消关注，作家损失粉丝&quot;,httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/unfollow&quot;)
+    public GraceJSONResult unfollow(@RequestParam String writerId, @RequestParam String fanId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/MyFansController.java
+package com.imooc.user.controller;
+
+import com.imooc.api.BaseController;
+import com.imooc.api.controller.user.MyFansControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.user.service.MyFansService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class MyFansController extends BaseController implements MyFansControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(MyFansController.class);
+
+    @Autowired
+    private MyFansService myFansService;
+
+    @Override
+    public GraceJSONResult isMeFollowThisWriter(String writerId, String fanId) &#123;
+        boolean res = myFansService.isMeFollowThisWriter(writerId,fanId);
+        return GraceJSONResult.ok(res);
+    &#125;
+
+    @Override
+    public GraceJSONResult follow(String writerId, String fanId) &#123;
+        myFansService.follow(writerId,fanId);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult unfollow(String writerId, String fanId) &#123;
+        myFansService.unfollow(writerId, fanId);
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/MyFansService.java
+package com.imooc.user.service;
+
+public interface MyFansService &#123;
+    /**
+     * 查询当前用户是否关注作家
+     */
+    public boolean isMeFollowThisWriter(String writerId, String fanId);
+
+    /**
+     * 关注成为粉丝
+     */
+    public void follow(String writerId, String fanId);
+    
+    /**
+     * 粉丝取消关注
+     */
+    public void unfollow(String writerId, String fanId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/MyFansServiceImpl.java
+package com.imooc.user.service.impl;
+
+import com.github.pagehelper.PageHelper;
+import com.imooc.api.service.BaseService;
+import com.imooc.enums.UserStatus;
+import com.imooc.pojo.AppUser;
+import com.imooc.pojo.Fans;
+import com.imooc.user.mapper.AppUserMapper;
+import com.imooc.user.mapper.FansMapper;
+import com.imooc.user.service.AppUserMngService;
+import com.imooc.user.service.MyFansService;
+import com.imooc.utils.PagedGridResult;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+public class MyFansServiceImpl extends BaseService implements MyFansService &#123;
+    @Autowired
+    public FansMapper fansMapper;
+    @Override
+    public boolean isMeFollowThisWriter(String writerId, String fanId) &#123;
+        Fans fan = new Fans();
+        fan.setFanId(fanId);
+        fan.setWriterId(writerId);
+        int count = fansMapper.selectCount(fan); //前期先放在数据库里
+        return count &gt; 0 ? true : false;
+    &#125;
+    
+    @Transactional
+    @Override
+    public void follow(String writerId, String fanId) &#123;
+        // 获得粉丝用户的信息
+        AppUser fanInfo = userService.getUser(fanId);
+
+        String fanPkId = sid.nextShort();
+
+        Fans fans = new Fans();
+        fans.setId(fanPkId);
+        fans.setFanId(fanId);
+        fans.setWriterId(writerId);
+
+        fans.setFace(fanInfo.getFace());
+        fans.setFanNickname(fanInfo.getNickname());
+        fans.setSex(fanInfo.getSex());
+        fans.setProvince(fanInfo.getProvince());
+
+        fansMapper.insert(fans);
+
+        // redis 作家粉丝数累加
+        redis.increment(REDIS_WRITER_FANS_COUNTS + &quot;:&quot; + writerId, 1);  //增加key一次
+        // redis 当前用户的(我的)关注数累加
+        redis.increment(REDIS_MY_FOLLOW_COUNTS + &quot;:&quot; + fanId, 1);  //增加key一次
+    &#125;
+    
+    @Transactional
+    @Override
+    public void unfollow(String writerId, String fanId) &#123;
+        Fans fans = new Fans();
+        fans.setWriterId(writerId);
+        fans.setFanId(fanId);
+
+        fansMapper.delete(fans);
+
+        // redis 作家粉丝数累减
+        redis.decrement(REDIS_WRITER_FANS_COUNTS + &quot;:&quot; + writerId, 1);  //增加key一次
+        // redis 当前用户的(我的)关注数累减
+        redis.decrement(REDIS_MY_FOLLOW_COUNTS + &quot;:&quot; + fanId, 1);  //增加key一次
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/service/BaseService.java
+package com.imooc.api.service;
+
+import com.github.pagehelper.PageInfo;
+import com.imooc.utils.PagedGridResult;
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+public class BaseService &#123;
+    public static final String REDIS_ALL_CATEGORY = &quot;redis_all_category&quot;;
+
+    public static final String REDIS_WRITER_FANS_COUNTS = &quot;redis_writer_fans_counts&quot;;
+    public static final String REDIS_MY_FOLLOW_COUNTS = &quot;redis_my_follow_counts&quot;;
+
+    public static final String REDIS_ARTICLE_COMMENT_COUNTS = &quot;redis_article_comment_counts&quot;;
+
+    @Autowired
+    public RedisOperator redis;
+    public PagedGridResult setterPagedGrid(List&lt;?&gt; list, Integer page)&#123; //类型是? 后期不确定是什么泛型
+        PageInfo&lt;?&gt; pageList = new PageInfo&lt;&gt;(list);
+        PagedGridResult gridResult = new PagedGridResult();
+        gridResult.setRows(list);
+        gridResult.setPage(page);
+        gridResult.setRecords(pageList.getTotal());
+        gridResult.setTotal(pageList.getPages());
+        return gridResult;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java //增加粉丝接口的拦截
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.AdminTokenInterceptor;
+import com.imooc.api.interceptors.PassportInterceptor;
+import com.imooc.api.interceptors.UserActiveInterceptor;
+import com.imooc.api.interceptors.UserTokenInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+    @Bean
+    public PassportInterceptor passportInterceptor()&#123;
+        return new PassportInterceptor();
+    &#125;
+    @Bean
+    public UserTokenInterceptor userTokenInterceptor()&#123;
+        return new UserTokenInterceptor();
+    &#125;
+    @Bean
+    public UserActiveInterceptor userActiveInterceptor() &#123;
+        return new UserActiveInterceptor();
+    &#125;
+
+    @Bean
+    public AdminTokenInterceptor adminTokenInterceptor() &#123;
+        return new AdminTokenInterceptor();
+    &#125;
+
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+        registry.addInterceptor(passportInterceptor())
+                .addPathPatterns(&quot;/passport/getSMSCode&quot;); //拦截PassportControllerApi里的信息
+        registry.addInterceptor(userTokenInterceptor())
+                .addPathPatterns(&quot;/user/getAccountInfo&quot;)
+                .addPathPatterns(&quot;/user/updateUserId&quot;)
+                .addPathPatterns(&quot;/fs/uploadFace&quot;)
+                .addPathPatterns(&quot;/fs/uploadSomeFiles&quot;)
+                .addPathPatterns(&quot;/fans/follow&quot;)
+                .addPathPatterns(&quot;/fans/unfollow&quot;);
+
+        registry.addInterceptor(adminTokenInterceptor())//继续添加拦截器：查询admin列表 创建新admin用户
+                .addPathPatterns(&quot;/adminMng/adminIsExist&quot;)
+                .addPathPatterns(&quot;/adminMng/addNewAdmin&quot;)
+                .addPathPatterns(&quot;/adminMng/getAdminList&quot;)
+                .addPathPatterns(&quot;/fs/uploadToGridFS&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/saveOrUpdateFriendLink&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/getFriendLinkList&quot;)
+                .addPathPatterns(&quot;/friendLinkMng/delete&quot;)
+                .addPathPatterns(&quot;/categoryMng/saveOrUpdateCategory&quot;)
+                .addPathPatterns(&quot;/categoryMng/getCatList&quot;);
+
+        registry.addInterceptor(userActiveInterceptor())
+                .addPathPatterns(&quot;/fs/uploadSomeFiles&quot;)
+                .addPathPatterns(&quot;/fans/follow&quot;)
+                .addPathPatterns(&quot;/fans/unfollow&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="粉丝数与关注数页面显示【粉丝关注】"><a href="#粉丝数与关注数页面显示【粉丝关注】" class="headerlink" title="粉丝数与关注数页面显示【粉丝关注】"></a>粉丝数与关注数页面显示【粉丝关注】</h3><pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+@RestController
+public class UserController extends BaseController implements UserControllerApi &#123;
+ @Override
+    public GraceJSONResult getUserInfo(String userId) &#123;
+        //接口进行解耦!!
+        // 0. 判断参数不为空
+        if (StringUtils.isBlank(userId))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.UN_LOGIN);
+        &#125;
+        // 1. 根据userId查询用户的信息 UserService+impl
+        AppUser user = getUser(userId);
+        // 2. 返回用户信息
+        AppUserVO userVO = new AppUserVO();
+        BeanUtils.copyProperties(user, userVO); //拷贝信息
+        // 3. 查询redis中用户的关注数和粉丝数，放入userVO放入前端渲染
+        userVO.setMyFansCounts(getCountsFromRedis(REDIS_WRITER_FANS_COUNTS + &quot;:&quot; + userId));
+        userVO.setMyFollowCounts(getCountsFromRedis(REDIS_MY_FOLLOW_COUNTS + &quot;:&quot; + userId));
+        return GraceJSONResult.ok(userVO);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java
+public abstract class BaseController &#123;
+public Integer getCountsFromRedis(String key)&#123;
+        String countsStr = redis.get(key);
+        if (StringUtils.isBlank(countsStr)) &#123;
+            countsStr = &quot;0&quot;;
+        &#125;
+        return Integer.valueOf(countsStr);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/AppUserVO.java
+public class AppUserVO &#123;
+    private String id;
+    private String nickname;
+    private String face;
+    private Integer activeStatus;
+
+    private Integer myFollowCounts;
+    private Integer myFansCounts;
+&#125;Getter + Setter
+</code></pre>
+<h3 id="我的粉丝列表-后端分页查询【粉丝管理】"><a href="#我的粉丝列表-后端分页查询【粉丝管理】" class="headerlink" title="我的粉丝列表_后端分页查询【粉丝管理】"></a>我的粉丝列表_后端分页查询【粉丝管理】</h3><pre><code class="java">service-api  com/imooc/api/controller/user/MyFansControllerApi.java
+@Api(value = &quot;粉丝管理&quot;,tags = &#123;&quot;粉丝管理功能的controller&quot;&#125;)
+@RequestMapping(&quot;fans&quot;)
+public interface MyFansControllerApi &#123;
+@ApiOperation(value = &quot;查询我的所有粉丝列表&quot;, notes = &quot;查询我的所有粉丝列表&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/queryAll&quot;)
+    public GraceJSONResult queryAll(
+            @RequestParam String writerId,
+            @ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;, required = false)
+            @RequestParam Integer page,
+            @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页查询每一页显示的条数&quot;, required = false)
+            @RequestParam Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/MyFansController.java
+@RestController
+public class MyFansController extends BaseController implements MyFansControllerApi &#123;
+ @Override
+    public GraceJSONResult queryAll(String writerId, Integer page, Integer pageSize) &#123;
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        return GraceJSONResult.ok(myFansService.queryMyFansList(writerId, page, pageSize));
+    &#125;
+&#125;
+===================================================================
+http://writer.imoocnews.com:9090/imooc-news/writer/myFans.html
+数据库中fans表
+weiter_id
+可以改成登录的cookie里面的 uid：240629F21AK1BHX4
+就可以测试用户粉丝数量
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/MyFansService.java
+package com.imooc.user.service;
+
+import com.imooc.utils.PagedGridResult;
+
+public interface MyFansService &#123;
+    /**
+     * 查询当前用户是否关注作家
+     */
+    public boolean isMeFollowThisWriter(String writerId, String fanId);
+
+    /**
+     * 关注成为粉丝
+     */
+    public void follow(String writerId, String fanId);
+
+    /**
+     * 粉丝取消关注
+     */
+    public void unfollow(String writerId, String fanId);
+
+    /**
+     * 查询我的粉丝
+     */
+    public PagedGridResult queryMyFansList(String writerId, Integer page, Integer pageSize);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/MyFansServiceImpl.java
+@Service
+public class MyFansServiceImpl extends BaseService implements MyFansService &#123;
+@Override
+    public PagedGridResult queryMyFansList(String writerId, Integer page, Integer pageSize) &#123;
+        Fans fans = new Fans();
+        fans.setWriterId(writerId);
+
+        PageHelper.startPage(page,pageSize); //进行分页
+        List&lt;Fans&gt; list = fansMapper.select(fans);
+        return setterPagedGrid(list,page);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="男女比例柱状图-饼状图显示【数据可视化-粉丝画像】Echarts"><a href="#男女比例柱状图-饼状图显示【数据可视化-粉丝画像】Echarts" class="headerlink" title="男女比例柱状图_饼状图显示【数据可视化-粉丝画像】Echarts"></a>男女比例柱状图_饼状图显示【数据可视化-粉丝画像】<del>Echarts</del></h3><p><a target="_blank" rel="noopener" href="https://echarts.apache.org/zh/index.html">Apache ECharts</a> + 前端 [myFansCharts-static.html + myFansCharts.html]</p>
+<pre><code class="java">service-api  com/imooc/api/controller/user/MyFansControllerApi.java
+@Api(value = &quot;粉丝管理&quot;,tags = &#123;&quot;粉丝管理功能的controller&quot;&#125;)
+@RequestMapping(&quot;fans&quot;)
+public interface MyFansControllerApi &#123;
+@ApiOperation(value = &quot;查询男女粉丝数量&quot;, notes = &quot;查询男女粉丝数量&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/queryRatio&quot;)
+    public GraceJSONResult queryRatio(@RequestParam String writerId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/MyFansController.java
+@RestController
+public class MyFansController extends BaseController implements MyFansControllerApi &#123;
+ @Override
+    public GraceJSONResult queryRatio(String writerId) &#123;
+        int manCount = myFansService.queryFansCounts(writerId, Sex.man);
+        int womanCount = myFansService.queryFansCounts(writerId, Sex.woman);
+
+        FansCountsVO fansCountsVO = new FansCountsVO();
+        fansCountsVO.setManCounts(manCount);
+        fansCountsVO.setWomanCounts(womanCount);
+        return GraceJSONResult.ok(fansCountsVO);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/MyFansService.java
+package com.imooc.user.service;
+
+import com.imooc.utils.PagedGridResult;
+
+public interface MyFansService &#123;
+     /**
+     * 查询粉丝数
+     */
+    public Integer queryFansCounts(String writerId, Sex sex);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/MyFansServiceImpl.java
+@Service
+public class MyFansServiceImpl extends BaseService implements MyFansService &#123;
+@Override
+    public Integer queryFansCounts(String writerId, Sex sex) &#123;
+        Fans fans = new Fans();
+        fans.setWriterId(writerId);
+        fans.setSex(sex.type);
+
+        int count = fansMapper.selectCount(fans);
+        return count;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="中国地图粉丝地域分布数量展示【数据可视化-粉丝画像】"><a href="#中国地图粉丝地域分布数量展示【数据可视化-粉丝画像】" class="headerlink" title="中国地图粉丝地域分布数量展示【数据可视化-粉丝画像】"></a>中国地图粉丝地域分布数量展示【数据可视化-粉丝画像】</h3><h3 id="男女比例柱状图-饼状图显示【数据可视化-粉丝画像】Echarts-1"><a href="#男女比例柱状图-饼状图显示【数据可视化-粉丝画像】Echarts-1" class="headerlink" title="男女比例柱状图_饼状图显示【数据可视化-粉丝画像】Echarts"></a>男女比例柱状图_饼状图显示【数据可视化-粉丝画像】<del>Echarts</del></h3><p><a target="_blank" rel="noopener" href="https://echarts.apache.org/zh/index.html">Apache ECharts</a> + 前端 [myFansCharts-static.html + myFansCharts.html]</p>
+<pre><code class="java">service-api  com/imooc/api/controller/user/MyFansControllerApi.java
+@ApiOperation(value = &quot;根据地域查询粉丝数量&quot;, notes = &quot;根据地域查询粉丝数量&quot;, httpMethod = &quot;POST&quot;)
+    @PostMapping(&quot;/queryRatioByRegion&quot;)
+    public GraceJSONResult queryRatioByRegion(@RequestParam String writerId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/MyFansController.java
+@RestController
+public class MyFansController extends BaseController implements MyFansControllerApi &#123;
+  @Override
+    public GraceJSONResult queryRatioByRegion(String writerId) &#123;
+        return GraceJSONResult.ok(myFansService.queryRegionRatioCounts(writerId));
+    &#125;
+&#125;
+=====================================================================
+将fans里的writer_id【自己的cookie里的uid 属于自己的属性 对应着右面的province省份】
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/MyFansService.java
+package com.imooc.user.service;
+
+import com.imooc.utils.PagedGridResult;
+
+public interface MyFansService &#123;
+     /**
+     * 查询粉丝数
+     */
+    public List&lt;RegionRatioVO&gt; queryRegionRatioCounts(String writerId);
+&#125;
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/service/impl/MyFansServiceImpl.java
+@Service
+public class MyFansServiceImpl extends BaseService implements MyFansService &#123;
+@Override
+    public List&lt;RegionRatioVO&gt; queryRegionRatioCounts(String writerId) &#123;
+        Fans fans = new Fans();
+        fans.setWriterId(writerId);
+
+        List&lt;RegionRatioVO&gt; list = new ArrayList&lt;&gt;();
+        for (String r : regions) &#123;
+            fans.setProvince(r);
+            Integer count = fansMapper.selectCount(fans);
+
+            RegionRatioVO regionRatioVO = new RegionRatioVO();
+            regionRatioVO.setName(r);
+            regionRatioVO.setValue(count);
+
+            list.add(regionRatioVO);
+        &#125;
+        return list;
+    &#125;
+
+    public static final String[] regions = &#123;&quot;北京&quot;, &quot;天津&quot;, &quot;上海&quot;, &quot;重庆&quot;,
+            &quot;河北&quot;, &quot;山西&quot;, &quot;辽宁&quot;, &quot;吉林&quot;, &quot;黑龙江&quot;, &quot;江苏&quot;, &quot;浙江&quot;, &quot;安徽&quot;, &quot;福建&quot;, &quot;江西&quot;, &quot;山东&quot;,
+            &quot;河南&quot;, &quot;湖北&quot;, &quot;湖南&quot;, &quot;广东&quot;, &quot;海南&quot;, &quot;四川&quot;, &quot;贵州&quot;, &quot;云南&quot;, &quot;陕西&quot;, &quot;甘肃&quot;, &quot;青海&quot;, &quot;台湾&quot;,
+            &quot;内蒙古&quot;, &quot;广西&quot;, &quot;西藏&quot;, &quot;宁夏&quot;, &quot;新疆&quot;,
+            &quot;香港&quot;, &quot;澳门&quot;&#125;;
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/RegionRatioVO.java
+package com.imooc.pojo.vo;
+
+public class RegionRatioVO &#123;
+
+    private String name;
+    private Integer value;
+
+    public String getName() &#123;
+        return name;
+    &#125;
+
+    public void setName(String name) &#123;
+        this.name = name;
+    &#125;
+
+    public Integer getValue() &#123;
+        return value;
+    &#125;
+
+    public void setValue(Integer value) &#123;
+        this.value = value;
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
