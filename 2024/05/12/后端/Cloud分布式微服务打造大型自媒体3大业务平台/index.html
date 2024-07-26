@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -8828,26 +8828,10 @@ public class Application &#123;
     &#125;
 &#125;
 </code></pre>
-<pre><code class="java">dev-model  com/imooc/pojo/bo/SaveFriendLinkBO.java
-package com.imooc.pojo.bo;
-
-import com.imooc.validate.CheckUrl;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
-public class SaveFriendLinkBO &#123;
-    private String id;
-    @NotBlank(message = &quot;友情链接名不能为空&quot;)
-    private String linkName;
-    @NotBlank(message = &quot;友情链接地址不能为空&quot;)
-    @CheckUrl 【ctrl+左键 显示↓ CheckUrl接口】
-    @CheckName 【 //不能有空格 不能为空 字符串长度要在6-12位】
-    private String linkUrl;
-    @NotNull(message = &quot;请选择保留或删除&quot;)
-    private Integer isDelete;
-&#125;Getter+Setter
-</code></pre>
+<p>dev-model  com&#x2F;imooc&#x2F;pojo&#x2F;bo&#x2F;SaveFriendLinkBO.java<br>package com.imooc.pojo.bo;</p>
+<p>import com.imooc.validate.CheckUrl;</p>
+<p>import javax.validation.constraints.NotBlank;<br>import javax.validation.constraints.NotNull;</p>
+<p>public class SaveFriendLinkBO {<br>    private String id;<br>    @NotBlank(message &#x3D; “友情链接名不能为空”)<br>    private String linkName;<br>    @NotBlank(message &#x3D; “友情链接地址不能为空”)<br>    @CheckUrl 【ctrl+左键 显示↓ CheckUrl接口】<br>    @CheckName 【 &#x2F;&#x2F;不能有空格 不能为空 字符串长度要在6-12位】<br>    private String linkUrl;<br>    @NotNull(message &#x3D; “请选择保留或删除”)<br>    private Integer isDelete;<br>}Getter+Setter</p>
 <pre><code class="java">dev-model  com/imooc/validate/CheckUrl.java
 package com.imooc.validate;
 
@@ -13217,6 +13201,758 @@ public class RegionRatioVO &#123;
     &#125;
 &#125;
 </code></pre>
+<h2 id="开发文章详情接口-【章节概述】detail-html"><a href="#开发文章详情接口-【章节概述】detail-html" class="headerlink" title="开发文章详情接口 【章节概述】detail.html"></a>开发文章详情接口 【章节概述】<del>detail.html</del></h2><ul>
+<li><strong>文章详情页</strong></li>
+<li><strong>文章评论模块</strong></li>
+<li><strong>评论管理</strong></li>
+</ul>
+<h3 id="文章详情页"><a href="#文章详情页" class="headerlink" title="文章详情页"></a>文章详情页</h3><pre><code class="java">service-api  com/imooc/api/controller/article/ArticlePortalControllerApi.java
+ @GetMapping(&quot;detail&quot;)
+    @ApiOperation(value = &quot;文章详情查询&quot;, notes = &quot;文章详情查询&quot;, httpMethod = &quot;GET&quot;)
+    public GraceJSONResult detail(@RequestParam String articleId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+ @Override
+    public GraceJSONResult detail(String articleId) &#123;
+        ArticleDetailVO detailVO = articlePortalService.queryDetail(articleId);
+
+        Set&lt;String&gt; idSet = new HashSet();
+        idSet.add(detailVO.getPublishUserId());
+        List&lt;AppUserVO&gt; publisherList = getPublisherList(idSet);
+
+        if (!publisherList.isEmpty()) &#123;
+            detailVO.setPublishUserName(publisherList.get(0).getNickname());
+        &#125;
+
+        detailVO.setReadCounts(
+                getCountsFromRedis(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + articleId));
+
+        return GraceJSONResult.ok(detailVO);
+    &#125;
+==================================================================
+http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=240721DDAHBPWG0H
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticlePortalService.java
+    /**
+     * 查询文章详情
+     */
+    public ArticleDetailVO queryDetail(String articleId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticlePortalServiceImpl.java
+    @Override
+    public ArticleDetailVO queryDetail(String articleId) &#123;
+        Article article = new Article();
+        article.setId(articleId);
+        article.setIsAppoint(YesOrNo.NO.type);
+        article.setIsDelete(YesOrNo.NO.type);
+        article.setArticleStatus(ArticleReviewStatus.SUCCESS.type);
+
+        Article result = articleMapper.selectOne(article);
+        ArticleDetailVO detailVO = new ArticleDetailVO();
+        BeanUtils.copyProperties(result, detailVO);
+        return detailVO;
+    &#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/ArticleDetailVO.java
+package com.imooc.pojo.vo;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.util.Date;
+
+public class ArticleDetailVO &#123;
+
+    private String id;
+    private String title;
+    private String cover;
+    private Integer categoryId;
+    private String categoryName;
+    private String publishUserId;
+    @JsonFormat(timezone = &quot;GMT+8&quot;, pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+    private Date publishTime;
+    private String content;
+
+    private String publishUserName;
+    private Integer readCounts;
+&#125;Getter + Setter
+</code></pre>
+<h3 id="阅读文章-阅读量redis累加【详情页】"><a href="#阅读文章-阅读量redis累加【详情页】" class="headerlink" title="阅读文章_阅读量redis累加【详情页】"></a>阅读文章_阅读量redis累加【详情页】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/ArticlePortalControllerApi.java
+@PostMapping(&quot;readArticle&quot;)
+    @ApiOperation(value = &quot;阅读文章，文章阅读量累加&quot;, notes = &quot;阅读文章，文章阅读量累加&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult readArticle(@RequestParam String articleId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+  @Override
+    public GraceJSONResult detail(String articleId) &#123;
+        ArticleDetailVO detailVO = articlePortalService.queryDetail(articleId);
+
+        Set&lt;String&gt; idSet = new HashSet();
+        idSet.add(detailVO.getPublishUserId());
+        List&lt;AppUserVO&gt; publisherList = getPublisherList(idSet);
+
+        if (!publisherList.isEmpty()) &#123;
+            detailVO.setPublishUserName(publisherList.get(0).getNickname());
+        &#125;
+
+        detailVO.setReadCounts( //去redis获取值 关联到前端阅读量增加 关联！！！
+                getCountsFromRedis(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + articleId));
+
+        return GraceJSONResult.ok(detailVO);
+    &#125;
+
+    @Override
+    public GraceJSONResult readArticle(String articleId) &#123;
+        redis.increment(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + articleId, 1);
+        return GraceJSONResult.ok();
+    &#125;
+==================================================================
+http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=240721DDAHBPWG0H
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticlePortalService.java
+public class ArticleDetailVO &#123;
+
+    private String id;
+    private String title;
+    private String cover;
+    private Integer categoryId;
+    private String categoryName;
+    private String publishUserId;
+    @JsonFormat(timezone = &quot;GMT+8&quot;, pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+    private Date publishTime;
+    private String content;
+
+    private String publishUserName;
+    private Integer readCounts;
+&#125;Getter + Setter
+</code></pre>
+<h3 id="文章阅读数防刷策略【详情页】"><a href="#文章阅读数防刷策略【详情页】" class="headerlink" title="文章阅读数防刷策略【详情页】"></a>文章阅读数防刷策略【详情页】</h3><blockquote>
+<p>限定id去做增加 readArticle中增加拦截器<br>在ArticlePortalControllerApi.java中的readArticle接口 增加 HttpServletRequest request</p>
+</blockquote>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticlePortalControllerApi.java
+@PostMapping(&quot;readArticle&quot;)
+    @ApiOperation(value = &quot;阅读文章，文章阅读量累加&quot;, notes = &quot;阅读文章，文章阅读量累加&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult readArticle(@RequestParam String articleId, HttpServletRequest request);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+@Override
+    public GraceJSONResult readArticle(String articleId, HttpServletRequest request) &#123;
+        String userIp = IPUtil.getRequestIp(request);
+        // 设置针对当前用户ip的永久存在的key，存入redis，表示该ip的用户已经阅读过了 防刷策略
+        redis.setnx(REDIS_ALREADY_READ + &quot;:&quot; + articleId + &quot;:&quot; + userIp, userIp);
+
+        redis.increment(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + articleId, 1);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/interceptors/ArticleReadInterceptor.java //【增加拦截器】
+package com.imooc.api.interceptors;
+
+import com.imooc.utils.IPUtil;
+import com.imooc.utils.RedisOperator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class ArticleReadInterceptor extends BaseInterceptor implements HandlerInterceptor &#123;
+
+    @Autowired
+    public RedisOperator redis;
+    public static final String REDIS_ALREADY_READ = &quot;redis_already_read&quot;;
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+
+        String articleId = request.getParameter(&quot;articleId&quot;);
+
+        String userIp = IPUtil.getRequestIp(request);
+        boolean isExist = redis.keyIsExist(REDIS_ALREADY_READ + &quot;:&quot; +  articleId + &quot;:&quot; + userIp);
+
+        if (isExist) &#123;
+            return false;
+        &#125;
+        return true;
+    &#125;
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+
+    &#125;
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/InterceptorConfig.java
+package com.imooc.api.config;
+
+import com.imooc.api.interceptors.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer &#123;
+...
+    @Bean
+    public ArticleReadInterceptor articleReadInterceptor()&#123;
+        return new ArticleReadInterceptor();
+    &#125;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry)&#123;//注册拦截器
+...
+        registry.addInterceptor(articleReadInterceptor())
+                .addPathPatterns(&quot;/portal/article/readArticle&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Redis-mget-批量查询组装阅读量并展示【文章列表】"><a href="#Redis-mget-批量查询组装阅读量并展示【文章列表】" class="headerlink" title="Redis mget 批量查询组装阅读量并展示【文章列表】"></a>Redis mget 批量查询组装阅读量并展示【文章列表】</h3><h5 id="Redis-get单个读取-amp-amp-Redis-mget批量读取"><a href="#Redis-get单个读取-amp-amp-Redis-mget批量读取" class="headerlink" title="Redis get单个读取 &amp;&amp; Redis mget批量读取"></a>Redis get单个读取 &amp;&amp; Redis mget批量读取</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/9d581a6e864d203ffb7157e6edd621ef947c4775/data/Redis_mget%E6%89%B9%E9%87%8F%E6%9F%A5%E8%AF%A2.png"></p>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+ private PagedGridResult rebuildArticleGrid(PagedGridResult gridResult) &#123;
+        // START
+        List&lt;Article&gt; list = (List&lt;Article&gt;)gridResult.getRows();
+        // 1. 构建发布者id列表
+        Set&lt;String&gt; idSet = new HashSet&lt;&gt;();
+        List&lt;String&gt; idList = new ArrayList&lt;&gt;();
+        for (Article a : list) &#123;
+//            System.out.println(a.getPublishUserId());
+            // 1.1 构建发布者的set
+            idSet.add(a.getPublishUserId());
+            // 1.2 构建文章id的list 包含所有key的值
+            idList.add(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + a.getId());
+        &#125;
+        System.out.println(idSet.toString());
+        // 发起redis的mget批量查询api，获得对应的值
+        List&lt;String&gt; readCountsRedisList = redis.mget(idList);
+        List&lt;AppUserVO&gt; publisherList = getPublisherList(idSet);
+
+        // 3. 拼接两个list，重组文章列表
+        List&lt;IndexArticleVO&gt; indexArticleList = new ArrayList&lt;&gt;();
+        for (int i = 0 ; i &lt; list.size() ; i ++) &#123;
+            IndexArticleVO indexArticleVO = new IndexArticleVO();
+            Article a = list.get(i); //属性值拷贝
+            BeanUtils.copyProperties(a, indexArticleVO);
+
+            // 3.1 从publisherList中获得发布者的基本信息
+            AppUserVO publisher  = getUserIfPublisher(a.getPublishUserId(), publisherList);
+            indexArticleVO.setPublisherVO(publisher);
+
+            // 3.2 重新组装设置文章列表中的阅读量
+            String redisCountsStr = readCountsRedisList.get(i);
+            int readCounts = 0;
+            if (StringUtils.isNotBlank(redisCountsStr)) &#123;
+                readCounts = Integer.valueOf(redisCountsStr);
+            &#125;
+            indexArticleVO.setReadCounts(readCounts);
+
+            indexArticleList.add(indexArticleVO);
+        &#125;
+        gridResult.setRows(indexArticleList);
+// END
+        return gridResult;
+    &#125;
+</code></pre>
+<h3 id="用户发表评论【文章评论】"><a href="#用户发表评论【文章评论】" class="headerlink" title="用户发表评论【文章评论】"></a>用户发表评论【文章评论】</h3><pre><code class="xml">mybatis-generator-database generatorConfig-article.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE generatorConfiguration
+        PUBLIC &quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd&quot;&gt;
+
+&lt;generatorConfiguration&gt;
+    &lt;context id=&quot;MysqlContext&quot; targetRuntime=&quot;MyBatis3Simple&quot; defaultModelType=&quot;flat&quot;&gt;
+        &lt;property name=&quot;beginningDelimiter&quot; value=&quot;`&quot;/&gt;
+        &lt;property name=&quot;endingDelimiter&quot; value=&quot;`&quot;/&gt;
+
+        &lt;!-- 通用mapper所在目录 --&gt;
+        &lt;plugin type=&quot;tk.mybatis.mapper.generator.MapperPlugin&quot;&gt;
+            &lt;property name=&quot;mappers&quot; value=&quot;com.imooc.my.mapper.MyMapper&quot;/&gt;
+        &lt;/plugin&gt;
+
+        &lt;jdbcConnection driverClass=&quot;com.mysql.jdbc.Driver&quot;
+                        connectionURL=&quot;jdbc:mysql://localhost:3306/imooc-news-dev&quot;
+                        userId=&quot;root&quot;
+                        password=&quot;root&quot;&gt;
+        &lt;/jdbcConnection&gt;
+
+        &lt;!-- 对应生成的pojo所在包 --&gt;
+        &lt;javaModelGenerator targetPackage=&quot;com.imooc.pojo&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot;/&gt;
+
+        &lt;!-- 对应生成的mapper所在目录 --&gt;
+        &lt;sqlMapGenerator targetPackage=&quot;mapper.article&quot; targetProject=&quot;mybatis-generator-database/src/main/resources&quot;/&gt;
+
+        &lt;!-- 配置mapper对应的java映射 --&gt;
+        &lt;javaClientGenerator targetPackage=&quot;com.imooc.article.mapper&quot; targetProject=&quot;mybatis-generator-database/src/main/java&quot; type=&quot;XMLMAPPER&quot;/&gt;
+
+        &lt;!-- 数据库表 --&gt;
+        &lt;table tableName=&quot;comments&quot;&gt;&lt;/table&gt;
+
+    &lt;/context&gt;
+&lt;/generatorConfiguration&gt;
+</code></pre>
+<pre><code class="java">mybatis-generator-database  com/imooc/mybatis/utils/ArticleGenerator.java //【运行】
+package com.imooc.mybatis.utils;
+
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class ArticleGenerator &#123;
+
+    public void generator() throws Exception &#123;
+
+        List&lt;String&gt; warnings = new ArrayList&lt;String&gt;();
+        boolean overwrite = true;
+        //指定 逆向工程配置文件
+        File configFile = new File(&quot;mybatis-generator-database&quot;
+                                            + File.separator
+                                            + &quot;generatorConfig-article.xml&quot;);
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(configFile);
+        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config,
+                callback, warnings);
+        myBatisGenerator.generate(null);
+
+    &#125; 
+    
+    public static void main(String[] args) throws Exception &#123;
+        try &#123;
+            ArticleGenerator generatorSqlmap = new ArticleGenerator();
+            generatorSqlmap.generator();
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/mapper/CommentsMapper.java
+package com.imooc.article.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Comments;
+
+public interface CommentsMapper extends MyMapper&lt;Comments&gt; &#123;
+&#125;
+
+================================================================
+
+</code></pre>
+<pre><code class="java">service-article  resources/mapper/CommentsMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.CommentsMapper&quot;&gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Comments&quot;&gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;id&quot; /&gt;
+    &lt;result column=&quot;writer_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;writerId&quot; /&gt;
+    &lt;result column=&quot;father_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;fatherId&quot; /&gt;
+    &lt;result column=&quot;article_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleId&quot; /&gt;
+    &lt;result column=&quot;article_title&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleTitle&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleCover&quot; /&gt;
+    &lt;result column=&quot;comment_user_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserId&quot; /&gt;
+    &lt;result column=&quot;comment_user_nickname&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserNickname&quot; /&gt;
+    &lt;result column=&quot;comment_user_face&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserFace&quot; /&gt;
+    &lt;result column=&quot;content&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;content&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; jdbcType=&quot;TIMESTAMP&quot; property=&quot;createTime&quot; /&gt;
+  &lt;/resultMap&gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Comments&quot;&gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;id&quot; /&gt;
+    &lt;result column=&quot;writer_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;writerId&quot; /&gt;
+    &lt;result column=&quot;father_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;fatherId&quot; /&gt;
+    &lt;result column=&quot;article_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleId&quot; /&gt;
+    &lt;result column=&quot;article_title&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleTitle&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleCover&quot; /&gt;
+    &lt;result column=&quot;comment_user_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserId&quot; /&gt;
+    &lt;result column=&quot;comment_user_nickname&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserNickname&quot; /&gt;
+    &lt;result column=&quot;comment_user_face&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserFace&quot; /&gt;
+    &lt;result column=&quot;content&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;content&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; jdbcType=&quot;TIMESTAMP&quot; property=&quot;createTime&quot; /&gt;
+  &lt;/resultMap&gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Comments&quot;&gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;id&quot; /&gt;
+    &lt;result column=&quot;writer_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;writerId&quot; /&gt;
+    &lt;result column=&quot;father_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;fatherId&quot; /&gt;
+    &lt;result column=&quot;article_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleId&quot; /&gt;
+    &lt;result column=&quot;article_title&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleTitle&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;articleCover&quot; /&gt;
+    &lt;result column=&quot;comment_user_id&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserId&quot; /&gt;
+    &lt;result column=&quot;comment_user_nickname&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;commentUserNickname&quot; /&gt;
+    &lt;result column=&quot;content&quot; jdbcType=&quot;VARCHAR&quot; property=&quot;content&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; jdbcType=&quot;TIMESTAMP&quot; property=&quot;createTime&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/article/CommentControllerApi.java
+@Api(value = &quot;评论相关业务的controller&quot;, tags = &#123;&quot;评论相关业务的controller&quot;&#125;)
+@RequestMapping(&quot;comment&quot;)
+public interface CommentControllerApi &#123;
+
+    @PostMapping(&quot;createComment&quot;)
+    @ApiOperation(value = &quot;用户评论&quot;, notes = &quot;用户评论&quot;, httpMethod = &quot;POST&quot;) //@Valid是做验证的
+    public GraceJSONResult createArticle(@RequestBody @Valid CommentReplyBO commentReplyBO, BindingResult result);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java
+@RestController
+public class CommentController extends BaseController implements CommentControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(CommentController.class);
+
+    @Override
+    public GraceJSONResult createArticle(@Valid CommentReplyBO commentReplyBO,
+                                         BindingResult result) &#123;
+        // 0. 判断BindingResult是否保存错误的验证信息，如果有，则直接return
+        if (result.hasErrors()) &#123;
+            Map&lt;String, String&gt; errorMap = getErrors(result);
+            return GraceJSONResult.errorMap(errorMap);
+        &#125;
+
+        // 1. 根据留言用户的id查询他的昵称，用于存入到数据表进行字段的冗余处理，从而避免多表关联查询的性能影响
+        String userId = commentReplyBO.getCommentUserId();
+
+        // 2. 发起restTemplate调用用户服务，获得用户侧昵称
+        Set&lt;String&gt; idSet = new HashSet&lt;&gt;();
+        idSet.add(userId);
+        String nickname = getBasicUserList(idSet).get(0).getNickname();
+...[未完待续]
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java
+public List&lt;AppUserVO&gt; getBasicUserList(Set idSet) &#123;
+        String userServerUrlExecute
+                = &quot;http://user.imoocnews.com:8003/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+        ResponseEntity&lt;GraceJSONResult&gt; responseEntity
+                = restTemplate.getForEntity(userServerUrlExecute, GraceJSONResult.class);
+        GraceJSONResult bodyResult = responseEntity.getBody();
+        List&lt;AppUserVO&gt; userVOList = null;
+        if (bodyResult.getStatus() == 200) &#123;
+            String userJson = JsonUtils.objectToJson(bodyResult.getData());
+            userVOList = JsonUtils.jsonToList(userJson, AppUserVO.class);
+        &#125;
+        return userVOList;
+    &#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/bo/CommentReplyBO.java
+/**
+ * 文章留言的BO
+ */
+public class CommentReplyBO &#123;
+
+    @NotBlank(message = &quot;留言信息不完整&quot;)
+    private String articleId;
+
+    @NotBlank(message = &quot;留言信息不完整&quot;)
+    private String fatherId;
+
+    @NotBlank(message = &quot;当前用户信息不正确，请尝试重新登录&quot;)
+    private String commentUserId;
+
+    @NotBlank(message = &quot;留言内容不能为空&quot;)
+    @Length(max = 50, message = &quot;文章内容长度不能超过50&quot;)
+    private String content;
+&#125;Getter + Setter + ToString
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Comments.java
+public class Comments &#123;
+    @Id
+    private String id;
+
+    /**
+     * 评论的文章是哪个作者的关联id
+     */
+    @Column(name = &quot;writer_id&quot;)
+    private String writerId;
+
+    /**
+     * 如果是回复留言，则本条为子留言，需要关联查询
+     */
+    @Column(name = &quot;father_id&quot;)
+    private String fatherId;
+
+    /**
+     * 回复的那个文章id
+     */
+    @Column(name = &quot;article_id&quot;)
+    private String articleId;
+
+    /**
+     * 冗余文章标题，宽表处理，非规范化的sql思维，对于几百万文章和几百万评论的关联查询来讲，性能肯定不行，所以做宽表处理，从业务角度来说，文章发布以后不能随便修改标题和封面的
+     */
+    @Column(name = &quot;article_title&quot;)
+    private String articleTitle;
+
+    /**
+     * 文章封面
+     */
+    @Column(name = &quot;article_cover&quot;)
+    private String articleCover;
+
+    /**
+     * 发布留言的用户id
+     */
+    @Column(name = &quot;comment_user_id&quot;)
+    private String commentUserId;
+
+    /**
+     * 冗余用户昵称，非一致性字段，用户修改昵称后可以不用同步
+     */
+    @Column(name = &quot;comment_user_nickname&quot;)
+    private String commentUserNickname;
+
+    /**
+     * 冗余的用户头像
+     */
+    @Column(name = &quot;comment_user_face&quot;)
+    private String commentUserFace;
+
+    /**
+     * 留言内容
+     */
+    private String content;
+
+    /**
+     * 留言时间
+     */
+    @Column(name = &quot;create_time&quot;)
+    private Date createTime;
+</code></pre>
+<h3 id="用户评论入库保存【文章评论】这里暂时把数据库的comment-user-face删除了"><a href="#用户评论入库保存【文章评论】这里暂时把数据库的comment-user-face删除了" class="headerlink" title="用户评论入库保存【文章评论】这里暂时把数据库的comment_user_face删除了"></a>用户评论入库保存【文章评论】<del>这里暂时把数据库的comment_user_face删除了</del></h3><pre><code class="java">service-api  com/imooc/api/controller/article/CommentControllerApi.java
+@Api(value = &quot;评论相关业务的controller&quot;, tags = &#123;&quot;评论相关业务的controller&quot;&#125;)
+@RequestMapping(&quot;comment&quot;)
+public interface CommentControllerApi &#123;
+
+    @PostMapping(&quot;createComment&quot;)
+    @ApiOperation(value = &quot;用户评论&quot;, notes = &quot;用户评论&quot;, httpMethod = &quot;POST&quot;) //@Valid是做验证的
+    public GraceJSONResult createArticle(@RequestBody @Valid CommentReplyBO commentReplyBO, BindingResult result);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java
+@RestController
+public class CommentController extends BaseController implements CommentControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(CommentController.class);
+    @Autowired
+    private CommentPortalService commentPortalService;
+
+    @Override
+    public GraceJSONResult createArticle(@Valid CommentReplyBO commentReplyBO,
+                                         BindingResult result) &#123;
+        // 0. 判断BindingResult是否保存错误的验证信息，如果有，则直接return
+        if (result.hasErrors()) &#123;
+            Map&lt;String, String&gt; errorMap = getErrors(result);
+            return GraceJSONResult.errorMap(errorMap);
+        &#125;
+
+        // 1. 根据留言用户的id查询他的昵称，用于存入到数据表进行字段的冗余处理，从而避免多表关联查询的性能影响
+        String userId = commentReplyBO.getCommentUserId();
+
+        // 2. 发起restTemplate调用用户服务，获得用户侧昵称
+        Set&lt;String&gt; idSet = new HashSet&lt;&gt;();
+        idSet.add(userId);
+        String nickname = getBasicUserList(idSet).get(0).getNickname();
+
+        // 3. 保存用户评论的信息到数据库
+        commentPortalService.createComment(commentReplyBO.getArticleId(), commentReplyBO.getFatherId(), commentReplyBO.getContent(), userId, nickname);
+
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/CommentPortalService.java
+public interface CommentPortalService &#123;
+    /**
+     * 发表评论
+     */
+    public void createComment(String articleId,
+                              String fatherCommentId,
+                              String content,
+                              String userId,
+                              String nickname);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/CommentPortalServiceImpl.java
+package com.imooc.article.service.impl;
+
+import com.imooc.api.service.BaseService;
+import com.imooc.article.mapper.CommentsMapper;
+import com.imooc.article.service.ArticlePortalService;
+import com.imooc.article.service.CommentPortalService;
+import com.imooc.pojo.Comments;
+import com.imooc.pojo.vo.ArticleDetailVO;
+import com.imooc.utils.PagedGridResult;
+import org.n3r.idworker.Sid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+
+
+@Service
+public class CommentPortalServiceImpl extends BaseService implements CommentPortalService &#123;
+    @Autowired
+    private ArticlePortalService articlePortalService;
+    @Autowired
+    private Sid sid;
+    @Autowired
+    private CommentsMapper commentsMapper;
+
+    @Transactional
+    @Override
+    public void createComment(String articleId, String fatherCommentId, String content, String userId, String nickname) &#123;
+        String commentId = sid.nextShort();
+        ArticleDetailVO article = articlePortalService.queryDetail(articleId);
+        Comments comments = new Comments();
+        comments.setId(commentId);
+
+        comments.setWriterId(article.getPublishUserId());
+        comments.setArticleTitle(article.getTitle());
+        comments.setArticleCover(article.getCover());
+        comments.setArticleId(articleId);
+
+        comments.setFatherId(fatherCommentId);
+        comments.setCommentUserId(userId);
+        comments.setCommentUserNickname(nickname);
+
+        comments.setContent(content);
+        comments.setCreateTime(new Date());
+
+        commentsMapper.insert(comments);
+
+        // 评论数累加
+        redis.increment(REDIS_ARTICLE_COMMENT_COUNTS + &quot;:&quot; + articleId, 1);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Comments.java
+public class Comments &#123;
+    @Id
+    private String id;
+
+    /**
+     * 评论的文章是哪个作者的关联id
+     */
+    @Column(name = &quot;writer_id&quot;)
+    private String writerId;
+
+    /**
+     * 如果是回复留言，则本条为子留言，需要关联查询
+     */
+    @Column(name = &quot;father_id&quot;)
+    private String fatherId;
+
+    /**
+     * 回复的那个文章id
+     */
+    @Column(name = &quot;article_id&quot;)
+    private String articleId;
+
+    /**
+     * 冗余文章标题，宽表处理，非规范化的sql思维，对于几百万文章和几百万评论的关联查询来讲，性能肯定不行，所以做宽表处理，从业务角度来说，文章发布以后不能随便修改标题和封面的
+     */
+    @Column(name = &quot;article_title&quot;)
+    private String articleTitle;
+
+    /**
+     * 文章封面
+     */
+    @Column(name = &quot;article_cover&quot;)
+    private String articleCover;
+
+    /**
+     * 发布留言的用户id
+     */
+    @Column(name = &quot;comment_user_id&quot;)
+    private String commentUserId;
+
+    /**
+     * 冗余用户昵称，非一致性字段，用户修改昵称后可以不用同步
+     */
+    @Column(name = &quot;comment_user_nickname&quot;)
+    private String commentUserNickname;
+
+//    /**
+//     * 冗余的用户头像
+//     */
+//    @Column(name = &quot;comment_user_face&quot;)
+//    private String commentUserFace;
+
+    /**
+     * 留言内容
+     */
+    private String content;
+
+    /**
+     * 留言时间
+     */
+    @Column(name = &quot;create_time&quot;)
+    private Date createTime;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/BaseController.java
+public List&lt;AppUserVO&gt; getBasicUserList(Set idSet) &#123;
+        String userServerUrlExecute
+                = &quot;http://user.imoocnews.com:8003/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+        ResponseEntity&lt;GraceJSONResult&gt; responseEntity
+                = restTemplate.getForEntity(userServerUrlExecute, GraceJSONResult.class);
+        GraceJSONResult bodyResult = responseEntity.getBody();
+        List&lt;AppUserVO&gt; userVOList = null;
+        if (bodyResult.getStatus() == 200) &#123;
+            String userJson = JsonUtils.objectToJson(bodyResult.getData());
+            userVOList = JsonUtils.jsonToList(userJson, AppUserVO.class);
+        &#125;
+        return userVOList;
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/mapper/CommentsMapper.java
+package com.imooc.article.mapper;
+
+import com.imooc.my.mapper.MyMapper;
+import com.imooc.pojo.Comments;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CommentsMapper extends MyMapper&lt;Comments&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  resources/mapper/CommentsMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.CommentsMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Comments&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;writer_id&quot; property=&quot;writerId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;father_id&quot; property=&quot;fatherId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_id&quot; property=&quot;articleId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_title&quot; property=&quot;articleTitle&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; property=&quot;articleCover&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;comment_user_id&quot; property=&quot;commentUserId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;comment_user_nickname&quot; property=&quot;commentUserNickname&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;content&quot; property=&quot;content&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; property=&quot;createTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<p>8-7</p>
 
     </div>
 
