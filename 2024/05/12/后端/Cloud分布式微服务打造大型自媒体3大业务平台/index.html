@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -13952,7 +13952,375 @@ public interface CommentsMapper extends MyMapper&lt;Comments&gt; &#123;
   &lt;/resultMap&gt;
 &lt;/mapper&gt;
 </code></pre>
-<p>8-7</p>
+<h3 id="评论数累计与显示【文章评论】"><a href="#评论数累计与显示【文章评论】" class="headerlink" title="评论数累计与显示【文章评论】"></a>评论数累计与显示【文章评论】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/CommentControllerApi.java
+@Api(value = &quot;评论相关业务的controller&quot;, tags = &#123;&quot;评论相关业务的controller&quot;&#125;)
+@RequestMapping(&quot;comment&quot;)
+public interface CommentControllerApi &#123;
+@GetMapping(&quot;counts&quot;)
+    @ApiOperation(value = &quot;用户评论数查询&quot;, notes = &quot;用户评论数查询&quot;, httpMethod = &quot;GET&quot;)
+    public GraceJSONResult commentCounts(@RequestParam String articleId);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java
+ @Override
+    public GraceJSONResult commentCounts(String articleId) &#123;
+        Integer counts = getCountsFromRedis(REDIS_ARTICLE_COMMENT_COUNTS + &quot;:&quot; + articleId);
+        return GraceJSONResult.ok(counts);
+    &#125;
+
+--------------------------------------------------------------------------
+service-api  com/imooc/api/BaseController.java
+public Integer getCountsFromRedis(String key)&#123;
+        String countsStr = redis.get(key);
+        if (StringUtils.isBlank(countsStr)) &#123;
+            countsStr = &quot;0&quot;;
+        &#125;
+        return Integer.valueOf(countsStr);
+    &#125;
+</code></pre>
+<h3 id="文章评论sql关联查询father-id…"><a href="#文章评论sql关联查询father-id…" class="headerlink" title="文章评论sql关联查询father_id…"></a>文章评论sql关联查询<del>father_id…</del></h3><pre><code class="mysql">【多表关联查询】
+SELECT
+    c.id as commentId,
+    c.father_id as fatherId,
+    c.comment_user_id as commentUserId,
+    c.comment_user_nickname as commentUserNickname,
+    c.article_id as articleId,
+    c.content as content,
+    c.create_time as createTime,
+    f.comment_user_nickname as quoteUserNickname,
+    f.content as quoteContent
+FROM
+    comments c
+LEFT JOIN
+    comments f
+ON
+    c.father_id = f.id
+WHERE
+    c.article_id = &#39;2006117B57WRZGHH&#39;
+ORDER BY
+    c.create_time
+DESC
+</code></pre>
+<h3 id="显示评论列表【文章评论】"><a href="#显示评论列表【文章评论】" class="headerlink" title="显示评论列表【文章评论】"></a>显示评论列表【文章评论】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/CommentControllerApi.java
+com/imooc/api/controller/article/CommentControllerApi.java 
+@GetMapping(&quot;list&quot;)
+    @ApiOperation(value = &quot;查询文章的所有评论列表&quot;, notes = &quot;查询文章的所有评论列表&quot;, httpMethod = &quot;GET&quot;)
+    public GraceJSONResult list(@RequestParam String articleId,
+                                @RequestParam Integer page,
+                                @RequestParam Integer pageSize);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java
+@Override
+    public GraceJSONResult list(String articleId, Integer page, Integer pageSize) &#123;
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+        PagedGridResult gridResult = commentPortalService.queryArticleComments(articleId, page, pageSize);
+        return GraceJSONResult.ok(gridResult);
+    &#125;
+==============================================================
+http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=200816961ZYBXFRP
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/CommentPortalService.java
+/**
+     * 查询文章评论列表
+     */
+    public PagedGridResult queryArticleComments(String articleId,
+                                                Integer page,
+                                                Integer pageSize);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/mapper/CommentsMapperCustom.java
+package com.imooc.article.mapper;
+
+import com.imooc.pojo.vo.CommentsVO;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Map;
+
+@Repository
+public interface CommentsMapperCustom &#123;
+
+    /**
+     * 查询文章评论
+     */
+    public List&lt;CommentsVO&gt; queryArticleCommentList(@Param(&quot;paramMap&quot;) Map&lt;String, Object&gt; map);
+
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/CommentPortalServiceImpl.java
+@Override
+    public PagedGridResult queryArticleComments(String articleId, Integer page, Integer pageSize) &#123;
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;articleId&quot;, articleId);
+
+        PageHelper.startPage(page, pageSize);
+        List&lt;CommentsVO&gt; list = commentsMapperCustom.queryArticleCommentList(map);
+        return setterPagedGrid(list,page);
+    &#125;
+</code></pre>
+<pre><code class="mysql">service-article  resources/mapper/CommentsMapperCustom.xml #【把关于face的字段都删掉】
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.CommentsMapperCustom&quot; &gt;
+
+  &lt;select id=&quot;queryArticleCommentList&quot;
+          resultType=&quot;com.imooc.pojo.vo.CommentsVO&quot;
+          parameterType=&quot;Map&quot;&gt;
+
+    SELECT
+      c.id as commentId,
+      c.father_id as fatherId,
+      c.comment_user_id as commentUserId,
+      c.comment_user_nickname as commentUserNickname,
+      c.article_id as articleId,
+      c.content as content,
+      c.create_time as createTime,
+      f.comment_user_nickname as quoteUserNickname,
+      f.content as quoteContent
+    FROM
+      comments c
+        LEFT JOIN
+      comments f
+      ON
+        c.father_id = f.id
+    WHERE
+      c.article_id = #&#123;paramMap.articleId&#125;
+    ORDER BY
+      c.create_time
+            DESC
+
+  &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="作业-管理评论列表以及删除评论【评论管理】"><a href="#作业-管理评论列表以及删除评论【评论管理】" class="headerlink" title="(作业) 管理评论列表以及删除评论【评论管理】"></a>(作业) 管理评论列表以及删除评论【评论管理】</h3><blockquote>
+<p>前端的commentMng.html的VUE有问题<br>需要增加定义userInfo<br>var mainPage &#x3D; new Vue({<br>        el: “#mainPage”,<br>data: {<br>            userInfo: {<br>                activeStatus: 0<br>            },<br>}…</p>
+</blockquote>
+<pre><code class="java">service-api  com/imooc/api/controller/article/CommentControllerApi.java
+    @PostMapping(&quot;mng&quot;)
+    @ApiOperation(value = &quot;查询我的评论管理列表&quot;, notes = &quot;查询我的评论管理列表&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult mng(@RequestParam String writerId,
+                               @ApiParam(name = &quot;page&quot;, value = &quot;查询下一页的第几页&quot;, required = false)
+                               @RequestParam Integer page,
+                               @ApiParam(name = &quot;pageSize&quot;, value = &quot;分页的每一页显示的条数&quot;, required = false)
+                               @RequestParam Integer pageSize);
+
+
+    @PostMapping(&quot;/delete&quot;)
+    @ApiOperation(value = &quot;作者删除评论&quot;, notes = &quot;作者删除评论&quot;, httpMethod = &quot;POST&quot;)
+    public GraceJSONResult delete(@RequestParam String writerId,
+                                  @RequestParam String commentId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java
+ @Override
+    public GraceJSONResult mng(String writerId, Integer page, Integer pageSize) &#123;
+
+        if (page == null) &#123;
+            page = COMMON_START_PAGE;
+        &#125;
+        if (pageSize == null) &#123;
+            pageSize = COMMON_PAGE_SIZE;
+        &#125;
+
+        PagedGridResult gridResult = commentPortalService.queryWriterCommentsMng(writerId, page, pageSize);
+        return GraceJSONResult.ok(gridResult);
+    &#125;
+
+    @Override
+    public GraceJSONResult delete(String writerId, String commentId) &#123;
+        commentPortalService.deleteComment(writerId, commentId);
+        return GraceJSONResult.ok();
+    &#125;
+==============================================================
+http://writer.imoocnews.com:9090/imooc-news/writer/commentMng.html
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/CommentPortalService.java
+     /**
+     * 查询我的评论管理列表
+     */
+    public PagedGridResult queryWriterCommentsMng(String writerId, Integer page, Integer pageSize);
+
+    /**
+     * 删除评论
+     */
+    public void deleteComment(String writerId, String commentId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/CommentPortalServiceImpl.java
+@Override
+    public PagedGridResult queryWriterCommentsMng(String writerId, Integer page, Integer pageSize) &#123;
+        Comments comment = new Comments();
+        comment.setWriterId(writerId);
+        PageHelper.startPage(page, pageSize);
+        List&lt;Comments&gt; list = commentsMapper.select(comment);
+        return setterPagedGrid(list,page);
+    &#125;
+
+    @Override
+    public void deleteComment(String writerId, String commentId) &#123;
+        Comments comment = new Comments();
+        comment.setId(commentId);
+        comment.setWriterId(writerId);
+        commentsMapper.delete(comment);
+    &#125;
+</code></pre>
+<h3 id="增加评论者头像展示功能需求扩展【文章评论】增加需求字段comment-user-face"><a href="#增加评论者头像展示功能需求扩展【文章评论】增加需求字段comment-user-face" class="headerlink" title="增加评论者头像展示功能需求扩展【文章评论】增加需求字段comment_user_face"></a>增加评论者头像展示功能需求扩展【文章评论】<del>增加需求字段comment_user_face</del></h3><blockquote>
+<p>[数据库添加一个新的字段comment_user_face 重新在mybatis-generator-database进行逆向生成覆盖]<br>涉及范围广</p>
+<p>在数据库里也要加个字段  在前端需求也要改一下头像</p>
+</blockquote>
+<pre><code class="html">detail.html
+&lt;div class=&quot;all-comments-list&quot; v-for=&quot;(comment,index) in commentList&quot; :key=&quot;index&quot;&gt;
+        &lt;div class=&quot;single-comment-wrapper&quot;&gt;
+        &lt;!--&lt;img src=&quot;./img/face1.png&quot; class=&quot;user-face&quot;/&gt;--&gt;
+        &lt;img :src=&quot;comment.commentUserFace&quot; class=&quot;user-face&quot;/&gt;
+&lt;/div&gt;
+</code></pre>
+<pre><code class="mysql">service-article  resources/mapper/CommentsMapper.xml #【增加字段】
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.CommentsMapper&quot; &gt;
+  &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.imooc.pojo.Comments&quot; &gt;
+    &lt;!--
+      WARNING - @mbg.generated
+    --&gt;
+    &lt;id column=&quot;id&quot; property=&quot;id&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;writer_id&quot; property=&quot;writerId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;father_id&quot; property=&quot;fatherId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_id&quot; property=&quot;articleId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_title&quot; property=&quot;articleTitle&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;article_cover&quot; property=&quot;articleCover&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;comment_user_id&quot; property=&quot;commentUserId&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;comment_user_nickname&quot; property=&quot;commentUserNickname&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;comment_user_face&quot; property=&quot;commentUserFace&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;content&quot; property=&quot;content&quot; jdbcType=&quot;VARCHAR&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; property=&quot;createTime&quot; jdbcType=&quot;TIMESTAMP&quot; /&gt;
+  &lt;/resultMap&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="mysql">service-article  resources/mapper/CommentsMapperCustom.xml #【增加字段】
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.imooc.article.mapper.CommentsMapperCustom&quot; &gt;
+
+  &lt;select id=&quot;queryArticleCommentList&quot;
+          resultType=&quot;com.imooc.pojo.vo.CommentsVO&quot;
+          parameterType=&quot;Map&quot;&gt;
+
+    SELECT
+      c.id as commentId,
+      c.father_id as fatherId,
+      c.comment_user_id as commentUserId,
+      c.comment_user_nickname as commentUserNickname,
+      c.comment_user_face as commentUserFace,
+      c.article_id as articleId,
+      c.content as content,
+      c.create_time as createTime,
+      f.comment_user_nickname as quoteUserNickname,
+      f.content as quoteContent
+    FROM
+      comments c
+        LEFT JOIN
+      comments f
+      ON
+        c.father_id = f.id
+    WHERE
+      c.article_id = #&#123;paramMap.articleId&#125;
+    ORDER BY
+      c.create_time
+            DESC
+
+  &lt;/select&gt;
+
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/CommentPortalService.java //【增加字段】
+ /**
+     * 发表评论
+     */
+    public void createComment(String articleId,
+                              String fatherCommentId,
+                              String content,
+                              String userId,
+                              String nickname,
+                              String face);
+</code></pre>
+<pre><code class="java">------------------------------------------------------------
+dev-model  com/imooc/pojo/vo/CommentsVO.java //【增加字段属性】
+private String commentUserFace;
+    【Getter + Setter】
+
+------------------------------------------------------------
+dev-model  com/imooc/pojo/Comments.java
+/**
+     * 冗余的用户头像
+     */
+@Column(name = &quot;comment_user_face&quot;)
+private String commentUserFace;
+    【Getter + Setter】
+------------------------------------------------------------
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/CommentController.java 
+    //【增加 String face = getBasicUserList(idSet).get(0).getFace();】
+@Override
+    public GraceJSONResult createArticle(@Valid CommentReplyBO commentReplyBO,
+                                         BindingResult result) &#123;
+        // 0. 判断BindingResult是否保存错误的验证信息，如果有，则直接return
+        if (result.hasErrors()) &#123;
+            Map&lt;String, String&gt; errorMap = getErrors(result);
+            return GraceJSONResult.errorMap(errorMap);
+        &#125;
+
+        // 1. 根据留言用户的id查询他的昵称，用于存入到数据表进行字段的冗余处理，从而避免多表关联查询的性能影响
+        String userId = commentReplyBO.getCommentUserId();
+
+        // 2. 发起restTemplate调用用户服务，获得用户侧昵称
+        Set&lt;String&gt; idSet = new HashSet&lt;&gt;();
+        idSet.add(userId);
+        String nickname = getBasicUserList(idSet).get(0).getNickname();
+        String face = getBasicUserList(idSet).get(0).getFace();
+
+        // 3. 保存用户评论的信息到数据库
+        commentPortalService.createComment(commentReplyBO.getArticleId(), commentReplyBO.getFatherId(), commentReplyBO.getContent(), userId, nickname,face);
+
+        return GraceJSONResult.ok();
+    &#125;
+====================================================
+http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=2006116Z3MAP8SW0
+//下面有个评论：牛逼  带着自己上传的头像
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/CommentPortalServiceImpl.java
+    //【增加 comments.setCommentUserFace(face);】
+@Transactional
+    @Override
+    public void createComment(String articleId, String fatherCommentId, String content, String userId, String nickname,String face) &#123;
+        String commentId = sid.nextShort();
+        ArticleDetailVO article = articlePortalService.queryDetail(articleId);
+        Comments comments = new Comments();
+        comments.setId(commentId);
+
+        comments.setWriterId(article.getPublishUserId());
+        comments.setArticleTitle(article.getTitle());
+        comments.setArticleCover(article.getCover());
+        comments.setArticleId(articleId);
+
+        comments.setFatherId(fatherCommentId);
+        comments.setCommentUserId(userId);
+        comments.setCommentUserNickname(nickname);
+        comments.setCommentUserFace(face);
+
+        comments.setContent(content);
+        comments.setCreateTime(new Date());
+
+        commentsMapper.insert(comments);
+
+        // 评论数累加
+        redis.increment(REDIS_ARTICLE_COMMENT_COUNTS + &quot;:&quot; + articleId, 1);
+    &#125;
+</code></pre>
 
     </div>
 
