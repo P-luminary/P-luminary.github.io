@@ -15142,7 +15142,740 @@ http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=2006116Z3M
         redis.increment(REDIS_ARTICLE_COMMENT_COUNTS + &quot;:&quot; + articleId, 1);
     &#125;
 </code></pre>
+<h3 id="文章静态化技术与Freemarker【文章概述】"><a href="#文章静态化技术与Freemarker【文章概述】" class="headerlink" title="文章静态化技术与Freemarker【文章概述】"></a>文章静态化技术与Freemarker【文章概述】</h3><ul>
+<li><strong>页面静态化</strong></li>
+<li><strong>Freemarker静态化技术</strong></li>
+<li><strong>渲染模板数据</strong></li>
+<li><strong>生成并展示静态页面</strong></li>
+</ul>
+<h5 id="静态化趋势"><a href="#静态化趋势" class="headerlink" title="静态化趋势"></a>静态化趋势</h5><ul>
+<li><strong>便于SEO</strong></li>
+<li><strong>加速用户访问</strong></li>
+<li><strong>降低数据库压力</strong></li>
+</ul>
+<h5 id="模板引擎技术"><a href="#模板引擎技术" class="headerlink" title="模板引擎技术"></a>模板引擎技术</h5><ul>
+<li><strong>JSP</strong></li>
+<li><strong>Freemarker</strong></li>
+<li><strong>Thymeleaf</strong></li>
+<li><strong>Velocity</strong></li>
+</ul>
+<h5 id="页面静态化"><a href="#页面静态化" class="headerlink" title="页面静态化"></a>页面静态化</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/1f57d8e494be53fe2ee4745f819db41fe1e7173a/data/%E9%A1%B5%E9%9D%A2%E9%9D%99%E6%80%81%E5%8C%96.png"></p>
+<h3 id="创建并且显示模板ftl"><a href="#创建并且显示模板ftl" class="headerlink" title="创建并且显示模板ftl"></a>创建并且显示模板ftl</h3><pre><code class="xml">service-article  pom.xml
+ &lt;!-- freemarker 依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-freemarker&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/FreemarkerController.java
+package com.imooc.article.controller;
 
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Controller
+@RequestMapping(&quot;free&quot;)
+public class FreemarkerController&#123;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello(Model model)&#123;
+        // 定义输出到模板的内容
+        // 输入字符串
+        String stranger = &quot;慕课网 imooc.com&quot;;
+        model.addAttribute(&quot;there&quot;, stranger);
+
+        // 返回的stu是freemarker模板所在的目录 classpath:/templates/
+        // 匹配 *.ftl
+        return &quot;stu&quot;;
+    &#125;
+&#125;
+==================================================================
+http://localhost:8001/free/hello
+</code></pre>
+<pre><code class="yaml">service-article  resources/application.yml 【suffix是模板后缀】
+  freemarker:
+    charset: UTF-8
+    content-type: text/html
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+</code></pre>
+<pre><code class="html">service-article  resources/templates/stu.ftl
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;Hello Freemarker&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+    &lt;#-- 
+        写完以后去模板页面配置 application.yml
+        Freemarker 页面的语法构成：
+        1. 注释
+        2. 表达式 $&#123;...&#125;
+        3. 普通文本，基本的html标签
+        4. 指令
+    --&gt;
+        &lt;div&gt;
+            hello $&#123;there&#125;
+        &lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="输出对象【Freemarker语法】"><a href="#输出对象【Freemarker语法】" class="headerlink" title="输出对象【Freemarker语法】"></a>输出对象【Freemarker语法】</h3><pre><code class="java">dev-model  com/imooc/pojo/Stu.java
+public class Stu &#123;
+    private String uid;
+    private String username;
+    private Integer age;
+    private Date birthday;
+    private Float amount;
+    private boolean haveChild;
+    private Spouse spouse;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Spouse.java
+public class Spouse &#123;
+    private String username;
+    private Integer age;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/FreemarkerController.java
+package com.imooc.article.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Controller
+@RequestMapping(&quot;free&quot;)
+public class FreemarkerController&#123;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello(Model model)&#123;
+        // 定义输出到模板的内容
+        // 输入字符串
+        String stranger = &quot;慕课网 imooc.com&quot;;
+        model.addAttribute(&quot;there&quot;, stranger);
+
+        makeModel(model);
+        // 返回的stu是freemarker模板所在的目录 classpath:/templates/
+        // 匹配 *.ftl
+        return &quot;stu&quot;;
+    &#125;
+
+    private Model makeModel(Model model) &#123;
+        Stu stu = new Stu();
+        stu.setUid(&quot;10010&quot;);
+        stu.setUsername(&quot;imooc&quot;);
+        stu.setAmount(88.86f);
+        stu.setAge(18);
+        stu.setHaveChild(true);
+        stu.setBirthday(new Date());
+
+        Spouse spouse = new Spouse();
+        spouse.setUsername(&quot;Lucy&quot;);
+        spouse.setAge(25);
+        stu.setSpouse(spouse);
+        model.addAttribute(&quot;stu&quot;,stu);
+        return model;
+    &#125;
+&#125;
+==================================================================
+http://localhost:8001/free/hello
+
+Hello 慕课网 imooc.com
+
+用户名uid: 10010
+用户姓名: imooc
+年龄：18
+生日：2024-07-29 15:13:05
+用户余额：88.86
+已育：yes
+伴侣：Lucy,25岁
+</code></pre>
+<pre><code class="html">service-article  resources/templates/stu.ftl
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Hello Freemarker&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;#-- 写完以后去模板页面配置 application.yml
+    Freemarker 页面的语法构成：
+    1. 注释
+    2. 表达式 $&#123;...&#125;
+    3. 普通文本，基本的html标签
+    4. 指令
+--&gt;
+    &lt;div&gt;
+        hello $&#123;there&#125;
+    &lt;/div&gt;
+&lt;br&gt;
+
+    &lt;div&gt;
+        用户名uid: $&#123;stu.uid&#125;&lt;br&gt;
+        用户姓名: $&#123;stu.username&#125;&lt;br&gt;
+        年龄：$&#123;stu.age&#125;&lt;br&gt;
+        生日：$&#123;stu.birthday?string(&#39;yyyy-MM-dd HH:mm:ss&#39;)&#125;&lt;br&gt; &lt;#-- 日期转换 --&gt;
+        用户余额：$&#123;stu.amount&#125;&lt;br&gt;
+        已育：$&#123;stu.haveChild?string(&#39;yes&#39;, &#39;no&#39;)&#125;&lt;br&gt;
+        伴侣：$&#123;stu.spouse.username&#125;,$&#123;stu.spouse.age&#125;岁
+
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="输出list与map【Freemarker语法】"><a href="#输出list与map【Freemarker语法】" class="headerlink" title="输出list与map【Freemarker语法】"></a>输出list与map【Freemarker语法】</h3><pre><code class="java">dev-model  com/imooc/pojo/Stu.java
+public class Stu &#123;
+    private String uid;
+    private String username;
+    private Integer age;
+    private Date birthday;
+    private Float amount;
+    private boolean haveChild;
+
+    private Spouse spouse;
+
+    private List&lt;Article&gt; articleList;
+    private Map&lt;String, String&gt; parents;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/Spouse.java
+public class Spouse &#123;
+    private String username;
+    private Integer age;
+&#125; Getter + Setter
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/FreemarkerController.java
+package com.imooc.article.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.Article;
+import com.imooc.pojo.Spouse;
+import com.imooc.pojo.Stu;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.*;
+
+@Controller
+@RequestMapping(&quot;free&quot;)
+public class FreemarkerController&#123;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello(Model model)&#123;
+        // 定义输出到模板的内容
+        // 输入字符串
+        String stranger = &quot;慕课网 imooc.com&quot;;
+        model.addAttribute(&quot;there&quot;, stranger);
+
+        makeModel(model);
+        // 返回的stu是freemarker模板所在的目录 classpath:/templates/
+        // 匹配 *.ftl
+        return &quot;stu&quot;;
+    &#125;
+
+    private Model makeModel(Model model) &#123;
+        Stu stu = new Stu();
+        stu.setUid(&quot;10010&quot;);
+        stu.setUsername(&quot;imooc&quot;);
+        stu.setAmount(88.86f);
+        stu.setAge(18);
+        stu.setHaveChild(true);
+        stu.setBirthday(new Date());
+
+        Spouse spouse = new Spouse();
+        spouse.setUsername(&quot;Lucy&quot;);
+        spouse.setAge(25);
+
+        stu.setSpouse(spouse);
+        stu.setArticleList(getArticles());
+        stu.setParents(getParents());
+
+        model.addAttribute(&quot;stu&quot;,stu);
+        return model;
+    &#125;
+
+    private List&lt;Article&gt; getArticles()&#123;
+        Article article1 = new Article();
+        article1.setId(&quot;1001&quot;);
+        article1.setTitle(&quot;今天天气不错&quot;);
+
+        Article article2 = new Article();
+        article2.setId(&quot;1002&quot;);
+        article2.setTitle(&quot;今天下雨了&quot;);
+
+        Article article3 = new Article();
+        article3.setId(&quot;1003&quot;);
+        article3.setTitle(&quot;昨天下雨了&quot;);
+
+        List&lt;Article&gt; list = new ArrayList&lt;&gt;();
+        list.add(article1);
+        list.add(article2);
+        list.add(article3);
+        return list;
+    &#125;
+
+    private Map&lt;String, String&gt; getParents()&#123;
+        Map&lt;String, String&gt; parents = new HashMap&lt;&gt;();
+        parents.put(&quot;father&quot;, &quot;XiaoMing&quot;);
+        parents.put(&quot;mother&quot;, &quot;LiLi&quot;);
+        return parents;
+    &#125;
+&#125;
+==================================================================
+http://localhost:8001/free/hello
+
+hello 慕课网 imooc.com
+
+用户名uid: 10010
+用户姓名: imooc
+年龄：18
+生日：2024-07-29 15:39:07
+用户余额：88.86
+已育：yes
+伴侣：Lucy,25岁
+
+1001 今天天气不错
+1002 今天下雨了
+1003 昨天下雨了
+
+LiLi
+XiaoMing
+</code></pre>
+<pre><code class="html">service-article  resources/templates/stu.ftl
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Hello Freemarker&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;#-- 写完以后去模板页面配置 application.yml
+    Freemarker 页面的语法构成：
+    1. 注释
+    2. 表达式 $&#123;...&#125;
+    3. 普通文本，基本的html标签
+    4. 指令
+--&gt;
+    &lt;div&gt;
+        hello $&#123;there&#125;
+    &lt;/div&gt;
+&lt;br&gt;
+
+    &lt;div&gt;
+        用户名uid: $&#123;stu.uid&#125;&lt;br&gt;
+        用户姓名: $&#123;stu.username&#125;&lt;br&gt;
+        年龄：$&#123;stu.age&#125;&lt;br&gt;
+        生日：$&#123;stu.birthday?string(&#39;yyyy-MM-dd HH:mm:ss&#39;)&#125;&lt;br&gt; &lt;#-- 日期转换 --&gt;
+        用户余额：$&#123;stu.amount&#125;&lt;br&gt;
+        已育：$&#123;stu.haveChild?string(&#39;yes&#39;, &#39;no&#39;)&#125;&lt;br&gt;
+        伴侣：$&#123;stu.spouse.username&#125;,$&#123;stu.spouse.age&#125;岁
+    &lt;/div&gt;
+
+&lt;br&gt;
+
+    &lt;div&gt;
+        &lt;#list stu.articleList as article&gt;
+            &lt;div&gt;
+                &lt;span&gt;$&#123;article.id&#125;&lt;/span&gt;
+                &lt;span&gt;$&#123;article.title&#125;&lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/#list&gt;
+    &lt;/div&gt;
+
+&lt;br&gt;
+
+    &lt;div&gt;
+        &lt;#list stu.parents?keys as key&gt;
+            &lt;div&gt;
+                $&#123;stu.parents[key]&#125;
+            &lt;/div&gt;
+        &lt;/#list&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令if【Freemarker语法】"><a href="#指令if【Freemarker语法】" class="headerlink" title="指令if【Freemarker语法】"></a>指令if【Freemarker语法】</h3><pre><code class="html">service-article  resources/templates/stu.ftl
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Hello Freemarker&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;#-- 
+    写完以后去模板页面配置 application.yml
+    Freemarker 页面的语法构成：
+    1. 注释
+    2. 表达式 $&#123;...&#125;
+    3. 普通文本，基本的html标签
+    4. 指令
+--&gt;
+    &lt;div&gt;
+        hello $&#123;there&#125;
+    &lt;/div&gt;
+&lt;br&gt;
+
+    &lt;div&gt;
+        用户名uid: $&#123;stu.uid&#125;&lt;br&gt;
+        用户姓名: $&#123;stu.username&#125;&lt;br&gt;
+        年龄：$&#123;stu.age&#125;&lt;br&gt;
+        生日：$&#123;stu.birthday?string(&#39;yyyy-MM-dd HH:mm:ss&#39;)&#125;&lt;br&gt; &lt;#-- 日期转换 --&gt;
+        用户余额：$&#123;stu.amount&#125;&lt;br&gt;
+        已育：$&#123;stu.haveChild?string(&#39;yes&#39;, &#39;no&#39;)&#125;&lt;br&gt;
+        &lt;#if stu.spouse??&gt;
+            伴侣：$&#123;stu.spouse.username&#125;, $&#123;stu.spouse.age&#125;岁
+        &lt;/#if&gt;
+        &lt;#if !stu.spouse??&gt;
+            单身狗
+        &lt;/#if&gt;
+    &lt;/div&gt;
+
+&lt;br&gt;
+
+    &lt;div&gt;
+        &lt;#list stu.articleList as article&gt;
+            &lt;div&gt;
+                &lt;span&gt;$&#123;article.id&#125;&lt;/span&gt;
+                &lt;span&gt;$&#123;article.title&#125;&lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/#list&gt;
+    &lt;/div&gt;
+
+&lt;br&gt;
+
+    &lt;div&gt;
+        &lt;#list stu.parents?keys as key&gt;
+            &lt;div&gt;
+                $&#123;stu.parents[key]&#125;
+            &lt;/div&gt;
+        &lt;/#list&gt;
+    &lt;/div&gt;
+
+&lt;br&gt;
+
+    &lt;div&gt;
+        &lt;#if stu.uid == &#39;10010&#39;&gt;
+            用户id是10010
+            &lt;br&gt;
+        &lt;/#if&gt;
+        &lt;#if stu.username != &#39;imooc&#39;&gt;
+            用户名不是imooc
+            &lt;br&gt;
+        &lt;/#if&gt;
+        &lt;#if (stu.age &gt;= 18) &gt;
+            用户已成年
+        &lt;/#if&gt;
+        &lt;br&gt;
+        &lt;#if (stu.age &gt; 18 || stu.age = 18) &gt;
+            成年人
+            &lt;br&gt;
+        &lt;/#if&gt;
+        &lt;#if (stu.age &lt; 18) &gt;
+            未成年
+            &lt;br&gt;
+        &lt;/#if&gt;
+        &lt;#if stu.haveChild &gt;
+            已育
+        &lt;/#if&gt;
+        &lt;br&gt;
+        &lt;#if !stu.haveChild &gt;
+             未育
+        &lt;/#if&gt;
+     &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="结合动态数据生成静态化HTML【Freemarker】"><a href="#结合动态数据生成静态化HTML【Freemarker】" class="headerlink" title="结合动态数据生成静态化HTML【Freemarker】"></a>结合动态数据生成静态化HTML【Freemarker】</h3><pre><code class="java">service-article  com/imooc/article/controller/FreemarkerController.java
+【stu.ftl如上图不变增加java的整合代码】 俗称Java+ftl=HTML
+package com.imooc.article.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.Article;
+import com.imooc.pojo.Spouse;
+import com.imooc.pojo.Stu;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
+
+@Controller
+@RequestMapping(&quot;free&quot;)
+public class FreemarkerController&#123;
+
+    @Value(&quot;$&#123;freemarker.html.target&#125;&quot;)
+    private String htmlTarget;
+
+    @GetMapping(&quot;/createHTML&quot;)
+    @ResponseBody
+    public String createHTML(Model model) throws IOException, TemplateException &#123;
+        // 0. 配置freemarker基本环境
+        Configuration cfg = new Configuration(Configuration.getVersion());
+        // 声明freemarker模板所需要加载的目录的位置
+            //resources/templates/stu.ftl
+        String classpath = this.getClass().getResource(&quot;/&quot;).getPath();
+        cfg.setDirectoryForTemplateLoading(new File((classpath + &quot;templates&quot;)));
+
+            // 测试打印
+        System.out.println(htmlTarget);
+        System.out.println(classpath + &quot;templates&quot;);
+        /**
+         * /workspace/freemarker_html
+         * /C:/Users/Pluminary/Desktop/backup/imooc-news-dev/imooc-news-dev-service-article/target/classes/templates
+         */
+        // 1. 获得现有的模板ftl文件
+        Template template = cfg.getTemplate(&quot;stu.ftl&quot;, &quot;utf-8&quot;);
+
+        // 2. 获得动态数据
+            // 定义输出到模板的内容
+            // 输入字符串
+        String stranger = &quot;慕课网 imooc.com&quot;;
+        model.addAttribute(&quot;there&quot;, stranger);
+        model = makeModel(model);
+
+        // 3. 融合动态数据和ftl，生成html
+        File tempDic = new File(htmlTarget);
+        if (!tempDic.exists()) &#123;
+            tempDic.mkdirs();
+        &#125;
+        Writer out = new FileWriter(htmlTarget + File.separator + &quot;10010&quot; + &quot;.html&quot;);
+        template.process(model, out);
+        out.close();
+        return &quot;ok&quot;;
+        // C:\workspace\freemarker_html\10010.html 里面的数据都是静态数据
+    &#125;
+
+    @GetMapping(&quot;/hello&quot;)
+    public String hello(Model model)&#123;
+        makeModel(model);
+        // 返回的stu是freemarker模板所在的目录 classpath:/templates/
+        // 匹配 *.ftl
+        return &quot;stu&quot;;
+    &#125;
+
+    private Model makeModel(Model model) &#123;
+        Stu stu = new Stu();
+        stu.setUid(&quot;10010&quot;);
+        stu.setUsername(&quot;imooc&quot;);
+        stu.setAmount(88.86f);
+        stu.setAge(18);
+        stu.setHaveChild(true);
+        stu.setBirthday(new Date());
+
+        Spouse spouse = new Spouse();
+        spouse.setUsername(&quot;Lucy&quot;);
+        spouse.setAge(25);
+
+        stu.setSpouse(spouse);
+        stu.setArticleList(getArticles());
+        stu.setParents(getParents());
+
+        model.addAttribute(&quot;stu&quot;,stu);
+        return model;
+    &#125;
+
+    private List&lt;Article&gt; getArticles()&#123;
+        Article article1 = new Article();
+        article1.setId(&quot;1001&quot;);
+        article1.setTitle(&quot;今天天气不错&quot;);
+
+        Article article2 = new Article();
+        article2.setId(&quot;1002&quot;);
+        article2.setTitle(&quot;今天下雨了&quot;);
+
+        Article article3 = new Article();
+        article3.setId(&quot;1003&quot;);
+        article3.setTitle(&quot;昨天下雨了&quot;);
+
+        List&lt;Article&gt; list = new ArrayList&lt;&gt;();
+        list.add(article1);
+        list.add(article2);
+        list.add(article3);
+        return list;
+    &#125;
+
+    private Map&lt;String, String&gt; getParents()&#123;
+        Map&lt;String, String&gt; parents = new HashMap&lt;&gt;();
+        parents.put(&quot;father&quot;, &quot;XiaoMing&quot;);
+        parents.put(&quot;mother&quot;, &quot;LiLi&quot;);
+        return parents;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="改写详情页为模板页ftl【页面静态化】"><a href="#改写详情页为模板页ftl【页面静态化】" class="headerlink" title="改写详情页为模板页ftl【页面静态化】"></a>改写详情页为模板页ftl【页面静态化】</h3><blockquote>
+<p>地址页不是拼接   将detail.html 的路径都变成绝对路径</p>
+<!--<link rel="shortcut icon" href="img/mu-toutiao.ico" />-->
+<pre><code>&lt;link rel=&quot;shortcut icon&quot; href=&quot;../img/mu-toutiao.ico&quot; /&gt;
+</code></pre>
+<p>把其拷贝到 resources&#x2F;templates&#x2F;detail.ftl</p>
+</blockquote>
+<pre><code class="html">【放在d盘 tomcat/webapps中的】detail.ftl
+&lt;div class=&quot;big-title&quot;&gt;
+     $&#123;articleDetail.title&#125;
+&lt;/div&gt;
+    &lt;div class=&quot;read-counts&quot; v-show=&quot;articleDetail.readCounts != &#39;&#39; &amp;&amp; articleDetail.readCounts != null&quot;&gt;
+     阅读量：$&#123;articleDetail.readCounts&#125;
+    &lt;/div&gt;
+......
+&lt;div class=&quot;date-title&quot;&gt;
+       &lt;span class=&quot;year&quot;&gt;$&#123;articleDetail.publishTime?string(&#39;yyyy&#39;)&#125;&lt;/span&gt;
+ &lt;/div&gt;
+      &lt;div class=&quot;back-year-line&quot;&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;date-md&quot;&gt;$&#123;articleDetail.publishTime?string(&#39;MM/dd&#39;)&#125;&lt;/div&gt;
+
+      &lt;div class=&quot;date-times&quot;&gt;$&#123;articleDetail.publishTime?string(&#39;HH:mm:ss&#39;)&#125;&lt;/div&gt;
+
+      &lt;div class=&quot;writer-name&quot; @click=&quot;showWriter(&#39;$&#123;articleDetail.publishUserId&#125;&#39;)&quot;&gt;
+                        $&#123;articleDetail.publishUserName&#125;
+                    &lt;/div&gt;
+.....
+&lt;div class=&quot;article-wrapper&quot;&gt;
+   &lt;div class=&quot;content&quot;&gt;
+        $&#123;articleDetail.content&#125;
+   &lt;/div&gt;
+&lt;div class=&quot;declare&quot;&gt;
+      免责声明：本平台所有内容仅供测试，且文章来自互联网，不代表慕课网的观点和立场，如有不妥，请联系后删除。
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<h3 id="文章详情ftl生成静态化页面【页面静态化】"><a href="#文章详情ftl生成静态化页面【页面静态化】" class="headerlink" title="文章详情ftl生成静态化页面【页面静态化】"></a>文章详情ftl生成静态化页面【页面静态化】</h3><pre><code class="yaml">freemarker:
+  html:
+    target: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+    article: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+</code></pre>
+<pre><code class="java">dev-model  com/imooc/pojo/vo/ArticleDetailVO.java
+public class ArticleDetailVO &#123;
+
+    private String id;
+    private String title;
+    private String cover;
+    private Integer categoryId;
+    private String categoryName;
+    private String publishUserId;
+    @JsonFormat(timezone = &quot;GMT+8&quot;, pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+    private Date publishTime;
+    private String content;
+
+    private String publishUserName;
+    private Integer readCounts;
+&#125;Getter + Setter
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+ @Override
+    public GraceJSONResult doReview(String articleId, Integer passOrNot) &#123;
+        Integer pendingStatus;
+        if (passOrNot == YesOrNo.YES.type) &#123;
+            // 审核成功
+            pendingStatus = ArticleReviewStatus.SUCCESS.type;
+        &#125; else if (passOrNot == YesOrNo.NO.type) &#123;
+            // 审核失败
+            pendingStatus = ArticleReviewStatus.FAILED.type;
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+        // 保存到数据库，更改文章状态为审核成功或者失败
+        articleService.updateArticleStatus(articleId, pendingStatus);
+        if (pendingStatus == ArticleReviewStatus.SUCCESS.type)&#123;
+            //审核成功，生成文章详情页静态html
+            try&#123;
+                 createArticleHTML(articleId);
+//                String articleMongoId = createArticleHTMLToGridF(articleId);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Value(&quot;$&#123;freemarker.html.target&#125;&quot;)
+    private String articlePath;
+    @Autowired
+    private RestTemplate restTemplate;
+    // 文章生成HTML
+    public void createArticleHTML(String articleId) throws IOException, TemplateException &#123;
+        Configuration cfg = new Configuration(Configuration.getVersion());
+        String classpath = this.getClass().getResource(&quot;/&quot;).getPath();
+        cfg.setDirectoryForTemplateLoading(new File(classpath + &quot;templates&quot;));
+
+        Template template = cfg.getTemplate(&quot;detail.ftl&quot;, &quot;utf-8&quot;);
+
+        // 获得文章的详情数据
+        ArticleDetailVO detailVO = getArticleDetail(articleId);
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;articleDetail&quot;, detailVO);
+
+        File tempDic = new File(articlePath);
+        if (!tempDic.exists()) &#123;
+            tempDic.mkdirs();
+        &#125;
+
+        String path = articlePath + File.separator + detailVO.getId() + &quot;.html&quot;;
+
+        Writer out = new FileWriter(path);
+        template.process(map, out);
+        out.close();
+    &#125;
+    // 发起远程调用rest，获得文章详情数据
+    public ArticleDetailVO getArticleDetail(String articleId) &#123;
+        String url
+                = &quot;http://www.imoocnews.com:8001/portal/article/detail?articleId=&quot; + articleId;
+        ResponseEntity&lt;GraceJSONResult&gt; responseEntity
+                = restTemplate.getForEntity(url, GraceJSONResult.class);
+        GraceJSONResult bodyResult = responseEntity.getBody();
+        ArticleDetailVO detailVO = null;
+        if (bodyResult.getStatus() == 200) &#123;
+            String detailJson = JsonUtils.objectToJson(bodyResult.getData());
+            detailVO = JsonUtils.jsonToPojo(detailJson, ArticleDetailVO.class);
+        &#125;
+        return detailVO;
+    &#125;
+</code></pre>
+<pre><code class="java">先去发表头条http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html
+再去审核通过http://www.imoocnews.com:9090/imooc-news/admin/contentReview.html
+此时运行后 就会有java+ftl=html静态页面在指定位置生成了
+指定位置：D:\apache-tomcat-8.5.93\webapps\imooc-news\portal\a
+生成了一个文件：240729D9S8683XP0.html  这里面就是刚刚发表头条的内容
+此时下面的两个网站都可以打开同样的头条内容
+http://www.imoocnews.com:9090/imooc-news/portal/a/240729D9S8683XP0.html
+http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=240729D9S8683XP0
+
+240729D9S8683XP0.html
+&lt;div class=&quot;writer-name&quot; @click=&quot;showWriter(&#39;240629F21AK1BHX4&#39;)&quot;&gt;
+      P_luminary
+&lt;/div&gt;
+
+// 跳转作家页面
+showWriter(writerId) &#123;
+    window.open(&quot;../writer.html?writerId=&quot; + writerId);
+&#125;,
+</code></pre>
+<p>9-9</p>
+<h3 id="文章阅读量单独获取并展示-【页面静态化】"><a href="#文章阅读量单独获取并展示-【页面静态化】" class="headerlink" title="文章阅读量单独获取并展示 【页面静态化】"></a>文章阅读量单独获取并展示 【页面静态化】</h3>
             
         </div>
     </div>
@@ -15156,7 +15889,7 @@ http://www.imoocnews.com:9090/imooc-news/portal/detail.html?articleId=2006116Z3M
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -18206,7 +18939,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -20635,7 +21368,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -23565,7 +24298,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -25632,7 +26365,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -30659,7 +31392,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -33968,7 +34701,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
