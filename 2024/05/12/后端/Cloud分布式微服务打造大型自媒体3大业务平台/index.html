@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -14774,6 +14774,7 @@ XiaoMing
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<p><span style = "color:red">在这里特别注意一下 已经开始第二阶段的代码 进阶篇 所以前端的代码也是需要更新换代的 包括..&#x2F;js&#x2F;app.js里面多了 app.getPageName();</span><br><a target="_blank" rel="noopener" href="https://coding.imooc.com/learn/questiondetail/4daeRX4JGBRPnWEp.html">没有getPageName这个函数-慕课网 (imooc.com)</a><br><a target="_blank" rel="noopener" href="https://coding.imooc.com/learn/questiondetail/224939.html">生成的html调用app.js中getPageName()函数出错的问题-慕课网 (imooc.com)</a></p>
 <h3 id="结合动态数据生成静态化HTML【Freemarker】"><a href="#结合动态数据生成静态化HTML【Freemarker】" class="headerlink" title="结合动态数据生成静态化HTML【Freemarker】"></a>结合动态数据生成静态化HTML【Freemarker】</h3><pre><code class="java">service-article  com/imooc/article/controller/FreemarkerController.java
 【stu.ftl如上图不变增加java的整合代码】 俗称Java+ftl=HTML
 package com.imooc.article.controller;
@@ -15053,8 +15054,56 @@ showWriter(writerId) &#123;
     window.open(&quot;../writer.html?writerId=&quot; + writerId);
 &#125;,
 </code></pre>
-<p>9-9</p>
-<h3 id="文章阅读量单独获取并展示-【页面静态化】"><a href="#文章阅读量单独获取并展示-【页面静态化】" class="headerlink" title="文章阅读量单独获取并展示 【页面静态化】"></a>文章阅读量单独获取并展示 【页面静态化】</h3>
+<p><a target="_blank" rel="noopener" href="https://coding.imooc.com/learn/questiondetail/4daeRX4JGBRPnWEp.html">没有getPageName这个函数-慕课网 (imooc.com)</a></p>
+<h3 id="文章阅读量detail单独获取并展示-【页面静态化】"><a href="#文章阅读量detail单独获取并展示-【页面静态化】" class="headerlink" title="文章阅读量detail单独获取并展示 【页面静态化】"></a>文章阅读量<del>detail</del>单独获取并展示 【页面静态化】</h3><p><a target="_blank" rel="noopener" href="http://www.imoocnews.com:9090/imooc-news/portal/a/240730FGXGSCRZ54.html">a5 (imoocnews.com)</a></p>
+<pre><code class="java">【去前面代入阅读量】
+ &lt;div class=&quot;read-counts&quot;&gt;
+            阅读量：&#123;&#123;readCounts&#125;&#125;
+        &lt;/div&gt;
+【先定义readCounts初始量为0】
+var articleList = new Vue(&#123;
+        el: &quot;#detailContainer&quot;,
+        data: &#123;
+            nowReplyingFatherCommentId: 0,  // 根据当前用户正在回复的父commentId进行页面的留言看展示或隐藏
+            userInfo: null,
+            
+            articleId: &quot;&quot;,
+            articleDetail: &#123;&#125;,
+            readCounts: 0,
+        &#125;
+
+// 获得文章阅读数
+         this.getArticleReadCounts(articleId);
+
+ // 获得文章阅读数
+        getArticleReadCounts(articleId) &#123;
+               var me = this;
+
+               var articleServerUrl = app.articleServerUrl;
+               axios.defaults.withCredentials = true;
+               axios.get(articleServerUrl + &quot;/portal/article/readCounts?articleId=&quot; + articleId)
+                .then(res =&gt; &#123;
+                  // console.log(JSON.stringify(res.data));
+                  this.readCounts = res.data;
+                &#125;);
+            &#125;,
+//★★★★★★★★★★★★★★★★★★★★     ★★★★★★★★★★★★★★★★★★★★★★★\\
+然后把这个临时页面修改的地方 移动到后端service-article  resources/templates/detail.ftl中
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+@Override
+    public Integer readCounts(String articleId) &#123;
+       return getCountsFromRedis(REDIS_ARTICLE_READ_COUNTS + &quot;:&quot; + articleId);
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticlePortalControllerApi.java
+@GetMapping(&quot;readCounts&quot;)
+    @ApiOperation(value = &quot;获得文章阅读数&quot;, notes = &quot;获得文章阅读数&quot;, httpMethod = &quot;GET&quot;)
+    public Integer readCounts(@RequestParam String articleId);
+</code></pre>
+<p><a target="_blank" rel="noopener" href="http://www.imoocnews.com:9090/imooc-news/portal/a/240730FP00HHCF14.html">在这里折腾一天终于好了 文章:a6 (imoocnews.com)</a></p>
+<p>9-10</p>
+<h3 id="梳理生产端消费端与中间gridfs关系"><a href="#梳理生产端消费端与中间gridfs关系" class="headerlink" title="梳理生产端消费端与中间gridfs关系"></a>梳理生产端消费端与中间gridfs关系</h3>
     </div>
 
     
