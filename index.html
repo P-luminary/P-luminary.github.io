@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#1bccbc>
                 前端
             </a>
         </span>
@@ -15924,7 +15924,509 @@ var articleList = new Vue(&#123;
 </code></pre>
 <p><a target="_blank" rel="noopener" href="http://www.imoocnews.com:9090/imooc-news/portal/a/240730FP00HHCF14.html">在这里折腾一天终于好了 文章:a6 (imoocnews.com)</a></p>
 <p>9-10</p>
-<h3 id="梳理生产端消费端与中间gridfs关系"><a href="#梳理生产端消费端与中间gridfs关系" class="headerlink" title="梳理生产端消费端与中间gridfs关系"></a>梳理生产端消费端与中间gridfs关系</h3>
+<h3 id="梳理生产端消费端与中间gridfs关系"><a href="#梳理生产端消费端与中间gridfs关系" class="headerlink" title="梳理生产端消费端与中间gridfs关系"></a>梳理生产端消费端与中间gridfs关系</h3><h5 id="静态化高度耦合"><a href="#静态化高度耦合" class="headerlink" title="静态化高度耦合"></a>静态化高度耦合</h5><blockquote>
+<p>在本地电脑&#x2F;同一台服务器     &#x3D;&gt;     生成静态页面HTML →<del>(发布)</del> 前端</p>
+</blockquote>
+<h5 id="解耦静态化"><a href="#解耦静态化" class="headerlink" title="解耦静态化"></a>解耦静态化</h5><blockquote>
+<p>后端服务器(生成静态页面HTML)  &#x3D;&gt;  GridFS  &lt;&#x3D;  前端服务器(前端HTML)<br>同时  后端服务器(生成静态页面HTML)  →  前端服务器(前端HTML)</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e63aeac9b0694f2fced26f0349e630e42e51ae54/data/%E9%9D%99%E6%80%81%E5%8C%96%E9%AB%98%E5%BA%A6%E8%80%A6%E5%90%88%E4%B8%8E%E8%A7%A3%E8%80%A6.png"></p>
+<pre><code class="java">创建一个新的module =&gt; imooc-news-dev-service-article-html
+把service-article中resources的application.yml /dev+prod.yml logback-spring.xml拷贝到article-html模块的resources中
+
+############################################################
+http://localhost:8002/hello
+&#123;
+    &quot;status&quot;: 200,
+    &quot;msg&quot;: &quot;操作成功！&quot;,
+    &quot;success&quot;: true,
+    &quot;data&quot;: null
+&#125;
+</code></pre>
+<pre><code class="yaml">application.yml
+############################################################
+#
+# article文章静态化服务
+# web访问端口号  约定：8002
+#
+############################################################
+server:
+# port: 8003
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  profiles:
+    active: dev # yml中配置文件的环境配置, dev:开发环境, test:测试环境, prod:生产环境
+  application:
+    name: service-article-html
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  data:
+    mongodb:
+      uri: mongodb://root:root@192.168.170.135:27017
+      database: imooc-news
+  freemarker:
+    charset: UTF-8
+    content-type: text/html
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+
+# 定义freemarker生成的HTML
+freemarker:
+  html:
+    target: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+    article: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+</code></pre>
+<pre><code class="yaml">application-dev.yml
+server:
+  port: 8002
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+
+## setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+
+
+
+
+application-prod.yml
+server:
+  port: 8002
+
+spring:
+  redis:
+    database: 0
+    host: 47.98.225.105
+    port: 6379
+</code></pre>
+<pre><code class="java">service-article-html  com/imooc/article/html/Application.java
+package com.imooc.article.html;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+@MapperScan(basePackages = &quot;com.imooc.article.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article-html  com/imooc/article/html/controller/HelloController.java
+package com.imooc.article.html.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+
+    public Object hello() &#123;
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="生产端存储html道gridfs并关联文章表【静态化解耦】"><a href="#生产端存储html道gridfs并关联文章表【静态化解耦】" class="headerlink" title="生产端存储html道gridfs并关联文章表【静态化解耦】"></a>生产端存储html道gridfs并关联文章表【静态化解耦】</h3><h5 id="静态化解耦步骤"><a href="#静态化解耦步骤" class="headerlink" title="静态化解耦步骤"></a>静态化解耦步骤</h5><ul>
+<li><strong>生成html，并上传到gridfs中</strong></li>
+<li><strong>获得mongoFileId，关联保存到文章表中</strong></li>
+<li><strong>调用消费端，下载gridfs的html进行发布</strong></li>
+</ul>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+ /**
+     * 关联文章和gridfs的html文件id
+     */
+    public void updateArticleToGridFS(String articleId, String articleMongoId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+ @Transactional
+    @Override
+    public void updateArticleToGridFS(String articleId, String articleMongoId) &#123;
+        Article pendingArticle = new Article();
+        pendingArticle.setId(articleId);
+        pendingArticle.setMongoFileId(articleMongoId);
+        articleMapper.updateByPrimaryKeySelective(pendingArticle);
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult doReview(String articleId, Integer passOrNot) &#123;
+        Integer pendingStatus;
+        if (passOrNot == YesOrNo.YES.type) &#123;
+            // 审核成功
+            pendingStatus = ArticleReviewStatus.SUCCESS.type;
+        &#125; else if (passOrNot == YesOrNo.NO.type) &#123;
+            // 审核失败
+            pendingStatus = ArticleReviewStatus.FAILED.type;
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+        // 保存到数据库，更改文章状态为审核成功或者失败
+        articleService.updateArticleStatus(articleId, pendingStatus);
+
+        if (pendingStatus == ArticleReviewStatus.SUCCESS.type)&#123;
+            //审核成功，生成文章详情页静态html
+            try&#123;
+//                 createArticleHTML(articleId);
+                String articleMongoId = createArticleHTMLToGridFS(articleId);
+                // 存储到对应的文章 进行关联保存
+                articleService.updateArticleToGridFS(articleId, articleMongoId);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+......
+...
+    @Value(&quot;$&#123;freemarker.html.target&#125;&quot;)
+    private String articlePath;
+    @Autowired
+    private RestTemplate restTemplate;
+    // 文章生成HTML
+    public void createArticleHTML(String articleId) throws IOException, TemplateException &#123;
+        Configuration cfg = new Configuration(Configuration.getVersion());
+        String classpath = this.getClass().getResource(&quot;/&quot;).getPath();
+        cfg.setDirectoryForTemplateLoading(new File(classpath + &quot;templates&quot;));
+
+        Template template = cfg.getTemplate(&quot;detail.ftl&quot;, &quot;utf-8&quot;);
+
+        // 获得文章的详情数据
+        ArticleDetailVO detailVO = getArticleDetail(articleId);
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;articleDetail&quot;, detailVO);
+
+        File tempDic = new File(articlePath);
+        if (!tempDic.exists()) &#123;
+            tempDic.mkdirs();
+        &#125;
+
+        String path = articlePath + File.separator + detailVO.getId() + &quot;.html&quot;;
+
+        Writer out = new FileWriter(path);
+        template.process(map, out);
+        out.close();
+    &#125;
+
+    @Autowired
+    private GridFSBucket gridFSBucket;
+    public String createArticleHTMLToGridFS(String articleId) throws IOException, TemplateException &#123;
+        Configuration cfg = new Configuration(Configuration.getVersion());
+        String classpath = this.getClass().getResource(&quot;/&quot;).getPath();
+        cfg.setDirectoryForTemplateLoading(new File(classpath + &quot;templates&quot;));
+
+        Template template = cfg.getTemplate(&quot;detail.ftl&quot;, &quot;utf-8&quot;);
+
+        // 获得文章的详情数据
+        ArticleDetailVO detailVO = getArticleDetail(articleId);
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;articleDetail&quot;, detailVO);
+
+        String htmlContent = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+//        System.out.println(htmlContent);
+
+        InputStream inputStream = IOUtils.toInputStream(htmlContent);
+        ObjectId fileId = gridFSBucket.uploadFromStream(detailVO.getId() + &quot;.html&quot;,inputStream);
+        return fileId.toString();
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/GridFSConfig.java
+package com.imooc.article;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
+@Component //可以被容器访问到
+public class GridFSConfig &#123;
+    @Value(&quot;$&#123;spring.data.mongodb.database&#125;&quot;)
+    private String mongodb;
+
+    @Bean
+    public GridFSBucket gridFSBucket(MongoClient mongoClient)&#123;
+        MongoDatabase mongoDatabase = mongoClient.getDatabase(mongodb);
+        GridFSBucket bucket = GridFSBuckets.create(mongoDatabase);//存入mongodatabase
+        return bucket;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="消费端从gridfs下载HTML到tomcat【静态化解耦】"><a href="#消费端从gridfs下载HTML到tomcat【静态化解耦】" class="headerlink" title="消费端从gridfs下载HTML到tomcat【静态化解耦】"></a>消费端从gridfs下载HTML到tomcat【静态化解耦】</h3><pre><code class="java">service-api  com/imooc/api/controller/article/ArticleHTMLControllerApi.java
+package com.imooc.api.controller.article;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.pojo.bo.NewArticleBO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.Date;
+
+@Api(value = &quot;静态化文章业务的controller&quot;, tags = &#123;&quot;静态化文章业务的controller&quot;&#125;)
+@RequestMapping(&quot;article/html&quot;)
+public interface ArticleHTMLControllerApi &#123;
+
+    @GetMapping(&quot;download&quot;)
+    @ApiOperation(value = &quot;下载html&quot;, notes = &quot;下载html&quot;, httpMethod = &quot;GET&quot;)
+    public Integer download(String articleId, String articleMongoId) throws Exception;
+&#125;
+</code></pre>
+<pre><code class="java">article-html  com/imooc/article/html/controller/ArticleHTMLController.java
+package com.imooc.article.html.controller;
+
+import com.imooc.api.controller.article.ArticleHTMLControllerApi;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.gridfs.GridFS;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+
+@RestController
+public class ArticleHTMLController implements ArticleHTMLControllerApi &#123;
+
+    final static Logger logger = LoggerFactory.getLogger(ArticleHTMLController.class);
+
+    @Autowired //相应的下载
+    private GridFSBucket gridFSBucket;
+
+    @Value(&quot;$&#123;freemarker.html.article&#125;&quot;)
+    private String articlePath;
+
+    @Override
+    public Integer download(String articleId, String articleMongoId)
+            throws Exception &#123;
+
+        // 拼接最终文件的保存的地址
+        String path = articlePath + File.separator + articleId + &quot;.html&quot;;
+
+        // 获取文件流，定义存放的位置和名称
+        File file = new File(path);
+        // 创建输出流
+        OutputStream outputStream = new FileOutputStream(file);
+        // 执行下载
+        gridFSBucket.downloadToStream(new ObjectId(articleMongoId), outputStream);
+
+        return HttpStatus.OK.value();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+@Override
+    public GraceJSONResult doReview(String articleId, Integer passOrNot) &#123;
+        Integer pendingStatus;
+        if (passOrNot == YesOrNo.YES.type) &#123;
+            // 审核成功
+            pendingStatus = ArticleReviewStatus.SUCCESS.type;
+        &#125; else if (passOrNot == YesOrNo.NO.type) &#123;
+            // 审核失败
+            pendingStatus = ArticleReviewStatus.FAILED.type;
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+        // 保存到数据库，更改文章状态为审核成功或者失败
+        articleService.updateArticleStatus(articleId, pendingStatus);
+
+        if (pendingStatus == ArticleReviewStatus.SUCCESS.type)&#123;
+            //审核成功，生成文章详情页静态html
+            try&#123;
+//                 createArticleHTML(articleId);
+                String articleMongoId = createArticleHTMLToGridFS(articleId);
+                // 存储到对应的文章 进行关联保存
+                articleService.updateArticleToGridFS(articleId, articleMongoId);
+                // 调用消费端，执行下载html
+                doDownloadArticleHTML(articleId,articleMongoId);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+    private void doDownloadArticleHTML(String articleId, String articleMongoId) &#123;
+        String url = //去SwitchHost弄个新的端口映射
+                &quot;http://html.imoocnews.com:8002/article/html/download?articleId=&quot;
+                        + articleId +
+                        &quot;&amp;articleMongoId=&quot;
+                        + articleMongoId;
+        ResponseEntity&lt;Integer&gt; responseEntity = restTemplate.getForEntity(url, Integer.class);
+        int status = responseEntity.getBody();
+        if (status != HttpStatus.OK.value()) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+      /**
+     * 关联文章和gridfs的html文件id
+     */
+    public void updateArticleToGridFS(String articleId, String articleMongoId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+    @Transactional
+    @Override
+    public void updateArticleToGridFS(String articleId, String articleMongoId) &#123;
+        Article pendingArticle = new Article();
+        pendingArticle.setId(articleId);
+        pendingArticle.setMongoFileId(articleMongoId);
+        articleMapper.updateByPrimaryKeySelective(pendingArticle);
+    &#125;
+</code></pre>
+<pre><code class="mysql">【SwitchHosts】
+# imooc-news 192.168.1.3
+127.0.0.1 www.imoocnews.com
+127.0.0.1 writer.imoocnews.com
+127.0.0.1 admin.imoocnews.com
+```
+127.0.0.1 article.imoocnews.com
+127.0.0.1 user.imoocnews.com
+127.0.0.1 files.imoocnews.com
+127.0.0.1 html.imoocnews.com
+
+发布文章后审核文章
+此时会发现数据库MongoDB里面的GridFS存储桶有新建的html 包括在 前端也存在此文件
+D:\apache-tomcat-8.5.93\webapps\imooc-news\portal\a\240731CN3X1M56Y8.html
+</code></pre>
+<h3 id="撤回删除文章，删除gridfs文件以及html【静态化解耦】"><a href="#撤回删除文章，删除gridfs文件以及html【静态化解耦】" class="headerlink" title="撤回删除文章，删除gridfs文件以及html【静态化解耦】"></a>撤回删除文章，删除gridfs文件以及html【静态化解耦】</h3><blockquote>
+<p>拿到mongodb_id  去删除 在service-html 写个删除接口 拼接删除方法</p>
+</blockquote>
+<pre><code class="java">service-api  com/imooc/api/controller/article/ArticleHTMLControllerApi.java
+@Api(value = &quot;静态化文章业务的controller&quot;, tags = &#123;&quot;静态化文章业务的controller&quot;&#125;)
+@RequestMapping(&quot;article/html&quot;)
+public interface ArticleHTMLControllerApi &#123;
+@GetMapping(&quot;delete&quot;)
+    @ApiOperation(value = &quot;删除html&quot;, notes = &quot;删除html&quot;, httpMethod = &quot;GET&quot;)
+    public Integer delete(String articleId) throws Exception;
+&#125;
+</code></pre>
+<pre><code class="java">article-html  com/imooc/article/html/controller/ArticleHTMLController.java
+@Override
+    public Integer delete(String articleId) throws Exception &#123;
+        // 拼接最终文件的保存的地址
+        String path = articlePath + File.separator + articleId + &quot;.html&quot;;
+        // 获取文件流，定义存放的位置和名称
+        File file = new File(path);
+        // 删除文件
+        file.delete();
+        return HttpStatus.OK.value();
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+ @Override
+    public GraceJSONResult delete(String userId, String articleId) &#123;
+        articleService.deleteArticle(userId,articleId);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @Override
+    public GraceJSONResult withdraw(String userId, String articleId) &#123;
+        articleService.withdrawArticle(userId, articleId);
+        return GraceJSONResult.ok();
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+@Transactional
+    @Override
+    public void deleteArticle(String userId, String articleId) &#123;
+        Example articleExample = makeExampleCriteria(userId, articleId);
+
+        Article pending = new Article();
+        pending.setIsDelete(YesOrNo.YES.type);
+
+        int result = articleMapper.updateByExampleSelective(pending, articleExample);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_DELETE_ERROR);
+        &#125;
+        deleteHTML(articleId);
+    &#125;
+
+    @Transactional
+    @Override
+    public void withdrawArticle(String userId, String articleId) &#123;
+        Example articleExample = makeExampleCriteria(userId, articleId);
+
+        Article pending = new Article();
+        pending.setArticleStatus(ArticleReviewStatus.WITHDRAW.type);
+
+        int result = articleMapper.updateByExampleSelective(pending, articleExample);
+        if (result != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_WITHDRAW_ERROR);
+        &#125;
+        deleteHTML(articleId);
+    &#125;
+...
+...
+
+    @Autowired
+    private GridFSBucket gridFSBucket;
+    /**
+     * 文章撤回删除后，删除静态化的html
+     */
+
+    public void deleteHTML(String articleId) &#123;
+        // 1. 查询文章的mongoFileId
+        Article pending = articleMapper.selectByPrimaryKey(articleId);
+        String articleMongoId = pending.getMongoFileId();
+
+        // 2. 删除GridFS上的文件
+        gridFSBucket.delete(new ObjectId(articleMongoId));
+
+        // 3. 删除消费端的HTML文件
+        doDeleteArticleHTML(articleId);
+//        doDeleteArticleHTMLByMQ(articleId);
+    &#125;
+
+    @Autowired
+    public RestTemplate restTemplate;
+    private void doDeleteArticleHTML(String articleId) &#123;
+        String url = &quot;http://html.imoocnews.com:8002/article/html/delete?articleId=&quot; + articleId;
+        ResponseEntity&lt;Integer&gt; responseEntity = restTemplate.getForEntity(url, Integer.class);
+        int status = responseEntity.getBody();
+        if (status != HttpStatus.OK.value()) &#123;
+            GraceException.display(ResponseStatusEnum.SYSTEM_OPERATION_ERROR);
+        &#125;
+    &#125;
+</code></pre>
+<p>10-1</p>
+<h3 id="接口解耦需求【章节概述】"><a href="#接口解耦需求【章节概述】" class="headerlink" title="接口解耦需求【章节概述】"></a>接口解耦需求【章节概述】</h3>
             
         </div>
     </div>
@@ -15938,7 +16440,7 @@ var articleList = new Vue(&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -21417,7 +21919,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -24347,7 +24849,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -26414,7 +26916,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -31441,7 +31943,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -34750,7 +35252,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -35252,7 +35754,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ff7d73>
                 软考
             </a>
         </span>
