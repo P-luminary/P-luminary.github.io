@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -15604,8 +15604,846 @@ public interface ArticleHTMLControllerApi &#123;
         &#125;
     &#125;
 </code></pre>
-<p>10-1</p>
-<h3 id="接口解耦需求【章节概述】"><a href="#接口解耦需求【章节概述】" class="headerlink" title="接口解耦需求【章节概述】"></a>接口解耦需求【章节概述】</h3>
+<h3 id="接口解耦需求【章节概述】"><a href="#接口解耦需求【章节概述】" class="headerlink" title="接口解耦需求【章节概述】"></a>接口解耦需求【章节概述】</h3><ul>
+<li><strong>介绍RabbitMQ</strong></li>
+<li><strong>RabbitMQ术语</strong></li>
+<li><strong>安装与配置消息队列</strong></li>
+<li><strong>实现接口调用解耦</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/d5205be20fc0bac1de7cadbc9b34f6ff949df3d1/data/Rabbitmq.png"></p>
+<h3 id="RabbitMQ概述-MQ模型"><a href="#RabbitMQ概述-MQ模型" class="headerlink" title="RabbitMQ概述_MQ模型"></a>RabbitMQ概述_MQ模型</h3><h5 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h5><ul>
+<li><strong>RabbitMQ</strong></li>
+<li><strong>ActiveMQ</strong></li>
+<li><strong>RocketMQ</strong></li>
+<li><strong>Kafka</strong></li>
+</ul>
+<h5 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h5><ul>
+<li><strong>erlang语言开发</strong></li>
+<li><strong>AMQP</strong></li>
+<li><strong>应用之间通信</strong></li>
+<li><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/">https://www.rabbitmq.com/</a></li>
+</ul>
+<h5 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h5><ul>
+<li><strong>异步任务</strong></li>
+<li><strong>提速</strong></li>
+<li><strong>接口解耦</strong></li>
+<li><strong>削峰</strong></li>
+</ul>
+<h5 id="RabbitMQ模型"><a href="#RabbitMQ模型" class="headerlink" title="RabbitMQ模型"></a>RabbitMQ模型</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/d83d056479d71444c598865698d340e2ba01da96/data/RabbitMQ%E6%A8%A1%E5%9E%8B.png"></p>
+<h3 id="RabbitMQ-3-8-5-安装与配置详细在”多线程与分布式-md“中有"><a href="#RabbitMQ-3-8-5-安装与配置详细在”多线程与分布式-md“中有" class="headerlink" title="RabbitMQ-3.8.5 安装与配置详细在”多线程与分布式.md“中有"></a>RabbitMQ-3.8.5 安装与配置<del>详细在”多线程与分布式.md“中有</del></h3><blockquote>
+<p>E:\Java实例项目1-20套\第04套【项目实战】Spring Cloud分布式微服务实战，打造大型自媒体3大业务平台 分布式前后端分离项目分层聚合 养成应对复杂业务的综合技术能力\imooc-news\rabbitmq-server-3.8.5</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://packagecloud.io/rabbitmq/erlang/install#bash-rpm">rabbitmq&#x2F;erlang - Installation · packagecloud- Bash Scripts</a></p>
+<pre><code class="mysql">[imooc@imooc ~]$ curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | sudo bash
+[imooc@imooc ~]$ sudo yum install erlang
+[imooc@imooc ~]$ erl
+Erlang/OTP 23 [erts-11.2.2.10] [source] [64-bit] [smp:2:2] [ds:2:2:10] [async-threads:1] [hipe]
+
+Eshell V11.2.2.10  (abort with ^G)
+1&gt; 
+[imooc@imooc ~]$ yum list | grep erlang
+erlang.x86_64                               23.3.4.11-1.el7            @rabbitmq_erlang
+erlang-debuginfo.x86_64                     23.3.4.11-1.el7            rabbitmq_erlang
+[imooc@imooc ~]$ sudo rpm --import https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey
+[imooc@imooc ~]$ sudo rpm --import https://packagecloud.io/gpg.key
+
+将资源包里的文件拷贝过来 rabbitmq.conf 和 rabbitmq-server.rpm
+#[先把两个依赖搞好 =&gt; 一个是key 一个是依赖]
+[imooc@imooc ~]$ sudo rpm --import https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
+[imooc@imooc ~]$ sudo yum install socat
+[imooc@imooc ~]$ sudo rpm -ivh rabbitmq-server-3.8.5-1.el7.noarch.rpm
+[imooc@imooc ~]$ sudo vim rabbitmq.conf
+#&#123;loopback_users, []&#125; 加上注释#
+[imooc@imooc ~]$ cd /etc/rabbitmq/
+#把conf移动到etc中
+[imooc@imooc rabbitmq]$ sudo cp /home/imooc/rabbitmq.conf .
+#重新启动rabbitmq
+[imooc@imooc rabbitmq]$ sudo systemctl restart rabbitmq-server
+#查看状态
+[imooc@imooc rabbitmq]$ sudo systemctl status rabbitmq-server
+
+● rabbitmq-server.service - RabbitMQ broker
+   Loaded: loaded (/usr/lib/systemd/system/rabbitmq-server.service; disabled; vendor preset: disabled)
+   Active: active (running) since 四 2024-08-01 15:45:54 CST; 13s ago
+ Main PID: 5843 (beam.smp)
+   Status: &quot;Initialized&quot;
+    Tasks: 86
+   CGroup: /system.slice/rabbitmq-server.service
+           ├─5843 /usr/lib64/erlang/erts-11.2.2.10/bin/beam.smp -W w -K true -A 64 -M...
+           ├─5952 erl_child_setup 32768
+           ├─6008 inet_gethost 4
+           └─6009 inet_gethost 4
+           
+[imooc@imooc rabbitmq]$ sudo rabbitmq-plugins enable rabbitmq_management
+[imooc@imooc rabbitmq]$ ll
+总用量 40
+-rw-r--r--. 1 root rabbitmq    23 8月   1 15:46 enabled_plugins
+-rw-r--r--. 1 root rabbitmq 33325 8月   1 15:35 rabbitmq.conf
+
+http://192.168.170.135:15672/
+username: guest
+password: guest
+[imooc@imooc ~]$ sudo vim rabbitmq.conf #把这个取消注释
+loopback_users.guest = false
+
+http://192.168.170.135:15672/#/  #创建虚拟host节点
+→ admin → Add a user
+</code></pre>
+<h3 id="引入依赖和配置【集成Rabbitmq】"><a href="#引入依赖和配置【集成Rabbitmq】" class="headerlink" title="引入依赖和配置【集成Rabbitmq】"></a>引入依赖和配置【集成Rabbitmq】</h3><pre><code class="xml">service-api  pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-amqp&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<blockquote>
+<p>模块 Module<br>imooc-news-dev-service-article 是生产者[发送消息]<br>→<br>imooc-news-dev-service-article-html 是消费者[处理消息]</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://192.168.170.135:15672/#/vhosts">RabbitMQ Management</a> 在Virtual Hosts → Add a new virtual host → Name: imooc-news-dev<br>退出再重新登陆一下rabbitmq → 账号密码：admin</p>
+<pre><code class="yaml">service-article  application.yml
+  rabbitmq:
+    host: 192.168.170.135
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: imooc-news-dev
+</code></pre>
+<pre><code class="yaml">service-article-html  application.yml
+  rabbitmq:
+    host: 192.168.170.135
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: imooc-news-dev
+</code></pre>
+<h3 id="创建交换机和队列【集成Rabbitmq】"><a href="#创建交换机和队列【集成Rabbitmq】" class="headerlink" title="创建交换机和队列【集成Rabbitmq】"></a>创建交换机和队列【集成Rabbitmq】</h3><pre><code class="java">service-api  com/imooc/api/config/RabbitMQConfig.java
+package com.imooc.api.config;
+
+import org.springframework.amqp.core.*;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * RabbitMQ 的配置类
+ */
+@Configuration
+public class RabbitMQConfig &#123;
+
+    // 定义交换机的名字
+    public static final String EXCHANGE_ARTICLE = &quot;exchange_article&quot;;
+
+    // 定义队列的名字
+    public static final String QUEUE_DOWNLOAD_HTML = &quot;queue_download_html&quot;;
+
+    // 创建交换机
+    @Bean(EXCHANGE_ARTICLE)
+    public Exchange exchange()&#123;
+        return ExchangeBuilder
+                .topicExchange(EXCHANGE_ARTICLE)
+                .durable(true)
+                .build();
+    &#125;
+
+    // 创建队列
+    @Bean(QUEUE_DOWNLOAD_HTML)
+    public Queue queue()&#123;
+        return new Queue(QUEUE_DOWNLOAD_HTML);
+    &#125;
+
+    // 队列绑定交换机
+    @Bean
+    public Binding binding(
+            @Qualifier(QUEUE_DOWNLOAD_HTML) Queue queue,
+            @Qualifier(EXCHANGE_ARTICLE) Exchange exchange)&#123;
+        return BindingBuilder
+                .bind(queue)
+                .to(exchange)
+                //.with(&quot;article.*&quot;) &quot;article.hello&quot;,  //类似于API的规则
+                .with(&quot;article.#.do&quot;)
+                .noargs();      // 执行绑定
+    &#125;
+&#125;
+</code></pre>
+<h3 id="创建生产者-配置路由规则【集成RabbitMQ】"><a href="#创建生产者-配置路由规则【集成RabbitMQ】" class="headerlink" title="创建生产者_配置路由规则【集成RabbitMQ】"></a>创建生产者_配置路由规则【集成RabbitMQ】</h3><p><a target="_blank" rel="noopener" href="http://localhost:8001/producer/hello">localhost:8001&#x2F;producer&#x2F;hello</a></p>
+<blockquote>
+<p>{<br>“status”: 200,<br>“msg”: “操作成功！”,<br>“success”: true,<br>“data”: null<br>}</p>
+</blockquote>
+<pre><code class="java">//如果队列规则改变 就需要把Exchanges里的RoutingKey解绑[Unbind] 否则还是会有以前的规则收到消息
+//http://192.168.170.135:15672/#/exchanges/imooc-news-dev/exchange_article 
+package com.imooc.article.controller;
+
+import com.imooc.api.config.RabbitMQConfig;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;producer&quot;)
+public class HelloController&#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @GetMapping(&quot;/hello&quot;)
+    public Object hello() &#123;
+    /**
+     * RabbitMQ的路由规则 routing key
+     * display.*.*  →  * 代表一个占位符
+     * .with(&quot;article.#.do&quot;)  //类似于API的规则
+     * 例：
+     *      display.do.download      匹配
+     *      display.do.upload.done 不匹配
+     *
+     * display.# → # 代表任意多个占位符
+     * 例：
+     *      display.do.download      匹配
+     *      display.do.upload.done.over 匹配
+     */
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.publish.download.do&quot;, //要绑定规则
+                &quot;1001~&quot;);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.success.do&quot;, //要绑定规则
+                &quot;1002~&quot;);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.play&quot;, //要绑定规则
+                &quot;1003~&quot;);
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+http://localhost:8001/producer/hello
+</code></pre>
+<h3 id="消费者接受消息处理业务【集成RabbitMQ】"><a href="#消费者接受消息处理业务【集成RabbitMQ】" class="headerlink" title="消费者接受消息处理业务【集成RabbitMQ】"></a>消费者接受消息处理业务【集成RabbitMQ】</h3><p><a target="_blank" rel="noopener" href="http://192.168.170.135:15672/#/queues/imooc-news-dev/queue_download_html">RabbitMQ Management</a></p>
+<blockquote>
+<p>如果消息被消费掉后那么就 需要重新请求消息队列生成</p>
+</blockquote>
+<pre><code class="java">service-article-html  com/imooc/article/html/RabbitMQConsumer.java
+package com.imooc.article.html;
+
+import com.imooc.api.config.RabbitMQConfig;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+//打断点后 只要队列有消息 消费者监听到就会被消费
+@Component
+public class RabbitMQConsumer &#123;
+    @RabbitListener(queues = &#123;RabbitMQConfig.QUEUE_DOWNLOAD_HTML&#125;)//监听哪个队列
+    public void watchQueue(String payload, Message message)&#123;
+        System.out.println(payload);
+
+        String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+        if (routingKey.equalsIgnoreCase(&quot;article.publish.download.do&quot;)) &#123;
+            System.out.println(&quot;article.publish.download.do&quot;);
+        &#125; else if (routingKey.equalsIgnoreCase(&quot;article.success.do&quot;)) &#123;
+            System.out.println(&quot;article.success.do&quot;);
+        &#125; else &#123;
+            System.out.println(&quot;不符合的规则：&quot; + routingKey);
+        &#125;
+    &#125;
+&#125;
+==================================================================
+// 如果消息被消费掉后那么就 需要重新请求消息队列生成
+// 此时需要刷新 http://localhost:8001/producer/hello 重新提交一下消息就可以了
+Console：
+1001~
+article.publish.download.do
+1002~
+article.success.do
+1003~
+不符合的规则：article.play
+</code></pre>
+<h3 id="文章静态化HTML与删除【异步解耦】"><a href="#文章静态化HTML与删除【异步解耦】" class="headerlink" title="文章静态化HTML与删除【异步解耦】"></a>文章静态化HTML与删除【异步解耦】</h3><pre><code class="java">service-article  com/imooc/article/controller/ArticleController.java
+ @Override
+    public GraceJSONResult doReview(String articleId, Integer passOrNot) &#123;
+        Integer pendingStatus;
+        if (passOrNot == YesOrNo.YES.type) &#123;
+            // 审核成功
+            pendingStatus = ArticleReviewStatus.SUCCESS.type;
+        &#125; else if (passOrNot == YesOrNo.NO.type) &#123;
+            // 审核失败
+            pendingStatus = ArticleReviewStatus.FAILED.type;
+        &#125; else &#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.ARTICLE_REVIEW_ERROR);
+        &#125;
+        // 保存到数据库，更改文章状态为审核成功或者失败
+        articleService.updateArticleStatus(articleId, pendingStatus);
+
+        if (pendingStatus == ArticleReviewStatus.SUCCESS.type)&#123;
+            //审核成功，生成文章详情页静态html
+            try&#123;
+//                 createArticleHTML(articleId);
+                String articleMongoId = createArticleHTMLToGridFS(articleId);
+                // 存储到对应的文章 进行关联保存
+                articleService.updateArticleToGridFS(articleId, articleMongoId);
+                // 调用消费端，执行下载html
+//                doDownloadArticleHTML(articleId,articleMongoId);
+            ★★  // 发送消息到mq队列，让消费者监听并且下载html  ★★
+                doDownloadArticleHTMLByMQ(articleId,articleMongoId);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+        return GraceJSONResult.ok();
+    &#125;
+@Autowired
+    private RabbitTemplate rabbitTemplate;
+    private void doDownloadArticleHTMLByMQ(String articleId, String articleMongoId) &#123;
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.download.do&quot;,
+                articleId + &quot;,&quot; + articleMongoId);
+    &#125;
+</code></pre>
+<pre><code class="java">service-article-html  com/imooc/article/html/controller/ArticleHTMLComponent.java
+package com.imooc.article.html.controller;
+
+import com.mongodb.client.gridfs.GridFSBucket;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+
+@Component
+public class ArticleHTMLComponent &#123;
+
+    @Autowired
+    private GridFSBucket gridFSBucket;
+
+    @Value(&quot;$&#123;freemarker.html.article&#125;&quot;)
+    private String articlePath;
+
+    public Integer download(String articleId, String articleMongoId)
+            throws Exception &#123;
+
+        // 拼接最终文件的保存的地址
+        String path = articlePath + File.separator + articleId + &quot;.html&quot;;
+
+        // 获取文件流，定义存放的位置和名称
+        File file = new File(path);
+        // 创建输出流
+        OutputStream outputStream = new FileOutputStream(file);
+        // 执行下载
+        gridFSBucket.downloadToStream(new ObjectId(articleMongoId), outputStream);
+
+        return HttpStatus.OK.value();
+    &#125;
+
+    public Integer delete(String articleId) throws Exception &#123;
+
+        // 拼接最终文件的保存的地址
+        String path = articlePath + File.separator + articleId + &quot;.html&quot;;
+
+        // 获取文件流，定义存放的位置和名称
+        File file = new File(path);
+
+        // 删除文件
+        file.delete();
+
+        return HttpStatus.OK.value();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article-html  com/imooc/article/html/RabbitMQConsumer.java
+package com.imooc.article.html;
+
+import com.imooc.api.config.RabbitMQConfig;
+import com.imooc.article.html.controller.ArticleHTMLComponent;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+//打断点后 只要队列有消息 消费者监听到就会被消费
+@Component
+public class RabbitMQConsumer &#123;
+    @Autowired
+    private ArticleHTMLComponent articleHTMLComponent;
+
+    @RabbitListener(queues = &#123;RabbitMQConfig.QUEUE_DOWNLOAD_HTML&#125;)//监听哪个队列
+    public void watchQueue(String payload, Message message)&#123;
+        System.out.println(payload);
+
+        String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+        if (routingKey.equalsIgnoreCase(&quot;article.publish.download.do&quot;)) &#123;
+            System.out.println(&quot;article.publish.download.do&quot;);
+        &#125; else if (routingKey.equalsIgnoreCase(&quot;article.success.do&quot;)) &#123;
+            System.out.println(&quot;article.success.do&quot;);
+        &#125;else if (routingKey.equalsIgnoreCase(&quot;article.download.do&quot;)) &#123;
+            String articleId = payload.split(&quot;,&quot;)[0];
+            String articleMongoId = payload.split(&quot;,&quot;)[1];
+            try &#123;
+                articleHTMLComponent.download(articleId, articleMongoId);
+            &#125; catch (Exception e) &#123;
+                e.printStackTrace();
+            &#125;
+
+        &#125; else if (routingKey.equalsIgnoreCase(&quot;article.html.download.do&quot;)) &#123;
+            String articleId = payload;
+            try &#123;
+                articleHTMLComponent.delete(articleId);
+            &#125; catch (Exception e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125; else &#123;
+            System.out.println(&quot;不符合的规则：&quot; + routingKey);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">前端的index.html页面也需要修改成静态页面跳转
+&lt;a :href=&quot;&#39;./a/&#39;+article.id+&#39;.html&#39;&quot; target=&quot;_blank&quot; class=&quot;link-article-title&quot;&gt;&#123;&#123;article.title&#125;&#125;&lt;/a&gt;
+这样再次刷新 就可以让页面不是articleId=?...
+http://www.imoocnews.com:9090/imooc-news/portal/a/240801D7S7PM63R4.html
+</code></pre>
+<h3 id="延迟队列的需求与安装配置【延迟队列】"><a href="#延迟队列的需求与安装配置【延迟队列】" class="headerlink" title="延迟队列的需求与安装配置【延迟队列】"></a>延迟队列的需求与安装配置【延迟队列】</h3><p>把这个<del>rabbitmq_delayed_message_exchange-3.8.0.ez</del>上传到Linux虚拟机</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/be9aa25974ee850399731a79b57f5cd8c4375356/data/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97.jpg"></p>
+<pre><code class="mysql">[imooc@imooc rabbitmq]$ cd /usr/lib/rabbitmq/lib/rabbitmq_server-3.8.5/plugins
+[imooc@imooc ~]$ sudo mv /home/imooc/rabbitmq_delayed_message_exchange-3.8.0.ez /usr/lib/rabbitmq/lib/rabbitmq_server-3.8.5/plugins
+[imooc@imooc plugins]$ sudo systemctl restart rabbitmq-server
+[imooc@imooc plugins]$ sudo rabbitmq-plugins list
+Listing plugins with pattern &quot;.*&quot; ...
+ Configured: E = explicitly enabled; e = implicitly enabled
+ | Status: * = running on rabbit@imooc
+ |/
+[  ] rabbitmq_amqp1_0                  3.8.5
+[  ] rabbitmq_auth_backend_cache       3.8.5
+[  ] rabbitmq_auth_backend_http        3.8.5
+[  ] rabbitmq_auth_backend_ldap        3.8.5
+[  ] rabbitmq_auth_backend_oauth2      3.8.5
+[  ] rabbitmq_auth_mechanism_ssl       3.8.5
+[  ] rabbitmq_consistent_hash_exchange 3.8.5
+[  ] rabbitmq_delayed_message_exchange 3.8.0
+[  ] rabbitmq_event_exchange           3.8.5
+[  ] rabbitmq_federation               3.8.5
+[  ] rabbitmq_federation_management    3.8.5
+[  ] rabbitmq_jms_topic_exchange       3.8.5
+[E*] rabbitmq_management               3.8.5
+[e*] rabbitmq_management_agent         3.8.5
+[  ] rabbitmq_mqtt                     3.8.5
+[  ] rabbitmq_peer_discovery_aws       3.8.5
+[  ] rabbitmq_peer_discovery_common    3.8.5
+[  ] rabbitmq_peer_discovery_consul    3.8.5
+[  ] rabbitmq_peer_discovery_etcd      3.8.5
+[  ] rabbitmq_peer_discovery_k8s       3.8.5
+[  ] rabbitmq_prometheus               3.8.5
+[  ] rabbitmq_random_exchange          3.8.5
+[  ] rabbitmq_recent_history_exchange  3.8.5
+[  ] rabbitmq_sharding                 3.8.5
+[  ] rabbitmq_shovel                   3.8.5
+[  ] rabbitmq_shovel_management        3.8.5
+[  ] rabbitmq_stomp                    3.8.5
+[  ] rabbitmq_top                      3.8.5
+[  ] rabbitmq_tracing                  3.8.5
+[  ] rabbitmq_trust_store              3.8.5
+[e*] rabbitmq_web_dispatch             3.8.5
+[  ] rabbitmq_web_mqtt                 3.8.5
+[  ] rabbitmq_web_mqtt_examples        3.8.5
+[  ] rabbitmq_web_stomp                3.8.5
+[  ] rabbitmq_web_stomp_examples       3.8.5
+[imooc@imooc plugins]$ service rabbitmq-server restart #[重启服务]
+Redirecting to /bin/systemctl restart rabbitmq-server.service
+</code></pre>
+<h3 id="实现延迟队列【延迟队列】"><a href="#实现延迟队列【延迟队列】" class="headerlink" title="实现延迟队列【延迟队列】"></a>实现延迟队列【延迟队列】</h3><pre><code class="java">service-api  com/imooc/api/config/RabbitMQDelayConfig.java
+package com.imooc.api.config;
+
+import org.springframework.amqp.core.*;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * RabbitMQ 的配置类
+ */
+@Configuration
+public class RabbitMQDelayConfig &#123;
+
+    // 定义交换机的名字
+    public static final String EXCHANGE_DELAY = &quot;exchange_delay&quot;;
+
+    // 定义队列的名字
+    public static final String QUEUE_DELAY = &quot;queue_delay&quot;;
+
+    // 创建延迟交换机
+    @Bean(EXCHANGE_DELAY)
+    public CustomExchange delayExchange() &#123;
+        Map&lt;String, Object&gt; args = new HashMap&lt;&gt;();
+        args.put(&quot;x-delayed-type&quot;, &quot;topic&quot;);
+        return new CustomExchange(EXCHANGE_DELAY, &quot;x-delayed-message&quot;, true, false, args);
+    &#125;
+
+    // 创建队列
+    @Bean(QUEUE_DELAY)
+    public Queue queue()&#123;
+        return new Queue(QUEUE_DELAY);
+    &#125;
+
+    // 队列绑定交换机 ↓ binding必须要唯一
+    @Bean
+    public Binding delayBinding(
+            @Qualifier(QUEUE_DELAY) Queue queue,
+            @Qualifier(EXCHANGE_DELAY) Exchange exchange)&#123;
+        return BindingBuilder
+                .bind(queue)
+                .to(exchange)
+                .with(&quot;delay.#&quot;)
+                .noargs();      // 执行绑定
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/RabbitMQDelayConsumer.java
+package com.imooc.article;
+
+import com.imooc.api.config.RabbitMQDelayConfig;
+import com.imooc.article.service.ArticleService;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+
+@Component
+public class RabbitMQDelayConsumer &#123;
+
+    @Autowired
+    private ArticleService articleService;
+
+    @RabbitListener(queues = &#123;RabbitMQDelayConfig.QUEUE_DELAY&#125;)
+    public void watchQueue(String payload, Message message) &#123;
+        System.out.println(payload);
+
+        String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+        System.out.println(routingKey);
+
+        System.out.println(&quot;消费者接受的延迟消息：&quot; + new Date());
+
+//        // 消费者接收到定时发布的延迟消息，修改当前的文章状态为`即时发布`
+//        String articleId = payload;
+//        articleService.updateArticleToPublish(articleId);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/HelloController.java
+package com.imooc.article.controller;
+
+import com.imooc.api.config.RabbitMQConfig;
+import com.imooc.api.config.RabbitMQDelayConfig;
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+
+@RestController
+@RequestMapping(&quot;producer&quot;)
+public class HelloController&#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @GetMapping(&quot;/hello&quot;)
+    public Object hello() &#123;
+    /**
+     * RabbitMQ的路由规则 routing key
+     * display.*.*  →  * 代表一个占位符
+     * .with(&quot;article.#.do&quot;)  //类似于API的规则
+     * 例：
+     *      display.do.download      匹配
+     *      display.do.upload.done 不匹配
+     *
+     * display.# → # 代表任意多个占位符
+     * 例：
+     *      display.do.download      匹配
+     *      display.do.upload.done.over 匹配
+     */
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.publish.download.do&quot;, //要绑定规则
+                &quot;1001~&quot;);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.success.do&quot;, //要绑定规则
+                &quot;1002~&quot;);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_ARTICLE,
+                &quot;article.play&quot;, //要绑定规则
+                &quot;1003~&quot;);
+        return GraceJSONResult.ok();
+    &#125;
+
+    @GetMapping(&quot;/delay&quot;)
+    public Object delay() &#123;
+        //重写延迟方法  【生产者】
+        MessagePostProcessor messagePostProcessor = new MessagePostProcessor() &#123;
+            @Override
+            public Message postProcessMessage(Message message) throws AmqpException &#123;
+                // 设置消息的持久
+                message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+                // 设置消息延迟的时间 单位ms毫秒
+                message.getMessageProperties().setDelay(5000);
+                return message;
+            &#125;
+        &#125;;
+        rabbitTemplate.convertAndSend(RabbitMQDelayConfig.EXCHANGE_DELAY,
+                &quot;delay.demo&quot;, //要绑定规则
+                &quot;这是一条延时消息~&quot;,
+                messagePostProcessor);
+        System.out.println(&quot;生产者发送的延迟消息：&quot; + new Date());
+        return &quot;OK&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="mysql">确保 rabbitmq_delayed_message_exchange 插件正确启用：
+
+复制代码
+rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+sudo systemctl restart rabbitmq-server
+
+======================================================================
+http://localhost:8001/producer/delay
+
+生产者发送的延迟消息：Thu Aug 01 20:17:30 CST 2024
+
+这是一条延时消息~
+delay.demo
+消费者接受的延迟消息：Thu Aug 01 20:17:35 CST 2024
+</code></pre>
+<h3 id="实现文章的定时延时发布【延迟队列】"><a href="#实现文章的定时延时发布【延迟队列】" class="headerlink" title="实现文章的定时延时发布【延迟队列】"></a>实现文章的定时延时发布【延迟队列】</h3><pre><code class="java">service-article  com/imooc/article/service/ArticleService.java
+/**
+     * 更新定时发布为即使发布
+     
+    public void updateAppointToPublish(); **/
+
+    /**
+     * 更新单条文章为记时发布
+     */
+    public void updateArticleToPublish(String articleId);
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/service/impl/ArticleServiceImpl.java
+【32-64行  89-101行】
+ @Transactional
+    @Override
+    public void createArticle(NewArticleBO newArticleBO, Category category) &#123;
+        String articleId = sid.nextShort();
+
+        Article article = new Article();
+        BeanUtils.copyProperties(newArticleBO, article);
+
+        article.setId(articleId);
+        article.setCategoryId(category.getId());
+        article.setArticleStatus(ArticleReviewStatus.REVIEWING.type);
+        article.setCommentCounts(0);
+        article.setReadCounts(0);
+
+        article.setIsDelete(YesOrNo.NO.type);
+        article.setCreateTime(new Date());
+        article.setUpdateTime(new Date());
+
+        if (article.getIsAppoint() == ArticleAppointType.TIMING.type) &#123;
+            article.setPublishTime(newArticleBO.getPublishTime()); //用户可以在前端选择定时发布
+        &#125; else if (article.getIsAppoint() == ArticleAppointType.IMMEDIATELY.type) &#123;
+            article.setPublishTime(new Date());
+        &#125;
+
+        int res = articleMapper.insert(article);
+        if (res != 1) &#123;
+            GraceException.display(ResponseStatusEnum.ARTICLE_CREATE_ERROR);
+        &#125;
+
+        // 发送延迟消息到mq，计算定时发布时间和当前时间的时间差，则为往后延迟的时间
+        if (article.getIsAppoint() == ArticleAppointType.TIMING.type) &#123;
+
+            Date endDate = newArticleBO.getPublishTime();
+            Date startDate = new Date();
+
+          int delayTimes = (int)(endDate.getTime() - startDate.getTime());
+
+            System.out.println(DateUtil.timeBetween(startDate, endDate));
+
+            // FIXME: 为了测试方便，写死10s
+//            int delayTimes = 10 * 1000;
+
+            MessagePostProcessor messagePostProcessor = new MessagePostProcessor() &#123;
+                @Override
+                public Message postProcessMessage(Message message) throws AmqpException &#123;
+                    // 设置消息的持久
+                    message.getMessageProperties()
+                            .setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+                    // 设置消息延迟的时间，单位ms毫秒
+                    message.getMessageProperties()
+                            .setDelay(delayTimes);
+                    return message;
+                &#125;
+            &#125;;
+            rabbitTemplate.convertAndSend(
+                    RabbitMQDelayConfig.EXCHANGE_DELAY,
+                    &quot;publish.delay.display&quot;,
+                    articleId,
+                    messagePostProcessor);
+
+            System.out.println(&quot;延迟消息-定时发布文章：&quot; + new Date());
+        &#125;
+
+
+        /**
+         * FIXME: 我们只检测正常的词汇，非正常词汇大家课后去检测
+         */
+        // 通过阿里智能AI实现对文章文本的自动检测（自动审核）
+//        String reviewTextResult = aliTextReviewUtils.reviewTextContent(newArticleBO.getContent());
+        String reviewTextResult = ArticleReviewLevel.REVIEW.type;
+
+        if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.PASS.type)) &#123;
+            // 修改当前的文章，状态标记为审核通过
+            this.updateArticleStatus(articleId, ArticleReviewStatus.SUCCESS.type);
+        &#125; else if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.REVIEW.type)) &#123;
+            // 修改当前的文章，状态标记为需要人工审核
+            this.updateArticleStatus(articleId, ArticleReviewStatus.WAITING_MANUAL.type);
+        &#125; else if (reviewTextResult
+                .equalsIgnoreCase(ArticleReviewLevel.BLOCK.type)) &#123;
+            // 修改当前的文章，状态标记为审核未通过
+            this.updateArticleStatus(articleId, ArticleReviewStatus.FAILED.type);
+        &#125;
+    &#125;
+
+@Transactional //添加事务[更新操作]
+/** @Override
+    public void updateAppointToPublish() &#123;
+        articleMapperCustom.updateAppointToPublish();
+    &#125; **/
+
+    @Override
+    public void updateArticleToPublish(String articleId) &#123;
+        Article article = new Article();
+        article.setId(articleId);
+        article.setIsAppoint(ArticleAppointType.IMMEDIATELY.type);
+        articleMapper.updateByPrimaryKeySelective(article);
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/RabbitMQDelayConsumer.java
+package com.imooc.article;
+
+import com.imooc.api.config.RabbitMQDelayConfig;
+import com.imooc.article.service.ArticleService;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+
+@Component
+public class RabbitMQDelayConsumer &#123;
+
+    @Autowired
+    private ArticleService articleService;
+
+    @RabbitListener(queues = &#123;RabbitMQDelayConfig.QUEUE_DELAY&#125;)
+    public void watchQueue(String payload, Message message) &#123;
+        System.out.println(payload);
+
+        String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+        System.out.println(routingKey);
+
+        System.out.println(&quot;消费者接受的延迟消息：&quot; + new Date());
+
+        // 消费者接收到定时发布的延迟消息，修改当前的文章状态为`即时发布`
+        String articleId = payload;
+        articleService.updateArticleToPublish(articleId);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/RabbitMQDelayConfig.java //【换一下绑定类型.with(...)】
+package com.imooc.api.config;
+
+import org.springframework.amqp.core.*;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * RabbitMQ 的配置类
+ */
+@Configuration
+public class RabbitMQDelayConfig &#123;
+
+    // 定义交换机的名字
+    public static final String EXCHANGE_DELAY = &quot;exchange_delay&quot;;
+
+    // 定义队列的名字
+    public static final String QUEUE_DELAY = &quot;queue_delay&quot;;
+
+    // 创建延迟交换机
+    @Bean(EXCHANGE_DELAY)
+    public CustomExchange delayExchange() &#123;
+        Map&lt;String, Object&gt; args = new HashMap&lt;&gt;();
+        args.put(&quot;x-delayed-type&quot;, &quot;topic&quot;);
+        return new CustomExchange(EXCHANGE_DELAY, &quot;x-delayed-message&quot;, true, false, args);
+    &#125;
+
+    // 创建队列
+    @Bean(QUEUE_DELAY)
+    public Queue queue()&#123;
+        return new Queue(QUEUE_DELAY);
+    &#125;
+
+    // 队列绑定交换机 ↓ binding必须要唯一
+    @Bean
+    public Binding delayBinding(
+            @Qualifier(QUEUE_DELAY) Queue queue,
+            @Qualifier(EXCHANGE_DELAY) Exchange exchange)&#123;
+        return BindingBuilder
+                .bind(queue)
+                .to(exchange)
+                .with(&quot;publish.delay.#&quot;)
+                .noargs();      // 执行绑定
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">http://writer.imoocnews.com:9090/imooc-news/writer/createArticle.html 发布一篇定时文章
+// 在数据库里面是article → is_appoint 是1 然后延迟3天后会变成0
+Registering transaction synchronization for SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@15650472]
+JDBC Connection [HikariProxyConnection@441638108 wrapping org.mariadb.jdbc.MariaDbConnection@159b2e33] will be managed by Spring
+==&gt;  Preparing: INSERT INTO article ( id,title,category_id,article_type,article_cover,is_appoint,article_status,publish_user_id,publish_time,read_counts,comment_counts,mongo_file_id,is_delete,create_time,update_time,content ) VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ) 
+==&gt; Parameters: 240801FNS7M8G354(String), b10(String), 14(Integer), 2(Integer), (String), 1(Integer), 1(Integer), 240629F21AK1BHX4(String), 2024-08-04 00:00:00.0(Timestamp), 0(Integer), 0(Integer), null, 0(Integer), 2024-08-01 20:36:24.971(Timestamp), 2024-08-01 20:36:24.971(Timestamp), &lt;p&gt;b10&lt;/p&gt;(String)
+//★ &lt;==    Updates: 1 ★
+Releasing transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@15650472]
+//★ 2天3小时23分钟 ★
+//★ 延迟消息-定时发布文章：Thu Aug 01 20:36:24 CST 2024 ★
+Fetched SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@15650472] from current transaction
+==&gt;  Preparing: UPDATE article SET article_status = ? WHERE ( ( id = ? ) ) 
+==&gt; Parameters: 2(Integer), 240801FNS7M8G354(String)
+&lt;==    Updates: 1
+</code></pre>
+<p>11-1</p>
+<h3 id="互联网框架演变"><a href="#互联网框架演变" class="headerlink" title="互联网框架演变"></a>互联网框架演变</h3>
     </div>
 
     
