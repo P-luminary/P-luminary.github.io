@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -16442,8 +16442,399 @@ Fetched SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@1565047
 ==&gt; Parameters: 2(Integer), 240801FNS7M8G354(String)
 &lt;==    Updates: 1
 </code></pre>
-<p>11-1</p>
-<h3 id="互联网框架演变"><a href="#互联网框架演变" class="headerlink" title="互联网框架演变"></a>互联网框架演变</h3>
+<h3 id="互联网框架演变【微服务块】"><a href="#互联网框架演变【微服务块】" class="headerlink" title="互联网框架演变【微服务块】"></a>互联网框架演变【微服务块】</h3><ul>
+<li><strong>架构演变</strong></li>
+<li><strong>微服务入门</strong></li>
+<li><strong>SpringCloud各个组件学习</strong></li>
+<li><strong>改造项目服务化</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/6d9d64a0daa29b87ebdd0c5ca1240264d5b802ed/data/r%E6%9E%B6%E6%9E%84%E6%BC%94%E5%8F%98.png"></p>
+<h3 id="注冊中心模型"><a href="#注冊中心模型" class="headerlink" title="注冊中心模型"></a>注冊中心模型</h3><ul>
+<li>Eureka</li>
+<li>可以把每個服務注入到eureka，更利於管理和維護，使得服務閒通信更方便</li>
+</ul>
+<blockquote>
+<p>Lilei [上户口] → <strong>派出所</strong>  ← [上户口] HanMeimei</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/317410ba901fb06e893bcdd7e2eb05980a9d19d0/data/Eureka%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83.png"></p>
+<h3 id="构建Eureka注册服务【eureka】"><a href="#构建Eureka注册服务【eureka】" class="headerlink" title="构建Eureka注册服务【eureka】"></a>构建Eureka注册服务【eureka】</h3><pre><code class="java">springcloud-eureka  com/imooc/eureka/Application.java
+package com.imooc.eureka;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+
+@SpringBootApplication(exclude = &#123;DataSourceAutoConfiguration.class, MongoAutoConfiguration.class&#125;)
+@EnableEurekaServer // 开启注册中心
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+
+&#125;
+http://localhost:7000/hello  #运行接口
+http://localhost:7000         #运行eureka
+</code></pre>
+<pre><code class="java">springcloud-eureka  com/imooc/eureka/controller/HelloController.java
+package com.imooc.eureka.controller;
+
+import com.imooc.api.controller.user.HelloControllerApi;
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.RedisOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController implements HelloControllerApi &#123;
+    final static Logger logger = LoggerFactory.getLogger(HelloController.class);
+    public Object hello()&#123;
+        return GraceJSONResult.ok();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">springcloud-eureka  pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;artifactId&gt;springcloud-eureka&lt;/artifactId&gt;
+
+    &lt;dependencies&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-server&lt;/artifactId&gt;
+            &lt;/dependency&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+            &lt;/dependency&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-starter-loadbalancer&lt;/artifactId&gt;
+            &lt;/dependency&gt;
+            &lt;!-- 其他必要的依赖 --&gt;
+    &lt;/dependencies&gt;
+
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;Hoxton.SR12&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">springcloud-eureka  logback-spring.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+
+&lt;configuration&gt;
+    &lt;!-- 指定日志文件的存储地址，使用绝对路径 --&gt;
+&lt;!--    &lt;property name=&quot;LOG_HOME&quot; value=&quot;/workspaces/logs/imooc-news-dev/service-admin&quot;/&gt;--&gt;
+    &lt;property name=&quot;LOG_HOME&quot; value=&quot;C:/Users/Pluminary/Desktop/imooc-news-dev/springcloud-eureka&quot;/&gt;
+
+    &lt;!-- Console 输出设置 --&gt;
+    &lt;appender name=&quot;CONSOLE&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder&gt;
+            &lt;!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符--&gt;
+            &lt;pattern&gt;%white(%d&#123;mm:ss.SSS&#125;) %green([%thread]) %cyan(%-5level) %yellow(%logger&#123;36&#125;) %magenta(-) %black(%msg%n)&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 按照每天生成日志文件 --&gt;
+    &lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;!-- 日志文件输出的文件名 --&gt;
+            &lt;fileNamePattern&gt;$&#123;LOG_HOME&#125;/eureka.%d&#123;yyyy-MM-dd&#125;.log&lt;/fileNamePattern&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; - %msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!--&lt;logger name=&quot;org.apache.ibatis.cache.decorators.LoggingCache&quot; level=&quot;DEBUG&quot; additivity=&quot;false&quot;&gt;--&gt;
+        &lt;!--&lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;--&gt;
+    &lt;!--&lt;/logger&gt;--&gt;
+
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;appender-ref ref=&quot;FILE&quot;/&gt;
+        &lt;appender-ref ref=&quot;CONSOLE&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="yaml">springcloud-eureka  application.yml
+############################################################
+#
+# eureka 注册中心
+# web访问端口号  约定：7000
+#
+############################################################
+server:
+  port: 7000
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1  # tomcat默认大小2M，超过2M的文件不会被捕获，需要调整此处大小为100MB或者-1即可
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  application:
+    name: springcloud-eureka
+
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:  # eureka 实例的hostname，也可以是自定义配置hostname
+    hostname: eureka
+  client:  # 是否要把当前的eureka server注册到自己
+    register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+    fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://$&#123;eureka.instance.hostname&#125;:$&#123;server.port&#125;/eureka/
+</code></pre>
+<pre><code class="java">http://localhost:7000/
+进入了Spring Eureka
+Instances currently registered with Eureka
+</code></pre>
+<h3 id="实现用户与文章的服务注册【eureka】"><a href="#实现用户与文章的服务注册【eureka】" class="headerlink" title="实现用户与文章的服务注册【eureka】"></a>实现用户与文章的服务注册【eureka】</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/longd123/article/details/124440454">关于eureka客户端启动报错UnknownHostException详细解决方法_eureka unknownhostexception-CSDN博客</a></p>
+<pre><code class="mysql"># 问题：
+http://eureka:7000/eureka   找不到 eureka 的服务器 IP 地址
+
+在cmd里面
+C:\Users\Pluminary&gt;ping eureka
+Ping 请求找不到主机 eureka。请检查该名称，然后重试。
+
+# 解答：
+从你的描述来看，主机eureka无法解析，这是导致服务无法注册到Eureka Server的原因。你可以通过以下方法解决这个问题：
+
+1. 更新 hosts 文件
+在你的开发机器上更新 hosts 文件以手动解析 eureka 主机名。
+
+Windows
+打开记事本以管理员身份运行。
+
+打开文件 C:\Windows\System32\drivers\etc\hosts。
+
+添加以下行，将 &lt;eureka服务器的IP地址&gt; 替换为实际的IP地址：
+
+plaintext
+复制代码
+&lt;eureka服务器的IP地址&gt; eureka
+保存并关闭文件。
+</code></pre>
+<pre><code class="yaml">springcloud-eureka  resources/application.yml
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:
+    # eureka 实例的hostname，可以是hostname，也可以自定义配置hostname
+    hostname: eureka
+  client:
+    # 是否要把当前的eureka server注册到自己
+    register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+    fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://$&#123;eureka.instance.hostname&#125;:$&#123;server.port&#125;/eureka/
+</code></pre>
+<pre><code class="yaml">service-user  resources/application.yml
+上面的其余不变 底下添加eureka
+############################################################
+#
+# eureka client 配置信息
+#
+############################################################
+eureka:
+  # 自定义eureka server的信息
+  server:
+    hostname: eureka
+    port: 7000
+  client:
+    # 所有的微服务都必须注册到eureka中
+    register-with-eureka: true
+    # 从注册中心获得检索服务实例
+    fetch-registry: true
+
+    # 注册中心的服务地址
+    service-url:
+      defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/Application.java
+package com.imooc.user;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.context.annotation.ComponentScan;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
+@MapperScan(basePackages = &quot;com.imooc.user.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+@EnableEurekaClient // 开启eureka client 注册到server中
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">springcloud-eureka  pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;imooc-news-dev&lt;/artifactId&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;artifactId&gt;springcloud-eureka&lt;/artifactId&gt;
+
+    &lt;dependencies&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+            &lt;artifactId&gt;imooc-news-dev-service-api&lt;/artifactId&gt;
+            &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-server&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">springcloud-eureka  com/imooc/user/Application.java
+package com.imooc.eureka;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+
+@SpringBootApplication(exclude = &#123;DataSourceAutoConfiguration.class, MongoAutoConfiguration.class&#125;)
+@EnableEurekaServer // 开启注册中心
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+====================================================================
+// 先启动这个服务 再启动user的服务
+随后就能看见http://localhost:7000/
+里面有一个注册的服务
+/*  
+   Instances currently registered with Eureka
+   Application    AMIs    Availability Zones    Status
+★ SERVICE-USER    n/a (1)    (1)    UP (1) - localhost:service-user:8003 
+*/
+</code></pre>
+<pre><code class="yaml">service-article  resources/application.yml
+# 定义freemarker生成的HTML
+freemarker:
+  html:
+    target: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+    article: D:/apache-tomcat-8.5.93/webapps/imooc-news/portal/a
+
+############################################################
+#
+# eureka client 配置信息
+#
+############################################################
+eureka:
+  # 自定义eureka server的信息
+  server:
+    hostname: eureka
+    port: 7000
+  client:
+    # 所有的微服务都必须注册到eureka中
+    register-with-eureka: true
+    # 从注册中心获得检索服务实例
+    fetch-registry: true
+
+    # 注册中心的服务地址
+    service-url:
+      defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/Application.java 
+//【此时再去启动这个article服务 会发现SERVICE-ARTICLE也成功的注册到Eureka中】
+package com.imooc.article;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.context.annotation.ComponentScan;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@EnableSwagger2
+@SpringBootApplication
+@MapperScan(basePackages = &quot;com.imooc.article.mapper&quot;)
+@ComponentScan(basePackages = &#123;&quot;com.imooc&quot;,&quot;org.n3r.idworker&quot;&#125;)
+@EnableEurekaClient
+public class Application &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Application.class, args);
+    &#125;
+&#125;
+/*
+   Application    AMIs    Availability Zones    Status
+★ SERVICE-ARTICLE    n/a (1)    (1)    UP (1) - localhost:service-article:8001
+★ SERVICE-USER    n/a (1)    (1)    UP (1) - localhost:service-user:8003
+*/
+</code></pre>
+<p>11-8</p>
+<h3 id="使用AppName优化服务间的通信【eureka】"><a href="#使用AppName优化服务间的通信【eureka】" class="headerlink" title="使用AppName优化服务间的通信【eureka】"></a>使用AppName优化服务间的通信【eureka】</h3>
     </div>
 
     
