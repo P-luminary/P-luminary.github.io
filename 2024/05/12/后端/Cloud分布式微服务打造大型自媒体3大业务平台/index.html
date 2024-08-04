@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -16631,7 +16631,7 @@ eureka:
 进入了Spring Eureka
 Instances currently registered with Eureka
 </code></pre>
-<h3 id="实现用户与文章的服务注册【eureka】"><a href="#实现用户与文章的服务注册【eureka】" class="headerlink" title="实现用户与文章的服务注册【eureka】"></a>实现用户与文章的服务注册【eureka】</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/longd123/article/details/124440454">关于eureka客户端启动报错UnknownHostException详细解决方法_eureka unknownhostexception-CSDN博客</a></p>
+<h3 id="实现用户与文章的服务注册【eureka】"><a href="#实现用户与文章的服务注册【eureka】" class="headerlink" title="实现用户与文章的服务注册【eureka】"></a>实现用户与文章的服务注册【eureka】</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/longd123/article/details/124440454">关于eureka客户端启动报错UnknownHostException详细解决方法_eureka unknownhostexception-CSDN博客</a> </p>
 <pre><code class="mysql"># 问题：
 http://eureka:7000/eureka   找不到 eureka 的服务器 IP 地址
 
@@ -16656,6 +16656,17 @@ plaintext
 复制代码
 &lt;eureka服务器的IP地址&gt; eureka
 保存并关闭文件。
+
+=================================================================
+# imooc-news 192.168.1.3
+127.0.0.1 www.imoocnews.com
+127.0.0.1 writer.imoocnews.com
+127.0.0.1 admin.imoocnews.com
+```
+127.0.0.1 article.imoocnews.com
+127.0.0.1 user.imoocnews.com
+127.0.0.1 files.imoocnews.com
+127.0.0.1 html.imoocnews.com
 </code></pre>
 <pre><code class="yaml">springcloud-eureka  resources/application.yml
 ############################################################
@@ -16833,8 +16844,577 @@ public class Application &#123;
 ★ SERVICE-USER    n/a (1)    (1)    UP (1) - localhost:service-user:8003
 */
 </code></pre>
-<p>11-8</p>
-<h3 id="使用AppName优化服务间的通信【eureka】"><a href="#使用AppName优化服务间的通信【eureka】" class="headerlink" title="使用AppName优化服务间的通信【eureka】"></a>使用AppName优化服务间的通信【eureka】</h3>
+<h3 id="使用AppName优化服务间的通信【eureka】"><a href="#使用AppName优化服务间的通信【eureka】" class="headerlink" title="使用AppName优化服务间的通信【eureka】"></a>使用AppName优化服务间的通信【eureka】</h3><h6 id="实行动态化调用-地址拼接"><a href="#实行动态化调用-地址拼接" class="headerlink" title="实行动态化调用 地址拼接"></a>实行动态化调用 地址拼接</h6><p>AppName是eureka的ApplicationId &#x3D; <strong>SERVICE-USER</strong></p>
+<p><a target="_blank" rel="noopener" href="http://localhost:8001/doc.html">慕课新闻·[文章article]自媒体接口api</a> 如果页面没有信息那就是在<strong>Swagger2.java</strong>中代码的问题<br><a target="_blank" rel="noopener" href="http://localhost:7000/">Eureka</a></p>
+<blockquote>
+<p>门户端文章业务的controller →  &#x2F;portal&#x2F;article&#x2F;detail  →  articleId&#x3D;2006117B57WRZGHH</p>
+</blockquote>
+<pre><code class="java">package com.imooc.api.config;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.RequestHandler;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@Configuration //Springboot啓動的時候會被掃描到并且加載
+@EnableSwagger2
+public class Swagger2 &#123;
+
+    //    http://localhost:8088/swagger-ui.html     原路径
+    //    http://localhost:8088/doc.html            新路径
+
+    // 配置swagger2核心配置 docket
+    @Bean
+    public Docket createRestApi() &#123;
+        Predicate&lt;RequestHandler&gt; adminPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.admin.controller&quot;);
+        Predicate&lt;RequestHandler&gt; articlePredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.article.controller&quot;);
+        Predicate&lt;RequestHandler&gt; userPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.user.controller&quot;);
+        Predicate&lt;RequestHandler&gt; filesPredicate = RequestHandlerSelectors.basePackage(&quot;com.imooc.files.controller&quot;);
+
+        return new Docket(DocumentationType.SWAGGER_2)  // 指定api类型为swagger2
+                .apiInfo(apiInfo())                 // 用于定义api文档汇总信息
+                .select()
+//                .apis(Predicates.or(userPredicate, adminPredicate, filesPredicate))
+                .apis(Predicates.or(adminPredicate, articlePredicate, userPredicate, filesPredicate))
+                .paths(PathSelectors.any())         // 所有controller
+                .build();
+    &#125;
+
+    private ApiInfo apiInfo() &#123;
+        return new ApiInfoBuilder()
+                .title(&quot;慕课新闻·自媒体接口api&quot;)                       // 文档页标题
+                .contact(new Contact(&quot;imooc&quot;,
+                        &quot;https://www.imooc.com&quot;,
+                        &quot;abc@imooc.com&quot;))                   // 联系人信息
+                .description(&quot;专为慕课新闻·自媒体平台提供的api文档&quot;)      // 详细信息
+                .version(&quot;1.0.1&quot;)                               // 文档版本号
+                .termsOfServiceUrl(&quot;https://www.imooc.com&quot;)     // 网站地址
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+// 注入服务发现，可以获得已经注册的服务相关信息
+    @Autowired
+    private DiscoveryClient discoveryClient;
+    // 发起远程调用，获得用户的基本信息
+    private List&lt;AppUserVO&gt; getPublisherList(Set idSet) &#123;
+        String serviceId = &quot;SERVICE-USER&quot;;
+        List&lt;ServiceInstance&gt; instanceList = discoveryClient.getInstances(serviceId);
+        ServiceInstance userService = instanceList.get(0);
+    // 实行动态化调用 地址拼接
+        String userServerUrlExecute
+                = &quot;http://&quot;+ userService.getHost() + &quot;:&quot; + userService.getPort() + &quot;/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+//        String userServerUrlExecute
+//                = &quot;http://user.imoocnews.com:8003/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+        ResponseEntity&lt;GraceJSONResult&gt; responseEntity
+                = restTemplate.getForEntity(userServerUrlExecute, GraceJSONResult.class);
+        GraceJSONResult bodyResult = responseEntity.getBody();
+        List&lt;AppUserVO&gt; publisherList = null;
+        if (bodyResult.getStatus() == 200) &#123;
+            String userJson = JsonUtils.objectToJson(bodyResult.getData());
+            publisherList = JsonUtils.jsonToList(userJson, AppUserVO.class);
+        &#125;
+        return publisherList;
+    &#125;
+</code></pre>
+<h3 id="动态构建eureka集群【eureka】保证高可用"><a href="#动态构建eureka集群【eureka】保证高可用" class="headerlink" title="动态构建eureka集群【eureka】保证高可用"></a>动态构建eureka集群【eureka】<del>保证高可用</del></h3><blockquote>
+<p>创建一个新的<strong>module</strong> 其内容和 <strong>springcloud-eureka</strong> 里面的一样</p>
+</blockquote>
+<pre><code class="mysql">SwitchHosts配置信息
+# imooc-news 192.168.1.3
+127.0.0.1 www.imoocnews.com
+127.0.0.1 writer.imoocnews.com
+127.0.0.1 admin.imoocnews.com
+```
+127.0.0.1 article.imoocnews.com
+127.0.0.1 user.imoocnews.com
+127.0.0.1 files.imoocnews.com
+127.0.0.1 html.imoocnews.com
+
+# SpringCloud
+127.0.0.1 eureka
+127.0.0.1 eureka-cluster-7001
+127.0.0.1 eureka-cluster-7002
+127.0.0.1 eureka-cluster-7003
+</code></pre>
+<pre><code class="yaml">springcloud-eureka-cluster  application.yml
+############################################################
+#
+# eureka 集群的注册中心
+# web访问端口号  约定：7001~7003
+#
+############################################################
+server:
+  port: 7001
+  tomcat:
+    uri-encoding: UTF-8
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  application:
+    name: springcloud-eureka-cluster
+
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:
+    # 集群中每个eureka的名字都是唯一的
+    hostname: eureka-cluster-7001
+  client:
+    # 是否要把当前的eureka server注册到自己
+    register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+    fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+
+####################################################################################
+http://localhost:7001/
+
+DS Replicas
+eureka-cluster-7003
+eureka-cluster-7002
+####################################################################################
+如果后面服务很多 100个 那是不是也要创建100个module呢？
+并不是 因为每个都是一样的只是改一下application.yml的port端口号而已
+所以我们要去把它设置为动态的端口
+</code></pre>
+<h3 id="↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓"><a href="#↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓" class="headerlink" title="↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓"></a><span style = "color:red">↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓</span></h3><pre><code class="yaml">springcloud-eureka-cluster  application.yml【改后】
+############################################################
+#
+# eureka 集群的注册中心
+# web访问端口号  约定：7001~7003
+#
+############################################################
+server:
+  port: $&#123;7001&#125;
+  tomcat:
+    uri-encoding: UTF-8
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  application:
+    name: springcloud-eureka-cluster
+
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:
+    # 集群中每个eureka的名字都是唯一的
+    hostname: eureka-cluster-$&#123;server.port&#125;
+    # 自定义端口号
+  other-node-port2: $&#123;p2:7002&#125;
+  other-node-port3: $&#123;p3:7003&#125;
+  client:
+    # 是否要把当前的eureka server注册到自己
+    register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+    fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://eureka-cluster-$&#123;eureka.other-node-port2&#125;:$&#123;eureka.other-node-port2&#125;/eureka/,http://eureka-cluster-$&#123;eureka.other-node-port3&#125;:$&#123;eureka.other-node-port3&#125;/eureka/
+
+####################################################################################
+http://eureka-cluster-7001:7001/  #【可运行】
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zyl-0110/p/14368753.html">1一站式管理所有SpringBoot启动类，Services服务窗口 - 喵酱张-Eric - 博客园 (cnblogs.com)</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44603382/article/details/121593216">IDEA 2021没有VM options_idea2021怎么找到“vm options”-CSDN博客</a></p>
+<blockquote>
+<p>复制eureka-cluster-7001服务 变成eureka-cluster-7002 并且在Edit configuration的地方点击Modify options中的Add VM 输入代码：**-DPORT&#x3D;7002 -DP2&#x3D;7001 -DP3&#x3D;7003**<br>同理弄一个eureka-cluster-7002 输入VM代码：**-DPORT&#x3D;7003 -DP2&#x3D;7001 -DP3&#x3D;7002**<br>全部启动后都可以在浏览器正常运行 【集群】<br><a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/">http://eureka-cluster-7001:7001/</a>  DS Replicas：<a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/eureka/">eureka-cluster-7003</a> + <a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/eureka/">eureka-cluster-7002</a><br><a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/">http://eureka-cluster-7002:7002/</a>  DS Replicas：<a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/eureka/">eureka-cluster-7003</a> + <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/eureka/">eureka-cluster-7001</a><br><a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/">http://eureka-cluster-7003:7003/</a>  DS Replicas：<a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/eureka/">eureka-cluster-7002</a> + <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/eureka/">eureka-cluster-7001</a><br>如果把里面的application.yml配置注释掉 就可以把自己注册到eureka中<br>client:<br>  <em>#</em> *是否要把当前的<strong>eureka server</strong>注册到自己<br>    *  register-with-eureka: false<br>  <em>#</em> *从注册中心获得检索服务实例，<strong>server</strong>没有必要，直接<strong>false</strong>即可<br>    *  fetch-registry: false<br>之后再重新启动eureka-cluster-7001~7003</p>
+<p><a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/">eureka-cluster-7001:7001</a></p>
+<h5 id="DS-Replicas"><a href="#DS-Replicas" class="headerlink" title="DS Replicas"></a>DS Replicas</h5><ul>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/eureka/">eureka-cluster-7003</a></li>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/eureka/">eureka-cluster-7002</a></li>
+</ul>
+<h5 id="Instances-currently-registered-with-Eureka"><a href="#Instances-currently-registered-with-Eureka" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h5><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SPRINGCLOUD-EUREKA-CLUSTER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (3)</td>
+<td align="left">(3)</td>
+<td align="left"><strong>UP</strong> (3) - <a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/actuator/info">localhost:springcloud-eureka-cluster:7003</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/actuator/info">localhost:springcloud-eureka-cluster:7001</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/actuator/info">localhost:springcloud-eureka-cluster:7002</a></td>
+</tr>
+</tbody></table>
+</blockquote>
+<h3 id="微服务注册到eureka集群【eureka】-port-8003"><a href="#微服务注册到eureka集群【eureka】-port-8003" class="headerlink" title="微服务注册到eureka集群【eureka】${port:8003}"></a>微服务注册到eureka集群【eureka】<del>${port:8003}</del></h3><pre><code class="yaml">service-user  application.yml
+    # 注册中心的服务地址
+    service-url:
+  # defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/ 三个节点的注册
+      defaultZone: http://eureka-cluster-7001:7001/eureka/,http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+</code></pre>
+<pre><code class="yaml">service-article  application.yml
+    # 注册中心的服务地址
+    service-url:
+  # defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/
+      defaultZone: http://eureka-cluster-7001:7001/eureka/,http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+</code></pre>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="http://localhost:8001/doc.html">慕课新闻·自媒体接口:8001_api</a><br>门户端文章业务的controller → get：&#x2F;portal&#x2F;article&#x2F;detail → articleId：2006117B57WRZGHH</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/">Eureka:7001</a></p>
+<h6 id="DS-Replicas-1"><a href="#DS-Replicas-1" class="headerlink" title="DS Replicas"></a>DS Replicas</h6><ul>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/eureka/">eureka-cluster-7003</a></li>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/eureka/">eureka-cluster-7002</a></li>
+</ul>
+<h6 id="Instances-currently-registered-with-Eureka-1"><a href="#Instances-currently-registered-with-Eureka-1" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h6><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SERVICE-ARTICLE</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://localhost:8001/actuator/info">localhost:service-article:8001</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SERVICE-USER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://localhost:8003/actuator/info">localhost:service-user:8003</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SPRINGCLOUD-EUREKA-CLUSTER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (3)</td>
+<td align="left">(3)</td>
+<td align="left"><strong>UP</strong> (3) - <a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/actuator/info">localhost:springcloud-eureka-cluster:7003</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/actuator/info">localhost:springcloud-eureka-cluster:7001</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/actuator/info">localhost:springcloud-eureka-cluster:7002</a></td>
+</tr>
+</tbody></table>
+<h3 id="构建微服务集集群【eureka】"><a href="#构建微服务集集群【eureka】" class="headerlink" title="构建微服务集集群【eureka】"></a>构建微服务集集群【eureka】</h3><blockquote>
+<p>复制<strong>service-user:8003</strong>服务 变成service-user:8013 并且在Edit configuration的地方点击Modify options中的Add VM 输入代码：**–DPORT&#x3D;8013** </p>
+</blockquote>
+<pre><code class="yaml">service-user  application-dev.yml
+server:
+  port: $&#123;port:8003&#125;
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+# open mybatis log in dev
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+</code></pre>
+<p><a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/">Eureka:7001</a></p>
+<h6 id="DS-Replicas-2"><a href="#DS-Replicas-2" class="headerlink" title="DS Replicas"></a>DS Replicas</h6><ul>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/eureka/">eureka-cluster-7003</a></li>
+<li><a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/eureka/">eureka-cluster-7002</a></li>
+</ul>
+<h6 id="Instances-currently-registered-with-Eureka-2"><a href="#Instances-currently-registered-with-Eureka-2" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h6><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SERVICE-ARTICLE</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://localhost:8001/actuator/info">localhost:service-article:8001</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SERVICE-USER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (2)</td>
+<td align="left">(2)</td>
+<td align="left"><strong>UP</strong> (2) - <a target="_blank" rel="noopener" href="http://localhost:8003/actuator/info">localhost:service-user:8003</a> , <a target="_blank" rel="noopener" href="http://localhost:8013/actuator/info">localhost:service-user:8013</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SPRINGCLOUD-EUREKA-CLUSTER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (3)</td>
+<td align="left">(3)</td>
+<td align="left"><strong>UP</strong> (3) - <a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/actuator/info">localhost:springcloud-eureka-cluster:7003</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/actuator/info">localhost:springcloud-eureka-cluster:7001</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/actuator/info">localhost:springcloud-eureka-cluster:7002</a></td>
+</tr>
+</tbody></table>
+<h3 id="实现轮训负载均衡【eureka】"><a href="#实现轮训负载均衡【eureka】" class="headerlink" title="实现轮训负载均衡【eureka】"></a>实现轮训负载均衡【eureka】</h3><pre><code class="yaml">imooc-news-dev-service-user  application-dev.yml
+server:
+  port: $&#123;port:8003&#125;
+
+spring:
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+# open mybatis log in dev
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# setup CN from java, This is resource
+website:
+  domain-name: imoocnews.com
+</code></pre>
+<pre><code class="java">service-user  com/imooc/user/controller/UserController.java
+//每次调用的时候 都会输出其Port
+ @Value(&quot;$&#123;server.port&#125;&quot;)
+    private String myPort;
+
+    @Override
+    public GraceJSONResult queryByIds(String userIds) &#123;
+        System.out.println(&quot;myPort=&quot; + myPort);
+        if (StringUtils.isBlank(userIds))&#123;
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.USER_NOT_EXIST_ERROR);
+        &#125;
+        List&lt;AppUserVO&gt; publisherList = new ArrayList&lt;&gt;();
+        List&lt;String&gt; userIdList = JsonUtils.jsonToList(userIds, String.class);//传过来两个用户的id
+        for (String userId : userIdList)&#123;
+            //获得用户基本信息
+            AppUserVO userVO = getBasicUserInfo(userId);
+            // 3.添加到publisherList
+            publisherList.add(userVO);
+        &#125;
+        return GraceJSONResult.ok(publisherList);
+    &#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/ArticlePortalController.java
+    // 注入服务发现，可以获得已经注册的服务相关信息
+    @Autowired
+    private DiscoveryClient discoveryClient;
+    // 发起远程调用，获得用户的基本信息
+    private List&lt;AppUserVO&gt; getPublisherList(Set idSet) &#123;
+        String serviceId = &quot;SERVICE-USER&quot;;
+//        List&lt;ServiceInstance&gt; instanceList = discoveryClient.getInstances(serviceId);
+//        ServiceInstance userService = instanceList.get(0);
+    // 实行动态化调用 地址拼接
+        String userServerUrlExecute
+                //因为seviceId里面的SERVICE—USER就存在着userService.getHost()和.getPort()
+                = &quot;http://&quot;+ serviceId + &quot;/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+//        String userServerUrlExecute
+//                = &quot;http://&quot;+ userService.getHost() + &quot;:&quot; + userService.getPort() + &quot;/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+//        String userServerUrlExecute
+//                = &quot;http://user.imoocnews.com:8003/user/queryByIds?userIds=&quot; + JsonUtils.objectToJson(idSet);
+        // 为restTemplate增加一个负载均衡 @CloudConfig 
+                // public RestTemplate restTemplate()
+        ResponseEntity&lt;GraceJSONResult&gt; responseEntity
+                = restTemplate.getForEntity(userServerUrlExecute, GraceJSONResult.class);
+        GraceJSONResult bodyResult = responseEntity.getBody();
+        List&lt;AppUserVO&gt; publisherList = null;
+        if (bodyResult.getStatus() == 200) &#123;
+            String userJson = JsonUtils.objectToJson(bodyResult.getData());
+            publisherList = JsonUtils.jsonToList(userJson, AppUserVO.class);
+        &#125;
+        return publisherList;
+    &#125;
+</code></pre>
+<pre><code class="java">service-api  com/imooc/api/config/CloudConfig.java
+package com.imooc.api.config;
+
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+@Configuration
+public class CloudConfig &#123;
+
+    public CloudConfig() &#123;
+    &#125;
+    /**
+     * 会基于OKHttp3的配置来实例RestTemplate
+     * @return
+     */
+    @Bean
+    @LoadBalanced //添加负载均衡
+    public RestTemplate restTemplate() &#123;
+        return new RestTemplate(new OkHttp3ClientHttpRequestFactory());
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="http://localhost:8001/doc.html">慕课新闻·自媒体接口:8001-api</a><br>门户端文章业务的controller → articleId：2006117B57WRZGHH</p>
+</blockquote>
+<h3 id="自我保护功能【eureka】"><a href="#自我保护功能【eureka】" class="headerlink" title="自我保护功能【eureka】"></a>自我保护功能【eureka】</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/6475d580b535921c2886327b5964ef9fdcad0663/data/Eureka%E8%87%AA%E6%88%91%E4%BF%9D%E6%8A%A4.png"></p>
+<pre><code class="yaml">springcloud-eureka-cluster  application.yml
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:
+    # 集群中每个eureka的名字都是唯一的
+    hostname: eureka-cluster-$&#123;server.port&#125;
+    # 自定义端口号
+  other-node-port2: $&#123;p2:7002&#125;
+  other-node-port3: $&#123;p3:7003&#125;
+  client:
+    # 是否要把当前的eureka server注册到自己
+      # register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+      # fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://eureka-cluster-$&#123;eureka.other-node-port2&#125;:$&#123;eureka.other-node-port2&#125;/eureka/,http://eureka-cluster-$&#123;eureka.other-node-port3&#125;:$&#123;eureka.other-node-port3&#125;/eureka/
+  server:
+    enable-self-preservation: false # 关闭eureka的自我保护功能
+    eviction-interval-timer-in-ms: 5000 # 清理无效节点的时间，可以缩短为5s 默认60s
+</code></pre>
+<pre><code class="yaml">springcloud-eureka application.yml
+############################################################
+#
+# eureka 配置信息
+#
+############################################################
+eureka:
+  instance:
+    # eureka 实例的hostname，可以是hostname，也可以自定义配置hostname
+    hostname: eureka
+  client:
+    # 是否要把当前的eureka server注册到自己
+    register-with-eureka: false
+    # 从注册中心获得检索服务实例，server没有必要，直接false即可
+    fetch-registry: false
+    # 单实例配置自己的服务地址，高可用集群则配置多个地址
+    service-url:
+      defaultZone: http://$&#123;eureka.instance.hostname&#125;:$&#123;server.port&#125;/eureka/
+  server:
+    enable-self-preservation: false # 关闭eureka的自我保护功能
+    eviction-interval-timer-in-ms: 5000 # 清理无效节点的时间，可以缩短为5s 默认60s
+</code></pre>
+<pre><code class="yaml">service-user  application.yml
+############################################################
+#
+# eureka client 配置信息
+#
+############################################################
+eureka:
+  # 自定义eureka server的信息
+  server:
+    hostname: eureka
+    port: 7000
+  client:
+    # 所有的微服务都必须注册到eureka中
+    register-with-eureka: true
+    # 从注册中心获得检索服务实例
+    fetch-registry: true
+
+    # 注册中心的服务地址
+    service-url:
+#     defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/ 三个节点的注册
+      defaultZone: http://eureka-cluster-7001:7001/eureka/,http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+</code></pre>
+<pre><code class="yaml">service-article  application.yml
+############################################################
+#
+# eureka client 配置信息
+#
+############################################################
+eureka:
+  # 自定义eureka server的信息
+  server:
+    hostname: eureka
+    port: 7000
+  client:
+    # 所有的微服务都必须注册到eureka中
+    register-with-eureka: true
+    # 从注册中心获得检索服务实例
+    fetch-registry: true
+
+    # 注册中心的服务地址
+    service-url:
+#     defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/
+      defaultZone: http://eureka-cluster-7001:7001/eureka/,http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+  instance:
+    # 调整微服务(eureka client)和注册中心(eureka server)的心跳时间
+    lease-renewal-interval-in-seconds: 3
+    # eureka 距离最近的一次心跳等待提出的时间 默认90s
+    lease-expiration-duration-in-seconds: 5
+</code></pre>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/">Eureka:7001</a><br>先把所有服务全启动<br>eureka:7000<br>eureka-cluster-7001<br>eureka-cluster-7002<br>eureka-cluster-7003<br>service-article:8001<br>service-user:8003<br>service-user:8013<br>然后去刷新</p>
+<h6 id="Instances-currently-registered-with-Eureka-3"><a href="#Instances-currently-registered-with-Eureka-3" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h6><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SERVICE-ARTICLE</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://localhost:8001/actuator/info">localhost:service-article:8001</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SERVICE-USER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (2)</td>
+<td align="left">(2)</td>
+<td align="left"><strong>UP</strong> (2) - <a target="_blank" rel="noopener" href="http://localhost:8003/actuator/info">localhost:service-user:8003</a> , <a target="_blank" rel="noopener" href="http://localhost:8013/actuator/info">localhost:service-user:8013</a></td>
+</tr>
+<tr>
+<td align="left"><strong>SPRINGCLOUD-EUREKA-CLUSTER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (3)</td>
+<td align="left">(3)</td>
+<td align="left"><strong>UP</strong> (3) - <a target="_blank" rel="noopener" href="http://eureka-cluster-7003:7003/actuator/info">localhost:springcloud-eureka-cluster:7003</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/actuator/info">localhost:springcloud-eureka-cluster:7001</a> , <a target="_blank" rel="noopener" href="http://eureka-cluster-7002:7002/actuator/info">localhost:springcloud-eureka-cluster:7002</a></td>
+</tr>
+</tbody></table>
+<p>随后只留下eureka-cluster-7001其他全部Stop<br>再次刷新</p>
+<h6 id="Instances-currently-registered-with-Eureka-4"><a href="#Instances-currently-registered-with-Eureka-4" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h6><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SPRINGCLOUD-EUREKA-CLUSTER</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://eureka-cluster-7001:7001/actuator/info">localhost:springcloud-eureka-cluster:7001</a></td>
+</tr>
+</tbody></table>
+</blockquote>
+<p>11-14</p>
+
     </div>
 
     
