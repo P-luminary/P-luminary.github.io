@@ -920,7 +920,7 @@ I  Your application is running here: http://localhost:8080
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -20026,9 +20026,549 @@ display pre zuul filter...
   timeInterval: 70
   limitTimes: 315
 </code></pre>
-<p>12-11</p>
-<h3 id="动态刷新git配置"><a href="#动态刷新git配置" class="headerlink" title="动态刷新git配置"></a>动态刷新git配置</h3><pre><code class="java">
+<h3 id="动态刷新git配置"><a href="#动态刷新git配置" class="headerlink" title="动态刷新git配置"></a>动态刷新git配置</h3><pre><code class="java">// zuul-prod.yml 动态修改数值
+  continueCounts: 35
+  timeInterval: 305
+  limitTimes: 65
+在浏览器会显示更新后的数值 但是在console打印台不会显示改后的 只会显示之前的
+需要重启服务才可以达到修改后的效果 显示修改的数值
 </code></pre>
+<pre><code class="xml">zuul-server  pom.xml
+添加健康检测的配置
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">zuul-server  com/imooc/zuul/filters/BlackIPFilter.java
+//【开启刷新 @RefreshScope 不能全自动 需要触碰某些请求 在yaml配置动态刷新的地址】
+package com.imooc.zuul.filters;
+
+import com.imooc.grace.result.GraceJSONResult;
+import com.imooc.grace.result.ResponseStatusEnum;
+import com.imooc.utils.IPUtil;
+import com.imooc.utils.JsonUtils;
+import com.imooc.utils.RedisOperator;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.exception.ZuulException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+/* application.yml
+*  blackIp:
+   continueCounts: $&#123;counts:10&#125;    # ip连续请求的次数
+   timeInterval: $&#123;interval:10&#125;    # ip判断的事件间隔，单位：秒
+   limitTimes: $&#123;times:15&#125;         # 限制的事件，单位：秒
+* */
+@Component
+@RefreshScope
+public class BlackIPFilter extends ZuulFilter &#123;
+
+    @Value(&quot;$&#123;blackIp.continueCounts&#125;&quot;)
+    public Integer continueCounts;
+    @Value(&quot;$&#123;blackIp.timeInterval&#125;&quot;)
+    public Integer timeInterval;
+    @Value(&quot;$&#123;blackIp.limitTimes&#125;&quot;)
+    public Integer limitTimes;
+
+    @Autowired
+    private RedisOperator redis;
+
+    @Override
+    public String filterType() &#123;
+        return &quot;pre&quot;;
+    &#125;
+
+    @Override
+    public int filterOrder() &#123;
+        return 2;
+    &#125;
+
+    @Override
+    public boolean shouldFilter() &#123;
+        return true;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="yaml">zuul-server  bootstrap.yml  +  springcloud-config  application.yaml
+# 配置动态刷新git配置的路径终端请求地址 只需要通过URL请求不用重启就可以自动刷新 后期要通过脚本运行才可【通过请求处理 postman → POST → https://localhost:7070/actuator/refresh】
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh
+# 此时回到console就可以有更新后的数据显示了
+</code></pre>
+<h3 id="消息总线概述【bus】-RabbitMQ"><a href="#消息总线概述【bus】-RabbitMQ" class="headerlink" title="消息总线概述【bus】[RabbitMQ]"></a>消息总线概述【bus】<del>[RabbitMQ]</del></h3><h5 id="Config遗留问题"><a href="#Config遗留问题" class="headerlink" title="Config遗留问题"></a>Config遗留问题</h5><ul>
+<li><strong>手动刷新与业务耦合</strong> [也可能在文章&#x2F;user模块发生]</li>
+<li>Config配置中心的刷新去解决动态刷新</li>
+<li><strong>N个微服务端需要N次手动书信</strong></li>
+</ul>
+<h5 id="消息总线-要和config与微服务端进行配置"><a href="#消息总线-要和config与微服务端进行配置" class="headerlink" title="消息总线(要和config与微服务端进行配置)"></a>消息总线<del>(要和config与微服务端进行配置)</del></h5><ul>
+<li><strong>SpringCloud Bus</strong></li>
+<li>为SpringCloud Config提供增益buff</li>
+<li><strong>可以实现配置自动刷新</strong>[1k个 1w个]</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/5fc0f342c2ab14a5e7e3aa9869b97348c7ed39ed/data/%E6%B6%88%E6%81%AF%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0.jpg"></p>
+<h3 id="配置实现消息统一发送【bus】"><a href="#配置实现消息统一发送【bus】" class="headerlink" title="配置实现消息统一发送【bus】"></a>配置实现消息统一发送【bus】</h3><blockquote>
+<p>config把消息推給zull-server</p>
+</blockquote>
+<pre><code class="xml">springcloud-config  pom.xml    ＋    zuul-server  pom.xml
+    &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-bus-amqp&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="yaml">zuul-server  resources/bootstrap.yaml  +  springcloud-config  application.yaml
+  rabbitmq:
+    host: 192.168.1.204
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: imooc-news-dev
+</code></pre>
+<blockquote>
+<p>实现刷新server端达到所有的刷新配置<br>【通过请求处理 postman → POST → <a target="_blank" rel="noopener" href="https://localhost:7080/actuator/bus-refresh%E3%80%91">https://localhost:7080/actuator/bus-refresh】</a><br>若想精确刷新某个服务 需要拼接<br> postman → POST → <a target="_blank" rel="noopener" href="https://localhost:7080/actuator/bus-refresh/%7B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%AE%9E%E4%BE%8Bid%7D:%7Bport%7D">https://localhost:7080/actuator/bus-refresh/{微服务的实例id}:{port}</a><br>微服务实例id是yaml配置项目信息 → spring.application.name：springcloud-zuul-server<br><a target="_blank" rel="noopener" href="https://localhost:7080/actuator/bus-refresh/springcloud-zuul-server:7070">https://localhost:7080/actuator/bus-refresh/springcloud-zuul-server:7070</a> 【目标微服务地址实现精确打击】</p>
+</blockquote>
+<h3 id="消息驱动概述【stream】"><a href="#消息驱动概述【stream】" class="headerlink" title="消息驱动概述【stream】"></a>消息驱动概述【stream】</h3><h5 id="消息驱动"><a href="#消息驱动" class="headerlink" title="消息驱动"></a>消息驱动</h5><ul>
+<li><strong>SpringCloud Stream</strong></li>
+<li><strong><span style = "color:red">统一封装消息的服务框架</span></strong></li>
+<li>RabbitMQ，RocketMQ，Kafka，ActiveMQ，ZeroMQ，…</li>
+</ul>
+<h5 id="Stream消息模型"><a href="#Stream消息模型" class="headerlink" title="Stream消息模型"></a>Stream消息模型</h5><img src="https://raw.githubusercontent.com/P-luminary/images/995964c627f628ee94ebb76bbbe6fe7872884f32/data/Stream%E6%B6%88%E6%81%AF%E6%A8%A1%E5%9E%8B.png" style="zoom:80%;" />
+
+
+
+<h3 id="实现消费者与生产者【stream】"><a href="#实现消费者与生产者【stream】" class="headerlink" title="实现消费者与生产者【stream】"></a>实现消费者与生产者【stream】</h3><blockquote>
+<p>将zuul-server的resources&#x2F;application.yml 恢复到原来配置</p>
+</blockquote>
+<pre><code class="yaml">############################################################
+#
+# 网关zuul
+# web访问端口号  约定：7070
+#
+############################################################
+server:
+  port: 7070
+  tomcat:
+    uri-encoding: UTF-8
+
+############################################################
+#
+# 配置项目信息
+#
+############################################################
+spring:
+  application:
+    name: springcloud-zuul-server
+
+  redis:
+    database: 0
+    host: 192.168.1.201
+    port: 6379
+    password: 123456
+  zipkin:
+    # 配置zipkin采集的服务地址，数据会发送到这里
+    base-url: http://192.168.1.2:9411/
+    sender:
+      # 数据采集的传输通信方式，web http的形式
+      type: web
+  sleuth:
+    sampler:
+      # 数据采样比例（百分数），0~1
+      probability: 1
+
+############################################################
+#
+# eureka client 配置信息
+#
+############################################################
+eureka:
+  server:
+    hostname: eureka
+    port: 7000
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      #defaultZone: http://$&#123;eureka.server.hostname&#125;:$&#123;eureka.server.port&#125;/eureka/
+      defaultZone: http://eureka-cluster-7001:7001/eureka/,http://eureka-cluster-7002:7002/eureka/,http://eureka-cluster-7003:7003/eureka/
+
+# 路由规则: http://[网关地址]:[端口号]/[prefix]/[微服务实例id]/[请求地址路径]
+zuul:
+  routes:
+    # 由于路由id和微服务实例id相同，我们可以简化转发的配置
+    service-article: /service-article/** # 请求路径(前缀)
+  #    service-article:                  # 配置微服务的路由id，微服务的实例id
+#      path: /service-article/**       # 请求路径(前缀)
+#      service-id: service-article     # 请求转发的微服务实例id
+#      url: http://192.168.1.2:8001    # 请求转发到指定的微服务所在的ip地址(8001文章服务)
+  prefix: /api                        # 请求前缀
+
+
+
+# ip请求限制的参数配置
+blackIp:
+  continueCounts: $&#123;counts:10&#125;    # ip连续请求的次数
+  timeInterval: $&#123;interval:10&#125;    # ip判断的事件间隔，单位：秒
+  limitTimes: $&#123;times:15&#125;         # 限制的事件，单位：秒
+</code></pre>
+<pre><code class="xml">service-article  pom.xml  +  service-user  pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-stream-rabbit&lt;/artifactId&gt;
+            &lt;version&gt;4.1.1&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="yaml">service-article  application.yaml      +      service-user  application.yaml
+    cloud:
+    stream:
+      bindings:                    # 绑定通道和交换机
+        myOutput:                   # 定义生产者的通道
+          # 自定义交换机的名字，也就是代码里构建的信息，交给底层mq的交换机
+          destination:
+        myInput:                    # 定义消费者通道
+          # 自定义交换机的名字，也就是消息从底层mq输入到消费端进行消费
+          destination:
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/MyStreamChannel.java
+package com.imooc.article.stream;
+
+import org.springframework.cloud.stream.annotation.Input;
+import org.springframework.cloud.stream.annotation.Output;
+import org.springframework.cloud.stream.messaging.Sink;
+import org.springframework.cloud.stream.messaging.Source;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.SubscribableChannel;
+import org.springframework.stereotype.Component;
+
+/**
+ * 声明构建通道channel
+ */
+@Component
+public interface MyStreamChannel &#123;
+
+    String OUTPUT = &quot;myOutput&quot;;
+    String INPUT = &quot;myInput&quot;;
+
+    @Output(MyStreamChannel.OUTPUT)
+    MessageChannel output();
+
+    @Input(MyStreamChannel.INPUT)
+    SubscribableChannel input();  //订阅能力的通道
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/MyStreamChannel.java
+package com.imooc.article.stream;
+
+
+import org.springframework.cloud.stream.annotation.Input;
+import org.springframework.cloud.stream.annotation.Output;
+import org.springframework.cloud.stream.messaging.Sink;
+import org.springframework.cloud.stream.messaging.Source;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.SubscribableChannel;
+import org.springframework.stereotype.Component;
+
+/**
+ * 声明构建通道channel
+ */
+@Component
+public interface MyStreamChannel &#123;
+    String OUTPUT = &quot;myOutput&quot;;
+    String INPUT = &quot;myInput&quot;;
+
+    @Output(MyStreamChannel.OUTPUT)
+    MessageChannel output();
+
+    @Input(MyStreamChannel.INPUT)
+    SubscribableChannel input();
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/StreamService.java
+package com.imooc.article.stream;
+
+public interface StreamService &#123;
+    public void sendMsg();
+    public void eat(String dumpling);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/StreamServiceImpl.java
+package com.imooc.article.stream;
+
+import com.imooc.pojo.AppUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Component;
+
+/**
+ * 开启绑定器
+ * 绑定通道channel
+ */
+@Component
+@EnableBinding(MyStreamChannel.class)
+public class StreamServiceImpl implements StreamService &#123;
+
+    @Autowired
+    private MyStreamChannel myStreamChannel;
+
+    @Override
+    public void sendMsg() &#123;
+        AppUser user = new AppUser();
+        user.setId(&quot;10101&quot;);
+        user.setNickname(&quot;imooc&quot;);
+
+        // 消息通过绑定器发送给mq
+        myStreamChannel.output()
+                .send(MessageBuilder.withPayload(user).build());
+    &#125;
+
+    @Override
+    public void eat(String dumpling) &#123;
+        myStreamChannel.output()
+                .send(MessageBuilder.withPayload(dumpling).build());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/MyStreamConsumer.java
+package com.imooc.article.stream;
+
+import com.imooc.pojo.AppUser;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * 构建消费端
+ */
+@Component
+@EnableBinding(MyStreamChannel.class) //开启通道绑定
+public class MyStreamConsumer &#123;
+
+    /**
+     * 监听并且实现消息的消费和相关业务处理
+     */
+    @StreamListener(MyStreamChannel.INPUT)
+    public void receiveMsg(AppUser user) &#123;
+        System.out.println(user.toString());
+    &#125;
+
+    @StreamListener(MyStreamChannel.INPUT)
+    public void receiveMsg(String dumpling) &#123;
+        System.out.println(dumpling);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/HelloController.java
+
+@RestController
+@RequestMapping(&quot;producer&quot;)
+public class HelloController &#123;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private StreamService streamService;
+
+    @GetMapping(&quot;/stream&quot;)
+    public Object stream() &#123;
+        streamService.sendMsg();
+
+        for (int i = 0 ; i &lt; 10 ; i ++ ) &#123;
+            streamService.eat(&quot;我吃了第&quot; + (i+1) + &quot;只饺子~&quot;);
+        &#125;
+
+        return &quot;ok~~!!!&quot;;
+    &#125;
+</code></pre>
+<h3 id="消息分组与持久化【stream】"><a href="#消息分组与持久化【stream】" class="headerlink" title="消息分组与持久化【stream】"></a>消息分组与持久化【stream】</h3><blockquote>
+<p>避免重复消费  分组group 组内消费者不会重复消费</p>
+</blockquote>
+<h5 id="Stream消息分组"><a href="#Stream消息分组" class="headerlink" title="Stream消息分组"></a>Stream消息分组</h5><pre><code class="yaml">service-article  application.yml  
+  cloud:
+    stream:
+      bindings:                    # 绑定通道和交换机
+        myOutput:                   # 定义生产者的通道
+          # 自定义交换机的名字，也就是代码里构建的信息，交给底层mq的交换机
+          destination:
+        myInput:                    # 定义消费者通道
+          # 自定义交换机的名字，也就是消息从底层mq输入到消费端进行消费
+          destination:
+          group: boys
+
+------------------------------------------------------------------------------
+
+service-user  application.yml
+  cloud:
+    stream:
+      bindings: # 绑定通道和交换机
+        myOutput: # 定义生产者的通道
+          # 自定义交换机的名字，也就是代码里构建的信息，交给底层mq的交换机
+          destination:
+        myInput: # 定义消费者通道
+          # 自定义交换机的名字，也就是消息从底层mq输入到消费端进行消费
+          destination:
+          group: girls
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/StreamService.java
+package com.imooc.article.stream;
+
+public interface StreamService &#123;
+  //public void sendMsg();
+    public void eat(String dumpling);
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/StreamServiceImpl.java
+package com.imooc.article.stream;
+
+import com.imooc.pojo.AppUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Component;
+
+/**
+ * 开启绑定器
+ * 绑定通道channel
+ */
+@Component
+@EnableBinding(MyStreamChannel.class)
+public class StreamServiceImpl implements StreamService &#123;
+
+    @Autowired
+    private MyStreamChannel myStreamChannel;
+
+    @Override
+ /* public void sendMsg() &#123;
+        AppUser user = new AppUser();
+        user.setId(&quot;10101&quot;);
+        user.setNickname(&quot;imooc&quot;);
+
+        // 消息通过绑定器发送给mq
+        myStreamChannel.output()
+                .send(MessageBuilder.withPayload(user).build());
+    &#125; */
+
+    @Override
+    public void eat(String dumpling) &#123;
+        myStreamChannel.output()
+                .send(MessageBuilder.withPayload(dumpling).build());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/stream/MyStreamConsumer.java
+package com.imooc.article.stream;
+
+import com.imooc.pojo.AppUser;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * 构建消费端
+ */
+@Component
+@EnableBinding(MyStreamChannel.class) //开启通道绑定
+public class MyStreamConsumer &#123;
+
+    /**
+     * 监听并且实现消息的消费和相关业务处理
+     */
+ /* @StreamListener(MyStreamChannel.INPUT)
+    public void receiveMsg(AppUser user) &#123;
+        System.out.println(user.toString());
+    &#125; */
+
+    @StreamListener(MyStreamChannel.INPUT)
+    public void receiveMsg(String dumpling) &#123;
+        System.out.println(dumpling);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service-article  com/imooc/article/controller/HelloController.java
+
+@RestController
+@RequestMapping(&quot;producer&quot;)
+public class HelloController &#123;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private StreamService streamService;
+
+    @GetMapping(&quot;/stream&quot;)
+    public Object stream() &#123;
+     // streamService.sendMsg();
+
+        for (int i = 0 ; i &lt; 10 ; i ++ ) &#123;
+            streamService.eat(&quot;我吃了第&quot; + (i+1) + &quot;只饺子~&quot;);
+        &#125;
+
+        return &quot;ok~~!!!&quot;;
+    &#125;
+</code></pre>
+<blockquote>
+<p>消息不会被重复消费<br>service-article:8001   我吃了1-10只饺子~  【消费的饺子总数一共10次】<br>service-user:8003(女生) 我吃了1 3 5 7 9只饺子~    【饺子随机】<br>service-user:8013(男生) 我吃了2 4 6 8 10只饺子~  【饺子随机】</p>
+<p>如果把service-user:8003(女生)  service-user:8013(男生) 服务stop 用户微服务无法接收任何消息<br>但是我们定义了group → 消息是可以持久化的 当重启用户微服务之后  就会打印出刚刚已经吃的饺子了<br>服务器宕机  &#x3D;  吃饺子中途去上厕所 回来后仍然还能吃到饺子</p>
+</blockquote>
+<h3 id="链路追踪概述与zipkin【sleuth】组件"><a href="#链路追踪概述与zipkin【sleuth】组件" class="headerlink" title="链路追踪概述与zipkin【sleuth】组件"></a>链路追踪概述与zipkin【sleuth】<del>组件</del></h3><h5 id="链路追踪"><a href="#链路追踪" class="headerlink" title="链路追踪"></a>链路追踪</h5><ul>
+<li><strong>Sleuth</strong></li>
+<li><strong>贯穿整个微服务系统中，追踪一个请求的过程</strong></li>
+<li><strong>zipkin 可视化控制面板</strong></li>
+</ul>
+<blockquote>
+<p>下载zipkin-server-2.12.6-exec.jar<br>CMD → C:\Users\Pluminary&gt;java -jar &#x2F;Users&#x2F;Pluminary&#x2F;Desktop&#x2F;zipkin-server-2.12.6-exec.jar<br><a target="_blank" rel="noopener" href="https://localhost:9411/zipkin/">https://localhost:9411/zipkin/</a></p>
+</blockquote>
+<h3 id="整合zipkin【sleuth】项目入口是网关"><a href="#整合zipkin【sleuth】项目入口是网关" class="headerlink" title="整合zipkin【sleuth】项目入口是网关"></a>整合zipkin【sleuth】<del>项目入口是网关</del></h3><pre><code class="xml">zuul-server  pom.xml  +  service-article  pom.xml  +  service-user  pom.xml
+         &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="yaml">zuul-server与service-article与service-user  application.yml
+  zipkin:
+    # 配置zipkin采集的服务地址，数据会发送到这里
+    base-url: http://192.168.1.2:9411/
+    sender:
+      # 数据采集的传输通信方式，web http的形式
+      type: web
+  sleuth:
+    sampler:
+      # 数据采样比例（百分数），0~1
+      probability: 1
+</code></pre>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://localhost:9411/zipkin/">https://localhost:9411/zipkin/</a></p>
+</blockquote>
+<h3 id="SpringCloud章节总结"><a href="#SpringCloud章节总结" class="headerlink" title="SpringCloud章节总结"></a>SpringCloud章节总结</h3><ul>
+<li><strong>eureka 注册中心</strong></li>
+<li><strong>ribbon 负载均衡</strong></li>
+<li><strong>feign 声明式客户端</strong></li>
+<li><strong>hystrix 熔断降级组件</strong></li>
+<li><strong>zuul 网关</strong></li>
+<li><strong>config 配置中心</strong></li>
+<li><strong>bus 消息总线</strong></li>
+<li><strong>stream 消息驱动</strong></li>
+<li><strong>zipkin + sleuth 链路追踪</strong></li>
+</ul>
 
             
         </div>
@@ -23093,7 +23633,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -23247,7 +23787,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -28452,7 +28992,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -30519,7 +31059,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -38855,7 +39395,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
