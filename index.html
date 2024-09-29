@@ -296,7 +296,305 @@ Mapper：
 <p>[INFO] ————————————————————————<br>[INFO] Reactor Summary for sky-take-out 1.0-SNAPSHOT:<br>[INFO]<br>[INFO] sky-take-out ………………………………… SUCCESS [  0.003 s]<br>[INFO] sky-common ………………………………….. SUCCESS [  2.761 s]<br>[INFO] sky-pojo ……………………………………. SUCCESS [  2.227 s]<br>[INFO] sky-server ………………………………….. SUCCESS [  1.294 s]<br>[INFO] ————————————————————————<br>[INFO] BUILD SUCCESS</p>
 </blockquote>
 <p><span style="color:red">在数据库中 <u>新建查询</u> <strong>→</strong> <u>SELECT VERSION()</u>; <strong>→</strong> 引擎是8.0.33的是正规操作mysql此时对应的任务管理器<strong>服务</strong>里搜索mysql(名称:MySQL80)开启这个 <strong>→</strong> 如果开启了服务里的MySQL那<u>SELECT VERSION()</u>查询就是11.0.5-MariaDB</span></p>
-<p>08    02:54</p>
+<blockquote>
+<p>handler：全局异常处理器</p>
+</blockquote>
+<h6 id="思考：前端发送的请求，是如何请求到后端服务的？"><a href="#思考：前端发送的请求，是如何请求到后端服务的？" class="headerlink" title="思考：前端发送的请求，是如何请求到后端服务的？"></a>思考：前端发送的请求，是如何请求到后端服务的？</h6><pre><code class="java">前端请求地址：http://localhost/api/employee/login
+后端接口地址：http://localhost:8080/admin/employee/login
+</code></pre>
+<ul>
+<li><p><strong>nginx</strong>反向代理，就是将前端发送的动态请求由nginx转发到后端服务器</p>
+</li>
+<li><p><strong>浏览器</strong> → <a target="_blank" rel="noopener" href="http://localhost/api/employee/login">http://localhost/api/employee/login</a> → <strong>Nginx</strong> → <a target="_blank" rel="noopener" href="http://localhost:8080/admin/employee/login">http://localhost:8080/admin/employee/login</a> → <strong>Tomcat</strong></p>
+</li>
+<li><p>nginx反向代理的好处：提高访问速度、进行负载均衡<del>(否则前端就只能访问一台服务器)</del>、保证后端服务安全<del>(不对外开放)</del></p>
+</li>
+</ul>
+<h6 id="nginx-反向代理的配置方式"><a href="#nginx-反向代理的配置方式" class="headerlink" title="nginx 反向代理的配置方式"></a>nginx 反向代理的配置方式</h6><pre><code class="java">nginx.conf
+
+server&#123;
+    listen 80;
+    server_name localhost;
+    location /api/&#123;
+        proxy_pass http://localhost:8080/admin/;  #反向代理
+    &#125;
+&#125;
+</code></pre>
+<h6 id="nginx-负载均衡的配置方法-平均转发到多台后端服务器"><a href="#nginx-负载均衡的配置方法-平均转发到多台后端服务器" class="headerlink" title="nginx 负载均衡的配置方法(平均转发到多台后端服务器)"></a>nginx 负载均衡的配置方法(平均转发到多台后端服务器)</h6><pre><code class="java">nginx.conf
+
+upstream webservers&#123;
+    server 192.168.100.128:8080;
+    server 192.168.100.129:8080;
+&#125;
+
+server&#123;
+    listen 80;
+    server_name localhost;
+    location /api/&#123;
+        proxy_pass http://webservers/admin/;  #反向代理
+    &#125;
+&#125;
+</code></pre>
+<h6 id="nginx-负载均衡策略："><a href="#nginx-负载均衡策略：" class="headerlink" title="nginx 负载均衡策略："></a>nginx 负载均衡策略：</h6><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>轮询</td>
+<td>默认方式</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>权重方式，默认为1，权重越高，被分配的客户端请求就越多</td>
+</tr>
+<tr>
+<td>ip_hash</td>
+<td>依据ip分配方式，这样每个访客可以固定访问一个后端服务</td>
+</tr>
+<tr>
+<td>least_conn</td>
+<td>依据最少连接方式，把请求优先分配给连接数少的后端服务</td>
+</tr>
+<tr>
+<td>url_hash</td>
+<td>依据url分配方式，这样相同的url会被分配到同一个后端服务</td>
+</tr>
+<tr>
+<td>fair</td>
+<td>依据相应时间方式，响应时间短的服务将会被优先分配</td>
+</tr>
+</tbody></table>
+<h3 id="完善登录功能"><a href="#完善登录功能" class="headerlink" title="完善登录功能"></a>完善登录功能</h3><h6 id="问题：员工表中的密码是明文存储，安全性太低"><a href="#问题：员工表中的密码是明文存储，安全性太低" class="headerlink" title="问题：员工表中的密码是明文存储，安全性太低"></a>问题：员工表中的密码是明文存储，安全性太低</h6><ul>
+<li><p>将密码加密后存储，提高安全性</p>
+</li>
+<li><p>使用MD5加密方式对明文密码加密 <strong>[不可逆]</strong></p>
+</li>
+<li><p>修改数据库中的明文代码，改为MD5加密后的密文</p>
+</li>
+<li><p>修改Java代码，前端提交的代码进行MD5加密后再跟数据库中密码比对</p>
+</li>
+</ul>
+<p><span style = "color:yellow"><strong>在Idea中有 “&#x2F;&#x2F;TODO” 这代表着标记处 此处还未完成一些操作 标记后可以在idea的下面快速定位到TODO</strong></span></p>
+<blockquote>
+<p>MD5密码加密后 也区分大小写 如果相同的密文但是大小写不同 结果还是不同的</p>
+</blockquote>
+<h3 id="导入接口文档"><a href="#导入接口文档" class="headerlink" title="导入接口文档"></a>导入接口文档</h3><h6 id="前后端分离开发流程"><a href="#前后端分离开发流程" class="headerlink" title="前后端分离开发流程"></a>前后端分离开发流程</h6><ul>
+<li><strong>定制接口</strong>(定义规范) → <strong>前端开发</strong>(mock数据) + <strong>后端开发</strong>(后端自测) → <strong>连调</strong>(校验格式) → <strong>提测</strong>(自动化测试)</li>
+</ul>
+<h6 id="操作步骤-YApi-Pro-高效、易用、功能强大的可视化接口管理平台"><a href="#操作步骤-YApi-Pro-高效、易用、功能强大的可视化接口管理平台" class="headerlink" title="操作步骤 YApi Pro-高效、易用、功能强大的可视化接口管理平台"></a>操作步骤 <a target="_blank" rel="noopener" href="https://yapi.pro/">YApi Pro-高效、易用、功能强大的可视化接口管理平台</a></h6><blockquote>
+<p>将课程资料中提供的项目接口导入YApi<br>苍穹外卖-管理端接口.json<br>苍穹外卖-用户端接口.json<br>苍穹外卖-管理端+用户端接口 → 数据管理 → 数据导入(json 随后把json文件拖入) → 点击接口可查看</p>
+</blockquote>
+<h3 id="Swagger介绍和使用方式"><a href="#Swagger介绍和使用方式" class="headerlink" title="Swagger介绍和使用方式"></a>Swagger介绍和使用方式</h3><p><strong>Knife4j</strong>是为Java MVC框架集成Swagger生成Api文档的增强解决方案</p>
+<pre><code class="xml">&lt;dependency&gt;
+   &lt;groupId&gt;com.github.xiaoymin&lt;/groupId&gt;
+   &lt;artifactId&gt;knife4j-spring-boot-starter&lt;/artifactId&gt;
+   &lt;version&gt;3.0.2&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h6 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h6><ul>
+<li>导入knife4j的maven坐标</li>
+<li>在配置类中加入knife4j相关配置</li>
+</ul>
+<pre><code class="java">/**
+ * 通过knife4j生成接口文档
+ * @return
+*/ 
+@Bean
+    public Docket docket() &#123;
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title(&quot;苍穹外卖项目接口文档&quot;)
+                .version(&quot;2.0&quot;)
+                .description(&quot;苍穹外卖项目接口文档&quot;)
+                .build();
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo)
+                .select()
+                    //指定生成接口需要扫描的包
+                .apis(RequestHandlerSelectors.basePackage(&quot;com.sky.controller&quot;))
+                .paths(PathSelectors.any())
+                .build();
+        return docket;
+    &#125;
+</code></pre>
+<ul>
+<li>设置静态资源映射，否则接口文档页面无法访问</li>
+</ul>
+<pre><code class="java">/**
+ * 设置静态资源映射
+ * @param registry
+*/
+    protected void addResourceHandlers(ResourceHandlerRegistry registry) &#123;
+        registry.addResourceHandler(&quot;/doc.html&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/webjars/&quot;);
+    &#125;
+</code></pre>
+<p>[苍穹外卖项目接口文档] (<a target="_blank" rel="noopener" href="http://localhost:8080/doc.html#/home">http://localhost:8080/doc.html#/home</a>) 这个文档是解析<code>EmployeeController</code>来的</p>
+<h6 id="通过Swagger就可以生成接口文档，那么我们不需要Yapi了？"><a href="#通过Swagger就可以生成接口文档，那么我们不需要Yapi了？" class="headerlink" title="通过Swagger就可以生成接口文档，那么我们不需要Yapi了？"></a>通过Swagger就可以生成接口文档，那么我们不需要Yapi了？</h6><ul>
+<li>Yapi是设计阶段使用的工具，管理和维护接口</li>
+<li>Swagger在开发阶段使用的框架，帮助后端开发人员做后端的接口测试</li>
+</ul>
+<h3 id="Swagger常用注解"><a href="#Swagger常用注解" class="headerlink" title="Swagger常用注解"></a>Swagger常用注解</h3><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Api</td>
+<td>用在类上，例如Controller，表明对类的说明</td>
+</tr>
+<tr>
+<td>@ApiModel</td>
+<td>用在类上，例如entity、DTO、VO</td>
+</tr>
+<tr>
+<td>@ApiModelProperty</td>
+<td>用在属性上，描述属性信息</td>
+</tr>
+<tr>
+<td>@ApiOperation</td>
+<td>用在方法上，例如Controller的方法，说明方法的用途、作用</td>
+</tr>
+</tbody></table>
+<pre><code class="java">sky-server  com/sky/controller/admin/EmployeeController.java
+package com.sky.controller.admin;
+
+import com.sky.constant.JwtClaimsConstant;
+import com.sky.dto.EmployeeLoginDTO;
+import com.sky.entity.Employee;
+import com.sky.properties.JwtProperties;
+import com.sky.result.Result;
+import com.sky.service.EmployeeService;
+import com.sky.utils.JwtUtil;
+import com.sky.vo.EmployeeLoginVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 员工管理
+ */
+@RestController
+@RequestMapping(&quot;/admin/employee&quot;)
+@Slf4j
+@Api(tags = &quot;员工相关接口&quot;)
+public class EmployeeController &#123;
+
+    @Autowired
+    private EmployeeService employeeService;
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    /**
+     * 登录
+     *
+     * @param employeeLoginDTO
+     * @return
+     */
+    @PostMapping(&quot;/login&quot;)
+    @ApiOperation(value = &quot;员工登录&quot;)
+    public Result&lt;EmployeeLoginVO&gt; login(@RequestBody EmployeeLoginDTO employeeLoginDTO) &#123;
+        log.info(&quot;员工登录：&#123;&#125;&quot;, employeeLoginDTO);
+
+        Employee employee = employeeService.login(employeeLoginDTO);
+
+        //登录成功后，生成jwt令牌
+        Map&lt;String, Object&gt; claims = new HashMap&lt;&gt;();
+        claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
+        String token = JwtUtil.createJWT(
+                jwtProperties.getAdminSecretKey(),
+                jwtProperties.getAdminTtl(),
+                claims);
+
+        EmployeeLoginVO employeeLoginVO = EmployeeLoginVO.builder()
+                .id(employee.getId())
+                .userName(employee.getUsername())
+                .name(employee.getName())
+                .token(token)
+                .build();
+
+        return Result.success(employeeLoginVO);
+    &#125;
+
+    /**
+     * 退出
+     *
+     * @return
+     */
+    @PostMapping(&quot;/logout&quot;)
+    @ApiOperation(value = &quot;员工退出&quot;)
+    public Result&lt;String&gt; logout() &#123;
+        return Result.success();
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-pojo  com/sky/vo/EmployeeLoginVO.java
+package com.sky.vo;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@ApiModel(description = &quot;员工登录返回的数据格式&quot;)
+public class EmployeeLoginVO implements Serializable &#123;
+
+    @ApiModelProperty(&quot;主键值&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String userName;
+
+    @ApiModelProperty(&quot;姓名&quot;)
+    private String name;
+
+    @ApiModelProperty(&quot;jwt令牌&quot;)
+    private String token;
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-pojo  com/sky/dto/EmployeeLoginDTO.java
+package com.sky.dto;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.io.Serializable;
+
+@Data
+@ApiModel(description = &quot;员工登录时传递的数据模型&quot;)
+public class EmployeeLoginDTO implements Serializable &#123;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;密码&quot;)
+    private String password;
+
+&#125;
+</code></pre>
 
             
         </div>
@@ -311,7 +609,7 @@ Mapper：
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -1232,7 +1530,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#1bccbc>
                 前端
             </a>
         </span>
@@ -20895,7 +21193,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -24099,7 +24397,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -26374,7 +26672,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -29304,7 +29602,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -31371,7 +31669,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -36398,7 +36696,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -39707,7 +40005,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
