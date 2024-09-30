@@ -774,7 +774,16 @@ public class EmployeeDTO implements Serializable &#123;
 </ul>
 <p>注意：由于开发阶段前后端是并行开发的，后端完成某个功能后，此时前端对应的功能可能还没有开发完成，导致无法进行前后端联调测试。所以在开发阶段，后端测试主要以接口文档测试为主</p>
 <p>[苍穹外卖项目接口文档] (<a target="_blank" rel="noopener" href="http://localhost:8080/doc.html#/documentManager/GlobalParameters-default">http://localhost:8080/doc.html#/documentManager/GlobalParameters-default</a>)</p>
-<p><span style = "color:red">首先要拿到<strong>JWT令牌</strong>(去接口进行一次登录测试后会有) → 全局参数设置 → 添加参数</span></p>
+<p><span style = "color:red">首先要拿到<strong>JWT令牌</strong>(去接口进行一次登录测试后会有) → 全局参数设置 → 添加参数</span><br><strong>注意</strong>：这个jwt→json是有有效期的(2小时&#x3D;7200000秒)</p>
+<pre><code class="xml">sky:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: itcast
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    admin-token-name: token
+</code></pre>
 <blockquote>
 <p>{<br>  “code”: 1,<br>  “msg”: null,<br>  “data”: {<br>    “id”: 1,<br>    “userName”: “admin”,<br>    “name”: “管理员”,<br>    “token”: “eyJhbGciOiJIUzI1NiJ9.eyJlbXBJZCI6MSwiZXhwIjoxNzI3NjAxMTAxfQ.rnxaRc7fjPzMYwGHk3VzKA4EOxRFrYkKzesxEQsCQUc”<br>  }<br>}</p>
 <hr>
@@ -1028,7 +1037,834 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
     &#125;
 
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 如果想单独针对22行代码 测试部分的值是多少 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-// 左键选中&#39;BaseContext.getCurrentId()&#39; 右键Evaluate Expression单独计算ji&#39;ke
+// 左键选中&#39;BaseContext.getCurrentId()&#39; 右键Evaluate Expression单独计算即可
+</code></pre>
+<h3 id="员工分页查询"><a href="#员工分页查询" class="headerlink" title="员工分页查询"></a>员工分页查询</h3><h5 id="需求分析和设计-1"><a href="#需求分析和设计-1" class="headerlink" title="需求分析和设计"></a>需求分析和设计</h5><h6 id="业务规则：-查询-→-get"><a href="#业务规则：-查询-→-get" class="headerlink" title="业务规则：(查询 → get)"></a>业务规则：(查询 → get)</h6><ul>
+<li>根据页码展示员工信息</li>
+<li>每页展示10条数据</li>
+<li>分页查询时可以根据需要，输入员工姓名进行查询</li>
+</ul>
+<h5 id="代码开发-1"><a href="#代码开发-1" class="headerlink" title="代码开发"></a>代码开发</h5><h6 id="根据分页查询接口设计对应的DTO"><a href="#根据分页查询接口设计对应的DTO" class="headerlink" title="根据分页查询接口设计对应的DTO:"></a>根据分页查询接口设计对应的DTO:</h6><p><strong>Query</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>是否必须</th>
+<th>示例</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>否</td>
+<td>张三</td>
+<td>员工姓名</td>
+</tr>
+<tr>
+<td>page</td>
+<td>是</td>
+<td>1</td>
+<td>页码</td>
+</tr>
+<tr>
+<td>pageSize</td>
+<td>是</td>
+<td>10</td>
+<td>每页记录数</td>
+</tr>
+</tbody></table>
+<pre><code class="java">@Data
+public class EmployeePageQueryDTO implements Serializable&#123;
+    private String name;
+    private int page;
+    private int pageSize;
+&#125;
+</code></pre>
+<h6 id="后面所有的分页查询，统一都封装成PageResult对象"><a href="#后面所有的分页查询，统一都封装成PageResult对象" class="headerlink" title="后面所有的分页查询，统一都封装成PageResult对象"></a>后面所有的分页查询，统一都封装成PageResult对象</h6><pre><code class="java">/*封装分页查询结果*/
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PageResult implements Serializable&#123;
+    private long total; 
+    private List records;
+&#125;
+</code></pre>
+<h6 id="员工信息分页查询后端返回的对象类型为：Result-lt-PageResult-gt"><a href="#员工信息分页查询后端返回的对象类型为：Result-lt-PageResult-gt" class="headerlink" title="员工信息分页查询后端返回的对象类型为：Result &lt; PageResult &gt;"></a>员工信息分页查询后端返回的对象类型为：<strong>Result &lt; PageResult &gt;</strong></h6><pre><code class="java">sky-server  com/sky/controller/admin/EmployeeController.java
+/**
+     * 员工分页查询
+     * @param employeePageQueryDTO
+     * @return
+     */
+    @GetMapping(&quot;/page&quot;)
+    public Result&lt;PageResult&gt; page(EmployeePageQueryDTO employeePageQueryDTO)&#123;
+        //格式不是JSON不用加 @RequestBody
+        log.info(&quot;员工分页查询，参数为：&#123;&#125;&quot;, employeePageQueryDTO);
+        PageResult pageResult = employeeService.pageQuery(employeePageQueryDTO);
+        return Result.success(pageResult);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/EmployeeService.java
+/**
+     * 分页查询
+     * @param employeePageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/EmployeeServiceImpl.java
+/**
+     * 分页查询
+     * @param employeePageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) &#123;
+        // select * from employee limit 0,10
+        // 开始分页查询 动态拼接
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
+        Page&lt;Employee&gt; page =  employeeMapper.pageQuery(employeePageQueryDTO);
+
+        long total = page.getTotal();
+        List&lt;Employee&gt; records = page.getResult();
+
+        return new PageResult(total, records);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
+ /**
+     * 分页查询 [动态sql 不用注解了 写道 EmployeeMapper.xml]
+     * @param employeePageQueryDTO
+     * @return
+     */
+    Page&lt;Employee&gt; pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/EmployeeMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.EmployeeMapper&quot;&gt;
+    &lt;select id=&quot;pageQuery&quot; resultType=&quot;com.sky.entity.Employee&quot;&gt;
+        select * from employee
+        &lt;where&gt;
+            &lt;if test=&quot;name != null and name != &#39;&#39;&quot;&gt;
+                and name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by create_time desc
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<p>[员工管理] (<a target="_blank" rel="noopener" href="http://localhost/#/employee">http://localhost/#/employee</a>)</p>
+<h5 id="代码完善-1"><a href="#代码完善-1" class="headerlink" title="代码完善"></a>代码完善</h5><h6 id="问题：创建-x2F-更新时间那边传入的数据不是想要的"><a href="#问题：创建-x2F-更新时间那边传入的数据不是想要的" class="headerlink" title="问题：创建&#x2F;更新时间那边传入的数据不是想要的"></a>问题：创建&#x2F;更新时间那边传入的数据不是想要的</h6><pre><code class="java">// 2024929214237
+&quot;createTime&quot;: [
+          2024,
+          9,
+          29,
+          22,
+          10,
+          37
+        ],
+        &quot;updateTime&quot;: [
+          2024,
+          9,
+          29,
+          22,
+          10,
+          37
+        ],
+</code></pre>
+<h6 id="解决方式："><a href="#解决方式：" class="headerlink" title="解决方式："></a>解决方式：</h6><ul>
+<li><p><strong>方法一</strong>：在属性上加注解，对日期进行格式化<del>(只能处理单独一个属性)</del></p>
+<pre><code class="java">@JsonFormat(pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+private LocalDateTime updateTime;
+------------------------------------------------------------------------
+ &quot;createTime&quot;: &quot;2024-09-29 22:10:37&quot;,
+</code></pre>
+</li>
+<li><p><strong>方法二</strong>：在<code>WebMvcConfiguration</code>中扩展Spring MVC的消息转换器，统一对日期类型进行格式化处理</p>
+</li>
+</ul>
+<blockquote>
+<p>重写父类方法 去扩展 消息转换器</p>
+</blockquote>
+<pre><code class="java">sky-server  com/sky/config/WebMvcConfiguration.java
+ /**
+     * 扩展Spring MVC框架的消息转化器
+     * @param converters
+     */
+    protected void extendMessageConverters(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters) &#123;
+        log.info(&quot;扩展消息转换器...&quot;);
+        //创建一个消息转换器对象
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        //需要为消息转换器设置一个对象转换器，对象转换器可以将Java对象序列化为json数据
+        converter.setObjectMapper(new JacksonObjectMapper());
+        //将自己的消息转化器加入容器中
+        converters.add(0,converter);
+    &#125;
+</code></pre>
+<pre><code class="java">
+package com.sky.json;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
+/**
+ * 对象映射器:基于jackson将Java对象转为json，或者将json转为Java对象
+ * 将JSON解析为Java对象的过程称为 [从JSON反序列化Java对象]
+ * 从Java对象生成JSON的过程称为 [序列化Java对象到JSON]
+ */
+public class JacksonObjectMapper extends ObjectMapper &#123;
+
+    public static final String DEFAULT_DATE_FORMAT = &quot;yyyy-MM-dd&quot;;
+    //public static final String DEFAULT_DATE_TIME_FORMAT = &quot;yyyy-MM-dd HH:mm:ss&quot;;
+    public static final String DEFAULT_DATE_TIME_FORMAT = &quot;yyyy-MM-dd HH:mm&quot;;
+    public static final String DEFAULT_TIME_FORMAT = &quot;HH:mm:ss&quot;;
+
+    public JacksonObjectMapper() &#123;
+        super();
+        //收到未知属性时不报异常
+        this.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        //反序列化时，属性不存在的兼容处理
+        this.getDeserializationConfig().withoutFeatures(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        SimpleModule simpleModule = new SimpleModule()
+                .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT)))
+                .addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)))
+                .addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT)))
+                .addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_FORMAT)))
+                .addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)))
+                .addSerializer(LocalTime.class, new LocalTimeSerializer(DateTimeFormatter.ofPattern(DEFAULT_TIME_FORMAT)));
+
+        //注册功能模块 例如，可以添加自定义序列化器和反序列化器
+        this.registerModule(simpleModule);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="启用禁用员工账号"><a href="#启用禁用员工账号" class="headerlink" title="启用禁用员工账号"></a>启用禁用员工账号</h3><h5 id="需求分析和设计-2"><a href="#需求分析和设计-2" class="headerlink" title="需求分析和设计"></a>需求分析和设计</h5><h6 id="业务规则："><a href="#业务规则：" class="headerlink" title="业务规则："></a>业务规则：</h6><ul>
+<li>可以对状态为 “启用” 的员工账号进行 “禁用” 操作</li>
+<li>可以对状态为 “禁用” 的员工账号进行 “启用” 操作</li>
+<li>状态为 “禁用” 的员工账号不能登录系统</li>
+</ul>
+<pre><code class="java">sky-server
+/**
+     * 启用禁用员工账号
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;启用禁用员工账号&quot;)
+    //因为上面的和下面的参数都是一致 不然需要@PathVariable(&quot;status&quot;)解释一下
+    public Result startOrStop(@PathVariable(&quot;status&quot;) Integer status, Long id) &#123;
+        log.info(&quot;启用禁用员工账号: &#123;&#125;,&#123;&#125;&quot;,status,id);
+        employeeService.startOrStop(status, id);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/EmployeeService.java
+ /**
+     * 启用禁用员工账号
+     * @param status
+     * @param id
+     * @return
+     */
+    void startOrStop(Integer status, Long id);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/EmployeeServiceImpl.java
+/**
+     * 启用禁用员工账号
+     * @param status
+     * @param id
+     * @return
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) &#123;
+        // update employee set status = ? where id = ?
+        Employee employee = new Employee();
+        employee.setStatus(status);
+        employee.setId(id);
+
+/** 要在Employee.java中添加@Builder 才能使用这种风格
+ *      Employee employee = Employee.builder()
+ *              .status(status)
+ *              .id(id)
+ *              .build();
+ */
+        employeeMapper.update(employee);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
+/**
+     * 根据主键动态修改属性
+     * @param employee
+     */
+    void update(Employee employee);
+</code></pre>
+<pre><code class="java">sky-server  mapper/EmployeeMapper.xml
+&lt;update id=&quot;update&quot; parameterType=&quot;Employee&quot;&gt;
+        update employee
+        &lt;set&gt;
+            &lt;if test=&quot;name != null&quot;&gt;name = #&#123;name&#125;,&lt;/if&gt;
+            &lt;if test=&quot;username != null&quot;&gt;username = #&#123;username&#125;,&lt;/if&gt;
+            &lt;if test=&quot;password != null&quot;&gt;password = #&#123;password&#125;,&lt;/if&gt;
+            &lt;if test=&quot;phone != null&quot;&gt;phone = #&#123;phone&#125;,&lt;/if&gt;
+            &lt;if test=&quot;sex != null&quot;&gt;sex = #&#123;sex&#125;,&lt;/if&gt;
+            &lt;if test=&quot;idNumber != null&quot;&gt;id_Number = #&#123;idNumber&#125;,&lt;/if&gt;
+            &lt;if test=&quot;updateTime != null&quot;&gt;update_Time = #&#123;updateTime&#125;,&lt;/if&gt;
+            &lt;if test=&quot;updateUser != null&quot;&gt;update_User = #&#123;updateUser&#125;,&lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;status = #&#123;status&#125;,&lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+</code></pre>
+<h3 id="编辑员工"><a href="#编辑员工" class="headerlink" title="编辑员工"></a>编辑员工</h3><h4 id="需求分析和设计-回写数据"><a href="#需求分析和设计-回写数据" class="headerlink" title="需求分析和设计[回写数据]"></a>需求分析和设计[回写数据]</h4><h6 id="编辑员工功能涉及到两个接口："><a href="#编辑员工功能涉及到两个接口：" class="headerlink" title="编辑员工功能涉及到两个接口："></a>编辑员工功能涉及到两个接口：</h6><ul>
+<li>根据id查询员工信息</li>
+<li>编辑员工信息</li>
+</ul>
+<h4 id="代码开发-2"><a href="#代码开发-2" class="headerlink" title="代码开发"></a>代码开发</h4><pre><code class="java">sky-server  com/sky/controller/admin/EmployeeController.java
+    /**
+     * 根据id查询员工信息
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询员工信息&quot;)
+    public Result&lt;Employee&gt; getById(@PathVariable Long id)&#123;
+        Employee employee = employeeService.getById(id);
+        return Result.success(employee);
+    &#125;
+
+    /**
+     * 编辑员工信息
+     * @param employeeDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;编辑员工信息&quot;)
+    public Result update(@RequestBody EmployeeDTO employeeDTO)&#123;
+        log.info(&quot;编辑员工信息：&#123;&#125;&quot;, employeeDTO);
+        employeeService.update(employeeDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/EmployeeService.java
+/**
+     * 根据id查询员工
+     * @param id
+     * @return
+     */
+    Employee getById(Long id);
+
+    /**
+     * 编辑员工信息
+     * @param employeeDTO
+     */
+    void update(EmployeeDTO employeeDTO);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/EmployeeServiceImpl.java
+/**
+     * 根据id查询员工
+     * @param id
+     * @return
+     */
+    public Employee getById(Long id) &#123;
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword(&quot;****&quot;);
+        return employee;
+    &#125;
+
+    /**
+     * 编辑员工信息
+     * @param employeeDTO
+     */
+    public void update(EmployeeDTO employeeDTO) &#123;
+        Employee employee = new Employee();
+        BeanUtils.copyProperties(employeeDTO, employee);
+
+        //employee.setUpdateTime(LocalDateTime.now());
+        //employee.setUpdateUser(BaseContext.getCurrentId());
+
+        employeeMapper.update(employee);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
+ /**
+     * 根据主键动态修改属性
+     * @param employee
+     */
+    void update(Employee employee);
+
+    /**
+     * 根据id查询员工信息
+     * @param id
+     * @return
+     */
+    @Select(&quot;select * from employee where id = #&#123;id&#125;&quot;)
+    Employee getById(Long id);
+</code></pre>
+<p>[苍穹外卖项目接口文档] (<a target="_blank" rel="noopener" href="http://localhost:8080/doc.html#/default/%E5%91%98%E5%B7%A5%E7%9B%B8%E5%85%B3%E6%8E%A5%E5%8F%A3/updateUsingPUT">http://localhost:8080/doc.html#/default/员工相关接口/updateUsingPUT</a>)</p>
+<h4 id="导入分类管理功能代码"><a href="#导入分类管理功能代码" class="headerlink" title="导入分类管理功能代码"></a>导入分类管理功能代码</h4><h6 id="业务规则：-1"><a href="#业务规则：-1" class="headerlink" title="业务规则："></a>业务规则：</h6><ul>
+<li>分类名称必须是<strong>唯一</strong>的</li>
+<li>分类按章类型可分为<strong>菜品分类</strong>和<strong>套餐分类</strong></li>
+<li>新添加的分类状态默认认为 “<strong>禁用</strong>“</li>
+</ul>
+<h6 id="接口设计："><a href="#接口设计：" class="headerlink" title="接口设计："></a>接口设计：</h6><ul>
+<li>新增分类</li>
+<li>分类分页查询</li>
+<li>根据id删除分类</li>
+<li>修改分类</li>
+<li>启用禁止分类</li>
+<li>根据类型调查分类</li>
+</ul>
+<p><strong>数据库设计(category表)</strong></p>
+<pre><code class="java">sky-server  com/sky/controller/admin/CategoryController.java
+package com.sky.controller.admin;
+
+import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import com.sky.result.PageResult;
+import com.sky.result.Result;
+import com.sky.service.CategoryService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+/**
+ * 分类管理
+ */
+@RestController
+@RequestMapping(&quot;/admin/category&quot;)
+@Api(tags = &quot;分类相关接口&quot;)
+@Slf4j
+public class CategoryController &#123;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     * @return
+     */
+    @PostMapping
+    @ApiOperation(&quot;新增分类&quot;)
+    public Result&lt;String&gt; save(@RequestBody CategoryDTO categoryDTO)&#123;
+        log.info(&quot;新增分类：&#123;&#125;&quot;, categoryDTO);
+        categoryService.save(categoryDTO);
+        return Result.success();
+    &#125;
+
+    /**
+     * 分类分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    @GetMapping(&quot;/page&quot;)
+    @ApiOperation(&quot;分类分页查询&quot;)
+    public Result&lt;PageResult&gt; page(CategoryPageQueryDTO categoryPageQueryDTO)&#123;
+        log.info(&quot;分页查询：&#123;&#125;&quot;, categoryPageQueryDTO);
+        PageResult pageResult = categoryService.pageQuery(categoryPageQueryDTO);
+        return Result.success(pageResult);
+    &#125;
+
+    /**
+     * 删除分类
+     * @param id
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(&quot;删除分类&quot;)
+    public Result&lt;String&gt; deleteById(Long id)&#123;
+        log.info(&quot;删除分类：&#123;&#125;&quot;, id);
+        categoryService.deleteById(id);
+        return Result.success();
+    &#125;
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;修改分类&quot;)
+    public Result&lt;String&gt; update(@RequestBody CategoryDTO categoryDTO)&#123;
+        categoryService.update(categoryDTO);
+        return Result.success();
+    &#125;
+
+    /**
+     * 启用、禁用分类
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;启用禁用分类&quot;)
+    public Result&lt;String&gt; startOrStop(@PathVariable(&quot;status&quot;) Integer status, Long id)&#123;
+        categoryService.startOrStop(status,id);
+        return Result.success();
+    &#125;
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;根据类型查询分类&quot;)
+    public Result&lt;List&lt;Category&gt;&gt; list(Integer type)&#123;
+        List&lt;Category&gt; list = categoryService.list(type);
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/CategoryService.java
+package com.sky.service;
+
+import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import com.sky.result.PageResult;
+import java.util.List;
+
+public interface CategoryService &#123;
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
+    void save(CategoryDTO categoryDTO);
+
+    /**
+     * 分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
+
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    void deleteById(Long id);
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     */
+    void update(CategoryDTO categoryDTO);
+
+    /**
+     * 启用、禁用分类
+     * @param status
+     * @param id
+     */
+    void startOrStop(Integer status, Long id);
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    List&lt;Category&gt; list(Integer type);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/CategoryServiceImpl.java
+package com.sky.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import com.sky.exception.DeletionNotAllowedException;
+import com.sky.mapper.CategoryMapper;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
+import com.sky.service.CategoryService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 分类业务层
+ */
+@Service
+@Slf4j
+public class CategoryServiceImpl implements CategoryService &#123;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
+    public void save(CategoryDTO categoryDTO) &#123;
+        Category category = new Category();
+        //属性拷贝
+        BeanUtils.copyProperties(categoryDTO, category);
+
+        //分类状态默认为禁用状态0
+        category.setStatus(StatusConstant.DISABLE);
+
+        //设置创建时间、修改时间、创建人、修改人
+        category.setCreateTime(LocalDateTime.now());
+        category.setUpdateTime(LocalDateTime.now());
+        category.setCreateUser(BaseContext.getCurrentId());
+        category.setUpdateUser(BaseContext.getCurrentId());
+
+        categoryMapper.insert(category);
+    &#125;
+
+    /**
+     * 分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) &#123;
+        PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize());
+        //下一条sql进行分页，自动加入limit关键字分页
+        Page&lt;Category&gt; page = categoryMapper.pageQuery(categoryPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    public void deleteById(Long id) &#123;
+        //查询当前分类是否关联了菜品，如果关联了就抛出业务异常
+        Integer count = dishMapper.countByCategoryId(id);
+        if(count &gt; 0)&#123;
+            //当前分类下有菜品，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_DISH);
+        &#125;
+
+        //查询当前分类是否关联了套餐，如果关联了就抛出业务异常
+        count = setmealMapper.countByCategoryId(id);
+        if(count &gt; 0)&#123;
+            //当前分类下有菜品，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_SETMEAL);
+        &#125;
+
+        //删除分类数据
+        categoryMapper.deleteById(id);
+    &#125;
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     */
+    public void update(CategoryDTO categoryDTO) &#123;
+        Category category = new Category();
+        BeanUtils.copyProperties(categoryDTO,category);
+
+        //设置修改时间、修改人
+        category.setUpdateTime(LocalDateTime.now());
+        category.setUpdateUser(BaseContext.getCurrentId());
+
+        categoryMapper.update(category);
+    &#125;
+
+    /**
+     * 启用、禁用分类
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) &#123;
+        Category category = Category.builder()
+                .id(id)
+                .status(status)
+                .updateTime(LocalDateTime.now())
+                .updateUser(BaseContext.getCurrentId())
+                .build();
+        categoryMapper.update(category);
+    &#125;
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    public List&lt;Category&gt; list(Integer type) &#123;
+        return categoryMapper.list(type);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/CategoryMapper.java
+package com.sky.mapper;
+
+import com.github.pagehelper.Page;
+import com.sky.enumeration.OperationType;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
+
+@Mapper
+public interface CategoryMapper &#123;
+
+    /**
+     * 插入数据
+     * @param category
+     */
+    @Insert(&quot;insert into category(type, name, sort, status, create_time, update_time, create_user, update_user)&quot; +
+            &quot; VALUES&quot; +
+            &quot; (#&#123;type&#125;, #&#123;name&#125;, #&#123;sort&#125;, #&#123;status&#125;, #&#123;createTime&#125;, #&#123;updateTime&#125;, #&#123;createUser&#125;, #&#123;updateUser&#125;)&quot;)
+    void insert(Category category);
+
+    /**
+     * 分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    Page&lt;Category&gt; pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
+
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    @Delete(&quot;delete from category where id = #&#123;id&#125;&quot;)
+    void deleteById(Long id);
+
+    /**
+     * 根据id修改分类
+     * @param category
+     */
+    void update(Category category);
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    List&lt;Category&gt; list(Integer type);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  mapper/CategoryMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.CategoryMapper&quot;&gt;
+
+    &lt;select id=&quot;pageQuery&quot; resultType=&quot;com.sky.entity.Category&quot;&gt;
+        select * from category
+        &lt;where&gt;
+            &lt;if test=&quot;name != null and name != &#39;&#39;&quot;&gt;
+                and name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;type != null&quot;&gt;
+                and type = #&#123;type&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by sort asc , create_time desc
+    &lt;/select&gt;
+
+    &lt;update id=&quot;update&quot; parameterType=&quot;Category&quot;&gt;
+        update category
+        &lt;set&gt;
+            &lt;if test=&quot;type != null&quot;&gt;
+                type = #&#123;type&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;name != null&quot;&gt;
+                name = #&#123;name&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;sort != null&quot;&gt;
+                sort = #&#123;sort&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                status = #&#123;status&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateTime != null&quot;&gt;
+                update_time = #&#123;updateTime&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateUser != null&quot;&gt;
+                update_user = #&#123;updateUser&#125;
+            &lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+
+    &lt;select id=&quot;list&quot; resultType=&quot;Category&quot;&gt;
+        select * from category
+        where status = 1
+        &lt;if test=&quot;type != null&quot;&gt;
+            and type = #&#123;type&#125;
+        &lt;/if&gt;
+        order by sort asc,create_time desc
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+package com.sky.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+@Mapper
+public interface DishMapper &#123;
+
+    /**
+     * 根据分类id查询菜品数量
+     * @param categoryId
+     * @return
+     */
+    @Select(&quot;select count(id) from dish where category_id = #&#123;categoryId&#125;&quot;)
+    Integer countByCategoryId(Long categoryId);
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/SetmealMapper.java
+package com.sky.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+@Mapper
+public interface SetmealMapper &#123;
+
+    /**
+     * 根据分类id查询套餐的数量
+     * @param id
+     * @return
+     */
+    @Select(&quot;select count(id) from setmeal where category_id = #&#123;categoryId&#125;&quot;)
+    Integer countByCategoryId(Long id);
+
+&#125;
 </code></pre>
 
             
@@ -1044,7 +1880,7 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -1965,7 +2801,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#ff7d73>
                 前端
             </a>
         </span>
@@ -21628,7 +22464,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -24678,7 +25514,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -27107,7 +27943,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -30037,7 +30873,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -32104,7 +32940,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -40440,7 +41276,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
