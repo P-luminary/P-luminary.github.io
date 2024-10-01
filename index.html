@@ -540,6 +540,47 @@ public class LoginListener3 &#123;
 </blockquote>
 </li>
 </ul>
+<pre><code class="java">com/itheima/bean/User.java
+package com.itheima.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// 实体类, 存储用户的数据
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class User &#123;
+    private String username; // 用户显示网页的名字
+    private String password; // 密码
+    private String loginName; // 登录时的用户名
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/bean/Employee.java
+package com.itheima.bean;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// 实体类, 保存员工的数据
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Employee &#123;
+    // 编号
+    private int id;
+    // 姓名
+    private String name;
+    // 性别
+    private String gender;
+    // 薪资
+    private double salary;
+    // 部门
+    private String department;
+&#125;
+</code></pre>
 <pre><code class="java">com/itheima/MainApp.java
 package com.itheima;
 
@@ -554,19 +595,19 @@ public class MainApp &#123;
     // 1.准备用户数据，用于登录
     public static ArrayList&lt;User&gt; userlist = new ArrayList&lt;&gt;();
     // 2.准备员工数据，用于员工的增删改查
-    static ArrayList&lt;Employee&gt; employeeList = new ArrayList&lt;&gt;();
+    public static ArrayList&lt;Employee&gt; employeeList = new ArrayList&lt;&gt;();
 
     // 静态代码块给静态成员初始化
     static &#123;
         // 添加2个用户对象
-        userlist.add(new User(&quot;admin&quot;,&quot;123456&quot;,&quot;admin&quot;));
-        userlist.add(new User(&quot;张三&quot;,&quot;123456&quot;,&quot;zs&quot;));
+        userlist.add(new User(&quot;admin&quot;,&quot;123&quot;,&quot;admin&quot;));
+        userlist.add(new User(&quot;张三&quot;,&quot;123&quot;,&quot;zs&quot;));
 
 
         // 添加4个员工对象
         employeeList.add(new Employee(1,&quot;张三&quot;,&quot;男&quot;,3000,&quot;市场部&quot;));
-        employeeList.add(new Employee(2,&quot;李四&quot;,&quot;女&quot;,5000,&quot;市场部&quot;));
-        employeeList.add(new Employee(3,&quot;王五&quot;,&quot;男&quot;,7000,&quot;市场部&quot;));
+        employeeList.add(new Employee(2,&quot;李四&quot;,&quot;女&quot;,5000,&quot;技术部&quot;));
+        employeeList.add(new Employee(3,&quot;王五&quot;,&quot;男&quot;,7000,&quot;营销部&quot;));
         employeeList.add(new Employee(4,&quot;赵六&quot;,&quot;女&quot;,9000,&quot;市场部&quot;));
     &#125;
 
@@ -578,8 +619,116 @@ public class MainApp &#123;
     &#125;
 &#125;
 </code></pre>
+<pre><code class="java">com/itheima/ui/LoginWindow.java
+package com.itheima.ui;
+
+import com.itheima.MainApp;
+import com.itheima.bean.User;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class LoginWindow extends JFrame &#123; // 定义一个继承自JFrame的类，表示主窗口
+    private JTextField usernameField; // 用户名输入框
+    private JPasswordField passwordField; // 密码输入框
+
+    public LoginWindow() &#123; // 构造函数
+        setTitle(&quot;黑马程序员人事管理系统&quot;); // 设置窗口标题
+        setSize(380, 280); // 设置窗口大小
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置窗口关闭操作
+        setLocationRelativeTo(null);
+
+        JPanel contentPane = new JPanel(); // 创建一个新的面板作为窗口的内容面板
+        contentPane.setLayout(null); // 使用空布局，允许手动定位组件
+        contentPane.setBackground(Color.white); // 设置内容面板的背景颜色
+
+        JLabel titleLabel = new JLabel(&quot;黑马程序员人事管理系统&quot;, SwingConstants.CENTER); // 创建标题标签
+        titleLabel.setBounds(50, 20, 240, 30); // 设置标签的位置和尺寸
+        titleLabel.setFont(titleLabel.getFont().deriveFont(18f).deriveFont(Font.BOLD)); // 设置字体大小和样式
+
+        JLabel usernameLabel = new JLabel(&quot;用户名:&quot;, SwingConstants.LEFT); // 创建用户名标签
+        usernameLabel.setBounds(60, 70, 90, 30); // 设置标签的位置和尺寸
+
+        usernameField = new JTextField(); // 创建用户名输入框
+        usernameField.setBounds(120, 70, 160, 30); // 设置输入框的位置和尺寸
+
+        JLabel passwordLabel = new JLabel(&quot;密 码:&quot;, SwingConstants.LEFT); // 创建密码标签
+        passwordLabel.setBounds(60, 120, 90, 30); // 设置标签的位置和尺寸
+
+        passwordField = new JPasswordField(); // 创建密码输入框
+        passwordField.setBounds(120, 120, 160, 30); // 设置输入框的位置和尺寸
+
+        JButton loginButton = new JButton(&quot;登 录&quot;); // 创建登录按钮
+        loginButton.setBackground(Color.BLUE); // 设置按钮背景色
+        loginButton.setForeground(Color.WHITE); // 设置按钮文字颜色
+        loginButton.setBounds(60, 180, 100, 30); // 设置按钮的位置和尺寸
+
+        JButton registerButton = new JButton(&quot;注 册&quot;); // 创建注册按钮
+        registerButton.setBackground(Color.GRAY); // 设置按钮背景色
+        registerButton.setBounds(180, 180, 100, 30); // 设置按钮的位置和尺寸
+
+        // 将各个组件添加到内容面板中
+        contentPane.add(titleLabel);
+        contentPane.add(usernameLabel);
+        contentPane.add(usernameField);
+        contentPane.add(passwordLabel);
+        contentPane.add(passwordField);
+        contentPane.add(loginButton);
+        contentPane.add(registerButton);
+
+        setContentPane(contentPane); // 设置窗口的内容面板
+
+        setVisible(true); // 显示窗口
+
+        // 登录按钮的点击事件
+        loginButton.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;按钮被点击了&quot;);
+                // 1.取用户输入的用户名和密码
+                String loginName = usernameField.getText();
+                char[] passwordCharArray = passwordField.getPassword();
+                String password = new String(passwordCharArray);
+                System.out.println(&quot;用户名 = &quot; + loginName + &quot;, 密码 = &quot; + password);
+                // 2.如果用户名或者密码错误，提示登录失败
+                if (checkLoginNameAndPassword(loginName, password)) &#123;
+                    // 3.如果用户名和密码正确，关闭登录界面，进入员工管理页面
+                    // 关闭当前页面
+                    dispose();
+                    // 进入员工管理页面
+                    new EmployeeManagerWindow();
+                &#125;else &#123;
+                    // 提示登录失败
+                    JOptionPane.showMessageDialog(null, &quot;用户名或密码错误，请重新输入！&quot;);
+                &#125;
+            &#125;
+        &#125;);
+    &#125;
+
+    // 根据用户名和密码确认是否登录成功
+    public boolean checkLoginNameAndPassword(String loginName, String password) &#123;
+        // 遍历用户集合
+        for (int i = 0; i &lt; MainApp.userlist.size(); i++) &#123;
+            // 获取每个用户对象
+            User user = MainApp.userlist.get(i);
+            // 判断用户名和密码是否正确
+            if (user.getLoginName().equals(loginName) &amp;&amp; user.getPassword().equals(password)) &#123;
+                // 如果用户名和密码相同就返回true
+                return true;
+            &#125;
+        &#125;
+        // 如果集合没有找到就返回false
+        return false;
+    &#125;
+&#125;
+</code></pre>
 <pre><code class="java">com/itheima/ui/EmployeeManagerWindow.java
 package com.itheima.ui;
+
+import com.itheima.MainApp;
+import com.itheima.bean.Employee;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -679,7 +828,11 @@ public class EmployeeManagerWindow extends JFrame &#123;
                     // 删除逻辑
                     int selectedRow = table.getSelectedRow();
                     if (selectedRow &gt;= 0) &#123;
+                        // 表格删除对应的这行
                         model.removeRow(selectedRow);
+                        // 使用行号到员工的ArrayList集合中删除
+                        MainApp.employeeList.remove(selectedRow);
+                        System.out.println(&quot;删除员工信息：&quot; + selectedRow);
                     &#125;
                     break;
             &#125;
@@ -692,13 +845,37 @@ public class EmployeeManagerWindow extends JFrame &#123;
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
-        // 初始化一些数据
-        for (int i = 1; i &lt;= 5; i++) &#123;
-            model.addRow(new Object[]&#123;i, &quot;员工&quot; + i, &quot;男&quot;, 5000 + i * 1000, &quot;部门&quot; + (i % 2)&#125;);
+        // 初始化一些数据(使用真数据)
+//        for (int i = 1; i &lt;= 5; i++) &#123;
+//            model.addRow(new Object[]&#123;i, &quot;员工&quot; + i, &quot;男&quot;, 5000 + i * 1000, &quot;部门&quot; + (i % 2)&#125;);
+//        &#125;
+        // 遍历人工集合
+        for (int i = 0; i &lt; MainApp.employeeList.size(); i++) &#123;
+            Employee employee = MainApp.employeeList.get(i);
+            model.addRow(new Object[]&#123;employee.getId(), employee.getName(), employee.getGender(), employee.getSalary(), employee.getDepartment()&#125;);
         &#125;
-
         setVisible(true);
+
+        // 给按钮添加点击事件
+        addButton.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                // 弹出新增页面
+                new EmployeeAddWindow(EmployeeManagerWindow.this);
+            &#125;
+        &#125;);
     &#125;
+
+    // 添加员工到表格中
+    public void addEmployeeToTable(Employee employee) &#123;
+        // 3.把员工对象添加到员工集合重
+        MainApp.employeeList.add(employee);
+        // 4.把员工对象添加到表格中
+        model.addRow(new Object[]&#123;employee.getId(), employee.getName(), employee.getGender(), employee.getSalary(), employee.getDepartment()&#125;);
+
+    &#125;
+
+
 
     public static void main(String[] args) &#123;
         SwingUtilities.invokeLater(EmployeeManagerWindow::new);
@@ -708,10 +885,17 @@ public class EmployeeManagerWindow extends JFrame &#123;
 <pre><code class="java">com/itheima/ui/EmployeeAddWindow.java
 package com.itheima.ui;
 
+import com.itheima.bean.Employee;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class EmployeeAddWindow extends JFrame &#123;
+    // 上一个 员工管理界面的引用
+    private EmployeeManagerWindow employeeMangerWindow;
+
     // 编号输入框
     private JTextField idField;
     // 姓名输入框
@@ -723,7 +907,12 @@ public class EmployeeAddWindow extends JFrame &#123;
     // 部门输入框
     private JTextField departmentField;
 
-    public EmployeeAddWindow() &#123;
+    // 最关键的就是这个 添加数值后上一个页面动态添加 MangerWindow 133行
+    // EmployeeManagerWindow.this
+    public EmployeeAddWindow(EmployeeManagerWindow employeeMangerWindow) &#123;
+        // 给成员变量赋值
+        this.employeeMangerWindow = employeeMangerWindow;
+
         // 设置窗口标题
         setTitle(&quot;添加员工&quot;);
         // 设置窗口大小
@@ -798,6 +987,32 @@ public class EmployeeAddWindow extends JFrame &#123;
         addButton.setForeground(Color.WHITE);
         // 设置按钮的位置和尺寸
         addButton.setBounds(120, 285, 160, 30);
+        // 设置添加按钮的点击事件
+        addButton.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;添加员工&quot;);
+                // 1.获取用户输入的员工信息
+                String idStr = idField.getText();
+                // 把字符串 转换为int &quot;6&quot; → 6
+                int id = Integer.parseInt(idStr);
+                String name = nameField.getText();
+                String gender = genderField.getText();
+                String department = departmentField.getText();
+                // 把字符串 转换为double &quot;6666&quot; → 6666.0
+                double salary = Double.parseDouble(salaryField.getText());
+
+                // 2.创建员工对象保存员工信息
+                Employee employee = new Employee(id, name, gender, salary, department);
+
+                // 3.把员工对象添加到员工集合重 因为上个页面是调用不了下一个页面的139 所以要回去MangerWindow写
+                // 4.把员工对象添加到表格中
+                employeeMangerWindow.addEmployeeToTable(employee);
+
+                // 5.关闭当前窗口
+                dispose();
+            &#125;
+        &#125;);
 
         // 将各个组件添加到内容面板中
         contentPane.add(idLabel);
@@ -820,11 +1035,10 @@ public class EmployeeAddWindow extends JFrame &#123;
     &#125;
 
     public static void main(String[] args) &#123;
-        SwingUtilities.invokeLater(EmployeeAddWindow::new);
+        new EmployeeAddWindow(null);
     &#125;
 &#125;
 </code></pre>
-<p>14</p>
 
             
         </div>
@@ -839,7 +1053,7 @@ public class EmployeeAddWindow extends JFrame &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#1bccbc>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
@@ -2586,6 +2800,277 @@ public interface SetmealMapper &#123;
 
 &#125;
 </code></pre>
+<h2 id="菜品管理"><a href="#菜品管理" class="headerlink" title="菜品管理"></a>菜品管理</h2><h4 id="公共字段自动填充"><a href="#公共字段自动填充" class="headerlink" title="公共字段自动填充"></a>公共字段自动填充</h4><p>业务表中的公共字段：(后期会很多[菜品&#x2F;套餐管理])</p>
+<h6 id="问题：代码冗余不利于后期维护"><a href="#问题：代码冗余不利于后期维护" class="headerlink" title="问题：代码冗余不利于后期维护"></a>问题：代码冗余不利于后期维护</h6><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>字段名</th>
+<th>含义</th>
+<th>数据类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>create_time</td>
+<td>创建时间</td>
+<td>datetime</td>
+</tr>
+<tr>
+<td>2</td>
+<td>create_user</td>
+<td>创建人id</td>
+<td>bigint</td>
+</tr>
+<tr>
+<td>3</td>
+<td>update_time</td>
+<td>修改时间</td>
+<td>datetime</td>
+</tr>
+<tr>
+<td>4</td>
+<td>update_user</td>
+<td>修改人id</td>
+<td>bigint</td>
+</tr>
+</tbody></table>
+<h6 id="解决：技术点-→-枚举、注解、AOP、反射"><a href="#解决：技术点-→-枚举、注解、AOP、反射" class="headerlink" title="解决：技术点 → 枚举、注解、AOP、反射"></a>解决：技术点 → 枚举、注解、AOP、反射</h6><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>字段名</th>
+<th>含义</th>
+<th>数据类型</th>
+<th>操作类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>create_time</td>
+<td>创建时间</td>
+<td>datetime</td>
+<td>insert</td>
+</tr>
+<tr>
+<td>2</td>
+<td>create_user</td>
+<td>创建人id</td>
+<td>bigint</td>
+<td>insert</td>
+</tr>
+<tr>
+<td>3</td>
+<td>update_time</td>
+<td>修改时间</td>
+<td>datetime</td>
+<td>insert、update</td>
+</tr>
+<tr>
+<td>4</td>
+<td>update_user</td>
+<td>修改人id</td>
+<td>bigint</td>
+<td>insert、update</td>
+</tr>
+</tbody></table>
+<ul>
+<li>自定义注解 <strong>AutoFill</strong>，用于标识需要进行公共字段自动填充的方法</li>
+<li>自定义切面 <strong>AutoFillAspect</strong>，统一拦截加入了 <strong>AutoFill</strong> 注解的方法，通过反射为公共字段赋值</li>
+<li>在 <strong>Mapper</strong> 的方法上加入 <strong>AutoFill</strong> 注解</li>
+</ul>
+<h4 id="代码开发1"><a href="#代码开发1" class="headerlink" title="代码开发1"></a>代码开发1</h4><pre><code class="java">sky-server  com/sky/annotation/AutoFill.java
+package com.sky.annotation;
+
+import com.sky.enumeration.OperationType;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * 自定义注解，用于标识某个方法需要进行功能字段自动填充处理
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AutoFill &#123;
+// 枚举数据库操作类型：UPDATE INSERT [只要在这情况才有必要设置]
+    OperationType value();
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/aspect/AutoFillAspect.java
+package com.sky.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
+
+/**
+ * 自定义切面，实现公共字段自动填充处理逻辑
+ */
+@Aspect
+@Component
+@Slf4j
+public class AutoFillAspect &#123;
+    /**
+     * 切入点
+     */
+    // 拦截类 + 注解的东西
+    @Pointcut(&quot;execution(* com.sky.mapper.*.*(..)) &amp;&amp; @annotation(com.sky.annotation.AutoFill)&quot;)
+    public void autoFillPointCut()&#123;&#125;
+
+    // 前置通知，在通知中进行公共字段的赋值
+    @Before(&quot;autoFillPointCut()&quot;)
+    public void autoFill(JoinPoint joinPoint) &#123;
+        log.info(&quot;开始公共字段自动填充...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
+//只在update和insert里加
+@Mapper
+public interface EmployeeMapper &#123;
+ /**
+     * 插入员工数据
+     * @param employee
+     */
+    @Insert(&quot;insert into employee (name, username, password, phone, sex, id_number, create_time, update_time, create_user, update_user,status) &quot; +
+            &quot;values &quot; +
+            &quot;(#&#123;name&#125;,#&#123;username&#125;,#&#123;password&#125;,#&#123;phone&#125;,#&#123;sex&#125;,#&#123;idNumber&#125;,#&#123;createTime&#125;,#&#123;updateTime&#125;,#&#123;createUser&#125;,#&#123;updateUser&#125;,#&#123;status&#125;)&quot;)
+    @AutoFill(value = OperationType.INSERT)
+    void insert(Employee employee);
+/**
+     * 分页查询 [动态sql 不用注解了 写道 EmployeeMapper.xml]
+     * @param employeePageQueryDTO
+     * @return
+     */
+    Page&lt;Employee&gt; pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
+    @AutoFill(value = OperationType.UPDATE)
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/CategoryMapper.java
+package com.sky.mapper;
+
+import com.github.pagehelper.Page;
+import com.sky.annotation.AutoFill;
+import com.sky.enumeration.OperationType;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
+@Mapper
+public interface CategoryMapper &#123;
+
+    /**
+     * 插入数据
+     * @param category
+     */
+    @Insert(&quot;insert into category(type, name, sort, status, create_time, update_time, create_user, update_user)&quot; +
+            &quot; VALUES&quot; +
+            &quot; (#&#123;type&#125;, #&#123;name&#125;, #&#123;sort&#125;, #&#123;status&#125;, #&#123;createTime&#125;, #&#123;updateTime&#125;, #&#123;createUser&#125;, #&#123;updateUser&#125;)&quot;)
+    @AutoFill(value = OperationType.INSERT)
+    void insert(Category category);
+
+    /**
+     * 根据id修改分类
+     * @param category
+     */
+    void update(Category category);
+    @AutoFill(value = OperationType.UPDATE)
+&#125;
+</code></pre>
+<h4 id="代码开发2"><a href="#代码开发2" class="headerlink" title="代码开发2"></a>代码开发2</h4><blockquote>
+<p>公共属性赋值后 Service里的 save(Employee employee) → employee.setCreateUser(BaseContext.getCurrentId())就不用再去赋值了</p>
+</blockquote>
+<h6 id="这个写完后-就可以把Service里的一些employee-setXXX的删除了-因为公共属性只需要加-AutoFill"><a href="#这个写完后-就可以把Service里的一些employee-setXXX的删除了-因为公共属性只需要加-AutoFill" class="headerlink" title="这个写完后 就可以把Service里的一些employee.setXXX的删除了 因为公共属性只需要加@AutoFill"></a>这个写完后 就可以把Service里的一些employee.setXXX的删除了 因为公共属性只需要加@AutoFill</h6><pre><code class="java">sky-server  com/sky/annotation/AutoFill.java 不变
+sky-server  com/sky/aspect/AutoFillAspect.java
+package com.sky.aspect;
+
+import com.sky.annotation.AutoFill;
+import com.sky.constant.AutoFillConstant;
+import com.sky.context.BaseContext;
+import com.sky.enumeration.OperationType;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+
+/**
+ * 自定义切面，实现公共字段自动填充处理逻辑
+ */
+@Aspect
+@Component
+@Slf4j
+public class AutoFillAspect &#123;
+    /**
+     * 切入点
+     */
+    // 拦截类 + 注解的东西
+    @Pointcut(&quot;execution(* com.sky.mapper.*.*(..)) &amp;&amp; @annotation(com.sky.annotation.AutoFill)&quot;)
+    public void autoFillPointCut()&#123;&#125;
+
+    // 前置通知，在通知中进行公共字段的赋值
+    @Before(&quot;autoFillPointCut()&quot;)
+    public void autoFill(JoinPoint joinPoint) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException &#123;
+        log.info(&quot;开始公共字段自动填充...&quot;);
+
+        // 获取当前被拦截的方法上的数据库操作类型(Update/Insert)
+        MethodSignature signature = (MethodSignature)joinPoint.getSignature(); //方法签名对象
+        AutoFill autoFill = signature.getMethod().getAnnotation(AutoFill.class); //获得方法上的注解对象
+        OperationType operationType = autoFill.value();//获得数据库操作类型
+
+        // 获取当当前被拦截的方法的参数--实体对象 (Employee employee)
+        Object[] args = joinPoint.getArgs();
+        if (args == null || args.length == 0) &#123; //没有参数不执行
+            return;
+        &#125;
+        Object entity = args[0]; //获得第一个
+
+        // 准备赋值数据
+        LocalDateTime now = LocalDateTime.now();
+        Long currentId = BaseContext.getCurrentId();
+
+        // 根据当前不同的操作类型，对对应的属性通过反射来赋值
+        if (operationType == OperationType.INSERT) &#123;
+            // 为4个公共字段赋值
+            Method setCreateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
+            Method setCreateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_USER, Long.class);
+            Method setUpdateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
+            Method setUpdateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
+
+
+            //通过反射对对象赋值属性
+            setCreateTime.invoke(entity,now);
+            setCreateUser.invoke(entity,currentId);
+            setUpdateTime.invoke(entity,now);
+            setUpdateUser.invoke(entity,currentId);
+        &#125; else if (operationType == OperationType.UPDATE) &#123;
+            // 为2个公共字段赋值
+            Method setUpdateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
+            Method setUpdateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
+
+            //通过反射对对象赋值属性
+            setUpdateTime.invoke(entity,now);
+            setUpdateUser.invoke(entity,currentId);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="新增菜品"><a href="#新增菜品" class="headerlink" title="新增菜品"></a>新增菜品</h3><p>5</p>
 
             
         </div>
@@ -2600,7 +3085,7 @@ public interface SetmealMapper &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -3521,7 +4006,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#1bccbc>
                 前端
             </a>
         </span>
@@ -23184,7 +23669,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -26388,7 +26873,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -28663,7 +29148,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -31593,7 +32078,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -38687,7 +39172,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
