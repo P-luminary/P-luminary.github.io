@@ -1053,7 +1053,7 @@ public class EmployeeAddWindow extends JFrame &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#ffa2c4>
                 HM
             </a>
         </span>
@@ -3474,6 +3474,361 @@ public interface DishFlavorMapper &#123;
     &lt;/insert&gt;
 &lt;/mapper&gt;
 </code></pre>
+<h3 id="菜品分页查询"><a href="#菜品分页查询" class="headerlink" title="菜品分页查询"></a>菜品分页查询</h3><blockquote>
+<p>菜品名称[         ]     菜品分类[         ]     售卖状态[         ]         [搜索]<br>菜品名称、图片、菜品分类、售价、售卖状态、最后操作事件、操作[修改 删除 启售,停售]<br>                                                                                                                            右下角 分页操作</p>
+</blockquote>
+<h6 id="业务规则：-3"><a href="#业务规则：-3" class="headerlink" title="业务规则："></a>业务规则：</h6><ul>
+<li>根据页码展示菜品信息</li>
+<li>每页展示10条数据</li>
+<li>分页查询时可以根据需要输入<strong>菜品名称、菜品分类、菜品状态</strong>进行查询</li>
+</ul>
+<h6 id="接口设计：-2"><a href="#接口设计：-2" class="headerlink" title="接口设计："></a>接口设计：</h6><p><strong>Path</strong>：&#x2F;admin&#x2F;dis&#x2F;page<br><strong>Method</strong>：GET</p>
+<h6 id="代码开发："><a href="#代码开发：" class="headerlink" title="代码开发："></a>代码开发：</h6><p>根据菜品分页查询接口定义设计对应的<strong>DTO</strong><br>根据菜品分页查询接口定义设计对应的<strong>VO</strong>[转成Json数据给前端]</p>
+<pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+@GetMapping(&quot;/page&quot;)
+    @ApiOperation(&quot;菜品分页查询&quot;)
+    public Result&lt;PageResult&gt; page(DishPageQueryDTO dishPageQueryDTO)&#123;
+        log.info(&quot;菜品分页查询：&#123;&#125;&quot;, dishPageQueryDTO);
+        PageResult pageResult = dishService.pageQuery(dishPageQueryDTO);
+        return Result.success(pageResult);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+package com.sky.service;
+
+import com.sky.dto.DishDTO;
+import com.sky.dto.DishPageQueryDTO;
+import com.sky.result.PageResult;
+
+public interface DishService &#123;
+    /**
+     * 新增菜品和对应的口味
+     * @param dishDTO
+     */
+    public void saveWithFlavour(DishDTO dishDTO);
+
+    /**
+     * 菜品分页查询
+     * @param dishPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+@Service
+@Slf4j
+public class DishServiceImpl implements DishService &#123;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private DishFlavorMapper dishFlavorMapper;
+ @Override
+    public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) &#123;
+        PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
+        Page&lt;DishVO&gt; page = dishMapper.pageQuery(dishPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+/**
+     * 菜品分页查询
+     * @param dishPageQueryDTO
+     * @return
+     */
+    Page&lt;DishVO&gt; pageQuery(DishPageQueryDTO dishPageQueryDTO);
+</code></pre>
+<pre><code class="java">sky-server  mapper/DishMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.DishMapper&quot;&gt;
+    &lt;insert id=&quot;insert&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
+        insert into dish (name, category_id, price, image, description, create_time, update_time, create_user,
+                          update_user, status)
+        values (#&#123;name&#125;, #&#123;categoryId&#125;, #&#123;price&#125;, #&#123;image&#125;, #&#123;description&#125;, #&#123;createTime&#125;, #&#123;updateTime&#125;, #&#123;createUser&#125;,
+                #&#123;updateUser&#125;, #&#123;status&#125;)
+    &lt;/insert&gt;
+    &lt;select id=&quot;pageQuery&quot; resultType=&quot;com.sky.vo.DishVO&quot;&gt;
+        select d.*, c.name as categoryName
+        from dish d
+            left join category c
+                on d.category_id=c.id
+        &lt;where&gt;
+            &lt;if test=&quot;name != null and name != &#39;&#39;&quot;&gt;
+                and d.name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and d.category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and d.status = #&#123;status&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by d.update_time desc
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="删除菜品"><a href="#删除菜品" class="headerlink" title="删除菜品"></a>删除菜品</h3><blockquote>
+<p>单个删除、批量删除、先停售后删除</p>
+</blockquote>
+<h6 id="业务规则：-4"><a href="#业务规则：-4" class="headerlink" title="业务规则："></a>业务规则：</h6><ul>
+<li>可以一次删除一个菜品，也可以批量删除菜品</li>
+</ul>
+<blockquote>
+<p><strong>Path</strong>: &#x2F;admin&#x2F;dish<br><strong>Method</strong>: DELETE<br><strong>数据库设计</strong>：<br>dish表 → id 【菜品】<br>dish_flavor表 → dish_id 【口味】<br>setmeal_dish表 → dish_id</p>
+</blockquote>
+<ul>
+<li>起售中的菜品不能删除</li>
+<li>被套餐关联的菜品不能删除</li>
+<li>删除菜品后，关联的口味数据也需要删除</li>
+</ul>
+<h6 id="代码开发：-1"><a href="#代码开发：-1" class="headerlink" title="代码开发："></a>代码开发：</h6><pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+ /**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(&quot;批量删除菜品&quot;)
+    //@RequestParam MVC动态解析字符串 ids提取出来
+    public Result delete(@RequestParam List&lt;Long&gt; ids) &#123; //ids
+        log.info(&quot;批量删除菜品：&#123;&#125;&quot;, ids);
+        dishService.deleteBatch(ids);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+ /**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    void deleteBatch(List&lt;Long&gt; ids);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+/**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    @Override
+    public void deleteBatch(List&lt;Long&gt; ids) &#123;
+        // 判断当前菜品是否能够删除--是否存在起售中的菜品？？ 取出id
+        for (Long id : ids) &#123;
+            Dish dish = dishMapper.getById(id);
+            if (dish.getStatus() == StatusConstant.ENABLE) &#123;
+                //当前菜品处于起售中，不能删除
+                throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
+            &#125;
+        &#125;
+
+        // 判断当前菜品是否能够删除--是否被套餐关联了
+        List&lt;Long&gt; setMealIds = setmealDishMapper.getSetmealIdsByDishId(ids);
+        if (setMealIds != null &amp;&amp; setMealIds.size() &gt; 0) &#123; //存在不允许删除
+            // 当前菜品被套餐关联了，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
+        &#125;
+        // 删除菜品表中的菜品数据
+        for (Long id : ids) &#123;
+            dishMapper.deleteById(id);
+            // 删除菜品关联的口味数据
+            dishFlavorMapper.deleteByDishId(id);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+/**
+     * 根据主键删除菜品数据
+     */
+
+    @Delete(&quot;delete from dish where id = #&#123;id&#125;&quot;)
+    void deleteById(Long id);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishFlavorMapper.java
+/**
+     * 根据菜品id删除对应的 口味数据
+     * @param id
+     */
+    @Delete(&quot;delete from dish_flavor where dish_id = #&#123;id&#125;&quot;)
+    void deleteByDishId(Long id);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/SetmealDishMapper.java
+package com.sky.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface SetmealDishMapper &#123;
+    /**
+     * 根据菜品id查询对应的套餐id
+     * @param dishIds
+     * @return
+     */
+    // select setmeal_id from setmeal_dish where dish_id in (1,2,3)
+    // 在mapper.xml中dishIds是形参  &lt;foreach collection=&quot;dishIds&quot;&gt;
+    List&lt;Long&gt; getSetmealIdsByDishId(List&lt;Long&gt; dishIds);
+&#125;
+</code></pre>
+<pre><code class="xml">sky-server  mapper/SetmealDishMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.SetmealDishMapper&quot;&gt;
+
+    &lt;select id=&quot;getSetmealIdsByDishId&quot; resultType=&quot;java.lang.Long&quot;&gt;
+        SELECT setmeal_id
+        FROM setmeal_dish
+        WHERE dish_id IN
+        &lt;foreach collection=&quot;dishIds&quot; item=&quot;dishId&quot; open=&quot;(&quot; separator=&quot;,&quot; close=&quot;)&quot;&gt;
+           #&#123;dishId&#125;
+        &lt;/foreach&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="修改菜品"><a href="#修改菜品" class="headerlink" title="修改菜品"></a>修改菜品</h3><h6 id="数据回显"><a href="#数据回显" class="headerlink" title="数据回显"></a>数据回显</h6><p><strong>接口设计：</strong></p>
+<ul>
+<li>根据id查询菜品</li>
+</ul>
+<blockquote>
+<p>口味也要回显<br><strong>Path:</strong>  &#x2F;admin&#x2F;dish&#x2F;{id}<br><strong>Method：</strong>GET</p>
+</blockquote>
+<ul>
+<li>根据类型查询分类(已实现)</li>
+<li>文件上传(已实现)</li>
+<li>修改菜品</li>
+</ul>
+<blockquote>
+<p>根据ID修改<br><strong>Path：</strong>&#x2F;admin&#x2F;dish<br><strong>Method：</strong>PUT</p>
+</blockquote>
+<h6 id="代码开发：-2"><a href="#代码开发：-2" class="headerlink" title="代码开发："></a>代码开发：</h6><p><strong>根据id查询菜品进行信息回显</strong></p>
+<pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+/**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询菜品&quot;)
+//  @PathVariable 注解用于从 URL 路径中的占位符参数中提取值，并将其绑定到方法参数上
+    public Result&lt;DishVO&gt; getById(@PathVariable long id) &#123;
+        log.info(&quot;根据id查询菜品：&#123;&#125;&quot;, id);
+        DishVO dishVO = dishService.getByIdWithFlavor(id);
+        return Result.success(dishVO);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+ /**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    DishVO getByIdWithFlavor(long id);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+/**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getByIdWithFlavor(long id) &#123;
+        // 根据id查询菜品数据
+        Dish dish = dishMapper.getById(id);
+        // 根据菜品id查询口味数据
+        List&lt;DishFlavor&gt; dishFlavors = dishFlavorMapper.getByDishId(id);
+
+        // 将查询到的数据封装到VO
+        DishVO dishVO = new DishVO();
+            // 属性拷贝
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(dishFlavors);
+
+        return dishVO;
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishFlavorMapper.java
+/**
+     * 根据菜品id查询对应的口味数据
+     * @param id
+     * @return
+     */
+    @Select(&quot;select * from dish_flavor where dish_id = #&#123;id&#125;&quot;)
+    List&lt;DishFlavor&gt; getByDishId(long id);
+</code></pre>
+<p><strong>修改菜品接口</strong></p>
+<pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+/**
+     * 根据id修改菜品和对应的口味数据
+     * @param dishDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;修改菜品&quot;)
+    public Result update(@RequestBody DishDTO dishDTO) &#123;
+        log.info(&quot;修改菜品：&#123;&#125;&quot;, dishDTO);
+        dishService.updateWithFlavor(dishDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+ /**
+     * 根据id修改菜品和对应的口味数据
+     * @param dishDTO
+     * @return
+     */
+    void updateWithFlavor(DishDTO dishDTO);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+/**
+     * 根据id修改菜品和对应的口味数据
+     * @param dishDTO
+     * @return
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) &#123;
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+
+        // 修改菜品表基本信息 只是基础信息噢
+        dishMapper.update(dish);
+        // 先删掉原先的
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+        // 再重新插入新的
+        List&lt;DishFlavor&gt; flavors = dishDTO.getFlavors();
+        if (flavors != null &amp;&amp; flavors.size() &gt; 0) &#123;
+            flavors.forEach(dishFlavor -&gt; &#123;
+                dishFlavor.setDishId(dishDTO.getId());
+            &#125;);
+            // 向口味表插入n条数据 集合对象批量传入不用集合
+            dishFlavorMapper.insertBatch(flavors);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+ /**
+     * 根据id修改菜品和对应的口味数据
+     * @param dish
+     */
+    //有时间和修改人 不要忘记自动填充
+    @AutoFill(value = OperationType.UPDATE)
+    void update(Dish dish);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/DishMapper.xml
+&lt;update id=&quot;update&quot;&gt;
+        update dish
+        &lt;set&gt;
+            &lt;if
+                test=&quot;name != null and name != &#39;&#39;&quot;&gt;
+                name = #&#123;name&#125;,
+            &lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+</code></pre>
 
             
         </div>
@@ -3488,7 +3843,7 @@ public interface DishFlavorMapper &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -4409,7 +4764,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -24072,7 +24427,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -27122,7 +27477,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -27276,7 +27631,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#00bcd4>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -29551,7 +29906,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -32481,7 +32836,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -34548,7 +34903,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -39575,7 +39930,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
