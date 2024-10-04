@@ -1053,7 +1053,7 @@ public class EmployeeAddWindow extends JFrame &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#1bccbc>
                 HM
             </a>
         </span>
@@ -3829,6 +3829,721 @@ public interface SetmealDishMapper &#123;
         where id = #&#123;id&#125;
     &lt;/update&gt;
 </code></pre>
+<h5 id="菜品起售停售"><a href="#菜品起售停售" class="headerlink" title="菜品起售停售"></a>菜品起售停售</h5><pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+/**
+     * 菜品起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;菜品起售停售&quot;)
+    public Result&lt;String&gt; startOrStop(@PathVariable Integer status, Long id) &#123;
+        dishService.startOrStop(status, id);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+/**
+     * 菜品起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    void startOrStop(Integer status, Long id);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+/**
+     * 菜品起售停售
+     * @param status
+     * @param id
+     */
+@Override
+    public void startOrStop(Integer status, Long id) &#123;
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status)
+                .build();
+        dishMapper.update(dish);
+
+        if (status == StatusConstant.DISABLE) &#123;
+            // 如果是停售操作，还需要将包含当前菜品的套餐也停售
+            List&lt;Long&gt; dishIds = new ArrayList&lt;&gt;();
+            dishIds.add(id);
+            // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
+            List&lt;Long&gt; setmealIds = setmealDishMapper.getSetmealIdsByDishId(dishIds);
+            if (setmealIds != null &amp;&amp; setmealIds.size() &gt; 0) &#123;
+                for (Long setmealId : setmealIds) &#123;
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+                    setmealMapper.update(setmeal);
+                &#125;
+            &#125;
+
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/SetmealMapper.java
+/**
+     * 根据id修改套餐
+     *
+     * @param setmeal
+     */
+    @AutoFill(OperationType.UPDATE)
+    void update(Setmeal setmeal);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/SetmealMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.SetmealMapper&quot;&gt;
+    &lt;resultMap id=&quot;setmealAndDishMap&quot; type=&quot;com.sky.vo.SetmealVO&quot; autoMapping=&quot;true&quot;&gt;
+        &lt;result column=&quot;id&quot; property=&quot;id&quot;/&gt;
+        &lt;collection property=&quot;setmealDishes&quot; ofType=&quot;SetmealDish&quot;&gt;
+            &lt;result column=&quot;sd_id&quot; property=&quot;id&quot;/&gt;
+            &lt;result column=&quot;setmeal_id&quot; property=&quot;setmealId&quot;/&gt;
+            &lt;result column=&quot;dish_id&quot; property=&quot;dishId&quot;/&gt;
+            &lt;result column=&quot;sd_name&quot; property=&quot;name&quot;/&gt;
+            &lt;result column=&quot;sd_price&quot; property=&quot;price&quot;/&gt;
+            &lt;result column=&quot;copies&quot; property=&quot;copies&quot;/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+    &lt;update id=&quot;update&quot; parameterType=&quot;Setmeal&quot;&gt;
+        update setmeal
+        &lt;set&gt;
+            &lt;if test=&quot;name != null&quot;&gt;
+                name = #&#123;name&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                category_id = #&#123;categoryId&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;price != null&quot;&gt;
+                price = #&#123;price&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                status = #&#123;status&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;description != null&quot;&gt;
+                description = #&#123;description&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;image != null&quot;&gt;
+                image = #&#123;image&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateTime != null&quot;&gt;
+                update_time = #&#123;updateTime&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateUser != null&quot;&gt;
+                update_user = #&#123;updateUser&#125;
+            &lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h4 id="修改套餐那些事"><a href="#修改套餐那些事" class="headerlink" title="修改套餐那些事"></a>修改套餐<del>那些事</del></h4><pre><code class="java">sky-server  com/sky/controller/admin/SetmealController.java
+package com.sky.controller.admin;
+
+import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.result.PageResult;
+import com.sky.result.Result;
+import com.sky.service.SetmealService;
+import com.sky.vo.SetmealVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 套餐管理
+ */
+@RestController
+@RequestMapping(&quot;/admin/setmeal&quot;)
+@Api(tags = &quot;套餐相关接口&quot;)
+@Slf4j
+public class SetmealController &#123;
+
+    @Autowired
+    private SetmealService setmealService;
+
+    /**
+     * 新增套餐
+     *
+     * @param setmealDTO
+     * @return
+     */
+    @PostMapping
+    @ApiOperation(&quot;新增套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,key = &quot;#setmealDTO.categoryId&quot;)//key: setmealCache::100
+    public Result save(@RequestBody SetmealDTO setmealDTO) &#123;
+        setmealService.saveWithDish(setmealDTO);
+        return Result.success();
+    &#125;
+
+    /**
+     * 分页查询
+     *
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    @GetMapping(&quot;/page&quot;)
+    @ApiOperation(&quot;分页查询&quot;)
+    public Result&lt;PageResult&gt; page(SetmealPageQueryDTO setmealPageQueryDTO) &#123;
+        PageResult pageResult = setmealService.pageQuery(setmealPageQueryDTO);
+        return Result.success(pageResult);
+    &#125;
+
+    /**
+     * 批量删除套餐
+     *
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(&quot;批量删除套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result delete(@RequestParam List&lt;Long&gt; ids) &#123;
+        setmealService.deleteBatch(ids);
+        return Result.success();
+    &#125;
+
+    /**
+     * 根据id查询套餐，用于修改页面回显数据
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询套餐&quot;)
+    public Result&lt;SetmealVO&gt; getById(@PathVariable Long id) &#123;
+        SetmealVO setmealVO = setmealService.getByIdWithDish(id);
+        return Result.success(setmealVO);
+    &#125;
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;修改套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result update(@RequestBody SetmealDTO setmealDTO) &#123;
+        setmealService.update(setmealDTO);
+        return Result.success();
+    &#125;
+
+    /**
+     * 套餐起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;套餐起售停售&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result startOrStop(@PathVariable Integer status, Long id) &#123;
+        setmealService.startOrStop(status, id);
+        return Result.success();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/SetmealService.java
+package com.sky.service;
+
+import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Setmeal;
+import com.sky.result.PageResult;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.SetmealVO;
+
+import java.util.List;
+
+public interface SetmealService &#123;
+
+    /**
+     * 新增套餐，同时需要保存套餐和菜品的关联关系
+     *
+     * @param setmealDTO
+     */
+    void saveWithDish(SetmealDTO setmealDTO);
+
+    /**
+     * 分页查询
+     *
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO);
+
+    /**
+     * 批量删除套餐
+     *
+     * @param ids
+     */
+    void deleteBatch(List&lt;Long&gt; ids);
+
+    /**
+     * 根据id查询套餐和关联的菜品数据
+     *
+     * @param id
+     * @return
+     */
+    SetmealVO getByIdWithDish(Long id);
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     */
+    void update(SetmealDTO setmealDTO);
+
+    /**
+     * 套餐起售、停售
+     *
+     * @param status
+     * @param id
+     */
+    void startOrStop(Integer status, Long id);
+
+    /**
+     * 条件查询
+     * @param setmeal
+     * @return
+     */
+    List&lt;Setmeal&gt; list(Setmeal setmeal);
+
+    /**
+     * 根据id查询菜品选项
+     * @param id
+     * @return
+     */
+    List&lt;DishItemVO&gt; getDishItemById(Long id);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/SetmealServiceImpl.java
+package com.sky.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
+import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
+import com.sky.entity.Setmeal;
+import com.sky.entity.SetmealDish;
+import com.sky.exception.DeletionNotAllowedException;
+import com.sky.exception.SetmealEnableFailedException;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
+import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.SetmealVO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * 套餐业务实现
+ */
+@Service
+@Slf4j
+public class SetmealServiceImpl implements SetmealService &#123;
+
+    @Autowired
+    private SetmealMapper setmealMapper;
+    @Autowired
+    private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private DishMapper dishMapper;
+
+
+    /**
+     * 新增套餐，同时需要保存套餐和菜品的关联关系
+     *
+     * @param setmealDTO
+     */
+    @Transactional
+    public void saveWithDish(SetmealDTO setmealDTO) &#123;
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+
+        //向套餐表插入数据
+        setmealMapper.insert(setmeal);
+
+        //获取生成的套餐id
+        Long setmealId = setmeal.getId();
+
+        List&lt;SetmealDish&gt; setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -&gt; &#123;
+            setmealDish.setSetmealId(setmealId);
+        &#125;);
+
+        //保存套餐和菜品的关联关系
+        setmealDishMapper.insertBatch(setmealDishes);
+    &#125;
+
+    /**
+     * 分页查询
+     *
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) &#123;
+        int pageNum = setmealPageQueryDTO.getPage();
+        int pageSize = setmealPageQueryDTO.getPageSize();
+
+        PageHelper.startPage(pageNum, pageSize);
+        Page&lt;SetmealVO&gt; page = setmealMapper.pageQuery(setmealPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+
+    /**
+     * 批量删除套餐
+     *
+     * @param ids
+     */
+    @Transactional
+    public void deleteBatch(List&lt;Long&gt; ids) &#123;
+        ids.forEach(id -&gt; &#123;
+            Setmeal setmeal = setmealMapper.getById(id);
+            if (StatusConstant.ENABLE == setmeal.getStatus()) &#123;
+                //起售中的套餐不能删除
+                throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
+            &#125;
+        &#125;);
+
+        ids.forEach(setmealId -&gt; &#123;
+            //删除套餐表中的数据
+            setmealMapper.deleteById(setmealId);
+            //删除套餐菜品关系表中的数据
+            setmealDishMapper.deleteBySetmealId(setmealId);
+        &#125;);
+    &#125;
+
+    /**
+     * 根据id查询套餐和套餐菜品关系
+     *
+     * @param id
+     * @return
+     */
+    public SetmealVO getByIdWithDish(Long id) &#123;
+        SetmealVO setmealVO = setmealMapper.getByIdWithDish(id);
+        return setmealVO;
+    &#125;
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     */
+    @Transactional
+    public void update(SetmealDTO setmealDTO) &#123;
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+
+        //1、修改套餐表，执行update
+        setmealMapper.update(setmeal);
+
+        //套餐id
+        Long setmealId = setmealDTO.getId();
+
+        //2、删除套餐和菜品的关联关系，操作setmeal_dish表，执行delete
+        setmealDishMapper.deleteBySetmealId(setmealId);
+
+        List&lt;SetmealDish&gt; setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -&gt; &#123;
+            setmealDish.setSetmealId(setmealId);
+        &#125;);
+        //3、重新插入套餐和菜品的关联关系，操作setmeal_dish表，执行insert
+        setmealDishMapper.insertBatch(setmealDishes);
+    &#125;
+
+    /**
+     * 套餐起售、停售
+     *
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) &#123;
+        //起售套餐时，判断套餐内是否有停售菜品，有停售菜品提示&quot;套餐内包含未启售菜品，无法启售&quot;
+        if (status == StatusConstant.ENABLE) &#123;
+            //select a.* from dish a left join setmeal_dish b on a.id = b.dish_id where b.setmeal_id = ?
+            List&lt;Dish&gt; dishList = dishMapper.getBySetmealId(id);
+            if (dishList != null &amp;&amp; dishList.size() &gt; 0) &#123;
+                dishList.forEach(dish -&gt; &#123;
+                    if (StatusConstant.DISABLE == dish.getStatus()) &#123;
+                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                    &#125;
+                &#125;);
+            &#125;
+        &#125;
+
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        setmealMapper.update(setmeal);
+    &#125;
+
+    /**
+     * 条件查询
+     * @param setmeal
+     * @return
+     */
+    public List&lt;Setmeal&gt; list(Setmeal setmeal) &#123;
+        List&lt;Setmeal&gt; list = setmealMapper.list(setmeal);
+        return list;
+    &#125;
+
+    /**
+     * 根据id查询菜品选项
+     * @param id
+     * @return
+     */
+    public List&lt;DishItemVO&gt; getDishItemById(Long id) &#123;
+        return setmealMapper.getDishItemBySetmealId(id);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/SetmealMapper.java
+package com.sky.mapper;
+
+import com.github.pagehelper.Page;
+import com.sky.annotation.AutoFill;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Setmeal;
+import com.sky.enumeration.OperationType;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.SetmealVO;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
+import java.util.Map;
+
+@Mapper
+public interface SetmealMapper &#123;
+
+    /**
+     * 根据分类id查询套餐的数量
+     *
+     * @param id
+     * @return
+     */
+    @Select(&quot;select count(id) from setmeal where category_id = #&#123;categoryId&#125;&quot;)
+    Integer countByCategoryId(Long id);
+
+    /**
+     * 根据id修改套餐
+     *
+     * @param setmeal
+     */
+    @AutoFill(OperationType.UPDATE)
+    void update(Setmeal setmeal);
+
+    /**
+     * 新增套餐
+     *
+     * @param setmeal
+     */
+    @AutoFill(OperationType.INSERT)
+    void insert(Setmeal setmeal);
+
+    /**
+     * 分页查询
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    Page&lt;SetmealVO&gt; pageQuery(SetmealPageQueryDTO setmealPageQueryDTO);
+
+    /**
+     * 根据id查询套餐
+     * @param id
+     * @return
+     */
+    @Select(&quot;select * from setmeal where id = #&#123;id&#125;&quot;)
+    Setmeal getById(Long id);
+
+    /**
+     * 根据id删除套餐
+     * @param setmealId
+     */
+    @Delete(&quot;delete from setmeal where id = #&#123;id&#125;&quot;)
+    void deleteById(Long setmealId);
+
+    /**
+     * 根据id查询套餐和套餐菜品关系
+     * @param id
+     * @return
+     */
+    SetmealVO getByIdWithDish(Long id);
+
+    /**
+     * 动态条件查询套餐
+     * @param setmeal
+     * @return
+     */
+    List&lt;Setmeal&gt; list(Setmeal setmeal);
+
+    /**
+     * 根据套餐id查询菜品选项
+     * @param setmealId
+     * @return
+     */
+    @Select(&quot;select sd.name, sd.copies, d.image, d.description &quot; +
+            &quot;from setmeal_dish sd left join dish d on sd.dish_id = d.id &quot; +
+            &quot;where sd.setmeal_id = #&#123;setmealId&#125;&quot;)
+    List&lt;DishItemVO&gt; getDishItemBySetmealId(Long setmealId);
+
+    /**
+     * 根据条件统计套餐数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+&#125;
+</code></pre>
+<pre><code class="xml">sky-server  mapper/SetmealMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.SetmealMapper&quot;&gt;
+    &lt;resultMap id=&quot;setmealAndDishMap&quot; type=&quot;com.sky.vo.SetmealVO&quot; autoMapping=&quot;true&quot;&gt;
+        &lt;result column=&quot;id&quot; property=&quot;id&quot;/&gt;
+        &lt;collection property=&quot;setmealDishes&quot; ofType=&quot;SetmealDish&quot;&gt;
+            &lt;result column=&quot;sd_id&quot; property=&quot;id&quot;/&gt;
+            &lt;result column=&quot;setmeal_id&quot; property=&quot;setmealId&quot;/&gt;
+            &lt;result column=&quot;dish_id&quot; property=&quot;dishId&quot;/&gt;
+            &lt;result column=&quot;sd_name&quot; property=&quot;name&quot;/&gt;
+            &lt;result column=&quot;sd_price&quot; property=&quot;price&quot;/&gt;
+            &lt;result column=&quot;copies&quot; property=&quot;copies&quot;/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+    &lt;update id=&quot;update&quot; parameterType=&quot;Setmeal&quot;&gt;
+        update setmeal
+        &lt;set&gt;
+            &lt;if test=&quot;name != null&quot;&gt;
+                name = #&#123;name&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                category_id = #&#123;categoryId&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;price != null&quot;&gt;
+                price = #&#123;price&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                status = #&#123;status&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;description != null&quot;&gt;
+                description = #&#123;description&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;image != null&quot;&gt;
+                image = #&#123;image&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateTime != null&quot;&gt;
+                update_time = #&#123;updateTime&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;updateUser != null&quot;&gt;
+                update_user = #&#123;updateUser&#125;
+            &lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;Setmeal&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
+        insert into setmeal
+        (category_id, name, price, status, description, image, create_time, update_time, create_user, update_user)
+        values (#&#123;categoryId&#125;, #&#123;name&#125;, #&#123;price&#125;, #&#123;status&#125;, #&#123;description&#125;, #&#123;image&#125;, #&#123;createTime&#125;, #&#123;updateTime&#125;,
+                #&#123;createUser&#125;, #&#123;updateUser&#125;)
+    &lt;/insert&gt;
+
+    &lt;select id=&quot;pageQuery&quot; resultType=&quot;com.sky.vo.SetmealVO&quot;&gt;
+        select
+        s.*,c.name categoryName
+        from
+        setmeal s
+        left join
+        category c
+        on
+        s.category_id = c.id
+        &lt;where&gt;
+            &lt;if test=&quot;name != null&quot;&gt;
+                and s.name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and s.status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and s.category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by s.create_time desc
+    &lt;/select&gt;
+
+    &lt;select id=&quot;getByIdWithDish&quot; parameterType=&quot;long&quot; resultMap=&quot;setmealAndDishMap&quot;&gt;
+        select a.*,
+               b.id    sd_id,
+               b.setmeal_id,
+               b.dish_id,
+               b.name  sd_name,
+               b.price sd_price,
+               b.copies
+        from setmeal a
+                 left join
+             setmeal_dish b
+             on
+                 a.id = b.setmeal_id
+        where a.id = #&#123;id&#125;
+    &lt;/select&gt;
+
+    &lt;select id=&quot;list&quot; parameterType=&quot;Setmeal&quot; resultType=&quot;Setmeal&quot;&gt;
+        select * from setmeal
+        &lt;where&gt;
+            &lt;if test=&quot;name != null&quot;&gt;
+                and name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+
+    &lt;select id=&quot;countByMap&quot; resultType=&quot;java.lang.Integer&quot;&gt;
+        select count(id) from setmeal
+        &lt;where&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
 <h3 id="Redis入门-调整营业状态"><a href="#Redis入门-调整营业状态" class="headerlink" title="Redis入门 [调整营业状态]"></a>Redis入门 [调整营业状态]</h3><p>Redis是一个基于<strong>内存</strong>的 key-value 结构数据库</p>
 <ul>
 <li>基于内存存储，读写性能高</li>
@@ -3844,6 +4559,9 @@ public interface SetmealDishMapper &#123;
 </ul>
 <h3 id="Redis常用命令"><a href="#Redis常用命令" class="headerlink" title="Redis常用命令"></a>Redis常用命令</h3><ul>
 <li><p><strong>字符串操作命令</strong></p>
+<blockquote>
+<p>ValueOperations valueOperations &#x3D; redisTemplate.opsForValue();</p>
+</blockquote>
 <ul>
 <li>SET key value                      设置指定key的值</li>
 <li>GET key                                获取指定key的值</li>
@@ -3852,6 +4570,9 @@ public interface SetmealDishMapper &#123;
 </ul>
 </li>
 <li><p><strong>哈希操作命令</strong> [<strong>key → value(field1 value1,  field2 value2)</strong>]</p>
+<blockquote>
+<p>HashOperations hashOperations &#x3D; redisTemplate.opsForHash();</p>
+</blockquote>
 <p>Redis hash是一个string类型的field和value的映射表，hash特别适合用于存储对象</p>
 <ul>
 <li>HSET key field value   将哈希表key中的字段field的值设为value</li>
@@ -3862,6 +4583,9 @@ public interface SetmealDishMapper &#123;
 </ul>
 </li>
 <li><p><strong>列表操作命令</strong></p>
+<blockquote>
+<p>ListOperations listOperations &#x3D; redisTemplate.opsForList();</p>
+</blockquote>
 <ul>
 <li>LPUSH key value1 [value2]      将一个或多个值插入到列表头部</li>
 <li>LRANGE key start stop             获取列表指定范围内的元素</li>
@@ -3870,6 +4594,9 @@ public interface SetmealDishMapper &#123;
 </ul>
 </li>
 <li><p><strong>集合操作命令</strong></p>
+<blockquote>
+<p>SetOperations setOperations &#x3D; redisTemplate.opsForSet();</p>
+</blockquote>
 <p>Redis set是string类型的无序集合。集合成员是唯一的，集合中不能出现重复的数据</p>
 <ul>
 <li>SADD key member1 [member2]           向集合添加一个或多个成员 [无序插入]</li>
@@ -3881,6 +4608,9 @@ public interface SetmealDishMapper &#123;
 </ul>
 </li>
 <li><p><strong>有序列表操作命令</strong></p>
+<blockquote>
+<p>ZSetOperations zSetOperations &#x3D; redisTemplate.opsForZSet();</p>
+</blockquote>
 <p>Redis有序集合是string类型元素的集合，且不允许重复成员。每个元素都会关联一个double类型的分数</p>
 <ul>
 <li>ZADD key score1 member1 [score2 member2]  向有序集合添加一个或多个成员</li>
@@ -3899,6 +4629,478 @@ public interface SetmealDishMapper &#123;
 </ul>
 </li>
 </ul>
+<h3 id="在java中操作Redis-SpringDataRedis"><a href="#在java中操作Redis-SpringDataRedis" class="headerlink" title="在java中操作Redis_SpringDataRedis"></a>在java中操作Redis_SpringDataRedis</h3><p><span style = "color:red">序列化器：<strong>redisTemplate.setKeySerializer(new StringRedisSerializer());</strong></span></p>
+<h6 id="Redis的Java客户端很多"><a href="#Redis的Java客户端很多" class="headerlink" title="Redis的Java客户端很多"></a>Redis的Java客户端很多</h6><ul>
+<li>Jedis</li>
+<li>Lettuce</li>
+<li>Spring Data Redis</li>
+</ul>
+<p>Spring Data Redis 是 Spring 的一部分，对Redis底层开发包进行了高度封装<br>在Spring项目中，可以使用Spring Data Redis来简化操作</p>
+<h5 id="Spring-Data-Redis"><a href="#Spring-Data-Redis" class="headerlink" title="Spring Data Redis"></a>Spring Data Redis</h5><ul>
+<li><p>导入Spring Data Redis的maven坐标</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+    &lt;version&gt;2.7.3&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+</li>
+<li><p>配置Redis数据源</p>
+<pre><code class="yaml">spring:
+ redis:
+  host: localhost
+  port: 6379
+  password:
+</code></pre>
+</li>
+<li><p>编写配置类，创建RedisTemplate对象</p>
+<pre><code class="java">package com.sky.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+@Configuration
+@Slf4j
+public class RedisConfiguration &#123;
+
+    @Bean
+    public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory)&#123;
+        log.info(&quot;开始创建redis模板对象...&quot;);
+        RedisTemplate redisTemplate = new RedisTemplate();
+        //设置redis的连接工厂对象
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        //设置redis key的序列化器
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        return redisTemplate;
+    &#125;
+&#125;
+</code></pre>
+</li>
+<li><p>通过RedisTemplate对象操作Redis</p>
+</li>
+</ul>
+<h6 id="测试连接"><a href="#测试连接" class="headerlink" title="测试连接"></a>测试连接</h6><pre><code class="yaml">application.yml
+  redis:
+    host: $&#123;sky.redis.host&#125;
+    port: $&#123;sky.redis.port&#125;
+    database: $&#123;sky.redis.database&#125;
+</code></pre>
+<pre><code class="yaml">application-dev.yml
+  redis:
+    host: localhost
+    port: 6379
+    database: 1
+</code></pre>
+<pre><code class="java">sky-server  com/sky/config/RedisConfiguration.java
+package com.sky.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+@Configuration
+@Slf4j
+public class RedisConfiguration &#123;
+    @Bean
+    public RedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory)&#123;
+        log.info(&quot;开始创建redis模板对象...&quot;);
+        RedisTemplate redisTemplate = new RedisTemplate();
+        //设置redis的连接工厂对象
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        //设置redis key的序列化器 在图形化界面不出现乱码
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        return redisTemplate;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server【测试类】 com/sky/test/SpringDataRedisTest.java
+package com.sky.test;
+
+import com.mysql.cj.util.TimeUtil;
+import net.sf.jsqlparser.statement.select.KSQLWindow;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.*;
+
+import java.util.concurrent.TimeUnit;
+
+@SpringBootTest //测试完记得注释 不然每次启动类就会运行这个测试类
+public class SpringDataRedisTest &#123;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Test
+    public void testRedisTemplate()&#123;
+        System.out.println(redisTemplate);
+        //创建根据字符串、哈希、列表、集合、有序列表、通用命令的代码
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        HashOperations hashOperations = redisTemplate.opsForHash();
+        ListOperations listOperations = redisTemplate.opsForList();
+        SetOperations setOperations = redisTemplate.opsForSet();
+        ZSetOperations zSetOperations = redisTemplate.opsForZSet();
+    &#125;
+
+    /**
+     * 操作字符串类型的数据
+     */
+    @Test
+    public void testString()&#123;
+        // set get setex setnx
+        redisTemplate.opsForValue().set(&quot;city&quot;,&quot;北京&quot;);
+        String city = (String) redisTemplate.opsForValue().get(&quot;city&quot;);
+        System.out.println(city); // 北京
+
+        redisTemplate.opsForValue().set(&quot;code&quot;, &quot;1234&quot;, 3, TimeUnit.MINUTES);
+        // 第一次调用可以设置成功
+        redisTemplate.opsForValue().setIfAbsent(&quot;lock&quot;, &quot;1&quot;);
+        // 第二次不可以成功
+        redisTemplate.opsForValue().setIfAbsent(&quot;lock&quot;, &quot;2&quot;);
+        Object lock = redisTemplate.opsForValue().get(&quot;lock&quot;);
+        System.out.println(lock); // 1
+
+        Object lock2 = redisTemplate.opsForValue().get(&quot;locwwk&quot;);
+        System.out.println(lock2);// null
+    &#125;
+    
+    /**
+     * 操作哈希类型的数据
+     */
+    @Test
+    public void testHash()&#123;
+        //hset hget hdel hkeys havls
+        HashOperations hashOperations = redisTemplate.opsForHash();
+        hashOperations.put(&quot;100&quot;,&quot;name&quot;,&quot;tom&quot;);
+        hashOperations.put(&quot;100&quot;,&quot;age&quot;,&quot;20&quot;);
+
+        String name = (String) hashOperations.get(&quot;100&quot;,&quot;name&quot;);
+        System.out.println(name);
+
+        Set keys = hashOperations.keys(&quot;100&quot;);
+        System.out.println(keys);
+
+        List values = hashOperations.values(&quot;100&quot;);
+        System.out.println(values);
+
+        hashOperations.delete(&quot;100&quot;,&quot;age&quot;);
+/**
+     * 操作列表类型的数据
+     */
+    @Test
+    public void testList()&#123;
+        //lpush lrange rpop llen
+        ListOperations listOperations = redisTemplate.opsForList();
+
+        listOperations.leftPushAll(&quot;mylist&quot;,&quot;a&quot;,&quot;b&quot;,&quot;c&quot;);
+        listOperations.leftPush(&quot;mylist&quot;,&quot;d&quot;);
+
+        List mylist = listOperations.range(&quot;mylist&quot;, 0, -1);
+        System.out.println(mylist);
+
+        listOperations.rightPop(&quot;mylist&quot;);
+
+        Long size = listOperations.size(&quot;mylist&quot;);
+        System.out.println(size);
+    &#125;
+
+    /**
+     * 操作集合类型的数据
+     */
+    @Test
+    public void testSet()&#123;
+        //sadd smembers scard sinter sunion srem
+        SetOperations setOperations = redisTemplate.opsForSet();
+
+        setOperations.add(&quot;set1&quot;,&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;);
+        setOperations.add(&quot;set2&quot;,&quot;a&quot;,&quot;b&quot;,&quot;x&quot;,&quot;y&quot;);
+
+        Set members = setOperations.members(&quot;set1&quot;);
+        System.out.println(members);
+
+        Long size = setOperations.size(&quot;set1&quot;);
+        System.out.println(size);
+
+        Set intersect = setOperations.intersect(&quot;set1&quot;, &quot;set2&quot;);
+        System.out.println(intersect);
+
+        Set union = setOperations.union(&quot;set1&quot;, &quot;set2&quot;);
+        System.out.println(union);
+
+        setOperations.remove(&quot;set1&quot;,&quot;a&quot;,&quot;b&quot;);
+    &#125;
+
+    /**
+     * 操作有序集合类型的数据
+     */
+    @Test
+    public void testZset()&#123;
+        //zadd zrange zincrby zrem
+        ZSetOperations zSetOperations = redisTemplate.opsForZSet();
+
+        zSetOperations.add(&quot;zset1&quot;,&quot;a&quot;,10);
+        zSetOperations.add(&quot;zset1&quot;,&quot;b&quot;,12);
+        zSetOperations.add(&quot;zset1&quot;,&quot;c&quot;,9);
+
+        Set zset1 = zSetOperations.range(&quot;zset1&quot;, 0, -1);
+        System.out.println(zset1);
+
+        zSetOperations.incrementScore(&quot;zset1&quot;,&quot;c&quot;,10);
+
+        zSetOperations.remove(&quot;zset1&quot;,&quot;a&quot;,&quot;b&quot;);
+    &#125;
+
+    /**
+     * 通用命令操作
+     */
+    @Test
+    public void testCommon()&#123;
+        //keys exists type del
+        Set keys = redisTemplate.keys(&quot;*&quot;);
+        System.out.println(keys);
+
+        Boolean name = redisTemplate.hasKey(&quot;name&quot;);
+        Boolean set1 = redisTemplate.hasKey(&quot;set1&quot;);
+
+        for (Object key : keys) &#123;
+            DataType type = redisTemplate.type(key);
+            System.out.println(type.name());
+        &#125;
+
+        redisTemplate.delete(&quot;mylist&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="店铺营业状态设置-【存入Redis】"><a href="#店铺营业状态设置-【存入Redis】" class="headerlink" title="店铺营业状态设置 【存入Redis】"></a>店铺营业状态设置 【存入Redis】</h3><h6 id="接口设计：-3"><a href="#接口设计：-3" class="headerlink" title="接口设计："></a>接口设计：</h6><ul>
+<li><p>设置营业状态</p>
+<blockquote>
+<p><strong>Path</strong>：&#x2F;admin&#x2F;shop&#x2F;{status}<br><strong>Method</strong>：PUT<br>status   1    店铺营业状态：1为营业，0为打样</p>
+</blockquote>
+</li>
+<li><p>管理端查询营业状态</p>
+<blockquote>
+<p><strong>Path</strong>：&#x2F;<strong>admin</strong>&#x2F;shop&#x2F;status<br><strong>Method</strong>：GET</p>
+</blockquote>
+</li>
+<li><p>用户端查询营业状态</p>
+<blockquote>
+<p><strong>Path</strong>：&#x2F;<strong>user</strong>&#x2F;shop&#x2F;status<br><strong>Method</strong>：GET</p>
+</blockquote>
+</li>
+</ul>
+<p>★ ★ <strong>本项目约定</strong> ★ ★</p>
+<ul>
+<li><strong>管理端</strong>发出的请求，统一使用**&#x2F;admin**作为前缀</li>
+<li><strong>用户端</strong>发出的请求，统一使用**&#x2F;user**作为前缀</li>
+</ul>
+<p>营业状态数据存储方式：基于Redis的字符串来进行存储<br>key: SHOP_STATUS     value: 1                1为营业，0为打样</p>
+<h6 id="代码开发：-3"><a href="#代码开发：-3" class="headerlink" title="代码开发："></a>代码开发：</h6><pre><code class="java">sky-server  com/sky/controller/admin/ShopController.java
+package com.sky.controller.admin;
+
+import com.sky.result.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.*;
+
+@RestController(&quot;adminShopController&quot;)
+@RequestMapping(&quot;/admin/shop&quot;)
+@Api(tags = &quot;店铺相关接口&quot;)
+@Slf4j
+public class ShopController &#123;
+    public static final String KEY = &quot;SHOP_STATUS&quot;;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+    /**
+     * 设置店铺营业状态
+     * @param status
+     * @return
+     */
+    @PutMapping(&quot;/&#123;status&#125;&quot;) //动态取到status
+    @ApiOperation(&quot;设置店铺营业状态&quot;)
+    public Result setStatus(@PathVariable Integer status) &#123;
+        log.info(&quot;设置店铺的营业状态为：&#123;&#125;&quot;, status == 1 ? &quot;营业中&quot; : &quot;打样中&quot;);
+        redisTemplate.opsForValue().set(KEY, status);
+        return Result.success();
+    &#125;
+
+    /**
+     * 获取店铺的营业状态
+     * @return
+     */
+    @GetMapping(&quot;/status&quot;)
+    @ApiOperation(&quot;获取店铺的营业状态&quot;)
+    public Result&lt;Integer&gt; getStatus()&#123;
+        Integer status = (Integer) redisTemplate.opsForValue().get(KEY);
+        log.info(&quot;获取到的店铺营业状态为：&#123;&#125;&quot;,status == 1 ? &quot;营业中&quot; : &quot;打样中&quot;);
+        return Result.success(status);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/user/ShopController.java
+package com.sky.controller.user;
+
+import com.sky.result.Result;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.*;
+//@RestController(&quot;userShopController&quot;) 指定了这个控制器的名称为 userShopController
+//这有助于在应用中唯一标识这个控制器，便于管理和调用
+@RestController(&quot;userShopController&quot;)
+@RequestMapping(&quot;/user/shop&quot;)
+@Api(tags = &quot;店铺相关接口&quot;)
+@Slf4j
+public class ShopController &#123;
+    public static final String KEY = &quot;SHOP_STATUS&quot;;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    /**
+     * 获取店铺的营业状态
+     * @return
+     */
+    @GetMapping(&quot;/status&quot;)
+    @ApiOperation(&quot;获取店铺的营业状态&quot;)
+    public Result&lt;Integer&gt; getStatus()&#123;
+        Integer status = (Integer) redisTemplate.opsForValue().get(KEY);
+        log.info(&quot;获取到的店铺营业状态为：&#123;&#125;&quot;,status == 1 ? &quot;营业中&quot; : &quot;打样中&quot;);
+        return Result.success(status);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/config/WebMvcConfiguration.java
+// 设置两个接口文档方便在前端文档处调试【管理端+用户端】
+package com.sky.config;
+
+import com.sky.interceptor.JwtTokenAdminInterceptor;
+import com.sky.interceptor.JwtTokenUserInterceptor;
+import com.sky.json.JacksonObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+
+import java.util.List;
+
+/**
+ * 配置类，注册web层相关组件
+ */
+@Configuration
+@Slf4j
+public class WebMvcConfiguration extends WebMvcConfigurationSupport &#123;
+
+    @Autowired
+    private JwtTokenAdminInterceptor jwtTokenAdminInterceptor;
+    @Autowired
+    private JwtTokenUserInterceptor jwtTokenUserInterceptor;
+
+    /**
+     * 注册自定义拦截器
+     * @param registry
+     */
+    protected void addInterceptors(InterceptorRegistry registry) &#123;
+        log.info(&quot;开始注册自定义拦截器...&quot;);
+        registry.addInterceptor(jwtTokenAdminInterceptor)
+                .addPathPatterns(&quot;/admin/**&quot;)
+                .excludePathPatterns(&quot;/admin/employee/login&quot;);
+
+        registry.addInterceptor(jwtTokenUserInterceptor)
+                .addPathPatterns(&quot;/user/**&quot;)
+                .excludePathPatterns(&quot;/user/user/login&quot;)
+                .excludePathPatterns(&quot;/user/shop/status&quot;);
+    &#125;
+
+    @Bean
+    public Docket docket1()&#123;
+        log.info(&quot;准备生成接口文档...&quot;);
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title(&quot;苍穹外卖项目接口文档&quot;)
+                .version(&quot;2.0&quot;)
+                .description(&quot;苍穹外卖项目接口文档&quot;)
+                .build();
+
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .groupName(&quot;管理端接口&quot;)
+                .apiInfo(apiInfo)
+                .select()
+                //指定生成接口需要扫描的包
+                .apis(RequestHandlerSelectors.basePackage(&quot;com.sky.controller.admin&quot;))
+                .paths(PathSelectors.any())
+                .build();
+
+        return docket;
+    &#125;
+
+    @Bean
+    public Docket docket2()&#123;
+        log.info(&quot;准备生成接口文档...&quot;);
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title(&quot;苍穹外卖项目接口文档&quot;)
+                .version(&quot;2.0&quot;)
+                .description(&quot;苍穹外卖项目接口文档&quot;)
+                .build();
+
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .groupName(&quot;用户端接口&quot;)
+                .apiInfo(apiInfo)
+                .select()
+                //指定生成接口需要扫描的包
+                .apis(RequestHandlerSelectors.basePackage(&quot;com.sky.controller.user&quot;))
+                .paths(PathSelectors.any())
+                .build();
+
+        return docket;
+    &#125;
+
+    /**
+     * 设置静态资源映射，主要是访问接口文档（html、js、css）
+     * @param registry
+     */
+    protected void addResourceHandlers(ResourceHandlerRegistry registry) &#123;
+        log.info(&quot;开始设置静态资源映射...&quot;);
+        registry.addResourceHandler(&quot;/doc.html&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/webjars/&quot;);
+    &#125;
+
+    /**
+     * 扩展Spring MVC框架的消息转化器
+     * @param converters
+     */
+    protected void extendMessageConverters(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters) &#123;
+        log.info(&quot;扩展消息转换器...&quot;);
+        //创建一个消息转换器对象
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        //需要为消息转换器设置一个对象转换器，对象转换器可以将Java对象序列化为json数据
+        converter.setObjectMapper(new JacksonObjectMapper());
+        //将自己的消息转化器加入容器中
+        converters.add(0,converter);
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -3913,7 +5115,7 @@ public interface SetmealDishMapper &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -4834,7 +6036,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#1bccbc>
+            <a href="/tags/前端" style=color:#ff7d73>
                 前端
             </a>
         </span>
@@ -24497,7 +25699,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -27547,7 +28749,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -29976,7 +31178,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -32906,7 +34108,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -34973,7 +36175,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -40000,7 +41202,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
