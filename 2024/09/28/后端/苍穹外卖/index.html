@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2853,6 +2853,21 @@ public interface SetmealDishMapper &#123;
             dishFlavorMapper.insertBatch(flavors);
         &#125;
     &#125;
+/*
+这段代码中，将 dishDTO 的属性复制到 dish 对象的主要原因有以下几点：
+数据模型分离：
+dishDTO 通常用于数据传输，包含前端传来的所有数据。
+dish 是数据库实体类，只包含数据库表中的字段。
+安全性：
+使用 BeanUtils.copyProperties 可以避免将不必要的字段（如前端传来的额外属性）写入数据库。
+确保只有预期的字段被更新。
+数据校验：
+dishDTO 可以包含更多的验证逻辑或额外的属性，而 dish 对象则严格遵循数据库模型。
+通过这种方式，可以在更新前对数据进行进一步校验。
+事务管理：
+添加 @Transactional 注解确保整个更新过程在一个事务中完成。
+如果任何一步出错，整个事务都会回滚，保证数据一致性。
+*/
 </code></pre>
 <pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
  /**
@@ -2941,6 +2956,20 @@ public interface SetmealDishMapper &#123;
      */
     @AutoFill(OperationType.UPDATE)
     void update(Setmeal setmeal);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+
+    /**
+     * 根据套餐id查询菜品
+     * @param setmealId
+     * @return
+     */
+    @Select(&quot;select a.* from dish a left join setmeal_dish b on a.id = b.dish_id where b.setmeal_id = #&#123;setmealId&#125;&quot;)
+    List&lt;Dish&gt; getBySetmealId(Long setmealId);
+/*
+在 SQL 查询中添加筛选条件。
+确保返回的结果集中，setmeal_dish 表中的 setmeal_id 字段值与传入的 setmealId 参数值相匹配，从而获取与指定套餐 ID 相关的菜品列表。
+*/
 </code></pre>
 <pre><code class="xml">sky-server  mapper/SetmealMapper.xml
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
@@ -3284,7 +3313,12 @@ public class SetmealServiceImpl implements SetmealService &#123;
             setmealDishMapper.deleteBySetmealId(setmealId);
         &#125;);
     &#125;
-
+/**
+ids.forEach(id -&gt; &#123; ... &#125;)：对ids集合中的每个元素id执行大括号内的操作。
+id -&gt; &#123; ... &#125;：定义了一个接受单个参数id的函数，并执行大括号内的逻辑。
+在大括号内，根据id查询数据库获取套餐信息，并检查其状态，若状态符合启用条件，则抛出异常。
+**/
+    
     /**
      * 根据id查询套餐和套餐菜品关系
      *
@@ -3516,6 +3550,13 @@ public interface SetmealMapper &#123;
         where id = #&#123;id&#125;
     &lt;/update&gt;
 
+&lt;!--
+    &lt;insert&gt;：表示这是一个插入操作。
+    id=&quot;insert&quot;：指定这个 SQL 语句的唯一标识符，通常用于在 MyBatis 映射文件中引用此 SQL 语句。
+    parameterType=&quot;Setmeal&quot;：指定插入操作的参数类型为 Setmeal 类型。
+    useGeneratedKeys=&quot;true&quot;：指示 MyBatis 在执行插入操作后自动获取自动生成的主键。
+    keyProperty=&quot;id&quot;：指定将自动生成的主键值设置到对象的 id 属性上。
+--&gt;
     &lt;insert id=&quot;insert&quot; parameterType=&quot;Setmeal&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
         insert into setmeal
         (category_id, name, price, status, description, image, create_time, update_time, create_user, update_user)
@@ -4144,6 +4185,1747 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport &#123;
         converter.setObjectMapper(new JacksonObjectMapper());
         //将自己的消息转化器加入容器中
         converters.add(0,converter);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="HttpClient-amp-微信小程序开发"><a href="#HttpClient-amp-微信小程序开发" class="headerlink" title="HttpClient &amp; 微信小程序开发"></a>HttpClient &amp; 微信小程序开发</h3><h5 id="HttpClient"><a href="#HttpClient" class="headerlink" title="HttpClient"></a>HttpClient</h5><p>HttpClient 是 Apache Jakarta Common下的子项目，可以用来提供高效的、最新的、功能丰富的支持HTTP协议的客户端编程工具包，并且它支持HTTP协议最新的版本和建议</p>
+<pre><code class="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.httpcomponents&lt;/groupId&gt;
+    &lt;artifactId&gt;httpclient&lt;/artifactId&gt;
+    &lt;version&gt;4.5.13&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>核心API：</p>
+<ul>
+<li>HttpClient</li>
+<li><strong>HttpClients</strong></li>
+<li>CloseableHttpClient</li>
+<li>HttpGet</li>
+<li>HttpPost</li>
+</ul>
+<p>发送请求步骤：</p>
+<ul>
+<li>创建HttpClient对象</li>
+<li>创建Http请求对象</li>
+<li>调用HttpClient的execute方法发送请求</li>
+</ul>
+<h5 id="发送GET方式请求-要先把项目跑起来"><a href="#发送GET方式请求-要先把项目跑起来" class="headerlink" title="发送GET方式请求 [要先把项目跑起来]"></a>发送GET方式请求 [要先把项目跑起来]</h5><pre><code class="java">sky-server  com/sky/test/HttpClientTest.java
+package com.sky.test;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.IOException;
+
+@SpringBootTest
+public class HttpClientTest &#123;
+    /**
+     * 测试通过httpclient发送GET方式的请求
+     */
+
+    @Test
+    public void testGET() throws IOException &#123;
+        // 创建httpclient对象
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+
+        // 创建请求对象接口 (GET请求方式+请求地址)
+        HttpGet httpGet = new HttpGet(&quot;http://localhost:8080/user/shop/status&quot;);
+
+        // 发送请求，接受响应结果
+        CloseableHttpResponse response = httpClient.execute(httpGet);
+
+        // 获取服务端返回的状态码
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println(&quot;服务端返回的状态码为：&quot; + statusCode);
+
+
+        HttpEntity entity = response.getEntity();// 获得请求体
+        String body = EntityUtils.toString(entity);
+        System.out.println(&quot;服务端返回的数据为：&quot; + body);
+
+        // 关闭资源
+        response.close();
+        httpClient.close();
+    &#125;
+
+    /**
+     * 测试通过httpclient发送POST方式的请求
+     */
+&#125;
+--------------------------------------------------------------------------------
+服务端返回的状态码为：200
+服务端返回的数据为：&#123;&quot;code&quot;:1,&quot;msg&quot;:null,&quot;data&quot;:0&#125;
+</code></pre>
+<h5 id="发送POST方式请求-要先把项目跑起来"><a href="#发送POST方式请求-要先把项目跑起来" class="headerlink" title="发送POST方式请求 [要先把项目跑起来]"></a>发送POST方式请求 [要先把项目跑起来]</h5><pre><code class="java">sky-server   com/sky/test/HttpClientTest.java
+/**
+     * 测试通过httpclient发送POST方式的请求
+     */
+    @Test
+    public void testPOST() throws Exception&#123;
+        // 创建httpclient对象
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+
+        // 创建请求对象
+        HttpPost httpPost = new HttpPost(&quot;http://localhost:8080/admin/employee/login&quot;);
+        // 以json方式请求提交参数
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(&quot;username&quot;,&quot;admin&quot;);
+        jsonObject.put(&quot;password&quot;,&quot;123456&quot;);
+
+        StringEntity entity = new StringEntity(jsonObject.toString());
+        // 指定请求编码方式
+        entity.setContentEncoding(&quot;utf-8&quot;);
+        // 数据格式
+        entity.setContentType(&quot;application/json&quot;);
+        httpPost.setEntity(entity);
+
+        // 发送请求
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+
+        // 解析返回结果
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println(&quot;响应码为：&quot; + statusCode);
+
+        HttpEntity entity1 = response.getEntity();
+        String body = EntityUtils.toString(entity1);
+        System.out.println(&quot;响应数据为：&quot; + body);
+
+        // 关闭资源
+        response.close();
+        httpClient.close();
+    &#125;
+--------------------------------------------------------------------------------
+响应码为：200
+响应数据为：&#123;&quot;code&quot;:1,&quot;msg&quot;:null,&quot;data&quot;:&#123;&quot;id&quot;:1,&quot;userName&quot;:&quot;admin&quot;,&quot;name&quot;:&quot;管理员&quot;,&quot;token&quot;:&quot;eyJhbGciOiJIUzI1NiJ9.eyJlbXBJZCI6MSwiZXhwIjoxNzI4MTMyMzczfQ.8M2nIkgtHx8wpORNfhKEWjbprBV6OwC82wgYjAMxe2I&quot;&#125;&#125;
+</code></pre>
+<h6 id="封装后的HttpClientUtil"><a href="#封装后的HttpClientUtil" class="headerlink" title="封装后的HttpClientUtil"></a>封装后的HttpClientUtil</h6><pre><code class="java">package com.sky.utils;
+
+import com.alibaba.fastjson.JSONObject;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Http工具类
+ */
+public class HttpClientUtil &#123;
+
+    static final  int TIMEOUT_MSEC = 5 * 1000;
+
+    /**
+     * 发送GET方式请求
+     * @param url
+     * @param paramMap
+     * @return
+     */
+    public static String doGet(String url,Map&lt;String,String&gt; paramMap)&#123;
+        // 创建Httpclient对象
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+
+        String result = &quot;&quot;;
+        CloseableHttpResponse response = null;
+
+        try&#123;
+            URIBuilder builder = new URIBuilder(url);
+            if(paramMap != null)&#123;
+                for (String key : paramMap.keySet()) &#123;
+                    builder.addParameter(key,paramMap.get(key));
+                &#125;
+            &#125;
+            URI uri = builder.build();
+
+            //创建GET请求
+            HttpGet httpGet = new HttpGet(uri);
+
+            //发送请求
+            response = httpClient.execute(httpGet);
+
+            //判断响应状态
+            if(response.getStatusLine().getStatusCode() == 200)&#123;
+                result = EntityUtils.toString(response.getEntity(),&quot;UTF-8&quot;);
+            &#125;
+        &#125;catch (Exception e)&#123;
+            e.printStackTrace();
+        &#125;finally &#123;
+            try &#123;
+                response.close();
+                httpClient.close();
+            &#125; catch (IOException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+        return result;
+    &#125;
+
+    /**
+     * 发送POST方式请求
+     * @param url
+     * @param paramMap
+     * @return
+     * @throws IOException
+     */
+    public static String doPost(String url, Map&lt;String, String&gt; paramMap) throws IOException &#123;
+        // 创建Httpclient对象
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpResponse response = null;
+        String resultString = &quot;&quot;;
+
+        try &#123;
+            // 创建Http Post请求
+            HttpPost httpPost = new HttpPost(url);
+
+            // 创建参数列表
+            if (paramMap != null) &#123;
+                List&lt;NameValuePair&gt; paramList = new ArrayList();
+                for (Map.Entry&lt;String, String&gt; param : paramMap.entrySet()) &#123;
+                    paramList.add(new BasicNameValuePair(param.getKey(), param.getValue()));
+                &#125;
+                // 模拟表单
+                UrlEncodedFormEntity entity = new UrlEncodedFormEntity(paramList);
+                httpPost.setEntity(entity);
+            &#125;
+
+            httpPost.setConfig(builderRequestConfig());
+
+            // 执行http请求
+            response = httpClient.execute(httpPost);
+
+            resultString = EntityUtils.toString(response.getEntity(), &quot;UTF-8&quot;);
+        &#125; catch (Exception e) &#123;
+            throw e;
+        &#125; finally &#123;
+            try &#123;
+                response.close();
+            &#125; catch (IOException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+        return resultString;
+    &#125;
+
+    /**
+     * 发送POST方式请求
+     * @param url
+     * @param paramMap
+     * @return
+     * @throws IOException
+     */
+    public static String doPost4Json(String url, Map&lt;String, String&gt; paramMap) throws IOException &#123;
+        // 创建Httpclient对象
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpResponse response = null;
+        String resultString = &quot;&quot;;
+
+        try &#123;
+            // 创建Http Post请求
+            HttpPost httpPost = new HttpPost(url);
+
+            if (paramMap != null) &#123;
+                //构造json格式数据
+                JSONObject jsonObject = new JSONObject();
+                for (Map.Entry&lt;String, String&gt; param : paramMap.entrySet()) &#123;
+                    jsonObject.put(param.getKey(),param.getValue());
+                &#125;
+                StringEntity entity = new StringEntity(jsonObject.toString(),&quot;utf-8&quot;);
+                //设置请求编码
+                entity.setContentEncoding(&quot;utf-8&quot;);
+                //设置数据类型
+                entity.setContentType(&quot;application/json&quot;);
+                httpPost.setEntity(entity);
+            &#125;
+
+            httpPost.setConfig(builderRequestConfig());
+
+            // 执行http请求
+            response = httpClient.execute(httpPost);
+
+            resultString = EntityUtils.toString(response.getEntity(), &quot;UTF-8&quot;);
+        &#125; catch (Exception e) &#123;
+            throw e;
+        &#125; finally &#123;
+            try &#123;
+                response.close();
+            &#125; catch (IOException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+        return resultString;
+    &#125;
+    private static RequestConfig builderRequestConfig() &#123;
+        return RequestConfig.custom()
+                .setConnectTimeout(TIMEOUT_MSEC)
+                .setConnectionRequestTimeout(TIMEOUT_MSEC)
+                .setSocketTimeout(TIMEOUT_MSEC).build();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="微信小程序开发"><a href="#微信小程序开发" class="headerlink" title="微信小程序开发"></a>微信小程序开发</h3><p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/wxamp/home/guide?lang=zh_CN&token=244469372">小程序 (qq.com)</a></p>
+<blockquote>
+<p>详情 → 本地设置 → [取消勾选]不校验合法域名…</p>
+</blockquote>
+<h5 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h5><ul>
+<li><p>了解小程序目录结构</p>
+<p>小程序包含一个<strong>描述整体程序</strong>的<u>app</u>和多个和<strong>描述各自页面</strong>的<u>page</u>，一个小程序主体部分由三个文件组村，必须放在项目的根目录</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>必需</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>app.js</td>
+<td>是</td>
+<td>小程序逻辑</td>
+</tr>
+<tr>
+<td>app.json</td>
+<td>是</td>
+<td>小程序公共配置</td>
+</tr>
+<tr>
+<td>app.wxss</td>
+<td>否</td>
+<td>小程序公共样式表</td>
+</tr>
+</tbody></table>
+<h6 id="一个小程序页面由四个文件组成-pages-→-index-→-…"><a href="#一个小程序页面由四个文件组成-pages-→-index-→-…" class="headerlink" title="一个小程序页面由四个文件组成 [pages → index → …]"></a>一个小程序页面由四个文件组成 [pages → index → …]</h6><table>
+<thead>
+<tr>
+<th>文件类型</th>
+<th>必需</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>js</td>
+<td>是</td>
+<td>页面逻辑</td>
+</tr>
+<tr>
+<td>wxml</td>
+<td>是</td>
+<td>页面结构</td>
+</tr>
+<tr>
+<td>json</td>
+<td>否</td>
+<td>页面配置</td>
+</tr>
+<tr>
+<td>wxss</td>
+<td>否</td>
+<td>页面样式表</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>编写测试小程序代码</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_23385943/article/details/142336381?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_utm_term~default-0-142336381-blog-119914069.235%5Ev43%5Epc_blog_bottom_relevance_base6&spm=1001.2101.3001.4242.1&utm_relevant_index=3">微信getUserProfile不弹出授权框_wx.getuserprofile没有弹窗-CSDN博客</a></p>
+<pre><code class="json">app.json 【外面一层】
+&#123;
+  &quot;pages&quot;: [
+    &quot;pages/index/index&quot;,
+    &quot;pages/logs/logs&quot;
+  ],
+  &quot;window&quot;: &#123;
+    &quot;navigationBarTextStyle&quot;: &quot;black&quot;,
+    &quot;navigationBarTitleText&quot;: &quot;Sky-Delivery&quot;,
+    &quot;navigationBarBackgroundColor&quot;: &quot;#ffffff&quot;
+  &#125;,
+  &quot;style&quot;: &quot;v2&quot;,
+  &quot;componentFramework&quot;: &quot;glass-easel&quot;,
+  &quot;sitemapLocation&quot;: &quot;sitemap.json&quot;,
+  &quot;lazyCodeLoading&quot;: &quot;requiredComponents&quot;
+&#125;
+</code></pre>
+<pre><code class="xml">pages/index/index.wxml
+&lt;view class=&quot;container&quot;&gt;
+  &lt;view&gt;
+    &#123;&#123;msg&#125;&#125;
+  &lt;/view&gt;
+
+  &lt;view&gt;
+    &lt;button bindtap=&quot;getUserInfo&quot; type=&quot;primary&quot;&gt;获取用户信息&lt;/button&gt;
+    昵称：&#123;&#123;nickName&#125;&#125;
+    &lt;image src=&quot;&#123;&#123;url&#125;&#125;&quot; style=&quot;width: 200px;height: 200px;&quot;&gt;&lt;/image&gt;
+    &lt;button bindtap=&quot;wxLogin&quot; type=&quot;warn&quot;&gt;微信登录&lt;/button&gt;
+    授权码：&#123;&#123;code&#125;&#125;
+  &lt;/view&gt;
+
+  &lt;view&gt;
+    &lt;button bindtap=&quot;sendRequest&quot; type=&quot;default&quot;&gt;发送请求&lt;/button&gt;
+  &lt;/view&gt;
+&lt;/view&gt;
+</code></pre>
+<pre><code class="js">pages/index/index.js
+Page(&#123;
+  data: &#123;
+    msg: &#39;hello world&#39;,
+    nickName: &#39;&#39;,
+    url:&#39;&#39;,
+    code:&#39;&#39;,
+  &#125;,
+
+  // 获取微信用户的头像和昵称
+  getUserInfo(e)&#123;
+    wx.getUserProfile(&#123;
+      desc: &#39;获取用户信息&#39;,
+      success: (res) =&gt; &#123;
+        console.log(res.userInfo);
+        // 为数据赋值
+        this.setData(&#123;
+          nickName: res.userInfo.nickName,
+          url: res.userInfo.avatarUrl
+        &#125;)
+      &#125;,
+      fail:(err) =&gt; &#123;
+        console.error(&#39;获取用户信息失败&#39;, err);
+      &#125;
+    &#125;);
+  &#125;,
+  
+  //微信登录，获取微信用户的授权码 
+  //拿到后可以去请求微信服务器获得openId
+  //授权码提交到后端去调用服务器
+  wxLogin()&#123;
+    wx.login(&#123;
+      success: (res) =&gt; &#123;
+        console.log(res.code)
+        this.setData(&#123;
+          code: res.code
+        &#125;)
+      &#125;
+    &#125;)
+  &#125;,
+
+  //发送请求
+  sendRequest()&#123;
+    wx.request(&#123;
+      url: &#39;http://localhost:8080/user/shop/status&#39;,
+      method: &#39;GET&#39;,
+      success: (res)=&gt;&#123;
+        // data是后端响应回来的整个数据
+        console.log(res.data)
+      &#125;
+    &#125;)
+  &#125;
+&#125;);
+</code></pre>
+</li>
+<li><p>编译小程序</p>
+</li>
+</ul>
+<h3 id="微信登录"><a href="#微信登录" class="headerlink" title="微信登录"></a>微信登录</h3><h5 id="导入小程序代码"><a href="#导入小程序代码" class="headerlink" title="导入小程序代码"></a>导入小程序代码</h5><blockquote>
+<p>E:\Java实例项目1-20套\第24套【项目实战】Java外卖项目实战《苍穹外卖》SpringBoot+SpringMVC+Vue+Swagger+Lombok+Mybatis+SpringSession+Redis+Nginx+小程序\0-0 源码资料\资料\day06\微信小程序代码\mp-weixin<br>【注意：导入后有很多包名错误common、components】</p>
+</blockquote>
+<h5 id="微信登录流程"><a href="#微信登录流程" class="headerlink" title="微信登录流程"></a>微信登录流程</h5><blockquote>
+<p><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/login.html">开放能力 &#x2F; 用户信息 &#x2F; 小程序登录 (qq.com)</a><br><img src="https://res.wx.qq.com/wxdoc/dist/assets/img/api-login.2fcc9f35.jpg"></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>类型</th>
+<th>默认值</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>appid</td>
+<td>string</td>
+<td></td>
+<td>是</td>
+<td>小程序 appId</td>
+</tr>
+<tr>
+<td>secret</td>
+<td>string</td>
+<td></td>
+<td>是</td>
+<td>小程序 appSecret</td>
+</tr>
+<tr>
+<td>js_code</td>
+<td>string</td>
+<td></td>
+<td>是</td>
+<td>登录时获取的 code</td>
+</tr>
+<tr>
+<td>grant_type</td>
+<td>string</td>
+<td></td>
+<td>是</td>
+<td>授权类型，此处只需填写 authorization_code</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>PostMan测试 →<br>GET：<a target="_blank" rel="noopener" href="https://api.weixin.qq.com/sns/jscode2session?appid=wxa33b4bae9165c5a5&amp;secret=c2d6fc237953d711146c4ad5db3ef947&amp;js_code=0f1hdA200TsYYS1ghD100c3GZJ1hdA2w&amp;grant_type=authorization_code">https://api.weixin.qq.com/sns/jscode2session?appid=wxa33b4bae9165c5a5&amp;secret=c2d6fc237953d711146c4ad5db3ef947&amp;js_code=0f1hdA200TsYYS1ghD100c3GZJ1hdA2w&amp;grant_type=authorization_code</a></p>
+<p>返回：<br>{“session_key”:”HsYD32ryqarcnrCXbEyWhg&#x3D;&#x3D;”,”openid”:”obaex5N3w1_oAP6a4h-c-CkQBsZQ”}</p>
+</blockquote>
+<h6 id="需求分析和设计-3"><a href="#需求分析和设计-3" class="headerlink" title="需求分析和设计"></a>需求分析和设计</h6><p>数据库设计(user表)</p>
+<h6 id="代码开发-3"><a href="#代码开发-3" class="headerlink" title="代码开发"></a>代码开发</h6><pre><code class="yaml">sky-server  application.yml
+sky:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: itcast
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    admin-token-name: token
+    user-secret-key: itheima
+    user-ttl: 7200000
+    user-token-name: authentication
+  alioss:
+    endpoint: $&#123;sky.alioss.endpoint&#125;
+    access-key-id: $&#123;sky.alioss.access-key-id&#125;
+    access-key-secret: $&#123;sky.alioss.access-key-secret&#125;
+    bucket: $&#123;sky.alioss.bucket&#125;
+  wechat:
+    appid: $&#123;sky.wechat.appid&#125;
+    secret: $&#123;sky.wechat.secret&#125;
+</code></pre>
+<pre><code class="java">sky-server  application-dev.yml
+  wechat:
+    appid: xxxxxxx
+    secret: xxxxxxx
+</code></pre>
+<pre><code class="java">sky-common  com/sky/properties/WeChatProperties.java
+package com.sky.properties;
+
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = &quot;sky.wechat&quot;)
+@Data
+public class WeChatProperties &#123;
+
+    private String appid; //小程序的appid
+    private String secret; //小程序的秘钥
+    private String mchid; //商户号
+    private String mchSerialNo; //商户API证书的证书序列号
+    private String privateKeyFilePath; //商户私钥文件
+    private String apiV3Key; //证书解密的密钥
+    private String weChatPayCertFilePath; //平台证书
+    private String notifyUrl; //支付成功的回调地址
+    private String refundNotifyUrl; //退款成功的回调地址
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/user/UserController.java
+package com.sky.controller.user;
+
+import com.sky.constant.JwtClaimsConstant;
+import com.sky.dto.UserLoginDTO;
+import com.sky.entity.User;
+import com.sky.properties.JwtProperties;
+import com.sky.result.Result;
+import com.sky.service.UserService;
+import com.sky.utils.JwtUtil;
+import com.sky.vo.UserLoginVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/user/user&quot;)
+@Api(tags = &quot;C端用户相关接口&quot;)
+@Slf4j
+public class UserController &#123;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtProperties jwtProperties;
+    /**
+     * 微信登录
+     * @param userLoginDTO
+     * @return
+     */
+    @PostMapping(&quot;/login&quot;)
+    @ApiOperation(&quot;微信登录&quot;)
+    public Result&lt;UserLoginVO&gt; login(@RequestBody UserLoginDTO userLoginDTO) &#123;
+        log.info(&quot;微信登录：&#123;&#125;&quot;, userLoginDTO.getCode());
+        //微信登录
+        User user = userService.wxLogin(userLoginDTO);
+
+        //为微信用户生成jwt令牌
+        Map&lt;String, Object&gt; claims = new HashMap&lt;&gt;();
+        claims.put(JwtClaimsConstant.USER_ID, user.getId());
+        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(),jwtProperties.getUserTtl(),claims);
+        UserLoginVO userLoginVO = UserLoginVO.builder()
+                .id(user.getId())
+                .openid(user.getOpenid())
+                .token(token)
+                .build();
+        return Result.success(userLoginVO);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/UserService.java
+package com.sky.service;
+
+import com.sky.dto.UserLoginDTO;
+import com.sky.entity.User;
+
+public interface UserService &#123;
+    /**
+     * 微信登录
+     * @return
+     */
+    User wxLogin(UserLoginDTO userLoginDTO);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/UserServiceImpl.java
+package com.sky.service.impl;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.sky.constant.MessageConstant;
+import com.sky.dto.UserLoginDTO;
+import com.sky.entity.User;
+import com.sky.exception.LoginFailedException;
+import com.sky.mapper.UserMapper;
+import com.sky.properties.WeChatProperties;
+import com.sky.service.UserService;
+import com.sky.utils.HttpClientUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+@Slf4j
+public class UserServiceImpl implements UserService &#123;
+    // 微信服务接口地址
+    public static final String WX_LOGIN = &quot;https://api.weixin.qq.com/sns/jscode2session&quot;;
+
+    @Autowired
+    private WeChatProperties weChatProperties;
+    @Autowired
+    private UserMapper userMapper;
+    /**
+     * 微信登录
+     * @param userLoginDTO
+     * @return
+     */
+    @Override
+    public User wxLogin(UserLoginDTO userLoginDTO) &#123;
+        String openid = getOpenid(userLoginDTO.getCode());
+        // 判断openId是否真的获取到 如果为空代表失败 业务异常
+        if (openid == null)&#123;
+            throw new LoginFailedException(MessageConstant.LOGIN_FAILED);
+        &#125;
+        // openId是否在表里 可判断是否为新用户
+        User user = userMapper.getByOpenid(openid);
+        // 如果是新用户，自动完成注册
+        if (user == null) &#123;
+            user = User.builder()
+                    .openid(openid)
+                    .createTime(LocalDateTime.now())
+                    .build();
+            userMapper.insert(user);
+        &#125;
+        // 返回这个用户对象
+        return user;
+    &#125;
+
+    /**
+     * 调用微信接口服务，获取微信用户的openid
+     * @param code
+     * @return
+     */
+    //只有当前类用到
+    private String getOpenid(String code) &#123;
+        // 调用微信服务器接口 获得当前用户的openid
+        // 四个请求参数
+        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;appid&quot;, weChatProperties.getAppid());
+        map.put(&quot;secret&quot;, weChatProperties.getSecret());
+        map.put(&quot;js_code&quot;, code);
+        map.put(&quot;grant_type&quot;, &quot;authorization_code&quot;);
+        String json = HttpClientUtil.doGet(WX_LOGIN, map);
+
+        // 获得json对象
+        JSONObject jsonObject = JSON.parseObject(json);
+        String openid = jsonObject.getString(&quot;openid&quot;);
+        return openid;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/UserMapper.java
+package com.sky.mapper;
+
+import com.sky.entity.User;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+@Mapper
+public interface UserMapper &#123;
+    /**
+     * 根据openid查询用户
+     * @param openid
+     * @return
+     */
+    @Select(&quot;select * from user where openid = #&#123;openid&#125;&quot;)
+    User getByOpenid(String openid);
+
+    /**
+     * 新增用户
+     * @param user
+     */
+    void insert(User user);
+&#125;
+</code></pre>
+<pre><code class="xml">sky-server  mapper/UserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.UserMapper&quot;&gt;
+
+    &lt;insert id=&quot;insert&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
+        insert into user (openid, name, phone, sex, id_number, avatar, create_time)
+        values (#&#123;openid&#125;, #&#123;name&#125;, #&#123;phone&#125;, #&#123;sex&#125;, #&#123;idNumber&#125;, #&#123;avatar&#125;, #&#123;createTime&#125;)
+    &lt;/insert&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">【检测小程序用户是否登陆性】
+sky-server  com/sky/interceptor/JwtTokenUserInterceptor.java
+package com.sky.interceptor;
+
+import com.sky.constant.JwtClaimsConstant;
+import com.sky.context.BaseContext;
+import com.sky.properties.JwtProperties;
+import com.sky.utils.JwtUtil;
+import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * jwt令牌校验的拦截器
+ */
+@Component
+@Slf4j
+public class JwtTokenUserInterceptor implements HandlerInterceptor &#123;
+
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    /**
+     * 校验jwt
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        //判断当前拦截到的是Controller的方法还是其他资源
+        if (!(handler instanceof HandlerMethod)) &#123;
+            //当前拦截到的不是动态方法，直接放行
+            return true;
+        &#125;
+
+        //1、从请求头中获取令牌
+        String token = request.getHeader(jwtProperties.getUserTokenName());
+
+        //2、校验令牌
+        try &#123;
+            log.info(&quot;jwt校验:&#123;&#125;&quot;, token);
+            Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
+            Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
+            log.info(&quot;当前用户的id：&quot;, userId);
+            BaseContext.setCurrentId(userId);
+            //3、通过，放行
+            return true;
+        &#125; catch (Exception ex) &#123;
+            //4、不通过，响应401状态码
+            response.setStatus(401);
+            return false;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/config/WebMvcConfiguration.java 【增加jwtTokenUserInterceptor】
+/**
+ * 配置类，注册web层相关组件
+ */
+@Configuration
+@Slf4j
+public class WebMvcConfiguration extends WebMvcConfigurationSupport &#123;
+
+    @Autowired
+    private JwtTokenAdminInterceptor jwtTokenAdminInterceptor;
+    @Autowired
+    private JwtTokenUserInterceptor jwtTokenUserInterceptor;
+
+    /**
+     * 注册自定义拦截器
+     * @param registry
+     */
+    protected void addInterceptors(InterceptorRegistry registry) &#123;
+        log.info(&quot;开始注册自定义拦截器...&quot;);
+        registry.addInterceptor(jwtTokenAdminInterceptor)
+                .addPathPatterns(&quot;/admin/**&quot;)
+                .excludePathPatterns(&quot;/admin/employee/login&quot;);
+
+        registry.addInterceptor(jwtTokenUserInterceptor)
+                .addPathPatterns(&quot;/user/**&quot;)
+                .excludePathPatterns(&quot;/user/user/login&quot;)
+                .excludePathPatterns(&quot;/user/shop/status&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="导入商品浏览功能代码"><a href="#导入商品浏览功能代码" class="headerlink" title="导入商品浏览功能代码"></a>导入商品浏览功能代码</h4><h6 id="接口设计"><a href="#接口设计" class="headerlink" title="接口设计"></a>接口设计</h6><ul>
+<li><p>查询分类</p>
+<blockquote>
+<p>Path: &#x2F;user&#x2F;category&#x2F;list<br>Method：GET<br>请求参数<br>Type： 分类类型→1.菜品分类  2.套餐分类</p>
+</blockquote>
+</li>
+<li><p>根据分类id查询菜品</p>
+<blockquote>
+<p>Path: &#x2F;user&#x2F;dish&#x2F;list<br>Method：GET<br>请求参数<br>categoryId 分类id</p>
+</blockquote>
+</li>
+<li><p>根据分类id查询套餐</p>
+<blockquote>
+<p>Path: &#x2F;user&#x2F;setmeal&#x2F;list?category&#x3D;111<br>Method：GET<br>请求参数<br>categoryId 分类id</p>
+</blockquote>
+</li>
+<li><p>根据套餐id查询包含的菜品</p>
+<blockquote>
+<p>Path: &#x2F;user&#x2F;setmeal&#x2F;dish&#x2F;10<br>Method：GET<br>请求参数<br>id 套餐id<br>返回数据：<br>copies 份数<br>description 菜品描述<br>image 菜品图片<br>name 菜品名称</p>
+</blockquote>
+</li>
+</ul>
+<pre><code class="java">sky-server  com/sky/controller/user/DishController.java
+package com.sky.controller.user;
+
+import com.sky.constant.StatusConstant;
+import com.sky.entity.Dish;
+import com.sky.result.Result;
+import com.sky.service.DishService;
+import com.sky.vo.DishVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+
+@RestController(&quot;userDishController&quot;)
+@RequestMapping(&quot;/user/dish&quot;)
+@Slf4j
+@Api(tags = &quot;C端-菜品浏览接口&quot;)
+public class DishController &#123;
+    @Autowired
+    private DishService dishService;
+
+    /**
+     * 根据分类id查询菜品
+     *
+     * @param categoryId
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;根据分类id查询菜品&quot;)
+    public Result&lt;List&lt;DishVO&gt;&gt; list(Long categoryId) &#123;
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+
+        List&lt;DishVO&gt; list = dishService.listWithFlavor(dish);
+
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/DishService.java
+package com.sky.service;
+
+import com.sky.dto.DishDTO;
+import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
+import com.sky.result.PageResult;
+import com.sky.vo.DishVO;
+
+import java.util.List;
+
+public interface DishService &#123;
+    /**
+     * 新增菜品和对应的口味
+     * @param dishDTO
+     */
+    public void saveWithFlavour(DishDTO dishDTO);
+
+    /**
+     * 菜品分页查询
+     * @param dishPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
+
+    /**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    void deleteBatch(List&lt;Long&gt; ids);
+
+    /**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    DishVO getByIdWithFlavor(long id);
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     * @return
+     */
+    void updateWithFlavor(DishDTO dishDTO);
+
+    /**
+     * 菜品起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    void startOrStop(Integer status, Long id);
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    List&lt;Dish&gt; list(Long categoryId);
+
+    /**
+     * 条件查询菜品和口味
+     * @param dish
+     * @return
+     */
+    List&lt;DishVO&gt; listWithFlavor(Dish dish);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/DishServiceImpl.java
+package com.sky.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
+import com.sky.dto.DishDTO;
+import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
+import com.sky.entity.DishFlavor;
+import com.sky.entity.Setmeal;
+import com.sky.exception.DeletionNotAllowedException;
+import com.sky.mapper.DishFlavorMapper;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
+import com.sky.service.DishService;
+import com.sky.vo.DishVO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@Slf4j
+
+public class DishServiceImpl implements DishService &#123;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private DishFlavorMapper dishFlavorMapper;
+    @Autowired
+    private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+    /**
+     * 新增菜品和对应的口味
+     * @param dishDTO
+     */
+    @Override
+    @Transactional //保证事务一致性
+    public void saveWithFlavour(DishDTO dishDTO) &#123;
+        Dish dish = new Dish();
+        //直接new出来是空的需要先赋值 属性拷贝[属性命名要一致]
+        BeanUtils.copyProperties(dishDTO,dish);
+
+        // 向菜品表插入1条数据
+        dishMapper.insert(dish);
+        // 前端无法传 要获取dishId
+// &lt;insert id=&quot;insertBatch&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt; 获取主键值
+        Long dishId = dish.getId();
+
+        List&lt;DishFlavor&gt; flavors = dishDTO.getFlavors();
+        if (flavors != null &amp;&amp; flavors.size() &gt; 0) &#123;
+            flavors.forEach(dishFlavor -&gt; &#123;
+                dishFlavor.setDishId(dishId);
+            &#125;);
+            // 向口味表插入n条数据 集合对象批量传入不用集合
+            dishFlavorMapper.insertBatch(flavors);
+        &#125;
+    &#125;
+
+    /**
+     * 菜品分页查询
+     * @param dishPageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) &#123;
+        PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
+        Page&lt;DishVO&gt; page = dishMapper.pageQuery(dishPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+
+    /**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    @Transactional
+    public void deleteBatch(List&lt;Long&gt; ids) &#123;
+        // 判断当前菜品是否能够删除--是否存在起售中的菜品？？ 取出id
+        for (Long id : ids) &#123;
+            Dish dish = dishMapper.getById(id);
+            if (dish.getStatus() == StatusConstant.ENABLE) &#123;
+                //当前菜品处于起售中，不能删除
+                throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
+            &#125;
+        &#125;
+
+        // 判断当前菜品是否能够删除--是否被套餐关联了
+        List&lt;Long&gt; setMealIds = setmealDishMapper.getSetmealIdsByDishIds(ids);
+        if (setMealIds != null &amp;&amp; setMealIds.size() &gt; 0) &#123; //存在不允许删除
+            // 当前菜品被套餐关联了，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
+        &#125;
+        // 删除菜品表中的菜品数据
+        for (Long id : ids) &#123;
+            dishMapper.deleteById(id);
+            // 删除菜品关联的口味数据
+            dishFlavorMapper.deleteByDishId(id);
+        &#125;
+    &#125;
+
+    /**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getByIdWithFlavor(long id) &#123;
+        // 根据id查询菜品数据
+        Dish dish = dishMapper.getById(id);
+        // 根据菜品id查询口味数据
+        List&lt;DishFlavor&gt; dishFlavors = dishFlavorMapper.getByDishId(id);
+
+        // 将查询到的数据封装到VO
+        DishVO dishVO = new DishVO();
+            // 属性拷贝
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(dishFlavors);
+
+        return dishVO;
+    &#125;
+
+
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     * @return
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) &#123;
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+
+        // 修改菜品表基本信息 只是基础信息噢
+        dishMapper.update(dish);
+        // 先删掉原先的
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+        // 再重新插入新的
+        List&lt;DishFlavor&gt; flavors = dishDTO.getFlavors();
+        if (flavors != null &amp;&amp; flavors.size() &gt; 0) &#123;
+            flavors.forEach(dishFlavor -&gt; &#123;
+                dishFlavor.setDishId(dishDTO.getId());
+            &#125;);
+            // 向口味表插入n条数据 集合对象批量传入不用集合
+            dishFlavorMapper.insertBatch(flavors);
+        &#125;
+    &#125;
+
+    /**
+     * 菜品起售停售
+     * @param status
+     * @param id
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) &#123;
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status)
+                .build();
+        dishMapper.update(dish);
+
+        if (status == StatusConstant.DISABLE) &#123;
+            // 如果是停售操作，还需要将包含当前菜品的套餐也停售
+            List&lt;Long&gt; dishIds = new ArrayList&lt;&gt;();
+            dishIds.add(id);
+            // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
+            List&lt;Long&gt; setmealIds = setmealDishMapper.getSetmealIdsByDishIds(dishIds);
+            if (setmealIds != null &amp;&amp; setmealIds.size() &gt; 0) &#123;
+                for (Long setmealId : setmealIds) &#123;
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+                    setmealMapper.update(setmeal);
+                &#125;
+            &#125;
+
+        &#125;
+    &#125;
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    public List&lt;Dish&gt; list(Long categoryId) &#123;
+        Dish dish = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return dishMapper.list(dish);
+    &#125;
+
+    /**
+     * 条件查询菜品和口味
+     * @param dish
+     * @return
+     */
+    public List&lt;DishVO&gt; listWithFlavor(Dish dish) &#123;
+        List&lt;Dish&gt; dishList = dishMapper.list(dish);
+
+        List&lt;DishVO&gt; dishVOList = new ArrayList&lt;&gt;();
+
+        for (Dish d : dishList) &#123;
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(d,dishVO);
+
+            //根据菜品id查询对应的口味
+            List&lt;DishFlavor&gt; flavors = dishFlavorMapper.getByDishId(d.getId());
+
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        &#125;
+
+        return dishVOList;
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">sky-server  com/sky/controller/user/SetmealController.java
+package com.sky.controller.user;
+
+import com.sky.constant.StatusConstant;
+import com.sky.entity.Setmeal;
+import com.sky.result.Result;
+import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+
+@RestController(&quot;userSetmealController&quot;)
+@RequestMapping(&quot;/user/setmeal&quot;)
+@Api(tags = &quot;C端-套餐浏览接口&quot;)
+public class SetmealController &#123;
+    @Autowired
+    private SetmealService setmealService;
+
+    /**
+     * 条件查询
+     *
+     * @param categoryId
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;根据分类id查询套餐&quot;)
+    public Result&lt;List&lt;Setmeal&gt;&gt; list(Long categoryId) &#123;
+        Setmeal setmeal = new Setmeal();
+        setmeal.setCategoryId(categoryId);
+        setmeal.setStatus(StatusConstant.ENABLE);
+
+        List&lt;Setmeal&gt; list = setmealService.list(setmeal);
+        return Result.success(list);
+    &#125;
+
+    /**
+     * 根据套餐id查询包含的菜品列表
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/dish/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据套餐id查询包含的菜品列表&quot;)
+    public Result&lt;List&lt;DishItemVO&gt;&gt; dishList(@PathVariable(&quot;id&quot;) Long id) &#123;
+        List&lt;DishItemVO&gt; list = setmealService.getDishItemById(id);
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/SetmealService.java
+package com.sky.service;
+
+import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Setmeal;
+import com.sky.result.PageResult;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.SetmealVO;
+
+import java.util.List;
+
+public interface SetmealService &#123;
+
+    /**
+     * 新增套餐，同时需要保存套餐和菜品的关联关系
+     *
+     * @param setmealDTO
+     */
+    void saveWithDish(SetmealDTO setmealDTO);
+
+    /**
+     * 分页查询
+     *
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO);
+
+    /**
+     * 批量删除套餐
+     *
+     * @param ids
+     */
+    void deleteBatch(List&lt;Long&gt; ids);
+
+    /**
+     * 根据id查询套餐和关联的菜品数据
+     *
+     * @param id
+     * @return
+     */
+    SetmealVO getByIdWithDish(Long id);
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     */
+    void update(SetmealDTO setmealDTO);
+
+    /**
+     * 套餐起售、停售
+     *
+     * @param status
+     * @param id
+     */
+    void startOrStop(Integer status, Long id);
+
+    /**
+     * 条件查询
+     * @param setmeal
+     * @return
+     */
+    List&lt;Setmeal&gt; list(Setmeal setmeal);
+
+    /**
+     * 根据id查询菜品选项
+     * @param id
+     * @return
+     */
+    List&lt;DishItemVO&gt; getDishItemById(Long id);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/SetmealServiceImpl.java
+package com.sky.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
+import com.sky.dto.SetmealDTO;
+import com.sky.dto.SetmealPageQueryDTO;
+import com.sky.entity.Dish;
+import com.sky.entity.Setmeal;
+import com.sky.entity.SetmealDish;
+import com.sky.exception.DeletionNotAllowedException;
+import com.sky.exception.SetmealEnableFailedException;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
+import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
+import com.sky.vo.SetmealVO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * 套餐业务实现
+ */
+@Service
+@Slf4j
+public class SetmealServiceImpl implements SetmealService &#123;
+
+    @Autowired
+    private SetmealMapper setmealMapper;
+    @Autowired
+    private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private DishMapper dishMapper;
+
+
+    /**
+     * 新增套餐，同时需要保存套餐和菜品的关联关系
+     *
+     * @param setmealDTO
+     */
+    @Transactional
+    public void saveWithDish(SetmealDTO setmealDTO) &#123;
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+
+        //向套餐表插入数据
+        setmealMapper.insert(setmeal);
+
+        //获取生成的套餐id
+        Long setmealId = setmeal.getId();
+
+        List&lt;SetmealDish&gt; setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -&gt; &#123;
+            setmealDish.setSetmealId(setmealId);
+        &#125;);
+
+        //保存套餐和菜品的关联关系
+        setmealDishMapper.insertBatch(setmealDishes);
+    &#125;
+
+    /**
+     * 分页查询
+     *
+     * @param setmealPageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) &#123;
+        int pageNum = setmealPageQueryDTO.getPage();
+        int pageSize = setmealPageQueryDTO.getPageSize();
+
+        PageHelper.startPage(pageNum, pageSize);
+        Page&lt;SetmealVO&gt; page = setmealMapper.pageQuery(setmealPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+
+    /**
+     * 批量删除套餐
+     *
+     * @param ids
+     */
+    @Transactional
+    public void deleteBatch(List&lt;Long&gt; ids) &#123;
+        ids.forEach(id -&gt; &#123;
+            Setmeal setmeal = setmealMapper.getById(id);
+            if (StatusConstant.ENABLE == setmeal.getStatus()) &#123;
+                //起售中的套餐不能删除
+                throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
+            &#125;
+        &#125;);
+
+        ids.forEach(setmealId -&gt; &#123;
+            //删除套餐表中的数据
+            setmealMapper.deleteById(setmealId);
+            //删除套餐菜品关系表中的数据
+            setmealDishMapper.deleteBySetmealId(setmealId);
+        &#125;);
+    &#125;
+
+    /**
+     * 根据id查询套餐和套餐菜品关系
+     *
+     * @param id
+     * @return
+     */
+    public SetmealVO getByIdWithDish(Long id) &#123;
+        SetmealVO setmealVO = setmealMapper.getByIdWithDish(id);
+        return setmealVO;
+    &#125;
+
+    /**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     */
+    @Transactional
+    public void update(SetmealDTO setmealDTO) &#123;
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+
+        //1、修改套餐表，执行update
+        setmealMapper.update(setmeal);
+
+        //套餐id
+        Long setmealId = setmealDTO.getId();
+
+        //2、删除套餐和菜品的关联关系，操作setmeal_dish表，执行delete
+        setmealDishMapper.deleteBySetmealId(setmealId);
+
+        List&lt;SetmealDish&gt; setmealDishes = setmealDTO.getSetmealDishes();
+        setmealDishes.forEach(setmealDish -&gt; &#123;
+            setmealDish.setSetmealId(setmealId);
+        &#125;);
+        //3、重新插入套餐和菜品的关联关系，操作setmeal_dish表，执行insert
+        setmealDishMapper.insertBatch(setmealDishes);
+    &#125;
+
+    /**
+     * 套餐起售、停售
+     *
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) &#123;
+        //起售套餐时，判断套餐内是否有停售菜品，有停售菜品提示&quot;套餐内包含未启售菜品，无法启售&quot;
+        if (status == StatusConstant.ENABLE) &#123;
+            //select a.* from dish a left join setmeal_dish b on a.id = b.dish_id where b.setmeal_id = ?
+            List&lt;Dish&gt; dishList = dishMapper.getBySetmealId(id);
+            if (dishList != null &amp;&amp; dishList.size() &gt; 0) &#123;
+                dishList.forEach(dish -&gt; &#123;
+                    if (StatusConstant.DISABLE == dish.getStatus()) &#123;
+                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                    &#125;
+                &#125;);
+            &#125;
+        &#125;
+
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        setmealMapper.update(setmeal);
+    &#125;
+
+    /**
+     * 条件查询
+     * @param setmeal
+     * @return
+     */
+    public List&lt;Setmeal&gt; list(Setmeal setmeal) &#123;
+        List&lt;Setmeal&gt; list = setmealMapper.list(setmeal);
+        return list;
+    &#125;
+
+    /**
+     * 根据id查询菜品选项
+     * @param id
+     * @return
+     */
+    public List&lt;DishItemVO&gt; getDishItemById(Long id) &#123;
+        return setmealMapper.getDishItemBySetmealId(id);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">sky-server  com/sky/controller/user/CategoryController.java
+package com.sky.controller.user;
+
+import com.sky.entity.Category;
+import com.sky.result.Result;
+import com.sky.service.CategoryService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+
+@RestController(&quot;userCategoryController&quot;)
+@RequestMapping(&quot;/user/category&quot;)
+@Api(tags = &quot;C端-分类接口&quot;)
+public class CategoryController &#123;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    /**
+     * 查询分类
+     * @param type
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;查询分类&quot;)
+    public Result&lt;List&lt;Category&gt;&gt; list(Integer type) &#123;
+        List&lt;Category&gt; list = categoryService.list(type);
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/CategoryService.java
+package com.sky.service;
+
+import com.sky.annotation.AutoFill;
+import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import com.sky.result.PageResult;
+import java.util.List;
+
+public interface CategoryService &#123;
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
+    void save(CategoryDTO categoryDTO);
+    /**
+     * 分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
+
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    void deleteById(Long id);
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     */
+    void update(CategoryDTO categoryDTO);
+
+    /**
+     * 启用、禁用分类
+     * @param status
+     * @param id
+     */
+    void startOrStop(Integer status, Long id);
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    List&lt;Category&gt; list(Integer type);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/CategoryServiceImpl.java
+package com.sky.service.impl;
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.CategoryDTO;
+import com.sky.dto.CategoryPageQueryDTO;
+import com.sky.entity.Category;
+import com.sky.exception.DeletionNotAllowedException;
+import com.sky.mapper.CategoryMapper;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.result.PageResult;
+import com.sky.service.CategoryService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 分类业务层
+ */
+@Service
+@Slf4j
+public class CategoryServiceImpl implements CategoryService &#123;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+
+    /**
+     * 新增分类
+     * @param categoryDTO
+     */
+    public void save(CategoryDTO categoryDTO) &#123;
+        Category category = new Category();
+        //属性拷贝
+        BeanUtils.copyProperties(categoryDTO, category);
+
+        //分类状态默认为禁用状态0
+        category.setStatus(StatusConstant.DISABLE);
+/**  公共属性
+        //设置创建时间、修改时间、创建人、修改人
+        category.setCreateTime(LocalDateTime.now());
+        category.setUpdateTime(LocalDateTime.now());
+        category.setCreateUser(BaseContext.getCurrentId());
+        category.setUpdateUser(BaseContext.getCurrentId());
+ **/
+
+        categoryMapper.insert(category);
+    &#125;
+
+    /**
+     * 分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) &#123;
+        PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize());
+        //下一条sql进行分页，自动加入limit关键字分页
+        Page&lt;Category&gt; page = categoryMapper.pageQuery(categoryPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    &#125;
+
+    /**
+     * 根据id删除分类
+     * @param id
+     */
+    public void deleteById(Long id) &#123;
+        //查询当前分类是否关联了菜品，如果关联了就抛出业务异常
+        Integer count = dishMapper.countByCategoryId(id);
+        if(count &gt; 0)&#123;
+            //当前分类下有菜品，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_DISH);
+        &#125;
+
+        //查询当前分类是否关联了套餐，如果关联了就抛出业务异常
+        count = setmealMapper.countByCategoryId(id);
+        if(count &gt; 0)&#123;
+            //当前分类下有菜品，不能删除
+            throw new DeletionNotAllowedException(MessageConstant.CATEGORY_BE_RELATED_BY_SETMEAL);
+        &#125;
+
+        //删除分类数据
+        categoryMapper.deleteById(id);
+    &#125;
+
+    /**
+     * 修改分类
+     * @param categoryDTO
+     */
+    public void update(CategoryDTO categoryDTO) &#123;
+        Category category = new Category();
+        BeanUtils.copyProperties(categoryDTO,category);
+
+        //设置修改时间、修改人 (公共属性)
+//        category.setUpdateTime(LocalDateTime.now());
+//        category.setUpdateUser(BaseContext.getCurrentId());
+
+        categoryMapper.update(category);
+    &#125;
+
+    /**
+     * 启用、禁用分类
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) &#123;
+        Category category = Category.builder()
+                .id(id)
+                .status(status) // 下面注释是公共属性AOP有写
+//                .updateTime(LocalDateTime.now())
+//                .updateUser(BaseContext.getCurrentId())
+                .build();
+        categoryMapper.update(category);
+    &#125;
+
+    /**
+     * 根据类型查询分类
+     * @param type
+     * @return
+     */
+    public List&lt;Category&gt; list(Integer type) &#123;
+        return categoryMapper.list(type);
     &#125;
 &#125;
 </code></pre>
