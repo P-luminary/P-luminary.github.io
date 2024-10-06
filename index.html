@@ -1053,7 +1053,7 @@ public class EmployeeAddWindow extends JFrame &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ff7d73>
+            <a href="/tags/HM" style=color:#1bccbc>
                 HM
             </a>
         </span>
@@ -6883,7 +6883,686 @@ public class CategoryServiceImpl implements CategoryService &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="缓存菜品-【redis】"><a href="#缓存菜品-【redis】" class="headerlink" title="缓存菜品 【redis】"></a>缓存菜品 【redis】</h3><h5 id="问题说明："><a href="#问题说明：" class="headerlink" title="问题说明："></a>问题说明：</h5><p>用户端小程序展示的菜品数据都是通过查询数据库获得，如果用户端访问量比较大，数据库访问压力随之增大</p>
+<h5 id="实现思路："><a href="#实现思路：" class="headerlink" title="实现思路："></a>实现思路：</h5><p>通过Redis来缓存菜品数据，减少数据库查询操作</p>
+<p>开始→(查询菜品)→后端服务→缓存是否存在→(是)→读取缓存<br>                                                                               (否)→查询数据库→载入缓存</p>
+<h5 id="缓存逻辑分析："><a href="#缓存逻辑分析：" class="headerlink" title="缓存逻辑分析："></a>缓存逻辑分析：</h5><ul>
+<li><p>每个分类下的菜品保存一份缓存数据</p>
+<p><strong>key</strong>：dish_1<br><strong>value</strong>：string(…) [List集合]</p>
+</li>
+</ul>
+<pre><code class="java">sky-server com/sky/controller/user/DishController.java
+package com.sky.controller.user;
 
+import com.sky.constant.StatusConstant;
+import com.sky.entity.Dish;
+import com.sky.result.Result;
+import com.sky.service.DishService;
+import com.sky.vo.DishVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
+
+@RestController(&quot;userDishController&quot;)
+@RequestMapping(&quot;/user/dish&quot;)
+@Slf4j
+@Api(tags = &quot;C端-菜品浏览接口&quot;)
+public class DishController &#123;
+    @Autowired
+    private DishService dishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    /**
+     * 根据分类id查询菜品
+     *
+     * @param categoryId
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;根据分类id查询菜品&quot;)
+    public Result&lt;List&lt;DishVO&gt;&gt; list(Long categoryId) &#123;
+
+        //构造redis中的key，规则：dish_分类id
+        String key = &quot;dish_&quot; + categoryId;
+
+        //查询redis中是否存在菜品数据
+        List&lt;DishVO&gt; list = (List&lt;DishVO&gt;) redisTemplate.opsForValue().get(key);
+        if(list != null &amp;&amp; list.size() &gt; 0)&#123;
+            //如果存在，直接返回，无须查询数据库
+            return Result.success(list);
+        &#125;
+
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
+
+        //如果不存在，查询数据库，将查询到的数据放入redis中
+        list = dishService.listWithFlavor(dish);
+        redisTemplate.opsForValue().set(key, list);
+
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="清理缓存数据"><a href="#清理缓存数据" class="headerlink" title="清理缓存数据"></a>清理缓存数据</h5><h6 id="防止-新增-x2F-更改-x2F-删除-x2F-起售停售-后无法及时在用户手机端接收"><a href="#防止-新增-x2F-更改-x2F-删除-x2F-起售停售-后无法及时在用户手机端接收" class="headerlink" title="防止 新增&#x2F;更改&#x2F;删除&#x2F;起售停售 后无法及时在用户手机端接收"></a>防止 <u>新增&#x2F;更改&#x2F;删除&#x2F;起售停售</u> 后无法及时在用户手机端接收</h6><p>修改管理端接口 <code>DishController</code> 加入清理缓存的逻辑 (新增菜品、修改菜品、批量删除菜品、起售停售菜品)</p>
+<pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
+/**
+ * 菜品管理
+ */
+@RestController
+@RequestMapping(&quot;/admin/dish&quot;)
+@Api(tags = &quot;菜品相关接口&quot;)
+@Slf4j
+public class DishController &#123;
+    @Autowired
+    private DishService dishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @PostMapping
+    @ApiOperation(&quot;新增菜品&quot;)
+    //@RequestBody 封装JSON格式的数据
+    public Result save(@RequestBody DishDTO dishDTO) &#123;
+        log.info(&quot;新增菜品：&#123;&#125;&quot;, dishDTO);
+        dishService.saveWithFlavour(dishDTO);
+
+        //清理缓存数据(精确查询)
+        String key = &quot;dish_&quot; + dishDTO.getCategoryId();
+        cleanCache(key);
+        return Result.success();
+    &#125;
+ /**
+     * 菜品的批量删除
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(&quot;批量删除菜品&quot;)
+    //@RequestParam MVC动态解析字符串 ids提取出来
+    public Result delete(@RequestParam List&lt;Long&gt; ids) &#123; //ids
+        log.info(&quot;批量删除菜品：&#123;&#125;&quot;, ids);
+        dishService.deleteBatch(ids);
+
+        // 将所有的菜品缓存数据清理掉，所有的以dish_开头的key
+        cleanCache(&quot;dish_*&quot;);
+        return Result.success();
+    &#125;
+/**
+     * 修改菜品
+     * @param dishDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;修改菜品&quot;)
+    public Result update(@RequestBody DishDTO dishDTO) &#123;
+        log.info(&quot;修改菜品：&#123;&#125;&quot;, dishDTO);
+        dishService.updateWithFlavor(dishDTO);
+
+        // 将所有的菜品缓存数据清理掉，所有的以dish_开头的key
+        cleanCache(&quot;dish_*&quot;);;
+        return Result.success();
+    &#125;
+/**
+     * 菜品起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;菜品起售停售&quot;)
+    public Result&lt;String&gt; startOrStop(@PathVariable Integer status, Long id) &#123;
+        dishService.startOrStop(status, id);
+
+        // 将所有的菜品缓存数据清理掉，所有的以dish_开头的key
+        cleanCache(&quot;dish_*&quot;);
+
+        return Result.success();
+    &#125;
+private void cleanCache(String pattern)&#123;
+        /** 因为单独清理每个菜品可能会有关联套餐 就直接清理全部
+         * 1. 先获取到所有的key
+         * 2. 遍历key，判断是否以pattern开头
+         * 3. 删除所有的key
+         */
+        Set keys = redisTemplate.keys(pattern);
+        redisTemplate.delete(keys);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="缓存套餐-【SpringCache】"><a href="#缓存套餐-【SpringCache】" class="headerlink" title="缓存套餐 【SpringCache】"></a>缓存套餐 【SpringCache】</h2><p>Spring Cache 是一个框架，实现了基于<strong>注解</strong>的缓存功能，只需要简单地加一个<strong>注解</strong>，就能实现缓存功能<br>Spring Cache 提供了一层抽象，底层可以切换不同的缓存实现</p>
+<ul>
+<li>EHCache</li>
+<li>Caffeine</li>
+<li>Redis</li>
+</ul>
+<pre><code class="xml">&lt;dependency&gt;
+     &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+     &lt;artifactId&gt;spring-boot-starter-cache&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h6 id="Spring-Cache"><a href="#Spring-Cache" class="headerlink" title="Spring Cache"></a>Spring Cache</h6><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style="color:red">@<strong>EnableCaching</strong></span></td>
+<td>开启缓存注解功能，通常加在<strong>启动类</strong>上</td>
+</tr>
+<tr>
+<td><span style="color:red">@<strong>Cacheable</strong></span></td>
+<td>在方法执行前先查询缓存中是否有数据，如果有数据，则直接返回缓存数据；如果没有缓存数据，调用方法并将方法返回值放到缓存中</td>
+</tr>
+<tr>
+<td><span style="color:red">@<strong>CachePut</strong></span></td>
+<td>将方法的返回值放到缓存中</td>
+</tr>
+<tr>
+<td><span style="color:red">@<strong>CacheEvict</strong></span></td>
+<td>将一条或多条数据从缓存中删除</td>
+</tr>
+</tbody></table>
+<pre><code class="java">@RestController
+@RequestMapping(&quot;/user&quot;)
+@Slf4j
+public class UserController &#123;
+
+     @CachePut(cacheNames = &quot;userCache&quot;,key = &quot;#user.id&quot;)
+// 将方法的返回值放到缓存中
+    // 如果使用Spring Cache缓存数据，key的生成&quot;#user.id&quot;
+    public User save(@RequestBody User user)&#123;
+        userMapper.insert(user);
+        return user;
+    &#125;
+
+    @DeleteMapping
+    @CacheEvict(cacheNames = &quot;userCache&quot;,key = &quot;#id&quot;)
+    public void deleteById(Long id)&#123;
+        userMapper.deleteById(id);
+    &#125;
+
+    @DeleteMapping(&quot;/delAll&quot;)
+    @CacheEvict(cacheNames = &quot;userCache&quot;,allEntries = true)
+    public void deleteAll()&#123;
+        userMapper.deleteAll();
+    &#125;
+
+    @GetMapping
+    @Cacheable(cacheNames = &quot;userCache&quot;,key = &quot;#id&quot;)
+// 在方法执行前先查询缓存中是否有数据，如果有数据，则直接返回缓存数据；如果没有缓存数据，调用方法并将方法返回值放到缓存中
+    public User getById(Long id)&#123;
+        User user = userMapper.getById(id);
+        return user;
+    &#125;
+</code></pre>
+<h5 id="SpringCache入门案例"><a href="#SpringCache入门案例" class="headerlink" title="SpringCache入门案例"></a>SpringCache入门案例</h5><h6 id="初始资源："><a href="#初始资源：" class="headerlink" title="初始资源："></a>初始资源：</h6><pre><code class="java">package com.itheima.controller;
+
+import com.itheima.entity.User;
+import com.itheima.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/user&quot;)
+@Slf4j
+public class UserController &#123;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @PostMapping
+    public User save(@RequestBody User user)&#123;
+        userMapper.insert(user);
+        return user;
+    &#125;
+
+    @DeleteMapping
+    public void deleteById(Long id)&#123;
+        userMapper.deleteById(id);
+    &#125;
+
+    @DeleteMapping(&quot;/delAll&quot;)
+    public void deleteAll()&#123;
+        userMapper.deleteAll();
+    &#125;
+
+    @GetMapping
+    public User getById(Long id)&#123;
+        User user = userMapper.getById(id);
+        return user;
+    &#125;
+
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.mapper;
+
+import com.itheima.entity.User;
+import org.apache.ibatis.annotations.*;
+
+@Mapper
+public interface UserMapper&#123;
+
+    @Insert(&quot;insert into user(name,age) values (#&#123;name&#125;,#&#123;age&#125;)&quot;)
+    @Options(useGeneratedKeys = true,keyProperty = &quot;id&quot;)
+    void insert(User user);
+
+    @Delete(&quot;delete from user where id = #&#123;id&#125;&quot;)
+    void deleteById(Long id);
+
+    @Delete(&quot;delete from user&quot;)
+    void deleteAll();
+
+    @Select(&quot;select * from user where id = #&#123;id&#125;&quot;)
+    User getById(Long id);
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.entity;
+
+import lombok.Data;
+import java.io.Serializable;
+
+@Data
+public class User implements Serializable &#123;
+
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
+
+    private String name;
+
+    private int age;
+
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+
+@Configuration
+@Slf4j
+public class WebMvcConfiguration extends WebMvcConfigurationSupport &#123;
+
+    /**
+     * 生成接口文档配置
+     * @return
+     */
+    @Bean
+    public Docket docket()&#123;
+        log.info(&quot;准备生成接口文档...&quot;);
+
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title(&quot;接口文档&quot;)
+                .version(&quot;2.0&quot;)
+                .description(&quot;接口文档&quot;)
+                .build();
+
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo)
+                .select()
+                //指定生成接口需要扫描的包
+                .apis(RequestHandlerSelectors.basePackage(&quot;com.itheima.controller&quot;))
+                .paths(PathSelectors.any())
+                .build();
+
+        return docket;
+    &#125;
+
+    /**
+     * 设置静态资源映射
+     * @param registry
+     */
+    protected void addResourceHandlers(ResourceHandlerRegistry registry) &#123;
+        log.info(&quot;开始设置静态资源映射...&quot;);
+        registry.addResourceHandler(&quot;/doc.html&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/&quot;);
+        registry.addResourceHandler(&quot;/webjars/**&quot;).addResourceLocations(&quot;classpath:/META-INF/resources/webjars/&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">application.yml
+server:
+  port: 8888
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/spring_cache_demo?serverTimezone=Asia/Shanghai&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=false&amp;allowPublicKeyRetrieval=true
+      username: root
+      password: root
+  redis:
+    host: localhost
+    port: 6379
+    database: 1
+logging:
+  level:
+    com:
+      itheima:
+        mapper: debug
+        service: info
+        controller: info
+</code></pre>
+<pre><code class="sql">springcachedemo.sql
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) DEFAULT NULL,
+  `age` int DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.7.3&lt;/version&gt;
+        &lt;relativePath/&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.itheima&lt;/groupId&gt;
+    &lt;artifactId&gt;springcache-demo&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;11&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;11&lt;/maven.compiler.target&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+            &lt;version&gt;1.18.20&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+            &lt;version&gt;1.2.76&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;commons-lang&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-lang&lt;/artifactId&gt;
+            &lt;version&gt;2.6&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-cache&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.2.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;druid-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.2.1&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.xiaoymin&lt;/groupId&gt;
+            &lt;artifactId&gt;knife4j-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;3.0.2&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;2.7.3&lt;/version&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+<hr>
+<hr>
+<h5 id="开始调试咯"><a href="#开始调试咯" class="headerlink" title="开始调试咯"></a>开始调试咯</h5><pre><code class="java">com/itheima/CacheDemoApplication.java
+package com.itheima;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+//@EnableCaching 放在 Application 类上，这样整个应用就启用了缓存支持
+@Slf4j
+@SpringBootApplication
+@EnableCaching
+public class CacheDemoApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(CacheDemoApplication.class,args);
+        log.info(&quot;项目启动成功...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/controller/UserController.java
+package com.itheima.controller;
+
+import com.itheima.entity.User;
+import com.itheima.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/user&quot;)
+@Slf4j
+public class UserController &#123;
+    /*
+    set a:b:c:d: itheima 这个就是树形结构在Redis里面 文件夹包着文件夹
+    */
+    @Autowired
+    private UserMapper userMapper;
+
+    @PostMapping
+//  @CachePut(cacheNames = &quot;userCache&quot;,key = &quot;#result.id&quot;) 对象导航
+//  @CachePut(cacheNames = &quot;userCache&quot;,key = &quot;#p0.id&quot;)
+//  @CachePut(cacheNames = &quot;userCache&quot;,key = &quot;#root.args[0]&quot;)
+    @CachePut(cacheNames = &quot;userCache&quot;,key = &quot;#user.id&quot;)
+// 将方法的返回值放到缓存中
+    // 如果使用Spring Cache缓存数据，key的生成&quot;#user.id&quot;
+    public User save(@RequestBody User user)&#123;
+        userMapper.insert(user);
+        return user;
+    &#125;
+
+    @DeleteMapping
+    @CacheEvict(cacheNames = &quot;userCache&quot;,key = &quot;#id&quot;)
+    public void deleteById(Long id)&#123;
+        userMapper.deleteById(id);
+    &#125;
+
+    @DeleteMapping(&quot;/delAll&quot;)
+    @CacheEvict(cacheNames = &quot;userCache&quot;,allEntries = true)
+    public void deleteAll()&#123;
+        userMapper.deleteAll();
+    &#125;
+
+
+    @GetMapping
+    @Cacheable(cacheNames = &quot;userCache&quot;,key = &quot;#id&quot;)
+// 在方法执行前先查询缓存中是否有数据，如果有数据，则直接返回缓存数据；如果没有缓存数据，调用方法并将方法返回值放到缓存中
+    public User getById(Long id)&#123;
+        User user = userMapper.getById(id);
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="缓存套餐-代码开发"><a href="#缓存套餐-代码开发" class="headerlink" title="缓存套餐_代码开发"></a>缓存套餐_代码开发</h4><h6 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h6><ul>
+<li>导入 <strong>Spring Cache</strong> 和 <strong>Redis</strong> 相关maven坐标</li>
+<li>在<u><strong>启动类</strong></u>上加入 <strong>@EnableCaching</strong> 注解，开启缓存注解功能</li>
+<li>在<u><strong>用户端</strong></u>接口 <strong>SetmealController</strong> 的 <strong>list</strong> 方法上加入 <strong>@Cacheable</strong> 注解</li>
+<li>在<u><strong>管理端</strong></u>接口 <strong>SetmealController</strong> 的 <strong>save、delete、update、startOrStop</strong> 等方法上<br>加入**@CacheEvict** 注解<del>保证数据一致性</del></li>
+</ul>
+<pre><code class="java">com/sky/SkyApplication.java
+package com.sky;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+@SpringBootApplication
+@EnableTransactionManagement //开启注解方式的事务管理
+@Slf4j
+@EnableCaching //开启缓存注解
+public class SkyApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SkyApplication.class, args);
+        log.info(&quot;server started&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/user/SetmealController.java
+@RestController(&quot;userSetmealController&quot;)
+@RequestMapping(&quot;/user/setmeal&quot;)
+@Api(tags = &quot;C端-套餐浏览接口&quot;)
+public class SetmealController &#123;
+    @Autowired
+    private SetmealService setmealService;
+
+    /**
+     * 条件查询
+     *
+     * @param categoryId
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;根据分类id查询套餐&quot;)
+    @Cacheable(cacheNames = &quot;setmealCache&quot;,key = &quot;#categoryId&quot;) //key: setmealCache::100
+    public Result&lt;List&lt;Setmeal&gt;&gt; list(Long categoryId) &#123;
+        Setmeal setmeal = new Setmeal();
+        setmeal.setCategoryId(categoryId);
+        setmeal.setStatus(StatusConstant.ENABLE);
+
+        List&lt;Setmeal&gt; list = setmealService.list(setmeal);
+        return Result.success(list);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/admin/SetmealController.java
+
+/**
+ * 套餐管理
+ */
+@RestController
+@RequestMapping(&quot;/admin/setmeal&quot;)
+@Api(tags = &quot;套餐相关接口&quot;)
+@Slf4j
+public class SetmealController &#123;
+
+    @Autowired
+    private SetmealService setmealService;
+
+    /**
+     * 新增套餐
+     *
+     * @param setmealDTO
+     * @return
+     */
+    @PostMapping
+    @ApiOperation(&quot;新增套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,key = &quot;#setmealDTO.categoryId&quot;)//key: setmealCache::100
+    public Result save(@RequestBody SetmealDTO setmealDTO) &#123;
+        setmealService.saveWithDish(setmealDTO);
+        return Result.success();
+    &#125;
+ /**
+     * 批量删除套餐
+     *
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(&quot;批量删除套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result delete(@RequestParam List&lt;Long&gt; ids) &#123;
+        setmealService.deleteBatch(ids);
+        return Result.success();
+    &#125;
+/**
+     * 修改套餐
+     *
+     * @param setmealDTO
+     * @return
+     */
+    @PutMapping
+    @ApiOperation(&quot;修改套餐&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result update(@RequestBody SetmealDTO setmealDTO) &#123;
+        setmealService.update(setmealDTO);
+        return Result.success();
+    &#125;
+
+    /**
+     * 套餐起售停售
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/status/&#123;status&#125;&quot;)
+    @ApiOperation(&quot;套餐起售停售&quot;)
+    @CacheEvict(cacheNames = &quot;setmealCache&quot;,allEntries = true)
+    public Result startOrStop(@PathVariable Integer status, Long id) &#123;
+        setmealService.startOrStop(status, id);
+        return Result.success();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="添加购物车"><a href="#添加购物车" class="headerlink" title="添加购物车"></a>添加购物车</h3>
             
         </div>
     </div>
@@ -6897,7 +7576,7 @@ public class CategoryServiceImpl implements CategoryService &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -7818,7 +8497,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -30531,7 +31210,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -30685,7 +31364,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -32960,7 +33639,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -37957,7 +38636,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -42984,7 +43663,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
