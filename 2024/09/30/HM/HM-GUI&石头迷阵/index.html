@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#879cff>
+                <a href="/tags/HM" style=color:#1bccbc>
                     HM
                 </a>
             </span>
@@ -1016,6 +1016,996 @@ public class EmployeeAddWindow extends JFrame &#123;
 
     public static void main(String[] args) &#123;
         new EmployeeAddWindow(null);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="石头迷阵"><a href="#石头迷阵" class="headerlink" title="石头迷阵"></a>石头迷阵</h3><pre><code class="java">com/itheima/ui/GameFrame.java
+package com.itheima.ui;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JFrame;
+
+// 游戏界面
+public class GameFrame extends JFrame &#123;
+    // 成员变量(这个类所有方法都可以使用)
+    private int[][] data = &#123;
+            &#123;1,2,3,4&#125;,
+            &#123;5,6,7,8&#125;,
+            &#123;9,10,11,12&#125;,
+            &#123;13,14,15,16&#125;
+    &#125;;
+
+    // 构造器
+    public GameFrame() &#123;
+        // 初始化界面
+        initFrame();
+        // 绘制游戏界面
+        paintView();
+        // 设置窗口可见(放到构造器最后)
+        setVisible(true);
+        // 设置窗口关闭操作
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    &#125;
+
+    // 绘制游戏界面
+    private void paintView() &#123;
+        // 绘制数字(先绘制的在上面)
+        // 遍历二维数组，拿到元素(每张图片的名字)
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                int num = data[row][column];
+                // 绘制数字的图片
+                JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/&quot; + num + &quot;.png&quot;));
+                // 设置图片的位置
+                label.setBounds(50 + column * 100,90 +  row * 100, 100, 100);
+                add(label);
+            &#125;
+        &#125;
+
+
+        // 绘制背景 写图片路径不需要写项目，从模块开始
+        JLabel bg = new JLabel(new ImageIcon(&quot;stone-maze/src/image/background.png&quot;));
+        bg.setBounds(26, 30, 450, 484); // 独立图片
+
+        // 将背景添加到窗口 add调用父类
+        add(bg);
+    &#125;
+
+    // 初始化界面
+    private void initFrame() &#123;
+        // 设置窗口标题
+        setTitle(&quot;石头迷阵单机版v1.0&quot;);
+        // 设置窗口宽高
+        setSize(514, 595);
+        // 设置窗体居中
+        setLocationRelativeTo(null);
+        // 设置窗口不要布局
+        setLayout(null);
+        // 设置窗口不可调整大小
+        setResizable(false);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/MainApp.java
+package com.itheima;
+
+import com.itheima.ui.GameFrame;
+
+public class MainApp &#123;
+    public static void main(String[] args) &#123;
+        GameFrame gameFrame = new GameFrame();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="打乱二维数组和记录0号位置打乱二维数组-重绘界面"><a href="#打乱二维数组和记录0号位置打乱二维数组-重绘界面" class="headerlink" title="打乱二维数组和记录0号位置打乱二维数组,重绘界面"></a>打乱二维数组和记录0号位置<del>打乱二维数组,重绘界面</del></h5><h6 id="0号位置至关重要-方便后面游戏游玩"><a href="#0号位置至关重要-方便后面游戏游玩" class="headerlink" title="0号位置至关重要 方便后面游戏游玩"></a>0号位置至关重要 方便后面游戏游玩</h6><pre><code class="java">package com.itheima.ui;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JFrame;
+import java.util.Random;
+
+// 游戏界面
+public class GameFrame extends JFrame &#123;
+    // 成员变量(这个类所有方法都可以使用)
+    private int[][] data = &#123;
+            &#123;1,2,3,4&#125;,
+            &#123;5,6,7,8&#125;,
+            &#123;9,10,11,12&#125;,
+            &#123;13,14,15,16&#125;
+    &#125;;
+    //  保存0号图片的行
+    private int zeroRow;
+    //  保存0号图片的列
+    private int zeroColum;
+
+    // 构造器
+    public GameFrame() &#123;
+        // 初始化界面
+        initFrame();
+        // 打乱二维数组
+        randomData();
+        // 绘制游戏界面
+        paintView();
+        // 设置窗口可见(放到构造器最后)
+        setVisible(true);
+        // 设置窗口关闭操作
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    &#125;
+    // 遍历二位数组
+    public void randomData() &#123;
+        Random r = new Random();
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                // 随机一个行
+                int randomRow = r.nextInt(4); // [0,3]随机数
+                // 随机一个列
+                int randomColum = r.nextInt(4); // [0,3]随机数
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[row][column];
+                data[row][column] = data[randomRow][randomColum];
+                data[randomRow][randomColum] = temp;
+            &#125;
+        &#125;
+        // 找到0号图片的位置，方便后面游戏时0号的移动
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                if (data[row][column] == 0) &#123;
+                    zeroRow = row;
+                    zeroColum = column;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    // 绘制游戏界面
+    private void paintView() &#123;
+        // 绘制数字(先绘制的在上面)
+        // 遍历二维数组，拿到元素(每张图片的名字)
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                int num = data[row][column];
+
+                // 绘制数字的图片
+                JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/&quot; + num + &quot;.png&quot;));
+                // 设置图片的位置
+                label.setBounds(50 + column * 100,90 +  row * 100, 100, 100);
+                add(label);
+            &#125;
+        &#125;
+
+
+        // 绘制背景 写图片路径不需要写项目，从模块开始
+        JLabel bg = new JLabel(new ImageIcon(&quot;stone-maze/src/image/background.png&quot;));
+        bg.setBounds(26, 30, 450, 484); // 独立图片
+
+        // 将背景添加到窗口 add调用父类
+        add(bg);
+    &#125;
+
+    // 初始化界面
+    private void initFrame() &#123;
+        // 设置窗口标题
+        setTitle(&quot;石头迷阵单机版v1.0&quot;);
+        // 设置窗口宽高
+        setSize(514, 595);
+        // 设置窗体居中
+        setLocationRelativeTo(null);
+        // 设置窗口不要布局
+        setLayout(null);
+        // 设置窗口不可调整大小
+        setResizable(false);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="上下左右移动改变数据、显示在界面上"><a href="#上下左右移动改变数据、显示在界面上" class="headerlink" title="上下左右移动改变数据、显示在界面上"></a>上下左右移动<del>改变数据、显示在界面上</del></h5><p><strong>向左移动 空白块和右边数据交换</strong></p>
+<blockquote>
+<p>每一次移动之后，调用paintView重新绘制界面<br>paintView方法中，加载图片资源之前，需要将现有的组件移除<br><strong>getContentPane().removeAll();</strong></p>
+<p>←<br>data[row] [column] 零号空白<br>data[row] [column+1] 列数加1<br>注意：交换后，空白块的位置发生了变化，坐标同样也需要变化</p>
+<p>↑<br>data[row] [column] 零号空白<br>data[row+1] [column] 行号加1</p>
+<p>→<br>data[row] [column] 零号空白<br>data[row] [column-1] 列号减1</p>
+<p>↓<br>data[row] [column] 零号空白<br>data[row-1] [column] 行号减1   row–</p>
+</blockquote>
+<h5 id="准备动作"><a href="#准备动作" class="headerlink" title="准备动作"></a>准备动作</h5><ul>
+<li>为窗体注册键盘监听，并区分出上下左右，谁被按下了 【核心：改变二维数组数据】</li>
+</ul>
+<pre><code class="java">package com.itheima.ui;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JFrame;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.Random;
+
+// 游戏界面
+public class GameFrame extends JFrame &#123;
+    // 成员变量(这个类所有方法都可以使用)
+    private int[][] data = &#123;
+            // 核心代码就是改变0图片的位置
+            &#123;1,2,3,4&#125;,
+            &#123;5,6,7,8&#125;,
+            &#123;9,10,11,12&#125;,
+            &#123;13,14,15,0&#125;
+    &#125;;
+    //  保存0号图片的行
+    private int zeroRow;
+    //  保存0号图片的列
+    private int zeroColum;
+
+    // 构造器
+    public GameFrame() &#123;
+        // 初始化界面
+        initFrame();
+        // 打乱二维数组
+        randomData();
+        // 绘制游戏界面
+        paintView();
+        // 设置窗口可见(放到构造器最后)
+        setVisible(true);
+        // 给窗口添加键盘按键事件
+        addKeyListener(new KeyAdapter() &#123;
+            @Override
+            public void keyPressed(KeyEvent e) &#123;
+                // 键盘按下事件
+
+                // 根据按键进行移动(改变二维数组的内容)
+                move(e.getKeyCode());
+                // 重绘界面
+                paintView();
+            &#125;
+        &#125;);
+        // 设置窗口关闭操作
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    &#125;
+    // 处理键盘上下左右移动
+    private void move(int keyCode) &#123;
+        // 使用switch语句判断上下左右按键
+        switch (keyCode) &#123;
+            case KeyEvent.VK_UP:
+                System.out.println(&quot;向上&quot;);
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow + 1][zeroColum];
+                data[zeroRow + 1][zeroColum] = temp;
+                // 更新0号图片的行-1
+                zeroRow++;
+                break;
+            case KeyEvent.VK_DOWN:
+                System.out.println(&quot;向下&quot;);
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow - 1][zeroColum];
+                data[zeroRow - 1][zeroColum] = temp;
+                // 更新0号图片的行+1
+                zeroRow--;
+                break;
+            case KeyEvent.VK_LEFT:
+                System.out.println(&quot;向左&quot;);
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum + 1];
+                data[zeroRow][zeroColum + 1] = temp;
+                // 更新0号图片的列+1
+                zeroColum++;
+                break;
+            case KeyEvent.VK_RIGHT:
+                System.out.println(&quot;向右&quot;);
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum - 1];
+                data[zeroRow][zeroColum - 1] = temp;
+                // 更新0号图片的列-1
+                zeroColum--;
+                break;
+        &#125;
+
+    &#125;
+
+
+    // 遍历二位数组
+    public void randomData() &#123;
+        Random r = new Random();
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                // 随机一个行
+                int randomRow = r.nextInt(4); // [0,3]随机数
+                // 随机一个列
+                int randomColum = r.nextInt(4); // [0,3]随机数
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[row][column];
+                data[row][column] = data[randomRow][randomColum];
+                data[randomRow][randomColum] = temp;
+            &#125;
+        &#125;
+        // 找到0号图片的位置，方便后面游戏时0号的移动
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                if (data[row][column] == 0) &#123;
+                    zeroRow = row;
+                    zeroColum = column;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+
+    // 绘制游戏界面
+    private void paintView() &#123;
+        // 移除之前绘制的图片
+        getContentPane().removeAll();
+
+        // 绘制数字(先绘制的在上面)
+        // 遍历二维数组，拿到元素(每张图片的名字)
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                int num = data[row][column];
+
+                // 绘制数字的图片
+                JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/&quot; + num + &quot;.png&quot;));
+                // 设置图片的位置
+                label.setBounds(50 + column * 100,90 +  row * 100, 100, 100);
+                add(label);
+            &#125;
+        &#125;
+
+
+        // 绘制背景 写图片路径不需要写项目，从模块开始
+        JLabel bg = new JLabel(new ImageIcon(&quot;stone-maze/src/image/background.png&quot;));
+        bg.setBounds(26, 30, 450, 484); // 独立图片
+
+        // 将背景添加到窗口 add调用父类
+        add(bg);
+
+        // 重新绘制这些内容(更新页面)
+        getContentPane().repaint();
+    &#125;
+
+    // 初始化界面
+    private void initFrame() &#123;
+        // 设置窗口标题
+        setTitle(&quot;石头迷阵单机版v1.0&quot;);
+        // 设置窗口宽高
+        setSize(514, 595);
+        // 设置窗体居中
+        setLocationRelativeTo(null);
+        // 设置窗口不要布局
+        setLayout(null);
+        // 设置窗口不可调整大小
+        setResizable(false);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="上下左右移动-Bug分析和解决"><a href="#上下左右移动-Bug分析和解决" class="headerlink" title="上下左右移动-Bug分析和解决"></a>上下左右移动-Bug分析和解决</h6><ul>
+<li>column &#x3D;&#x3D; 3 不允许左移动</li>
+<li>row &#x3D;&#x3D; 3 不允许上移动</li>
+<li>column &#x3D;&#x3D; 0 不允许右移动</li>
+<li>row &#x3D;&#x3D; 0 不允许下移动</li>
+</ul>
+<pre><code class="java"> // 处理键盘上下左右移动
+    private void move(int keyCode) &#123;
+        // 使用switch语句判断上下左右按键
+        switch (keyCode) &#123;
+            case KeyEvent.VK_UP:
+                System.out.println(&quot;向上&quot;);
+                // row == 3 不允许上移动
+                if (zeroRow == 3) &#123;
+                    return;
+                &#125;
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow + 1][zeroColum];
+                data[zeroRow + 1][zeroColum] = temp;
+                // 更新0号图片的行-1
+                zeroRow++;
+                break;
+            case KeyEvent.VK_DOWN:
+                System.out.println(&quot;向下&quot;);
+                // row == 0 不允许下移动
+                if (zeroRow == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow - 1][zeroColum];
+                data[zeroRow - 1][zeroColum] = temp;
+                // 更新0号图片的行+1
+                zeroRow--;
+                break;
+            case KeyEvent.VK_LEFT:
+                System.out.println(&quot;向左&quot;);
+                // colum == 3 不允许左移动
+                if (zeroColum == 3) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum + 1];
+                data[zeroRow][zeroColum + 1] = temp;
+                // 更新0号图片的列+1
+                zeroColum++;
+                break;
+            case KeyEvent.VK_RIGHT:
+                System.out.println(&quot;向右&quot;);
+                // colum == 0 不允许右移动
+                if (zeroColum == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum - 1];
+                data[zeroRow][zeroColum - 1] = temp;
+                // 更新0号图片的列-1
+                zeroColum--;
+                break;
+        &#125;
+    &#125;
+</code></pre>
+<h5 id="处理游戏胜利规则"><a href="#处理游戏胜利规则" class="headerlink" title="处理游戏胜利规则"></a>处理游戏胜利规则</h5><h6 id="思路："><a href="#思路：" class="headerlink" title="思路："></a>思路：</h6><ul>
+<li><p>定义新的二维数组，存储游戏胜利的数据</p>
+</li>
+<li><p>使用现有数组中的元素，和胜利数组中元素逐个进行对比</p>
+<ul>
+<li>全部相同显示胜利图片</li>
+<li>建议定义为一个，例如victory</li>
+</ul>
+</li>
+<li><p>每一次移动后，都需要调用绘制界面的方法，所以应该在该方法中判断是否胜利</p>
+</li>
+</ul>
+<pre><code class="java">// 判断游戏是否胜利
+    public boolean victory() &#123;
+        // 遍历data二维数组每个数据和winData每个数据是否相同
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 如果这两个数组有不同的，返回false
+                if (data[row][column] != winData[row][column]) &#123;
+                    return false;
+                &#125;
+            &#125;
+        &#125;
+        // 全相同，返回true
+        System.out.println(&quot;游戏胜利！返回true&quot;);
+        return true;
+    &#125;
+&#125;
+-------------------------------------------------------------------------
+private void move(int keyCode) &#123;
+        // 如果胜利了，不能移动
+        if (victory()) &#123;
+            return;
+        &#125;
+        // 使用switch语句判断上下左右按键
+        switch (keyCode) &#123;
+        case KeyEvent.VK_Z:
+                // 作弊按钮，直接胜利
+                data = new int[][]&#123;
+                        // 核心代码就是改变0图片的位置
+                        &#123;1,2,3,4&#125;,
+                        &#123;5,6,7,8&#125;,
+                        &#123;9,10,11,12&#125;,
+                        &#123;13,14,15,0&#125;
+                &#125;;
+        &#125;
+&#125;
+-------------------------------------------------------------------------
+private void paintView() &#123;
+        // 移除之前绘制的图片
+        getContentPane().removeAll();
+
+        // 如果游戏胜利，显示胜利图片
+        if (victory()) &#123;
+            JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/win.png&quot;));
+            label.setBounds(124,230,266,88);
+            add(label);
+        &#125;
+&#125;
+</code></pre>
+<h5 id="显示步数"><a href="#显示步数" class="headerlink" title="显示步数"></a>显示步数</h5><ul>
+<li>添加JLabel</li>
+<li>添加统计变量count</li>
+<li>每次上下左右移动，count++</li>
+</ul>
+<pre><code class="java"> // 保存游戏移动的步数
+    private int count;
+-------------------------------------------------------------------------
+    // 绘制游戏界面
+    private void paintView() &#123;
+    // 绘制游戏步数
+        JLabel stepLabel = new JLabel(&quot;步数：&quot; + count);
+        stepLabel.setBounds(50,20,100,20); //独立的
+        add(stepLabel);// 添加到窗口里
+    &#125;
+-------------------------------------------------------------------------
+ // 使用switch语句判断上下左右按键 【在真正移动的地方count++】
+        switch (keyCode) &#123;
+            case KeyEvent.VK_UP:
+                System.out.println(&quot;向上&quot;);
+                // row == 3 不允许上移动
+                if (zeroRow == 3) &#123;
+                    return;
+                &#125;
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow + 1][zeroColum];
+                data[zeroRow + 1][zeroColum] = temp;
+                // 更新0号图片的行-1
+                zeroRow++;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_DOWN:
+                System.out.println(&quot;向下&quot;);
+                // row == 0 不允许下移动
+                if (zeroRow == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow - 1][zeroColum];
+                data[zeroRow - 1][zeroColum] = temp;
+                // 更新0号图片的行+1
+                zeroRow--;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_LEFT:
+                System.out.println(&quot;向左&quot;);
+                // colum == 3 不允许左移动
+                if (zeroColum == 3) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum + 1];
+                data[zeroRow][zeroColum + 1] = temp;
+                // 更新0号图片的列+1
+                zeroColum++;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_RIGHT:
+                System.out.println(&quot;向右&quot;);
+                // colum == 0 不允许右移动
+                if (zeroColum == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum - 1];
+                data[zeroRow][zeroColum - 1] = temp;
+                // 更新0号图片的列-1
+                zeroColum--;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_Z:
+                // 作弊按钮，直接胜利
+                data = new int[][]&#123;
+                        // 核心代码就是改变0图片的位置
+                        &#123;1,2,3,4&#125;,
+                        &#123;5,6,7,8&#125;,
+                        &#123;9,10,11,12&#125;,
+                        &#123;13,14,15,0&#125;
+                &#125;;
+
+        &#125;
+</code></pre>
+<h5 id="重新开始游戏"><a href="#重新开始游戏" class="headerlink" title="重新开始游戏"></a>重新开始游戏</h5><ul>
+<li>创建JButton按钮</li>
+<li>setBounds()</li>
+<li>绑定动作监听 ActionListenter</li>
+</ul>
+<ol>
+<li>步数归零</li>
+<li>重新调用initData()方法</li>
+<li>重新调用paintView()方法</li>
+</ol>
+<pre><code class="java">// 绘制重新开始按钮 不要让按钮得到焦点不然没反应
+        JButton restartButton = new JButton(&quot;重新开始&quot;);
+        restartButton.setBounds(350,20,100,20);
+        add(restartButton);
+        // 按钮不要获得焦点
+        restartButton.setFocusable(false);
+
+        // 给按钮 重新开始 添加监听器
+        restartButton.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                // 重新开始，重新随机数据，刷新界面
+                System.out.println(&quot;点击了重新开始按钮&quot;);
+                // 1.步数归零
+                count = 0;
+                // 2.重新随机数据
+                randomData();
+                // 3.刷新界面
+                paintView();
+
+            &#125;
+        &#125;);
+</code></pre>
+<h5 id="扩展菜单栏"><a href="#扩展菜单栏" class="headerlink" title="扩展菜单栏"></a>扩展菜单栏</h5><pre><code class="java"> // 构造器
+    public GameFrame() &#123;
+        // 初始化界面
+        initFrame();
+        // 初始化菜单
+        initMenu();
+        // 打乱二维数组
+        randomData();
+        // 绘制游戏界面
+        paintView();
+        // 设置窗口可见(放到构造器最后)
+        setVisible(true);
+        // 给窗口添加键盘按键事件
+        addKeyListener(new KeyAdapter() &#123;
+            @Override
+            public void keyPressed(KeyEvent e) &#123;
+                // 键盘按下事件
+                // 根据按键进行移动(改变二维数组的内容)
+                move(e.getKeyCode());
+                // 重绘界面
+                paintView();
+            &#125;
+        &#125;);
+        // 设置窗口关闭操作
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    &#125;
+----------------------------------------------------------------------------------
+// 初始化菜单
+    public void initMenu()&#123;
+        // 菜单栏
+        JMenuBar menuBar = new JMenuBar();
+        // 一个菜单
+        JMenu menu = new JMenu(&quot;系统&quot;);
+        // 把菜单添加到菜单栏
+        menuBar.add(menu);
+
+        // 菜单中的一个条目
+        JMenuItem exitItem = new JMenuItem(&quot;退出&quot;);
+        JMenuItem rebootItem = new JMenuItem(&quot;重启&quot;);
+        // 把条目添加到菜单中
+        menu.add(exitItem);
+        menu.add(rebootItem);
+
+        // 添加点击事件
+        exitItem.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;点击了退出&quot;);
+                System.exit(0);
+            &#125;
+        &#125;);
+
+        rebootItem.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;点击了重启&quot;);
+                // 重新调用构造器，重新初始化界面
+                new GameFrame();
+                // 关闭当前窗口
+                setVisible(false);
+            &#125;
+        &#125;);
+        // 给窗口设置菜单栏
+        setJMenuBar(menuBar);
+    &#125;
+</code></pre>
+<h5 id="扩展模拟用户移动初始化游戏"><a href="#扩展模拟用户移动初始化游戏" class="headerlink" title="扩展模拟用户移动初始化游戏"></a>扩展模拟用户移动初始化游戏</h5><pre><code class="java">package com.itheima.ui;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.Random;
+
+// 游戏界面
+public class GameFrame extends JFrame &#123;
+    // 成员变量(这个类所有方法都可以使用)
+    private int[][] data = &#123;
+            // 核心代码就是改变0图片的位置
+            &#123;1,2,3,4&#125;,
+            &#123;5,6,7,8&#125;,
+            &#123;9,10,11,12&#125;,
+            &#123;13,14,15,0&#125;
+    &#125;;
+    private int[][] winData = &#123;
+            &#123;1,2,3,4&#125;,
+            &#123;5,6,7,8&#125;,
+            &#123;9,10,11,12&#125;,
+            &#123;13,14,15,0&#125;
+    &#125;;
+    //  保存0号图片的行
+    private int zeroRow = 3; //0号位在右下角
+    //  保存0号图片的列
+    private int zeroColum = 3; //0号位在右下角
+    // 保存游戏移动的步数
+    private int count;
+
+    // 构造器
+    public GameFrame() &#123;
+        // 初始化界面
+        initFrame();
+        // 初始化菜单
+        initMenu();
+        // 打乱二维数组
+    // randomData();
+        // 模拟用户移动
+        selfMove();
+        // 设置步数为0
+        count = 0;
+
+        // 绘制游戏界面
+        paintView();
+        // 设置窗口可见(放到构造器最后)
+        setVisible(true);
+        // 给窗口添加键盘按键事件
+        addKeyListener(new KeyAdapter() &#123;
+            @Override
+            public void keyPressed(KeyEvent e) &#123;
+                // 键盘按下事件
+                // 如果胜利了，不能移动
+                if (victory()) &#123;
+                    return;
+                &#125;
+                // 根据按键进行移动(改变二维数组的内容)
+                move(e.getKeyCode());
+                // 重绘界面
+                paintView();
+            &#125;
+        &#125;);
+        // 设置窗口关闭操作
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    &#125;
+    // 根据自动随机移动(打乱的效果)
+    private void selfMove() &#123;
+        // 搞一个随机数组表示上下左右
+        Random r = new Random();
+        for (int i = 0; i &lt; 1000; i++) &#123;
+            int number = r.nextInt(4);
+            int keyCode = KeyEvent.VK_LEFT + number;
+            move(keyCode);
+        &#125;
+    &#125;
+
+
+    // 初始化菜单
+    public void initMenu()&#123;
+        // 菜单栏
+        JMenuBar menuBar = new JMenuBar();
+        // 一个菜单
+        JMenu menu = new JMenu(&quot;系统&quot;);
+        // 把菜单添加到菜单栏
+        menuBar.add(menu);
+
+        // 菜单中的一个条目
+        JMenuItem exitItem = new JMenuItem(&quot;退出&quot;);
+        JMenuItem rebootItem = new JMenuItem(&quot;重启&quot;);
+        // 把条目添加到菜单中
+        menu.add(exitItem);
+        menu.add(rebootItem);
+
+        // 添加点击事件
+        exitItem.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;点击了退出&quot;);
+                System.exit(0);
+            &#125;
+        &#125;);
+
+        rebootItem.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                System.out.println(&quot;点击了重启&quot;);
+                // 重新调用构造器，重新初始化界面
+                new GameFrame();
+                // 关闭当前窗口
+                setVisible(false);
+            &#125;
+        &#125;);
+        // 给窗口设置菜单栏
+        setJMenuBar(menuBar);
+    &#125;
+
+
+    // 判断游戏是否胜利
+    public boolean victory() &#123;
+        // 遍历data二维数组每个数据和winData每个数据是否相同
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 如果这两个数组有不同的，返回false
+                if (data[row][column] != winData[row][column]) &#123;
+                    return false;
+                &#125;
+            &#125;
+        &#125;
+        // 全相同，返回true
+        System.out.println(&quot;游戏胜利！返回true&quot;);
+        return true;
+    &#125;
+
+
+    // 处理键盘上下左右移动
+    private void move(int keyCode) &#123;
+
+        // 使用switch语句判断上下左右按键
+        switch (keyCode) &#123;
+            case KeyEvent.VK_UP:
+                System.out.println(&quot;向上&quot;);
+                // row == 3 不允许上移动
+                if (zeroRow == 3) &#123;
+                    return;
+                &#125;
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow + 1][zeroColum];
+                data[zeroRow + 1][zeroColum] = temp;
+                // 更新0号图片的行-1
+                zeroRow++;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_DOWN:
+                System.out.println(&quot;向下&quot;);
+                // row == 0 不允许下移动
+                if (zeroRow == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow - 1][zeroColum];
+                data[zeroRow - 1][zeroColum] = temp;
+                // 更新0号图片的行+1
+                zeroRow--;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_LEFT:
+                System.out.println(&quot;向左&quot;);
+                // colum == 3 不允许左移动
+                if (zeroColum == 3) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum + 1];
+                data[zeroRow][zeroColum + 1] = temp;
+                // 更新0号图片的列+1
+                zeroColum++;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_RIGHT:
+                System.out.println(&quot;向右&quot;);
+                // colum == 0 不允许右移动
+                if (zeroColum == 0) &#123;
+                    return;
+                &#125;
+                temp = data[zeroRow][zeroColum];
+                data[zeroRow][zeroColum] = data[zeroRow][zeroColum - 1];
+                data[zeroRow][zeroColum - 1] = temp;
+                // 更新0号图片的列-1
+                zeroColum--;
+                count++; //步数+1
+                break;
+            case KeyEvent.VK_Z:
+                // 作弊按钮，直接胜利
+                data = new int[][]&#123;
+                        // 核心代码就是改变0图片的位置
+                        &#123;1,2,3,4&#125;,
+                        &#123;5,6,7,8&#125;,
+                        &#123;9,10,11,12&#125;,
+                        &#123;13,14,15,0&#125;
+                &#125;;
+
+        &#125;
+    &#125;
+
+    // 遍历二位数组
+    public void randomData() &#123;
+        Random r = new Random();
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                // 随机一个行
+                int randomRow = r.nextInt(4); // [0,3]随机数
+                // 随机一个列
+                int randomColum = r.nextInt(4); // [0,3]随机数
+                // 让遍历的当前元素和随机位置的元素位置 data[row][colum] 和 data[randomRow][randomColum]
+                int temp = data[row][column];
+                data[row][column] = data[randomRow][randomColum];
+                data[randomRow][randomColum] = temp;
+            &#125;
+        &#125;
+        // 找到0号图片的位置，方便后面游戏时0号的移动
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                if (data[row][column] == 0) &#123;
+                    zeroRow = row;
+                    zeroColum = column;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+
+    // 绘制游戏界面
+    private void paintView() &#123;
+        // 移除之前绘制的图片
+        getContentPane().removeAll();
+
+        // 如果游戏胜利，显示胜利图片
+        if (victory()) &#123;
+            JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/win.png&quot;));
+            label.setBounds(124,230,266,88);
+            add(label);
+        &#125;
+
+        // 绘制游戏步数
+        JLabel stepLabel = new JLabel(&quot;步数：&quot; + count);
+        stepLabel.setBounds(50,20,100,20); //独立的
+        add(stepLabel);// 添加到窗口里
+
+        // 绘制重新开始按钮 不要让按钮得到焦点不然没反应
+        JButton restartButton = new JButton(&quot;重新开始&quot;);
+        restartButton.setBounds(350,20,100,20);
+        add(restartButton);
+        // 按钮不要获得焦点
+        restartButton.setFocusable(false);
+
+        // 给按钮 重新开始 添加监听器
+        restartButton.addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                // 重新开始，重新随机数据，刷新界面
+                System.out.println(&quot;点击了重新开始按钮&quot;);
+                // 1.步数归零
+//                count = 0;
+                // 2.重新随机数据
+//                randomData();
+                selfMove();
+                count = 0;
+                // 3.刷新界面
+                paintView();
+
+            &#125;
+        &#125;);
+
+
+        // 绘制数字(先绘制的在上面)
+        // 遍历二维数组，拿到元素(每张图片的名字)
+        for (int row = 0; row &lt; data.length; row++) &#123;
+            // 遍历二维数组 得到每个一维数组(一行)
+            for (int column = 0; column &lt; data[row].length; column++) &#123;
+                // 遍历一维数组，得到每个元素(一列)
+                int num = data[row][column];
+
+                // 绘制数字的图片
+                JLabel label = new JLabel(new ImageIcon(&quot;stone-maze/src/image/&quot; + num + &quot;.png&quot;));
+                // 设置图片的位置
+                label.setBounds(50 + column * 100,90 +  row * 100, 100, 100);
+                add(label);
+            &#125;
+        &#125;
+
+
+        // 绘制背景 写图片路径不需要写项目，从模块开始
+        JLabel bg = new JLabel(new ImageIcon(&quot;stone-maze/src/image/background.png&quot;));
+        bg.setBounds(26, 30, 450, 484); // 独立图片
+
+        // 将背景添加到窗口 add调用父类
+        add(bg);
+
+        // 重新绘制这些内容(更新页面)
+        getContentPane().repaint();
+    &#125;
+
+    // 初始化界面
+    private void initFrame() &#123;
+        // 设置窗口标题
+        setTitle(&quot;石头迷阵单机版v1.0&quot;);
+        // 设置窗口宽高
+        setSize(514, 595);
+        // 设置窗体居中
+        setLocationRelativeTo(null);
+        // 设置窗口不要布局
+        setLayout(null);
+        // 设置窗口不可调整大小
+        setResizable(false);
     &#125;
 &#125;
 </code></pre>

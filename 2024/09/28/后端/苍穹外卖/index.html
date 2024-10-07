@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -6608,7 +6608,296 @@ public class SetmealController &#123;
     &#125;
 &#125;
 </code></pre>
-<h3 id="添加购物车"><a href="#添加购物车" class="headerlink" title="添加购物车"></a>添加购物车</h3>
+<h3 id="添加购物车"><a href="#添加购物车" class="headerlink" title="添加购物车"></a>添加购物车</h3><blockquote>
+<p>套餐直接点击加号<br>菜品＋ 或者有口味数据的选择后才可以加入购物车</p>
+</blockquote>
+<h6 id="接口设计：-4"><a href="#接口设计：-4" class="headerlink" title="接口设计："></a>接口设计：</h6><ul>
+<li>请求方式：<strong>POST</strong></li>
+<li>请求路径：&#x2F;user&#x2F;shoppingCart&#x2F;add</li>
+<li>请求参数：<strong>菜品id</strong>(dish_id)、<strong>口味</strong>(dish_flavor) 或 <strong>套餐id</strong>(setmeal_id) (JSON请求体)</li>
+<li>返回结果：code、data、msg</li>
+</ul>
+<h6 id="数据库设计-shopping-cart表-设置冗余字段可提高数据库效率"><a href="#数据库设计-shopping-cart表-设置冗余字段可提高数据库效率" class="headerlink" title="数据库设计(shopping_cart表):设置冗余字段可提高数据库效率"></a>数据库设计(shopping_cart表):<del>设置冗余字段可提高数据库效率</del></h6><ul>
+<li>作用：暂时存放所选商品的地方</li>
+<li>选的什么商品</li>
+<li>每个商品都买了几个</li>
+<li>不同用户的购物车需要区分开</li>
+</ul>
+<pre><code class="java">sky-pojo  com/sky/dto/ShoppingCartDTO.java
+package com.sky.dto;
+
+import lombok.Data;
+import java.io.Serializable;
+
+@Data
+public class ShoppingCartDTO implements Serializable &#123;
+
+    private Long dishId;
+    private Long setmealId;
+    private String dishFlavor;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/user/ShoppingCartController.java
+package com.sky.controller.user;
+
+import com.sky.dto.ShoppingCartDTO;
+import com.sky.result.Result;
+import com.sky.service.ShoppingCartService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/user/shoppingCart&quot;)
+@Slf4j
+@Api(tags = &quot;C端添加购物车接口&quot;)
+public class ShoppingCartController &#123;
+    @Autowired
+    private ShoppingCartService shoppingCartService;
+    /**
+     * 添加购物车
+     * @param shoppingCartDTO
+     * @return
+     */
+    @PostMapping(&quot;/add&quot;)
+    @ApiOperation(&quot;添加购物车&quot;)
+    public Result add(@RequestBody ShoppingCartDTO shoppingCartDTO)&#123;
+        log.info(&quot;添加购物车，商品信息为：&#123;&#125;&quot;,shoppingCartDTO);
+        shoppingCartService.addShoppingCart(shoppingCartDTO);
+        return Result.success();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ShoppingCartService.java
+package com.sky.service;
+
+import com.sky.dto.ShoppingCartDTO;
+import org.springframework.stereotype.Service;
+
+public interface ShoppingCartService &#123;
+    /**
+     * 添加购物车
+     * @param shoppingCartDTO
+     */
+    void addShoppingCart(ShoppingCartDTO shoppingCartDTO);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ShoppingCartServiceImpl.java
+package com.sky.service.impl;
+
+import com.sky.context.BaseContext;
+import com.sky.dto.ShoppingCartDTO;
+import com.sky.entity.Dish;
+import com.sky.entity.Setmeal;
+import com.sky.entity.ShoppingCart;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.mapper.ShoppingCartMapper;
+import com.sky.service.ShoppingCartService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+@Service
+@Slf4j
+public class ShoppingCartServiceImpl implements ShoppingCartService &#123;
+    /**
+     * 添加购物车
+     * @param shoppingCartDTO
+     */
+    @Autowired
+    private ShoppingCartMapper shoppingCartMapper;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+    @Override
+    public void addShoppingCart(ShoppingCartDTO shoppingCartDTO) &#123;
+        // 判断当前加入购物车中的商品是否已经存在了 (user_id + setmeal_id)
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        Long userId = BaseContext.getCurrentId();
+        shoppingCart.setUserId(userId);
+
+        List&lt;ShoppingCart&gt; list = shoppingCartMapper.list(shoppingCart);
+
+        // 如果已经存在了，只需要将数量+1
+        if (list != null &amp;&amp; list.size() &gt; 0) &#123;
+            ShoppingCart cart = list.get(0);
+            cart.setNumber(cart.getNumber() + 1);
+            // update shopping_cart set number = ? where id = ?
+            shoppingCartMapper.updateNumberById(cart);
+        &#125; else &#123;
+            // 如果不存在，需要插入一条购物车数据
+            // [先确定套餐or菜品]
+            // 判断本次添加到购物车的是菜品还是套餐
+            Long dishId = shoppingCartDTO.getDishId();
+            if (dishId != null) &#123;
+                //本次添加到购物车的是菜品
+                Dish dish = dishMapper.getById(dishId);
+                shoppingCart.setName(dish.getName());
+                shoppingCart.setImage(dish.getImage());
+                shoppingCart.setAmount(dish.getPrice());
+            &#125; else &#123;
+                //本次添加到购物车的是套餐 查菜品表
+                Long setmealId = shoppingCartDTO.getSetmealId();
+                Setmeal setmeal = setmealMapper.getById(setmealId);
+                shoppingCart.setName(setmeal.getName());
+                shoppingCart.setImage(setmeal.getImage());
+                shoppingCart.setAmount(setmeal.getPrice());
+
+            &#125;
+            shoppingCart.setNumber(1);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCartMapper.insert(shoppingCart);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/ShoppingCartMapper.java
+package com.sky.mapper;
+
+import com.sky.entity.ShoppingCart;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
+
+@Mapper
+public interface ShoppingCartMapper &#123;
+    List&lt;ShoppingCart&gt; list(ShoppingCart shoppingCart);
+
+    /**
+     * 根据id修改商品数量
+     * @param shoppingCart
+     */
+    @Update(&quot;update shopping_cart set number = #&#123;number&#125; where id = #&#123;id&#125;&quot;)
+    void updateNumberById(ShoppingCart shoppingCart);
+
+    /**
+     * 插入购物车数据
+     * @param shoppingCart
+     */
+    @Insert(&quot;insert into shopping_cart (name, user_id, dish_id, setmeal_id, dish_flavor, number, amount, image, create_time) &quot; +
+            &quot; values (#&#123;name&#125;,#&#123;userId&#125;,#&#123;dishId&#125;,#&#123;setmealId&#125;,#&#123;dishFlavor&#125;,#&#123;number&#125;,#&#123;amount&#125;,#&#123;image&#125;,#&#123;createTime&#125;)&quot;)
+    void insert(ShoppingCart shoppingCart);
+&#125;
+</code></pre>
+<pre><code class="xml">sky-server  mapper/ShoppingCartMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.ShoppingCartMapper&quot;&gt;
+
+    &lt;select id=&quot;list&quot; resultType=&quot;com.sky.entity.ShoppingCart&quot;&gt;
+        select * from shopping_cart
+        &lt;where&gt;
+            &lt;if test=&quot;userId != null&quot;&gt;
+                and user_id = #&#123;userId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;dishId != null&quot;&gt;
+                and dish_id = #&#123;dishId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;setmealId != null&quot;&gt;
+                and setmeal_id = #&#123;setmealId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;dishFlavor != null&quot;&gt;
+                and dish_flavor = #&#123;dishFlavor&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="查看购物车"><a href="#查看购物车" class="headerlink" title="查看购物车"></a>查看购物车</h3><blockquote>
+<p>名称、价格、商品、数量<br>Path：&#x2F;user&#x2F;shoppingCart&#x2F;list<br>            PUT</p>
+</blockquote>
+<pre><code class="java">sky-server  com/sky/controller/user/ShoppingCartController.java
+/**
+     * 查看购物车
+     * @return
+     */
+    @GetMapping(&quot;/list&quot;)
+    @ApiOperation(&quot;查看购物车&quot;)
+    public Result&lt;List&lt;ShoppingCart&gt;&gt; list()&#123;
+       List&lt;ShoppingCart&gt; list = shoppingCartService.showShoppingCart();
+       return Result.success(list);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ShoppingCartService.java
+    /**
+     * 查看购物车
+     * @return
+     */
+    List&lt;ShoppingCart&gt; showShoppingCart();
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ShoppingCartServiceImpl.java
+/**
+     * 查看购物车
+     * @return
+     */
+    @Override
+    public List&lt;ShoppingCart&gt; showShoppingCart() &#123;
+        // 获取到当前微信用户的id
+        Long userId = BaseContext.getCurrentId();
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(userId)
+                .build();
+        List&lt;ShoppingCart&gt; list = shoppingCartMapper.list(shoppingCart);
+        return list;
+    &#125;
+</code></pre>
+<h3 id="清空购物车"><a href="#清空购物车" class="headerlink" title="清空购物车"></a>清空购物车</h3><blockquote>
+<p>Path：user&#x2F;shoppingCart&#x2F;clean<br>Method：DELETE<br>返回：code <strong>date</strong> msg</p>
+</blockquote>
+<blockquote>
+</blockquote>
+<pre><code class="java">sky-server  com/sky/controller/user/ShoppingCartController.java
+/**
+     * 清空购物车
+     * @return
+     */
+    @DeleteMapping(&quot;/clean&quot;)
+    @ApiOperation(&quot;清空购物车&quot;)
+    public Result clean() &#123;
+        shoppingCartService.cleanShoppingCart();
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ShoppingCartService.java
+/**
+     * 清空购物车 删除自己的购物车
+     */
+    void cleanShoppingCart();
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ShoppingCartServiceImpl.java
+/**
+     * 清空购物车
+     */
+    @Override
+    public void cleanShoppingCart() &#123;
+        //获取到当前用户的id
+        Long userId = BaseContext.getCurrentId();
+        shoppingCartMapper.deleteByUserId(userId);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/ShoppingCartMapper.java
+/**
+     * 根据用户id清空购物车
+     * @param userId
+     */
+    @Delete(&quot;delete from shopping_cart where user_id = #&#123;userId&#125;&quot;)
+    void deleteByUserId(Long userId);
+</code></pre>
+
     </div>
 
     
