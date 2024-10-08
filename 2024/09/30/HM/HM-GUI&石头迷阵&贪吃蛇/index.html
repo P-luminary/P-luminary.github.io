@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#1bccbc>
+                <a href="/tags/HM" style=color:#879cff>
                     HM
                 </a>
             </span>
@@ -2006,6 +2006,686 @@ public class GameFrame extends JFrame &#123;
         setLayout(null);
         // 设置窗口不可调整大小
         setResizable(false);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="贪吃蛇"><a href="#贪吃蛇" class="headerlink" title="贪吃蛇"></a>贪吃蛇</h2><h5 id="定时器原理"><a href="#定时器原理" class="headerlink" title="定时器原理"></a>定时器原理</h5><pre><code class="java">package com.itheima.定时器;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class Demo01 &#123;
+    public static void main(String[] args) &#123;
+        // 定时器Timer
+        Timer timer = new Timer();
+
+        // 添加任务
+        // schedule(代码任务，第一次执行时间，每隔多久反复执行)
+        timer.schedule(new TimerTask() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(&quot;Hello World&quot;);
+            &#125;
+        &#125;, 3000, 1000);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="初始化窗口"><a href="#初始化窗口" class="headerlink" title="初始化窗口"></a>初始化窗口</h5><ul>
+<li>设置标题、大小、窗口固定大小、关闭窗口退出程序、窗口居中、取消布局、设置背景颜色</li>
+</ul>
+<pre><code class="java">package com.itheima.ui;
+
+import javax.swing.*;
+import java.awt.*;
+
+// 自定义窗口，实现贪吃蛇的功能
+public class SnakeFrame extends JFrame &#123;
+    // 构造器
+    public SnakeFrame()&#123;
+        // 初始化窗口
+        initFrame();
+        // 设置窗口可见
+        setVisible(true);
+    &#125;
+
+    // 初始化窗口
+    public void initFrame()&#123;
+        // 设置标题
+        setTitle(&quot;贪吃蛇&quot;);
+        // 设置大小
+        setSize(800,400);
+        // 设置窗口固定大小
+        setResizable(false);
+        // 设置关闭窗口退出程序
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // 窗口居中
+        setLocationRelativeTo(null);
+        // 取消布局
+        setLayout(null);
+        // 设置背景颜色
+        setBackground(Color.lightGray);
+        // 窗口置顶
+        setAlwaysOnTop(true);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.定时器;
+
+import com.itheima.ui.SnakeFrame;
+
+// 游戏的启动类
+public class SnakeApp &#123;
+    public static void main(String[] args) &#123;
+        SnakeFrame snakeFrame = new SnakeFrame();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="初始化地图"><a href="#初始化地图" class="headerlink" title="初始化地图"></a>初始化地图</h5><ul>
+<li>25行×50列、图片大小15像素、图片路径、四周生成墙体</li>
+</ul>
+<pre><code class="java">package com.itheima.ui;
+
+import javax.swing.*;
+import java.awt.*;
+
+// 自定义窗口，实现贪吃蛇的功能
+public class SnakeFrame extends JFrame &#123;
+    // 游戏地图的行数
+    public static final int ROW_COUNT = 25;
+    // 游戏地图的列数
+    public static final int COLUMN_COUNT = 50;
+    // 游戏地图的方格的大小
+    public static final int IMAGE_SIZE = 16;
+    // 游戏图片路径
+    public static final String IMAGE_PATH = &quot;snake/src/com/itheima/image/&quot;;
+
+
+    // 构造器
+    public SnakeFrame()&#123;
+        // 初始化窗口
+        initFrame();
+        // 初始化地图
+        initMap();
+        // 设置窗口可见
+        setVisible(true);
+
+    &#125;
+
+    // 初始化地图
+    private void initMap() &#123;
+        // 四周生成墙体 0行 0列 最后一行 最后一列
+        for (int row = 0; row &lt; ROW_COUNT; row++) &#123;// 行
+            // row是列
+            for (int column = 0; column &lt; COLUMN_COUNT; column++) &#123;// 列
+                // column是列
+                // 第0行 或 第0列 或 最后一行 或 最后一列 生成墙体
+                if (row == 0 || column == 0 || row == ROW_COUNT - 1 || column == COLUMN_COUNT - 1) &#123;
+                    // 绘制墙体
+                    JLabel wallLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;wall.png&quot;));
+                    wallLabel.setBounds(column * IMAGE_SIZE, row * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+                    // 把墙体添加到窗口中
+                    add(wallLabel);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    // 初始化窗口
+    public void initFrame()&#123;
+        // 设置标题
+        setTitle(&quot;贪吃蛇&quot;);
+        // 设置大小
+        setSize((COLUMN_COUNT+1) * IMAGE_SIZE ,(ROW_COUNT+1)*IMAGE_SIZE+20);
+        // 设置窗口固定大小
+        setResizable(false);
+        // 设置关闭窗口退出程序
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // 窗口居中
+        setLocationRelativeTo(null);
+        // 取消布局
+        setLayout(null);
+        // 设置背景颜色
+        setBackground(Color.lightGray);
+        // 窗口置顶
+        setAlwaysOnTop(true);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="初始化蛇"><a href="#初始化蛇" class="headerlink" title="初始化蛇"></a>初始化蛇</h5><ul>
+<li>计算地图的中心点(x,y)</li>
+<li>创建蛇头和身体的坐标</li>
+<li>把这三个点保存到LinkedList集合中</li>
+<li>把蛇的坐标数据刷新到地图上</li>
+</ul>
+<pre><code class="java">
+   // 保存蛇的坐标点 LinkedList 和 ArrayList类似
+    private LinkedList&lt;Point&gt; snakePointList = new LinkedList&lt;&gt;();
+
+// 初始化蛇
+    private void initSnake() &#123;
+        //- 计算地图的中心点(x,y)
+        int x = COLUMN_COUNT / 2; //50/2 = 第25列
+        int y = ROW_COUNT / 2; // 25 / 2 = 12
+
+        // 创建蛇头和身体的坐标点
+        Point head = new Point(x, y);
+        Point body1 = new Point(x - 1, y);
+        Point body2 = new Point(x - 2, y);
+
+        // 把这三个点保存到LinkedList集合中
+        snakePointList.add(head);
+        snakePointList.add(body1);
+        snakePointList.add(body2);
+        System.out.println(&quot;snakePointList = &quot; + snakePointList);
+        // 把蛇的坐标数据刷新到地图上
+        flushSnakeToMap();
+    &#125;
+    // 把蛇的坐标数据刷新到地图上
+    private void flushSnakeToMap()&#123;
+
+        // 获取蛇头的坐标，把坐标上的图片设置为蛇头的图片
+        Point head = snakePointList.getFirst();
+        JLabel headLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;head_up.png&quot;));
+        headLabel.setBounds(head.x * IMAGE_SIZE, head.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 把蛇头图片添加到窗体中
+        add(headLabel);
+
+        // 遍历蛇坐标点集合，把坐标上的图片设置为蛇头的图片
+        for (int i = 1; i &lt; snakePointList.size(); i++) &#123;
+            Point body = snakePointList.get(i);
+            JLabel bodyLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;body.png&quot;));
+            bodyLabel.setBounds(body.x * IMAGE_SIZE, body.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+            // 把蛇头图片添加到窗体中
+            add(bodyLabel);
+        &#125;
+    &#125;
+</code></pre>
+<h5 id="初始化食物"><a href="#初始化食物" class="headerlink" title="初始化食物"></a>初始化食物</h5><ul>
+<li>游戏开始随机生成食物</li>
+<li>创建随机数</li>
+<li>在地图内随机一个坐标作为食物</li>
+<li>不能让食物随机到蛇的身体上</li>
+<li>根据食物坐标，在地图上生成食物图片</li>
+</ul>
+<pre><code class="java">// 构造器
+    public SnakeFrame()&#123;
+        // 初始化窗口
+        initFrame();
+        // 初始化地图
+        initMap();
+        // 初始化蛇
+        initSnake();
+        // 随机生成食物
+        createFood();
+        // 设置窗口可见
+        setVisible(true);
+
+    &#125;
+</code></pre>
+<pre><code class="java">// 随机生成食物
+    private void createFood() &#123;
+        while (true) &#123;
+            // 创建随机数
+            Random r = new Random();
+            // 在地图内随机一个坐标作为食物的位置
+            int x = r.nextInt(COLUMN_COUNT - 2) + 1;   //[1,48] → -1 → [0,47] + 1
+            int y = r.nextInt(ROW_COUNT - 2) + 1; // [1,23] → -1 → [0,22] + 1
+
+            // 食物的点在其他方法也需要使用
+            foodPoint = new Point(x, y);
+
+            // 不能让食物随机到蛇身体上
+            // 假设食物不在蛇身上
+            boolean flag = false;
+            // 遍历蛇的坐标点集合，判断食物坐标是否在蛇坐标上
+            for (int i = 0; i &lt; snakePointList.size(); i++) &#123;
+                Point snakePoint = snakePointList.get(i);
+                if (snakePoint.x == foodPoint.x &amp;&amp; snakePoint.y == foodPoint.y) &#123;
+                    // 食物在蛇身上，标记改为true
+                    flag = true;
+                &#125;
+            &#125;
+            // 判断标记
+            if (flag) &#123;
+                // 重新生成食物
+                createFood();
+            &#125; else &#123;
+                // 食物不在蛇蛇身上，这个食物可以使用，结束while
+                break;
+            &#125;
+        &#125;
+        // 根据食物坐标，在地图上生成食物图片
+        JLabel foodLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;food.png&quot;));
+        foodLabel.setBounds(foodPoint.x * IMAGE_SIZE, foodPoint.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 把食物添加到窗体中
+        add(foodLabel);
+    &#125;
+</code></pre>
+<h3 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h3><pre><code class="java">package com.itheima.ui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.LinkedList;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+
+// 自定义窗口, 实现贪吃蛇的功能
+public class SnakeFrame extends JFrame &#123;
+    // 游戏地图的行数
+    public static final int ROW_COUNT = 25;
+    // 游戏地图的列数
+    public static final int COLUMN_COUNT = 50;
+    // 游戏墙体的宽高
+    public static final int IMAGE_SIZE = 15;
+    // 游戏图片路径
+    public static final String IMAGE_PATH = &quot;snake/src/com/itheima/image/&quot;;
+
+    // 保存蛇的坐标点 LinkedList 和 ArrayList类似, 使用基本一致
+    private LinkedList&lt;Point&gt; snakePointList = new LinkedList&lt;&gt;();
+    // 保存蛇的图片
+    private LinkedList&lt;JLabel&gt; snakeImageList = new LinkedList&lt;&gt;();
+
+    // 保存食物的坐标点
+    private Point foodPoint;
+    // 保存食物的图片
+    private JLabel foodImage;
+    // 吃掉食物的数量
+    private int count;
+    // 显示吃掉食物的数量
+    private JLabel countLabel;
+
+    // 定义蛇的四个移动方向
+    private static final int DIRECTION_UP = 1; // 上
+    private static final int DIRECTION_DOWN = -1; // 下
+    private static final int DIRECTION_LEFT = 2; // 左
+    private static final int DIRECTION_RIGHT = -2; // 右
+
+    // 蛇当前移动方向, 默认是向右移动
+    private int currentDirection = DIRECTION_RIGHT;
+
+    // 自动移动的时间
+    private int autoMoveTime = 500;
+
+    // 构造器
+    public SnakeFrame() &#123;
+        // 初始化窗口
+        initFrame();
+        // 初始化地图
+        initMap();
+        // 初始化蛇
+        initSnake();
+        // 随机生成食物
+        createFood();
+        // 自动移动
+        autoMove();
+        // 初始化菜单
+        initMenu();
+        // 设置窗口可见
+        setVisible(true);
+        // 监听键盘按下事件
+        addKeyListener(new KeyAdapter() &#123;
+            @Override
+            public void keyPressed(KeyEvent e) &#123;
+                // 键盘按下事件
+                int keyCode = e.getKeyCode();
+                switch (keyCode) &#123;
+                    case KeyEvent.VK_UP:
+                        move(DIRECTION_UP);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        move(DIRECTION_RIGHT);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        move(DIRECTION_DOWN);
+                        break;
+                    case KeyEvent.VK_LEFT:
+                        move(DIRECTION_LEFT);
+                        break;
+                &#125;
+            &#125;
+        &#125;);
+    &#125;
+
+    private void initMenu() &#123;
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu(&quot;难度选择&quot;);
+        menu.add(&quot;简单&quot;).addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                // 简单：2秒自动移动一次
+                autoMoveTime = 2000;
+                autoMove();
+            &#125;
+        &#125;);
+        menu.add(&quot;困难&quot;).addActionListener(new ActionListener() &#123;
+            @Override
+            public void actionPerformed(ActionEvent e) &#123;
+                // 困难：1秒自动移动一次
+                autoMoveTime = 200;
+                autoMove();
+            &#125;
+        &#125;);
+        menuBar.add(menu);
+        setJMenuBar(menuBar);
+    &#125;
+
+
+
+    // 蛇自动移动
+    public void autoMove() &#123;
+        Timer timer = new Timer();
+        // 添加任务: schedule(任务代码, 多久后开始, 每隔多久反复执行)
+        timer.schedule(new TimerTask() &#123;
+            @Override
+            public void run() &#123;
+                // 自动移动一下, 往当前方向移动
+                move(currentDirection);
+            &#125;
+        &#125;, autoMoveTime, autoMoveTime);
+    &#125;
+
+    // 蛇移动
+    public synchronized void move(int newDirection) &#123;
+        System.out.println(&quot;最新移动方向 newDirection = &quot; + newDirection);
+        // 不能反向移动
+        if(currentDirection + newDirection == 0) &#123;
+            System.out.println(&quot;不能反向移动!&quot;);
+            return; // 结束方法
+        &#125;
+        // 保存最新的移动方向
+        currentDirection = newDirection;
+        System.out.println(&quot;移动前: &quot; + snakePointList);
+        // 获取蛇头的坐标点
+        Point headPoint = snakePointList.getFirst();
+        // 根据最新方向移动
+        switch (currentDirection) &#123;
+            case DIRECTION_RIGHT:
+                // 往右移动, 在蛇头右边添加一个点, 添加到集合最前面
+                snakePointList.addFirst(new Point(headPoint.x + 1, headPoint.y));
+                break;
+            case DIRECTION_DOWN:
+                // 往下移动, 在蛇头下边添加一个点, 添加到集合最前面
+                snakePointList.addFirst(new Point(headPoint.x, headPoint.y + 1));
+                break;
+            case DIRECTION_LEFT:
+                // 往左移动, 在蛇头左边添加一个点, 添加到集合最前面
+                snakePointList.addFirst(new Point(headPoint.x - 1, headPoint.y));
+                break;
+            case DIRECTION_UP:
+                // 往上移动, 在蛇头上边添加一个点, 添加到集合最前面
+                snakePointList.addFirst(new Point(headPoint.x , headPoint.y - 1));
+                break;
+        &#125;
+        System.out.println(&quot;移动后: &quot; + snakePointList);
+
+        // 判断是否吃到食物
+        if (isEatFood()) &#123;
+            // 如果吃到食物, 创建新的食物
+            createFood();
+        &#125; else &#123;
+            // 没有吃到食物, 删除最后一个点
+            snakePointList.removeLast();
+            // 从集合中删除设为图片
+            JLabel lastImage = snakeImageList.removeLast();
+            // 从窗体中删除设为图片
+            remove(lastImage);
+        &#125;
+
+        // 判断游戏是否结束
+        if (isGameOver()) &#123;
+            // 游戏结束, 弹出对话框
+            JOptionPane.showMessageDialog(SnakeFrame.this, &quot;游戏结束!&quot;);
+            // 退出程序
+            System.exit(0);
+        &#125;
+
+        // 刷新蛇的数据
+        // flushSnakeToMap();
+
+        // 获取最新蛇头的坐标点 【保证再多的图也不卡 因为之前刷新是要全部删除图片后再加】
+        Point newSnakeHeadPoint = snakePointList.getFirst();
+        // 创建蛇头图片
+        JLabel newSnakeHeadLable = new JLabel(new ImageIcon(IMAGE_PATH + &quot;head_up.png&quot;));
+        newSnakeHeadLable.setBounds(newSnakeHeadPoint.x * IMAGE_SIZE, newSnakeHeadPoint.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 把图片添加到窗口上
+        add(newSnakeHeadLable);
+        // 把图片添加到蛇的图片集合中
+        snakeImageList.addFirst(newSnakeHeadLable);
+
+        // 删除老蛇头的图片
+        JLabel oldSnakeHeadImage = snakeImageList.get(1);
+        // 从窗体中删除老蛇头的图片
+        remove(oldSnakeHeadImage);
+
+        // 老的蛇头变成身体
+        // 获取老的蛇头的坐标点
+        Point oldSnakeHeadPoint = snakePointList.get(1);
+        // 把老蛇头坐标点创建新的身体图片
+        JLabel newSnakeBodyLable = new JLabel(new ImageIcon(IMAGE_PATH + &quot;body.png&quot;));
+        newSnakeBodyLable.setBounds(oldSnakeHeadPoint.x * IMAGE_SIZE, oldSnakeHeadPoint.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 新是身体图片添加到窗口中
+        add(newSnakeBodyLable);
+        // 把新的身体图片替换图片集合中的老蛇头图片
+        snakeImageList.set(1, newSnakeBodyLable);
+
+        // 重绘
+        getContentPane().repaint();
+    &#125;
+
+    /**
+     * 判断游戏是否结束
+     * @return true结束游戏, false游戏不结束
+     */
+    public boolean isGameOver() &#123;
+        // 获取蛇头
+        Point snakeHead = snakePointList.getFirst();
+
+        // 如果蛇头坐标和墙壁坐标相同, 返回true结束游戏
+        if (snakeHead.x == 0 || snakeHead.x == COLUMN_COUNT - 1 || snakeHead.y == 0 || snakeHead.y == ROW_COUNT - 1) &#123;
+            System.out.println(&quot;蛇头撞到了墙壁, 结束游戏&quot;);
+            return true;
+        &#125;
+
+        // 如果蛇头吃到自己, 返回true结束游戏
+        for (int i = 1; i &lt; snakePointList.size(); i++) &#123;
+            // 获取蛇头后面的点
+            Point bodyPoint = snakePointList.get(i);
+            if (snakeHead.equals(bodyPoint)) &#123;
+                System.out.println(&quot;蛇头吃到了自己, 结束游戏&quot;);
+                return true;
+            &#125;
+        &#125;
+
+        // 游戏没有结束
+        return false;
+    &#125;
+
+    /**
+     * 判断是否吃到食物
+     * @return true吃到食物, false没有吃到食物
+     */
+    public boolean isEatFood() &#123;
+        // 获取蛇头的点
+        Point snakeHead = snakePointList.getFirst();
+
+        // 看蛇头和食物是不是相同的点
+        // if (snakeHead.x == foodPoint.x &amp;&amp; snakeHead.y == foodPoint.y) &#123;
+        //     return true;
+        // &#125; else &#123;
+        //     return false;
+        // &#125;
+
+        // Point类重写了equals就是比较x和y的值
+        return snakeHead.equals(foodPoint);
+    &#125;
+
+    // 随机生成食物
+    private void createFood() &#123;
+        // 如果之前有食物图片
+        if (foodImage != null) &#123;
+            // 从窗口中删除之前的食物图片
+            remove(foodImage);
+        &#125;
+
+        // 如果生成的食物在蛇身上, 重新生成
+        while (true) &#123;
+            // 创建随机数
+            Random r = new Random();
+            // 在地图内随机一个坐标作为食物位置
+            int x = r.nextInt(COLUMN_COUNT - 2) + 1; // [1, 48] -&gt; -1 -&gt; [0, 47] + 1
+            int y = r.nextInt(ROW_COUNT - 2) + 1; // [1, 23] -&gt; -1 -&gt; [0, 22] + 1
+
+            // 食物的点在其他方法也需要使用, 作为成员变量
+            foodPoint = new Point(x, y);
+
+            // 不能让食物随机到蛇的身体上
+            // 假设食物不在蛇身上
+            boolean flag = false;
+            // 遍历蛇的坐标点集合, 判断食物坐标是否在蛇坐标上
+            for (int i = 0; i &lt; snakePointList.size(); i++) &#123;
+                Point snakePoint = snakePointList.get(i);
+                if (snakePoint.x == foodPoint.x &amp;&amp; snakePoint.y == foodPoint.y) &#123;
+                    // 食物在蛇身上, 标记改为true
+                    flag = true;
+                    break;
+                &#125;
+            &#125;
+
+            // 判断标记
+            if (flag) &#123;
+                System.out.println(&quot;食物在蛇身上, 重新生成食物&quot;);
+            &#125; else &#123;
+                // 食物不在蛇身上, 这个食物的点可以使用, 结束while循环
+                break;
+            &#125;
+        &#125;
+
+        // 根据食物坐标.在地图上生成食物图片
+        JLabel foodLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;food.png&quot;));
+        foodLabel.setBounds(foodPoint.x * IMAGE_SIZE, foodPoint.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 把食物添加到窗体中
+        add(foodLabel);
+        // 把食物图片保存到成员变量中
+        foodImage = foodLabel;
+        // 食物数量+1
+        count++;
+        countLabel.setText(&quot;吃掉食物的数量: &quot; + count);
+    &#125;
+
+    // 初始化蛇
+    // 初始化蛇
+    private void initSnake() &#123;
+        // 计算地图的中心点(X,Y)
+        int x = COLUMN_COUNT / 2; // 50 / 2 = 25
+        int y = ROW_COUNT / 2; // 25 / 2 = 12
+
+        // 定义蛇的初始长度
+        int initialLength = 3; // 您可以根据需要调整初始长度
+
+        // 循环添加蛇头和身体坐标点
+        for (int i = 0; i &lt; initialLength; i++) &#123;
+            // 蛇头在前，身体向左延伸
+            Point point = new Point(x - i, y);
+            snakePointList.add(point);
+            System.out.println(&quot;添加蛇身坐标: &quot; + point);
+        &#125;
+        // 把蛇的坐标数据刷新到地图上
+        flushSnakeToMap();
+    &#125;
+
+
+    // 把蛇的坐标数据刷新到地图上
+    private void flushSnakeToMap() &#123;
+        // 删除以前蛇的图片
+        for (int i = 0; i &lt; snakeImageList.size(); i++) &#123;
+            // 从集合中获取蛇的图片
+            JLabel label = snakeImageList.get(i);
+            // 从窗体中删除蛇的图片
+            remove(label);
+        &#125;
+        // 根据坐标绘制新的蛇的图片
+        // 获取蛇头的坐标, 把在坐标点上的图片设置为蛇头的图片
+        Point head = snakePointList.getFirst();
+        JLabel headLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;head_up.png&quot;));
+        headLabel.setBounds(head.x * IMAGE_SIZE, head.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+        // 把蛇头图片添加到窗体中
+        add(headLabel);
+        // 把蛇头图片添加到集合中
+        snakeImageList.add(headLabel);
+
+        // 遍历蛇身体坐标点集合, 把在身体坐标点上的图片设置为蛇的图片
+        for (int i = 1; i &lt; snakePointList.size(); i++) &#123;
+            Point body = snakePointList.get(i);
+            JLabel bodyLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;body.png&quot;));
+            bodyLabel.setBounds(body.x * IMAGE_SIZE, body.y * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+            // 把身体图片添加到窗体中
+            add(bodyLabel);
+            // 把身体图片添加到集合中
+            snakeImageList.add(bodyLabel);
+        &#125;
+
+        // 在已有界面上修改界面, 需要重绘界面
+        // 重绘界面 (更新界面)
+        getContentPane().repaint();
+    &#125;
+
+    // 初始化地图
+    private void initMap() &#123;
+        // 四周生成墙体 (第0行,第0列,最后一行,最后一列)
+        for (int row = 0; row &lt; ROW_COUNT; row++) &#123; // 外循环表示行
+            // row是行
+            for (int column = 0; column &lt; COLUMN_COUNT; column++) &#123; // 内循环表示列
+                // column是列
+                // 第0行 或 第0列 或 最后一行 或 最后一列 生成墙体
+                if (row == 0 || column == 0 || row == ROW_COUNT - 1 || column == COLUMN_COUNT - 1) &#123;
+                    // 绘制墙体
+                    JLabel wallLabel = new JLabel(new ImageIcon(IMAGE_PATH + &quot;wall.png&quot;));
+                    wallLabel.setBounds(column * IMAGE_SIZE, row * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE);
+                    // 把墙体添加到窗口中
+                    add(wallLabel);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    // 初始化窗口
+    public void initFrame() &#123;
+        // 设置标题
+        setTitle(&quot;贪吃蛇&quot;);
+        // 设置窗体大小
+        setSize((COLUMN_COUNT + 1) * IMAGE_SIZE, (ROW_COUNT + 1) * IMAGE_SIZE + 47);
+        // 设置窗口固定大小
+        setResizable(false);
+        // 设置关闭窗口退出程序
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // 窗口居中
+        setLocationRelativeTo(null);
+        // 取消布局
+        setLayout(null);
+        // 设置背景颜色
+        setBackground(Color.LIGHT_GRAY);
+        // 窗口置顶
+        setAlwaysOnTop(true);
+        // 显示吃掉食物的数量
+        countLabel = new JLabel(&quot;吃掉食物的数量: &quot; + count);
+        countLabel.setBounds(10, 10, 200, 30);
+        add(countLabel);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.定时器;
+
+import com.itheima.ui.SnakeFrame;
+
+// 游戏的启动类
+public class SnakeApp &#123;
+    public static void main(String[] args) &#123;
+        SnakeFrame snakeFrame = new SnakeFrame();
     &#125;
 &#125;
 </code></pre>
