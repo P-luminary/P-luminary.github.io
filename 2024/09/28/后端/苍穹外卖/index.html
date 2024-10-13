@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -8116,6 +8116,159 @@ public class PayNotifyController &#123;
             
         &lt;/foreach&gt;
 &lt;/insert&gt;
+</code></pre>
+<h3 id="订单搜索"><a href="#订单搜索" class="headerlink" title="订单搜索"></a>订单搜索</h3><h4 id="1-2-1-admin-x2F-OrderController"><a href="#1-2-1-admin-x2F-OrderController" class="headerlink" title="1.2.1 admin&#x2F;OrderController"></a>1.2.1 admin&#x2F;OrderController</h4><p>在admin包下创建OrderController</p>
+<pre><code class="java">/**
+ * 订单管理
+ */
+@RestController(&quot;adminOrderController&quot;)
+@RequestMapping(&quot;/admin/order&quot;)
+@Slf4j
+@Api(tags = &quot;订单管理接口&quot;)
+public class OrderController &#123;
+
+    @Autowired
+    private OrderService orderService;
+
+    /**
+     * 订单搜索
+     *
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    @GetMapping(&quot;/conditionSearch&quot;)
+    @ApiOperation(&quot;订单搜索&quot;)
+    public Result&lt;PageResult&gt; conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) &#123;
+        PageResult pageResult = orderService.conditionSearch(ordersPageQueryDTO);
+        return Result.success(pageResult);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="1-2-2-OrderService-1"><a href="#1-2-2-OrderService-1" class="headerlink" title="1.2.2 OrderService"></a>1.2.2 OrderService</h4><pre><code class="java">    /**
+     * 条件搜索订单
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
+</code></pre>
+<h4 id="1-2-3-OrderServiceImpl-1"><a href="#1-2-3-OrderServiceImpl-1" class="headerlink" title="1.2.3 OrderServiceImpl"></a>1.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 订单搜索
+     *
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) &#123;
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+
+        Page&lt;Orders&gt; page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        // 部分订单状态，需要额外返回订单菜品信息，将Orders转化为OrderVO
+        List&lt;OrderVO&gt; orderVOList = getOrderVOList(page);
+
+        return new PageResult(page.getTotal(), orderVOList);
+    &#125;
+
+    private List&lt;OrderVO&gt; getOrderVOList(Page&lt;Orders&gt; page) &#123;
+        // 需要返回订单菜品信息，自定义OrderVO响应结果
+        List&lt;OrderVO&gt; orderVOList = new ArrayList&lt;&gt;();
+
+        List&lt;Orders&gt; ordersList = page.getResult();
+        if (!CollectionUtils.isEmpty(ordersList)) &#123;
+            for (Orders orders : ordersList) &#123;
+                // 将共同字段复制到OrderVO
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders, orderVO);
+                String orderDishes = getOrderDishesStr(orders);
+
+                // 将订单菜品信息封装到orderVO中，并添加到orderVOList
+                orderVO.setOrderDishes(orderDishes);
+                orderVOList.add(orderVO);
+            &#125;
+        &#125;
+        return orderVOList;
+    &#125;
+
+    /**
+     * 根据订单id获取菜品信息字符串
+     *
+     * @param orders
+     * @return
+     */
+    private String getOrderDishesStr(Orders orders) &#123;
+        // 查询订单菜品详情信息（订单中的菜品和数量）
+        List&lt;OrderDetail&gt; orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+        // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
+        List&lt;String&gt; orderDishList = orderDetailList.stream().map(x -&gt; &#123;
+            String orderDish = x.getName() + &quot;*&quot; + x.getNumber() + &quot;;&quot;;
+            return orderDish;
+        &#125;).collect(Collectors.toList());
+
+        // 将该订单对应的所有菜品信息拼接在一起
+        return String.join(&quot;&quot;, orderDishList);
+    &#125;
+</code></pre>
+<h3 id="各个状态的订单数量统计"><a href="#各个状态的订单数量统计" class="headerlink" title="各个状态的订单数量统计"></a>各个状态的订单数量统计</h3><h4 id="2-2-1-admin-x2F-OrderController"><a href="#2-2-1-admin-x2F-OrderController" class="headerlink" title="2.2.1 admin&#x2F;OrderController"></a>2.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 各个状态的订单数量统计
+     *
+     * @return
+     */
+    @GetMapping(&quot;/statistics&quot;)
+    @ApiOperation(&quot;各个状态的订单数量统计&quot;)
+    public Result&lt;OrderStatisticsVO&gt; statistics() &#123;
+        OrderStatisticsVO orderStatisticsVO = orderService.statistics();
+        return Result.success(orderStatisticsVO);
+    &#125;
+</code></pre>
+<h4 id="2-2-2-OrderService-1"><a href="#2-2-2-OrderService-1" class="headerlink" title="2.2.2 OrderService"></a>2.2.2 OrderService</h4><pre><code class="java">    /**
+     * 各个状态的订单数量统计
+     * @return
+     */
+    OrderStatisticsVO statistics();
+</code></pre>
+<h4 id="2-2-3-OrderServiceImpl-1"><a href="#2-2-3-OrderServiceImpl-1" class="headerlink" title="2.2.3 OrderServiceImpl"></a>2.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 各个状态的订单数量统计
+     *
+     * @return
+     */
+    public OrderStatisticsVO statistics() &#123;
+        // 根据状态，分别查询出待接单、待派送、派送中的订单数量
+        Integer toBeConfirmed = orderMapper.countStatus(Orders.TO_BE_CONFIRMED);
+        Integer confirmed = orderMapper.countStatus(Orders.CONFIRMED);
+        Integer deliveryInProgress = orderMapper.countStatus(Orders.DELIVERY_IN_PROGRESS);
+
+        // 将查询出的数据封装到orderStatisticsVO中响应
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+        orderStatisticsVO.setToBeConfirmed(toBeConfirmed);
+        orderStatisticsVO.setConfirmed(confirmed);
+        orderStatisticsVO.setDeliveryInProgress(deliveryInProgress);
+        return orderStatisticsVO;
+    &#125;
+</code></pre>
+<h4 id="2-2-4-OrderMapper-1"><a href="#2-2-4-OrderMapper-1" class="headerlink" title="2.2.4 OrderMapper"></a>2.2.4 OrderMapper</h4><pre><code class="java">    /**
+     * 根据状态统计订单数量
+     * @param status
+     */
+    @Select(&quot;select count(id) from orders where status = #&#123;status&#125;&quot;)
+    Integer countStatus(Integer status);
+</code></pre>
+<h3 id="查询订单详情-1"><a href="#查询订单详情-1" class="headerlink" title="查询订单详情"></a>查询订单详情</h3><p>业务规则：</p>
+<ul>
+<li>订单详情页面需要展示订单基本信息（状态、订单号、下单时间、收货人、电话、收货地址、金额等）</li>
+<li>订单详情页面需要展示订单明细数据（商品名称、数量、单价）</li>
+</ul>
+<h4 id="3-2-1-admin-x2F-OrderController"><a href="#3-2-1-admin-x2F-OrderController" class="headerlink" title="3.2.1 admin&#x2F;OrderController"></a>3.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 订单详情
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/details/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;查询订单详情&quot;)
+    public Result&lt;OrderVO&gt; details(@PathVariable(&quot;id&quot;) Long id) &#123;
+        OrderVO orderVO = orderService.details(id);
+        return Result.success(orderVO);
+    &#125;
 </code></pre>
 <h3 id="SpringTask-定时任务-定时自动执行某段Java代码"><a href="#SpringTask-定时任务-定时自动执行某段Java代码" class="headerlink" title="SpringTask[定时任务]定时自动执行某段Java代码"></a>SpringTask[定时任务]<del>定时自动执行某段Java代码</del></h3><p>SpringTask是Spring框架提供的任务调度工具，可以按照约定的时间自动执行某个代码逻辑</p>
 <h6 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h6><ul>
