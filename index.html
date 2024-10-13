@@ -2723,7 +2723,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -3360,7 +3360,7 @@ sout(newStr)
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#1bccbc>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
@@ -10078,6 +10078,61 @@ public interface ShoppingCartMapper &#123;
     &lt;/select&gt;
 &lt;/mapper&gt;
 </code></pre>
+<h3 id="删除购物车"><a href="#删除购物车" class="headerlink" title="删除购物车"></a>删除购物车</h3><pre><code class="java">sky-server  com/sky/controller/user/ShoppingCartController.java
+/**
+     * 删除购物车
+     * @param shoppingCartDTO
+     * @return
+     */
+    @PostMapping(&quot;/sub&quot;)
+    @ApiOperation(&quot;删除购物车&quot;)
+    public Result sub(@RequestBody ShoppingCartDTO shoppingCartDTO)&#123;
+        log.info(&quot;删除购物车，商品信息为：&#123;&#125;&quot;,shoppingCartDTO);
+        shoppingCartService.subShoppingCart(shoppingCartDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ShoppingCartService.java
+    /**
+     * 删除购物车
+     * @param shoppingCartDTO
+     */
+    void subShoppingCart(ShoppingCartDTO shoppingCartDTO);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ShoppingCartServiceImpl.java
+/**
+     * 删除购物车中的商品
+     * @param shoppingCartDTO
+     */
+    @Override
+    public void subShoppingCart(ShoppingCartDTO shoppingCartDTO) &#123;
+        Long userId = BaseContext.getCurrentId();
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        shoppingCart.setUserId(userId);
+
+        List&lt;ShoppingCart&gt; list = shoppingCartMapper.list(shoppingCart);
+        if (list != null &amp;&amp; list.size() &gt; 0) &#123;
+            ShoppingCart cart = list.get(0);
+            if (cart.getNumber() &gt; 1) &#123;
+                // 如果 number &gt;1， 则需要将 number - 1
+                cart.setNumber(cart.getNumber() - 1);
+                shoppingCartMapper.updateNumberById(cart);
+            &#125; else &#123;
+                // 如果 number &lt;=1，则直接删除该购物车数据
+                shoppingCartMapper.deleteById(cart.getId());
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/ShoppingCartMapper.java
+/**
+     * 根据id删除购物车数据
+     * @param id
+     */
+    @Delete(&quot;delete from shopping_cart where id = #&#123;id&#125;&quot;)
+    void deleteById(Long id);
+</code></pre>
 <h3 id="查看购物车"><a href="#查看购物车" class="headerlink" title="查看购物车"></a>查看购物车</h3><blockquote>
 <p>名称、价格、商品、数量<br>Path：&#x2F;user&#x2F;shoppingCart&#x2F;list<br>            PUT</p>
 </blockquote>
@@ -10118,8 +10173,6 @@ public interface ShoppingCartMapper &#123;
 </code></pre>
 <h3 id="清空购物车"><a href="#清空购物车" class="headerlink" title="清空购物车"></a>清空购物车</h3><blockquote>
 <p>Path：user&#x2F;shoppingCart&#x2F;clean<br>Method：DELETE<br>返回：code <strong>date</strong> msg</p>
-</blockquote>
-<blockquote>
 </blockquote>
 <pre><code class="java">sky-server  com/sky/controller/user/ShoppingCartController.java
 /**
@@ -10755,6 +10808,7 @@ public interface OrderDetailMapper &#123;
  @Autowired
     private WeChatPayUtil weChatPayUtil;
 
+    
     /**
      * 订单支付
      *
@@ -10762,28 +10816,34 @@ public interface OrderDetailMapper &#123;
      * @return
      */
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception &#123;
-        // 当前登录用户id
-        Long userId = BaseContext.getCurrentId();
-        User user = userMapper.getById(userId);
-
-        //调用微信支付接口，生成预支付交易单
-        JSONObject jsonObject = weChatPayUtil.pay(
-                ordersPaymentDTO.getOrderNumber(), //商户订单号
-                new BigDecimal(0.01), //支付金额，单位 元
-                &quot;苍穹外卖订单&quot;, //商品描述
-                user.getOpenid() //微信用户的openid
-        );
-
-        if (jsonObject.getString(&quot;code&quot;) != null &amp;&amp; jsonObject.getString(&quot;code&quot;).equals(&quot;ORDERPAID&quot;)) &#123;
-            throw new OrderBusinessException(&quot;该订单已支付&quot;);
+        // 查询订单
+        Orders order = orderMapper.getByOrderNumber(ordersPaymentDTO.getOrderNumber());
+        if (order == null) &#123;
+            throw new OrderBusinessException(&quot;订单不存在&quot;);
         &#125;
 
-        OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
-        vo.setPackageStr(jsonObject.getString(&quot;package&quot;));
+        // 检查订单支付状态
+        if (order.getPayStatus() == 1) &#123; // 1 表示已支付
+            throw new OrderBusinessException(&quot;该订单已支付&quot;);
+        &#125;
+        order.setPayStatus(1);
 
-        return vo;
+        // 更新订单支付状态为已支付
+        order.setPayStatus(Orders.PAID);
+        order.setCheckoutTime(LocalDateTime.now());
+        order.setPayMethod(ordersPaymentDTO.getPayMethod());
+        order.setStatus(Orders.CONFIRMED);
+
+        orderMapper.update(order);
+
+        // 构造并返回支付结果对象
+        OrderPaymentVO orderPaymentVO = new OrderPaymentVO();
+        orderPaymentVO.setOrderNumber(order.getNumber()); // 订单号
+        orderPaymentVO.setPaymentTime(new Date());
+        orderPaymentVO.setPaymentStatus(&quot;SUCCESS&quot;);
+
+        return orderPaymentVO;
     &#125;
-
     /**
      * 支付成功，修改订单状态
      *
@@ -10842,10 +10902,15 @@ public interface OrderMapper &#123;
      * @param orders
      */
     void update(Orders orders);
-
+    /**
+     * 根据id查询订单
+     * @param id
+     */
+    @Select(&quot;select * from orders where id = #&#123;id&#125;&#125;&quot;)
+    Orders getById(Long id);
 &#125;
 </code></pre>
-<pre><code class="java">resources/mapper/OrderMapper.xml
+<pre><code class="xml">resources/mapper/OrderMapper.xml
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
 &lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
 &lt;mapper namespace=&quot;com.sky.mapper.OrderMapper&quot;&gt;
@@ -10890,6 +10955,11 @@ public interface OrderMapper &#123;
         &lt;/set&gt;
         where id = #&#123;id&#125;
     &lt;/update&gt;
+        
+        &lt;!-- 根据订单号查询订单 --&gt;
+    &lt;select id=&quot;getByOrderNumber&quot; parameterType=&quot;String&quot; resultType=&quot;Orders&quot;&gt;
+        select * from orders where number = #&#123;orderNumber&#125;
+    &lt;/select&gt;
 &lt;/mapper&gt;
 </code></pre>
 <pre><code class="java">sky-server  com/sky/mapper/UserMapper.java
@@ -11017,6 +11087,297 @@ public class PayNotifyController &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="查询历史订单"><a href="#查询历史订单" class="headerlink" title="查询历史订单"></a>查询历史订单</h3><p>业务规则</p>
+<ul>
+<li>分页查询历史订单</li>
+<li>可以根据订单状态查询</li>
+<li>展示订单数据时，需要展示的数据包括：下单时间、订单状态、订单金额、订单明细（商品名称、图片）</li>
+</ul>
+<p>接口设计：参见接口文档</p>
+<h3 id="1-2-代码实现"><a href="#1-2-代码实现" class="headerlink" title="1.2 代码实现"></a>1.2 代码实现</h3><h4 id="1-2-1-user-x2F-OrderController"><a href="#1-2-1-user-x2F-OrderController" class="headerlink" title="1.2.1 user&#x2F;OrderController"></a>1.2.1 user&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 历史订单查询
+     *
+     * @param page
+     * @param pageSize
+     * @param status   订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+     * @return
+     */
+    @GetMapping(&quot;/historyOrders&quot;)
+    @ApiOperation(&quot;历史订单查询&quot;)
+    public Result&lt;PageResult&gt; page(int page, int pageSize, Integer status) &#123;
+        PageResult pageResult = orderService.pageQuery4User(page, pageSize, status);
+        return Result.success(pageResult);
+    &#125;
+</code></pre>
+<h4 id="1-2-2-OrderService"><a href="#1-2-2-OrderService" class="headerlink" title="1.2.2 OrderService"></a>1.2.2 OrderService</h4><pre><code class="java">    /**
+     * 用户端订单分页查询
+     * @param page
+     * @param pageSize
+     * @param status
+     * @return
+     */
+    PageResult pageQuery4User(int page, int pageSize, Integer status);
+</code></pre>
+<h4 id="1-2-3-OrderServiceImpl"><a href="#1-2-3-OrderServiceImpl" class="headerlink" title="1.2.3 OrderServiceImpl"></a>1.2.3 OrderServiceImpl</h4><pre><code class="java">/**
+     * 用户端订单分页查询
+     *
+     * @param pageNum
+     * @param pageSize
+     * @param status
+     * @return
+     */
+    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) &#123;
+        // 设置分页
+        PageHelper.startPage(pageNum, pageSize);
+
+        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        ordersPageQueryDTO.setStatus(status);
+
+        // 分页条件查询
+        Page&lt;Orders&gt; page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        List&lt;OrderVO&gt; list = new ArrayList();
+
+        // 查询出订单明细，并封装入OrderVO进行响应
+        if (page != null &amp;&amp; page.getTotal() &gt; 0) &#123;
+            for (Orders orders : page) &#123;
+                Long orderId = orders.getId();// 订单id
+
+                // 查询订单明细
+                List&lt;OrderDetail&gt; orderDetails = orderDetailMapper.getByOrderId(orderId);
+
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders, orderVO);
+                orderVO.setOrderDetailList(orderDetails);
+
+                list.add(orderVO);
+            &#125;
+        &#125;
+        return new PageResult(page.getTotal(), list);
+    &#125;
+</code></pre>
+<h4 id="1-2-4-OrderMapper"><a href="#1-2-4-OrderMapper" class="headerlink" title="1.2.4 OrderMapper"></a>1.2.4 OrderMapper</h4><pre><code class="java">    /**
+     * 分页条件查询并按下单时间排序
+     * @param ordersPageQueryDTO
+     */
+    Page&lt;Orders&gt; pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
+</code></pre>
+<h4 id="1-2-5-OrderMapper-xml"><a href="#1-2-5-OrderMapper-xml" class="headerlink" title="1.2.5 OrderMapper.xml"></a>1.2.5 OrderMapper.xml</h4><pre><code class="xml">    &lt;select id=&quot;pageQuery&quot; resultType=&quot;Orders&quot;&gt;
+        select * from orders
+        &lt;where&gt;
+            &lt;if test=&quot;number != null and number!=&#39;&#39;&quot;&gt;
+                and number like concat(&#39;%&#39;,#&#123;number&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;phone != null and phone!=&#39;&#39;&quot;&gt;
+                and phone like concat(&#39;%&#39;,#&#123;phone&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;userId != null&quot;&gt;
+                and user_id = #&#123;userId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;beginTime != null&quot;&gt;
+                and order_time &amp;gt;= #&#123;beginTime&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;endTime != null&quot;&gt;
+                and order_time &amp;lt;= #&#123;endTime&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by order_time desc
+    &lt;/select&gt;
+</code></pre>
+<h4 id="1-2-6-OrderDetailMapper"><a href="#1-2-6-OrderDetailMapper" class="headerlink" title="1.2.6 OrderDetailMapper"></a>1.2.6 OrderDetailMapper</h4><pre><code class="java">    /**
+     * 根据订单id查询订单明细
+     * @param orderId
+     * @return
+     */
+    @Select(&quot;select * from order_detail where order_id = #&#123;orderId&#125;&quot;)
+    List&lt;OrderDetail&gt; getByOrderId(Long orderId);
+</code></pre>
+<h3 id="查询订单详情"><a href="#查询订单详情" class="headerlink" title="查询订单详情"></a>查询订单详情</h3><h4 id="2-2-代码实现"><a href="#2-2-代码实现" class="headerlink" title="2.2 代码实现"></a>2.2 代码实现</h4><h6 id="2-2-1-user-x2F-OrderController"><a href="#2-2-1-user-x2F-OrderController" class="headerlink" title="2.2.1 user&#x2F;OrderController"></a>2.2.1 user&#x2F;OrderController</h6><pre><code class="java">    /**
+     * 查询订单详情
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/orderDetail/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;查询订单详情&quot;)
+    public Result&lt;OrderVO&gt; details(@PathVariable(&quot;id&quot;) Long id) &#123;
+        OrderVO orderVO = orderService.details(id);
+        return Result.success(orderVO);
+    &#125;
+</code></pre>
+<h4 id="2-2-2-OrderService"><a href="#2-2-2-OrderService" class="headerlink" title="2.2.2 OrderService"></a>2.2.2 OrderService</h4><pre><code class="java">    /**
+     * 查询订单详情
+     * @param id
+     * @return
+     */
+    OrderVO details(Long id);
+</code></pre>
+<h4 id="2-2-3-OrderServiceImpl"><a href="#2-2-3-OrderServiceImpl" class="headerlink" title="2.2.3 OrderServiceImpl"></a>2.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 查询订单详情
+     *
+     * @param id
+     * @return
+     */
+    public OrderVO details(Long id) &#123;
+        // 根据id查询订单
+        Orders orders = orderMapper.getById(id);
+
+        // 查询该订单对应的菜品/套餐明细
+        List&lt;OrderDetail&gt; orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+        // 将该订单及其详情封装到OrderVO并返回
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
+
+        return orderVO;
+    &#125;
+</code></pre>
+<h4 id="2-2-4-OrderMapper"><a href="#2-2-4-OrderMapper" class="headerlink" title="2.2.4 OrderMapper"></a>2.2.4 OrderMapper</h4><pre><code class="java">    /**
+     * 根据id查询订单
+     * @param id
+     */
+    @Select(&quot;select * from orders where id=#&#123;id&#125;&quot;)
+    Orders getById(Long id);
+</code></pre>
+<h3 id="取消订单"><a href="#取消订单" class="headerlink" title="取消订单"></a>取消订单</h3><p>业务规则：</p>
+<ul>
+<li>待支付和待接单状态下，用户可直接取消订单</li>
+<li>商家已接单状态下，用户取消订单需电话沟通商家</li>
+<li>派送中状态下，用户取消订单需电话沟通商家</li>
+<li>如果在待接单状态下取消订单，需要给用户退款</li>
+<li>取消订单后需要将订单状态修改为“已取消”</li>
+</ul>
+<h4 id="3-2-1-user-x2F-OrderController"><a href="#3-2-1-user-x2F-OrderController" class="headerlink" title="3.2.1 user&#x2F;OrderController"></a>3.2.1 user&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 用户取消订单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/cancel/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;取消订单&quot;)
+    public Result cancel(@PathVariable(&quot;id&quot;) Long id) throws Exception &#123;
+        orderService.userCancelById(id);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="3-2-2-OrderService"><a href="#3-2-2-OrderService" class="headerlink" title="3.2.2 OrderService"></a>3.2.2 OrderService</h4><pre><code class="java">    /**
+     * 用户取消订单
+     * @param id
+     */
+    void userCancelById(Long id) throws Exception;
+</code></pre>
+<h4 id="3-2-3-OrderServiceImpl"><a href="#3-2-3-OrderServiceImpl" class="headerlink" title="3.2.3 OrderServiceImpl"></a>3.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 用户取消订单
+     *
+     * @param id
+     */
+    public void userCancelById(Long id) throws Exception &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 校验订单是否存在
+        if (ordersDB == null) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        &#125;
+
+        //订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        if (ordersDB.getStatus() &gt; 2) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        &#125;
+
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+
+        // 订单处于待接单状态下取消，需要进行退款
+        if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) &#123;
+            //调用微信支付退款接口
+            weChatPayUtil.refund(
+                    ordersDB.getNumber(), //商户订单号
+                    ordersDB.getNumber(), //商户退款单号
+                    new BigDecimal(0.01),//退款金额，单位 元
+                    new BigDecimal(0.01));//原订单金额
+
+            //支付状态修改为 退款
+            orders.setPayStatus(Orders.REFUND);
+        &#125;
+
+        // 更新订单状态、取消原因、取消时间
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason(&quot;用户取消&quot;);
+        orders.setCancelTime(LocalDateTime.now());
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="再来一单"><a href="#再来一单" class="headerlink" title="再来一单"></a>再来一单</h3><h4 id="4-2-1-user-x2F-OrderController"><a href="#4-2-1-user-x2F-OrderController" class="headerlink" title="4.2.1 user&#x2F;OrderController"></a>4.2.1 user&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 再来一单
+     *
+     * @param id
+     * @return
+     */
+    @PostMapping(&quot;/repetition/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;再来一单&quot;)
+    public Result repetition(@PathVariable Long id) &#123;
+        orderService.repetition(id);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="4-2-2-OrderService"><a href="#4-2-2-OrderService" class="headerlink" title="4.2.2 OrderService"></a>4.2.2 OrderService</h4><pre><code class="java">    /**
+     * 再来一单
+     *
+     * @param id
+     */
+    void repetition(Long id);
+</code></pre>
+<h4 id="4-2-3-OrderServiceImpl"><a href="#4-2-3-OrderServiceImpl" class="headerlink" title="4.2.3 OrderServiceImpl"></a>4.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 再来一单
+     *
+     * @param id
+     */
+   @Override
+    public void repetition(Long id) &#123;
+        //查询当前用户id
+        Long userId = BaseContext.getCurrentId();
+        //根据订单id查询当前订单详情
+        List&lt;OrderDetail&gt; orderDetailList = orderDetailMapper.getByOrderId(id);
+
+        // 将订单详情对象转换为购物车对象
+        // 这一行使用 map 方法对每个 OrderDetail 对象进行转换操作，x 是当前遍历的 OrderDetail 对象
+        List&lt;ShoppingCart&gt; shoppingCartList = orderDetailList.stream().map(x -&gt; &#123;
+            //表示一个函数，该函数接受一个参数 x 并返回一个新对象
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            // 将原订单详情里面的菜品信息重新复制到购物车对象中
+            BeanUtils.copyProperties(x, shoppingCart, &quot;id&quot;);
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+
+            return shoppingCart;
+        &#125;).collect(Collectors.toList());
+// 使用 collect 方法将转换后的 ShoppingCart 对象收集到一个新的 List&lt;ShoppingCart&gt; 列表中
+        // 将购物车对象批量添加到数据库
+        shoppingCartMapper.insertBatch(shoppingCartList);
+    &#125;
+</code></pre>
+<h4 id="4-2-4-ShoppingCartMapper"><a href="#4-2-4-ShoppingCartMapper" class="headerlink" title="4.2.4 ShoppingCartMapper"></a>4.2.4 ShoppingCartMapper</h4><pre><code class="java">    /**
+     * 批量插入购物车数据
+     *
+     * @param shoppingCartList
+     */
+    void insertBatch(List&lt;ShoppingCart&gt; shoppingCartList);
+</code></pre>
+<h4 id="4-2-5-ShoppingCartMapper-xml"><a href="#4-2-5-ShoppingCartMapper-xml" class="headerlink" title="4.2.5 ShoppingCartMapper.xml"></a>4.2.5 ShoppingCartMapper.xml</h4><pre><code class="xml">&lt;insert id=&quot;insertBatch&quot; parameterType=&quot;list&quot;&gt;
+        insert into shopping_cart
+        (name, image, user_id, dish_id, setmeal_id, dish_flavor, number, amount, create_time)
+        values
+        &lt;foreach collection=&quot;shoppingCartList&quot; item=&quot;sc&quot; separator=&quot;,&quot;&gt;
+            
+        &lt;/foreach&gt;
+&lt;/insert&gt;
+</code></pre>
 <h3 id="SpringTask-定时任务-定时自动执行某段Java代码"><a href="#SpringTask-定时任务-定时自动执行某段Java代码" class="headerlink" title="SpringTask[定时任务]定时自动执行某段Java代码"></a>SpringTask[定时任务]<del>定时自动执行某段Java代码</del></h3><p>SpringTask是Spring框架提供的任务调度工具，可以按照约定的时间自动执行某个代码逻辑</p>
 <h6 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h6><ul>
 <li>信用卡每月还款提醒</li>
@@ -11097,7 +11458,7 @@ public class MyTask &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -12018,7 +12379,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -31681,7 +32042,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -34731,7 +35092,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -34885,7 +35246,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -40090,7 +40451,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -42157,7 +42518,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
