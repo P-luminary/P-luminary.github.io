@@ -2723,7 +2723,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#00bcd4>
+            <a href="/tags/HM" style=color:#1bccbc>
                 HM
             </a>
         </span>
@@ -11531,6 +11531,355 @@ public class OrderController &#123;
         return Result.success(orderVO);
     &#125;
 </code></pre>
+<h3 id="接单"><a href="#接单" class="headerlink" title="接单"></a>接单</h3><p>业务规则：</p>
+<ul>
+<li>商家接单其实就是将订单的状态修改为“已接单”</li>
+</ul>
+<h4 id="4-2-1-admin-x2F-OrderController"><a href="#4-2-1-admin-x2F-OrderController" class="headerlink" title="4.2.1 admin&#x2F;OrderController"></a>4.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 接单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/confirm&quot;)
+    @ApiOperation(&quot;接单&quot;)
+    public Result confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO) &#123;
+        orderService.confirm(ordersConfirmDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="4-2-2-OrderService-1"><a href="#4-2-2-OrderService-1" class="headerlink" title="4.2.2 OrderService"></a>4.2.2 OrderService</h4><pre><code class="java">    /**
+     * 接单
+     *
+     * @param ordersConfirmDTO
+     */
+    void confirm(OrdersConfirmDTO ordersConfirmDTO);
+</code></pre>
+<h4 id="4-2-3-OrderServiceImpl-1"><a href="#4-2-3-OrderServiceImpl-1" class="headerlink" title="4.2.3 OrderServiceImpl"></a>4.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 接单
+     *
+     * @param ordersConfirmDTO
+     */
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) &#123;
+        Orders orders = Orders.builder()
+                .id(ordersConfirmDTO.getId())
+                .status(Orders.CONFIRMED)
+                .build();
+
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="拒单"><a href="#拒单" class="headerlink" title="拒单"></a>拒单</h3><p>业务规则：</p>
+<ul>
+<li>商家拒单其实就是将订单状态修改为“已取消”</li>
+<li>只有订单处于“待接单”状态时可以执行拒单操作</li>
+<li>商家拒单时需要指定拒单原因</li>
+<li>商家拒单时，如果用户已经完成了支付，需要为用户退款</li>
+</ul>
+<h4 id="5-2-1-admin-x2F-OrderController"><a href="#5-2-1-admin-x2F-OrderController" class="headerlink" title="5.2.1 admin&#x2F;OrderController"></a>5.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 拒单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/rejection&quot;)
+    @ApiOperation(&quot;拒单&quot;)
+    public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) throws Exception &#123;
+        orderService.rejection(ordersRejectionDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="5-2-2-OrderService"><a href="#5-2-2-OrderService" class="headerlink" title="5.2.2 OrderService"></a>5.2.2 OrderService</h4><pre><code class="java">    /**
+     * 拒单
+     *
+     * @param ordersRejectionDTO
+     */
+    void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception;
+</code></pre>
+<h4 id="5-2-3-OrderServiceImpl"><a href="#5-2-3-OrderServiceImpl" class="headerlink" title="5.2.3 OrderServiceImpl"></a>5.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 拒单
+     *
+     * @param ordersRejectionDTO
+     */
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+
+        // 订单只有存在且状态为2（待接单）才可以拒单
+        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        &#125;
+
+        //支付状态
+        Integer payStatus = ordersDB.getPayStatus();
+        if (payStatus == Orders.PAID) &#123;
+            //用户已支付，需要退款
+            String refund = weChatPayUtil.refund(
+                    ordersDB.getNumber(),
+                    ordersDB.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01));
+            log.info(&quot;申请退款：&#123;&#125;&quot;, refund);
+        &#125;
+
+        // 拒单需要退款，根据订单id更新订单状态、拒单原因、取消时间
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        orders.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="取消订单-1"><a href="#取消订单-1" class="headerlink" title="取消订单"></a>取消订单</h3><h4 id="6-2-代码实现"><a href="#6-2-代码实现" class="headerlink" title="6.2 代码实现"></a>6.2 代码实现</h4><h4 id="6-2-1-admin-x2F-OrderController"><a href="#6-2-1-admin-x2F-OrderController" class="headerlink" title="6.2.1 admin&#x2F;OrderController"></a>6.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 取消订单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/cancel&quot;)
+    @ApiOperation(&quot;取消订单&quot;)
+    public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception &#123;
+        orderService.cancel(ordersCancelDTO);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="6-2-2-OrderService"><a href="#6-2-2-OrderService" class="headerlink" title="6.2.2 OrderService"></a>6.2.2 OrderService</h4><pre><code class="java">    /**
+     * 商家取消订单
+     *
+     * @param ordersCancelDTO
+     */
+    void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception;
+</code></pre>
+<h4 id="6-2-3-OrderServiceImpl"><a href="#6-2-3-OrderServiceImpl" class="headerlink" title="6.2.3 OrderServiceImpl"></a>6.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 取消订单
+     *
+     * @param ordersCancelDTO
+     */
+    public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(ordersCancelDTO.getId());
+
+        //支付状态
+        Integer payStatus = ordersDB.getPayStatus();
+        if (payStatus == 1) &#123;
+            //用户已支付，需要退款
+            String refund = weChatPayUtil.refund(
+                    ordersDB.getNumber(),
+                    ordersDB.getNumber(),
+                    new BigDecimal(0.01),
+                    new BigDecimal(0.01));
+            log.info(&quot;申请退款：&#123;&#125;&quot;, refund);
+        &#125;
+
+        // 管理端取消订单需要退款，根据订单id更新订单状态、取消原因、取消时间
+        Orders orders = new Orders();
+        orders.setId(ordersCancelDTO.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason(ordersCancelDTO.getCancelReason());
+        orders.setCancelTime(LocalDateTime.now());
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="派送订单"><a href="#派送订单" class="headerlink" title="派送订单"></a>派送订单</h3><p>业务规则：</p>
+<ul>
+<li>派送订单其实就是将订单状态修改为“派送中”</li>
+<li>只有状态为“待派送”的订单可以执行派送订单操作</li>
+</ul>
+<h4 id="7-2-1-admin-x2F-OrderController"><a href="#7-2-1-admin-x2F-OrderController" class="headerlink" title="7.2.1 admin&#x2F;OrderController"></a>7.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 派送订单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/delivery/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;派送订单&quot;)
+    public Result delivery(@PathVariable(&quot;id&quot;) Long id) &#123;
+        orderService.delivery(id);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="7-2-2-OrderService"><a href="#7-2-2-OrderService" class="headerlink" title="7.2.2 OrderService"></a>7.2.2 OrderService</h4><pre><code class="java">    /**
+     * 派送订单
+     *
+     * @param id
+     */
+    void delivery(Long id);
+</code></pre>
+<h4 id="7-2-3-OrderServiceImpl"><a href="#7-2-3-OrderServiceImpl" class="headerlink" title="7.2.3 OrderServiceImpl"></a>7.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 派送订单
+     *
+     * @param id
+     */
+    public void delivery(Long id) &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 校验订单是否存在，并且状态为3
+        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.CONFIRMED)) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        &#125;
+
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+        // 更新订单状态,状态转为派送中
+        orders.setStatus(Orders.DELIVERY_IN_PROGRESS);
+
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="完成订单"><a href="#完成订单" class="headerlink" title="完成订单"></a>完成订单</h3><p>业务规则：</p>
+<ul>
+<li>完成订单其实就是将订单状态修改为“已完成”</li>
+<li>只有状态为“派送中”的订单可以执行订单完成操作</li>
+</ul>
+<h4 id="8-2-1-admin-x2F-OrderController"><a href="#8-2-1-admin-x2F-OrderController" class="headerlink" title="8.2.1 admin&#x2F;OrderController"></a>8.2.1 admin&#x2F;OrderController</h4><pre><code class="java">    /**
+     * 完成订单
+     *
+     * @return
+     */
+    @PutMapping(&quot;/complete/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;完成订单&quot;)
+    public Result complete(@PathVariable(&quot;id&quot;) Long id) &#123;
+        orderService.complete(id);
+        return Result.success();
+    &#125;
+</code></pre>
+<h4 id="8-2-2-OrderService"><a href="#8-2-2-OrderService" class="headerlink" title="8.2.2 OrderService"></a>8.2.2 OrderService</h4><pre><code class="java">    /**
+     * 完成订单
+     *
+     * @param id
+     */
+    void complete(Long id);
+</code></pre>
+<h4 id="8-2-3-OrderServiceImpl"><a href="#8-2-3-OrderServiceImpl" class="headerlink" title="8.2.3 OrderServiceImpl"></a>8.2.3 OrderServiceImpl</h4><pre><code class="java">    /**
+     * 完成订单
+     *
+     * @param id
+     */
+    public void complete(Long id) &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 校验订单是否存在，并且状态为4
+        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        &#125;
+
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+        // 更新订单状态,状态转为完成
+        orders.setStatus(Orders.COMPLETED);
+        orders.setDeliveryTime(LocalDateTime.now());
+
+        orderMapper.update(orders);
+    &#125;
+</code></pre>
+<h3 id="校验收货地址是否超出配送范围"><a href="#校验收货地址是否超出配送范围" class="headerlink" title="校验收货地址是否超出配送范围"></a>校验收货地址是否超出配送范围</h3><h2 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h2><p>注册账号：<a target="_blank" rel="noopener" href="https://passport.baidu.com/v2/?reg&amp;tt=1671699340600&amp;overseas=&amp;gid=CF954C2-A3D2-417F-9FE6-B0F249ED7E33&amp;tpl=pp&amp;u=https://lbsyun.baidu.com/index.php?title=%E9%A6%96%E9%A1%B5">https://passport.baidu.com/v2/?reg&amp;tt=1671699340600&amp;overseas=&amp;gid=CF954C2-A3D2-417F-9FE6-B0F249ED7E33&amp;tpl=pp&amp;u=https%3A%2F%2Flbsyun.baidu.com%2Findex.php%3Ftitle%3D%E9%A6%96%E9%A1%B5</a></p>
+<p>登录百度地图开放平台：<a target="_blank" rel="noopener" href="https://lbsyun.baidu.com/">https://lbsyun.baidu.com/</a></p>
+<p>进入控制台，创建应用，获取AK：</p>
+<p>![image-20221222170049729](E:\Java实例项目1-20套\第24套【项目实战】Java外卖项目实战《苍穹外卖》SpringBoot+SpringMVC+Vue+Swagger+Lombok+Mybatis+SpringSession+Redis+Nginx+小程序\0-0 源码资料\资料\day09\项目实战参考答案\assets\image-20221222170049729.png)</p>
+<p>![image-20221222170256927](E:\Java实例项目1-20套\第24套【项目实战】Java外卖项目实战《苍穹外卖》SpringBoot+SpringMVC+Vue+Swagger+Lombok+Mybatis+SpringSession+Redis+Nginx+小程序\0-0 源码资料\资料\day09\项目实战参考答案\assets\image-20221222170256927.png)</p>
+<p>相关接口:</p>
+<p><a target="_blank" rel="noopener" href="https://lbsyun.baidu.com/index.php?title=webapi/guide/webservice-geocoding">https://lbsyun.baidu.com/index.php?title=webapi/guide/webservice-geocoding</a></p>
+<p><a target="_blank" rel="noopener" href="https://lbsyun.baidu.com/index.php?title=webapi/directionlite-v1">https://lbsyun.baidu.com/index.php?title=webapi/directionlite-v1</a></p>
+<h2 id="2-代码开发"><a href="#2-代码开发" class="headerlink" title="2. 代码开发"></a>2. 代码开发</h2><h3 id="2-1-application-yml"><a href="#2-1-application-yml" class="headerlink" title="2.1 application.yml"></a>2.1 application.yml</h3><p>配置外卖商家店铺地址和百度地图的AK：</p>
+<p>![image-20221222170819582](E:\Java实例项目1-20套\第24套【项目实战】Java外卖项目实战《苍穹外卖》SpringBoot+SpringMVC+Vue+Swagger+Lombok+Mybatis+SpringSession+Redis+Nginx+小程序\0-0 源码资料\资料\day09\项目实战参考答案\assets\image-20221222170819582.png)</p>
+<h3 id="2-2-OrderServiceImpl"><a href="#2-2-OrderServiceImpl" class="headerlink" title="2.2 OrderServiceImpl"></a>2.2 OrderServiceImpl</h3><p>改造OrderServiceImpl，注入上面的配置项：</p>
+<pre><code class="java">com/sky/properties/BaiDuProperties.java
+package com.sky.properties;
+
+import lombok.Data;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+// 多个prefix
+@ConfigurationProperties(prefix = &quot;sky.baidu&quot;)
+@Data
+public class BaiDuProperties &#123;
+    private String shopAddress;
+    private String ak;
+&#125;
+</code></pre>
+<pre><code class="yaml">application.yml
+  baidu:
+    ak: $&#123;sky.baidu.ak&#125;
+    shopAddress: $&#123;sky.baidu.shopAddress&#125;
+</code></pre>
+<pre><code class="yaml">application-dev.yml
+  baidu:
+    ak: xxxxxxxxx
+    shopAddress: 河北省唐山市丰润区燕山路街道美景花园
+</code></pre>
+<p>在OrderServiceImpl中提供校验方法：</p>
+<pre><code class="java">/**
+     * 检查客户的收货地址是否超出配送范围
+     * @param address
+     */
+    private void checkOutOfRange(String address) &#123;
+        Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;address&quot;, baiDuProperties.getShopAddress());
+        map.put(&quot;output&quot;, &quot;json&quot;);
+        map.put(&quot;ak&quot;, baiDuProperties.getAk());
+
+        //获取店铺的经纬度坐标
+        String shopCoordinate = HttpClientUtil.doGet(&quot;https://api.map.baidu.com/geocoding/v3&quot;, map);
+
+        JSONObject jsonObject = JSON.parseObject(shopCoordinate);
+        if(!jsonObject.getString(&quot;status&quot;).equals(&quot;0&quot;))&#123;
+            throw new OrderBusinessException(&quot;店铺地址解析失败&quot;);
+        &#125;
+
+        //数据解析
+        JSONObject location = jsonObject.getJSONObject(&quot;result&quot;).getJSONObject(&quot;location&quot;);
+        String lat = location.getString(&quot;lat&quot;);
+        String lng = location.getString(&quot;lng&quot;);
+        //店铺经纬度坐标
+        String shopLngLat = lat + &quot;,&quot; + lng;
+
+        map.put(&quot;address&quot;,address);
+        //获取用户收货地址的经纬度坐标
+        String userCoordinate = HttpClientUtil.doGet(&quot;https://api.map.baidu.com/geocoding/v3&quot;, map);
+
+        jsonObject = JSON.parseObject(userCoordinate);
+        if(!jsonObject.getString(&quot;status&quot;).equals(&quot;0&quot;))&#123;
+            throw new OrderBusinessException(&quot;收货地址解析失败&quot;);
+        &#125;
+
+        //数据解析
+        location = jsonObject.getJSONObject(&quot;result&quot;).getJSONObject(&quot;location&quot;);
+        lat = location.getString(&quot;lat&quot;);
+        lng = location.getString(&quot;lng&quot;);
+        //用户收货地址经纬度坐标
+        String userLngLat = lat + &quot;,&quot; + lng;
+
+        map.put(&quot;origin&quot;,shopLngLat);
+        map.put(&quot;destination&quot;,userLngLat);
+        map.put(&quot;steps_info&quot;,&quot;0&quot;);
+
+        //路线规划
+        String json = HttpClientUtil.doGet(&quot;https://api.map.baidu.com/directionlite/v1/driving&quot;, map);
+
+        jsonObject = JSON.parseObject(json);
+        if(!jsonObject.getString(&quot;status&quot;).equals(&quot;0&quot;))&#123;
+            throw new OrderBusinessException(&quot;配送路线规划失败&quot;);
+        &#125;
+
+        //数据解析
+        JSONObject result = jsonObject.getJSONObject(&quot;result&quot;);
+        JSONArray jsonArray = (JSONArray) result.get(&quot;routes&quot;);
+        Integer distance = (Integer) ((JSONObject) jsonArray.get(0)).get(&quot;distance&quot;);
+
+        if(distance &gt; 5000)&#123;
+            //配送距离超过5000米
+            throw new OrderBusinessException(&quot;超出配送范围&quot;);
+        &#125;
+    &#125;
+</code></pre>
+<p>在OrderServiceImpl的submitOrder方法中调用上面的校验方法：</p>
+<pre><code class="java">   // 检查用户的收获地址是否超出配送范围
+        checkOutOfRange(addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
+</code></pre>
+<p>![image-20221222171444981](E:\Java实例项目1-20套\第24套【项目实战】Java外卖项目实战《苍穹外卖》SpringBoot+SpringMVC+Vue+Swagger+Lombok+Mybatis+SpringSession+Redis+Nginx+小程序\0-0 源码资料\资料\day09\项目实战参考答案\assets\image-20221222171444981.png)</p>
 <h3 id="SpringTask-定时任务-定时自动执行某段Java代码"><a href="#SpringTask-定时任务-定时自动执行某段Java代码" class="headerlink" title="SpringTask[定时任务]定时自动执行某段Java代码"></a>SpringTask[定时任务]<del>定时自动执行某段Java代码</del></h3><p>SpringTask是Spring框架提供的任务调度工具，可以按照约定的时间自动执行某个代码逻辑</p>
 <h6 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h6><ul>
 <li>信用卡每月还款提醒</li>
@@ -11597,6 +11946,379 @@ public class MyTask &#123;
 </ul>
 </li>
 </ul>
+<h5 id="代码开发：-4"><a href="#代码开发：-4" class="headerlink" title="代码开发："></a>代码开发：</h5><pre><code class="java">sky-server  com/sky/task/OrderTask.java
+package com.sky.task;
+
+import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Component
+@Slf4j
+public class OrderTask &#123;
+    @Autowired
+    private OrderMapper orderMapper;
+
+    /**
+     * 处理超时订单的方法
+     */
+    @Scheduled(cron = &quot;0 * * * * ?&quot;)//每分钟触发一次
+    public void processTimeoutOrder()&#123;
+        log.info(&quot;定时处理超时订单&quot;);
+        // select * from orders where status = ? and order_time = (当前时间 - 15分钟)
+        LocalDateTime time = LocalDateTime.now().plusMinutes(-15);
+        List&lt;Orders&gt; ordersList = orderMapper.getByStatusAndOrderTimeLT(Orders.PENDING_PAYMENT, time);
+        if (ordersList != null &amp;&amp; ordersList.size() &gt; 0) &#123;
+            for (Orders orders : ordersList) &#123;
+                orders.setStatus(Orders.CANCELLED);
+                orders.setCancelReason(&quot;订单超时，自动取消&quot;);
+                orders.setCancelTime(LocalDateTime.now());
+                orderMapper.update(orders);
+            &#125;
+        &#125;
+    &#125;
+
+    /**
+     * 处理一直处于派送中状态的订单
+     */
+    @Scheduled(cron = &quot;0 0 1 * * ?&quot;)//每天凌晨一点
+    public void processDeliveryOrder() &#123;
+        log.info(&quot;定时处理处于派送中的订单&quot;);
+        LocalDateTime time = LocalDateTime.now().plusMinutes(-60);
+        List&lt;Orders&gt; ordersList = orderMapper.getByStatusAndOrderTimeLT(Orders.DELIVERY_IN_PROGRESS, time);
+        if (ordersList != null &amp;&amp; ordersList.size() &gt; 0) &#123;
+            for (Orders orders : ordersList) &#123;
+                orders.setStatus(Orders.COMPLETED);
+                orderMapper.update(orders);
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/OrderMapper.java
+    /**
+     *
+     * 根据订单状态和下单时间查询订单
+     * @param status
+     * @param orderTime
+     * @return
+     */
+    @Select(&quot;select * from orders where status = #&#123;status&#125; and order_time &lt; #&#123;orderTime&#125;&quot;)
+    List&lt;Orders&gt; getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
+</code></pre>
+<h3 id="WebSocket"><a href="#WebSocket" class="headerlink" title="WebSocket"></a>WebSocket</h3><p>WebSocket是基于TCP的一种新的<strong>网络协议</strong>，它实现了浏览器与服务器全双工通信——浏览器和服务器只需要完成一次握手，两者之间就可以创建<strong>持续性</strong>连接，并进行<strong>双向</strong>数据传输</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/edb75e96dfbeebfac80f0c08ad92001201b8754c/data/WebSocket.png"></p>
+<h6 id="应用场景："><a href="#应用场景：" class="headerlink" title="应用场景："></a>应用场景：</h6><ul>
+<li>视频弹幕</li>
+<li>网页聊天</li>
+<li>体育实况更新</li>
+<li>股票基金报价实时更新</li>
+</ul>
+<h5 id="入门案例"><a href="#入门案例" class="headerlink" title="入门案例"></a>入门案例</h5><p><strong>实现步骤：</strong></p>
+<ul>
+<li>直接使用<strong>websocket.html</strong>页面坐位WebSocket客户端</li>
+<li>导入<strong>WebSocket</strong>的maven坐标</li>
+<li>导入<strong>WebSocket</strong>服务端组件<strong>WebSocketServer</strong>，用于和客户端通信</li>
+<li>导入配置类<strong>WebSocketConfiguration</strong>，注册WebSocket的服务端组件</li>
+<li>导入定时人物类<strong>WebSocketTask</strong>，定时向客户端推送数据</li>
+</ul>
+<pre><code class="html">websocket.html
+&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;WebSocket Demo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;input id=&quot;text&quot; type=&quot;text&quot; /&gt;
+    &lt;button onclick=&quot;send()&quot;&gt;发送消息&lt;/button&gt;
+    &lt;button onclick=&quot;closeWebSocket()&quot;&gt;关闭连接&lt;/button&gt;
+    &lt;div id=&quot;message&quot;&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    var websocket = null;
+    var clientId = Math.random().toString(36).substr(2);
+
+    //判断当前浏览器是否支持WebSocket
+    if(&#39;WebSocket&#39; in window)&#123;
+        //连接WebSocket节点
+        websocket = new WebSocket(&quot;ws://localhost:8080/ws/&quot;+clientId);
+    &#125;
+    else&#123;
+        alert(&#39;Not support websocket&#39;)
+    &#125;
+
+    //连接发生错误的回调方法
+    websocket.onerror = function()&#123;
+        setMessageInnerHTML(&quot;error&quot;);
+    &#125;;
+
+    //连接成功建立的回调方法
+    websocket.onopen = function()&#123;
+        setMessageInnerHTML(&quot;连接成功&quot;);
+    &#125;
+
+    //接收到消息的回调方法
+    websocket.onmessage = function(event)&#123;
+        setMessageInnerHTML(event.data);
+    &#125;
+
+    //连接关闭的回调方法
+    websocket.onclose = function()&#123;
+        setMessageInnerHTML(&quot;close&quot;);
+    &#125;
+
+    //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+    window.onbeforeunload = function()&#123;
+        websocket.close();
+    &#125;
+
+    //将消息显示在网页上
+    function setMessageInnerHTML(innerHTML)&#123;
+        document.getElementById(&#39;message&#39;).innerHTML += innerHTML + &#39;&lt;br/&gt;&#39;;
+    &#125;
+
+    //发送消息
+    function send()&#123;
+        var message = document.getElementById(&#39;text&#39;).value;
+        websocket.send(message);
+    &#125;
+    
+    //关闭连接
+    function closeWebSocket() &#123;
+        websocket.close();
+    &#125;
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">com/sky/websocket/WebSocketServer.java
+package com.sky.websocket;
+
+import org.springframework.stereotype.Component;
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+import javax.websocket.server.PathParam;
+import javax.websocket.server.ServerEndpoint;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * WebSocket服务
+ */
+@Component //交给spring容器管理
+@ServerEndpoint(&quot;/ws/&#123;sid&#125;&quot;)
+public class WebSocketServer &#123;
+
+    //存放会话对象
+    private static Map&lt;String, Session&gt; sessionMap = new HashMap();
+
+    /**
+     * 连接建立成功调用的方法
+     */
+    @OnOpen
+    public void onOpen(Session session, @PathParam(&quot;sid&quot;) String sid) &#123;
+        System.out.println(&quot;客户端：&quot; + sid + &quot;建立连接&quot;);
+        sessionMap.put(sid, session);
+    &#125;
+
+    /**
+     * 收到客户端消息后调用的方法
+     *
+     * @param message 客户端发送过来的消息
+     */
+    @OnMessage
+    public void onMessage(String message, @PathParam(&quot;sid&quot;) String sid) &#123;
+        System.out.println(&quot;收到来自客户端：&quot; + sid + &quot;的信息:&quot; + message);
+    &#125;
+
+    /**
+     * 连接关闭调用的方法
+     *
+     * @param sid
+     */
+    @OnClose
+    public void onClose(@PathParam(&quot;sid&quot;) String sid) &#123;
+        System.out.println(&quot;连接断开:&quot; + sid);
+        sessionMap.remove(sid);
+    &#125;
+
+    /**
+     * 群发
+     *
+     * @param message
+     */
+    public void sendToAllClient(String message) &#123;
+        Collection&lt;Session&gt; sessions = sessionMap.values();
+        for (Session session : sessions) &#123;
+            try &#123;
+                //服务器向客户端发送消息
+                session.getBasicRemote().sendText(message);
+            &#125; catch (Exception e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/sky/config/WebSocketConfiguration.java
+package com.sky.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+
+/**
+ * WebSocket配置类，用于注册WebSocket的Bean
+ */
+@Configuration
+public class WebSocketConfiguration &#123;
+
+    @Bean
+    public ServerEndpointExporter serverEndpointExporter() &#123;
+        return new ServerEndpointExporter();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/sky/task/WebSocketTask.java
+package com.sky.task;
+
+import com.sky.websocket.WebSocketServer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Component
+public class WebSocketTask &#123;
+    @Autowired
+    private WebSocketServer webSocketServer;
+
+    /**
+     * 通过WebSocket每隔5秒向客户端发送消息
+     */
+    @Scheduled(cron = &quot;0/5 * * * * ?&quot;)
+    public void sendMessageToClient() &#123;
+        webSocketServer.sendToAllClient(&quot;这是来自服务端的消息：&quot; + DateTimeFormatter.ofPattern(&quot;HH:mm:ss&quot;).format(LocalDateTime.now()));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="来单提醒"><a href="#来单提醒" class="headerlink" title="来单提醒"></a>来单提醒</h3><p>用户下单并且支付成功后，需要第一时间通知外卖商家</p>
+<ul>
+<li><strong>语音播报</strong></li>
+<li><strong>弹出提示框</strong></li>
+</ul>
+<h6 id="设计："><a href="#设计：" class="headerlink" title="设计："></a>设计：</h6><ul>
+<li>通过WebSocket实现管理端页面和服务端保持长连接状态</li>
+<li>当客户支付后，调用WebSocket的相关API实现服务端向客户端推送消息</li>
+<li>客户端浏览器解析服务端推送的消息，判断是来单提醒还是客户催单，进行相应的消息提示和语音播报</li>
+<li>约定服务器发送给客户端浏览器的数据格式为JSON，字段包括：type，orderId，content<ul>
+<li>type 为消息类型，1为来单提醒  2为客户催单</li>
+<li>orderId 为订单id</li>
+<li>content 为消息内容</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">sky-server  com/sky/service/impl/OrderServiceImpl.java
+ /**
+     * 订单支付
+     *
+     * @param ordersPaymentDTO
+     * @return
+     */
+    public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception &#123;
+        // 查询订单
+        Orders order = orderMapper.getByOrderNumber(ordersPaymentDTO.getOrderNumber());
+        if (order == null) &#123;
+            throw new OrderBusinessException(&quot;订单不存在&quot;);
+        &#125;
+
+        // 检查订单支付状态
+        if (order.getPayStatus() == 1) &#123; // 1 表示已支付
+            throw new OrderBusinessException(&quot;该订单已支付&quot;);
+        &#125;
+        order.setPayStatus(1);
+
+        // 更新订单支付状态为已支付
+        order.setPayStatus(Orders.PAID);
+        order.setCheckoutTime(LocalDateTime.now());
+        order.setPayMethod(ordersPaymentDTO.getPayMethod());
+        order.setStatus(Orders.TO_BE_CONFIRMED);
+
+        // 支付成功后通过 WebSocket 向客户端推送消息
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;type&quot;, 1); // 1 表示来单提醒
+        map.put(&quot;orderId&quot;, order.getId());
+        map.put(&quot;content&quot;, &quot;订单号：&quot; + ordersPaymentDTO.getOrderNumber());
+
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
+
+
+        orderMapper.update(order);
+
+        // 构造并返回支付结果对象
+        OrderPaymentVO orderPaymentVO = new OrderPaymentVO();
+        orderPaymentVO.setOrderNumber(order.getNumber()); // 订单号
+        orderPaymentVO.setPaymentTime(new Date());
+        orderPaymentVO.setPaymentStatus(&quot;SUCCESS&quot;);
+
+        return orderPaymentVO;
+
+    &#125;
+</code></pre>
+<h3 id="用户催单"><a href="#用户催单" class="headerlink" title="用户催单"></a>用户催单</h3><pre><code class="java">com/sky/controller/user/OrderController.java 
+/**
+     * 客户催单
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;/reminder/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;客户催单&quot;)
+    public Result reminder(@PathVariable(&quot;id&quot;) Long id)&#123;
+        orderService.reminder(id);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">com/sky/service/OrderService.java
+ /**
+     * 用户催单
+     * @param id
+     */
+    void reminder(Long id);
+</code></pre>
+<pre><code class="java">com/sky/service/impl/OrderServiceImpl.java
+/**
+     * 客户催单
+     * @param id
+     */
+    public void reminder(Long id) &#123;
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(id);
+
+        // 校验订单是否存在
+        if (ordersDB == null) &#123;
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        &#125;
+
+        Map map = new HashMap();
+        map.put(&quot;type&quot;,2); //1表示来单提醒 2表示客户催单
+        map.put(&quot;orderId&quot;,id);
+        map.put(&quot;content&quot;,&quot;订单号：&quot; + ordersDB.getNumber());
+
+        //通过websocket向客户端浏览器推送消息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
+    &#125;
+</code></pre>
 
             
         </div>
@@ -11611,7 +12333,7 @@ public class MyTask &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -12532,7 +13254,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -32195,7 +32917,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -35245,7 +35967,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -35399,7 +36121,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -37674,7 +38396,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -40604,7 +41326,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -42671,7 +43393,7 @@ spring:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
