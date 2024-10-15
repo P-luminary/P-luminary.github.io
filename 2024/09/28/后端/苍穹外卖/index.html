@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -9057,6 +9057,736 @@ public class WebSocketTask &#123;
         //通过websocket向客户端浏览器推送消息
         webSocketServer.sendToAllClient(JSON.toJSONString(map));
     &#125;
+</code></pre>
+<h3 id="ApacheECharts"><a href="#ApacheECharts" class="headerlink" title="ApacheECharts"></a>ApacheECharts</h3><p><a target="_blank" rel="noopener" href="http://echarts.apache.org/zh/index.html">http://echarts.apache.org/zh/index.html</a></p>
+<ul>
+<li><strong>柱形图</strong> bar</li>
+<li><strong>饼形图</strong></li>
+<li><strong>折线图</strong></li>
+</ul>
+<p>使用Echarts，重点在于研究当前图标所需<strong>数据格式</strong>，通常是需要后端提供符合格式要求的动态数据，然后相应给前端来展示图表</p>
+<h3 id="营业额统计"><a href="#营业额统计" class="headerlink" title="营业额统计"></a>营业额统计</h3><h6 id="业务规则"><a href="#业务规则" class="headerlink" title="业务规则"></a>业务规则</h6><ul>
+<li>营业额指订单状态为已完成的订单金额合计</li>
+<li>基于可视化报表的折线图展示营业额数据，x轴为日期，y轴为营业额</li>
+<li>根据时间选择区间，展示每天的营业额数据</li>
+</ul>
+<h5 id="根据接口定义设计对应的vo："><a href="#根据接口定义设计对应的vo：" class="headerlink" title="根据接口定义设计对应的vo："></a>根据接口定义设计对应的vo：</h5><pre><code class="java">sky-pojo  com/sky/vo/TurnoverReportVO.java
+package com.sky.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TurnoverReportVO implements Serializable &#123;
+
+    //日期，以逗号分隔，例如：2022-10-01,2022-10-02,2022-10-03 [开始到结束的每一天]
+    private String dateList;
+
+    //营业额，以逗号分隔，例如：406.0,1520.0,75.0 [营业额一一对应]
+    private String turnoverList;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/admin/ReportController.java
+package com.sky.controller.admin;
+
+import com.sky.result.Result;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+
+/**
+ * 数据统计相关接口
+ */
+@RestController
+@RequestMapping(&quot;/admin/report&quot;)
+@Api(tags = &quot;数据统计接口&quot;)
+@Slf4j
+public class ReportController &#123;
+    @Autowired
+    private ReportService reportService;
+
+    /**
+     * 统计指定时间区间内的营业额数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    @GetMapping(&quot;/turnoverStatistics&quot;)
+    public Result&lt;TurnoverReportVO&gt; turnoverStatistics(
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)LocalDate begin,
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)LocalDate end) &#123;
+        log.info(&quot;营业额统计:&#123;&#125;,&#123;&#125;&quot;,begin,end);
+        return Result.success(reportService.getTurnoverStatistics(begin,end));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ReportService.java
+package com.sky.service;
+
+import com.sky.vo.TurnoverReportVO;
+
+import java.time.LocalDate;
+
+public interface ReportService &#123;
+    /**
+     * 统计指定时间区间内的营业额数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ReportServiceImpl.java
+package com.sky.service.impl;
+
+import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@Slf4j
+public class ReportServiceImpl implements ReportService &#123;
+    @Autowired
+    private OrderMapper orderMapper;
+    /**
+     * 统计指定时间区间内的营业额数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) &#123;
+        // 当前集合用于存放从begin到end范围内的每天的日期
+        List&lt;LocalDate&gt; dateList = new ArrayList&lt;&gt;();
+        dateList.add(begin);
+
+        while (!begin.equals(end)) &#123;
+            //日期计算，计算指定日期的后一天对应的日期
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        &#125;
+
+        // 存放每天的营业额
+        List&lt;Double&gt; turnoverList = new ArrayList&lt;&gt;();
+        for (LocalDate date : dateList) &#123; //LocalDate只是年月日 而下单的Order有时分秒
+            // 查询Date日期对应的营业额数据，数据额是指：订单状态为“已完成”的订单金额合计
+            LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+        // select sum(count) from orders where order_time &gt; ? and order_time &lt; ? and status = 5
+            Map map = new HashMap&lt;&gt;();
+            map.put(&quot;begin&quot;, beginTime);
+            map.put(&quot;end&quot;, endTime);
+            map.put(&quot;status&quot;, Orders.COMPLETED);
+            Double turnover = orderMapper.sumByMap(map);
+            turnover = turnover == null ? 0.0 : turnover;//没有营业额则默认为0
+            turnoverList.add(turnover);
+        &#125;
+
+        return TurnoverReportVO.builder()
+                .dateList(StringUtils.join(dateList, &quot;,&quot;))
+                .turnoverList(StringUtils.join(turnoverList, &quot;,&quot;))
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/OrderMapper.java
+/**
+     * 根据动态条件统计营业额数据
+     * @param map
+     * @return
+     */
+    Double sumByMap(Map map);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/OrderMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.OrderMapper&quot;&gt;
+
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;Orders&quot; useGeneratedKeys=&quot;true&quot; keyProperty=&quot;id&quot;&gt;
+        insert into orders
+        (number, status, user_id, address_book_id, order_time, checkout_time, pay_method, pay_status, amount, remark,
+         phone, address, consignee, estimated_delivery_time, delivery_status, pack_amount, tableware_number,
+         tableware_status)
+        values (#&#123;number&#125;, #&#123;status&#125;, #&#123;userId&#125;, #&#123;addressBookId&#125;, #&#123;orderTime&#125;, #&#123;checkoutTime&#125;, #&#123;payMethod&#125;,
+                #&#123;payStatus&#125;, #&#123;amount&#125;, #&#123;remark&#125;, #&#123;phone&#125;, #&#123;address&#125;, #&#123;consignee&#125;,
+                #&#123;estimatedDeliveryTime&#125;, #&#123;deliveryStatus&#125;, #&#123;packAmount&#125;, #&#123;tablewareNumber&#125;, #&#123;tablewareStatus&#125;)
+    &lt;/insert&gt;
+
+    &lt;update id=&quot;update&quot; parameterType=&quot;com.sky.entity.Orders&quot;&gt;
+        update orders
+        &lt;set&gt;
+            &lt;if test=&quot;cancelReason != null and cancelReason!=&#39;&#39; &quot;&gt;
+                cancel_reason=#&#123;cancelReason&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;rejectionReason != null and rejectionReason!=&#39;&#39; &quot;&gt;
+                rejection_reason=#&#123;rejectionReason&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;cancelTime != null&quot;&gt;
+                cancel_time=#&#123;cancelTime&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;payStatus != null&quot;&gt;
+                pay_status=#&#123;payStatus&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;payMethod != null&quot;&gt;
+                pay_method=#&#123;payMethod&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;checkoutTime != null&quot;&gt;
+                checkout_time=#&#123;checkoutTime&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                status = #&#123;status&#125;,
+            &lt;/if&gt;
+            &lt;if test=&quot;deliveryTime != null&quot;&gt;
+                delivery_time = #&#123;deliveryTime&#125;
+            &lt;/if&gt;
+        &lt;/set&gt;
+        where id = #&#123;id&#125;
+    &lt;/update&gt;
+
+    &lt;select id=&quot;pageQuery&quot; resultType=&quot;Orders&quot;&gt;
+        select * from orders
+        &lt;where&gt;
+            &lt;if test=&quot;number != null and number!=&#39;&#39;&quot;&gt;
+                and number like concat(&#39;%&#39;,#&#123;number&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;phone != null and phone!=&#39;&#39;&quot;&gt;
+                and phone like concat(&#39;%&#39;,#&#123;phone&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;userId != null&quot;&gt;
+                and user_id = #&#123;userId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;beginTime != null&quot;&gt;
+                and order_time &amp;gt;= #&#123;beginTime&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;endTime != null&quot;&gt;
+                and order_time &amp;lt;= #&#123;endTime&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by order_time desc
+    &lt;/select&gt;
+    &lt;!-- 根据订单号查询订单 --&gt;
+    &lt;select id=&quot;getByOrderNumber&quot; parameterType=&quot;String&quot; resultType=&quot;Orders&quot;&gt;
+        select * from orders where number = #&#123;orderNumber&#125;
+    &lt;/select&gt;
+    &lt;select id=&quot;sumByMap&quot; resultType=&quot;java.lang.Double&quot;&gt;
+        select sum(amount) from orders
+        &lt;where&gt;
+            &lt;if test=&quot;begin != null&quot;&gt;
+                and order_time &amp;gt; #&#123;begin&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;end != null&quot;&gt;
+                and order_time &amp;lt; #&#123;end&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="用户统计"><a href="#用户统计" class="headerlink" title="用户统计"></a>用户统计</h3><p>业务规则：</p>
+<ul>
+<li>根据时间选择区间，展示每天的用户总量和新增用户量数据</li>
+</ul>
+<h5 id="据接口定义设计对应的vo："><a href="#据接口定义设计对应的vo：" class="headerlink" title="据接口定义设计对应的vo："></a>据接口定义设计对应的vo：</h5><pre><code class="java">sky-pojo  com/sky/vo/UserReportVO.java
+package com.sky.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserReportVO implements Serializable &#123;
+
+    //日期，以逗号分隔，例如：2022-10-01,2022-10-02,2022-10-03
+    private String dateList;
+
+    //用户总量，以逗号分隔，例如：200,210,220
+    private String totalUserList;
+
+    //新增用户，以逗号分隔，例如：20,21,10
+    private String newUserList;
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/admin/ReportController.java
+package com.sky.controller.admin;
+
+import com.sky.result.Result;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+
+/**
+     * 用户统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    @GetMapping(&quot;/userStatistics&quot;)
+    @ApiOperation(&quot;用户统计&quot;)
+    public Result&lt;UserReportVO&gt; userStatistics(
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)LocalDate begin,
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)LocalDate end)&#123;
+        log.info(&quot;用户数据统计:&#123;&#125;,&#123;&#125;&quot;,begin,end);
+        return Result.success(reportService.getUserStatistics(begin,end));
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ReportService.java
+package com.sky.service;
+
+import com.sky.vo.TurnoverReportVO;
+
+import java.time.LocalDate;
+
+public interface ReportService &#123;
+   /**
+     * 用户统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    UserReportVO getUserStatistics(LocalDate begin, LocalDate end);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ReportServiceImpl.java
+package com.sky.service.impl;
+
+import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@Slf4j
+public class ReportServiceImpl implements ReportService &#123;
+    /**
+     * 统计指定时间区间内的用户数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public UserReportVO getUserStatistics(LocalDate begin, LocalDate end) &#123;
+        // 存放从begin 到 end之间的日期
+        List&lt;LocalDate&gt; dateList = new ArrayList&lt;&gt;();
+        dateList.add(begin);
+        while (!begin.equals(end)) &#123;
+            //日期计算，计算指定日期的后一天的日期
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        &#125;
+
+        // 存放每天新增用户数量 select count(id) from user where create_time &gt; ? and create_time &lt; ?
+        List&lt;Integer&gt; newUserList = new ArrayList&lt;&gt;();
+        // 存放每天的总用户数量 select count(id) from user where create_time &lt;= ?
+        List&lt;Integer&gt; totalUserList = new ArrayList&lt;&gt;();
+
+        for (LocalDate date : dateList) &#123;
+        // 遍历每一天的用户总量和数量
+            LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+
+            Map map = new HashMap&lt;&gt;();
+            map.put(&quot;end&quot;, endTime);
+
+            // 总用户数量
+            Integer integer = userMapper.countByMap(map);
+
+            map.put(&quot;begin&quot;, beginTime);
+            //新增用户数量
+            Integer newUser = userMapper.countByMap(map);
+            totalUserList.add(integer);
+            newUserList.add(newUser);
+        &#125;
+        return UserReportVO.builder()
+                .dateList(StringUtils.join(dateList, &quot;,&quot;))
+                .totalUserList(StringUtils.join(totalUserList, &quot;,&quot;))
+                .newUserList(StringUtils.join(newUserList, &quot;,&quot;))
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/UserMapper.java
+/**
+     * 根据动态条件统计用户数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/UserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.OrderMapper&quot;&gt;
+
+&lt;select id=&quot;countByMap&quot; resultType=&quot;java.lang.Integer&quot;&gt;
+        select count(id) from orders
+        &lt;where&gt;
+            &lt;if test=&quot;begin != null&quot;&gt;
+                and order_time &amp;gt; #&#123;begin&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;end != null&quot;&gt;
+                and order_time &amp;lt; #&#123;end&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="订单统计"><a href="#订单统计" class="headerlink" title="订单统计"></a>订单统计</h3><h6 id="业务规则-1"><a href="#业务规则-1" class="headerlink" title="业务规则"></a>业务规则</h6><ul>
+<li>根据时间选择区间，展示每天的订单总数和有效订单数</li>
+<li>展示所选时间区间内的有效订单数、总订单数、订单完成率</li>
+<li>订单完成率 &#x3D; 有效订单数 &#x2F; 总订单数 * 100%</li>
+</ul>
+<h6 id="返回数据"><a href="#返回数据" class="headerlink" title="返回数据"></a>返回数据</h6><ul>
+<li>dataList 日期列表以逗号分隔</li>
+<li>orderCompletionRate 订单完成率</li>
+<li>orderCountList 订单数列表以逗号分隔</li>
+<li>totalOrderCount 订单总数</li>
+<li>validOrderCount 有效订单数</li>
+<li>validOrderCountList 有效订单数列表以逗号分隔</li>
+</ul>
+<h5 id="据接口定义设计对应的vo：-1"><a href="#据接口定义设计对应的vo：-1" class="headerlink" title="据接口定义设计对应的vo："></a>据接口定义设计对应的vo：</h5><pre><code class="java">sky-pojo  com/sky/vo/OrderReportVO.java
+package com.sky.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderReportVO implements Serializable &#123;
+
+    //日期，以逗号分隔，例如：2022-10-01,2022-10-02,2022-10-03
+    private String dateList;
+
+    //每日订单数，以逗号分隔，例如：260,210,215
+    private String orderCountList;
+
+    //每日有效订单数，以逗号分隔，例如：20,21,10
+    private String validOrderCountList;
+
+    //订单总数
+    private Integer totalOrderCount;
+
+    //有效订单数
+    private Integer validOrderCount;
+
+    //订单完成率
+    private Double orderCompletionRate;
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/admin/ReportController.java
+package com.sky.controller.admin;
+
+import com.sky.result.Result;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+
+/**
+     * 订单统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    @GetMapping(&quot;/ordersStatistics&quot;)
+    @ApiOperation(&quot;订单统计&quot;)
+    public Result&lt;OrderReportVO&gt; ordersStatistics(
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)  LocalDate begin,
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) LocalDate end)&#123;
+        log.info(&quot;订单数据统计：&#123;&#125;,&#123;&#125;&quot;,begin,end);
+        return Result.success(reportService.getOrderStatistics(begin,end));
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ReportService.java
+package com.sky.service;
+
+import com.sky.vo.TurnoverReportVO;
+
+import java.time.LocalDate;
+
+public interface ReportService &#123;
+ /**
+     * 统计指定时间区间内的订单数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end);
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ReportServiceImpl.java
+package com.sky.service.impl;
+
+import com.sky.entity.Orders;
+import com.sky.mapper.OrderMapper;
+import com.sky.service.ReportService;
+import com.sky.vo.TurnoverReportVO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+ /**
+     * 统计指定时间区间内的订单数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    public OrderReportVO getOrderStatistics(LocalDate begin, LocalDate end) &#123;
+        //存放从begin到end之间的每天对应的日期
+        List&lt;LocalDate&gt; dateList = new ArrayList&lt;&gt;();
+
+        dateList.add(begin);
+
+        while (!begin.equals(end)) &#123;
+            begin = begin.plusDays(1);
+            dateList.add(begin);
+        &#125;
+
+        //存放每天的订单总数
+        List&lt;Integer&gt; orderCountList = new ArrayList&lt;&gt;();
+        //存放每天的有效订单数
+        List&lt;Integer&gt; validOrderCountList = new ArrayList&lt;&gt;();
+
+        //遍历dateList集合，查询每天的有效订单数和订单总数
+        for (LocalDate date : dateList) &#123;
+            //查询每天的订单总数 select count(id) from orders where order_time &gt; ? and order_time &lt; ?
+            LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+            Integer orderCount = getOrderCount(beginTime, endTime, null);
+
+            //查询每天的有效订单数 select count(id) from orders where order_time &gt; ? and order_time &lt; ? and status = 5
+            Integer validOrderCount = getOrderCount(beginTime, endTime, Orders.COMPLETED);
+
+            orderCountList.add(orderCount);
+            validOrderCountList.add(validOrderCount);
+        &#125;
+
+        //计算时间区间内的订单总数量
+        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).get();
+
+        //计算时间区间内的有效订单数量
+        Integer validOrderCount = validOrderCountList.stream().reduce(Integer::sum).get();
+
+        Double orderCompletionRate = 0.0;
+        if(totalOrderCount != 0)&#123;
+            //计算订单完成率
+            orderCompletionRate = validOrderCount.doubleValue() / totalOrderCount;
+        &#125;
+
+        return  OrderReportVO.builder()
+                .dateList(StringUtils.join(dateList,&quot;,&quot;))
+                .orderCountList(StringUtils.join(orderCountList,&quot;,&quot;))
+                .validOrderCountList(StringUtils.join(validOrderCountList,&quot;,&quot;))
+                .totalOrderCount(totalOrderCount)
+                .validOrderCount(validOrderCount)
+                .orderCompletionRate(orderCompletionRate)
+                .build();
+    &#125;
+    /**
+     * 根据条件统计订单数量
+     * @param begin
+     * @param end
+     * @param status
+     * @return
+     */
+    private Integer getOrderCount(LocalDateTime begin, LocalDateTime end, Integer status)&#123;
+        Map map = new HashMap();
+        map.put(&quot;begin&quot;,begin);
+        map.put(&quot;end&quot;,end);
+        map.put(&quot;status&quot;,status);
+
+        return orderMapper.countByMap(map);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/OrderMapper.java
+/**
+     * 根据动态条件统计用户数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/OrderMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.sky.mapper.OrderMapper&quot;&gt;
+
+&lt;select id=&quot;countByMap&quot; resultType=&quot;java.lang.Integer&quot;&gt;
+        select count(id) from orders
+        &lt;where&gt;
+            &lt;if test=&quot;begin != null&quot;&gt;
+                and order_time &amp;gt; #&#123;begin&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;end != null&quot;&gt;
+                and order_time &amp;lt; #&#123;end&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="销量排名Top10"><a href="#销量排名Top10" class="headerlink" title="销量排名Top10"></a>销量排名Top10</h3><h6 id="产品原型-查已完成的数据"><a href="#产品原型-查已完成的数据" class="headerlink" title="产品原型 (查已完成的数据)"></a>产品原型 (查已完成的数据)</h6><ul>
+<li>此处的销量为商品销售的份数</li>
+</ul>
+<pre><code class="java">sky-server  com/sky/controller/admin/ReportController.java
+/**
+     * 销量排名统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    @GetMapping(&quot;/top10&quot;)
+    @ApiOperation(&quot;销量排名top10&quot;)
+    public Result&lt;SalesTop10ReportVO&gt; top10(
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) LocalDate begin,
+            @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) LocalDate end)&#123;
+        log.info(&quot;销量排名top10：&#123;&#125;,&#123;&#125;&quot;,begin,end);
+        return Result.success(reportService.getSalesTop10(begin,end));
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ReportService.java
+/**
+     * 销量排名统计
+     * @param begin
+     * @param end
+     * @return
+     */
+    SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ReportServiceImpl.java
+    /**
+     * 统计指定时间区间内的销量排名前10
+     * @param begin
+     * @param end
+     * @return
+     */
+    @Override
+    public SalesTop10ReportVO getSalesTop10(LocalDate begin, LocalDate end) &#123;
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);
+
+        List&lt;GoodsSalesDTO&gt; salesTop10 = orderMapper.getSalesTop10(beginTime, endTime);
+        List&lt;String&gt; names = salesTop10.stream().map(GoodsSalesDTO::getName).collect(Collectors.toList());
+        String nameList = StringUtils.join(names, &quot;,&quot;);
+
+        List&lt;Integer&gt; numbers = salesTop10.stream().map(GoodsSalesDTO::getNumber).collect(Collectors.toList());
+        String numberList = StringUtils.join(numbers, &quot;,&quot;);
+
+        //封装返回结果数据
+        return SalesTop10ReportVO
+                .builder()
+                .nameList(nameList)
+                .numberList(numberList)
+                .build();
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/OrderMapper.java
+  /**
+     * 统计指定时间内的销量排名
+     * @return
+     */
+    List&lt;GoodsSalesDTO&gt; getSalesTop10(LocalDateTime begin,LocalDateTime end);
+</code></pre>
+<pre><code class="xml">sky-server  mapper/OrderMapper.xml
+&lt;select id=&quot;getSalesTop10&quot; resultType=&quot;com.sky.dto.GoodsSalesDTO&quot;&gt;
+        select od.name, sum(od.number) number
+        from order_detail od,orders o
+        where od.order_id = o.id and o.status = 5
+        &lt;if test=&quot;begin != null&quot;&gt;
+            and o.order_time &amp;gt; #&#123;begin&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;end != null&quot;&gt;
+            and o.order_time &amp;lt; #&#123;end&#125;
+        &lt;/if&gt;
+        group by od.name
+        order by number desc
+        limit 0,10
+    &lt;/select&gt;
 </code></pre>
 
     </div>
