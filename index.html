@@ -2723,7 +2723,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ff7d73>
+            <a href="/tags/HM" style=color:#ffa2c4>
                 HM
             </a>
         </span>
@@ -13072,6 +13072,542 @@ MariaDB 服务正在启动 .
 MariaDB 服务无法启动。
 服务里的MariaDB是MariaDB服务
 </code></pre>
+<h3 id="工作台"><a href="#工作台" class="headerlink" title="工作台"></a>工作台</h3><h5 id="工作台是系统运营的数据看板，并提供快捷操作入口，可以有效提高商家的工作效率"><a href="#工作台是系统运营的数据看板，并提供快捷操作入口，可以有效提高商家的工作效率" class="headerlink" title="工作台是系统运营的数据看板，并提供快捷操作入口，可以有效提高商家的工作效率"></a>工作台是系统运营的数据看板，并提供快捷操作入口，可以有效提高商家的工作效率</h5><p>功能工作台展示的数据：</p>
+<ul>
+<li>今日数据</li>
+<li>订单管理</li>
+<li>菜品总览</li>
+<li>套餐总览</li>
+<li>订单信息</li>
+</ul>
+<h6 id="名词解释："><a href="#名词解释：" class="headerlink" title="名词解释："></a>名词解释：</h6><ul>
+<li>营业额：已完成订单的总金额</li>
+<li>有效订单：已完成订单的数量</li>
+<li>订单完成率：有效订单数 &#x2F; 总订单数 * 100%</li>
+<li>平均客单价：营业额 &#x2F; 有效订单数</li>
+<li>新增用户：新增用户的数量</li>
+</ul>
+<h6 id="接口设计：-5"><a href="#接口设计：-5" class="headerlink" title="接口设计："></a>接口设计：</h6><ul>
+<li><p>今日数据接口</p>
+<blockquote>
+<p>Path: &#x2F;admin&#x2F;workspace&#x2F;businessData<br>Method: Get</p>
+</blockquote>
+</li>
+<li><p>订单管理接口</p>
+<blockquote>
+<p>Path: &#x2F;admin&#x2F;workspace&#x2F;overviewOrders<br>Method: Get</p>
+</blockquote>
+</li>
+<li><p>菜品总览接口</p>
+<blockquote>
+<p>Path: &#x2F;admin&#x2F;workspace&#x2F;overviewDishes<br>Method: Get</p>
+</blockquote>
+</li>
+<li><p>套餐总览接口</p>
+<blockquote>
+<p>Path: &#x2F;admin&#x2F;workspace&#x2F;overviewSetmeals<br>Method: Get</p>
+</blockquote>
+</li>
+<li><p>订单搜索(已完成)</p>
+</li>
+</ul>
+<pre><code class="java">sky-server  com/sky/controller/admin/WorkSpaceController.java
+package com.sky.controller.admin;
+
+import com.sky.result.Result;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.BusinessDataVO;
+import com.sky.vo.DishOverViewVO;
+import com.sky.vo.OrderOverViewVO;
+import com.sky.vo.SetmealOverViewVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+/**
+ * 工作台
+ */
+@RestController
+@RequestMapping(&quot;/admin/workspace&quot;)
+@Slf4j
+@Api(tags = &quot;工作台相关接口&quot;)
+public class WorkSpaceController &#123;
+
+    @Autowired
+    private WorkspaceService workspaceService;
+
+    /**
+     * 工作台今日数据查询
+     * @return
+     */
+    @GetMapping(&quot;/businessData&quot;)
+    @ApiOperation(&quot;工作台今日数据查询&quot;)
+    public Result&lt;BusinessDataVO&gt; businessData()&#123;
+        //获得当天的开始时间
+        LocalDateTime begin = LocalDateTime.now().with(LocalTime.MIN);
+        //获得当天的结束时间
+        LocalDateTime end = LocalDateTime.now().with(LocalTime.MAX);
+
+        BusinessDataVO businessDataVO = workspaceService.getBusinessData(begin, end);
+        return Result.success(businessDataVO);
+    &#125;
+
+    /**
+     * 查询订单管理数据
+     * @return
+     */
+    @GetMapping(&quot;/overviewOrders&quot;)
+    @ApiOperation(&quot;查询订单管理数据&quot;)
+    public Result&lt;OrderOverViewVO&gt; orderOverView()&#123;
+        return Result.success(workspaceService.getOrderOverView());
+    &#125;
+
+    /**
+     * 查询菜品总览
+     * @return
+     */
+    @GetMapping(&quot;/overviewDishes&quot;)
+    @ApiOperation(&quot;查询菜品总览&quot;)
+    public Result&lt;DishOverViewVO&gt; dishOverView()&#123;
+        return Result.success(workspaceService.getDishOverView());
+    &#125;
+
+    /**
+     * 查询套餐总览
+     * @return
+     */
+    @GetMapping(&quot;/overviewSetmeals&quot;)
+    @ApiOperation(&quot;查询套餐总览&quot;)
+    public Result&lt;SetmealOverViewVO&gt; setmealOverView()&#123;
+        return Result.success(workspaceService.getSetmealOverView());
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/WorkspaceService.java
+package com.sky.service;
+
+import com.sky.vo.BusinessDataVO;
+import com.sky.vo.DishOverViewVO;
+import com.sky.vo.OrderOverViewVO;
+import com.sky.vo.SetmealOverViewVO;
+import java.time.LocalDateTime;
+
+public interface WorkspaceService &#123;
+
+    /**
+     * 根据时间段统计营业数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    BusinessDataVO getBusinessData(LocalDateTime begin, LocalDateTime end);
+
+    /**
+     * 查询订单管理数据
+     * @return
+     */
+    OrderOverViewVO getOrderOverView();
+
+    /**
+     * 查询菜品总览
+     * @return
+     */
+    DishOverViewVO getDishOverView();
+
+    /**
+     * 查询套餐总览
+     * @return
+     */
+    SetmealOverViewVO getSetmealOverView();
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/WorkspaceServiceImpl.java
+package com.sky.service.impl;
+
+import com.sky.constant.StatusConstant;
+import com.sky.entity.Orders;
+import com.sky.mapper.DishMapper;
+import com.sky.mapper.OrderMapper;
+import com.sky.mapper.SetmealMapper;
+import com.sky.mapper.UserMapper;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.BusinessDataVO;
+import com.sky.vo.DishOverViewVO;
+import com.sky.vo.OrderOverViewVO;
+import com.sky.vo.SetmealOverViewVO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+@Slf4j
+public class WorkspaceServiceImpl implements WorkspaceService &#123;
+
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+
+    /**
+     * 根据时间段统计营业数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    public BusinessDataVO getBusinessData(LocalDateTime begin, LocalDateTime end) &#123;
+        /**
+         * 营业额：当日已完成订单的总金额
+         * 有效订单：当日已完成订单的数量
+         * 订单完成率：有效订单数 / 总订单数
+         * 平均客单价：营业额 / 有效订单数
+         * 新增用户：当日新增用户的数量
+         */
+
+        Map map = new HashMap();
+        map.put(&quot;begin&quot;,begin);
+        map.put(&quot;end&quot;,end);
+
+        //查询总订单数
+        Integer totalOrderCount = orderMapper.countByMap(map);
+
+        map.put(&quot;status&quot;, Orders.COMPLETED);
+        //营业额
+        Double turnover = orderMapper.sumByMap(map);
+        turnover = turnover == null? 0.0 : turnover;
+
+        //有效订单数
+        Integer validOrderCount = orderMapper.countByMap(map);
+
+        Double unitPrice = 0.0;
+
+        Double orderCompletionRate = 0.0;
+        if(totalOrderCount != 0 &amp;&amp; validOrderCount != 0)&#123;
+            //订单完成率
+            orderCompletionRate = validOrderCount.doubleValue() / totalOrderCount;
+            //平均客单价
+            unitPrice = turnover / validOrderCount;
+        &#125;
+
+        //新增用户数
+        Integer newUsers = userMapper.countByMap(map);
+
+        return BusinessDataVO.builder()
+                .turnover(turnover)
+                .validOrderCount(validOrderCount)
+                .orderCompletionRate(orderCompletionRate)
+                .unitPrice(unitPrice)
+                .newUsers(newUsers)
+                .build();
+    &#125;
+
+
+    /**
+     * 查询订单管理数据
+     *
+     * @return
+     */
+    public OrderOverViewVO getOrderOverView() &#123;
+        Map map = new HashMap();
+        map.put(&quot;begin&quot;, LocalDateTime.now().with(LocalTime.MIN));
+        map.put(&quot;status&quot;, Orders.TO_BE_CONFIRMED);
+
+        //待接单
+        Integer waitingOrders = orderMapper.countByMap(map);
+
+        //待派送
+        map.put(&quot;status&quot;, Orders.CONFIRMED);
+        Integer deliveredOrders = orderMapper.countByMap(map);
+
+        //已完成
+        map.put(&quot;status&quot;, Orders.COMPLETED);
+        Integer completedOrders = orderMapper.countByMap(map);
+
+        //已取消
+        map.put(&quot;status&quot;, Orders.CANCELLED);
+        Integer cancelledOrders = orderMapper.countByMap(map);
+
+        //全部订单
+        map.put(&quot;status&quot;, null);
+        Integer allOrders = orderMapper.countByMap(map);
+
+        return OrderOverViewVO.builder()
+                .waitingOrders(waitingOrders)
+                .deliveredOrders(deliveredOrders)
+                .completedOrders(completedOrders)
+                .cancelledOrders(cancelledOrders)
+                .allOrders(allOrders)
+                .build();
+    &#125;
+
+    /**
+     * 查询菜品总览
+     *
+     * @return
+     */
+    public DishOverViewVO getDishOverView() &#123;
+        Map map = new HashMap();
+        map.put(&quot;status&quot;, StatusConstant.ENABLE);
+        Integer sold = dishMapper.countByMap(map);
+
+        map.put(&quot;status&quot;, StatusConstant.DISABLE);
+        Integer discontinued = dishMapper.countByMap(map);
+
+        return DishOverViewVO.builder()
+                .sold(sold)
+                .discontinued(discontinued)
+                .build();
+    &#125;
+
+    /**
+     * 查询套餐总览
+     *
+     * @return
+     */
+    public SetmealOverViewVO getSetmealOverView() &#123;
+        Map map = new HashMap();
+        map.put(&quot;status&quot;, StatusConstant.ENABLE);
+        Integer sold = setmealMapper.countByMap(map);
+
+        map.put(&quot;status&quot;, StatusConstant.DISABLE);
+        Integer discontinued = setmealMapper.countByMap(map);
+
+        return SetmealOverViewVO.builder()
+                .sold(sold)
+                .discontinued(discontinued)
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/DishMapper.java
+/**
+     * 根据条件统计菜品数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+</code></pre>
+<pre><code class="java">sky-server  mapper/DishMapper.xml
+&lt;select id=&quot;countByMap&quot; resultType=&quot;java.lang.Integer&quot;&gt;
+        select count(id) from dish
+        &lt;where&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/mapper/SetmealMapper.java
+/**
+     * 根据条件统计套餐数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+</code></pre>
+<pre><code class="java">sky-server  mapper/SetmealMapper.xml
+&lt;select id=&quot;countByMap&quot; resultType=&quot;java.lang.Integer&quot;&gt;
+        select count(id) from setmeal
+        &lt;where&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and status = #&#123;status&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+    &lt;/select&gt;
+</code></pre>
+<h3 id="Apache-POI"><a href="#Apache-POI" class="headerlink" title="Apache POI"></a>Apache POI</h3><h6 id="在Java中操控Excel文件-读写操作"><a href="#在Java中操控Excel文件-读写操作" class="headerlink" title="在Java中操控Excel文件 [读写操作]"></a>在Java中操控Excel文件 [读写操作]</h6><p>Apache POI 是一个处理Miscrosoft Office各种文件格式的开源项目，POI都是用于操作Excel文件</p>
+<h6 id="Apache-POI应用场景："><a href="#Apache-POI应用场景：" class="headerlink" title="Apache POI应用场景："></a>Apache POI应用场景：</h6><ul>
+<li><strong>银行网银系统</strong>导出交易明细</li>
+<li>各种业务系统到出Excel报表</li>
+<li>批量导入业务数据</li>
+</ul>
+<pre><code class="java">sky-server  com/sky/test/POITest.java
+package com.sky.test;
+
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
+public class POITest &#123;
+    /**
+     * 通过POI创建Excel文件并且写入文件内容
+     */
+    public static void write() throws Exception &#123;
+        // 在内存中创建一个Excel文件
+        XSSFWorkbook excel = new XSSFWorkbook();
+        // 在Excel文件中创建一个sheet页
+        XSSFSheet sheet = excel.createSheet(&quot;info&quot;);
+        // 在Sheet中创建行对象, rownum编号从0开始
+        XSSFRow row = sheet.createRow(1);
+        // 创建单元格并写入文件内容
+        row.createCell(1).setCellValue(&quot;姓名&quot;);
+        row.createCell(2).setCellValue(&quot;城市&quot;);
+
+        // 创建一个新行
+        row = sheet.createRow(2);
+        row.createCell(1).setCellValue(&quot;张三&quot;);
+        row.createCell(2).setCellValue(&quot;北京&quot;);
+
+        row = sheet.createRow(3);
+        row.createCell(1).setCellValue(&quot;李四&quot;);
+        row.createCell(2).setCellValue(&quot;南京&quot;);
+
+        // 通过输出流将内存中的Excel文件写入到磁盘
+        FileOutputStream out = new FileOutputStream(new File(&quot;C:\\Users\\Pluminary\\Desktop\\itcast.xlsx&quot;));
+        excel.write(out);
+
+        // 关闭资源
+        out.close();
+        excel.close();
+    &#125;
+
+    public static void main(String[] args) throws Exception &#123;
+        write();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="导出运营数据Excel报表"><a href="#导出运营数据Excel报表" class="headerlink" title="导出运营数据Excel报表"></a>导出运营数据Excel报表</h3><h6 id="实现步骤："><a href="#实现步骤：" class="headerlink" title="实现步骤："></a>实现步骤：</h6><ul>
+<li>设计Excel模板文件</li>
+<li>查询近30天的运营数据</li>
+<li>将查询到的运营数据写入模板文件</li>
+<li>通过输出流将Excel文件下载到客户端浏览器</li>
+</ul>
+<pre><code class="java">sky-pojo  com/sky/vo/BusinessDataVO.java
+package com.sky.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+/**
+ * 数据概览
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class BusinessDataVO implements Serializable &#123;
+
+    private Double turnover;//营业额
+
+    private Integer validOrderCount;//有效订单数
+
+    private Double orderCompletionRate;//订单完成率
+
+    private Double unitPrice;//平均客单价
+
+    private Integer newUsers;//新增用户数
+
+&#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/controller/admin/ReportController.java
+/**
+     * 导出运营数据报表
+     * @param response
+     */
+    @GetMapping(&quot;/export&quot;)
+    @ApiOperation(&quot;导出运营数据报表&quot;)
+    public void export(HttpServletResponse response) &#123;
+        reportService.exportBusinessData(response);
+    &#125;
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/ReportService.java
+ /**
+     * 导出运营数据报表
+     * @param response
+     */
+    void exportBusinessData(HttpServletResponse response);
+</code></pre>
+<pre><code class="java">sky-server  com/sky/service/impl/ReportServiceImpl.java
+/**
+     * 导出运营数据报表
+     * @param response
+     */
+    @Override
+    public void exportBusinessData(HttpServletResponse response) &#123;
+        // 查询数据库 获取营业数据 -- 查询最近30天的营业数据
+        LocalDate dateBegin = LocalDate.now().minusDays(30);
+        LocalDate dateEnd = LocalDate.now().minusDays(1);
+        // 查询概览数据
+        BusinessDataVO businessDataVO = workspaceService.getBusinessData(LocalDateTime.of(dateBegin, LocalTime.MIN),LocalDateTime.of(dateEnd, LocalTime.MAX));
+
+        // 查询的数据通过POI写入Excel文件中 (获得对象 获得类加载器 类加载器读取资源)
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;template/运营数据报表模板.xlsx&quot;);
+        try &#123;
+            // 基于模板文件创建一个新的Excel文件
+            XSSFWorkbook excel = new XSSFWorkbook();
+
+            // 填充数据 [获取标签页]
+
+            XSSFSheet sheet = excel.getSheet(&quot;Sheet1&quot;);
+            // 获取第二行[索引是从0开始]
+            sheet.getRow(1).createCell(1).setCellValue(&quot;时间：&quot; + dateBegin + &quot;至&quot; + dateEnd);
+
+            // 获得第四行
+            XSSFRow row = sheet.getRow(3);
+            row.getCell(2).setCellValue(businessDataVO.getTurnover());//营业额
+            row.getCell(4).setCellValue(businessDataVO.getOrderCompletionRate());//订单完成率
+            row.getCell(6).setCellValue(businessDataVO.getNewUsers());//新增用户数
+
+            // 获得第五行
+            row = sheet.getRow(4);
+            row.getCell(2).setCellValue(businessDataVO.getValidOrderCount());//有效订单数
+            row.getCell(4).setCellValue(businessDataVO.getUnitPrice());//平均单品价格
+
+            // 填充明细数据
+            for (int i = 0; i &lt; 30; i++) &#123;
+                LocalDate date = dateBegin.plusDays(i);
+                // 查询某一天的营业数据
+                workspaceService.getBusinessData(LocalDateTime.of(date, LocalTime.MIN), LocalDateTime.of(date, LocalTime.MAX));
+                // 获得某一行
+                row = sheet.getRow(7 + i);// 利用循环 超越循环
+                row.getCell(1).setCellValue(date.toString());
+                row.getCell(2).setCellValue(businessDataVO.getTurnover());
+                row.getCell(3).setCellValue(businessDataVO.getValidOrderCount());
+                row.getCell(6).setCellValue(businessDataVO.getOrderCompletionRate());
+                row.getCell(4).setCellValue(businessDataVO.getUnitPrice());
+                row.getCell(5).setCellValue(businessDataVO.getNewUsers());
+            &#125;
+
+            // 通过输出流将Excel文件下载到客户端浏览器
+            ServletOutputStream out = response.getOutputStream();
+            excel.write(out);
+
+            // 关闭资源
+            out.close();
+            excel.close();
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+</code></pre>
 
             
         </div>
@@ -13086,7 +13622,7 @@ MariaDB 服务无法启动。
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -14007,7 +14543,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#1bccbc>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -33670,7 +34206,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -36720,7 +37256,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -36874,7 +37410,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#1bccbc>
+            <a href="/tags/英语" style=color:#ff7d73>
                 英语
             </a>
         </span>
@@ -39149,7 +39685,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -42079,7 +42615,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
