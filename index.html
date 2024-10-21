@@ -2723,7 +2723,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -3360,7 +3360,7 @@ sout(newStr)
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#1bccbc>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
@@ -3368,6 +3368,643 @@ sout(newStr)
     </div>
 
     <a href="/2024/09/30/HM/HM-API/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
+    <a href="/2024/09/30/HM/HM-基础强化进阶/">
+        <h2>
+            HM-API
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/9/30
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h2 id="异常"><a href="#异常" class="headerlink" title="异常"></a>异常</h2><ul>
+<li><p>直接红线处 → alt + 回车</p>
+</li>
+<li><p>抛出异常 alt  → 回车 →  suttound with try&#x2F;cache</p>
+</li>
+<li><p><strong>直接红线处 → ctrl + alt + T</strong></p>
+</li>
+<li><p>处理多个异常 alt + 回车 → Add ‘catch’ clause(s)</p>
+</li>
+</ul>
+<pre><code class="java">...throws FileNotFoundException...
+
+FileReader fr = new FileReader(&quot;G:\\abc.txt&quot;)  
+// 产生异常new FileNotFoundException();
+</code></pre>
+<pre><code class="java">java-up-198/uplevel/Exceptions.java
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class Main &#123;
+    public static void main(String[] args) throws ParseException, FileNotFoundException &#123;
+
+        try &#123;
+            test01();
+            System.out.println(&quot;我走了吗&quot;);
+        &#125; catch (ParseException e) &#123;
+            // 给用户提示，弹对话框或网页
+            System.out.println(&quot;日期格式不对，请重新输入&quot;);
+        &#125; catch (FileNotFoundException e) &#123;
+            System.out.println(&quot;处理了文件找不到异常&quot;);
+        &#125;
+        System.out.println(&quot;我结束了&quot;);
+    &#125;
+
+    private static void test01() throws ParseException, FileNotFoundException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy年MM月dd日&quot;);
+        Date date = sdf.parse(&quot;2024-10-22&quot;);
+        System.out.println(&quot;date = &quot; + date);
+
+        FileReader fr = new FileReader(&quot;G:\\abc.txt&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="自定义异常"><a href="#自定义异常" class="headerlink" title="自定义异常"></a>自定义异常</h5><ul>
+<li><p>Java无法为这个世界上全部的问题提供异常类来代表，如果企业自己的某种问题，想要通过异常来表示，以便用异常来管理该问题，那就需要自己来定义异常类了</p>
+</li>
+<li><p><code>RuntimeException</code> 运行时异常</p>
+</li>
+</ul>
+<pre><code class="java">异常/自定义异常/U18Exception.java
+package 异常.自定义异常;
+
+// 1.定义类继承
+// RuntimeException(运行时异常) / Exception(编译时异常)
+public class U18Exception extends Exception &#123;
+    // 2.生成两个构造器
+
+    public U18Exception() &#123;
+
+    &#125;
+
+    public U18Exception(String message) &#123;
+        super(message);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">异常/自定义异常/ExceptionByMyself.java
+package 异常.自定义异常;
+
+import java.util.Scanner;
+
+public class ExceptionByMyself &#123;
+    public static void main(String[] args) &#123;
+        Scanner sc = new Scanner(System.in);
+        System.out.println(&quot;请输入姓名：&quot;);
+        String name = sc.next();
+        System.out.println(&quot;请输入年龄：&quot;);
+        int age = sc.nextInt();
+        try &#123;   // 受到异常
+            register(name, age);
+        &#125; catch (U18Exception e) &#123;
+            System.out.println(&quot;年龄不合法，请使用父母的身份证&quot;);
+        &#125; finally &#123;
+            System.out.println(&quot;finally代码块中的代码，总会被执行&quot;);
+        &#125;
+    &#125;
+    // 模拟网站注册
+    public static void register(String name, int age) throws U18Exception &#123;
+        if (age &lt; 18) &#123; // 产生异常
+    // 小于18不让注册, 产生异常, 抛出异常, 让调用的地方去处理
+            throw new U18Exception(&quot;年龄不能小于18&quot;);
+        &#125; else &#123;
+            System.out.println(&quot;注册成功&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>return：结束&#x2F;回调方法<br>finally：稳妥一点，一定执行，<u><strong>把资源释放 (关闭文件、IO流关闭) 的代码</strong>放到finally中</u></p>
+</blockquote>
+<h3 id="泛型"><a href="#泛型" class="headerlink" title="泛型"></a>泛型</h3><ul>
+<li><p>定义类、接口、方法时，<strong>同时声明了一个或者多个类型变量</strong> <code>&lt;E&gt;</code><br>称之为泛型类、泛型接口，泛型方法、它们统称为泛型<br>有效的避免类型转换及可能出现的异常</p>
+<pre><code class="java">ArrayList&lt;String&gt; list = new ArrayList&lt;&gt;();
+
+public class ArrayList&lt;E&gt;&#123;
+    public boolean add(String e)&#123;
+        
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h5 id="泛型类"><a href="#泛型类" class="headerlink" title="泛型类"></a>泛型类</h5><p>类型变量建议用大写的英文字母：’<strong>E、T、K、V</strong>‘</p>
+<p>在Java中，泛型类中的E、T、K、V 是常用的类型参数名称，它们各自有约定俗成的含义：</p>
+<ul>
+<li>E (Element): 通常用于表示集合中的元素类型，如 List&lt; E &gt;。</li>
+<li>T (Type): 通用类型参数，可以表示任何类型，如 Box&lt; T &gt;。</li>
+<li>K (Key): 通常用于表示键值对中的键类型，如 Map&lt; K, V &gt;。</li>
+<li>V (Value): 通常用于表示键值对中的值类型，如 Map&lt; K, V &gt;。</li>
+</ul>
+<p>这些类型参数使得类或方法可以在编译时检查类型安全，并且所有的强制类型转换都是自动和隐式的，提高了代码的重用率和安全性。</p>
+<pre><code class="java">泛型类/MyArrayList.java
+package 泛型类;
+
+// 1.&lt;E&gt;：定义泛型，相当于定义变量
+// 2. 把具体的类型修改为E
+public class MyArrayList&lt;E&gt; &#123;
+    // 添加元素
+    public void add(E e) &#123;
+
+    &#125;
+
+    // 获取元素
+    public E get()&#123;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">泛型类/demo05.java
+package 泛型类;
+
+/**
+  泛型类的格式：
+        class 泛型类名&lt;泛型参数列表&gt;&#123;
+        &#125;
+ */
+public class demo05 &#123;
+    public static void main(String[] args) &#123;
+        // 3.创建对象，指定泛型的类型
+        MyArrayList&lt;String&gt; list1 = new MyArrayList&lt;&gt;();
+        // list1.add(String e)
+        list1.add(&quot;hello&quot;);
+        // public String get()
+        String s1 = list1.get();
+
+        MyArrayList&lt;Integer&gt; list2 = new MyArrayList&lt;&gt;();
+        // list2.add(Integer e)
+        list2.add(11);
+        // public Integer get()
+        Integer i1 = list2.get();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="泛型类-1"><a href="#泛型类-1" class="headerlink" title="泛型类"></a>泛型类</h5><pre><code class="java">泛型接口/demo06.java
+package 泛型接口;
+
+public class demo06 &#123;
+    public static void main(String[] args) &#123;
+        MyArrayList&lt;String&gt; list1 = new MyArrayList();
+        // list1.add(String e);
+        // String s = list1.get();
+
+        MyArrayList&lt;Integer&gt; list2 = new MyArrayList&lt;&gt;();
+        // list2.add(Integer e);
+        // Integer i = list2.get();
+        list2.add(11);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">泛型接口/MyList.java
+package 泛型接口;
+
+public interface MyList&lt;E&gt; &#123;
+    public abstract void add(E e);
+    public abstract E get();
+&#125;
+</code></pre>
+<pre><code class="java">泛型接口/MyArrayList.java
+package 泛型接口;
+
+public class MyArrayList&lt;E&gt; implements MyList&lt;E&gt;&#123;
+
+    @Override
+    public void add(E e) &#123;
+
+    &#125;
+
+    @Override
+    public E get() &#123;
+        return null;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h5><blockquote>
+<p>修饰符&lt;类型变量, 类型变量, …&gt; 返回值类型 方法名(形参列表){</p>
+<p>}</p>
+<p>public static &lt; T &gt;  void test(T t){</p>
+<p>}</p>
+</blockquote>
+<pre><code class="java">package 泛型方法;
+
+public class Demo07 &#123;
+    public static void main(String[] args) &#123;
+        //列举各种类型
+        printAll(1);
+        printAll(&quot;hello&quot;);
+        printAll(true);
+        printAll(3.14);
+    &#125;
+
+    // 泛型方法
+    public static &lt;T&gt; T printAll(T a)&#123;
+        System.out.println(&quot;a = &quot; + a);
+        return a;
+    &#125;
+    //T：方法的返回类型也是T，表示返回值的类型与传入参数的类型相同
+&#125;
+</code></pre>
+<h5 id="上下限-与-通配符：？"><a href="#上下限-与-通配符：？" class="headerlink" title="上下限 与 通配符：？"></a>上下限 与 通配符：？</h5><pre><code class="java">package 通配符;
+
+public class Car &#123;&#125;
+class XiaoMiCar extends Car&#123;&#125;
+class BYD extends Car&#123;&#125;
+</code></pre>
+<pre><code class="java">package 通配符;
+
+import java.util.ArrayList;
+
+// 理解泛型通配符 &quot;?&quot; 的作用
+public class demo08 &#123;
+    public static void main(String[] args) &#123;
+        ArrayList&lt;Object&gt; list1 = new ArrayList&lt;&gt;();
+        ArrayList&lt;Car&gt; list2 = new ArrayList&lt;&gt;();
+        ArrayList&lt;XiaoMiCar&gt; list3 = new ArrayList&lt;&gt;();
+        ArrayList&lt;BYD&gt; list4 = new ArrayList&lt;&gt;();
+
+        print1(list1);
+        print1(list2);
+        print1(list3);
+        print1(list4);
+
+        print2(list2);
+        print2(list3);
+        print2(list4);
+
+        print3(list1);
+        print3(list2);
+
+    &#125;
+    // 打印ArrayList，可以传入ArrayList，集合的泛型类型任意
+    // 泛型在匹配的时候一定要一样
+    // ?：泛型可以任意匹配类型
+    // java泛型匹配时类型一样，泛型是没有多态的
+    // ？ extend Car：泛型可以匹配Car以及其子类
+    // ？ super Car：泛型可以匹配Car及其父类
+    public static void print1(ArrayList&lt;?&gt; list) &#123;
+
+    &#125;
+    public static void print2(ArrayList&lt;? extends Car&gt; list) &#123;
+
+    &#125;
+    public static void print3(ArrayList&lt;? super Car&gt; list) &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<h5 id="泛型支持的类型"><a href="#泛型支持的类型" class="headerlink" title="泛型支持的类型"></a>泛型支持的类型</h5><ul>
+<li>泛型不支持基本数据类型，只支持对象类型(引用数据类型)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">基本数据类型</th>
+<th align="center">包装类</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">byte</td>
+<td align="center">Byte</td>
+</tr>
+<tr>
+<td align="center">short</td>
+<td align="center">Short</td>
+</tr>
+<tr>
+<td align="center">int</td>
+<td align="center"><strong>Integer</strong></td>
+</tr>
+<tr>
+<td align="center">long</td>
+<td align="center">Long</td>
+</tr>
+<tr>
+<td align="center">float</td>
+<td align="center">Float</td>
+</tr>
+<tr>
+<td align="center">double</td>
+<td align="center">Double</td>
+</tr>
+<tr>
+<td align="center">char</td>
+<td align="center"><strong>Character</strong></td>
+</tr>
+<tr>
+<td align="center">boolean</td>
+<td align="center">Boolean</td>
+</tr>
+</tbody></table>
+<h5 id="String和int相互转换"><a href="#String和int相互转换" class="headerlink" title="String和int相互转换"></a>String和int相互转换</h5><blockquote>
+<p>int 转换为 String</p>
+<ul>
+<li>加双引号即可</li>
+<li>Integer    public static String toString(double d)</li>
+</ul>
+</blockquote>
+<pre><code class="java">package 相互转换;
+
+public class demo10 &#123;
+    public static void main(String[] args) &#123;
+        // int转换String 5 -&gt; &quot;5&quot;
+        // 方式一：加双引号即可
+        String str1 = &quot;5&quot;;
+        // 方式二：Integer类中的toString方法
+        String str2 = Integer.toString(5);
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>String 转换为 Int</p>
+<ul>
+<li>public static int parseInt(String s): 将字符串解析为int类型，该方法是Integer类型</li>
+</ul>
+</blockquote>
+<pre><code class="java">package 相互转换;
+
+public class demo10 &#123;
+    public static void main(String[] args) &#123;
+        // String转换为int &quot;5&quot; -&gt; 5
+        // Integer类中的parseInt方法
+        int i = Integer.parseInt(&quot;5&quot;);
+        // 小数
+        double d = Double.parseDouble(&quot;555.50&quot;);
+        System.out.println(d);
+
+        //再加个异常
+         try &#123;
+            double d = Double.parseDouble(&quot;5afc55.50&quot;);
+            System.out.println(d);
+        &#125; catch (NumberFormatException e) &#123;
+            System.out.println(&quot;数据格式化异常&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 进阶版 从键盘输入
+package 相互转换;
+
+import java.util.Scanner;
+
+public class demo10_2 &#123;
+    public static void main(String[] args) &#123;
+        // 控制键盘输入
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print(&quot;请输入一个字符串: &quot;);
+        String input = scanner.nextLine();
+        try &#123;
+            int number = Integer.parseInt(input);
+            System.out.println(&quot;转换后的整数: &quot; + number);
+        &#125; catch (NumberFormatException e) &#123;
+            System.out.println(&quot;输入的不是有效的整数&quot;);
+        &#125;
+
+
+        System.out.print(&quot;请输入一个小数: &quot;);
+        input = scanner.nextLine();
+        try &#123;
+            double number = Double.parseDouble(input);
+            System.out.println(&quot;转换后的小数: &quot; + number);
+        &#125; catch (NumberFormatException e) &#123;
+            System.out.println(&quot;输入的不是有效的小数&quot;);
+        &#125;
+        scanner.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="自动装箱和自动拆箱"><a href="#自动装箱和自动拆箱" class="headerlink" title="自动装箱和自动拆箱"></a>自动装箱和自动拆箱</h3><h5 id="自动装箱"><a href="#自动装箱" class="headerlink" title="自动装箱"></a>自动装箱</h5><p>把<strong>基本数据类型</strong>转换对应的<strong>包装类</strong>类型<br>Integer i1 &#x3D; 5;</p>
+<h5 id="自动拆箱"><a href="#自动拆箱" class="headerlink" title="自动拆箱"></a>自动拆箱</h5><p>把<strong>包装类</strong>类型转换为对应的<strong>基本数据类型</strong><br>int i2 &#x3D; i1;</p>
+<pre><code class="java">// 原理：        反编译工具XJad
+xxx.java源代码 → 编译器javac → xxx.class字节码文件
+xxx.class字节码文件 → 反编译 → xxx.java源代码
+
+//装箱：
+Integer i1 = 5;  →→→  Integer i1 = Integer.valueOf(5)
+//拆箱：
+int i2 = i1;     →→→  int i2 = i1.intValue();
+
+ArrayList&lt;Integer&gt; list = new ArrayList&lt;&gt;();
+list.add(6); //自动装箱
+int i4 = list.get(0) //自动拆箱
+</code></pre>
+<h3 id="集合框架"><a href="#集合框架" class="headerlink" title="集合框架"></a>集合框架</h3><ul>
+<li><strong>集合是一种容器</strong>，类似于数组，但<strong>集合的大小可改变</strong><ul>
+<li><strong>Collection</strong> 单列集合  每个元素只包含一个值</li>
+<li><strong>Map</strong> 双列集合 每个元素包含两个值(键值对)</li>
+</ul>
+</li>
+</ul>
+<h6 id="Collection集合特点"><a href="#Collection集合特点" class="headerlink" title="Collection集合特点"></a>Collection集合特点</h6><ul>
+<li><strong>List系列</strong>集合：添加的元素是<strong>有序、可重复、有索引</strong> [增删改查]</li>
+<li><strong>Set系列</strong>集合：添加的元素是<strong>无序、不重复、无索引</strong></li>
+</ul>
+<h6 id="Collection的常用功能"><a href="#Collection的常用功能" class="headerlink" title="Collection的常用功能"></a>Collection的常用功能</h6><ul>
+<li>Collection是单列集合的祖宗，它规定的方法(功能)是全部单列集合都会继承的</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public boolean add(E e)</td>
+<td>把给定的对象添加到当前集合中</td>
+</tr>
+<tr>
+<td>public void clear()</td>
+<td>清空集合中所有的元素</td>
+</tr>
+<tr>
+<td>public boolean remove(E e)</td>
+<td>把给定的对象再当前集合中删除</td>
+</tr>
+<tr>
+<td>public boolean contains(Object obj)</td>
+<td>判断当前集合中是否包含给定的对象</td>
+</tr>
+<tr>
+<td>public boolean isEmpty()</td>
+<td>判断当前集合是否为空</td>
+</tr>
+<tr>
+<td>public int size()</td>
+<td>返回集合中元素的个数</td>
+</tr>
+<tr>
+<td>public Object[] toArray()</td>
+<td>把集合中的元素存储到数组中</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package collection集合;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+/**
+ *         1.public boolean add(E e): 添加元素到当前集合中
+ *         2.public void clear(): 清空集合中所有的元素
+ *         3.public boolean isEmpty(): 判断当前集合是否为空
+ *         4.public int size(): 返回集合中元素的个数
+ *         5.public boolean contains(Object obj): 判断当前集合中是否包含给定的对象
+ *         6.public boolean remove(E e): 把给定的对象在当前集合中删除
+ *         7.public Object[] toArray(): 把集合中的元素，存储到数组中
+ *
+ */
+public class demo11 &#123;
+    public static void main(String[] args) &#123;
+        //1.public boolean add(E e): 添加元素到当前集合中
+
+        // 创建集合 多态： 接口 变量名 = new 实现类();
+        Collection&lt;String&gt; coll = new ArrayList(); //collection接口不能直接用
+        // 没写泛型就会自动写成Object
+        coll.add(&quot;java&quot;);
+        coll.add(&quot;php&quot;);
+        coll.add(&quot;c++&quot;);
+        coll.add(&quot;Mybatis&quot;);
+        System.out.println(&quot;coll = &quot; + coll);
+// coll = [java, php, c++, Mybatis]
+        boolean java = coll.contains(&quot;java&quot;);
+        System.out.println(&quot;java = &quot; + java);
+// java = true
+
+    &#125;
+&#125;
+</code></pre>
+<p><span style = "color:orange"><strong>详细体会多态概念</strong></span></p>
+<blockquote>
+<p>多态的概念：<br>多态是指同一个接口或基类的引用可以指向不同的实现类或子类的对象。<br>通过多态，你可以在不改变代码的情况下，使用不同的实现类来完成相同的操作。</p>
+<p>&#x2F;&#x2F; 创建集合 多态： 接口 变量名 &#x3D; new 实现类();<br>Collection &lt; String &gt; coll &#x3D; new ArrayList&lt;&gt;();</p>
+<p>通过这种方式，coll 变量可以调用 Collection 接口中定义的所有方法，而具体的实现细节由 ArrayList 提供</p>
+</blockquote>
+<h3 id="迭代器遍历集合"><a href="#迭代器遍历集合" class="headerlink" title="迭代器遍历集合"></a>迭代器遍历集合</h3><ul>
+<li>迭代器用来遍历集合的专用方式(数组没有迭代器)，在java中迭代器的代表是<code>Iterator</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Iterator&lt; E &gt; iterator()</td>
+<td>返回集合中的迭代器对象，该迭代器对象默认指向当前集合的第一个元素</td>
+</tr>
+</tbody></table>
+<h6 id="Iterator迭代器中的常用方法"><a href="#Iterator迭代器中的常用方法" class="headerlink" title="Iterator迭代器中的常用方法"></a>Iterator迭代器中的常用方法</h6><table>
+<thead>
+<tr>
+<th>方法名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>boolean hasNext()</td>
+<td>询问当前位置是否有元素存在，存在返回true 反之false</td>
+</tr>
+<tr>
+<td>E next()</td>
+<td>获取当前位置的元素，并同时将迭代器对象指向下一个元素处</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 迭代器;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+
+public class demo12 &#123;
+    public static void main(String[] args) &#123;
+        // 创建Collection集合
+        Collection&lt;String&gt; coll = new ArrayList&lt;&gt;();
+
+        // 添加数据到集合中
+        coll.add(&quot;赵敏&quot;);
+        coll.add(&quot;小昭&quot;);
+        coll.add(&quot;周芷若&quot;);
+        coll.add(&quot;小華&quot;);
+
+        // 使用迭代器获取集合中的数据
+        // 1.获取集合的迭代器
+        Iterator&lt;String&gt; it = coll.iterator();
+        // 直接通过迭代器获取数据
+        System.out.println(&quot;it.next() = &quot; + it.next()); //赵敏
+        System.out.println(&quot;it.next() = &quot; + it.next()); //小昭
+        System.out.println(&quot;it.next() = &quot; + it.next()); //周芷若
+        System.out.println(&quot;it.next() = &quot; + it.next()); //小華
+
+        System.out.println(&quot;=========================&quot;);
+
+        Iterator&lt;String&gt; its = coll.iterator();
+        // 循环判断是否有下一个元素 有就取出
+        while (its.hasNext()) &#123; // true or false
+            // 获取下一个元素
+            String name = its.next();
+            System.out.println(&quot;name = &quot; + name);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p><span style ="color:orange"><strong>为什么要用迭代器 什么场景用 为什么不用for</strong></span></p>
+<blockquote>
+<ul>
+<li><p>为什么要用迭代器：<br><strong>灵活性</strong>：迭代器提供了一种统一的方式来遍历不同类型的集合，而不需要关心集合的具体实现。<br><strong>功能丰富</strong>：迭代器不仅提供了遍历集合的功能，还提供了删除元素等操作。</p>
+</li>
+<li><p>什么场景用迭代器：<br><strong>多态性</strong>：当需要<u>遍历多种类型的集合时</u>，使用迭代器可以避免重复代码。<br><strong>并发修改</strong>：在<u>遍历集合的同时需要修改集合</u>（如删除元素），使用迭代器更安全。<br><strong>自定义集合</strong>：对于<u>自定义的集合类</u>，可以通过实现迭代器接口来提供遍历功能。</p>
+</li>
+<li><p>为什么不用for：<br><strong>类型限制</strong>：增强的 for 循环（即 for-each 循环）只能用于遍历集合或数组，不能进行其他操作（如删除元素）。<br><strong>灵活性不足</strong>：增强的 for 循环不适用于所有集合类型，特别是那些不支持随机访问的集合（如 LinkedList）。<br><strong>并发修改问题</strong>：在使用增强的 for 循环遍历集合时，如果集合被修改，会抛出 ConcurrentModificationException。</p>
+</li>
+</ul>
+</blockquote>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/基础强化进阶" style=color:#ff7d73>
+                基础强化进阶
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2024/09/30/HM/HM-基础强化进阶/ " class="go-post">
         阅读全文
     </a>
 </div>
@@ -4211,30 +4848,6 @@ public class Employee implements Serializable &#123;
 
 &#125;
 </code></pre>
-<pre><code class="java">sky-pojo  com/sky/dto/EmployeeDTO.java
-package com.sky.dto;
-
-import lombok.Data;
-
-import java.io.Serializable;
-
-@Data
-public class EmployeeDTO implements Serializable &#123;
-
-    private Long id;
-
-    private String username;
-
-    private String name;
-
-    private String phone;
-
-    private String sex;
-
-    private String idNumber;
-
-&#125;
-</code></pre>
 <pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
 /**
  * 插入员工数据
@@ -4604,8 +5217,52 @@ public class PageResult implements Serializable&#123;
         List&lt;Employee&gt; records = page.getResult();
 
         return new PageResult(total, records);
-    &#125;
+&#125;
 </code></pre>
+<p><span style = "color:orange"><strong>逐行研究分页查询</strong></span></p>
+<blockquote>
+<ul>
+<li><p>PageHelper.startPage 是 MyBatis 分页插件提供的方法，用于开启分页功能</p>
+<ul>
+<li><p>employeePageQueryDTO.getPage() 获取当前页码。</p>
+</li>
+<li><p>employeePageQueryDTO.getPageSize() 获取每页显示的记录数</p>
+<p>这一行代码的作用是告诉 MyBatis 在接下来的查询中启用分页，并设置分页参数</p>
+</li>
+</ul>
+</li>
+<li><p>employeeMapper.pageQuery(employeePageQueryDTO) 是调用 MyBatis 的 Mapper 接口方法，执行分页查询。</p>
+<ul>
+<li>employeePageQueryDTO 包含了查询条件，如关键字、排序字段等。</li>
+<li>查询结果会被封装成 Page<Employee> 对象，其中包含了分页数据和分页元数据。</li>
+</ul>
+</li>
+<li><p>page.getTotal() 获取分页查询的总记录数。</p>
+<ul>
+<li>总记录数用于计算总页数和其他分页相关的计算</li>
+</ul>
+</li>
+<li><p>List<Employee> records &#x3D; page.getResult();</p>
+<ul>
+<li>page.getResult() 获取分页查询的实际数据列表。</li>
+<li>这个列表包含了当前页的员工记录</li>
+</ul>
+</li>
+<li><p>return new PageResult(total, records);</p>
+</li>
+<li><p>new PageResult(total, records) 创建一个新的 PageResult 对象，将总记录数和分页数据列表封装起来</p>
+</li>
+<li><p>PageResult 类通常包含 total 和 records 属性，用于返回给客户端</p>
+</li>
+<li><p>假设 employeePageQueryDTO.getPage() 返回 2，employeePageQueryDTO.getPageSize() 返回 10，那么 MyBatis 生成的 SQL 可能类似于：</p>
+</li>
+</ul>
+<pre><code class="mysql">SELECT * FROM employee
+WHERE ... -- 根据 employeePageQueryDTO 中的查询条件
+LIMIT 10 OFFSET 10;
+</code></pre>
+<p>LIMIT 10：表示每页显示 10 条记录。<br>OFFSET 10：表示从第 11 条记录开始（因为页码从 1 开始，所以第 2 页的偏移量是 10）。</p>
+</blockquote>
 <pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
  /**
      * 分页查询 [动态sql 不用注解了 写道 EmployeeMapper.xml]
@@ -13858,7 +14515,7 @@ public class BusinessDataVO implements Serializable &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -14779,7 +15436,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -34442,7 +35099,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -37492,7 +38149,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -39921,7 +40578,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -42851,7 +43508,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -42859,2073 +43516,6 @@ public class Receiver2 &#123;
     </div>
 
     <a href="/2024/04/04/后端/多线程与分布式/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2024/03/28/后端/Java面试/">
-        <h2>
-            Java面试
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2024/3/28
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h1 id="Java面试-——-准备"><a href="#Java面试-——-准备" class="headerlink" title="Java面试 —— 准备"></a>Java面试 —— 准备</h1><h3 id="給职场新人的建议"><a href="#給职场新人的建议" class="headerlink" title="給职场新人的建议"></a>給职场新人的建议</h3><ul>
-<li>不要有为老板工作的心态</li>
-<li>永远不要敷衍工作</li>
-<li>事情做完马上汇报</li>
-<li>管理好自己的情绪，做一个可爱的人</li>
-<li>接受任务有确认机制</li>
-<li>注意工作汇报方式</li>
-<li>注重细节</li>
-<li>提建议要有数据支撑</li>
-<li>給主管选择题 而不是判断题 </li>
-<li>要提升自己的价值 [人脉网]</li>
-<li>认真对待工作汇报3</li>
-</ul>
-<h3 id="介绍面试环节中常见问题"><a href="#介绍面试环节中常见问题" class="headerlink" title="介绍面试环节中常见问题"></a>介绍面试环节中常见问题</h3><h5 id="自我介绍"><a href="#自我介绍" class="headerlink" title="自我介绍"></a>自我介绍</h5><ul>
-<li><h6 id="我是誰"><a href="#我是誰" class="headerlink" title="我是誰"></a>我是誰</h6></li>
-<li><h6 id="我做过什么"><a href="#我做过什么" class="headerlink" title="我做过什么"></a>我做过什么</h6></li>
-<li><h6 id="我的优势在哪里"><a href="#我的优势在哪里" class="headerlink" title="我的优势在哪里"></a>我的优势在哪里</h6></li>
-</ul>
-<blockquote>
-<p>张总你好，我叫潘春尧，<strong>今年23岁</strong>，来自河北唐山人，来<strong>应聘贵公司的Java软件工程师职位</strong>，26年毕业于南昌工学院<strong>软件工程专业</strong>，从事Java开发有2年的工作时间了，我<strong>对编程有着浓厚的兴趣</strong>，擅长基于HTML5的互联网应用开发，擅长使用Mysql数据库对大数据量方面的调优有经验，同时具备完整的项目开发能力，具备一定的分布式架构经验，之前<strong>我做过两个项目</strong>，都是独立完成的，<strong>第一个</strong>是XX 在2024年开发，这是一个电商网站，已经运用了一年的时间，我负责底层的架构搭建与前后端开发，技术方面采用了XXXX。架构方面底层使用了XXX，我负责的模块设计XXX，这些都是由我完整开发的，而<strong>第二个</strong>项目是由我开发的xxx，这是一个xxx平台，基于阿里云搭建，技术方面与上一个相似，工作原因产品需要增加XXX，我负责的网站模块主要负责xxx，这也是由我负责开发的，以上是我的个人介绍，有不足的请您多保函。</p>
-</blockquote>
-<h5 id="现场面对面-要面试官知道我有闪光的价值"><a href="#现场面对面-要面试官知道我有闪光的价值" class="headerlink" title="现场面对面  [要面试官知道我有闪光的价值]"></a>现场面对面  [要面试官知道我有闪光的价值]</h5><ul>
-<li><strong>容貌要求</strong> [注意形象(<u>刮胡子,短发,指甲</u>)]</li>
-<li><strong>着装要求</strong> [品牌+面料+皮鞋(商务休闲)]</li>
-<li><strong>面试礼仪</strong> [提前15分钟到达面试场地填写表格、敬语(您好,感谢,再见)、善意的微笑] [和前台了解面试官的称呼和职位 主动握手 张总… ] [跟着面试官进去后 注意关门  进去前注意敲门] [沟通时眼神不要游离] [提交简历调转180°双手呈递] [不要抖腿翘腿] [手放腿上 十指交叉放桌子上 不许靠着椅子靠背]</li>
-<li><strong>一对多面试</strong> [一男一女   <strong>男:</strong> 技术主管[考察技术能力]  <strong>女:</strong> HR[根据动作分析本人能力]] [面试紧张的时候要降低语速]</li>
-</ul>
-<h5 id="面试必知必会"><a href="#面试必知必会" class="headerlink" title="面试必知必会"></a>面试必知必会</h5><ul>
-<li><h6 id="谈谈你的职业规划-对未来职业有清晰的规划"><a href="#谈谈你的职业规划-对未来职业有清晰的规划" class="headerlink" title="谈谈你的职业规划 [对未来职业有清晰的规划]"></a>谈谈你的职业规划 [对未来职业有清晰的规划]</h6></li>
-</ul>
-<blockquote>
-<p>我从小对软件技术有着很浓厚的兴趣，在未来我五年内我希望从事于与技术相关的岗位，我给自己定位了一个小目标，在五年的时间内我希望拿下系统架构师的认证，同时在分布式、微服务的领域有自己独道的见识。希望在未来的一段时间里公司能给我提供成长的机会。</p>
-</blockquote>
-<ul>
-<li><h6 id="与同时遇到正面冲突，你会怎么办"><a href="#与同时遇到正面冲突，你会怎么办" class="headerlink" title="与同时遇到正面冲突，你会怎么办"></a>与同时遇到正面冲突，你会怎么办</h6></li>
-</ul>
-<blockquote>
-<p>[不诋毁任何人 不传达任何负面情绪 以大局为重]<br>我很少与别人产生正面的冲突，面对别人对我个人的职责批评，我通常先会反思我是不是真的做错了，如果是我会虚心接受，尽快改正。如果是别人对我无端的诽谤，在公共场合也会保持沉默，我会在私下跟他心平气和的沟通看看之间是不是有什么误会。如果是在工作中就某些问题产生了分歧。在会议时直接打开天窗说亮话，阐述自己的观点，这种是典型的对事不对人，这也是点到为止，如果双方意见僵持不下，这可能需要项目经理在中间做出定夺，他看到的问题可能比我们的更加全面而且更有建设性，总之我处事的原则是对事不对人，做事必须认真，做人还是要谦虚一些</p>
-</blockquote>
-<ul>
-<li><h6 id="你生活中最重要的是什么"><a href="#你生活中最重要的是什么" class="headerlink" title="你生活中最重要的是什么"></a>你生活中最重要的是什么</h6></li>
-</ul>
-<blockquote>
-<p>[考察你对待工作 生活 家庭是什么态度] [<strong>强调以事业为重</strong>]<br>我一个人来到XX打拼，目前是单身，对于我现在而言，事业就是我的全部，我会珍惜每一天，让自己尽快的成长起来</p>
-</blockquote>
-<ul>
-<li><h6 id="这份工作你能遇见哪些问题"><a href="#这份工作你能遇见哪些问题" class="headerlink" title="这份工作你能遇见哪些问题"></a>这份工作你能遇见哪些问题</h6></li>
-</ul>
-<blockquote>
-<p>[不能太过实在 避重就轻 强调自己的特性]<br>我对咱们公司的业务不太了解，经验很少，进入公司以后我会听取领导的指示和要求，尽快的熟悉公司的业务和技能，并且制定一份近期的工作计划并报告給领导批准，最后按照计划展开工作，其实针对这个问题，明眼人都看得出来，都说了一堆套话，废话，但是对于面试官来说，你正面的回答了这些问题。而这些问题肯定是现实中存在的，这样既无伤大雅又巧妙的表达了自己对这份工作的期望</p>
-</blockquote>
-<ul>
-<li><h6 id="你希望与什么样的同事或上级公事"><a href="#你希望与什么样的同事或上级公事" class="headerlink" title="你希望与什么样的同事或上级公事"></a>你希望与什么样的同事或上级公事</h6></li>
-</ul>
-<blockquote>
-<p>[考察情商]<br>作为刚步入社会的新人，我应该要求自己多熟悉工作环境适应环境，而不是对环境提出要求，对于我的工作只要能发挥我的专长就可以了，如果工作中有做的不对的地方还请领导多批评指正</p>
-</blockquote>
-<ul>
-<li><h6 id="你将如何开展工作"><a href="#你将如何开展工作" class="headerlink" title="你将如何开展工作"></a>你将如何开展工作</h6></li>
-</ul>
-<blockquote>
-<p>[面试通过几率已经很大了]<br>每天我会提高工作效率，完成公司交付的工作任务，任务未完成绝不下班，根据领导的指示和工作安排制定好工作计划，提前预备并按照计划完成，多请示领导及时汇报，如果有遇到不明白的地方要向前辈们请教，抓住缝隙时间多学习多提升，尽快的提高自己的专业能力与业务水平</p>
-</blockquote>
-<ul>
-<li><h6 id="你有想过创业吗"><a href="#你有想过创业吗" class="headerlink" title="你有想过创业吗"></a>你有想过创业吗</h6></li>
-</ul>
-<blockquote>
-<p>[面试官喜欢有冲劲的小伙子 给出明确的时间规划 不要说我是来公司学习的]<br>我当然有想过创业，但我觉得不是现在，我计划在30岁前后选择创业，软件行业需要大量的技术积累才能有竞争力，同时呢创业对我来说也需要很多的资金，我是一名刚走出校园的新人，在这两方面都不成熟，所以在未来的5年时间内，我会努力的工作，在经验和资金方面做好准备，同时之所以来贵公司，是因为贵公司在XXX行业是一个知名的企业，我想在为公司创造价值的同时，也能进一步的掌握咱们行业最新的动向，希望您能给我一次证明自己的机会，我肯定不会让公司失望的。</p>
-</blockquote>
-<ul>
-<li><h6 id="你还应聘了哪些公司"><a href="#你还应聘了哪些公司" class="headerlink" title="你还应聘了哪些公司"></a>你还应聘了哪些公司</h6></li>
-</ul>
-<blockquote>
-<p>[千万不能说海投 也不能说hr打了电话才来 最好不要跨行业]<br>做一些准备了</p>
-</blockquote>
-<ul>
-<li><h6 id="为什么你的学历是专科"><a href="#为什么你的学历是专科" class="headerlink" title="为什么你的学历是专科"></a>为什么你的学历是专科</h6></li>
-</ul>
-<blockquote>
-<p>[很难回答 送命题 学历非常重要的 话术把劣势转换优势]<br>实话实说上高中的时候我并不是一个好学生，在那时候爱玩电脑，确实也耽误了不少学业。但我认为学历的高低并不代表能力的好坏，在我上了专科以后我更加意识到因为学历比别人落后，自己就更需要努力了，从小对编程感兴趣，上了大学后就更有时间朝着自己喜欢的领域努力。在大学几年的时间里面我没有醉生梦死，自己呢也连续学习了XXX技术内容，我知道有朝一日，这些知识一定能给我带来用处，我一定能成为所向往的软件工程师，我能用实际行动来证明专科不比本科差</p>
-</blockquote>
-<ul>
-<li><h6 id="谈谈你对加班的看法"><a href="#谈谈你对加班的看法" class="headerlink" title="谈谈你对加班的看法"></a>谈谈你对加班的看法</h6></li>
-</ul>
-<blockquote>
-<p>[测试你是否能为公司奉献 要强调上班提高效率 强调加班并不是我的工作效率低下]<br>上班时间我会提高效率，做到当日事当日毕，但是如果当天的事没有按时完成，我会义不容辞的加班，现在我是单身，没有家庭的负担，可以全身心的工作</p>
-</blockquote>
-<ul>
-<li><h6 id="你的薪资的要求"><a href="#你的薪资的要求" class="headerlink" title="你的薪资的要求"></a>你的薪资的要求</h6></li>
-</ul>
-<blockquote>
-<p>[提前有明确主张 自己能赚多少钱 给出hr谈薪资的余地期待8k 可以报价8.5k 千万不要说区间6-8k]<br>我期望的薪资是8.5k，每一个公司都有自己的薪资结构，咱们公司是xxx行业中是非常有实力的企业，相对于薪资来说我更看重技术和行业本身，如果您觉得薪资水平超出了公司的预期的话，这个咱们可以谈</p>
-</blockquote>
-<ul>
-<li><h6 id="谈谈你对跳槽的看法"><a href="#谈谈你对跳槽的看法" class="headerlink" title="谈谈你对跳槽的看法"></a>谈谈你对跳槽的看法</h6></li>
-</ul>
-<blockquote>
-<p>[千万不要说负面话语 也不能说工资太低、福利太差、没有晋升空间]<br>我这个人稳定性很好，本身反对频繁跳槽，但是有一种情况我会选择跳槽，就是公司的发展对于我的事业规划不符，我之前在进入xxx公司的时候，公司主要从事金融行业的项目开发，后来该行业金融不理想改作了电信行业了，当我的长期规划是想成为长期的金融软件工程师与架构师，如果遇到这种情况我会好不容易的选择离开。</p>
-</blockquote>
-<h1 id="Java面试——Java基础面试技巧"><a href="#Java面试——Java基础面试技巧" class="headerlink" title="Java面试——Java基础面试技巧"></a>Java面试——Java基础面试技巧</h1><h3 id="JDK、JRE、JVM有什么区别"><a href="#JDK、JRE、JVM有什么区别" class="headerlink" title="JDK、JRE、JVM有什么区别"></a>JDK、JRE、JVM有什么区别</h3><ul>
-<li><strong>JDK：</strong>Java Development Kit 针对Java程序员的产品</li>
-<li><strong>JRE：</strong>Java Runtime Environment是运行Java的环境集合</li>
-<li><strong>JVM</strong>：Java虚拟机用于运行Java字节码文件[class]，跨平台的核心。通过JVM隐藏了操作系统最底层的API，对于我们java工程师只需要面对jvm层面进行开发，再转移到其他就可以了</li>
-</ul>
-<h5 id="为什么可以跨平台？"><a href="#为什么可以跨平台？" class="headerlink" title="为什么可以跨平台？"></a>为什么可以跨平台？</h5><p>因为JVM可以跨平台，JVM只认识<strong>字节码</strong>，能够解释到系统的API调用，对于不同的系统有不同的JVM实现。Windows和Linux有不同的JVM实现，但是编成字节码后都是一样的。</p>
-<h3 id="常用数字类型的区别"><a href="#常用数字类型的区别" class="headerlink" title="常用数字类型的区别"></a>常用数字类型的区别</h3><table>
-<thead>
-<tr>
-<th align="center">名次</th>
-<th align="center">取值范围</th>
-<th align="center">存储空间</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">字节(byte)</td>
-<td align="center">-$2^7$ ~ $2^7$-1<br />-128 ~ 127</td>
-<td align="center">1个字节</td>
-</tr>
-<tr>
-<td align="center">短整数(short)</td>
-<td align="center">-$2^{15}$ ~ $2^{15}$-1 <br />-32768 ~ 32767</td>
-<td align="center">2个字节</td>
-</tr>
-<tr>
-<td align="center"><span style = "color:red"><strong>整数(int)</strong></span></td>
-<td align="center"><span style = "color:red"> -$2^{31}$ ~ $2^{31}$-1<br />-2147483648 ~ 2147483647</span></td>
-<td align="center"><span style = "color:red">4个字节</span></td>
-</tr>
-<tr>
-<td align="center">长整数(long)</td>
-<td align="center">-$2^{63}$ ~ $2^{63}$-1</td>
-<td align="center">8个字节</td>
-</tr>
-<tr>
-<td align="center">单精度(float)</td>
-<td align="center">$2^{-149}$ ~ $2^{128}$-1</td>
-<td align="center">4个字节</td>
-</tr>
-<tr>
-<td align="center">双精度(double)</td>
-<td align="center">$2^{-1074}$ ~ $2^{1024}$-1</td>
-<td align="center">8个字节</td>
-</tr>
-</tbody></table>
-<h3 id="Float在JVM的表达方式及使用陷阱"><a href="#Float在JVM的表达方式及使用陷阱" class="headerlink" title="Float在JVM的表达方式及使用陷阱"></a>Float在JVM的表达方式及使用陷阱</h3><pre><code class="java">float d1 = 423432423f;
-float d2 = d1 + 1;
-if(d1 == d2)&#123;
-    System.out.println(&quot;d1==d2&quot;);
-&#125;else&#123;
-    System.out.println(&quot;d1!=d2&quot;);
-&#125;
-
-答案：d1 == d2
-对于单精度浮点型float d1在内存中是采用科学计数法表示
-表达为：4.2343242E7 保留小数点后七位 [如果更高精度的用double]
-d1是八位数
-无论是d1还是d2不考虑最后一位
-d2用科学计数法表示同样为4.2343242E7
-因此 d1 == d2
-
-银行业务数值精确计算要用BigDecimal类进行加减乘除的计算
-</code></pre>
-<h3 id="随机数的使用"><a href="#随机数的使用" class="headerlink" title="随机数的使用"></a>随机数的使用</h3><pre><code class="java">编程题：随机生成30~100之间的整数
-==========================================================
-package com.example.demo12;
-
-import java.util.Random;
-
-public class RandomSample &#123;
-    public Integer randomInt1()&#123;
-        int min = 30;
-        int max = 100;
-        //生成正整数范围0-70的随机数 =&gt; 30~100
-        int result = new Random().nextInt(max - min) + min;
-        return  result;
-    &#125;
-    public Integer randomInt2()&#123;
-        int min = 30;
-        int max = 100;
-        int result = (int)(Math.random() * (max-min)) + min;
-        return result;
-    &#125;
-
-    public static void main(String[] args) &#123;
-        System.out.println(new RandomSample().randomInt1());
-        System.out.println(new RandomSample().randomInt2());
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">编程题：列出1-1000的质数[大于1的情况下 只能被1和自身整除的数]
-==========================================================
-package com.example.demo12;
-
-public class PrimeNumber &#123;
-    public static void main(String[] args) &#123;
-        for (int i = 2; i &lt;= 1000; i++)&#123;
-            boolean flag = true;
-            for (int j = 2; j &lt; i; j++)&#123;
-                if(i % j == 0)&#123;
-                    flag = false;
-                    break;
-                &#125;
-            &#125;
-            if (flag)&#123;
-                System.out.println(i);
-            &#125;
-        &#125;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="面向对象的三大特征是什么"><a href="#面向对象的三大特征是什么" class="headerlink" title="面向对象的三大特征是什么"></a>面向对象的三大特征是什么</h3><ul>
-<li><p><strong>封装</strong><br>对同一类事务的特征和功能包装到一起，只对外暴露需要调用接口而已<br>[我想让你看到的你能看到 不想让你看到的不能看到]。作用：对接口进行实现的过程中每一个接口的实现类对接口进行了实现，但是在调用的时候通常是面对接口的，对于使用者来说只需要知道接口对应的哪些方法做什么用的就可以了，对内部的什么是不需要理解的。接口是体现封装的常见方法<br><strong>封装的好处</strong>：</p>
-<ol>
-<li>实现专业的分工</li>
-<li>减少代码耦合</li>
-<li>可以自由修改类的内部结构</li>
-</ol>
-</li>
-<li><p><strong>继承</strong><br>是Java中面向对象最显著的特征，继承是从已有的类中派生出新的类，新的类能够吸收原有属性的属性和行为并扩展新的类，<u>Java中类是不支持多继承的，接口可以，一个接口可以继承多个其他接口</u> 父类是子类的抽象化，子类是父类的具体化。<br><strong>接口与抽象类有那些异同？</strong></p>
-<table>
-<thead>
-<tr>
-<th align="center">相同点</th>
-<th align="center">不同点</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">都是上层的抽象</td>
-<td align="center">抽象类可包含方法的实现<br />接口则只能包含方法的声明</td>
-</tr>
-<tr>
-<td align="center">不能被实例化 [不可new]</td>
-<td align="center">继承类只能继承一个抽象类<br />实现类可以实现多个接口</td>
-</tr>
-<tr>
-<td align="center">都可以包含抽象发发</td>
-<td align="center">抽象级别：接口&gt;抽象类&gt;实现类</td>
-</tr>
-</tbody></table>
-<p><span style = "color : red"><strong>作用不同</strong>：接口用于约束程序行为。继承则用于代码复用</span><br>注意：JDK8以上版本，接口可以有default方法，包含方法实现</p>
-</li>
-<li><p><strong>多态</strong><br>最重要的特性 前面是为多态服务的<br>多态是三大特性中最重要的操作<br>多态是同一个行为具有多个不同表现形式或形态的能力<br>多态是同一个接口，使用不同的实例而执行不同操作</p>
-</li>
-</ul>
-<h3 id="静态和实例变量-方法-的区别"><a href="#静态和实例变量-方法-的区别" class="headerlink" title="静态和实例变量(方法)的区别"></a>静态和实例变量(方法)的区别</h3><ul>
-<li><strong>语法区别</strong>：静态变量前要加static关键字，实例则不用</li>
-<li><strong>隶属区别</strong>：实例变量属于某个对象的属性，而静态属于类</li>
-<li><strong>运行区别</strong>：<u>静态变量</u>在JVM加载类字节码创建，<u>实例变量</u>在实例化对象时创建</li>
-</ul>
-<h3 id="类的执行顺序"><a href="#类的执行顺序" class="headerlink" title="类的执行顺序"></a>类的执行顺序</h3><pre><code class="java">package com.example.text;
-//请写出程序输出结果
-//1. 静态优先
-//2. 父类优先
-//3. 非静态块优先于构造函数
-public class ExecutionSequence &#123;
-    public static void main(String[] args) &#123;
-        new GeneralClass();
-    &#125;
-&#125;
-class ParentClass&#123;
-    static &#123;
-        System.out.println(&quot;①我是父类静态块&quot;);
-    &#125;
-
-    &#123;
-        System.out.println(&quot;②我是父类非静态块&quot;);
-    &#125;
-    public ParentClass()&#123;
-        System.out.println(&quot;③我是父类构造函数&quot;);
-    &#125;
-&#125;
-
-class GeneralClass extends ParentClass&#123;
-    static&#123;
-        System.out.println(&quot;④我是子类静态块&quot;);
-    &#125;
-
-    &#123;
-        System.out.println(&quot;⑤我是子类非静态块&quot;);
-    &#125;
-
-    public GeneralClass()&#123;
-        System.out.println(&quot;⑥我是子类构造函数&quot;);
-    &#125;
-&#125;
-/*
-①我是父类静态块
-④我是子类静态块
-②我是父类非静态块
-③我是父类构造函数
-⑤我是子类非静态块
-⑥我是子类构造函数
-*/
-</code></pre>
-<h3 id="请说明java的异常体系"><a href="#请说明java的异常体系" class="headerlink" title="请说明java的异常体系"></a>请说明java的异常体系</h3><p>Error → Throwable<br>RuntimeException → Exception → Throwable<br>运行时产生的异常不要求对其强制try catch…</p>
-<h5 id="Error和Exception的区别和联系"><a href="#Error和Exception的区别和联系" class="headerlink" title="Error和Exception的区别和联系"></a>Error和Exception的区别和联系</h5><table>
-<thead>
-<tr>
-<th align="center">Exception</th>
-<th align="center">Error</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">可以是可被控制或不可控制的</td>
-<td align="center">总是不可控制的</td>
-</tr>
-<tr>
-<td align="center">表示一个由程序员导致的错误</td>
-<td align="center">经常用来用于表示系统错误或低层资源的错误</td>
-</tr>
-<tr>
-<td align="center">表示在应用程序级被处理</td>
-<td align="center">如果可能的话，应该在系统级被捕捉</td>
-</tr>
-</tbody></table>
-<h3 id="String与字符串常量池-比较内存地址"><a href="#String与字符串常量池-比较内存地址" class="headerlink" title="String与字符串常量池 [比较内存地址]"></a>String与字符串常量池 [比较内存地址]</h3><pre><code class="java">String s1 = &quot;abc&quot;;
-String s2 = &quot;abc&quot;;
-String s3 = &quot;abc&quot;+&quot;def&quot;;
-String s4 = &quot;abcdef&quot;;
-String s5 = s2 + &quot;def&quot;;
-String s6 = new String(&quot;abc&quot;);
-System.ouut.println(s1==s2); //true
-System.ouut.println(s3==s4); //true 相等的都保存到常量池
-System.ouut.println(s4==s5); //false 
-//s5中的s2属于引用类型 在java编译期间无法确定其类型 只有在运行时才能确定具体的值 会产生一个新的内存地址给s5 所以不相等
-System.ouut.println(s4.equals(s5));//true equals比较的是内容
-System.ouut.println(s1==s6); //false
-//s1是在常量池的常量 new String(&quot;abc&quot;);创建的东西不在常量池 存储的地方是完全不同的
-</code></pre>
-<h3 id="String、StringBuilder、StringBuffer的区别"><a href="#String、StringBuilder、StringBuffer的区别" class="headerlink" title="String、StringBuilder、StringBuffer的区别"></a>String、StringBuilder、StringBuffer的区别</h3><table>
-<thead>
-<tr>
-<th></th>
-<th align="center">String</th>
-<th align="center">StringBuffer</th>
-<th align="center">StringBuilder</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>执行速度</td>
-<td align="center">最差</td>
-<td align="center">其次</td>
-<td align="center">最高</td>
-</tr>
-<tr>
-<td>线程安全</td>
-<td align="center">线程安全</td>
-<td align="center">线程安全</td>
-<td align="center">线程不安全</td>
-</tr>
-<tr>
-<td>使用场景</td>
-<td align="center">少量字符串操作</td>
-<td align="center">多线程环境下的大量操作</td>
-<td align="center">单线程环境下的大量操作</td>
-</tr>
-</tbody></table>
-<h3 id="List与Set的区别"><a href="#List与Set的区别" class="headerlink" title="List与Set的区别"></a>List与Set的区别</h3><table>
-<thead>
-<tr>
-<th align="center"></th>
-<th align="center">List</th>
-<th align="center">Set</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">允许重复</td>
-<td align="center">是</td>
-<td align="center">否</td>
-</tr>
-<tr>
-<td align="center">是否允许null</td>
-<td align="center">是</td>
-<td align="center">否</td>
-</tr>
-<tr>
-<td align="center">是否有序</td>
-<td align="center">是</td>
-<td align="center">否</td>
-</tr>
-<tr>
-<td align="center">常用类</td>
-<td align="center">ArrayList<br />LinkedList</td>
-<td align="center">HashSet<br />LinkedHashSet<br />TreeSet</td>
-</tr>
-</tbody></table>
-<h3 id="ArrayList与LinkedList的区别"><a href="#ArrayList与LinkedList的区别" class="headerlink" title="ArrayList与LinkedList的区别"></a>ArrayList与LinkedList的区别</h3><table>
-<thead>
-<tr>
-<th align="center"></th>
-<th align="center">ArrayList</th>
-<th align="center">LinkedList</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">存储结构</td>
-<td align="center">基于动态数组</td>
-<td align="center">基于链表</td>
-</tr>
-<tr>
-<td align="center">遍历方式</td>
-<td align="center">连续读取</td>
-<td align="center">基于指针</td>
-</tr>
-<tr>
-<td align="center">使用场景</td>
-<td align="center">大数据量读取</td>
-<td align="center">频繁新增、插入[写入类型]</td>
-</tr>
-</tbody></table>
-<h3 id="HashSet和TreeSet的区别"><a href="#HashSet和TreeSet的区别" class="headerlink" title="HashSet和TreeSet的区别"></a>HashSet和TreeSet的区别</h3><table>
-<thead>
-<tr>
-<th align="center"></th>
-<th align="center">HashSet</th>
-<th align="center">TreeSet</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">排序方式</td>
-<td align="center">不能保证顺序</td>
-<td align="center">按预置规则顺序</td>
-</tr>
-<tr>
-<td align="center">底层存储</td>
-<td align="center">基于HashMap</td>
-<td align="center">基于TreeMap</td>
-</tr>
-<tr>
-<td align="center">底层实现</td>
-<td align="center">基于Hash表实现</td>
-<td align="center">基于二叉树实现</td>
-</tr>
-</tbody></table>
-<h3 id="List排序的编码实现"><a href="#List排序的编码实现" class="headerlink" title="List排序的编码实现"></a>List排序的编码实现</h3><pre><code class="java">编程题：List排序
-Employee.java
-package com.example.text;
-
-public class Employee &#123;
-    private String ename;
-    private Integer age;
-    private Float salary;
-
-    @Override
-    public String toString() &#123;
-        return &quot;Employee&#123;&quot; +
-                &quot;ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
-                &quot;, age=&quot; + age +
-                &quot;, salary=&quot; + salary +
-                &#39;&#125;&#39;;
-    &#125;
-
-    public Employee() &#123;&#125;
-    public Employee(String ename, Integer age, Float salary) &#123;
-        this.ename = ename;
-        this.age = age;
-        this.salary = salary;
-    &#125;
-    public String getEname() &#123; return ename;&#125;
-    public void setEname(String ename) &#123;this.ename = ename;&#125;
-    public Integer getAge() &#123; return age;&#125;
-    public void setAge(Integer age) &#123;this.age = age;&#125;
-    public Float getSalary() &#123;return salary;&#125;
-    public void setSalary(Float salary) &#123;this.salary = salary;&#125;
-&#125;
-</code></pre>
-<pre><code class="java">ListSorter.java
-package com.example.text;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-public class ListSorter &#123;
-    public static void main(String[] args) &#123;
-        List&lt;Employee&gt; emps = new ArrayList&lt;&gt;();
-        emps.add(new Employee(&quot;张三&quot;, 33, 1800f));
-        emps.add(new Employee(&quot;李四&quot;, 55, 3800f));
-        emps.add(new Employee(&quot;王五&quot;, 40, 2300f));
-        Collections.sort(emps, new Comparator&lt;Employee&gt;() &#123;
-            @Override
-            public int compare(Employee o1, Employee o2) &#123;
-                //以薪资排序 如果是以年龄的话o1.getAge() - o2.getAge();
-                return (int) (o1.getSalary() - o2.getSalary());
-                //返回正数 第一个大于第二个
-            &#125;
-        &#125;);
-        System.out.println(emps);
-    &#125;
-&#125;
-</code></pre>
-<h3 id="TreeSet排序的编码实现"><a href="#TreeSet排序的编码实现" class="headerlink" title="TreeSet排序的编码实现"></a>TreeSet排序的编码实现</h3><pre><code class="java">编程题:TreeSet排序
-Employee.java 同上
-[自定义排序]
-SetSorter.java 
-package com.example.text.TreeSet;
-
-import java.util.*;
-
-//自定义排序
-public class SetSorter &#123;
-    public static void main(String[] args) &#123;
-        TreeSet&lt;Employee&gt; emps = new TreeSet&lt;Employee&gt;(new Comparator&lt;Employee&gt;() &#123;
-            @Override
-            public int compare(Employee o1, Employee o2) &#123;
-                return (int)(o2.getSalary() - o1.getSalary());
-            &#125;
-        &#125;);
-        emps.add(new Employee(&quot;张三&quot;, 33, 1800f));
-        emps.add(new Employee(&quot;李四&quot;, 55, 3800f));
-        emps.add(new Employee(&quot;王五&quot;, 40, 2300f));
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">[自然排序]
-package com.example.text;
-
-public class Employee implements Comparable&lt;Employee&gt;&#123;
-    private String ename;
-    private Integer age;
-    private Float salary;
-
-    @Override
-    public String toString() &#123;
-        return &quot;Employee&#123;&quot; +
-                &quot;ename=&#39;&quot; + ename + &#39;\&#39;&#39; +
-                &quot;, age=&quot; + age +
-                &quot;, salary=&quot; + salary +
-                &#39;&#125;&#39;;
-    &#125;
-    @Override
-    public int compareTo(Employee o)&#123;
- //如果返回-1 Employee对象返回到红黑树的左边 采用降序排列
- //如果返回1
-        return this.getAge().compareTo(o.getAge());
-//      return o.getAge().compareTo(this.getAge()); 输出降序
-//如果前面比后面大 返回1 反之返回-1 如果两者相等返回0
-    &#125;
-    public Employee() &#123;&#125;
-    public Employee(String ename, Integer age, Float salary) &#123;
-        this.ename = ename;
-        this.age = age;
-        this.salary = salary;
-    &#125;
-    public String getEname() &#123; return ename;&#125;
-    public void setEname(String ename) &#123;this.ename = ename;&#125;
-    public Integer getAge() &#123; return age;&#125;
-    public void setAge(Integer age) &#123;this.age = age;&#125;
-    public Float getSalary() &#123;return salary;&#125;
-    public void setSalary(Float salary) &#123;this.salary = salary;&#125;
-&#125;
-=============================================================
-SetSorter.java 
-package com.example.text.TreeSet;
-
-import java.util.*;
-
-//自定义排序
-public class SetSorter &#123;
-    public static void main(String[] args) &#123;
-        TreeSet&lt;Employee&gt; emps = new TreeSet&lt;Employee&gt;
-        emps.add(new Employee(&quot;张三&quot;, 33, 1800f));
-        emps.add(new Employee(&quot;李四&quot;, 55, 3800f));
-        emps.add(new Employee(&quot;王五&quot;, 40, 2300f));
-        System.out.println(emps);
-    &#125;
-&#125;
-</code></pre>
-<h3 id="hashCode与equals的联系与区别"><a href="#hashCode与equals的联系与区别" class="headerlink" title="hashCode与equals的联系与区别"></a>hashCode与equals的联系与区别</h3><h5 id="Object类hashCode-和equals-的区别"><a href="#Object类hashCode-和equals-的区别" class="headerlink" title="Object类hashCode()和equals()的区别"></a>Object类hashCode()和equals()的区别</h5><ul>
-<li><p>equals()方法用来判断两个对象是否”相同”</p>
-</li>
-<li><p>hashCode()返回一个int，代表”将该对象的内部地址” [如果不相等肯定不是同一个对象] [小概率情况下不同的对象也产生相同的hashCode(), 之后再用equals()去比较]</p>
-<table>
-<thead>
-<tr>
-<th align="center">序号</th>
-<th align="center">描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">1</td>
-<td align="center">两个对象如果equals()成立, hashcode()一定成立</td>
-</tr>
-<tr>
-<td align="center">2</td>
-<td align="center">如果equals()不成立, hashcode()可能成立</td>
-</tr>
-<tr>
-<td align="center">3</td>
-<td align="center">如果hashcode()成立, equals()不一定成立</td>
-</tr>
-<tr>
-<td align="center">4</td>
-<td align="center">hashcode()不相等, equals()一定不成立</td>
-</tr>
-</tbody></table>
-</li>
-</ul>
-<h3 id="Java-IO中有集中类型的流"><a href="#Java-IO中有集中类型的流" class="headerlink" title="Java IO中有集中类型的流"></a>Java IO中有集中类型的流</h3><table>
-<thead>
-<tr>
-<th align="center"></th>
-<th align="center">输入流</th>
-<th align="center">输出流</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">字节流</td>
-<td align="center">InputStream[父类]<br />     FileInputStream<br />BufferedInputStream[缓存]</td>
-<td align="center">OutputStream[父类]<br />      FileOutputStream<br />  BufferedOutputStream[缓存]</td>
-</tr>
-<tr>
-<td align="center">字符流</td>
-<td align="center">Reader<br />FileReader<br />InputStreamReader<br />BufferedReader</td>
-<td align="center">Writer<br />FileWeiter<br />OutputStreamWriter<br />BufferedWeiter</td>
-</tr>
-</tbody></table>
-<h3 id="★-利用IO实现文件复制-★-笔试"><a href="#★-利用IO实现文件复制-★-笔试" class="headerlink" title="★ 利用IO实现文件复制 ★ [笔试]"></a>★ 利用IO实现文件复制 ★ [笔试]</h3><pre><code class="java">编程题：复制文件到指定文件夹
-package com.example.text.FileCopy;
-
-import java.io.*;
-
-public class FileCopy &#123;
-    public static void main(String[] args) &#123;
-        //1. 利用JavaIo
-        File source = new File(&quot;D:/application.rar&quot;);
-        File target = new File(&quot;D:/target/application.rar&quot;);
-        InputStream input = null;
-        OutputStream output = null;
-        try &#123;
-            input = new FileInputStream(source);
-            output = new FileOutputStream(target);
-            byte[] buf = new byte[1024];
-            int byteRead;
-            while((byteRead = input.read(buf)) != -1)&#123;
-                output.write(buf,0,byteRead);
-            &#125;
-        &#125; catch (FileNotFoundException e) &#123;
-            throw new RuntimeException(e);
-        &#125; catch (IOException e) &#123;
-            throw new RuntimeException(e);
-        &#125;finally &#123;
-            try &#123;
-                input.close();
-                output.close();
-            &#125; catch (IOException e) &#123;
-                throw new RuntimeException(e);
-            &#125;
-        &#125;
-        //2. 利用FileChannel实现文件复制
-        //3. Commons Io组件实现文件复制
-        //FileUtils.copyFile(Source,Target);
-    &#125;
-&#125;
-</code></pre>
-<h3 id="请介绍JVM的内存组成"><a href="#请介绍JVM的内存组成" class="headerlink" title="请介绍JVM的内存组成"></a>请介绍JVM的内存组成</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/c2c6b396e3573fda209d5b4db42d40799b0be3f1/data/JVM%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%84%E6%88%90.png"></p>
-<blockquote>
-<p>[共享区：供所有对象共享 所有线程都访问到的地方]<br><strong>堆</strong>：垃圾回收销毁处理区<br><strong>方法区</strong>：虚拟机加载的类的信息、常量、静态变量等信息</p>
-<p>[私有区：所有对象都是私有的]<br><strong>程序计数器PC</strong>： 当前线程所执行的字节码指令的行号指示器[<strong>分值、跳转</strong>、循环、异常处理、线程恢复] 每个线程都有单独的程序计数器 [私有的]<br><strong>虚拟机栈VM Stack</strong>：为Java的方法服务 当线程创建的时候虚拟机栈会为线程分配一个虚拟机栈，在线程执行的时候创建的每个方法都会创建一个栈针，用于存放局部变量、操作方法等 [入栈+出栈]<br><strong>本地方法栈</strong>：类似于虚拟机栈，本地方法栈是执行<u>本地方法使用</u>的</p>
-</blockquote>
-<h3 id="请简述Java的垃圾回收-GC"><a href="#请简述Java的垃圾回收-GC" class="headerlink" title="请简述Java的垃圾回收(GC)"></a>请简述Java的垃圾回收(GC)</h3><ul>
-<li>GC(Garbage Collection)用于回收不再使用的内存</li>
-<li>GC负责3项任务：分配内存、确保引用、回收内存</li>
-<li>GC回收的依据某对象没有任何引用、则可以被回收</li>
-</ul>
-<h5 id="垃圾回收-GC-算法"><a href="#垃圾回收-GC-算法" class="headerlink" title="垃圾回收(GC)算法"></a>垃圾回收(GC)算法</h5><ul>
-<li><strong>引用计数算法</strong> [计数器 引用到这个对象的时候+1  被释放或断开计数器-1  当计数器变成0就可以被垃圾回收]<br>若两个对象相互引用就会产生循环计数器 这个对于引用计数算法是无效的</li>
-<li><strong>跟踪回收算法</strong> [利用JVM维护的对象引用图 每个对象彼此依赖和引用 从根节点标记对象引用图和可以被标记的对象 遍历结束以后未被标记的对象是不能够使用的对象可以被回收]</li>
-<li><strong>压缩回收算法</strong> [将JVM堆中活动的对象放到一个集中的区域中 另外一大块留出一个活动的区域 对堆中的碎片进行集中的处理]</li>
-<li><strong>复制回收算法</strong> [把堆分成两个相同大小的区域 只有其中的一个区域被使用 直到这个区域被消耗完 垃圾回收器就会中断这个程序的运行 以遍历的方式把活动的对象移动到另一个区域 移动的过程中对象是紧密挨在一起的 可以消除其中的碎片 【在复制的同时也对对象进行重新复制和安排 一次性解决了内存碎片的问题】【需要两倍大小的内存空间 降低了效率】]</li>
-<li><strong>按代回收算法</strong> [把堆分成多个子堆，每个堆命名成一代，算法优先收集年幼年轻的对象，在这其中对象仍然存活的就把它移动到高级堆中 【减少扫描次数和范围 提高回收效益】]</li>
-</ul>
-<h3 id="Java的内存泄露的场景"><a href="#Java的内存泄露的场景" class="headerlink" title="Java的内存泄露的场景"></a>Java的内存泄露的场景</h3><h5 id="请列举Java中内存泄漏的场景"><a href="#请列举Java中内存泄漏的场景" class="headerlink" title="请列举Java中内存泄漏的场景"></a>请列举Java中内存泄漏的场景</h5><p>一个不需要使用的对象还在内存中占用并使用其内存空间，忘记释放就会存在内存泄露</p>
-<ul>
-<li><strong>静态集合类</strong> static描述对象 存储在方法区 垃圾回收器不会对其扫码回收</li>
-<li><strong>各种连接</strong> JVM一直可达不会被回收</li>
-<li><strong>监听器</strong> 全局存在的</li>
-<li><strong>不合理的作用域</strong> 能用在方法中public 不要用在方法外private</li>
-<li>没有把对象及时设置为null【极少发生】</li>
-</ul>
-<h3 id="请实现对象的浅复制与深复制"><a href="#请实现对象的浅复制与深复制" class="headerlink" title="请实现对象的浅复制与深复制"></a>请实现对象的浅复制与深复制</h3><ul>
-<li><strong>潜复制</strong>：只对对象及变量值进行复制，引用对象地址不变</li>
-<li><strong>深复制</strong>[序列化方式]：不仅对象及变量值进行复制，<u>引用对象也进行复制</u>[彼此互不干扰]</li>
-</ul>
-<pre><code class="java">com/example/text/clone/Dancer.java
-package com.example.text.clone;
-
-import java.io.*;
-
-public class Dancer implements Cloneable,Serializable&#123;
-    private String name;
-    private Dancer partner;
-
-    public Dancer() &#123;
-    &#125;
-
-    public Dancer(String name, Dancer partner) &#123;
-        this.name = name;
-        this.partner = partner;
-    &#125;
-
-    public String getName() &#123;
-        return name;
-    &#125;
-
-    public void setName(String name) &#123;
-        this.name = name;
-    &#125;
-
-    public Dancer getPartner() &#123;
-        return partner;
-    &#125;
-
-    public void setPartner(Dancer partner) &#123;
-        this.partner = partner;
-    &#125;
-    public Dancer deepClone() throws IOException, ClassNotFoundException &#123;
-        //序列化, 将内存中的对象序列化为字节数组
-        //序列化要注意加Serializable接口
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();//字节数组
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(this);
-
-        //反序列化, 将字节数组转回到对象, 同时完成深复制的任务
-        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        ObjectInputStream ois = new ObjectInputStream(bis); //字节数组还原成对象
-        return (Dancer) ois.readObject();
-    &#125;
-    //初始化一下
-    public static void main(String[] args) throws CloneNotSupportedException, IOException, ClassNotFoundException &#123;
-        Dancer d1 = new Dancer();
-        d1.setName(&quot;小明&quot;);
-        Dancer d2 = new Dancer();
-        d2.setName(&quot;小红&quot;);
-        d1.setPartner(d2);
-        //hashCode()是内存地址转化后的一个整数
-        System.out.println(&quot;Partner:&quot; + d2.hashCode());
-        //浅复制
-        Dancer shallow =  (Dancer)d1.clone();
-        System.out.println(&quot;浅复制：&quot; + shallow.getPartner().hashCode());
-        //深复制
-        Dancer deep = (Dancer) d1.deepClone();
-        System.out.println(&quot;深复制：&quot; + deep.getPartner().hashCode());
-    &#125;
-&#125;
-</code></pre>
-<h1 id="Java面试——Web基础与数据处理"><a href="#Java面试——Web基础与数据处理" class="headerlink" title="Java面试——Web基础与数据处理"></a>Java面试——Web基础与数据处理</h1><h3 id="请说明Servlet执行流程"><a href="#请说明Servlet执行流程" class="headerlink" title="请说明Servlet执行流程"></a>请说明Servlet执行流程</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/94561f5b5984c6a6ac9be3dd6a81d295e2955040/data/Servlet%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B.png"></p>
-<h6 id="问：Servlet什么时候被实例化的呢？"><a href="#问：Servlet什么时候被实例化的呢？" class="headerlink" title="问：Servlet什么时候被实例化的呢？"></a>问：Servlet什么时候被实例化的呢？</h6><blockquote>
-<p>Servlet默认情况下是<u>第一次访问的时候</u><strong>实例化</strong>的<br>也可以通过web.xml配置load-on-startup，使其在服务启动的时候实例化</p>
-</blockquote>
-<h6 id="问：Servlet在并发条件下如何处理的？"><a href="#问：Servlet在并发条件下如何处理的？" class="headerlink" title="问：Servlet在并发条件下如何处理的？"></a>问：Servlet在并发条件下如何处理的？</h6><blockquote>
-<p>基于<strong>单例多线程</strong>技术提供web服务<br>使用servlet时不允许使用存在状态改变的变量</p>
-</blockquote>
-<h3 id="Servlet生命周期"><a href="#Servlet生命周期" class="headerlink" title="Servlet生命周期"></a>Servlet生命周期</h3><ul>
-<li><h6 id="启动时装载-web-xml"><a href="#启动时装载-web-xml" class="headerlink" title="启动时装载 - web.xml"></a>启动时装载 - web.xml</h6></li>
-<li><h6 id="创建-构造函数"><a href="#创建-构造函数" class="headerlink" title="创建 - 构造函数"></a>创建 - 构造函数</h6></li>
-<li><h6 id="初始化-init-专门的初始化资源"><a href="#初始化-init-专门的初始化资源" class="headerlink" title="初始化 - init()  [专门的初始化资源]"></a>初始化 - init()  [专门的初始化资源]</h6></li>
-<li><h6 id="提供服务-service-对于发来的请求无论是get-post-一律使用service进行处理-细化分出doget-dopost"><a href="#提供服务-service-对于发来的请求无论是get-post-一律使用service进行处理-细化分出doget-dopost" class="headerlink" title="提供服务 - service() [对于发来的请求无论是get post 一律使用service进行处理] [细化分出doget() dopost()]"></a>提供服务 - service() [对于发来的请求无论是get post 一律使用service进行处理] [细化分出doget() dopost()]</h6></li>
-<li><h6 id="停止时销毁-destory-销毁资源"><a href="#停止时销毁-destory-销毁资源" class="headerlink" title="停止时销毁 - destory() [销毁资源]"></a>停止时销毁 - destory() [销毁资源]</h6></li>
-</ul>
-<pre><code class="java">com/example/text/servlet/SampleServlet.java
-package com.example.text.servlet;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-public class SampleServlet extends HttpServlet &#123;
-    public SampleServlet()&#123;
-        System.out.println(&quot;正在创建Servlet&quot;);
-    &#125;
-
-    @Override
-    public void init() throws ServletException &#123;
-        System.out.println(&quot;正在初始化Servlet&quot;);
-    &#125;
-
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException &#123;
-        System.out.println(this.hashCode() + &quot;: Service()正在提供服务&quot;);
-        resp.setContentType(&quot;text/html;charset=utf-8&quot;);
-        resp.getWriter().print(this.hashCode() + &quot;: Service()正在提供服务&quot;);
-    &#125;
-
-    @Override
-    public void destroy()&#123;
-        System.out.println(&quot;正在销毁Servlet&quot;);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
-         version=&quot;4.0&quot;&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;SampleServlet&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;com.example.text.servlet.SampleServlet&lt;/servlet-class&gt;
-    &lt;/servlet&gt;
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;SampleServlet&lt;/servlet-name&gt;
-        &lt;url-pattern&gt;/sample&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-&lt;/web-app&gt;
-
-=================================================
-http://localhost:8080/sample
-
-正在创建Servlet 【启动时】
-正在初始化Servlet
-1025518765: Service()正在提供服务
-正在销毁Servlet 【停止时】
-</code></pre>
-<h3 id="请求与响应的结构"><a href="#请求与响应的结构" class="headerlink" title="请求与响应的结构"></a>请求与响应的结构</h3><ul>
-<li>HTTP请求包含三部分：请求行、请求头、请求体</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/22dcc798c61eeec0f74ca5dd6e7372dfa0fa135e/data/HTTP%E8%AF%B7%E6%B1%82%E4%B8%89%E9%83%A8%E5%88%86.jpg" alt="HTTP请求三部分"></p>
-<ul>
-<li>HTTP响应包含三部分：响应行、响应头、响应体</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/5c6c25addb904f020840b00a3b10ed5b3c707469/data/HTTP%E5%93%8D%E5%BA%94%E4%B8%89%E9%83%A8%E5%88%86.jpg" alt="HTTP响应三部分"></p>
-<h3 id="请求转发与响应重定向的区别"><a href="#请求转发与响应重定向的区别" class="headerlink" title="请求转发与响应重定向的区别"></a>请求转发与响应重定向的区别</h3><h5 id="请求转发-一次请求"><a href="#请求转发-一次请求" class="headerlink" title="请求转发 [一次请求]"></a>请求转发 [一次请求]</h5><ul>
-<li>请求转发是<strong>服务器跳转</strong>，只会产生一次请求</li>
-<li>请求转发语句是：<code>request.getRequestDispatcher().forward()</code></li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/5c6c25addb904f020840b00a3b10ed5b3c707469/data/HTTP%E5%93%8D%E5%BA%94%E4%B8%89%E9%83%A8%E5%88%86.jpg" alt="请求转发"></p>
-<blockquote>
-<p>网页请求Tomcat的Servlet1，Servlet1请求Servlet2，Servlet2响应给网页，网页收到响应</p>
-</blockquote>
-<h5 id="响应重定向-两次请求"><a href="#响应重定向-两次请求" class="headerlink" title="响应重定向 [两次请求]"></a>响应重定向 [两次请求]</h5><ul>
-<li>重定向则是<strong>浏览器端跳转</strong>，会产生两次请求</li>
-<li>响应重定向语句是：<code>response.sendRedirect()</code></li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/de72ec8d8af2b71272c785f5fb04bad0df88d78f/data/%E5%93%8D%E5%BA%94%E9%87%8D%E5%AE%9A%E5%90%911.jpg" alt="响应重定向"></p>
-<blockquote>
-<p>网页$请求_1$Tomcat的Servlet1，Servlet1直接$响应_1$给网页，网页收到$响应_1$[让网页创建一个新的$请求_2$]<br>网页新创了一个$请求_2$Tomcat的Servlet2，Servlet2只对请求进行处理返回给$响应_2$网页</p>
-</blockquote>
-<h3 id="请阐述Session的原理"><a href="#请阐述Session的原理" class="headerlink" title="请阐述Session的原理"></a>请阐述Session的原理</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/e69d245dd6d92882f32e9bee19e85bb5646a145c/data/%E7%AE%80%E8%BF%B0Session%E7%9A%84%E5%8E%9F%E7%90%86.png" alt="简述Session的原理"></p>
-<blockquote>
-<p>浏览器第一次向Tomcat发送请求，Tomcat收到请求自动在tomcat运行内存中生成一个存储空间并赋予一个SessionId:7U809J唯一编号，<strong>若使用了session.setAttribute(name,小潘)<strong>，会在那个运行内存中存放一个</strong>张三</strong>的内存属性[name:张三] 当程序处理完后返回给浏览器其中包含了一个特殊信息SessionId:7U809J，浏览器收到响应后把SessionId:7U809J保存到浏览器的Cookie中SessionId:7U809J[只要当前浏览器没有被关闭的话 Cookie会一直存在 会在发送请求的时候一并发送给服务器]，当第二次发送请求的时候浏览器会把SessionId:7U809J第二次发送给Tomcat，<strong>若使用了session.getAttribute(name) &#x3D; 小潘</strong>，得到的结果就出现了小潘 返回浏览器响应</p>
-</blockquote>
-<h3 id="JSP九大内置对象是什么"><a href="#JSP九大内置对象是什么" class="headerlink" title="JSP九大内置对象是什么"></a>JSP九大内置对象是什么</h3><table>
-<thead>
-<tr>
-<th align="left">内置对象</th>
-<th align="left">描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">request</td>
-<td align="left">请求对象 - HttpServletRequest</td>
-</tr>
-<tr>
-<td align="left">response</td>
-<td align="left">响应对象 - HttpServletResponse</td>
-</tr>
-<tr>
-<td align="left">session</td>
-<td align="left">用户会话 - HttpSession</td>
-</tr>
-<tr>
-<td align="left">application [全局实例]</td>
-<td align="left">应用全局对象 - ServletContext</td>
-</tr>
-<tr>
-<td align="left">out</td>
-<td align="left">输出对象 - PrintWriter</td>
-</tr>
-<tr>
-<td align="left">page</td>
-<td align="left">当前页面对象 - this [Object实例]</td>
-</tr>
-<tr>
-<td align="left">pageContext</td>
-<td align="left">页面上下文对象 - PageContext</td>
-</tr>
-<tr>
-<td align="left">config [全局参数]</td>
-<td align="left">应用配置对象 - ServletConfig</td>
-</tr>
-<tr>
-<td align="left">exception</td>
-<td align="left">应用异常对象 - Throwable</td>
-</tr>
-</tbody></table>
-<h3 id="Statement-和-PreparedStatement的区别"><a href="#Statement-和-PreparedStatement的区别" class="headerlink" title="Statement 和 PreparedStatement的区别"></a>Statement 和 PreparedStatement的区别</h3><ul>
-<li>PreparedStatement是预编译的SQL语句，效率高于Statement</li>
-<li>PreparedStatement支持 ‘?’ 操作符，相对于Statement更加灵活</li>
-<li>PreparedStatement可以防止SQL注入，安全性高于Statement</li>
-</ul>
-<pre><code class="java">package com.example.text.jdbc;
-
-import java.sql.*;
-
-public class StatementSample &#123;
-    //使用Statement sql语句解释N多次
-    //SQL注入攻击：  &#39; or 1=1 or &#39;
-    public void findByEname1(String ename) &#123;
-        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
-        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
-        String username = &quot;root&quot;;
-        String password = &quot;root&quot;;
-        Connection conn = null;
-        try &#123;
-            Class.forName(driverName);
-            conn = DriverManager.getConnection(URL, username, password);
-            Statement ps = conn.createStatement();
-            //使用Statement
-            String sql = &quot;SELECT * FROM emp where ename = &#39;&quot; + ename + &quot;&#39; &quot;;
-            System.out.println(sql);
-            ResultSet rs = ps.executeQuery(sql);
-
-            while (rs.next()) &#123;
-                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
-                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
-                        rs.getFloat(&quot;sal&quot;));
-            &#125;
-        &#125; catch (ClassNotFoundException e) &#123;
-            e.printStackTrace();
-        &#125; catch (SQLException e) &#123;
-            e.printStackTrace();
-        &#125;
-        //5.关闭连接
-        finally &#123;
-            if (conn != null) &#123;
-                try &#123;
-                    conn.close();
-                &#125; catch (SQLException e) &#123;
-                    e.printStackTrace();
-                &#125;
-            &#125;
-        &#125;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">package com.example.text.jdbc;
-
-import java.sql.*;
-
-public class StatementSample &#123;
-
-    //使用预编译PreparedStatement sql语句解释一次
-    public void findByEname2(String ename) &#123;
-        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
-        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
-
-        String username = &quot;root&quot;;
-        String password = &quot;root&quot;;
-        Connection conn = null;
-        try &#123;
-            Class.forName(driverName);
-            conn = DriverManager.getConnection(URL, username, password);
-
-            //使用预编译PreparedStatement
-            String sql = &quot;SELECT * FROM emp where ename = ?&quot;;
-            System.out.println(sql);
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, ename);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) &#123;
-                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
-                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
-                        rs.getFloat(&quot;sal&quot;));
-            &#125;
-        &#125; catch (ClassNotFoundException e) &#123;
-            e.printStackTrace();
-        &#125; catch (SQLException e) &#123;
-            e.printStackTrace();
-        &#125;
-        //5.关闭连接
-        finally &#123;
-            if (conn != null) &#123;
-                try &#123;
-                    conn.close();
-                &#125; catch (SQLException e) &#123;
-                    e.printStackTrace();
-                &#125;
-            &#125;
-        &#125;
-    &#125;
-
-    public static void main(String[] args) &#123;
-        StatementSample sample = new StatementSample();
-        sample.findByEname1(&quot;SMITH&#39; or 1=1 or &#39;&quot;); //SQL注入攻击
-        sample.findByEname2(&quot;SMITH&quot;);
-    &#125;
-&#125;
-</code></pre>
-<h3 id="请说明JDBC的使用步骤"><a href="#请说明JDBC的使用步骤" class="headerlink" title="请说明JDBC的使用步骤"></a>请说明JDBC的使用步骤</h3><ul>
-<li>加载JDBC驱动</li>
-<li>创建数据库连接(Connection)</li>
-<li>创建命令(Statement)</li>
-<li>处理结果(ResultSet)</li>
-<li>关闭连接</li>
-</ul>
-<pre><code class="java">package com.example.text.jdbc;
-
-import java.sql.*;
-
-public class MysqlJDBC &#123;
-    public static void main(String[] args) &#123;
-        //连接需要提前下载好包   mysql-connector-java-5.1.47.jar
-        String driverName = &quot;com.mysql.jdbc.Driver&quot;;
-        String URL = &quot;jdbc:mysql://127.0.0.1:3306/scott&quot;;
-        String sql = &quot;SELECT * FROM emp&quot;;
-        String username = &quot;root&quot;;
-        String password = &quot;root&quot;;
-        Connection conn = null;
-        try &#123;
-            //1.加载JDBC驱动
-            Class.forName(driverName);
-            //2.建立连接
-            conn = DriverManager.getConnection(URL, username, password);
-            //3.创建命令（Statement)
-            Statement ps = conn.createStatement();
-            //4.处理结果
-            ResultSet rs = ps.executeQuery(sql);
-            while (rs.next()) &#123;
-                System.out.println(rs.getString(&quot;ename&quot;) + &quot;,&quot; +
-                        rs.getString(&quot;job&quot;) + &quot;,&quot; +
-                        rs.getFloat(&quot;sal&quot;));
-            &#125;
-        &#125; catch (ClassNotFoundException e) &#123;
-            e.printStackTrace();
-        &#125; catch (SQLException e) &#123;
-            e.printStackTrace();
-        &#125;
-        //5.关闭连接
-        finally &#123;
-            if (conn != null) &#123;
-                try &#123;
-                    conn.close();
-                &#125; catch (SQLException e) &#123;
-                    e.printStackTrace();
-                &#125;
-            &#125;
-        &#125;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="SQL编程训练"><a href="#SQL编程训练" class="headerlink" title="SQL编程训练"></a>SQL编程训练</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/bc48ea2eefeb9921758f69d1ee9d506366d73753/data/scott_sql%E7%BB%83%E4%B9%A0%E9%A2%98.png"></p>
-<pre><code class="sql">scott.sql文件已准备好
-
-★按部门编号升序、工资倒序的排列员工信息
-SELECT * FROM emp ORDER BY deptno ASC, sal DESC
-
-★列出deptno=30的部门名称及员工[关联查询]
-SELECT dept.dname, emp.* FROM emp,dept
-WHERE emp.deptno = dept.deptno
-AND dept.deptno = 30
-
-★列出每个部门最高、最低、平均工资 #若再列出人数只需要再SELECT后面加 COUNT(*)
-SELECT deptno, max(sal), min(sal), avg(sal)
-FROM emp 
-GROUP BY deptno  
-
-★列出市场部(SALES)及研发部(RESEARCH)的员工
-SELECT * FROM dept d, emp e
-WHERE d.deptno = e.deptno 
-AND (d.dname = &#39;SALES&#39; or d.dname = &#39;RESEARCH&#39;)
-
-★列出人数超过3人的部门 #按照部门分组 
-# WHERE对原始数据进行筛选[在GROUP BY之前进行的] 
-# HAVING对分组后的进行二次筛选[在GROUP BY之后进行的]
-SELECT d.dname, count(*)
-FROM dept d, emp e
-WHERE d.deptno = e.deptno 
-GROUP BY d.dname 
-HAVING count(*)&gt;3
-
-★计算MILLER年薪比SMITH高多少
-SELECT a.a_sal, b.b_sal, a.a_sal - b.b_sal FROM 
-(SELECT sal * 12 a_sal FROM emp WHERE ename = &#39;MILLER&#39;) a,
-(SELECT sal * 12 b_sal FROM emp WHERE ename = &#39;SMITH&#39;) b
-
-★★列出直接向King汇报的员工
-SELECT * FROM emp
-WHERE mgr = (SELECT empno FROM emp WHERE ename = &#39;KING&#39;)
-#或
-SELECT e.* FROM emp e, (SELECT empno FROM emp WHERE ename = &#39;KING&#39;) k
-WHERE e.mgr = k.empno
-
-★★列出公司所有员工的工龄，并倒序排列 
-# NOW获取当前时间 
-# SELECT DATE_FORMAT(date,format)   DATE_FORMAT只对日期形式的数据生效
-SELECT * FROM(
-    SELECT emp.*, DATE_FORMAT(NOW(),&quot;%Y&quot;) - DATE_FORMAT(hiredate,&quot;%Y&quot;) yg 
-    FROM emp
-)d 
-ORDER BY d.yg DESC
-
-★★计算管理者与基层员工平均薪资差额
-SELECT a_avg - b_avg 
-FROM
- (SELECT avg(sal) a_avg 
- FROM emp
- WHERE job = &#39;MANAGER&#39; OR job = &#39;PRESIDENT&#39;) a,
-  (SELECT avg(sal) b_avg
-  FROM emp
-  WHERE job IN (&#39;CLERK&#39;,&#39;SALESMAN&#39;,&#39;ANALYST&#39;))b
-</code></pre>
-<h1 id="Java面试-——-主流框架"><a href="#Java面试-——-主流框架" class="headerlink" title="Java面试 —— 主流框架"></a>Java面试 —— 主流框架</h1><h3 id="谈谈你对IOC和DI的理解"><a href="#谈谈你对IOC和DI的理解" class="headerlink" title="谈谈你对IOC和DI的理解"></a>谈谈你对IOC和DI的理解</h3><ul>
-<li><h6 id="IOC控制反转，设计理念，由第三方来管理与控制对象"><a href="#IOC控制反转，设计理念，由第三方来管理与控制对象" class="headerlink" title="IOC控制反转，设计理念，由第三方来管理与控制对象"></a>IOC控制反转，设计理念，由第三方来管理与控制对象</h6></li>
-<li><h6 id="DI依赖注入，具体实现，由对象容器在运行时动态注入对象"><a href="#DI依赖注入，具体实现，由对象容器在运行时动态注入对象" class="headerlink" title="DI依赖注入，具体实现，由对象容器在运行时动态注入对象"></a>DI依赖注入，具体实现，由对象容器在运行时动态注入对象</h6></li>
-</ul>
-<p>[<strong><u>DI是一种具体的技术实现，是对宏观IOC里面的一种技术上的形式，在Spring中使用了反射+工厂模式来实现DI</u></strong>]</p>
-<pre><code class="java">IDAO dao = new UserDao(); //原始版本 原本的容器控制器
-
-运行时Spring动态进行创建 对程序进行有效的解耦 //将控制权交给第三方控制容器  IOC容器
-// applicationContext最底层是类工厂模式
-IDAO dao = (IDAO)applicationContext.getBean(&quot;userDAO&quot;); //ICO容器 动态实例化DAO
- &lt;bean id = &quot;userDAO&quot; class = &quot;com.imooc.dao.UserDAO&quot;/&gt;
- &lt;bean id = &quot;userDAO&quot; class = &quot;com.imooc.dao.UserExtDAO&quot;/&gt; //方便随时更改
-</code></pre>
-<h3 id="Spring中Bean实例化有几种方式"><a href="#Spring中Bean实例化有几种方式" class="headerlink" title="Spring中Bean实例化有几种方式"></a>Spring中Bean实例化有几种方式</h3><ul>
-<li>使用<strong>类构造器</strong>实例化</li>
-<li>使用<strong>静态工厂方法</strong>实例化</li>
-<li>使用<strong>实例工厂方法</strong>实例化</li>
-</ul>
-<pre><code class="java">com/example/text/spring/Person.java
-package com.example.text.spring;
-
-public class Person &#123;
-
-    private String name;
-    private Integer age;
-
-
-    public Person() &#123;
-        System.out.println(&quot;Person默认构造函数&quot;);
-    &#125;
-
-    public Person(String name, Integer age) &#123;
-        this.name = name;
-        this.age = age;
-
-        System.out.println(&quot;Person&#123;&quot; +
-                &quot;name=&#39;&quot; + name + &#39;\&#39;&#39; +
-                &quot;, age=&quot; + age +
-                &#39;&#125;&#39;);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/example/text/spring/PersonStaticFactory.java
-package com.example.text.spring;
-
-/**
- * Person静态工厂
- */
-public class PersonStaticFactory &#123;
-    public static Person createPerson(String name,int age)&#123;
-        return new Person(name,age);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/example/text/spring/PersonFactory.java
-package com.example.text.spring;
-
-/**
- * Person实例工厂 实例化以后才可以调用
- */
-public class PersonFactory &#123;
-    public Person createPerson(String name,int age)&#123;
-        return new Person(name,age);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="xml">C:\Users\Pluminary\Desktop\text\src\main\resources\applicationContext.xml
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
-    &lt;!--构造函数实例化--&gt;
-    &lt;!-- 1.调用无参构造函数 --&gt;
-    &lt;bean id=&quot;person1&quot; class=&quot;com.imooc.spring.instance.Person&quot;&gt;&lt;/bean&gt;
-
-    &lt;!-- 2.调用有参构造函数 --&gt;
-    &lt;bean id=&quot;person2&quot; class=&quot;com.imooc.spring.instance.Person&quot;&gt;
-        &lt;constructor-arg name=&quot;name&quot; value=&quot;枫叶(构造函数)&quot;/&gt;
-        &lt;constructor-arg name=&quot;age&quot; value=&quot;23&quot;/&gt;
-    &lt;/bean&gt;
-
-
-    &lt;!-- 通过静态工厂创建对象--&gt;
-    &lt;bean id=&quot;person3&quot; class=&quot;com.imooc.spring.instance.PersonStaticFactory&quot; factory-method=&quot;createPerson&quot;&gt;
-        &lt;constructor-arg name=&quot;name&quot; value=&quot;蓝天(静态工厂)&quot;/&gt;
-        &lt;constructor-arg name=&quot;age&quot; value=&quot;27&quot;/&gt;
-    &lt;/bean&gt;
-
-    &lt;!-- 通过实例工厂创建对象--&gt;
-&lt;!-- 实例化PersonFactory--&gt;
-    &lt;bean id=&quot;instanceFactory&quot; class=&quot;com.imooc.spring.instance.PersonFactory&quot;&gt;&lt;/bean&gt;
-
-    &lt;bean id=&quot;person4&quot; factory-bean=&quot;instanceFactory&quot; factory-method=&quot;createPerson&quot;&gt;
-        &lt;constructor-arg name=&quot;name&quot; value=&quot;绿地(实例工厂)&quot;/&gt;
-        &lt;constructor-arg name=&quot;age&quot; value=&quot;29&quot;/&gt;
-    &lt;/bean&gt;
-
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="java">com/example/text/Application.java
-package com.example.text;
-
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-public class Application &#123;
-    public static void main(String[] args) &#123;
-        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:applicationContext.xml&quot;);
-    &#125;
-&#125;
-===================================================================
-Person默认构造函数
-Person&#123;name=&#39;枫叶(构造函数)&#39;,age=23&#125;
-Person&#123;name=&#39;蓝天(静态工厂)&#39;,age=27&#125;
-Person&#123;name=&#39;绿地(实例工厂)&#39;,age=29&#125;
-</code></pre>
-<h3 id="Bean注入属性有哪几种方式"><a href="#Bean注入属性有哪几种方式" class="headerlink" title="Bean注入属性有哪几种方式"></a>Bean注入属性有哪几种方式</h3><ul>
-<li><h6 id="setter注入"><a href="#setter注入" class="headerlink" title="setter注入"></a>setter注入</h6></li>
-<li><h6 id="构造器注入"><a href="#构造器注入" class="headerlink" title="构造器注入"></a>构造器注入</h6></li>
-<li><h6 id="注解注入"><a href="#注解注入" class="headerlink" title="注解注入"></a>注解注入</h6></li>
-<li><h6 id="Java-Config注入"><a href="#Java-Config注入" class="headerlink" title="Java Config注入"></a>Java Config注入</h6></li>
-</ul>
-<h6 id="setter注入-1"><a href="#setter注入-1" class="headerlink" title="setter注入"></a>setter注入</h6><blockquote>
-<p>在UserService使用的时候依赖于UserDao，目前UserDao是空的，要想运行时通过setter方法注入的话，我们需要在injection.xml中<br>&lt;context:component-scan base-package&#x3D;”com.imooc.spring”&#x2F;&gt;<br><bean id="userDAO" class="com.imooc.spring.injection.UserDAOImpl"/><br><bean id="userService" class="com.imooc.spring.injection.UserService"><br>    <property name="userDAO" ref="userDAO"/><br>    <constructor-arg name="userDAO" ref="userDAO"/><br>前面的name&#x3D;”userDAO”对应着UserService.java中的userDAO属性 <code>private UserDAO userDAO</code><br>后面的ref&#x3D;”userDAO”对应着当前文件中的bean id &#x3D; “userDAO”<br></bean></p>
-</blockquote>
-<pre><code class="java">com/example/text/injection/UserDAO.java
-package com.example.text.injection;
-
-public interface UserDAO &#123;
-    public void insert();
-&#125;
-</code></pre>
-<pre><code class="java">com/example/text/injection/UserDAOImpl.java
-package com.example.text.injection;
-
-import org.springframework.stereotype.Repository;
-
-//@Repository(&quot;userDAO&quot;) ★注解方式注入
-public class UserDAOImpl implements UserDAO&#123;
-    public UserDAOImpl()&#123;
-        System.out.println(this + &quot;已创建&quot;);
-    &#125;
-    public void insert() &#123;
-        System.out.println(this + &quot;:正在调用UserDAOImpl.insert()&quot;);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/example/text/injection/UserService.java
-package com.example.text.injection;
-
-import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-
-//@Service(&quot;userService&quot;) ★注解方式注入
-//spring需要动态将userDao注入到UserService上
-public class UserService &#123;
-//  @Resource(name=&quot;userDAO&quot;)  注解方式注入 可以把原始的bean都注释掉
-    private UserDAO userDAO;
-
-    public UserService() &#123;
-        System.out.println(this + &quot;已创建&quot;);
-    &#125;
-/* 注解方式这些可以抛弃 并且摒弃了xml的那些bean 只需要增加个扫描的注解方式注入
-    //通过构造函数注入
-    public UserService(UserDAO userDAO) &#123;
-        this.userDAO = userDAO;
-        System.out.println(this + &quot;:正在调用构造函数注入，UserService(&quot; + userDAO + &quot;)&quot;);
-    &#125;
-
-    //通过Setter方法注入
-    public void setUserDAO(UserDAO userDAO) &#123;
-        this.userDAO = userDAO;
-        System.out.println(this + &quot;:正在调用Setter方法注入，setUserDAO(&quot; + userDAO + &quot;)&quot;);
-    &#125;
-*/
-
-    public void createUser()&#123;
-        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
-        userDAO.insert();
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/example/text/InjectionRunner.java
-package com.example.text;
-
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-public class InjectionRunner &#123;
-    public static void main(String[] args) &#123;
-        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:injection.xml&quot;);
-        UserService userService = (UserService)ctx.getBean(&quot;userService&quot;);
-        userService.createUser();
-    &#125;
-&#125;
-
-==============================================================
-UserDAOImpl@531be3c5对象已创建
-UserService@5034c75a对象已创建
-UserService@5034c75a:正在调用Setter方法注入,setUserDAO
-UserService@5034c75a:正在调用UserService.createUser()
-UserDAOImpl@531be3c5:正在调用UserDAOImpl.insert()
-</code></pre>
-<pre><code class="java">C:\Users\Pluminary\Desktop\text\src\main\resources\injection.xml
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.spring&quot;/&gt; //★扫描注解方式注入
-    &lt;bean id=&quot;userDAO&quot; class=&quot;com.imooc.spring.injection.UserDAOImpl&quot;/&gt;
-    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.injection.UserService&quot;&gt;
-        &lt;property name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt; //★这个是setter注入
-        &lt;constructor-arg name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt; //★这个是构造函数注入
-    &lt;/bean&gt;
-&lt;/beans&gt;
-</code></pre>
-<h6 id="Java-config注入"><a href="#Java-config注入" class="headerlink" title="Java config注入"></a>Java config注入</h6><pre><code class="java">Appconfig.java 
-[配置文件 在原有代码之外的东西 优点：不用破坏原始代码去达到效果 比xml优点在于java可以及时检查]
-package com.imooc.spring.injection;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-public class AppConfig &#123; //类似创建对象的方法
-    @Bean(name=&quot;userDAO&quot;)
-    public UserDAO userDAO()&#123;
-        return new UserDAOImpl();
-    &#125;
-
-    @Bean(name=&quot;userService&quot;)
-    public UserService userService()&#123;
-        UserService userService = new UserService();
-        userService.setUserDAO(this.userDAO());
-        return userService;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="Spring常见面试问题"><a href="#Spring常见面试问题" class="headerlink" title="Spring常见面试问题"></a>Spring常见面试问题</h3><pre><code class="xml">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd&quot;&gt;
-    &lt;bean id=&quot;userDAO&quot; class=&quot;com.imooc.spring.scope.UserDAOImpl&quot;/&gt;
-    &lt;bean id=&quot;userService&quot; class=&quot;com.imooc.spring.scope.UserService&quot; scope=&quot;prototype&quot; lazy-init=&quot;false&quot;&gt;  
-//scope是控制对象的数量是单例(singleton)还是多例(prototype)[每一次创建getbean创建对象]
-//还有两个不常见的值 request[同一个对象是同一个请求 不同对象ICO容器创建不同对象] 和 
-//session[调用多个getbean是同一个对象 不同session是不同对象] [SpringMVC时用]
-        //lazy-init=&quot;true&quot; 延迟初始化 需要的时候才会加载 若getBean被注释则不会加载
-        &lt;property name=&quot;userDAO&quot; ref=&quot;userDAO&quot;/&gt;
-    &lt;/bean&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="java">ScopeRunner.java
-package com.imooc.spring.scope;
-
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-public class ScopeRunner &#123;
-    public static void main(String[] args) &#123;
-        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:scope.xml&quot;);
-        UserService userService1 = (UserService)ctx.getBean(&quot;userService&quot;);
-        UserService userService2 = (UserService)ctx.getBean(&quot;userService&quot;);
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">UserDAO.java   UserDAOImpl.java   UserService.java 与上方相同
-</code></pre>
-<h6 id="两个注解"><a href="#两个注解" class="headerlink" title="两个注解"></a>两个注解</h6><p><code>@Autowired</code>[第三方] 和 <code>@Resource</code>[官方推荐]</p>
-<blockquote>
-<p>@Resource(name&#x3D;”userDAO”) &#x2F;&#x2F;设置了则进行精准匹配<br>private UserDAO userDAO;&#x2F;&#x2F;没设置则优先将名字userDAO在beanId内查找, 再没有就按照UserDAO类型在IOC容器中查找</p>
-</blockquote>
-<h3 id="AOP有几种通知类型"><a href="#AOP有几种通知类型" class="headerlink" title="AOP有几种通知类型"></a>AOP有几种通知类型</h3><h6 id="在不修改原始程序的前提下使用通知来对程序进行扩展"><a href="#在不修改原始程序的前提下使用通知来对程序进行扩展" class="headerlink" title="在不修改原始程序的前提下使用通知来对程序进行扩展"></a>在不修改原始程序的前提下使用通知来对程序进行扩展</h6><ul>
-<li><h6 id="前置通知-Before"><a href="#前置通知-Before" class="headerlink" title="前置通知[Before]"></a>前置通知[Before]</h6></li>
-<li><h6 id="返回通知-After-returning"><a href="#返回通知-After-returning" class="headerlink" title="返回通知[After returning]"></a>返回通知[After returning]</h6></li>
-<li><h6 id="异常通知-After-throwing"><a href="#异常通知-After-throwing" class="headerlink" title="异常通知[After throwing]"></a>异常通知[After throwing]</h6></li>
-<li><h6 id="后置通知-After"><a href="#后置通知-After" class="headerlink" title="后置通知[After]"></a>后置通知[After]</h6></li>
-<li><h6 id="环绕通知-Around-统统实现"><a href="#环绕通知-Around-统统实现" class="headerlink" title="环绕通知[Around] (统统实现)"></a><span style = "color:red">环绕通知[Around]</span> (统统实现)</h6></li>
-</ul>
-<pre><code class="java">SampleAspect.java
-package com.imooc.spring.aop;
-
-import java.util.Date;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
-
-//切面类
-public class SampleAspect &#123;
-    
-    //1.前置通知
-    public void doBefore(JoinPoint jp)&#123;
-        String clzName = jp.getTarget().getClass().getName();
-        //getTarget() 获取即将要执行的对象
-        String method = jp.getSignature().getName();//即将要执行的方法
-        Object args = jp.getArgs();
-        System.out.println(&quot;【前置通知】&quot;  + clzName + &quot;.&quot; + method );
-    &#125;
-    
-    //2.后置通知
-    public void doAfter(JoinPoint jp)&#123;
-        String clzName = jp.getTarget().getClass().getName();
-        //getTarget() 获取即将要执行的对象
-        String method = jp.getSignature().getName();//即将要执行的方法
-        System.out.println(&quot;【后置通知】&quot;  + clzName + &quot;.&quot; + method );
-
-    &#125;
-    
-    //3.返回通知
-    public void doAfterReturning(JoinPoint jp , Object ret)&#123;
-        System.out.println(&quot;【返回后通知】&quot; + ret);
-        
-    &#125;
-    //4.异常通知
-    public void doAfterThrowing(JoinPoint jp , Throwable t)&#123;
-        System.out.println(&quot;【异常通知】&quot; + t.getMessage());
-    &#125;
-
-    //5.环绕通知
-    public Object doAround(ProceedingJoinPoint pjp) throws Throwable&#123;
-        String clzName = pjp.getTarget().getClass().getName();
-        //getTarget() 获取即将要执行的对象
-        String method = pjp.getSignature().getName();//即将要执行的方法
-        Object args = pjp.getArgs();
-        System.out.println(&quot;【前置通知】&quot;  + clzName + &quot;.&quot; + method );
-        Object ret = null;
-        try &#123;
-            ret = pjp.proceed();//执行目标方法
-            System.out.println(&quot;【返回后通知】&quot; + ret);
-        &#125; catch (Throwable t) &#123;
-            // TODO Auto-generated catch block
-            System.out.println(&quot;【异常通知】&quot; + t.getMessage());
-            throw t;
-        &#125;finally&#123;
-            System.out.println(&quot;【后置通知】&quot;  + clzName + &quot;.&quot; + method + &quot;()&quot;);
-        &#125;
-        return ret;
-    &#125;
-    
-&#125;
-</code></pre>
-<pre><code class="java">UserService.java
-package com.imooc.spring.aop;
-
-import com.imooc.spring.scope.UserDAO;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-//@Transactional(propagation = Propagation.REQUIRED , rollbackFor = Exception.class)
-@Transactional(propagation = Propagation.NOT_SUPPORTED , readOnly = true )
-public class UserService &#123;
-
-    public String createUser()&#123;
-        //打开事务
-        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
-        //提交事务
-        //catch块中回滚事务 - RuntimeException
-        return &quot;success&quot;;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">AOPRunner.java
-package com.imooc.spring.aop;
-
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-public class AOPRunner &#123;
-    public static void main(String[] args) &#123;
-        ApplicationContext ctx = new ClassPathXmlApplicationContext(&quot;classpath:aop.xml&quot;);
-        UserService userService1 = (UserService)ctx.getBean(&quot;userService&quot;);
-        userService1.createUser();
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="xml">aop.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/context
- http://www.springframework.org/schema/context/spring-context.xsd
- http://www.springframework.org/schema/beans
- http://www.springframework.org/schema/beans/spring-beans.xsd
- http://www.springframework.org/schema/aop
- http://www.springframework.org/schema/aop/spring-aop.xsd&quot;&gt;
-    &lt;!-- 定义类被Spring IOC容器管理 --&gt;
-    &lt;bean name=&quot;sampleAspect&quot; class=&quot;com.imooc.spring.aop.SampleAspect&quot;&gt;&lt;/bean&gt;
-    &lt;bean name=&quot;userService&quot; class=&quot;com.imooc.spring.aop.UserService&quot;&gt;&lt;/bean&gt;
-    &lt;!-- 配置Spring AOP --&gt;
-    &lt;aop:config&gt;
-        &lt;!-- 配置过程中引用切面类  sampleAspect是切面 扩展--&gt;
-        &lt;aop:aspect ref=&quot;sampleAspect&quot;&gt;
-            &lt;!-- PointCut(切点) 限制了切面应用的范围 ↓↓aop作用了哪些方法上↓↓--&gt;
-            &lt;aop:pointcut id=&quot;samplePC&quot; expression=&quot;execution(* com.imooc.spring.aop.*Service.create*(..))&quot; /&gt;
-            &lt;!-- 定义通知 --&gt;
-            &lt;!-- 前置通知 method=对应着SampleAspect.java中的doBefore--&gt;
-            &lt;aop:before pointcut-ref=&quot;samplePC&quot; method=&quot;doBefore&quot;/&gt;
-            &lt;!-- 后置通知 --&gt;
-            &lt;aop:after pointcut-ref=&quot;samplePC&quot; method=&quot;doAfter&quot;/&gt;
-            &lt;!-- 返回后通知，注意：返回后通知需要增加retruning属性
-            指向doAfterReturning的名为ret的参数，使用ret参数获取方法的返回值 --&gt;
-            &lt;aop:after-returning method=&quot;doAfterReturning&quot; pointcut-ref=&quot;samplePC&quot; returning=&quot;ret&quot;/&gt; 
-&lt;!--3.ret是返回通知里面的参数 public void doAfterReturning(JoinPoint jp , Object ret)--&gt;
-             &lt;!-- 异常通知 --&gt;
-&lt;!--public void doAfterThrowing(JoinPoint jp , Throwable t)中的Throwable的参数是目标方法所抛出的异常  throwing=&quot;t&quot;相关噢~ --&gt;
-            &lt;aop:after-throwing method=&quot;doAfterThrowing&quot; pointcut-ref=&quot;samplePC&quot; throwing=&quot;t&quot;/&gt;
-            --&gt;
-            &lt;!-- ★★★★ 环绕通知 ★★★★ --&gt;
-            &lt;aop:around method=&quot;doAround&quot; pointcut-ref=&quot;samplePC&quot;/&gt;
-        &lt;/aop:aspect&gt;
-    &lt;/aop:config&gt;
-&lt;/beans&gt;
-</code></pre>
-<h3 id="请介绍Spring的声明式事务"><a href="#请介绍Spring的声明式事务" class="headerlink" title="请介绍Spring的声明式事务"></a>请介绍Spring的声明式事务</h3><ul>
-<li>在执行方法前自动开启的事务</li>
-<li>声明式事务式指利用AOP自动提交、回滚数据库事务</li>
-<li>声明式事务式规则进入方法打开事务，成功提交，<strong>运行时异常</strong>回滚</li>
-<li><code>@Transactional</code>是声明式事务的注解 放在类上则所有方法执行此事务 放在方法上则单独方法执行此事务</li>
-<li>propagation &#x3D; 确定方法是否启动事务[Propagation.REQUIRED]执行的方法自动使用事务<br>rollbackFor &#x3D; Exception.class在什么时机进行回滚  readOnly &#x3D; true 方法只读</li>
-<li>通过程序打开或关闭事务属于<strong>编程式事务</strong></li>
-</ul>
-<pre><code class="java">UserService.java
-package com.imooc.spring.aop;
-
-import com.imooc.spring.scope.UserDAO;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-//@Transactional(propagation = Propagation.REQUIRED , rollbackFor = Exception.class)
-@Transactional(propagation = Propagation.NOT_SUPPORTED , readOnly = true )
-public class UserService &#123;
-    public String createUser()&#123;
-        //进入方法 → 打开事务
-        System.out.println(this + &quot;:正在调用UserService.createUser()&quot;);
-        //方法执行成功 → 提交事务
-        
-        //方法抛出运行时异常 → 回滚事务
-        //catch块中回滚事务 - RuntimeException[及其子类会自动回滚]
-        return &quot;success&quot;;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="使用SpringMVC实现REST风格"><a href="#使用SpringMVC实现REST风格" class="headerlink" title="使用SpringMVC实现REST风格"></a>使用SpringMVC实现REST风格</h3><ul>
-<li>REST(表述性状态传递)以URL表示要访问的资源</li>
-<li><strong>GET&#x2F;POST&#x2F;PUT&#x2F;DELETE</strong>对应<strong>查询、新增、更新、删除</strong>操作[浏览器不支持PUT和DELETE操作]<br><span style = "color:red"><strong>[用GET对应查询操作(写)、用POST对应新增、更新、删除操作(写)]</strong></span></li>
-<li>REST风格<strong>只响应的数据</strong>，通常是以JSON形式体现</li>
-</ul>
-<pre><code class="xml">pom.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;interview-springmvc&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
-            &lt;version&gt;5.1.3.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
-            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
-            &lt;version&gt;1.2.54&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
-            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
-            &lt;version&gt;3.1.0&lt;/version&gt;
-            &lt;scope&gt;compile&lt;/scope&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="xml">web/WEB-INF/web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
-         version=&quot;4.0&quot;&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;spring&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-    &lt;/servlet&gt;
-
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;spring&lt;/servlet-name&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<pre><code class="xml">interview-springmvc\src\main\resources\applicationContext.xml
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd
-        http://www.springframework.org/schema/mvc
-        http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;!-- 配置扫描的包 --&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.interview&quot;/&gt;
-    &lt;!-- 注册HandlerMapper、HandlerAdapter两个映射类 开启注解模式--&gt;
-    &lt;mvc:annotation-driven/&gt;
-    &lt;!-- 访问静态资源 --&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-    &lt;mvc:interceptors&gt;
-        &lt;mvc:interceptor&gt;
-            &lt;mvc:mapping path=&quot;/**&quot;/&gt; //所有URL不分层级和格式
-            &lt;bean class=&quot;com.imooc.interview.rest.MyInterceptor&quot;/&gt;
-        &lt;/mvc:interceptor&gt;
-    &lt;/mvc:interceptors&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="java">Employee.java
-package com.imooc.interview.rest;
-
-public class Employee &#123;
-    private String name;
-    private int age;
-    private String department;
-
-    public Employee(String name, int age, String department) &#123;
-        this.name = name;
-        this.age = age;
-        this.department = department;
-    &#125;
-
-    public String getName() &#123;
-        return name;
-    &#125;
-
-    public void setName(String name) &#123;
-        this.name = name;
-    &#125;
-
-    public int getAge() &#123;
-        return age;
-    &#125;
-
-    public void setAge(int age) &#123;
-        this.age = age;
-    &#125;
-
-    public String getDepartment() &#123;
-        return department;
-    &#125;
-
-    public void setDepartment(String department) &#123;
-        this.department = department;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">RestfulController.java
-package com.imooc.interview.rest;
-
-import com.alibaba.fastjson.JSON;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
-@Controller //在IOC容器初始化的情况下自动扫描这个类进行加载并且通知IOC容器 这个是一个MVC中的控制类
-//@RestController
-public class RestfulController &#123; //&#123;XXX&#125;是路径变量 随时产生变化的 注解@PathVariable(&quot;DEPT&quot;)
-    @GetMapping(&quot;/emp/list/&#123;DEPT&#125;&quot;) //响应GET请求 前面的是响应URL输入这个的时候响应下面的方法
-    @ResponseBody
-    public String list(@PathVariable(&quot;DEPT&quot;) String department) &#123;
-        List&lt;Employee&gt; list = new ArrayList&lt;Employee&gt;();
-        if (department.equals(&quot;RESEARCH&quot;)) &#123;
-            list.add(new Employee(&quot;JAMES&quot;, 38, &quot;RESEARCH&quot;));
-            list.add(new Employee(&quot;ANDY&quot;, 23, &quot;RESEARCH&quot;));
-            list.add(new Employee(&quot;SMITH&quot;, 31, &quot;RESEARCH&quot;));
-        &#125;
-        return JSON.toJSONString(list);//只返回纯粹的JSON数据 只返回页面名称
-        //如何只返回数据不跳转页面呢？ 用 @RespondBoday 直接将返回的数据输出到客户端
-//但是可以简化使用 @RestController 所有的可以直接不用写 @RespondBoday
-    &#125;
-&#125;//前端使用AJAX技术接收数据
-</code></pre>
-<h3 id="请说明SpringMVC拦截器的作用-底层就是AOP面向切面编程技术"><a href="#请说明SpringMVC拦截器的作用-底层就是AOP面向切面编程技术" class="headerlink" title="请说明SpringMVC拦截器的作用 [底层就是AOP面向切面编程技术]"></a>请说明SpringMVC拦截器的作用 [底层就是AOP面向切面编程技术]</h3><ul>
-<li>SpringMVC拦截器用于对控制器方法进行前置、后置处理</li>
-<li>拦截器的底层实现技术是AOP(面向切面编程)</li>
-<li>拦截器必须实现HandlerInterceptor接口</li>
-</ul>
-<pre><code class="java">★★ 上一个代码通用 ★★
-interview-springmvc\src\main\java\com\imooc\interview\rest\MyInterceptor.java
-package com.imooc.interview.rest;
-
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.logging.Logger;
-
-public class MyInterceptor implements HandlerInterceptor &#123;
-
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
-        System.out.println(&quot;进入 preHandle 方法...&quot; + request.getRequestURL().toString());
-        return true;
-    &#125;
- 
-
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
-        System.out.println(&quot;进入 postHandle 方法...&quot; + request.getRequestURL().toString());
-    &#125;
- 
-
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
-        System.out.println(&quot;进入 afterCompletion 方法...&quot; + request.getRequestURL().toString());
-    &#125;
-&#125;
-====================================================================================
-查看上面的applicationContext.xml
-&lt;bean&gt;
-&lt;!-- 访问静态资源 --&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-    &lt;mvc:interceptors&gt;
-        &lt;mvc:interceptor&gt;
-            &lt;mvc:mapping path=&quot;/**&quot;/&gt; //所有URL不分层级和格式
-            &lt;bean class=&quot;com.imooc.interview.rest.MyInterceptor&quot;/&gt; 
-            //对上面这个类进行处理和拦截
-        &lt;/mvc:interceptor&gt;
-    &lt;/mvc:interceptors&gt;
-&lt;/bean&gt;
-</code></pre>
-<h3 id="SpringMVC的执行流程"><a href="#SpringMVC的执行流程" class="headerlink" title="SpringMVC的执行流程"></a>SpringMVC的执行流程</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/bfd26ff021aa3755cfc43c62bfa86e0b3ef77144/data/SpringMVC%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B.jpg"></p>
-<h3 id="说明Mybatis的开发过程"><a href="#说明Mybatis的开发过程" class="headerlink" title="说明Mybatis的开发过程"></a>说明Mybatis的开发过程</h3><blockquote>
-<p>案例沿用之前的scott.sql表</p>
-</blockquote>
-<pre><code class="xml">pom.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-             
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;interview-mybatis&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
-            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
-            &lt;version&gt;3.4.6&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;mysql&lt;/groupId&gt;
-            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
-            &lt;version&gt;5.1.46&lt;/version&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="xml">mybatis.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;!DOCTYPE configuration PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
-&lt;configuration&gt;
-    &lt;settings&gt;
-        &lt;setting name=&quot;cacheEnabled&quot; value=&quot;true&quot;/&gt;
-    &lt;/settings&gt;
-    &lt;environments default=&quot;development&quot;&gt;
-        &lt;environment id=&quot;development&quot;&gt;
-            &lt;transactionManager type=&quot;JDBC&quot; /&gt;
-            &lt;!-- 配置数据库连接信息 --&gt;
-            &lt;dataSource type=&quot;POOLED&quot;&gt; &lt;!--数据库连接池的方式--&gt;
-                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.jdbc.Driver&quot; /&gt;
-                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/scott&quot; /&gt;
-                &lt;property name=&quot;username&quot; value=&quot;root&quot; /&gt;
-                &lt;property name=&quot;password&quot; value=&quot;root&quot; /&gt;
-            &lt;/dataSource&gt;
-        &lt;/environment&gt;
-    &lt;/environments&gt;
-    &lt;mappers&gt;
-        &lt;mapper resource=&quot;mapper/emp.xml&quot;&gt;&lt;/mapper&gt;
-    &lt;/mappers&gt;
-&lt;/configuration&gt;
-</code></pre>
-<pre><code class="java">Employee.java
-package com.imooc.interview.mybatis.entity;
-
-import java.io.Serializable;
-import java.util.Date;
-
-public class Employee implements Serializable &#123;
-    private Integer empno;
-    private String ename;
-    private String job;
-    private Integer mgr;
-    private Date hiredate;
-    private Float sal;
-    private Float comm;
-    private Integer deptno;
-&#125;Getter + Setter
-</code></pre>
-<pre><code class="xml">用于查询的配置文件 emp.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
-&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
-&lt;!-- 命名空间是个虚拟的类 --&gt;
-&lt;mapper namespace=&quot;com.imooc.interview.mybatis.mapper.EmpMapper&quot;&gt; 
-    &lt;cache size=&quot;512&quot; eviction=&quot;FIFO&quot; flushInterval=&quot;60000&quot; readOnly=&quot;true&quot;/&gt;
-    &lt;select id=&quot;findAll&quot; resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;false&quot;&gt;
-        select * from emp
-    &lt;/select&gt;
-&lt;!-- 类型是int 把传入的int代入到#&#123;value&#125;中 --&gt;
-    &lt;select id=&quot;findById&quot; parameterType=&quot;int&quot; 
-            resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;true&quot;&gt;
-        select * from emp where empno = #&#123;value&#125;
-&lt;!--查询数据 根据数据自动创建Employee对象 根据字段名把值一一的设置到属性中--&gt;
-&lt;!--记得写完以后再mybatis.xml中注册 通知mybatis 有个&lt;mapper resource=&quot;mapper/emp.xml&quot;&gt;--&gt;
-&lt;!--至此mybatis的配置全部完成 --&gt;
-    &lt;/select&gt;
-&lt;/mapper&gt;
-</code></pre>
-<pre><code class="java">MybatisRunner.java
-package com.imooc.interview.mybatis.entity;
-
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
-import java.io.InputStream;
-
-public class MybatisRunner &#123;
-    public static void main(String[] args) &#123;
-        //mybatis的配置文件 核心配置文件↓
-        String resource = &quot;mybatis.xml&quot;;
-        InputStream is = MybatisRunner.class.getClassLoader().getResourceAsStream(resource);
-        //构建sqlSession的工厂(对Mybatis进行解析)  build(is)是初始化
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
-//com.imooc.interview.mybatis.mapper.EmpMapper前面是命名空间
-        //.findById对应着select的Id
-        String statement = &quot;com.imooc.interview.mybatis.mapper.EmpMapper.findById&quot;;
-        SqlSession session = sessionFactory.openSession();
-//selectOne获取唯一的查询结果  之前定义了要传入整数int
-        Employee emp1 = session.selectOne(statement, 7566);
-        System.out.println(emp1);
-        session.close();
-    &#125;
-&#125;
-</code></pre>
-<h3 id="Mybatis的缓存机制"><a href="#Mybatis的缓存机制" class="headerlink" title="Mybatis的缓存机制"></a>Mybatis的缓存机制</h3><h6 id="把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率"><a href="#把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率" class="headerlink" title="把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率"></a>把一些不太常变动的数据保存在内存中或高速存储器中，从而降低查询时间提高查询效率</h6><ul>
-<li><p>Mybatis存在两级缓存</p>
-<ul>
-<li><p>一级缓存与SqlSession会话绑定，默认开启 [巨大的HashMap] [默认开启]</p>
-</li>
-<li><p>二级缓存是应用全局缓存，所有SqlSession共享 [分布式数据库等]</p>
-</li>
-</ul>
-</li>
-</ul>
-<pre><code class="java">//一级缓存验证结果
-Employee emp1 = session.selectOne(statement, 7566);
-Employee emp2 = session.selectOne(statement, 7566);
-System.out.println(emp1);
-System.out.println(emp2);
-======================打印结果========================
-com.imooc.interview.mybatis.entity.Employee@6a41eaa2
-com.imooc.interview.mybatis.entity.Employee@6a41eaa2
-从缓存中将这个7566提出来，所以对象是一样的
-随着session的关闭 → session.close(); 一级缓存也随着消失; 输出的对象结果就不相同了
-</code></pre>
-<pre><code class="java">//二级缓存验证结果  让7566全局缓存 默认是不开启的 需要在mapper中开启 → emp.xml
-//在缓存中最大容纳512个对象 缓存多余清除策略[FIFO先进先出算法 LRU访问最少的对象清除] 
-//flushInterval=&gt;时间间隔定时清理缓存[毫秒数 每60秒]
-&lt;cache size=&quot;512&quot; eviction=&quot;FIFO&quot; flushInterval=&quot;60000&quot; readOnly=&quot;true&quot;/&gt;
-//若对全部查找 则不适合使用缓存 因为每次都变化 这样就可以设置useCache=&quot;false&quot;
-&lt;select id=&quot;findAll&quot; resultType=&quot;com.imooc.interview.mybatis.entity.Employee&quot; useCache=&quot;false&quot;&gt;
-//对数据进行新增、修改、删除也会对缓存进行强制更新 上面设置 readOnly=&quot;true&quot; 保存在缓存中的数据都是只读的
-//二级缓存要对工具类Employee进行接口的实现
-public class Employee implements Serializable &#123;...&#125;
-</code></pre>
-<h3 id="Spring、SpringMVC与SpringBoot的区别"><a href="#Spring、SpringMVC与SpringBoot的区别" class="headerlink" title="Spring、SpringMVC与SpringBoot的区别"></a>Spring、SpringMVC与SpringBoot的区别</h3><ul>
-<li>Spring是所有应用的基础，提供了IOC与AOP特性实现对对象轻松的管理</li>
-<li>SpringMVC是Spring的子项目用于提供Web支持 替代传统的Servlet [<u>提高兼容性和可维护性</u>]</li>
-<li>SpringBoot是Spring体系的敏捷开发框架，提高了开发效率 [<u>对Spring整个体系都有良好的支撑</u>]<ul>
-<li>Spring Framework是整个Spring的框架基础</li>
-<li>Spring Cloud对分布式架构与微服务提供了良好的支持</li>
-<li>Spring Data简化关系型数据库 非关系型数据库 大数据源</li>
-<li>Spring Batch提供高效率的批处理任务</li>
-<li>Spring Security超级牛逼的安全框架 登录验证之类的</li>
-<li>Spring Amqp消息队列进行支持 统一的接口进行适配</li>
-<li>Spring Mobile手机开发特性</li>
-</ul>
-</li>
-</ul>
-<h3 id="SpringBoot面试题"><a href="#SpringBoot面试题" class="headerlink" title="SpringBoot面试题"></a>SpringBoot面试题</h3><ul>
-<li><p>Spring Initializr是创建SpringBoot Project的唯一方法吗？</p>
-<blockquote>
-<p>否！也可以用Maven进行手动创建，也可以官网创建</p>
-</blockquote>
-</li>
-<li><p>SpringBoot支持几种配置文件？</p>
-<blockquote>
-<p>只有两种</p>
-<pre><code class="xml">一种
-server.port=80
-debug=false
-server.servlet.context-path=/myspringboot
-logging.file=d:/logs/msb.log
-spring.mvc.date-format=yyyy-MM-dd
-</code></pre>
-<pre><code class="xml">二种 [按层级进行区分 yml 对程序维护有很大帮助]
-debug:false
-server:
-  port:8000
-  servlet:
-    context-path:/
-spring:
-  mvc:
-    date-format:yyyy-MM-dd
-</code></pre>
-</blockquote>
-</li>
-<li><p>请列举至少五个SpringBoot中配置选项</p>
-<table>
-<thead>
-<tr>
-<th>配置名称</th>
-<th>默认值</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>server.port</td>
-<td>8080</td>
-<td>端口号</td>
-</tr>
-<tr>
-<td>server.servlet.context-path</td>
-<td>&#x2F;</td>
-<td>设置应用上下文</td>
-</tr>
-<tr>
-<td>logging.file</td>
-<td>无</td>
-<td>日志文件输出路径</td>
-</tr>
-<tr>
-<td>logging.level</td>
-<td>info</td>
-<td>最低日志输出级别</td>
-</tr>
-<tr>
-<td>debug</td>
-<td>false</td>
-<td>开启&#x2F;关闭调试模式</td>
-</tr>
-<tr>
-<td>spring.datasource.*</td>
-<td></td>
-<td>与数据库相关的设置</td>
-</tr>
-</tbody></table>
-</li>
-</ul>
-<h3 id="Maven的构建生命周期"><a href="#Maven的构建生命周期" class="headerlink" title="Maven的构建生命周期"></a>Maven的构建生命周期</h3><table>
-<thead>
-<tr>
-<th align="center">命令</th>
-<th align="center">用途</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">mvn archetype:generate</td>
-<td align="center">创建Maven工程构建</td>
-</tr>
-<tr>
-<td align="center">mvn validate</td>
-<td align="center">验证工程结构</td>
-</tr>
-<tr>
-<td align="center">mvn compile</td>
-<td align="center">编译源代码</td>
-</tr>
-<tr>
-<td align="center">mvn test</td>
-<td align="center">执行测试用例</td>
-</tr>
-<tr>
-<td align="center">mvn package</td>
-<td align="center">项目打包</td>
-</tr>
-<tr>
-<td align="center">mvn install</td>
-<td align="center">安装至本地仓库</td>
-</tr>
-<tr>
-<td align="center">mvn deploy</td>
-<td align="center">发布至远程仓库</td>
-</tr>
-</tbody></table>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/后端" style=color:#ff7d73>
-                后端
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2024/03/28/后端/Java面试/ " class="go-post">
         阅读全文
     </a>
 </div>

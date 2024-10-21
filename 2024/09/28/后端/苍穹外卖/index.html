@@ -950,30 +950,6 @@ public class Employee implements Serializable &#123;
 
 &#125;
 </code></pre>
-<pre><code class="java">sky-pojo  com/sky/dto/EmployeeDTO.java
-package com.sky.dto;
-
-import lombok.Data;
-
-import java.io.Serializable;
-
-@Data
-public class EmployeeDTO implements Serializable &#123;
-
-    private Long id;
-
-    private String username;
-
-    private String name;
-
-    private String phone;
-
-    private String sex;
-
-    private String idNumber;
-
-&#125;
-</code></pre>
 <pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
 /**
  * 插入员工数据
@@ -1343,8 +1319,52 @@ public class PageResult implements Serializable&#123;
         List&lt;Employee&gt; records = page.getResult();
 
         return new PageResult(total, records);
-    &#125;
+&#125;
 </code></pre>
+<p><span style = "color:orange"><strong>逐行研究分页查询</strong></span></p>
+<blockquote>
+<ul>
+<li><p>PageHelper.startPage 是 MyBatis 分页插件提供的方法，用于开启分页功能</p>
+<ul>
+<li><p>employeePageQueryDTO.getPage() 获取当前页码。</p>
+</li>
+<li><p>employeePageQueryDTO.getPageSize() 获取每页显示的记录数</p>
+<p>这一行代码的作用是告诉 MyBatis 在接下来的查询中启用分页，并设置分页参数</p>
+</li>
+</ul>
+</li>
+<li><p>employeeMapper.pageQuery(employeePageQueryDTO) 是调用 MyBatis 的 Mapper 接口方法，执行分页查询。</p>
+<ul>
+<li>employeePageQueryDTO 包含了查询条件，如关键字、排序字段等。</li>
+<li>查询结果会被封装成 Page<Employee> 对象，其中包含了分页数据和分页元数据。</li>
+</ul>
+</li>
+<li><p>page.getTotal() 获取分页查询的总记录数。</p>
+<ul>
+<li>总记录数用于计算总页数和其他分页相关的计算</li>
+</ul>
+</li>
+<li><p>List<Employee> records &#x3D; page.getResult();</p>
+<ul>
+<li>page.getResult() 获取分页查询的实际数据列表。</li>
+<li>这个列表包含了当前页的员工记录</li>
+</ul>
+</li>
+<li><p>return new PageResult(total, records);</p>
+</li>
+<li><p>new PageResult(total, records) 创建一个新的 PageResult 对象，将总记录数和分页数据列表封装起来</p>
+</li>
+<li><p>PageResult 类通常包含 total 和 records 属性，用于返回给客户端</p>
+</li>
+<li><p>假设 employeePageQueryDTO.getPage() 返回 2，employeePageQueryDTO.getPageSize() 返回 10，那么 MyBatis 生成的 SQL 可能类似于：</p>
+</li>
+</ul>
+<pre><code class="mysql">SELECT * FROM employee
+WHERE ... -- 根据 employeePageQueryDTO 中的查询条件
+LIMIT 10 OFFSET 10;
+</code></pre>
+<p>LIMIT 10：表示每页显示 10 条记录。<br>OFFSET 10：表示从第 11 条记录开始（因为页码从 1 开始，所以第 2 页的偏移量是 10）。</p>
+</blockquote>
 <pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
  /**
      * 分页查询 [动态sql 不用注解了 写道 EmployeeMapper.xml]
