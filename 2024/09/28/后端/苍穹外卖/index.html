@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -899,7 +899,7 @@ $(&#39;#updateBtn&#39;).click(function() &#123;
 <li><strong>管理端</strong>发出的请求，统一使用 <strong>&#x2F;admin</strong> 作为前缀</li>
 <li><strong>用户端</strong>发出的请求，统一使用 <strong>&#x2F;user</strong> 作为前缀</li>
 </ul>
-<h4 id="代码开发"><a href="#代码开发" class="headerlink" title="代码开发"></a>代码开发</h4><p>根据新增员工接口设计对应的DTO<br>注意：当前提交的数据和实体类中对应的属性差别比较大时，建议使用DTO来封装数据</p>
+<h4 id="代码开发"><a href="#代码开发" class="headerlink" title="代码开发"></a>代码开发</h4><p>根据新增员工接口设计对应的DTO<br>注意：当前提交的数据和实体类中对应的属性差别比较大时，建议使用DTO(数据传输)来封装数据</p>
 <pre><code class="java">sky-pojo  com/sky/dto/EmployeeDTO.java
 package com.sky.dto;
 
@@ -1043,6 +1043,106 @@ public class Employee implements Serializable &#123;
             &quot;(#&#123;name&#125;,#&#123;username&#125;,#&#123;password&#125;,#&#123;phone&#125;,#&#123;sex&#125;,#&#123;idNumber&#125;,#&#123;createTime&#125;,#&#123;updateTime&#125;,#&#123;createUser&#125;,#&#123;updateUser&#125;,#&#123;status&#125;)&quot;)
     void insert(Employee employee);
 </code></pre>
+<p><span style = "color:orange"><strong>@Builder 和 @JsonFormat</strong></span></p>
+<blockquote>
+<p>@Builder 是 Lombok 提供的一个注解，用于自动生成构建器模式的代码。<br>它会在编译时生成一个静态的 Builder 类和相关的方法，使得对象的创建更加灵活和可读。<br>需要<strong>创建不可变对象</strong>时，可以使用 @Builder 结合 @Value 注解。<br>需要<strong>创建复杂的对象</strong>时，可以通过构建器模式逐步设置属性，提高代码的可读性和可维护性</p>
+<p>@JsonFormat 是 Jackson 库提供的注解，用于指定日期时间字段在 JSON 序列化和反序列化时的格式。<br>通过设置 pattern 属性，可以控制日期时间字段的格式化方式。<br>当需要将 LocalDateTime、Date 等日期时间类型的字段转换为特定格式的字符串时。<br>在 RESTful API 中，返回的 JSON 数据需要符合特定的日期时间格式要求。</p>
+<h6 id="使用-Builder-的场景"><a href="#使用-Builder-的场景" class="headerlink" title="使用 @Builder 的场景"></a>使用 @Builder 的场景</h6><pre><code class="java">public class Main &#123;
+    public static void main(String[] args) &#123;
+        // 使用 @Builder 创建 Employee 对象
+        Employee employee = Employee.builder()
+                .id(1L)
+                .username(&quot;user123&quot;)
+                .name(&quot;张三&quot;)
+                .password(&quot;password123&quot;)
+                .phone(&quot;12345678901&quot;)
+                .sex(&quot;男&quot;)
+                .idNumber(&quot;123456789012345678&quot;)
+                .status(1)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .createUser(1L)
+                .updateUser(1L)
+                .build();
+
+        System.out.println(employee);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="使用-JsonFormat-的场景"><a href="#使用-JsonFormat-的场景" class="headerlink" title="使用 @JsonFormat 的场景"></a>使用 @JsonFormat 的场景</h6><pre><code class="java">//创建 RESTful API
+Employee里面的pojo就不详细写了
+    //@JsonFormat(pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+    private LocalDateTime createTime;
+
+    //@JsonFormat(pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;)
+    private LocalDateTime updateTime;
+==========================================================================
+
+@RestController
+public class EmployeeController &#123;
+
+    @GetMapping(&quot;/employee&quot;)
+    public ResponseEntity&lt;String&gt; getEmployee() throws Exception &#123;
+        // 创建 Employee 对象
+        Employee employee = Employee.builder()
+                .id(1L)
+                .username(&quot;user123&quot;)
+                .name(&quot;张三&quot;)
+                .password(&quot;password123&quot;)
+                .phone(&quot;12345678901&quot;)
+                .sex(&quot;男&quot;)
+                .idNumber(&quot;123456789012345678&quot;)
+                .status(1)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .createUser(1L)
+                .updateUser(1L)
+                .build();
+
+        // 使用 ObjectMapper 将 Employee 对象转换为 JSON 字符串
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(employee);
+
+        return ResponseEntity.ok(json);
+    &#125;
+&#125;
+===========================================================================
+// 除了 @JsonFormat 注解，还有其他方式可以指定日期时间格式，具体取决于你的需求和使用的库。
+ public static void main(String[] args) &#123;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+        String formattedDateTime = now.format(formatter);
+
+        Employee employee = Employee.builder()
+                .id(1L)
+                .username(&quot;user123&quot;)
+                .name(&quot;张三&quot;)
+                .password(&quot;password123&quot;)
+                .phone(&quot;12345678901&quot;)
+                .sex(&quot;男&quot;)
+                .idNumber(&quot;123456789012345678&quot;)
+                .status(1)
+                .createTime(now)
+                .updateTime(now)
+                .createUser(1L)
+                .updateUser(1L)
+                .build();
+
+        System.out.println(&quot;Formatted Create Time: &quot; + formattedDateTime);
+        System.out.println(&quot;Formatted Update Time: &quot; + formattedDateTime);
+    &#125;
+</code></pre>
+<p>@<strong>Builder</strong>：<br>通过 Employee.builder() 创建了一个构建器对象。<br>使用链式调用设置各个属性，最后调用 build() 方法生成 Employee 实例。<br>这种方式使得创建对象的代码更加简洁和易读，特别是当对象属性较多时。</p>
+<p>@<strong>JsonFormat</strong>：<br>在 createTime 和 updateTime 字段上使用了 @JsonFormat 注解，指定了日期时间的格式为 “yyyy-MM-dd HH:mm:ss”。<br><u><strong>当 Employee 对象被转换为 JSON 字符串</strong></u>时，这两个字段会被格式化为指定的日期时间格式。<br>这样可以确保返回的 JSON 数据符合预期的格式要求。</p>
+</blockquote>
+<p><span style = "color:orange"><strong>RESTful风</strong></span></p>
+<blockquote>
+<p><strong>可缓存性：</strong><br>RESTful API 可以利用 HTTP 缓存机制，减少网络请求，提高性能。<br>客户端可以缓存响应，减少服务器的负载。</p>
+<p>易于集成：<br>RESTful API 使用标准的 HTTP 协议，几乎所有的编程语言和框架都支持 HTTP 请求。<br>这使得不同系统之间的集成变得更加容易。</p>
+<p>可读性强：<br>RESTful API 的 URL 设计通常非常直观，易于理解和记忆。<br>例如，&#x2F;users&#x2F;123 表示用户 ID 为 123 的资源，&#x2F;users&#x2F;123&#x2F;orders 表示该用户的订单资源。</p>
+<p>灵活性：<br>RESTful API 支持多种数据格式（如 JSON、XML 等），可以根据需要选择合适的格式。<br>客户端和服务器可以通过协商确定数据格式，提高了灵活性。</p>
+<p>  GET &#x2F;users<br>  GET &#x2F;users&#x2F;{id}<br>  POST &#x2F;users<br>  PUT &#x2F;users&#x2F;{id}</p>
+</blockquote>
 <h4 id="功能测试"><a href="#功能测试" class="headerlink" title="功能测试"></a>功能测试</h4><h6 id="功能测试方式："><a href="#功能测试方式：" class="headerlink" title="功能测试方式："></a>功能测试方式：</h6><ul>
 <li>通过接口文档测试</li>
 <li>通过前后端联调测试</li>
@@ -1084,10 +1184,10 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * jwt令牌校验的拦截器
  */
-@Component
-@Slf4j
+@Component  //将该类注册为 Spring 管理的 Bean。
+@Slf4j //使用 Lombok 自动生成日志记录器
 public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
-
+// 包含 JWT 相关的配置属性，如令牌名称和密钥
     @Autowired
     private JwtProperties jwtProperties;
 
@@ -1102,6 +1202,7 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
         //判断当前拦截到的是Controller的方法还是其他资源
+//检查当前拦截到的是否是 Controller 的方法。如果不是，直接放行
         if (!(handler instanceof HandlerMethod)) &#123;
             //当前拦截到的不是动态方法，直接放行
             return true;
@@ -1124,6 +1225,33 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
             return false;
         &#125;
     &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/sky/properties/JwtProperties.java
+package com.sky.properties;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = &quot;sky.jwt&quot;)
+@Data
+public class JwtProperties &#123;
+
+    /**
+     * 管理端员工生成jwt令牌相关配置
+     */
+    private String adminSecretKey;
+    private long adminTtl;
+    private String adminTokenName;
+
+    /**
+     * 用户端微信用户生成jwt令牌相关配置
+     */
+    private String userSecretKey;
+    private long userTtl;
+    private String userTokenName;
 &#125;
 </code></pre>
 <h4 id="代码完善"><a href="#代码完善" class="headerlink" title="代码完善"></a>代码完善</h4><h6 id="程序存在的问题："><a href="#程序存在的问题：" class="headerlink" title="程序存在的问题："></a>程序存在的问题：</h6><ul>
@@ -1181,7 +1309,18 @@ public class GlobalExceptionHandler &#123;
     &#125;
 &#125;
 </code></pre>
-<h6 id="问题②-解析出员工登录id后，如何转递给Service的save方法？→-ThreadLocal"><a href="#问题②-解析出员工登录id后，如何转递给Service的save方法？→-ThreadLocal" class="headerlink" title="问题②  解析出员工登录id后，如何转递给Service的save方法？→ ThreadLocal"></a>问题②  解析出员工登录id后，如何转递给Service的save方法？→ ThreadLocal</h6><img src="https://raw.githubusercontent.com/P-luminary/images/2dd9f9e12ba173719123c685949c277632af5ce4/data/%E8%8B%8D%E7%A9%B9%E5%A4%96%E5%8D%96%E7%99%BB%E5%BD%95%E5%8F%8A%E6%A0%A1%E9%AA%8C.jpg" style="zoom:150%;" />
+<p><span style = "color:orange"><strong>Split的深入学习</strong></span></p>
+<blockquote>
+<ul>
+<li><strong>正则表达式</strong></li>
+</ul>
+<p>split 方法接受一个<strong>正则表达式</strong>作为参数，因此分隔符可以是复杂的模式，而不仅仅是单个字符。<br>例如，<strong>split(“\s+”)</strong> 可以用来按一个或多个空白字符（包括空格、制表符、换行符等）进行分割。</p>
+<ul>
+<li><strong>限制分割次数</strong></li>
+</ul>
+<p>split 方法还有一个重载版本 split(String regex, int limit)，可以限制分割的次数。<br>例如，split(“‘“, 3) 只会进行两次分割，结果数组最多包含三个元素。</p>
+</blockquote>
+<h3 id="问题②-解析出员工登录id后，如何转递给Service的save方法？→-ThreadLocal"><a href="#问题②-解析出员工登录id后，如何转递给Service的save方法？→-ThreadLocal" class="headerlink" title="问题②  解析出员工登录id后，如何转递给Service的save方法？→ ThreadLocal"></a>问题②  <span style = "color:orange"><strong>解析出员工登录id后，如何转递给Service的save方法？</strong></span>→ <span style = "color:red">ThreadLocal</span></h3><img src="https://raw.githubusercontent.com/P-luminary/images/2dd9f9e12ba173719123c685949c277632af5ce4/data/%E8%8B%8D%E7%A9%B9%E5%A4%96%E5%8D%96%E7%99%BB%E5%BD%95%E5%8F%8A%E6%A0%A1%E9%AA%8C.jpg" style="zoom:150%;" />
 
 <h6 id="前端会携带JWT令牌，通过JWT令牌可以解析出当前登录员工id："><a href="#前端会携带JWT令牌，通过JWT令牌可以解析出当前登录员工id：" class="headerlink" title="前端会携带JWT令牌，通过JWT令牌可以解析出当前登录员工id："></a>前端会携带JWT令牌，通过JWT令牌可以解析出当前登录员工id：</h6><pre><code class="java">        //1、从请求头中获取令牌
         String token = request.getHeader(jwtProperties.getAdminTokenName());
@@ -1200,7 +1339,7 @@ public class GlobalExceptionHandler &#123;
             return false;
         &#125;
 </code></pre>
-<h6 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h6><p>ThreadLocal并不是一个Thread，Thread的局部变量<br>ThreadLocal为每个线程提供单独一份存储空间，具有线程隔离的效果，只有在线程内才能获得到对应的值，线程外则不能访问</p>
+<h6 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h6><p>ThreadLocal并不是一个Thread，Thread的局部变量<br><strong>ThreadLocal为每个线程提供单独一份存储空间，具有线程隔离的效果，只有在线程内才能获得到对应的值，线程外则不能访问</strong></p>
 <pre><code class="java">sky-common  com/sky/context/BaseContext.java
 package com.sky.context;
 
@@ -1314,6 +1453,51 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor &#123;
 // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 如果想单独针对22行代码 测试部分的值是多少 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 // 左键选中&#39;BaseContext.getCurrentId()&#39; 右键Evaluate Expression单独计算即可
 </code></pre>
+<p><span style = "color:orange"><strong>将员工登录ID放在 ThreadLocal 中的原因</strong></span></p>
+<blockquote>
+<p>在多线程环境中，使用 ThreadLocal 来存储和传递员工的完整信息是一个常见的做法。这样可以确保每个线程都有独立的变量副本，避免并发问题。以下是一些步骤和最佳实践，帮助你在 ThreadLocal 中安全地传递和存储员工的完整信息。<br>ThreadLocal 主要用于在同一个线程内传递和存储数据，确保每个线程都有独立的变量副本。在你的例子中，ThreadLocal 用于存储员工ID，确保在多线程环境下员工ID的安全传递。</p>
+<ul>
+<li><strong>线程隔离</strong>：ThreadLocal 确保每个线程都有独立的员工ID副本，避免了多线程环境下的并发问题。<br>防止篡改：<u><strong>只有当前线程可以访问和修改 ThreadLocal 中的员工ID</strong></u>，其他线程无法访问，确保了ID的安全性。</li>
+<li><strong>员工其他信息的安全性</strong><br><u>数据库查询</u>：员工的其他信息是从数据库中查询的，而不是从 ThreadLocal 中获取的。数据库查询本身是安全的，只要数据库连接和查询操作是安全的。<br><u>权限控制</u>：确保只有经过认证的用户才能执行查询操作，防止未授权访问。<br><u>数据加密</u>：敏感信息（如密码）在存储和传输过程中应进行加密，确保数据的安全性。</li>
+</ul>
+<p><strong>线程安全</strong>：<br>ThreadLocal 为每个线程提供独立的变量副本，避免了多线程环境下的并发问题。每个线程都可以安全地读取和修改自己的 ThreadLocal 变量，而不会影响其他线程。</p>
+<p><strong>简化代码</strong>：<br>在 Web 应用中，通常需要在多个方法或组件之间传递用户身份信息（如员工登录ID）。使用 ThreadLocal 可以避免在每个方法调用中显式传递这些信息，从而简化代码。</p>
+<p><strong>全局访问</strong>：<br>在同一个线程内，任何地方都可以访问 ThreadLocal 中存储的值，这使得在复杂的业务逻辑中传递和使用员工登录ID变得非常方便。</p>
+<p><strong>避免传递参数</strong>：<br>在多层调用中，如果需要传递员工登录ID，通常需要在每个方法签名中添加相应的参数。使用 ThreadLocal 可以避免这种繁琐的参数传递，提高代码的可读性和可维护性。</p>
+<pre><code class="java">// 设置员工登录ID：
+在用户登录成功后，将员工登录ID设置到 ThreadLocal 中。
+@PostMapping(&quot;/login&quot;)
+public ResponseEntity&lt;?&gt; login(@RequestBody LoginRequest loginRequest) &#123;
+    // 验证用户名和密码
+    User user = userService.validateUser(loginRequest.getUsername(), loginRequest.getPassword());
+    if (user != null) &#123;
+        // 设置当前线程的员工登录ID
+        BaseContext.setCurrentId(user.getId());
+        // 返回登录成功信息
+        return ResponseEntity.ok(&quot;Login successful&quot;);
+    &#125; else &#123;
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(&quot;Invalid username or password&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 获取员工登录ID
+在需要使用员工登录ID的地方，直接从 ThreadLocal 中获取
+@Service
+public class OrderService &#123;
+
+    public void createOrder(Order order) &#123;
+        Long currentUserId = BaseContext.getCurrentId();
+        if (currentUserId != null) &#123;
+            order.setCreatedBy(currentUserId);
+            orderRepository.save(order);
+        &#125; else &#123;
+            throw new RuntimeException(&quot;User ID not found in context&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>将员工登录ID放在 ThreadLocal 中，可以确保每个线程都有独立的变量副本，避免多线程环境下的并发问题。同时，这种方式简化了代码，提供了全局访问的能力，避免了繁琐的参数传递，使得在复杂的业务逻辑中传递和使用员工登录ID变得非常方便。</p>
+</blockquote>
 <h3 id="员工分页查询"><a href="#员工分页查询" class="headerlink" title="员工分页查询"></a>员工分页查询</h3><h5 id="需求分析和设计-1"><a href="#需求分析和设计-1" class="headerlink" title="需求分析和设计"></a>需求分析和设计</h5><h6 id="业务规则：-查询-→-get"><a href="#业务规则：-查询-→-get" class="headerlink" title="业务规则：(查询 → get)"></a>业务规则：(查询 → get)</h6><ul>
 <li>根据页码展示员工信息</li>
 <li>每页展示10条数据</li>
@@ -1448,6 +1632,21 @@ WHERE ... -- 根据 employeePageQueryDTO 中的查询条件
 LIMIT 10 OFFSET 10;
 </code></pre>
 <p>LIMIT 10：表示每页显示 10 条记录。<br>OFFSET 10：表示从第 11 条记录开始（因为页码从 1 开始，所以第 2 页的偏移量是 10）。</p>
+<ul>
+<li><p><strong>PageResult 类</strong>：用于封装分页查询的结果，包括总记录数和当前页的数据集合。<br>使用场景：在分页查询服务中，将查询结果封装为 PageResult 对象，通过控制器返回给客户端。</p>
+</li>
+<li><p><strong>Serializable 接口</strong>：是 Java 中的一个标记接口，没有定义任何方法。实现 Serializable 接口的类的对象可以被序列化，即将对象的状态转换为字节流，以便在网络上传输或持久化存储。反序列化则是将字节流恢复为对象的过程。 </p>
+<ul>
+<li><strong>序列化</strong></li>
+</ul>
+<p><u>对象状态转换</u>：将对象的状态（即对象的字段值）转换为字节流。<br>默认序列化机制：Java 提供了默认的序列化机制，通过 ObjectOutputStream 类的 writeObject 方法实现。<br><u>自定义序列化</u>：可以通过实现 writeObject 和 readObject 方法来自定义序列化和反序列化过程。</p>
+<ul>
+<li><strong>持久化</strong></li>
+</ul>
+<p>持久化：序列化的主要目的是将对象的状态保存到存储介质中，或者通过网络传输对象。</p>
+</li>
+</ul>
+<p>查询结果会被封装到 PageResult 对象中，其中 total 表示总记录数，records 表示当前页的数据集合。</p>
 </blockquote>
 <pre><code class="java">sky-server  com/sky/mapper/EmployeeMapper.java
  /**
@@ -1472,6 +1671,10 @@ LIMIT 10 OFFSET 10;
         order by create_time desc
     &lt;/select&gt;
 &lt;/mapper&gt;
+&lt;!--
+and name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)：
+如果条件成立，生成的 SQL 条件为 AND name LIKE &#39;%$&#123;name&#125;%&#39;，实现名称的模糊匹配
+--&gt;
 </code></pre>
 <p>[员工管理] (<a target="_blank" rel="noopener" href="http://localhost/#/employee">http://localhost/#/employee</a>)</p>
 <h5 id="代码完善-1"><a href="#代码完善-1" class="headerlink" title="代码完善"></a>代码完善</h5><h6 id="问题：创建-x2F-更新时间那边传入的数据不是想要的"><a href="#问题：创建-x2F-更新时间那边传入的数据不是想要的" class="headerlink" title="问题：创建&#x2F;更新时间那边传入的数据不是想要的"></a>问题：创建&#x2F;更新时间那边传入的数据不是想要的</h6><pre><code class="java">// 2024929214237
@@ -1521,8 +1724,7 @@ private LocalDateTime updateTime;
         converters.add(0,converter);
     &#125;
 </code></pre>
-<pre><code class="java">
-package com.sky.json;
+<pre><code class="java">package com.sky.json;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1736,6 +1938,78 @@ public class JacksonObjectMapper extends ObjectMapper &#123;
     @Select(&quot;select * from employee where id = #&#123;id&#125;&quot;)
     Employee getById(Long id);
 </code></pre>
+<blockquote>
+<ul>
+<li>前端提交表单：<br>用户在前端页面编辑员工信息并提交表单。<br>表单数据被序列化为 JSON 格式，通过 HTTP PUT 请求发送到后端。</li>
+<li>后端接收数据：<br>控制器方法 update 接收到 EmployeeDTO 对象。<br>记录日志，输出接收到的员工信息。<br>调用服务层的 update 方法，处理员工信息的更新。</li>
+<li>服务层处理：<br>创建一个新的 Employee 对象。<br>使用 BeanUtils.copyProperties 将 EmployeeDTO 的属性复制到 Employee 对象中。<br>调用 MyBatis 的 employeeMapper，执行更新操作。</li>
+<li>MyBatis 更新操作：<br>生成动态 SQL 语句，只更新传入的非 null 属性。<br>例如，如果 name 和 phone 不为 null，生成的 SQL 语句如下：</li>
+</ul>
+</blockquote>
+<p><span style = "color:orange"><strong>数据回写的具体过程</strong></span></p>
+<blockquote>
+<ul>
+<li>前端请求获取员工信息   &#x2F;&#x2F; 根据id查询员工信息<br>当你点击编辑按钮时，前端会发起一个 HTTP GET 请求，从后端获取员工的详细信息。这些信息将被用来填充表单字段。</li>
+<li>后端处理 GET 请求<br>后端需要提供一个接口来处理这个 GET 请求，并返回员工的详细信息。</li>
+<li>前端处理响应并填充表单<br>前端接收到后端返回的员工信息后，将其填充到表单字段中</li>
+</ul>
+<pre><code class="java">/**
+     * 根据id查询员工信息
+     * @param id
+     * @return
+     */
+    @GetMapping(&quot;&#123;/id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询员工信息&quot;)
+    public Result&lt;Employee&gt; getById(@PathVariable Long id) &#123;
+        log.info(&quot;根据id查询员工信息：&#123;&#125;&quot;, id);
+        Employee employee = employeeService.getById(id);
+        return Result.success(employee);
+    &#125;
+</code></pre>
+<pre><code class="vue">&lt;script&gt;export default &#123;
+  data() &#123;
+    return &#123;
+      employee: &#123;
+        id: null,
+        name: &#39;&#39;,
+        username: &#39;&#39;,
+        password: &#39;&#39;,
+        phone: &#39;&#39;,
+        sex: &#39;&#39;,
+        idNumber: &#39;&#39;
+      &#125;
+    &#125;;
+  &#125;,
+  methods: &#123;
+    async fetchEmployee(id) &#123;
+      try &#123;
+        const response = await this.$axios.get(`/employees/$&#123;id&#125;`);
+        this.employee = response.data.data;
+      &#125; catch (error) &#123;
+        console.error(&#39;获取员工信息失败&#39;, error);
+      &#125;
+    &#125;,
+    async updateEmployee() &#123;
+      try &#123;
+        await this.$axios.put(&#39;/employees&#39;, this.employee);
+        alert(&#39;员工信息更新成功&#39;);
+      &#125; catch (error) &#123;
+        console.error(&#39;更新员工信息失败&#39;, error);
+      &#125;
+    &#125;
+  &#125;,
+  mounted() &#123;
+    const id = this.$route.params.id; // 假设通过路由参数传递员工ID
+    this.fetchEmployee(id);
+  &#125;
+&#125;;
+&lt;/script&gt;
+</code></pre>
+<ul>
+<li>提交表单<br>当用户编辑完表单并点击保存按钮时，前端会发起一个 HTTP PUT 请求，将更新后的员工信息发送到后端进行处理</li>
+</ul>
+<p><strong>总结</strong><br>前端请求获取员工信息：点击编辑按钮时，前端发起 GET 请求获取员工的详细信息。<br>后端处理 GET 请求：后端提供一个接口处理 GET 请求，返回员工的详细信息。<br>前端处理响应并填充表单：前端接收到员工信息后，将其填充到表单字段中。<br>提交表单：用户编辑完表单并点击保存按钮，前端发起 PUT 请求，将更新后的员工信息发送到后端进行处理。</p>
+</blockquote>
 <p>[苍穹外卖项目接口文档] (<a target="_blank" rel="noopener" href="http://localhost:8080/doc.html#/default/%E5%91%98%E5%B7%A5%E7%9B%B8%E5%85%B3%E6%8E%A5%E5%8F%A3/updateUsingPUT">http://localhost:8080/doc.html#/default/员工相关接口/updateUsingPUT</a>)</p>
 <h4 id="导入分类管理功能代码"><a href="#导入分类管理功能代码" class="headerlink" title="导入分类管理功能代码"></a>导入分类管理功能代码</h4><h6 id="业务规则：-1"><a href="#业务规则：-1" class="headerlink" title="业务规则："></a>业务规则：</h6><ul>
 <li>分类名称必须是<strong>唯一</strong>的</li>
