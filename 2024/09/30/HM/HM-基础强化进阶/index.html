@@ -2098,6 +2098,644 @@ public class Demo07 &#123;
 班级: 1A 学生: 小红 成绩: &#123;英语=88, 物理=85, 数学=90&#125;
 班级: 1B 学生: 小刚 成绩: &#123;英语=80, 物理=78, 数学=75&#125;
 </code></pre>
+<h5 id="收集Stream流"><a href="#收集Stream流" class="headerlink" title="收集Stream流"></a><strong>收集Stream流</strong></h5><ul>
+<li><p>就是把Stream流操作后的结果转回到集合或者数组中去返回。</p>
+</li>
+<li><p>Stream流：方便操作集合&#x2F;数组的手段。<br>集合&#x2F;数组：才是开发中的目的</p>
+</li>
+</ul>
+<pre><code class="java">package homework;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class Demo08 &#123;
+    public static void main(String[] args) &#123;
+        List&lt;String&gt; one = new ArrayList&lt;&gt;();
+        // 把流中的数据保存到集合或数组中
+        // 1.存到list集合中
+        Collections.addAll(one, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张无忌&quot;, &quot;张敏&quot;);
+        List&lt;String&gt; list = one.stream().limit(4).collect(Collectors.toList());
+
+        // 2.把流中的数据保存到Set集合中
+        Set&lt;String&gt; set = one.stream().limit(4).collect(Collectors.toSet());
+
+        // 3.把流中的数据保存到Map集合中
+        Map&lt;String, Integer&gt; map = one.stream().limit(4).distinct().collect(Collectors.toMap(s -&gt; s, s -&gt; s.length()));
+                
+        System.out.println(&quot;map = &quot; + map);
+
+        // 4.把流中的数据保存到数组中
+        String[] arr = one.stream().limit(4).toArray(String[]::new);
+        for (String s : arr) &#123;
+            System.out.println(&quot;s = &quot; + s);
+        &#125;
+    &#125;
+&#125;
+/*
+总结
+静态块：静态块在类加载时执行，且父类静态块先于子类静态块执行。
+非静态块和构造函数：在对象创建时，先执行父类的非静态块和构造函数，再执行子类的非静态块和构造函数。
+*/
+</code></pre>
+<h3 id="斗地主案例"><a href="#斗地主案例" class="headerlink" title="斗地主案例"></a>斗地主案例</h3><blockquote>
+<p>总共有54张牌</p>
+<p>点数: “3”,”4”,”5”,”6”,”7”,”8”,”9”,”10”,”J”,”Q”,”K”,”A”,”2“</p>
+<p>花色: “♠”, “♥”, “♣”, “♦“</p>
+<p>大小王: “👲” , “🃏“</p>
+<p>斗地主：发出51张牌，剩下3张做为底牌。</p>
+<p>在启动游戏房间的时候，应该提前准备好54张牌</p>
+<p>接着，需要完成洗牌、发牌、对牌排序、看牌</p>
+<p>1.<strong>定义纸牌类</strong></p>
+<p>每张牌包含花色和数字两个属性。      </p>
+<p>2.<strong>准备牌</strong></p>
+<p>一副牌有54张，使用ArrayList集合存储所有的纸牌对象。 </p>
+<p>每张牌由花色数字两部分组成，可以使用花色数组与数字数组嵌套迭代完成每张牌的组装，并添加到集合中。</p>
+<p>3.<strong>洗牌</strong></p>
+<p>使用Collections类的shuffle()方法对集合元素随机打乱。</p>
+<p>4.<strong>发牌</strong></p>
+<p>每个玩家对应一手牌，创建3个ArrayList集合分别存储每个玩家的纸牌，通过对3取模依次发牌。</p>
+<p>将最后3张牌直接存放于底牌集合中。</p>
+<p>5.<strong>看牌 [要排序哦]</strong></p>
+<p>直接打印每个集合。</p>
+</blockquote>
+<pre><code class="java">Poker.java
+package com.itheima.demo15斗地主;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// 定义纸牌类Poker, 每张牌包含花色和数字两个属性
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+// 类实现Comparable接口, 用于自然排序
+public class Poker implements Comparable&lt;Poker&gt; &#123;
+    // 花色
+    private String color;
+
+    // 数字
+    private String number;
+
+    // 牌的序号, 用于排序的
+    private int index;
+
+    // 重写父类方法的快捷键: ctrl + o
+    @Override
+    public String toString() &#123;
+        return color + number;
+    &#125;
+
+    @Override
+    public int compareTo(Poker o) &#123;
+        // this 和 o比较
+        return this.index - o.index;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.demo15斗地主;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/*
+目标:
+按照斗地主的规则，完成洗牌发牌的动作。 具体规则：使用54张牌打乱顺序,三个玩家参与游戏，三人交替摸牌，每人17张牌，最后三张留作底牌
+
+分析:
+    1.定义纸牌类Poker
+        每张牌包含花色和数字两个属性
+
+    2.准备牌
+        一副牌有54张，使用ArrayList集合存储所有的纸牌对象
+        每张牌由花色数字两部分组成，可以使用花色数组与数字数组嵌套迭代完成每张牌的组装，并添加到集合中
+
+    3.洗牌
+        使用Collections类的shuffle()方法对集合元素随机打乱
+
+    4.发牌
+        每个玩家对应一手牌，创建3个ArrayList集合分别存储每个玩家的纸牌，通过对3取模依次发牌
+        将最后3张牌直接存放于底牌集合中
+
+    5.看牌
+        直接打印每个集合
+ */
+public class Demo15 &#123;
+    public static void main(String[] args) &#123;
+        // 2.准备牌
+        // 一副牌有54张，使用ArrayList集合存储所有的纸牌对象
+        // 每张牌由花色数字两部分组成，可以使用花色数组与数字数组嵌套迭代完成每张牌的组装，并添加到集合中
+        List&lt;Poker&gt; pokerList = new ArrayList&lt;&gt;();
+
+        // 保存大小王
+        pokerList.add(new Poker(&quot;大王&quot;, &quot;&quot;, 0));
+        pokerList.add(new Poker(&quot;小王&quot;, &quot;&quot;, 1));
+
+        String[] colors = &#123;&quot;♠&quot;,&quot;♥&quot;,&quot;♣&quot;,&quot;♦&quot;&#125;;
+        String[] numbers = &#123;&quot;2&quot;,&quot;A&quot;,&quot;K&quot;,&quot;Q&quot;,&quot;J&quot;,&quot;10&quot;,&quot;9&quot;,&quot;8&quot;,&quot;7&quot;,&quot;6&quot;,&quot;5&quot;,&quot;4&quot;,&quot;3&quot;&#125;;
+
+        // 嵌套循环特点: 外循环执行一次, 内循环执行完
+        int index = 2;
+        for (String number : numbers) &#123;
+            // &quot;2&quot;
+            for (String color : colors) &#123;
+                // &quot;♠2&quot;,&quot;♥2&quot;,&quot;♣2&quot;,&quot;♦2&quot;
+                // 创建牌
+                Poker poker = new Poker(color, number, index++);
+                // 把牌添加到集合中
+                pokerList.add(poker);
+            &#125;
+        &#125;
+        System.out.println(&quot;准备好了一副牌: &quot; + pokerList);
+
+        // 3.洗牌
+        // 使用Collections类的shuffle()方法对集合元素随机打乱
+        Collections.shuffle(pokerList);
+        System.out.println(&quot;洗牌后: &quot; + pokerList);
+
+        // 4.发牌
+        // 每个玩家对应一手牌，创建3个ArrayList集合分别存储每个玩家的纸牌，通过对3取模依次发牌, 将最后3张牌直接存放于底牌集合中
+        // pokerList = [♣8, ♣7, ♠9, ♦Q, ♠Q, ♥2, ♣3, ♠8, ♣Q, ♥9, ♦4, ♣J, ♦10, ♠10]
+        //         索引  0   1   2   3    4   5   6   7   8   9 ...    51  52   53
+        // 玩家1: 0,3,6   索引 % 3 == 0
+        // 玩家2: 1,4,7   索引 % 3 == 1
+        // 玩家3: 2,5,8   索引 % 3 == 2
+        List&lt;Poker&gt; player01 = new ArrayList&lt;&gt;();
+        List&lt;Poker&gt; player02 = new ArrayList&lt;&gt;();
+        List&lt;Poker&gt; player03 = new ArrayList&lt;&gt;();
+        List&lt;Poker&gt; diPai = new ArrayList&lt;&gt;();
+
+        for (int i = 0; i &lt; pokerList.size(); i++) &#123;
+            // i 是索引
+            // poker是i索引对应的牌
+            Poker poker = pokerList.get(i);
+            if (i &gt;= 51) &#123;
+                diPai.add(poker);
+            &#125; else if (i % 3 == 0) &#123;
+                // 玩家1
+                player01.add(poker);
+            &#125; else if (i % 3 == 1) &#123;
+                // 玩家2
+                player02.add(poker);
+            &#125; else if (i % 3 == 2) &#123;
+                player03.add(poker);
+            &#125;
+        &#125;
+
+        // 给玩家手上的牌排序
+        Collections.sort(player01);
+        Collections.sort(player02);
+        Collections.sort(player03);
+
+        // 5.看牌: 直接打印每个集合
+        System.out.println(&quot;玩家1: &quot; + player01);
+        System.out.println(&quot;玩家2: &quot; + player02);
+        System.out.println(&quot;玩家3: &quot; + player03);
+        System.out.println(&quot;底牌: &quot; + diPai);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="File"><a href="#File" class="headerlink" title="File"></a>File</h3><h6 id="创建File类的对象"><a href="#创建File类的对象" class="headerlink" title="创建File类的对象"></a>创建File类的对象</h6><table>
+<thead>
+<tr>
+<th>构造器</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public File(String pathname)</td>
+<td>根据文件路径创建文件对象</td>
+</tr>
+<tr>
+<td>public File(String parent, String child)</td>
+<td>根据父路径和子路径名字创建文件对象</td>
+</tr>
+<tr>
+<td>public File(File parent, String child)</td>
+<td>根据父路径对应文件对象和子路径名字创建文件对象</td>
+</tr>
+</tbody></table>
+<ul>
+<li>绝对路径：从盘符开始</li>
+</ul>
+<blockquote>
+<p>File file &#x3D; new File(“D:\itheima\a.txt”);</p>
+</blockquote>
+<ul>
+<li>相对路径：不带盘符，默认直接到当前工程下的目录寻找文件</li>
+</ul>
+<blockquote>
+<p>File file &#x3D; new File(“模块名\a.txt”);</p>
+</blockquote>
+<p>★ 直接可以ctrl+c复制项目模块名字 或者 右键Copy Path </p>
+<blockquote>
+<p>C:\Users\Pluminary\Desktop\java-up-198\uplevel\src\File类构造器<br>再删掉前面的 保留到模块 就是相对路径了 →→→<br>uplevel\src\File类构造器</p>
+</blockquote>
+<h6 id="File类创建功能"><a href="#File类创建功能" class="headerlink" title="File类创建功能"></a>File类创建功能</h6><table>
+<thead>
+<tr>
+<th>方法名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public boolean createNewFile()</td>
+<td>创建一个新的空的文件</td>
+</tr>
+<tr>
+<td>public boolean mkdir()</td>
+<td>只能创建一级文件夹</td>
+</tr>
+<tr>
+<td>public boolean mkdirs()</td>
+<td>可以创建多级文件夹</td>
+</tr>
+</tbody></table>
+<h6 id="File类删除文件的功能-delete方法默认只能删除文件和空文件夹，删除后的文件不会进入回收站"><a href="#File类删除文件的功能-delete方法默认只能删除文件和空文件夹，删除后的文件不会进入回收站" class="headerlink" title="File类删除文件的功能 (delete方法默认只能删除文件和空文件夹，删除后的文件不会进入回收站)"></a>File类删除文件的功能 (delete方法默认只能删除文件和空文件夹，删除后的文件不会进入回收站)</h6><table>
+<thead>
+<tr>
+<th>方法名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public  boolean delete()</td>
+<td>删除文件、空文件夹</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package File类构造器;
+
+import java.io.File;
+import java.io.IOException;
+
+public class Demo02 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // boolean createNewFile() 创建新文件
+        File file1 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\我的天.txt&quot;);
+        System.out.println(&quot;file1 = &quot; + file1.createNewFile());
+
+        // boolean mkdir() make directory 创建单级文件夹 true表示成功
+        File file2 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\我和春天有个约定&quot;);
+        System.out.println(&quot;file2 = &quot; + file2.mkdir());
+
+        // boolean mkdirs() 创建多级文件夹
+        File file3 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb\\cc\\母猪上树&quot;);
+        System.out.println(&quot;file2 = &quot; + file3.mkdirs());
+
+        // 如果文件夹里面还有内容 就删不掉 false
+        File file4 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb\\cc&quot;);
+        System.out.println(&quot;file2 = &quot; + file4.delete());
+    &#125;
+&#125;
+</code></pre>
+<h5 id="File提供的判断文件类型、获取文件信息功能"><a href="#File提供的判断文件类型、获取文件信息功能" class="headerlink" title="File提供的判断文件类型、获取文件信息功能"></a>File提供的判断文件类型、获取文件信息功能</h5><table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public boolean exists()</td>
+<td>判断当前文件对象，对应的文件路径是否存在，存在返回true</td>
+</tr>
+<tr>
+<td>public boolean isFile()</td>
+<td>判断当前文件对象指代的是否是文件，是文件返回true，反之。</td>
+</tr>
+<tr>
+<td>public boolean isDirectory()</td>
+<td>判断当前文件对象指代的是否是文件夹，是文件夹返回true，反之。</td>
+</tr>
+<tr>
+<td>public String getName()</td>
+<td>获取文件的名称（包含后缀）</td>
+</tr>
+<tr>
+<td>public String getParent()</td>
+<td>获取文件对象的父路径</td>
+</tr>
+<tr>
+<td>public long length()</td>
+<td>获取文件的大小，返回字节个数</td>
+</tr>
+<tr>
+<td>public long lastModified()</td>
+<td>获取文件的最后修改时间。</td>
+</tr>
+<tr>
+<td>public String getAbsolutePath()</td>
+<td>获取绝对路径</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package File类构造器;
+
+import java.io.File;
+
+public class Demo03 &#123;
+    public static void main(String[] args) &#123;
+        File file0 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb&quot;);
+        File file1 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb\\cc\\中国梦666.txt&quot;);
+        File file2 = new File(&quot;uplevel\\src\\File类构造器\\666.txt&quot;);
+        // 获取绝对路径
+        System.out.println(&quot;file1 = &quot; + file1.getAbsolutePath());
+        System.out.println(&quot;file2 = &quot; + file2.getAbsolutePath());
+
+        // 获取文件的名称（包含后缀）
+        System.out.println(&quot;file1 = &quot; + file1.getName());
+        System.out.println(&quot;file2 = &quot; + file2.getName());
+
+        // 获取文件的名称（包含后缀）
+        System.out.println(&quot;file1 = &quot; + file1.getParent());
+        System.out.println(&quot;file2 = &quot; + file2.getParent());
+
+        // 获取文件的大小，返回字节个数
+        System.out.println(&quot;file0 = &quot; + file0.length());//文件夹不能直接获取大小
+        System.out.println(&quot;file1 = &quot; + file1.length());
+        System.out.println(&quot;file2 = &quot; + file2.length());
+
+        // 获取文件的最后修改时间
+        System.out.println(&quot;file1 = &quot; + file1.lastModified());//获得毫秒值
+        System.out.println(&quot;file2 = &quot; + file2.lastModified());
+    &#125;
+&#125;
+</code></pre>
+<h5 id="File类提供的遍历文件夹的功能"><a href="#File类提供的遍历文件夹的功能" class="headerlink" title="File类提供的遍历文件夹的功能"></a>File类提供的遍历文件夹的功能</h5><table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public String[] list()</td>
+<td>获取当前目录下所有的”一级文件名称”到一个字符串数组中去返回。</td>
+</tr>
+<tr>
+<td>public File[] listFiles()</td>
+<td>获取当前目录下所有的”一级文件对象”到一个文件对象数组中去返回（重点）</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package File类构造器;
+
+import java.io.File;
+
+public class Demo04遍历文件夹 &#123;
+    public static void main(String[] args) &#123;
+        //遍历文件夹
+        //list方法遍历的是文件夹，返回值是字符串数组
+        File dir = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb\\cc&quot;);
+        String[] file1 = dir.list();
+        for (String file : file1) &#123;
+            System.out.println(file);
+        &#125;
+
+        System.out.println(&quot;-------------------------------------------------&quot;);
+
+  // public File[] listFiles() 获取当前目录下所有的&quot;一级文件对象&quot;到一个文件对象数组中去返回（重点）
+        // 可返回隐藏文件 如果文件夹没有权限访问 返回null
+        File dir2 = new File(&quot;C:\\Users\\Pluminary\\Desktop\\aa\\bb\\cc&quot;);
+        File[] file2 = dir2.listFiles();
+        for (File file : file2) &#123;
+            System.out.println(file);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="实现案例-查找-‘母猪上树-txt’-文件"><a href="#实现案例-查找-‘母猪上树-txt’-文件" class="headerlink" title="实现案例 查找 ‘母猪上树.txt’ 文件"></a>实现案例 查找 ‘母猪上树.txt’ 文件</h6><pre><code class="java">package File类构造器;
+
+import java.io.File;
+
+/**
+ * 需求：从D:盘中，搜索“QQ.exe” 这个文件，找到后直接输出其位置。
+ * 分析：
+ * 先找出D:盘下的所有一级文件对象
+ * 遍历全部一级文件对象，判断是否是文件
+ * 如果是文件，判断是否是自己想要的
+ * 如果是文件夹，需要继续进入到该文件夹，重复上述过程
+ */
+public class Demo05文件搜索 &#123;
+    public static void main(String[] args) &#123;
+        String rootPath = &quot;C:\\Users\\Pluminary\\Desktop\\&quot;;
+        String targetFile = &quot;母猪上树.txt&quot;;
+
+        File rootDir = new File(rootPath);
+        searchFile(rootDir, targetFile);
+    &#125;
+
+    private static void searchFile(File dir, String targetFile) &#123;
+        if (dir == null || !dir.exists()) &#123;
+            System.out.println(&quot;目录不存在&quot;);
+            return;
+        &#125;
+        File[] files = dir.listFiles();
+        if (files != null) &#123;
+            for (File file : files) &#123;
+                if (file.isFile()) &#123;
+                    if (file.getName().equalsIgnoreCase(targetFile)) &#123;
+                        System.out.println(&quot;找到文件：&quot; + file.getAbsolutePath());
+                    &#125;
+                &#125; else if (file.isDirectory()) &#123;
+                    searchFile(file, targetFile);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+---------------------------------------------------------------------------
+找到文件：C:\Users\Pluminary\Desktop\aa\bb\cc\母猪树\母猪上树.txt
+</code></pre>
+<h6 id="用Stream流实现-查找’母猪上树-txt’-文件"><a href="#用Stream流实现-查找’母猪上树-txt’-文件" class="headerlink" title="用Stream流实现 查找’母猪上树.txt’ 文件"></a>用Stream流实现 查找’母猪上树.txt’ 文件</h6><pre><code class="java">package File类构造器;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
+
+/**
+ * 需求：从D:盘中，搜索“QQ.exe” 这个文件，找到后直接输出其位置。
+ * 分析：
+ * 先找出D:盘下的所有一级文件对象
+ * 遍历全部一级文件对象，判断是否是文件
+ * 如果是文件，判断是否是自己想要的
+ * 如果是文件夹，需要继续进入到该文件夹，重复上述过程
+ */
+public class Demo05文件搜索_Stream流 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        String rootPath = &quot;C:\\Users\\Pluminary\\Desktop\\&quot;;
+        String targetFile = &quot;母猪上树.txt&quot;;
+        // Files.walk()用于递归地遍历文件系统中的目录和文件
+        try (Stream&lt;Path&gt; paths = Files.walk(Paths.get(rootPath)).parallel()) &#123;
+            // ↓↓ filter(path -&gt; Files.isRegularFile(path))   &quot; &#39;::&#39;是方法引用 &quot;
+            paths.filter(Files::isRegularFile) //过滤出所有普通文件（排除目录和其他类型的文件）
+                    .filter(path -&gt; path.getFileName().toString().equalsIgnoreCase(targetFile))
+                    .forEach(System.out::println);
+        &#125; catch (IOException e) &#123;
+            System.err.println(&quot;搜索过程中发生错误: &quot; + e.getMessage());
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="使用程序对字符进行编码和解码的操作"><a href="#使用程序对字符进行编码和解码的操作" class="headerlink" title="使用程序对字符进行编码和解码的操作"></a>使用程序对字符进行编码和解码的操作</h4><p>(文字→编码→字节数据 [编码])</p>
+<h6 id="对字符的编码"><a href="#对字符的编码" class="headerlink" title="对字符的编码"></a>对字符的编码</h6><table>
+<thead>
+<tr>
+<th>String提供了如下方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>byte[] getBytes()</td>
+<td>使用平台的默认字符集将该 String编码为一系列字节，将结果存储到新的字节数组中</td>
+</tr>
+<tr>
+<td>byte[] getBytes(String charsetName)</td>
+<td>使用指定的字符集将该 String编码为一系列字节，将结果存储到新的字节数组中</td>
+</tr>
+</tbody></table>
+<h6 id="对字符的解码"><a href="#对字符的解码" class="headerlink" title="对字符的解码"></a>对字符的解码</h6><table>
+<thead>
+<tr>
+<th>String提供了如下方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>String(byte[] bytes)</td>
+<td>通过使用平台的默认字符集解码指定的字节数组来构造新的  String</td>
+</tr>
+<tr>
+<td>String(byte[] bytes, String charsetName)</td>
+<td>通过指定的字符集解码指定的字节数组来构造新的 String</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 字符操作;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+
+public class Demo10 &#123;
+    public static void main(String[] args) throws UnsupportedEncodingException &#123;
+        String name = &quot;a我m&quot;;
+
+        // 1.编码，IDEA默认是UTF-8编码
+        byte[] utf8Bytes = name.getBytes();
+        System.out.println(Arrays.toString(utf8Bytes)); //[97, -26, -120, -111, 109]
+
+        // 2.编码，自定义GBK编码
+        byte[] gbkBytes = name.getBytes(&quot;GBK&quot;);
+        System.out.println(Arrays.toString(gbkBytes)); //[97, -50, -46, 109]
+
+        // 3.解码，IDEA默认是UTF-8编码
+        String utf8Str = new String(utf8Bytes);
+        System.out.println(utf8Str);
+
+        // 4.解码，指定GBK编码
+        String gbkStr = new String(gbkBytes, &quot;GBK&quot;);
+        System.out.println(gbkStr);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="IO流"><a href="#IO流" class="headerlink" title="IO流"></a>IO流</h3><h5 id="FileOutputStream文件字节输出流"><a href="#FileOutputStream文件字节输出流" class="headerlink" title="FileOutputStream文件字节输出流"></a><strong>FileOutputStream</strong>文件字节输出流</h5><p>作用：以内存为基准，把内存中的数据以字节的形式写出到文件中去。</p>
+<table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public FileOutputStream(File file)</td>
+<td>创建字节输出流管道与源文件对象接通</td>
+</tr>
+<tr>
+<td>public FileOutputStream(String filepath)</td>
+<td>创建字节输出流管道与源文件路径接通</td>
+</tr>
+<tr>
+<td>public FileOutputStream(File file，boolean append)</td>
+<td>创建字节输出流管道与源文件对象接通，可追加数据</td>
+</tr>
+<tr>
+<td>public FileOutputStream(String filepath，boolean append)</td>
+<td>创建字节输出流管道与源文件路径接通，可追加数据</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public void write(int a)</td>
+<td>写一个字节出去</td>
+</tr>
+<tr>
+<td>public void write(byte[] buffer)</td>
+<td>写一个字节数组出去</td>
+</tr>
+<tr>
+<td>public void write(byte[] buffer , int pos , int len)</td>
+<td>写一个字节数组的一部分出去。</td>
+</tr>
+<tr>
+<td>public void close() throws IOException</td>
+<td>关闭流。</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package IO流;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+/**
+ * IO流注意事项：
+ *   1.如果输出流的路径是文件夹，那么会报错(拒绝访问)
+ *   2，如果输出流的父路径不存在，那么会报错(系统找不到指定的路径)
+ *
+ * | public FileOutputStream(File file)                       | 创建字节输出流管道与源文件对象接通             |
+ * | public FileOutputStream(String filepath)                 | 创建字节输出流管道与源文件路径接通             |
+ * | public FileOutputStream(File file，boolean append)       | 创建字节输出流管道与源文件对象接通，可追加数据 |
+ * | public FileOutputStream(String filepath，boolean append) | 创建字节输出流管道与源文件路径接通，可追加数据 |
+ */
+
+public class Demo11_文件字节输出流 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 1.创建文件字节输出流 关联到一个文件
+        FileOutputStream fos = new FileOutputStream(&quot;uplevel\\src\\IO流\\abc\\1.txt&quot;);
+        // 2.调用写数据的方法, 把数据写到流中
+        fos.write(97);
+        fos.write(98);
+
+
+        // void write(byte[] buffer)：一次写一个字节数组到流中，效率高
+        byte[] bytes = &#123;97, 98, 99, 100, 101&#125;;
+        fos.write(bytes);
+
+        // public void write(byte[] buffer , int pos , int len)：一次写字节数组的一部分到流中
+        fos.write(bytes, 0, 3); //从0索引开始写3个
+
+        // 字节流写字符串
+        fos.write(&quot;你好靓仔&quot;.getBytes());
+
+        // 换行：\r\n
+        fos.write(&quot;\r\n&quot;.getBytes());
+        fos.write(&quot;我是新的靓仔&quot;.getBytes());
+       // public FileOutputStream(File file，boolean append)
+        fos = new FileOutputStream(&quot;uplevel\\src\\IO流\\abc\\2.txt&quot;, true);
+        fos.write(&quot;追加&quot;.getBytes());
+
+        // 3.关闭流
+        fos.close();
+    &#125;
+&#125;
+</code></pre>
 
     </div>
 
