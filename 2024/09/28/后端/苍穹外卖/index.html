@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2642,6 +2642,69 @@ public interface CategoryMapper &#123;
     void update(Category category);
 &#125;
 </code></pre>
+<p><span style = "color:orange"><strong>详细讲解@AutoFill</strong></span></p>
+<blockquote>
+<p><strong><u>@Target(ElementType.<em>METHOD</em>)</u></strong><br>使用<code>@Target</code>注解指定自定义注解@AutoFill可以应用的目标元素类，这里指定了<code>ElementType.METHOD</code>，表示@AutoFill**<u>只能应用于方法上</u>**</p>
+<p><strong><u>@Retention(RetentionPolicy.RUNTIME)</u></strong><br>使用 <code>@Retention</code> 注解指定自定义注解 @AutoFill 的保留策略。这里指定了 <code>RetentionPolicy.RUNTIME</code>，表示 @AutoFill 注解会在运行时保留，可以通过反射获取到。</p>
+<p><strong><u>public @interface AutoFill {…}</u></strong><br>@interface：关键字，用于定义一个新的注解类型。<br>AutoFill：注解的名称，表示这个注解就叫做AutoFill</p>
+<p>区分普通接口：<code>@interface</code> 与普通的 <code>interface</code> 不同，普通的interface用于定义接口，而@interface用于定义注解，@符号帮助编译器区分这两者</p>
+<pre><code class="java">package com.sky.enumeration;
+
+/**
+ * 数据库操作类型
+ */
+public enum OperationType &#123;
+    /**
+     * 更新操作
+     */
+    UPDATE,
+
+    /**
+     * 插入操作
+     */
+    INSERT
+&#125;
+</code></pre>
+<hr>
+<p>@<strong><u>Aspect</u></strong><br>使用<code>@Aspect</code>注解将这个类标记为一个切面，切面是AOP(面向切面编程)，用于定义切面关注点(日志记录、事务管理)</p>
+<p>@<strong><u>Component</u></strong><br>使用<code>@Component</code>注解将这个类标记为Spring管理的Bean，这样Spring容器会自动扫描并管理这个类的实例</p>
+<p>@<strong><u>Slf4j</u></strong><br>使用 <code>@Slf4j</code> 注解生成一个日志记录器（Logger）实例。这个注解来自 Lombok 库，可以简化日志记录器的创建</p>
+<pre><code class="java">@Pointcut(&quot;execution(* com.sky.mapper.*.*(..)) &amp;&amp; @annotation(com.sky.annotation.AutoFill)&quot;)
+    public void autoFillPointCut()&#123;&#125;
+</code></pre>
+<p>使用<code>@Pointcut</code>注解定义一个切入点<code>autoFillPointCut</code></p>
+<ul>
+<li><code>execution(* com.sky.mapper.*.*(..))</code>：匹配<code>com.sky.mapper</code>包下所有类的所有方法</li>
+<li><code>&amp;&amp; @annotation(com.sky.annotation.AutoFill)</code>：并且这些方法必须带有<code>@AutoFill</code>注解</li>
+<li>public void autoFillPointCut()：定义一个空的方法，用于标识这个切入点</li>
+</ul>
+<pre><code class="java">/**
+ * 自定义切面，实现公共字段自动填充处理逻辑
+ */
+@Aspect
+@Component
+@Slf4j
+public class AutoFillAspect &#123;
+    /**
+     * 切入点
+     */
+    // 拦截类 + 注解的东西
+    @Pointcut(&quot;execution(* com.sky.mapper.*.*(..)) &amp;&amp; @annotation(com.sky.annotation.AutoFill)&quot;)
+    public void autoFillPointCut()&#123;&#125;
+
+    // 前置通知，在通知中进行公共字段的赋值
+    @Before(&quot;autoFillPointCut()&quot;)
+    public void autoFill(JoinPoint joinPoint) &#123;
+        log.info(&quot;开始公共字段自动填充...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>使用<code>@Before</code>注解定义一个前置通知<code>autoFill</code>，这个通知会在切入点方法执行前被调用</p>
+<ul>
+<li><code>@Before(&quot;autoFillPointCut()&quot;)</code>：指定这个通知应用于<code>autoFillPointCut</code>切入点</li>
+<li><code>public void autoFill(JoinPoint joinPoint)</code>：定义通知方法，接收一个<code>JoinPoint</code>参数，<code>JoinPoint</code>包含了连接点的信息，如被拦截的方法、参数等</li>
+</ul>
+</blockquote>
 <h4 id="代码开发2"><a href="#代码开发2" class="headerlink" title="代码开发2"></a>代码开发2</h4><blockquote>
 <p>公共属性赋值后 Service里的 save(Employee employee) → employee.setCreateUser(BaseContext.getCurrentId())就不用再去赋值了</p>
 </blockquote>

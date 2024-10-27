@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/基础强化进阶" style=color:#ffa2c4>
+                <a href="/tags/基础强化进阶" style=color:#879cff>
                     基础强化进阶
                 </a>
             </span>
@@ -2733,6 +2733,633 @@ public class Demo11_文件字节输出流 &#123;
 
         // 3.关闭流
         fos.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="文件字节输入流-FileInputStream-把网络中的数据读到程序中"><a href="#文件字节输入流-FileInputStream-把网络中的数据读到程序中" class="headerlink" title="文件字节输入流(FileInputStream) 把网络中的数据读到程序中"></a>文件字节输入流(FileInputStream) 把网络中的数据读到程序中</h5><table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public <strong>FileInputStream(File file)</strong></td>
+<td>创建字节输入流管道与源文件接通</td>
+</tr>
+<tr>
+<td>public <strong>FileInputStream(String pathname)</strong></td>
+<td>创建字节输入流管道与源文件接通</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public int <strong>read()</strong></td>
+<td>每次读取一个字节返回，如果发现没有数据可读会返回-1.</td>
+</tr>
+<tr>
+<td>public int **read(**byte[]  buffer)</td>
+<td>每次用一个字节数组去读取数据，返回字节数组读取了多少个字节，如果发现没有数据可读会返回-1.</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字节输入流FileInputStream;
+
+import java.io.FileInputStream;
+
+public class Demo02 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        FileInputStream fis = new FileInputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\abc.txt&quot;);
+        // public int read(byte[] b)：一次性读取多个字节数据保存到字节数组中，返回值是读取的数量 没有就返回-1
+        byte[] buf = new byte[1024 * 8]; //速度快 内存块
+        int len = fis.read(buf);
+        System.out.println(&quot;读取个数：&quot; + len);
+        System.out.println(&quot;读取的内容：&quot; + new String(buf));
+
+        len = fis.read(buf);
+        System.out.println(&quot;读取个数：&quot; + len);
+        System.out.println(&quot;读取的内容：&quot; + new String(buf));
+
+        while ((len = fis.read(buf)) != -1) &#123;
+            System.out.println(&quot;读取到的数据：&quot; + new String(buf, 0, len));
+        &#125;
+        fis.close();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 文件字节输入流FileInputStream;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
+public class Demo03 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 创建文件字节输入流关联源文件
+        FileInputStream fis = new FileInputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\abc.txt&quot;);
+        // 创建文件字节输出流关联目标文件
+        FileOutputStream fos = new FileOutputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;);
+
+        // 循环读写
+        byte[] buf = new byte[1024 * 8];
+        int len;
+        while ((len = fis.read(buf)) != -1) &#123;
+            fos.write(buf, 0, len);
+        &#125;
+        fos.close();
+        fis.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="try-catch"><a href="#try-catch" class="headerlink" title="try-catch"></a>try-catch</h5><blockquote>
+<p>try(<strong>定义资源1</strong>; <strong>定义资源2</strong>;…）{<br>     可能出现异常的代码;<br> }catch(异常类名 变量名){<br>     异常的处理代码;<br> }</p>
+</blockquote>
+<blockquote>
+<p><strong>try() 中只能放实现AutoCloseable接口的对象</strong></p>
+<ol>
+<li>选中创建流的代码</li>
+<li>ctrl + alt + t</li>
+<li>选择<code>try-with-resources</code></li>
+<li>把其他的定义资源移动到小括号中</li>
+<li>光标在 new 类上 <code>Alt + 回车</code></li>
+</ol>
+</blockquote>
+<pre><code class="java">package 文件字节输入流FileInputStream;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class Demo03 &#123;
+    public static void main(String[] args)&#123;
+        // 创建文件字节输入流关联源文件
+        // 创建文件字节输出流关联目标文件
+// 该资源使用完毕后，会自动调用其close()方法，完成对资源的释放！
+        try (FileOutputStream fos = new FileOutputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;);
+             FileInputStream fis = new FileInputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\abc.txt&quot;);) &#123;
+
+            // 循环读写
+            byte[] buf = new byte[1024 * 8];
+            int len;
+            while ((len = fis.read(buf)) != -1) &#123;
+                fos.write(buf, 0, len);
+            &#125;
+        &#125; catch (FileNotFoundException e) &#123;
+            System.out.println(&quot;文件找不到&quot;);
+        &#125; catch (IOException e) &#123;
+            System.out.println(&quot;文件读写异常&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="FileReader文件字符输入流"><a href="#FileReader文件字符输入流" class="headerlink" title="FileReader文件字符输入流"></a>FileReader文件字符输入流</h5><table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public FileReader(File file)</td>
+<td>创建字符输入流管道与源文件接通</td>
+</tr>
+<tr>
+<td>public FileReader(String pathname)</td>
+<td>创建字符输入流管道与源文件接通</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public int <strong>read()</strong></td>
+<td>每次读取一个字符返回，如果发现没有数据可读会返回-1.</td>
+</tr>
+<tr>
+<td>public int read(char[]  buffer)</td>
+<td>每次用一个字符数组去读取数据，返回字符数组读取了多少个字符，如果发现没有数据可读会返回-1.</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字节输入流FileInputStream;
+
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Demo04 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 1.创建文件字符输入流关联文件
+        FileReader fr = new FileReader(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;);
+        char[] buf = new char[4];
+        int len;
+        while ((len = fr.read(buf)) != -1) &#123;
+            System.out.println(&quot;读取的数据= &quot; + new String(buf, 0, len));
+        &#125;
+        fr.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="FileWriter文件字符输出流"><a href="#FileWriter文件字符输出流" class="headerlink" title="FileWriter文件字符输出流"></a>FileWriter文件字符输出流</h5><table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public FileWriter(File file)</td>
+<td>创建字节输出流管道与源文件对象接通</td>
+</tr>
+<tr>
+<td>public FileWriter(String filepath)</td>
+<td>创建字节输出流管道与源文件路径接通</td>
+</tr>
+<tr>
+<td>public FileWriter(File file，boolean append)</td>
+<td>创建字节输出流管道与源文件对象接通，可追加数据</td>
+</tr>
+<tr>
+<td>public FileWriter(String filepath，boolean append)</td>
+<td>创建字节输出流管道与源文件路径接通，可追加数据</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>void  write(int c)</td>
+<td>写一个字符</td>
+</tr>
+<tr>
+<td>void  write(String str)</td>
+<td>写一个字符串</td>
+</tr>
+<tr>
+<td>void  write(String str, int off, int len)</td>
+<td>写一个字符串的一部分</td>
+</tr>
+<tr>
+<td>void  write(char[] cbuf)</td>
+<td>写入一个字符数组</td>
+</tr>
+<tr>
+<td>void  write(char[] cbuf, int off, int len)</td>
+<td>写入字符数组的一部分</td>
+</tr>
+</tbody></table>
+<h6 id="fw-flush-和-fw-close-的区别"><a href="#fw-flush-和-fw-close-的区别" class="headerlink" title="fw.flush() 和 fw.close()的区别"></a>fw.flush() 和 fw.close()的区别</h6><pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class Demo01 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        // 1.创建文件字符输出流
+        FileWriter fw = new FileWriter(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;);
+        fw.write(&#39;我&#39;);
+        char[] chs = new char[]&#123;&#39;想&#39;,&#39;要&#39;,&#39;女&#39;,&#39;同&#39;,&#39;桌&#39;&#125;;
+        fw.write(chs);
+
+        // 写一个字符数组的一部分数据到流中
+        fw.write(chs,0,4);
+
+        // flush：刷新，流中的数据就会到文件中 fw.flush(); 类似于保存
+        // 刷新后还可以再写数据 如果是close()就关闭了，就无法再写数据了
+        // 在close的时候会刷新一次，所以可以不用刷新
+
+        // 写一个字符串到流中
+        String str = &quot;在做梦呀&quot;;
+        fw.write(str);
+
+        fw.close();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="缓冲流-提高字节输入流读取数据的性能"><a href="#缓冲流-提高字节输入流读取数据的性能" class="headerlink" title="缓冲流 [提高字节输入流读取数据的性能]"></a>缓冲流 [提高字节输入流读取数据的性能]</h3><p><img src="https://github.com/P-luminary/images/blob/master/%E7%BC%93%E5%86%B2%E6%B5%81%E5%8F%8AIO%E6%B5%81%E4%BD%93%E7%B3%BB.jpg?raw=true"></p>
+<table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public BufferedInputStream(InputStream is)</td>
+<td>把低级的字节输入流包装成一个高级的缓冲字节输入流，从而提高读数据的性能</td>
+</tr>
+<tr>
+<td>public BufferedOutputStream(OutputStream os)</td>
+<td>把低级的字节输出流包装成一个高级的缓冲字节输出流，从而提高写数据的性能</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.*;
+
+public class Demo02 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 1.创建缓冲字节输入流 继承了InputStream 还是使用父类的read()方法读取参数 参数指定读取哪个文件 内部自带8192大小数组 提高效率
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;));
+        // 2.创建缓冲字节输出流 继承了OutputStream 还是使用父类的write()方法读取参数 参数指定读取哪个文件 内部自带8192大小数组 提高效率
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(&quot;uplevel\\src\\文件字节输入流FileInputStream\\b.txt&quot;));
+        // 3.循环读写
+        byte[] buf = new byte[1024];
+        int len;
+        while ((len = bis.read(buf)) != -1) &#123;
+            bos.write(buf, 0, len);
+        &#125;
+        // 4.关闭流
+        bis.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="BufferedWriter缓冲字符输出流"><a href="#BufferedWriter缓冲字符输出流" class="headerlink" title="BufferedWriter缓冲字符输出流"></a>BufferedWriter缓冲字符输出流</h5><table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public  BufferedWriter(Writer r)</td>
+<td>把低级的字符输出流包装成一个高级的缓冲字符输出流管道，从而提高字符输出流写数据的性能</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.*;
+
+public class Demo03 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        BufferedWriter bw = new BufferedWriter(new FileWriter(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;));
+        bw.write(&quot;缓冲流1&quot;);
+        bw.newLine();
+        bw.write(&quot;缓冲流2&quot;);
+        bw.newLine();
+        bw.close();
+
+        BufferedReader br = new BufferedReader(new FileReader(&quot;uplevel\\src\\文件字节输入流FileInputStream\\a.txt&quot;));
+        String line = br.readLine();
+        while (line != null) &#123;
+            System.out.println(line);
+            line = br.readLine();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="需求：把《出师表》的文章顺序进行恢复到一个新文件中。"><a href="#需求：把《出师表》的文章顺序进行恢复到一个新文件中。" class="headerlink" title="需求：把《出师表》的文章顺序进行恢复到一个新文件中。"></a><strong>需求</strong>：把《出师表》的文章顺序进行恢复到一个新文件中。</h6><pre><code class="java">分析：
+定义一个缓存字符输入流管道与源文件接通。
+定义一个List集合存储读取的每行数据。
+定义一个循环按照行读取数据，存入到List集合中去。
+对List集合中的每行数据按照首字符编号升序排序。
+定义一个缓存字符输出管道与目标文件接通。
+遍历List集合中的每个元素，用缓冲输出管道写出并换行
+</code></pre>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Demo04 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 定义一个缓存字符输入流管道与源文件联通
+        BufferedReader br = new BufferedReader(new FileReader(&quot;uplevel\\src\\文件字符输出流写字符数据\\csb.txt&quot;));
+        // 定义一个List集合存储读取的每行数据
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        // 定义一个循环按照行读取数据，存入List集合中去
+        String line;
+        while ((line = br.readLine()) != null) &#123;
+            list.add(line);
+        &#125;
+        br.close();
+
+        // 对List集合中的每行数据按照首字母编号升序排序
+        Collections.sort(list);
+
+        // 定义一个缓冲字符输出管道与目标文件接通
+        BufferedWriter bw = new BufferedWriter(new FileWriter(&quot;uplevel\\src\\文件字符输出流写字符数据\\csb_sort.txt&quot;));
+
+        // 遍历List集合中的每个元素，用缓冲输出管道写出并换行
+        for (String s : list) &#123;
+            bw.write(s);
+            bw.newLine();
+        &#125;
+        bw.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="InputStreamReader-字符输入转换流"><a href="#InputStreamReader-字符输入转换流" class="headerlink" title="InputStreamReader 字符输入转换流"></a><span style = "color:red">InputStreamReader 字符输入转换流</span></h5><p>先获取文件的原始字节流，再将其按真实的字符集编码转成字符输入流，这样字符输入流中的字符就不乱码了</p>
+<table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public InputStreamReader(InputStream is)</td>
+<td>把原始的字节输入流，按照代码默认编码转成字符输入流（与直接用FileReader的效果一样）</td>
+</tr>
+<tr>
+<td>InputStreamReader(InputStream  is，String  charset)</td>
+<td>把原始的字节输入流，按照指定字符集编码转成字符输入流(重点)</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+
+public class Demo05 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // new InputStreamReader() //光标放在括号里面 Ctrl+Q 就可以查看方法需要的参数
+        InputStreamReader fr = new InputStreamReader(new FileInputStream(&quot;母猪上树.txt&quot;),&quot;GBK&quot;);
+        int len = 0;
+        while ((len = fr.read()) != -1) &#123;
+            System.out.print((char)len);
+        &#125;
+        fr.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="打印流PrintStream、PrintWriter"><a href="#打印流PrintStream、PrintWriter" class="headerlink" title="打印流PrintStream、PrintWriter"></a>打印流PrintStream、PrintWriter</h5><p>作用：打印流可以实现更方便、更高效的打印数据出去，能实现打印啥出去就是啥出去。</p>
+<table>
+<thead>
+<tr>
+<th><strong>构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public  <strong>PrintStream</strong>(<a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/OutputStream.html">OutputStream</a>&#x2F;<a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/File.html">File</a>&#x2F;<strong><a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/lang/String.html">String</a></strong>)</td>
+<td>打印流直接通向字节输出流&#x2F;文件&#x2F;文件路径</td>
+</tr>
+<tr>
+<td>public PrintStream(<a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/lang/String.html">String</a> fileName,  <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/nio/charset/Charset.html">Charset</a> charset)</td>
+<td>可以指定写出去的字符编码</td>
+</tr>
+<tr>
+<td>public PrintStream(<a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/OutputStream.html">OutputStream</a> out, boolean autoFlush)</td>
+<td>可以指定实现自动刷新</td>
+</tr>
+<tr>
+<td>public PrintStream(<a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/OutputStream.html">OutputStream</a> out, boolean autoFlush, <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/lang/String.html">String</a> encoding)</td>
+<td>可以指定实现自动刷新，并可指定字符的编码</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><span style = "color:red"><strong>public  void println(Xxx xx)</strong></span></td>
+<td>打印任意类型的数据出去</td>
+</tr>
+<tr>
+<td>public  void write(int&#x2F;byte[]&#x2F;byte[]一部分)</td>
+<td>可以支持写<strong>字节</strong>数据出去</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
+public class Demo06 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 创建字节打印流
+        PrintStream ps = new PrintStream(&quot;uplevel\\src\\文件字符输出流写字符数据\\csb.txt&quot;);
+        ps.println(&quot;我爱北京天安门&quot;);
+        ps.println(123);
+        ps.println(true);
+        ps.println(3.14);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="DataOutputStream-数据输出流"><a href="#DataOutputStream-数据输出流" class="headerlink" title="DataOutputStream(数据输出流)"></a>DataOutputStream(数据输出流)</h5><p>允许把数据和其类型一并写出去。</p>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public  final void writeByte(int v)  throws <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/IOException.html">IOException</a></td>
+<td>将byte类型的数据写入基础的字节输出流</td>
+</tr>
+<tr>
+<td>public  final void <strong>writeInt</strong>(int v) throws <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/IOException.html">IOException</a></td>
+<td>将int类型的数据写入基础的字节输出流</td>
+</tr>
+<tr>
+<td>public  final void <strong>writeDouble</strong>(Double v)throws <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/IOException.html">IOException</a></td>
+<td>将double类型的数据写入基础的字节输出流</td>
+</tr>
+<tr>
+<td>public  final void <strong>writeUTF</strong>(String str) throws <a href="mk:@MSITStore:D:\course\最新版Java基础入门教程\API文档\jdk-11中文api修订版.CHM::/java.base/java/io/IOException.html">IOException</a></td>
+<td>将字符串数据以UTF-8编码成字节写入基础的字节输出流</td>
+</tr>
+<tr>
+<td>public  void write(int&#x2F;byte[]&#x2F;byte[]一部分)</td>
+<td>支持写字节数据出去</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 文件字符输出流写字符数据;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
+public class Demo07 &#123;
+    public static void main(String[] args) throws Exception&#123;
+        // 使用数据输出流往文件写数据
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(&quot;uplevel\\src\\文件字符输出流写字符数据\\csb.txt&quot;));
+        dos.writeUTF(&quot;我爱北京天安门&quot;);
+        dos.writeInt(22);
+        dos.writeChar(&#39;a&#39;);
+        dos.writeBoolean(true);
+        dos.close();
+    // 我爱北京天安门    a
+
+        // 使用数据输入流从文件读之前写的数据
+        DataInputStream dis = new DataInputStream(new FileInputStream(&quot;uplevel\\src\\文件字符输出流写字符数据\\csb.txt&quot;));
+        System.out.println(dis.readUTF());
+        System.out.println(dis.readInt());
+        System.out.println(dis.readChar());
+        System.out.println(dis.readBoolean());
+        dis.close();
+        /*
+        *   我爱北京天安门
+            22
+            a
+            true
+        * */
+    &#125;
+&#125;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/5730ab76810e895d93e6eb063a97569204026ef8/IO%E6%B5%81%E6%80%BB%E7%BB%93.png"></p>
+<h3 id="IO框架"><a href="#IO框架" class="headerlink" title="IO框架"></a>IO框架</h3><ul>
+<li>框架（Framework）是一个预先写好的代码库或一组工具，旨在简化和加速开发过程</li>
+<li>框架的形式：一般是把类、接口等编译成class形式，再压缩成一个.jar结尾的文件发行出去</li>
+</ul>
+<h6 id="什么是IO框架？"><a href="#什么是IO框架？" class="headerlink" title="什么是IO框架？"></a>什么是IO框架？</h6><ul>
+<li>封装了Java提供的对文件、数据进行操作的代码，对外提供了更简单的方式来对文件进行操作，对数据进行读写等</li>
+</ul>
+<blockquote>
+<p>导入commons-io-2.11.0.jar框架到项目中去</p>
+<p>①在项目中创建一个文件夹：lib</p>
+<p>②将commons-io-2.6.jar文件复制到lib文件夹</p>
+<p>③<u>在jar文件上点右键</u>，选择 <strong>Add as Library</strong> → 点击OK</p>
+<p>④在类中导包使用</p>
+</blockquote>
+<h4 id="Commons-io框架"><a href="#Commons-io框架" class="headerlink" title="Commons-io框架"></a><span style="color:red"><strong>Commons-io</strong>框架</span></h4><ul>
+<li>Commons-io是apache开源基金组织提供的一组有关IO操作的小框架，目的是提高IO流的开发效率。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>FileUtils类提供的部分方法展示</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public static void <strong>copyFile</strong>(File srcFile, File destFile)</td>
+<td>复制文件。</td>
+</tr>
+<tr>
+<td>public static void <strong>copyDirectory</strong>(File srcDir, File destDir)</td>
+<td>复制文件夹</td>
+</tr>
+<tr>
+<td>public static void <strong>deleteDirectory</strong>(File directory)</td>
+<td>删除文件夹</td>
+</tr>
+<tr>
+<td>public static String <strong>readFileToString</strong>(File file, String encoding)</td>
+<td>读数据</td>
+</tr>
+<tr>
+<td>public static void <strong>writeStringToFile</strong>(File file, String data, String charname, boolean append)</td>
+<td>写数据</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>IOUtils类提供的部分方法展示</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public static int <strong>copy</strong>(InputStream inputStream, OutputStream outputStream)</td>
+<td>复制文件。</td>
+</tr>
+<tr>
+<td>public static int <strong>copy</strong>(Reader reader, Writer writer)</td>
+<td>复制文件。</td>
+</tr>
+<tr>
+<td>public static void <strong>write</strong>(String data, OutputStream output, String charsetName)</td>
+<td>写数据</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package IOUtils的使用;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
+public class Demo01 &#123;
+    /**
+     * FileUtils的功能
+     *         public static void copyFile(File srcFile, File destFile): 复制文件
+     *         public static void copyDirectory(File srcDir, File destDir): 复制文件夹
+     *         public static void deleteDirectory(File directory): 删除文件夹
+     *         public static String readFileToString(File file, String encoding): 读数据
+     *
+     * IOUtils的功能
+     *         public static int copy(InputStream inputStream, OutputStream outputStream): 复制文件
+     * @param args
+     */
+    public static void main(String[] args) throws Exception &#123;
+        // public static void copyFile(File srcFile, File destFile): 复制文件
+        FileUtils.copyFile(new File(&quot;uplevel\\src\\IOUtils的使用\\file\\abc.txt&quot;), new File(&quot;uplevel\\src\\IOUtils的使用\\file\\abc1.txt&quot;));
+        
+        // public static void copyDirectory(File srcDir, File destDir): 复制文件夹
+        FileUtils.copyDirectory(new File(&quot;uplevel\\src\\IOUtils的使用\\file&quot;), new File(&quot;uplevel\\src\\IOUtils的使用\\file1&quot;));
+        
+        // public static void deleteDirectory(File directory): 删除文件夹
+        FileUtils.deleteDirectory(new File(&quot;uplevel\\src\\IOUtils的使用\\file1&quot;));
+        
+        // public static String readFileToString(File file, String encoding): 读数据
+        System.out.println(FileUtils.readFileToString(new File(&quot;uplevel\\src\\IOUtils的使用\\file\\abc.txt&quot;),&quot;GBK&quot;));
+
+        // public static int copy(InputStream inputStream, OutputStream outputStream): 复制文件
+        IOUtils.copy(new FileInputStream(&quot;uplevel\\src\\IOUtils的使用\\file\\abc.txt&quot;), new FileOutputStream(&quot;uplevel\\src\\IOUtils的使用\\file\\abc2.txt&quot;));
     &#125;
 &#125;
 </code></pre>
