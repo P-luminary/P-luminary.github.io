@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -2797,9 +2797,13 @@ public class AutoFillAspect &#123;
 <li>每个菜品必须对应一张图片</li>
 </ul>
 <h6 id="接口设计：-1"><a href="#接口设计：-1" class="headerlink" title="接口设计："></a>接口设计：</h6><ul>
-<li>根据类型查询分类(已完成) <code>/admin/category/list    GET</code></li>
-<li>文件上传 <code>/admin/common/upload    POST</code>   </li>
-<li>新增菜品 <code>/admin/dish    POST</code></li>
+<li><p>根据类型查询分类(已完成) <code>/admin/category/list    GET</code></p>
+<p><u>这里要注意数据返回 因为它里面的口味算一个集合</u></p>
+</li>
+<li><p>文件上传 <code>/admin/common/upload    POST</code>   </p>
+</li>
+<li><p>新增菜品 <code>/admin/dish    POST</code></p>
+</li>
 </ul>
 <h6 id="数据库设计："><a href="#数据库设计：" class="headerlink" title="数据库设计："></a>数据库设计：</h6><ul>
 <li>dish菜品表 [一个菜品对应着多种口味]</li>
@@ -2839,7 +2843,7 @@ public class AliOssUtil &#123;
      */
     public String upload(byte[] bytes, String objectName) &#123;
 
-        // 创建OSSClient实例。
+ // 创建OSSClient实例。 将字节数组转换为输入流，并将其上传到指定的bucket和objectName
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
 
         try &#123;
@@ -2893,7 +2897,7 @@ public class AutoFillConstant &#123;
     public static final String SET_UPDATE_USER = &quot;setUpdateUser&quot;;
 &#125;
 </code></pre>
-<pre><code class="java">application-dev.yml
+<pre><code class="yaml">application-dev.yml
 sky:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -2959,6 +2963,31 @@ public class CommonController &#123;
         return Result.error(MessageConstant.UPLOAD_FAILED);
     &#125;
 &#125;
+</code></pre>
+<p><span style = "color:orange"><strong>如何让application.yml识别到我在application-dev.yml里设置的值呢？</strong></span></p>
+<pre><code class="yaml">server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+
+你已经在 application.yml 中指定了 spring.profiles.active: dev，这样在启动应用程序时，Spring Boot 会自动加载 application-dev.yml 中的配置
+
+如果你使用的是 IDE（如 IntelliJ IDEA 或 Eclipse），你可以在运行配置中指定激活的环境配置文件。例如，在 IntelliJ IDEA 中：
+打开 Run -&gt; Edit Configurations。
+选择你的应用程序配置。
+在 VM options 中添加 -Dspring.profiles.active=dev。
+
+# 在 VM options 中配置的原理：
+在 VM options 中添加 -Dspring.profiles.active=dev 的原理是通过 Java 虚拟机（JVM）的系统属性来设置 Spring Boot 应用程序的活动配置文件。以下是详细的解释：
+原理
+JVM 系统属性：
+JVM 提供了一种机制，允许你在启动时通过命令行参数传递系统属性。这些系统属性可以在应用程序中通过 System.getProperty 方法访问。
+-D 前缀用于设置系统属性。例如，-Dkey=value 会将 key 设置为 value。
+Spring Boot 配置：
+Spring Boot 会读取 spring.profiles.active 系统属性来确定当前激活的配置文件。
+当你通过 -Dspring.profiles.active=dev 设置系统属性时，Spring Boot 会在启动时读取这个属性，并根据其值加载相应的配置文件（如 application-dev.yml）。
 </code></pre>
 <h6 id="新增菜品重要代码"><a href="#新增菜品重要代码" class="headerlink" title="新增菜品重要代码"></a>新增菜品重要代码</h6><pre><code class="java">sky-pojo  com/sky/dto/DishDTO.java
 package com.sky.dto;
@@ -3060,7 +3089,7 @@ public class DishController &#123;
     &#125;
 &#125;
 </code></pre>
-<pre><code class="java">
+<pre><code class="java">com/sky/service/DishService.java
 package com.sky.service;
 
 import com.sky.dto.DishDTO;
@@ -3073,7 +3102,7 @@ public interface DishService &#123;
     public void saveWithFlavour(DishDTO dishDTO);
 &#125;
 </code></pre>
-<pre><code class="java">
+<pre><code class="java">com/sky/service/impl/DishServiceImpl.java
 package com.sky.service.impl;
 
 import com.sky.dto.DishDTO;
@@ -3153,7 +3182,7 @@ public interface DishMapper &#123;
     void insert(Dish dish);
 &#125;
 </code></pre>
-<pre><code class="java">sky-server  mapper/DishMapper.xml
+<pre><code class="xml">sky-server  mapper/DishMapper.xml
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
 &lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
         &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
@@ -3204,7 +3233,7 @@ public interface DishFlavorMapper &#123;
 <li>每页展示10条数据</li>
 <li>分页查询时可以根据需要输入<strong>菜品名称、菜品分类、菜品状态</strong>进行查询</li>
 </ul>
-<h6 id="接口设计：-2"><a href="#接口设计：-2" class="headerlink" title="接口设计："></a>接口设计：</h6><p><strong>Path</strong>：&#x2F;admin&#x2F;dis&#x2F;page<br><strong>Method</strong>：GET</p>
+<h6 id="接口设计：-2"><a href="#接口设计：-2" class="headerlink" title="接口设计："></a>接口设计：</h6><p><strong>Path</strong>：&#x2F;admin&#x2F;dish&#x2F;page<br><strong>Method</strong>：GET</p>
 <h6 id="代码开发："><a href="#代码开发：" class="headerlink" title="代码开发："></a>代码开发：</h6><p>根据菜品分页查询接口定义设计对应的<strong>DTO</strong><br>根据菜品分页查询接口定义设计对应的<strong>VO</strong>[转成Json数据给前端]</p>
 <pre><code class="java">sky-server  com/sky/controller/admin/DishController.java
 @GetMapping(&quot;/page&quot;)
@@ -3247,8 +3276,11 @@ public class DishServiceImpl implements DishService &#123;
     private DishFlavorMapper dishFlavorMapper;
  @Override
     public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) &#123;
+  // 1. 开启分页功能，设置当前页和每页显示的数量
         PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
+ // 2. 调用 dishMapper 的 pageQuery 方法进行分页查询，返回一个 Page&lt;DishVO&gt; 对象
         Page&lt;DishVO&gt; page = dishMapper.pageQuery(dishPageQueryDTO);
+     // 3. 创建并返回 PageResult 对象，包含总记录数和查询结果列表
         return new PageResult(page.getTotal(), page.getResult());
     &#125;
 &#125;
@@ -3261,7 +3293,7 @@ public class DishServiceImpl implements DishService &#123;
      */
     Page&lt;DishVO&gt; pageQuery(DishPageQueryDTO dishPageQueryDTO);
 </code></pre>
-<pre><code class="java">sky-server  mapper/DishMapper.xml
+<pre><code class="mysql">sky-server  mapper/DishMapper.xml
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
 &lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
         &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
@@ -3292,6 +3324,30 @@ public class DishServiceImpl implements DishService &#123;
     &lt;/select&gt;
 &lt;/mapper&gt;
 </code></pre>
+<p><span style="color:orange"><strong>分页查询SQL语句分析</strong></span></p>
+<blockquote>
+<pre><code class="mysql">&lt;select id=&quot;pageQuery&quot; resultType=&quot;com.sky.vo.DishVO&quot;&gt;
+        select d.*, c.name as categoryName
+        from dish d
+            left join category c
+                on d.category_id=c.id
+        &lt;where&gt;
+            &lt;if test=&quot;name != null and name != &#39;&#39;&quot;&gt;
+                and d.name like concat(&#39;%&#39;,#&#123;name&#125;,&#39;%&#39;)
+            &lt;/if&gt;
+            &lt;if test=&quot;categoryId != null&quot;&gt;
+                and d.category_id = #&#123;categoryId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;status != null&quot;&gt;
+                and d.status = #&#123;status&#125;
+            &lt;/if&gt;
+        &lt;/where&gt;
+        order by d.update_time desc
+    &lt;/select&gt;
+</code></pre>
+<p>从 dish 表中选择所有列，并从 category 表中选择 name 列，别名为 categoryName。<br>使用左连接 (left join) 将 dish 表和 category 表连接起来，连接条件是 d.category_id &#x3D; c.id。</p>
+<p>动态生成WHERE子句，&lt; where &gt;标签会自动处理AND和OR关键字的添加，并且会忽略第一个条件前的ADN和OR</p>
+</blockquote>
 <h3 id="删除菜品"><a href="#删除菜品" class="headerlink" title="删除菜品"></a>删除菜品</h3><blockquote>
 <p>单个删除、批量删除、先停售后删除</p>
 </blockquote>
@@ -3410,7 +3466,20 @@ public interface SetmealDishMapper &#123;
         &lt;/foreach&gt;
     &lt;/select&gt;
 &lt;/mapper&gt;
+
+&lt;!--
+★ foreach 标签用于遍历集合，并生成相应的 SQL 语句。
+★ collection=&quot;dishIds&quot;：指定要遍历的集合名称，即传入的参数 dishIds。
+★ item=&quot;dishId&quot;：指定集合中的每个元素的别名，即每次迭代时的变量名。
+★ separator=&quot;,&quot;：指定每个元素之间的分隔符，这里是逗号 ,。
+★ open=&quot;(&quot; 和 close=&quot;)&quot;：指定生成的 SQL 语句的开始和结束符号，这里是括号 ( 和 )。
+--&gt;
 </code></pre>
+<p><span style="color:orange">@<strong>RequestParm详细分析</strong></span></p>
+<blockquote>
+<p><code>public Result delete(@RequestParam List&lt;Long&gt; ids)</code></p>
+<p><code>@RequestParam</code>：注解用于将请求参数绑定到方法参数上。具体来说，它可以从请求的查询参数中提取出指定的参数值，并将其转换为方法参数的类型；在这个例子中，@RequestParam List<Long> ids 表示从请求的查询参数中提取 ids 参数，并将其转换为 List<Long> 类型。</p>
+</blockquote>
 <h3 id="修改菜品"><a href="#修改菜品" class="headerlink" title="修改菜品"></a>修改菜品</h3><h6 id="数据回显"><a href="#数据回显" class="headerlink" title="数据回显"></a>数据回显</h6><p><strong>接口设计：</strong></p>
 <ul>
 <li>根据id查询菜品</li>
