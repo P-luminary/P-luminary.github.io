@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -3679,7 +3679,7 @@ dishDTO 可以包含更多的验证逻辑或额外的属性，而 dish 对象则
             List&lt;Long&gt; dishIds = new ArrayList&lt;&gt;();
             dishIds.add(id);
             // select setmeal_id from setmeal_dish where dish_id in (?,?,?)
-            List&lt;Long&gt; setmealIds = setmealDishMapper.getSetmealIdsByDishId(dishIds);
+            List&lt;Long&gt; setmealIds = setmealDishMapper.getSetmealIdsByDishIds(dishIds);
             if (setmealIds != null &amp;&amp; setmealIds.size() &gt; 0) &#123;
                 for (Long setmealId : setmealIds) &#123;
                     Setmeal setmeal = Setmeal.builder()
@@ -3763,6 +3763,25 @@ dishDTO 可以包含更多的验证逻辑或额外的属性，而 dish 对象则
         where id = #&#123;id&#125;
     &lt;/update&gt;
 &lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">@Mapper
+public interface SetmealDishMapper &#123;
+    /**
+     * 根据菜品id查询对应的套餐id
+     * @param dishIds
+     * @return
+     */
+    // select setmeal_id from setmeal_dish where dish_id in (1,2,3)
+    // 在mapper.xml中dishIds是形参  &lt;foreach collection=&quot;dishIds&quot;&gt;
+    List&lt;Long&gt; getSetmealIdsByDishIds(List&lt;Long&gt; dishIds);
+</code></pre>
+<pre><code class="xml">SetmealDishMapper.xml
+&lt;select id=&quot;getSetmealIdsByDishIds&quot; resultType=&quot;java.lang.Long&quot;&gt;
+        select setmeal_id from setmeal_dish where dish_id in
+        &lt;foreach collection=&quot;dishIds&quot; item=&quot;dishId&quot; separator=&quot;,&quot; open=&quot;(&quot; close=&quot;)&quot;&gt;
+            #&#123;dishId&#125;
+        &lt;/foreach&gt;
+    &lt;/select&gt;
 </code></pre>
 <h4 id="修改套餐那些事"><a href="#修改套餐那些事" class="headerlink" title="修改套餐那些事"></a>修改套餐<del>那些事</del></h4><pre><code class="java">sky-server  com/sky/controller/admin/SetmealController.java
 package com.sky.controller.admin;

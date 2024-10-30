@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#00bcd4>
+                <a href="/tags/HM" style=color:#ff7d73>
                     HM
                 </a>
             </span>
@@ -3363,6 +3363,896 @@ public class Demo01 &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="多线程"><a href="#多线程" class="headerlink" title="多线程"></a>多线程</h3><h6 id="继承Thread类"><a href="#继承Thread类" class="headerlink" title="继承Thread类"></a>继承Thread类</h6><p>① 定义一个子类MyThread继承线程类java.lang.Thread，重写run()方法<br>② 创建MyThread类的对象<br>③ 调用线程对象的start()方法启动线程（启动后还是执行run方法的）</p>
+<pre><code class="java">package Thread多线程;
+
+public class MyThread extends Thread&#123;
+    @Override
+    public void run() &#123;
+        for (int i = 0; i &lt; 20; i++) &#123;
+            System.out.println(&quot;a = &quot; + i);
+        &#125;
+        super.run();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程;
+
+public class Demo01 &#123;
+    /**
+     * 多线程每次运行的效果可能不同，因为多线程是CPU在多个线程间快速切换
+     * 最主要的是会分析线程的执行流程
+     *
+     * 面试题：
+     * Thread线程的start()和run()的区别
+     * run()中存放线程要执行的代码，start()方法才是启动新的线程，新的线程会执行run()
+     * 如果直接调用run方法()，没有启动新的线程
+     * 一个线程对象只能start()一次
+     * @param args
+     */
+    public static void main(String[] args) &#123;
+        System.out.println(&quot;main线程开始执行&quot;);
+        MyThread mt = new MyThread();
+        // 调用线程对象的start()方法启动新的线程，其会执行mt.run()方法
+        mt.start();
+
+        for (int i = 0; i &lt; 20; i++) &#123;
+            System.out.println(&quot;ii = &quot; + i);
+        &#125;
+    &#125;
+&#125;
+
+/////////////////////////////////////////////
+
+MyRunnable mr = new MyRunnable();
+        Thread t1 = new Thread(mr);
+        t1.start();
+
+/////////////////////////////////////////////
+
+ // Lambda表达式
+        Thread a = new Thread(() -&gt; &#123;
+            for (int i = 0; i &lt; 30; i++) &#123;
+                System.out.println(&quot;zzzzzzzzz = &quot; + i);
+            &#125;
+        &#125;);
+        a.start();  //启动线程
+</code></pre>
+<h5 id="实现Runnable接口"><a href="#实现Runnable接口" class="headerlink" title="实现Runnable接口"></a>实现Runnable接口</h5><p>①定义一个线程任务类MyRunnable实现Runnable接口，重写run()方法</p>
+<p>②创建MyRunnable任务对象</p>
+<p>③把MyRunnable任务对象交给Thread处理。</p>
+<table>
+<thead>
+<tr>
+<th>Thread类提供的构造器</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public Thread(Runnable target)</td>
+<td>封装Runnable对象成为线程对象</td>
+</tr>
+</tbody></table>
+<p>④调用线程对象的start()方法启动线程</p>
+<table>
+<thead>
+<tr>
+<th><strong>FutureTask提供的构造器</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public FutureTask&lt;&gt;(Callable call)</td>
+<td>把Callable对象封装成FutureTask对象。</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>FutureTask提供的方法</th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public V get() throws Exception</td>
+<td>获取线程执行call方法返回的结果。</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package Thread多线程;
+
+import java.util.concurrent.Callable;
+// 1.定义类实现Callable接口，重写call方法
+public class MyCallable implements Callable&lt;Integer&gt; &#123;
+    public Integer call() throws Exception &#123;
+        int sum = 0;
+        System.out.println(&quot;方法执行啦！&quot;);
+        for (int i = 0; i &lt;= 100; i++) &#123;
+            sum += i;
+        &#125;
+        return sum;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+public class Demo03 &#123;
+    public static void main(String[] args) throws Exception&#123;
+        // 2.创建Callable实现类对象
+        MyCallable mc = new MyCallable();
+        // 3.创建FutureTask，包装MyCallable对象，用于获取返回值
+        FutureTask&lt;Integer&gt; task = new FutureTask&lt;&gt;(mc);
+        // 4.创建Thread对象，传入FutureTask对象
+        Thread t = new Thread(task);
+        // 5.启动线程调用线程对象的start()方法启动新的线程
+        t.start();
+        // 6.得到返回值
+        Integer ret = task.get();
+        System.out.println(&quot;返回值 = &quot; + ret);
+    &#125;
+&#125;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>继承Thread类</td>
+<td>编程比较简单，可以直接使用Thread类中的方法</td>
+<td>扩展性较差，不能再继承其他的类，不能返回线程执行的结果</td>
+</tr>
+<tr>
+<td>实现Runnable接口</td>
+<td>扩展性强，实现该接口的同时还可以继承其他的类。</td>
+<td>编程相对复杂，不能返回线程执行的结果</td>
+</tr>
+<tr>
+<td>实现Callable接口</td>
+<td>扩展性强，实现该接口的同时还可以继承其他的类。可以得到线程执行的结果</td>
+<td>编程相对复杂</td>
+</tr>
+</tbody></table>
+<h4 id="线程的常用方法"><a href="#线程的常用方法" class="headerlink" title="线程的常用方法"></a>线程的常用方法</h4><table>
+<thead>
+<tr>
+<th>Thread提供的常用方法</th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public void run()</td>
+<td>线程的任务方法</td>
+</tr>
+<tr>
+<td>public void start()</td>
+<td>启动线程</td>
+</tr>
+<tr>
+<td><u>public String <strong>getName()</strong></u></td>
+<td><u>获取当前线程的名称，线程名称默认是Thread-索引</u></td>
+</tr>
+<tr>
+<td><u>public void <strong>setName</strong>(String name)</u></td>
+<td><u>为线程设置名称</u></td>
+</tr>
+<tr>
+<td><u>public <strong>static</strong> Thread <strong>currentThread</strong>(</u></td>
+<td><u>获取当前执行的线程对象</u></td>
+</tr>
+<tr>
+<td><u>public <strong>static</strong> void <strong>sleep(long time)</strong></u></td>
+<td><u>让当前执行的线程休眠多少毫秒后，再继续执行</u></td>
+</tr>
+<tr>
+<td>public final void join()…</td>
+<td>让调用当前这个方法的线程先执行完！</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Thread提供的常见构造器</th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public <strong>Thread(String name)</strong></td>
+<td>可以为当前线程指定名称</td>
+</tr>
+<tr>
+<td>public Thread(Runnable target)</td>
+<td>封装Runnable对象成为线程对象</td>
+</tr>
+<tr>
+<td>public Thread(Runnable target, String name)</td>
+<td>封装Runnable对象成为线程对象，并指定线程名称</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package Thread多线程;
+
+public class Demo04 &#123;
+    /**
+     * 创建新线程，默认名称为: Thread-0
+     * @param args
+     */
+    public static void main(String[] args) throws InterruptedException &#123;
+        // public static Thread currentThread() 获取当前线程
+        Thread currentThread = Thread.currentThread();
+        System.out.println(&quot;main方法中获取当前线程：&quot; + currentThread + currentThread.getName());
+        Thread.sleep(1000); //线程休眠1秒
+
+        NamedThread nt = new NamedThread(&quot;卖油条&quot;);
+        // 修改线程名称
+//        nt.setName(&quot;卖包子&quot;);
+        nt.start();
+
+        for (int i = 10; i &gt; 0; i--) &#123;
+            Thread.sleep(1000);
+            System.out.println(&quot;十秒倒计时&quot; + i);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程;
+
+public class NamedThread extends Thread&#123;
+    public NamedThread(String name)&#123;
+        // 一个类不写构造器，默认会有无参构造
+        // 写了构造器默认的无参构造器就没有了
+        super(name); // 默认调用父类的无参构造
+    &#125;
+
+    @Override
+    public void run() &#123;
+        // 子类直接使用父类的getName()方法
+        System.out.println(&quot;run = &quot; + getName());
+
+        Thread currentThread = Thread.currentThread();
+        System.out.println(&quot;run方法中获取当前线程：&quot; + currentThread);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="public-final-void-join-…-让调用当前这个方法的线程先执行完！"><a href="#public-final-void-join-…-让调用当前这个方法的线程先执行完！" class="headerlink" title="public final void join()…   让调用当前这个方法的线程先执行完！"></a>public final void join()…   让调用当前这个方法的线程先执行完！</h6><pre><code class="java">MyThread01.java
+package Thread多线程;
+
+public class MyThread01 extends Thread&#123;
+    @Override
+    public void run()
+    &#123;
+        for (int i = 0; i &lt; 100; i++)
+        &#123;
+            System.out.println(&quot;线程1：&quot; + i);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">MyThread02.java
+package Thread多线程;
+
+public class MyThread02 extends Thread&#123;
+    @Override
+    public void run()
+    &#123;
+        for (int i = 0; i &lt; 100; i++)
+        &#123;
+            System.out.println(&quot;线程2=====&gt;：&quot; + i);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程;
+
+/**
+ * 目标：学习线程的join方法
+ * join()方法：哪个线程调用join()方法，等这个线程执行完毕，才会执行后面代码(拦住)
+ */
+public class Demo05 &#123;
+    public static void main(String[] args) throws InterruptedException &#123;
+        // 创建两个线程
+        MyThread01 mt01 = new MyThread01();
+        MyThread02 mt02 = new MyThread02();
+
+        mt01.start();
+
+        // 让mt01执行完毕，再执行mt02 要用到join方法
+// join()方法：那个线程对象调用join()方法，等这个线程执行完毕，才会执行后面的代码(拦住)
+        mt01.join();
+        mt02.start();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h5><ul>
+<li><h6 id="多个线程，同时操作同一个共享资源时，可能会出现业务安全问题"><a href="#多个线程，同时操作同一个共享资源时，可能会出现业务安全问题" class="headerlink" title="多个线程，同时操作同一个共享资源时，可能会出现业务安全问题"></a><strong>多个线程，同时操作同一个共享资源</strong>时，可能会出现业务安全问题</h6></li>
+</ul>
+<h6 id="线程安全出现的原因："><a href="#线程安全出现的原因：" class="headerlink" title="线程安全出现的原因："></a>线程安全出现的原因：</h6><p>多个线程，同时访问同一个共享资源，且存在修改该资源</p>
+<h6 id="模拟线程安全的场景：取钱"><a href="#模拟线程安全的场景：取钱" class="headerlink" title="模拟线程安全的场景：取钱"></a>模拟线程安全的场景：取钱</h6><p><strong>需求</strong></p>
+<ul>
+<li>小明和小红是一对夫妻，他们有一个共同的账户，余额是10万元，用程序模拟两人同时取钱10万元。</li>
+</ul>
+<p><strong>分析</strong></p>
+<ul>
+<li><p>怎样描述小明和小红的共同账户呢？</p>
+<p>设计一个账户类，创建一个账户对象，代表2人的共享账户</p>
+</li>
+<li><p>怎样模拟两人同时取钱？</p>
+<p>设计一个线程类，创建并启动两个线程，在线程的run方法中调用账户的取钱方法</p>
+</li>
+</ul>
+<pre><code class="java">DrawThread.java
+package Thread多线程.getMoney;
+
+public class DrawThread extends Thread&#123;
+    // 使用成员变量保存账户对象
+    private Account account;
+
+    // 通过构造器给成员变量赋值
+    public DrawThread(Account account, String name) &#123;
+        // name为线程的名称 给父类构造器去处理
+        super(name);
+        this.account = account;
+    &#125;
+    private double drawMoney;
+    @Override
+    public void run() &#123;
+        // 取钱
+        account.drawMoney(100000);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Account.java
+package Thread多线程.getMoney;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+
+public class Account &#123;
+    private String cardId;
+    private double money;
+
+    public Account() &#123;
+    &#125;
+
+    public Account(String cardId, double money) &#123;
+        this.cardId = cardId;
+        this.money = money;
+    &#125;
+
+    // 取钱的方法
+    public void drawMoney(double money)&#123;
+        // 获取线程的名称
+        String name = Thread.currentThread().getName();
+
+        // 判断余额是否充足
+        if (this.money &gt;= money)&#123;
+            System.out.println(name + &quot;准备取钱：&quot; + money);
+
+            // 余额充足，取钱
+            this.money -= money;
+            System.out.println(name +&quot;取钱成功，余额为:&quot;+ this.money);
+        &#125;
+        else&#123;
+            // 余额不足，提示
+            System.out.println(name + &quot;余额不足，取钱失败&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Demo01.java
+package Thread多线程.getMoney;
+
+public class Demo01 &#123;
+    public static void main(String[] args) &#123;
+        // 创建小明和小红公共的账户
+        Account account = new Account(&quot;ICBC-88888888&quot;, 100000);
+
+        // 创建一个线程表示小明
+        DrawThread xiaoMing = new DrawThread(account, &quot;小明&quot;);
+
+        // 创建一个线程表示小红
+        DrawThread xiaoHong = new DrawThread(account, &quot;小红&quot;);
+
+        xiaoMing.start();
+        xiaoHong.start();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h5><ul>
+<li>让多个线程<strong>先后依次</strong>访问共享资源，就可以避免出现线程安全问题。</li>
+</ul>
+<h5 id="线程同步的常见方案"><a href="#线程同步的常见方案" class="headerlink" title="线程同步的常见方案"></a>线程同步的常见方案</h5><ul>
+<li><strong>加锁</strong>：每次只允许一个线程加锁，加锁后才能进入访问，访问完毕后自动解锁，然后其他线程才能再加锁进来。</li>
+</ul>
+<h5 id="同步代码块"><a href="#同步代码块" class="headerlink" title="同步代码块"></a>同步代码块</h5><ul>
+<li>作用：把访问共享资源的<strong>核心代码</strong>给上锁，以此保证线程安全</li>
+</ul>
+<pre><code class="java">synchronized(同步锁)&#123;
+    访问共享资源的核心代码
+&#125;
+//【选中代码 Ctrl+Alt+T】
+</code></pre>
+<ul>
+<li>原理：每次只允许一个线程加锁后进入，执行完毕后自动解锁，其他线程才可以进来</li>
+</ul>
+<pre><code class="java">package Thread多线程.同步代码块;
+
+
+public class Account &#123;
+    private String cardId;
+    private double money;
+    // 来用的时候是静态的同一个对象
+    private static Object obj = new Object();
+    public Account() &#123;
+    &#125;
+
+    public Account(String cardId, double money) &#123;
+        this.cardId = cardId;
+        this.money = money;
+    &#125;
+
+    // 取钱的方法
+    public void drawMoney(double money)&#123;
+        // 获取线程的名称
+        String name = Thread.currentThread().getName();
+        // 注意：synchronized(锁对象)&#123;&#125;
+        // 任意对象都能作为锁 但是要保证锁对象是唯一的！
+        ////谁调用 this就是谁 account调用的drawMoney
+        // 所以锁对象是唯一的 能锁到 this 和 obj都可以 ∵静态的同一个对象
+        synchronized (this) &#123; //Account.class 或 this 都可但要保证唯一
+            // 判断余额是否充足
+            if (this.money &gt;= money)&#123;
+                System.out.println(name + &quot;准备取钱：&quot; + money);
+
+                // 余额充足，取钱
+                this.money -= money;
+                System.out.println(name +&quot;取钱成功，余额为:&quot;+ this.money);
+            &#125;
+            else&#123;
+                // 余额不足，提示
+                System.out.println(name + &quot;余额不足，取钱失败&quot;);
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程.同步代码块;
+
+public class DrawThread extends Thread&#123;
+    // 使用成员变量保存账户对象
+    private Account account;
+
+    // 通过构造器给成员变量赋值
+    public DrawThread(Account account, String name) &#123;
+        // name为线程的名称 给父类构造器去处理
+        super(name);
+        this.account = account;
+    &#125;
+    private double drawMoney;
+    @Override
+    public void run() &#123;
+        // 取钱
+        account.drawMoney(100000);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package Thread多线程.同步代码块;
+
+public class Demo01 &#123;
+    public static void main(String[] args) &#123;
+        // 创建小明和小红公共的账户
+        Account account = new Account(&quot;ICBC-88888888&quot;, 100000);
+
+        // 创建一个线程表示小明
+        DrawThread xiaoMing = new DrawThread(account, &quot;小明&quot;);
+
+        // 创建一个线程表示小红
+        DrawThread xiaoHong = new DrawThread(account, &quot;小红&quot;);
+
+        xiaoMing.start();
+        xiaoHong.start();
+    &#125;
+&#125;
+</code></pre>
+<p><strong>注意</strong>：锁对象的使用规范</p>
+<ul>
+<li>建议使用共享资源作为锁对象，对于实例方法建议使用this作为锁对象。</li>
+<li>对于静态方法建议使用字节码（类名.class）对象作为锁对象。</li>
+</ul>
+<h6 id="同步代码块是如何实现线程安全的？"><a href="#同步代码块是如何实现线程安全的？" class="headerlink" title="同步代码块是如何实现线程安全的？"></a>同步代码块是如何实现线程安全的？</h6><ul>
+<li>对出现问题的核心代码使用synchronized进行加锁</li>
+<li>每次只能一个线程占锁进入访问</li>
+</ul>
+<h6 id="同步代码块的同步锁对象有什么要求？"><a href="#同步代码块的同步锁对象有什么要求？" class="headerlink" title="同步代码块的同步锁对象有什么要求？"></a>同步代码块的同步锁对象有什么要求？</h6><ul>
+<li>对于实例方法建议使用this作为锁对象。</li>
+<li>对于静态方法建议使用字节码（类名.class）对象作为锁对象。</li>
+</ul>
+<h5 id="同步方法"><a href="#同步方法" class="headerlink" title="同步方法"></a>同步方法</h5><ul>
+<li>作用：把访问共享资源的核心方法给上锁，以此保证线程安全</li>
+</ul>
+<pre><code class="java">// 【选中代码 Ctrl+Alt+T】
+修饰符 synchronized 返回值类型 方法名称(形参列表)&#123;
+    操作共享资源的代码
+&#125;
+</code></pre>
+<h6 id="同步方法底层原理"><a href="#同步方法底层原理" class="headerlink" title="同步方法底层原理"></a>同步方法底层原理</h6><ul>
+<li>同步方法其实底层也是有隐式锁对象的，只是锁的范围是整个方法代码。</li>
+<li>如果方法是<strong>实例方法</strong>：同步方法默认用<strong>this</strong>作为的锁对象。</li>
+<li>如果方法是<strong>静态方法</strong>：同步方法默认用<strong>类名.class</strong>作为的锁对象。</li>
+</ul>
+<pre><code class="java">// 取钱的方法
+    public synchronized void drawMoney(double money)&#123;
+        // 获取线程的名称
+        String name = Thread.currentThread().getName();
+        // 注意：synchronized(锁对象)&#123;&#125;
+        // 任意对象都能作为锁 但是要保证锁对象是唯一的！
+        ////谁调用 this就是谁 account调用的drawMoney
+        // 所以锁对象是唯一的 能锁到 this 和 obj都可以 ∵静态的同一个对象
+       //Account.class 或 this 都可但要保证唯一
+            // 判断余额是否充足
+            if (this.money &gt;= money)&#123;
+                System.out.println(name + &quot;准备取钱：&quot; + money);
+
+                // 余额充足，取钱
+                this.money -= money;
+                System.out.println(name +&quot;取钱成功，余额为:&quot;+ this.money);
+            &#125;
+            else&#123;
+                // 余额不足，提示
+                System.out.println(name + &quot;余额不足，取钱失败&quot;);
+            &#125;
+    &#125;
+</code></pre>
+<h5 id="同步代码块好还是同步方法好？"><a href="#同步代码块好还是同步方法好？" class="headerlink" title="同步代码块好还是同步方法好？"></a>同步代码块好还是同步方法好？</h5><ul>
+<li><p><strong>范围上</strong>：同步代码块锁的范围更小，同步方法锁的范围更大</p>
+</li>
+<li><p><strong>可读性</strong>：同步方法更好</p>
+</li>
+</ul>
+<h4 id="Lock锁"><a href="#Lock锁" class="headerlink" title="Lock锁"></a>Lock锁</h4><ul>
+<li>Lock锁是JDK5开始提供的一个新的锁定操作，通过它可以创建出锁对象进行加锁和解锁，更灵活、更方便、更强大。</li>
+<li>Lock是接口，不能直接实例化，可以采用它的实现类ReentrantLock来构建Lock锁对象。</li>
+</ul>
+<h6 id="Lock常用方法"><a href="#Lock常用方法" class="headerlink" title="Lock常用方法"></a>Lock常用方法</h6><table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>void lock()</td>
+<td>获得锁</td>
+</tr>
+<tr>
+<td>void unlock()</td>
+<td>释放锁</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package Thread多线程.同步代码块;
+
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Account &#123;
+    private String cardId;
+    private double money;
+    // 来用的时候是静态的同一个对象
+    private static Object obj = new Object();
+    // 加了final锁对象就唯一了 不能再new了
+    private final Lock lock = new ReentrantLock();
+
+    public Account() &#123;
+    &#125;
+
+    public Account(String cardId, double money) &#123;
+        this.cardId = cardId;
+        this.money = money;
+    &#125;
+
+    // 取钱的方法
+    public void drawMoney(double money) &#123;
+        // 获取线程的名称
+        String name = Thread.currentThread().getName();
+        // 注意：synchronized(锁对象)&#123;&#125;
+        // 任意对象都能作为锁 但是要保证锁对象是唯一的！
+        ////谁调用 this就是谁 account调用的drawMoney
+        // 所以锁对象是唯一的 能锁到 this 和 obj都可以 ∵静态的同一个对象
+        //Account.class 或 this 都可但要保证唯一
+        // 判断余额是否充足
+     
+        try &#123;
+        // 获得锁
+            lock.lock();
+            if (this.money &gt;= money) &#123;
+                System.out.println(name + &quot;准备取钱：&quot; + money);
+
+                // 余额充足，取钱
+                this.money -= money;
+                System.out.println(name + &quot;取钱成功，余额为:&quot; + this.money);
+            &#125; else &#123;
+                // 余额不足，提示
+                System.out.println(name + &quot;余额不足，取钱失败&quot;);
+            &#125;
+        &#125; finally &#123;
+        // 释放锁 保证一定执行 放在finally里面
+            lock.unlock();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h3><h5 id="每次创建线程存在的问题"><a href="#每次创建线程存在的问题" class="headerlink" title="每次创建线程存在的问题"></a>每次创建线程存在的问题</h5><p>1.每个线程在创建和销毁时都要写占用CPU，内存等资源。<br>2.在并发系统中，频繁创建和销毁大量线程， 对性能影响很大，甚至会导致系统资源耗尽的风险。</p>
+<h5 id="线程池的优势"><a href="#线程池的优势" class="headerlink" title="线程池的优势"></a>线程池的优势</h5><ul>
+<li>降低资源消耗，重复利用线程池中线程，不需要每次都创建、销毁 。</li>
+<li>便于线程管理，线程池可以集中管理并发线程的数量。</li>
+</ul>
+<h5 id="创建线程池"><a href="#创建线程池" class="headerlink" title="创建线程池"></a>创建线程池</h5><ul>
+<li>使用<code>ExecutorService</code>的实现类<code>ThreadPoolExecutor</code>自创建一个线程池对象</li>
+<li>使用<code>Executors(线程池的工具类)</code>调用方法返回不同特点的线程池对象</li>
+</ul>
+<h5 id="通过Executors创建线程池"><a href="#通过Executors创建线程池" class="headerlink" title="通过Executors创建线程池"></a>通过Executors创建线程池</h5><ul>
+<li>是一个线程池的工具类，提供了很多静态方法用于返回不同特点的线程池对象。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>方法名称</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public static <a href="mk:@MSITStore:D:\course\jdk-11中文api修订版.CHM::/java.base/java/util/concurrent/ExecutorService.html">ExecutorService</a> newFixedThreadPool(int nThreads)</td>
+<td>创建固定线程数量的线程池，如果某个线程因为执行异常而结束，那么线程池会补充一个新线程替代它。</td>
+</tr>
+<tr>
+<td>public  static <a href="mk:@MSITStore:D:\course\jdk-11中文api修订版.CHM::/java.base/java/util/concurrent/ExecutorService.html">ExecutorService</a> newSingleThreadExecutor()</td>
+<td>创建只有一个线程的线程池对象，如果该线程出现异常而结束，那么线程池会补充一个新线程。</td>
+</tr>
+<tr>
+<td>public  static <a href="mk:@MSITStore:D:\course\jdk-11中文api修订版.CHM::/java.base/java/util/concurrent/ExecutorService.html">ExecutorService</a> newCachedThreadPool()</td>
+<td>线程数量随着任务增加而增加，如果线程任务执行完毕且空闲了60s则会被回收掉。</td>
+</tr>
+<tr>
+<td>public  static <a href="mk:@MSITStore:D:\course\jdk-11中文api修订版.CHM::/java.base/java/util/concurrent/ScheduledExecutorService.html">ScheduledExecutorService</a> newScheduledThreadPool(int corePoolSize)</td>
+<td>创建一个线程池，可以实现在给定的延迟后运行任务，或者定期执行任务。</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 线程池使用方式一_runnable;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Demo01 &#123;
+    public static void main(String[] args) &#123;
+        // 创建线程池对象
+        // newFixedThreadPool：创建固定线程数量的线程池
+        ExecutorService pool = Executors.newFixedThreadPool(3);
+        System.out.println(&quot;pool = &quot; + pool);
+
+        // 创建任务
+        MyRunnable mr = new MyRunnable();
+
+        // 执行任务
+        pool.execute(mr);
+        pool.execute(mr);
+        pool.execute(mr);
+        pool.execute(mr);
+        pool.execute(mr);
+
+        // 关闭线程池
+        pool.shutdown();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 线程池使用方式一_runnable;
+
+public class MyRunnable implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        System.out.println(Thread.currentThread().getName() + &quot;执行完毕了！&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="ExecutorService的常用方法"><a href="#ExecutorService的常用方法" class="headerlink" title="ExecutorService的常用方法"></a><strong>ExecutorService的常用方法</strong></h5><table>
+<thead>
+<tr>
+<th>方法名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>void execute(Runnable command)</td>
+<td>执行 Runnable  任务</td>
+</tr>
+<tr>
+<td>Future<T>  submit(Callable<T> task)</td>
+<td>执行 Callable  任务，返回未来任务对象，用于获取线程返回的结果</td>
+</tr>
+<tr>
+<td>void  shutdown()</td>
+<td>等全部任务执行完毕后，再关闭线程池！</td>
+</tr>
+<tr>
+<td><a href="mk:@MSITStore:D:\course\jdk-11中文api修订版.CHM::/java.base/java/util/List.html">List</a>&lt; Runnable &gt; shutdownNow()</td>
+<td>立刻关闭线程池，停止正在执行的任务，并返回队列中未执行的任务</td>
+</tr>
+</tbody></table>
+<pre><code class="java">SumCallable.java
+package 线程池使用方式二_callable;
+
+import java.util.concurrent.Callable;
+
+public class SumCallable implements Callable&lt;Integer&gt; &#123;
+    private int n;
+    public SumCallable(int n)&#123;
+        this.n = n;
+    &#125;
+    public Integer call() throws Exception&#123;
+        int sum = 0;
+        for (int i = 1; i &lt;= n; i++)&#123;
+            sum += i;
+        &#125;
+        return sum;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 线程池使用方式二_callable;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+/**
+ * 线程池的使用方式二：使用Callable接口，计算1到n的和并返回总和
+ */
+public class Demo01 &#123;
+    public static void main(String[] args) throws ExecutionException, InterruptedException &#123;
+        // 1.创建线程池
+        ExecutorService pool = Executors.newFixedThreadPool(3);
+
+        // 2.创建callable任务
+        SumCallable sc1 = new SumCallable(100);
+        // 3.提交Callable任务,call方法的返回值会放到Future对象中
+        Future&lt;Integer&gt; f1 = pool.submit(sc1);
+        // 获取返回值
+        System.out.println(f1.get());
+
+        SumCallable sc2 = new SumCallable(200);
+        Future&lt;Integer&gt; f2 = pool.submit(sc2);
+        System.out.println(f2.get());
+
+        pool.shutdown();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="手动创建线程池"><a href="#手动创建线程池" class="headerlink" title="手动创建线程池"></a>手动创建线程池</h5><h6 id="通过ThreadPoolExecutor创建线程池-面试专用"><a href="#通过ThreadPoolExecutor创建线程池-面试专用" class="headerlink" title="通过ThreadPoolExecutor创建线程池 (面试专用)"></a><span style = "color:red"><strong>通过ThreadPoolExecutor创建线程池</strong> (面试专用)</span></h6><pre><code class="java">public ThreadPoolExecutor(int corePoolSize,                                          int maximumPoolSize,                                      long keepAliveTime,                                          TimeUnit unit,                                          BlockingQueue&lt;Runnable&gt; workQueue,                          ThreadFactory threadFactory,                          RejectedExecutionHandler handler) 
+</code></pre>
+<blockquote>
+<p>参数一 corePoolSize：指定线程池的线程数量（核心线程）</p>
+<p>参数二 maximumPoolSize：指定线程池可支持的最大线程数</p>
+<p>参数三 keepAliveTime：指定临时线程的最大存活时间</p>
+<p>参数四 unit：指定线程存活时间的单位(秒、分、时、天)</p>
+<p>参数五 workQueue：指定任务存放的队列</p>
+<p>参数六 threadFactory：指定用谁来创建线程</p>
+<p>参数七 handler：任务满的时候如何处理(拒绝策略) </p>
+</blockquote>
+<pre><code class="java">LongRunnable.java
+package 手动创建线程池;
+
+public class LongRunnable implements Runnable&#123;
+    @Override
+    public void run() &#123;
+        System.out.println(Thread.currentThread().getName() + &quot;开始执行任务！&quot;);
+        try &#123;
+            Thread.sleep(1000 * 2); //一小时
+        &#125; catch (InterruptedException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        System.out.println(Thread.currentThread().getName() + &quot;任务执行完！&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 手动创建线程池;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class Demo01 &#123;
+    /**
+     * 参数一 corePoolSize：指定线程池的线程数量（核心线程） 
+       → 正式员工数量
+     * 参数二 maximumPoolSize：指定线程池可支持的最大线程数  
+       → 最大员工数量 = 正是员工数量+临时员工数量
+     * 参数三 keepAliveTime：指定临时线程的最大存活时间  
+       →  临时工没事做多久被解雇
+     * 参数四 unit：指定线程存活时间的单位(秒、分、时、天) 
+       → 时间单位
+     * 参数五 workQueue：指定任务存放的队列 
+       → 等候区
+     * 参数六 threadFactory：指定用谁来创建线程  
+       →  人事部门，作用是招聘工人
+     * 参数七 handler：任务满的时候如何处理(拒绝策略)  
+       →  客人太多坐不下怎么办
+     * @param args
+     */
+    public static void main(String[] args) &#123;
+        // 创建线程池
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(3
+                , 6
+                , 100
+                , TimeUnit.SECONDS
+                , new ArrayBlockingQueue&lt;&gt;(7)
+                , Executors.defaultThreadFactory()
+                , new ThreadPoolExecutor.AbortPolicy()
+        );
+        LongRunnable lr = new LongRunnable();
+        // 提交任务
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+
+        // 提交任务 核心线程都在忙，放在任务队列
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+
+        // 提交任务，核心线程都在忙，任务队列满了
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+        pool.execute(lr);
+
+        // 临时线程达到最大值，执行拒绝策略
+        pool.execute(lr);
+    &#125;
+&#125;
+/*
+Exception in thread &quot;main&quot; java.util.concurrent.RejectedExecutionException: Task 手动创建线程池.LongRunnable@7cd84586 rejected from java.util.concurrent.ThreadPoolExecutor@52cc8049[Running, pool size = 6, active threads = 6, queued tasks = 7, completed tasks = 0]
+    at java.base/java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2081)
+    at java.base/java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:841)
+    at java.base/java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1376)
+    at 手动创建线程池.Demo01.main(Demo01.java:50)
+*/
+</code></pre>
+<h6 id="什么时候开始创建临时线程？"><a href="#什么时候开始创建临时线程？" class="headerlink" title="什么时候开始创建临时线程？"></a>什么时候开始创建临时线程？</h6><p>新任务提交时发现核心线程都在忙，任务队列也满了，并且还可以创建临时线程，此时才会创建临时线程。</p>
+<h6 id="什么时候会拒绝新任务？"><a href="#什么时候会拒绝新任务？" class="headerlink" title="什么时候会拒绝新任务？"></a>什么时候会拒绝新任务？</h6><p>核心线程和临时线程都在忙，任务队列也满了，新的任务过来的时候才会开始拒绝任务。</p>
+<h6 id="任务拒绝策略"><a href="#任务拒绝策略" class="headerlink" title="任务拒绝策略"></a>任务拒绝策略</h6><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ThreadPoolExecutor.<strong>AbortPolicy()</strong></td>
+<td>丢弃任务并抛出RejectedExecutionException异常。是默认的策略</td>
+</tr>
+<tr>
+<td>ThreadPoolExecutor. <strong>DiscardPolicy()</strong></td>
+<td>丢弃任务，但是不抛出异常，这是不推荐的做法</td>
+</tr>
+<tr>
+<td>ThreadPoolExecutor. <strong>DiscardOldestPolicy()</strong></td>
+<td>抛弃队列中等待最久的任务  然后把当前任务加入队列中</td>
+</tr>
+<tr>
+<td>ThreadPoolExecutor. <strong>CallerRunsPolicy()</strong></td>
+<td>由主线程负责调用任务的run()方法从而绕过线程池直接执行</td>
+</tr>
+</tbody></table>
 
     </div>
 
