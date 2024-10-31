@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#ff7d73>
+                <a href="/tags/HM" style=color:#879cff>
                     HM
                 </a>
             </span>
@@ -4253,6 +4253,674 @@ Exception in thread &quot;main&quot; java.util.concurrent.RejectedExecutionExcep
 <td>由主线程负责调用任务的run()方法从而绕过线程池直接执行</td>
 </tr>
 </tbody></table>
+<h3 id="网络编程"><a href="#网络编程" class="headerlink" title="网络编程"></a>网络编程</h3><ul>
+<li><strong>LocalDateTime</strong>：代表本地日期、时间</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>方法名</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>getYear、getMonthValue、getDayOfMonth、getDayOfYear  getDayOfWeek、getHour、getMinute、getSecond、getNano</td>
+<td>获取年月日、时分秒、纳秒等</td>
+</tr>
+<tr>
+<td>withYear、withMonth、withDayOfMonth、withDayOfYear  withHour、withMinute、withSecond、withNano</td>
+<td>修改某个信息，返回新日期时间对象</td>
+</tr>
+<tr>
+<td>plusYears、plusMonths、plusDays、plusWeeks  plusHours、plusMinutes、plusSeconds、plusNanos</td>
+<td>把某个信息<strong>加多少</strong>，返回新日期时间对象</td>
+</tr>
+<tr>
+<td>minusYears、minusMonths、minusDays、minusWeeks  minusHours、minusMinutes、minusSeconds、minusNanos</td>
+<td>把某个信息<strong>减多少</strong>，返回新日期时间对象</td>
+</tr>
+<tr>
+<td>equals isBefore isAfter</td>
+<td>判断2个时间对象，是否相等，在前还是在后</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 网络编程;
+
+import java.time.LocalDateTime;
+
+public class Demo01 &#123;
+    /**
+     *     1.now(): 根据当前时间创建LocalDateTime对象
+     *     2.of(int year, int month, int dayOfMonth, int hour, int minute, int second): 根据指定的年月日时分秒创建LocalDateTime对象
+     *     3.直接修改某个信息, with是绝对修改, 你写多少就是多少, 他的值不能超出范围: withYear、withMonth、withDayOfMonth、withDayOfYear、withHour、withMinute、withSecond、withNano
+     *     4.把某个信息加多少, plus是加上,相对修改, 可以超出范围, 超出范围会自动转换: plusYears、plusMonths、plusDays、plusWeeks、plusHours、plusMinutes、plusSeconds、plusNanos
+     *     5.把某个信息减多少,  minus是减去,相对修改, 可以超出范围, 超出范围会自动转换: minusYears、minusMonths、minusDays、minusWeeks、minusHours、minusMinutes、minusSeconds、minusNanos
+     *     6.获取 年 月 日 时 分 秒
+     * @param args
+     */
+    public static void main(String[] args) &#123;
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println(&quot;now = &quot; + now);
+
+        LocalDateTime localDateTime = LocalDateTime.of(2020, 5, 5, 10, 10, 10);
+        System.out.println(&quot;localDateTime = &quot; + localDateTime);
+
+        System.out.println(&quot;年：&quot; + now.getYear());
+        System.out.println(&quot;月：&quot; + now.getMonthValue());
+        System.out.println(&quot;日：&quot; + now.getDayOfMonth());
+        System.out.println(&quot;时：&quot; + now.getHour());
+        System.out.println(&quot;分：&quot; + now.getMinute());
+        System.out.println(&quot;秒：&quot; + now.getSecond());
+
+        // 绝对修改
+        LocalDateTime ldt2 = now.withYear(2077).withMinute(20);
+        System.out.println(&quot;with绝对修改 = &quot; + ldt2);
+
+        // 相对修改
+        LocalDateTime ldt3 = now.plusYears(10).plusDays(3);
+        System.out.println(&quot;plus相对修改 = &quot; + ldt3);
+
+        // 相对修改
+        LocalDateTime ldt4 = now.minusYears(10).minusDays(3);
+        System.out.println(&quot;minus相对修改 = &quot; + ldt4);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="基本的通信架构"><a href="#基本的通信架构" class="headerlink" title="基本的通信架构"></a>基本的通信架构</h5><p>基本的通信架构有2种形式：</p>
+<ul>
+<li><p><strong>CS架构</strong> (Client客户端&#x2F;Server服务端)</p>
+</li>
+<li><p><strong>BS架构</strong> (Browser浏览器&#x2F;Server服务端)</p>
+</li>
+</ul>
+<h5 id="开放式网络互联标准：OSI网络参考模型"><a href="#开放式网络互联标准：OSI网络参考模型" class="headerlink" title="开放式网络互联标准：OSI网络参考模型"></a>开放式网络互联标准：OSI网络参考模型</h5><ul>
+<li>OSI网络参考模型：全球网络互联标准。 </li>
+<li>TCP&#x2F;IP网络模型：事实上的国际标准。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>OSI网络参考模型</th>
+<th>TCP&#x2F;IP网络模型</th>
+<th><strong>各层对应</strong></th>
+<th><strong>面向操作</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>应用层</td>
+<td><strong>应用层</strong></td>
+<td>HTTP、FTP、SMTP…</td>
+<td>应用程序需要关注的：浏览器，邮箱。程序员一般在这一层开发</td>
+</tr>
+<tr>
+<td>表示层</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~  ~ ~ ~</td>
+</tr>
+<tr>
+<td>会话层</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~  ~ ~ ~</td>
+</tr>
+<tr>
+<td>传输层</td>
+<td><strong>传输层</strong></td>
+<td><strong>UDP、TCP…</strong></td>
+<td>选择使用的TCP , UDP协议</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td><strong>网络层</strong></td>
+<td>IP…</td>
+<td>封装源和目标IP</td>
+</tr>
+<tr>
+<td>数据链路层</td>
+<td>数据链路层+  物理</td>
+<td>比特流…</td>
+<td>物理设备中传输</td>
+</tr>
+<tr>
+<td>物理层</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~</td>
+<td>~ ~ ~  ~ ~ ~</td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>UDP协议特点:  用户数据报协议(User Datagram Protocol)</p>
+<ul>
+<li>不需要连接，直接发送数据</li>
+<li>易丢失数据</li>
+<li>速度快</li>
+<li>有大小限制，一个包最多发送64K</li>
+</ul>
+</li>
+<li><p>TCP协议特点:  传输控制协议 (Transmission Control Protocol)</p>
+<ul>
+<li>需要连接</li>
+<li>不易丢失数据</li>
+<li>速度慢</li>
+<li>建立连接后以流的形式传输，没有大小限制</li>
+</ul>
+</li>
+<li><p>UDP协议通信场景（速度要求高，数据完整性要求不高）</p>
+<ul>
+<li>直播</li>
+<li>语音通话</li>
+<li>视频会话</li>
+</ul>
+</li>
+<li><p>TCP协议通信场景（速度要求不高，数据完整性要求高）</p>
+<ul>
+<li>下载</li>
+<li>扫码支付</li>
+<li>金融等数据通信</li>
+</ul>
+</li>
+</ul>
+<h5 id="TCP协议：三次握手建立可靠连接"><a href="#TCP协议：三次握手建立可靠连接" class="headerlink" title="TCP协议：三次握手建立可靠连接"></a>TCP协议：三次握手建立可靠连接</h5><p><strong>可靠连接：确定通信双方，收发消息都是正常无问题的！（全双工）</strong></p>
+<ul>
+<li>客户端发送链接请求</li>
+<li>服务端返回确认链接，发送链接请求</li>
+<li>客户端返回确认链接，连接成功</li>
+</ul>
+<h5 id="TCP协议：四次握手断开链接"><a href="#TCP协议：四次握手断开链接" class="headerlink" title="TCP协议：四次握手断开链接"></a>TCP协议：四次握手断开链接</h5><ul>
+<li>客户端发出断开链接请求</li>
+<li>服务器端返回一个相应：稍等</li>
+<li>服务器处理完最后的数据后返回相应：确认断开</li>
+<li>客户端发出正式确认断开链接</li>
+</ul>
+<blockquote>
+<h6 id="1、通信协议是什么？"><a href="#1、通信协议是什么？" class="headerlink" title="1、通信协议是什么？"></a>1、通信协议是什么？</h6><p><strong>计算机网络中，连接和通信数据的规则被称为网络通信协议。</strong></p>
+<h6 id="2、TCP通信协议的特点是什么样的"><a href="#2、TCP通信协议的特点是什么样的" class="headerlink" title="2、TCP通信协议的特点是什么样的?"></a>2、TCP通信协议的特点是什么样的?</h6><p><strong>需要连接</strong></p>
+<p><strong>不易丢失数据</strong></p>
+<p><strong>速度慢</strong></p>
+<p><strong>建立连接后以流的形式传输，没有大小限制</strong></p>
+<h6 id="3、UDP协议的特点是什么"><a href="#3、UDP协议的特点是什么" class="headerlink" title="3、UDP协议的特点是什么"></a>3、UDP协议的特点是什么</h6><p><strong>不需要连接，直接发送数据</strong></p>
+<p><strong>易丢失数据</strong></p>
+<p><strong>速度快</strong></p>
+<p><strong>有大小限制，一个包最多发送****64K</strong></p>
+</blockquote>
+<h5 id="UDP通信"><a href="#UDP通信" class="headerlink" title="UDP通信"></a>UDP通信</h5><ul>
+<li>DatagramPacket: 表示数据包<br>DatagramPacket(byte[] buf, int offset, int length, InetAddress address, int port) 创建发送的数据包DatagramPacket(byte[] buf, int length) 创建接收的数据包</li>
+</ul>
+<pre><code class="java">UDPReceiver.java
+package 网络编程.UDP入门;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+
+// 先启动接收端 后启动发送端
+public class UDPReceiver &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;UDP接收端启动啦&quot;);
+
+        // 1.创建接收端，绑定端口，让发送端找到这个接收端
+        DatagramSocket socket = new DatagramSocket(9527);
+
+        // 2.创建空的数据包
+        byte[] buf = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+
+        // 3.接收数据
+        socket.receive(packet);
+        // 获取接收到的数据长度
+        int length = packet.getLength();
+        // 打印数据
+        System.out.println(&quot;接收端收到：&quot; + new String(buf, 0, length));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UDPSender.java
+package 网络编程.UDP入门;
+
+import java.net.*;
+
+public class UDPSender &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;UDP发送端启动啦！&quot;);
+        // 1.创建发送端，发送端会随机分配一个端口
+        DatagramSocket socket = new DatagramSocket();
+
+        // 2.创建一个数据包
+        // DatagramPacket(byte[] buf, int offset, int length, InetAddress address, int port) 数据包 用于发送数据
+        // 分别解释一下参数
+        // buf：发送的数据
+        // offset：数据包开始发送的位置
+        // length：发送数据的长度
+        // address：接收方的IP地址  如果是自己：InetAddress.getLocalHost()
+        // port：接收方的端口号
+        byte[] data = &quot;你好，我是UDP发送端&quot;.getBytes();
+        DatagramPacket packet = new DatagramPacket(data, 0, data.length,
+                InetAddress.getLocalHost(), 9527);
+
+        // 3.发送数据包
+        socket.send(packet);
+
+        // 4.释放资源
+        socket.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="TCP入门"><a href="#TCP入门" class="headerlink" title="TCP入门"></a>TCP入门</h5><ul>
+<li>特点：面向连接、可靠通信。<ul>
+<li>通信双方事先会采用“三次握手”方式建立可靠连接，实现端到端的通信；底层能保证数据成功传给服务端。</li>
+<li>Java提供了一个java.net.Socket类来实现TCP通信。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">TCPClient.java
+package 网络编程.TCP入门;
+
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
+/**
+ * 如果直接启动TCP客户端，没有TCP服务端会链接失败，出现ConnectException
+ */
+
+public class TCPClient &#123;
+    public static void main(String[] args) throws Exception&#123;
+        System.out.println(&quot;TCP客户端启动啦！&quot;);
+        // 1.创建客户端对象
+        // Socket(String host, int port)：指定服务端的IP和端口
+        // Socket(InetAddress address, int port)：指定服务端的IP和端口
+        Socket socket = new Socket(&quot;127.0.0.1&quot;, 10086);
+
+        // 2.得到输出流
+        OutputStream out = socket.getOutputStream();
+        // 数据流，写数据和类型到流中，方便读取
+        DataOutputStream dos = new DataOutputStream(out);
+
+        // 3.发送数据
+        dos.writeUTF(&quot;你好 约吗？&quot;);
+
+        // 4.释放资源
+        dos.close();
+        socket.close();
+    &#125;
+&#125;
+</code></pre>
+<h6 id="TCP客户端和服务端"><a href="#TCP客户端和服务端" class="headerlink" title="TCP客户端和服务端"></a>TCP客户端和服务端</h6><pre><code class="java">TCPServer.java
+package 网络编程.TCP入门;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+// 掌握TCP通信模式下：服务端接收客户端发过来的一条消息
+public class TCPServer &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;TCP服务端启动啦！&quot;);
+        // 1.创建服务端
+        ServerSocket serverSocket = new ServerSocket(10086);
+
+        // 2.同意客户端的链接, 返回一个和客户端对应的Socket
+        Socket socket = serverSocket.accept();
+        // 3.得到输入流读取数据
+        InputStream in = socket.getInputStream();
+        DataInputStream dis = new DataInputStream(in);
+        String msg = dis.readUTF();
+        System.out.println(&quot;服务端收到：&quot;+ msg);
+
+        // 4.释放资源
+        dis.close();
+        socket.close();
+        serverSocket.close();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">TCPClient.java
+package 网络编程.TCP入门;
+
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
+/**
+ * 如果直接启动TCP客户端，没有TCP服务端会链接失败，出现ConnectException
+ */
+
+public class TCPClient &#123;
+    public static void main(String[] args) throws Exception&#123;
+        System.out.println(&quot;TCP客户端启动啦！&quot;);
+        // 1.创建客户端对象
+        // Socket(String host, int port)：指定服务端的IP和端口
+        // Socket(InetAddress address, int port)：指定服务端的IP和端口
+        Socket socket = new Socket(&quot;127.0.0.1&quot;, 10086);
+
+        // 2.得到输出流
+        OutputStream out = socket.getOutputStream();
+        // 数据流，写数据和类型到流中，方便读取
+        DataOutputStream dos = new DataOutputStream(out);
+
+        // 3.发送数据
+        dos.writeUTF(&quot;你好 约吗？&quot;);
+
+        // 4.释放资源
+        dos.close();
+        socket.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="TCP实现通讯互联-单向"><a href="#TCP实现通讯互联-单向" class="headerlink" title="TCP实现通讯互联 (单向)"></a>TCP实现通讯互联 (单向)</h5><pre><code class="java">网络编程/TCP入门/TCPServer.java
+package 网络编程.TCP入门;
+
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+// 掌握TCP通信模式下：服务端接收客户端发过来的一条消息
+public class TCPServer &#123;
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;TCP服务端启动啦！&quot;);
+        // 1.创建服务端
+        ServerSocket serverSocket = new ServerSocket(10086);
+
+        // loop
+        while (true) &#123;
+            // 主线程负责接收客户端的链接
+            // 2.同意客户端的链接, 返回一个和客户端对应的Socket
+            Socket socket = serverSocket.accept();
+            System.out.println(&quot;一个客户端链接啦：&quot; + socket.getRemoteSocketAddress());
+
+            // 使用线程来处理客户端发送的数据
+            ServerReadThread t = new ServerReadThread(socket);
+            t.start();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">网络编程/TCP入门/ServerReadThread.java
+package 网络编程.TCP入门;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.time.LocalDateTime;
+
+public class ServerReadThread extends Thread&#123;
+    private Socket socket; //读取传进来的值
+
+    public ServerReadThread(Socket socket) &#123;
+        this.socket = socket;
+    &#125;
+
+    @Override
+    public void run() &#123;
+        // 3.得到输入流读取数据
+        try &#123;
+            InputStream in = socket.getInputStream();
+            DataInputStream dis = new DataInputStream(in);
+
+            while (true) &#123;
+                String msg = dis.readUTF();
+                System.out.println(LocalDateTime.now() + &quot; 客户端收到：&quot; + socket.getRemoteSocketAddress() + &quot; 来自客户端的消息：&quot; + msg);
+
+                if (&quot;886&quot;.equals(msg)) &#123;
+                    break;
+                &#125;
+            &#125;
+            // 4.释放资源
+            dis.close();
+            socket.close();
+        &#125; catch (IOException e) &#123;
+            System.out.println(&quot;读取线程数据失败：&quot; + e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">网络编程/TCP入门/TCPClient.java
+package 网络编程.TCP入门;
+
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.Scanner;
+
+/**
+ * 如果直接启动TCP客户端，没有TCP服务端会链接失败，出现ConnectException
+ */
+
+public class TCPClient &#123;
+    public static void main(String[] args) throws Exception&#123;
+        System.out.println(&quot;TCP客户端启动啦！&quot;);
+        // 1.创建客户端对象
+        // Socket(String host, int port)：指定服务端的IP和端口
+        // Socket(InetAddress address, int port)：指定服务端的IP和端口
+        Socket socket = new Socket(&quot;127.0.0.1&quot;, 10086);
+
+        // 2.得到输出流
+        OutputStream out = socket.getOutputStream();
+        // 数据流，写数据和类型到流中，方便读取
+        DataOutputStream dos = new DataOutputStream(out);
+
+        // 3.发送数据
+        Scanner sc = new Scanner(System.in);
+        while (true) &#123;
+            System.out.println(&quot;请输入要发送的内容：&quot;);
+            String msg = sc.next();
+            dos.writeUTF(msg);
+            if (&quot;886&quot;.equals(msg)) &#123;
+                break;
+            &#125;
+        &#125;
+        // 4.释放资源
+        dos.close();
+        socket.close();
+    &#125;
+&#125;
+</code></pre>
+<h5 id="TCP实现通讯互联-双向"><a href="#TCP实现通讯互联-双向" class="headerlink" title="TCP实现通讯互联 (双向)"></a>TCP实现通讯互联 (双向)</h5><h6 id="记录在线的socket、搞一个线程来收-读"><a href="#记录在线的socket、搞一个线程来收-读" class="headerlink" title="记录在线的socket、搞一个线程来收(读)"></a>记录在线的socket、搞一个线程来收(读)</h6><p><strong>集合</strong>是重点！</p>
+<pre><code class="java">网络编程/TCP实现双向通信_群聊/TCPClient.java
+package 网络编程.TCP实现双向通信_群聊;
+
+import java.io.*;
+import java.net.Socket;
+import java.util.Scanner;
+
+/**
+ * 如果直接启动TCP客户端，没有TCP服务端会链接失败，出现ConnectException
+ */
+
+public class TCPClient &#123;
+    public static void main(String[] args) throws Exception&#123;
+        System.out.println(&quot;TCP客户端启动啦！&quot;);
+        // 1.创建客户端对象
+        // Socket(String host, int port)：指定服务端的IP和端口
+        // Socket(InetAddress address, int port)：指定服务端的IP和端口
+        Socket socket = new Socket(&quot;127.0.0.1&quot;, 10086);
+
+   // 搞一个线程专门读取数据
+        Thread t = new Thread(new Runnable() &#123;
+            @Override
+            public void run() &#123;
+                // 新线程执行的代码
+                try &#123;
+                    InputStream in = socket.getInputStream();
+                    DataInputStream dis = new DataInputStream(in);
+                    while (true) &#123;
+                        String msg = dis.readUTF();
+                        System.out.println(&quot;来自服务器的消息：&quot; + msg);
+                    &#125;
+                &#125; catch (IOException e) &#123;
+                    System.out.println(&quot;读取线程数据失败：&quot; + e);
+                &#125;
+            &#125;
+        &#125;);
+        t.start();
+
+        // 2.得到输出流
+        OutputStream out = socket.getOutputStream();
+        // 数据流，写数据和类型到流中，方便读取
+        DataOutputStream dos = new DataOutputStream(out);
+
+        // 3.发送数据
+        Scanner sc = new Scanner(System.in);
+        while (true) &#123;
+            System.out.println(&quot;请输入要发送的内容：&quot;);
+            String msg = sc.next();
+            dos.writeUTF(msg);
+            if (&quot;886&quot;.equals(msg)) &#123;
+                break;
+            &#125;
+        &#125;
+        // 4.释放资源
+        dos.close();
+        socket.close();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">网络编程/TCP实现双向通信_群聊/ServerReadThread.java
+package 网络编程.TCP实现双向通信_群聊;
+
+import java.io.*;
+import java.net.Socket;
+import java.time.LocalDateTime;
+
+public class ServerReadThread extends Thread&#123;
+    private Socket socket; //读取传进来的值
+
+    public ServerReadThread(Socket socket) &#123;
+        this.socket = socket;
+    &#125;
+
+    @Override
+    public void run() &#123;
+        // 3.得到输入流读取数据
+        try &#123;
+            InputStream in = socket.getInputStream();
+            DataInputStream dis = new DataInputStream(in);
+
+            while (true) &#123;
+                String msg = dis.readUTF();
+                System.out.println(LocalDateTime.now() + &quot; 客户端收到：&quot; + socket.getRemoteSocketAddress() + &quot; 来自客户端的消息：&quot; + msg);
+                // 把读取的数据群发给所有的客户端
+                for (Socket socket1 : TCPServer.onlineSocket) &#123;
+                    // 获取Socket的输出流，再去写数据
+                    OutputStream out = socket1.getOutputStream();
+                    DataOutputStream dos = new DataOutputStream(out);
+                    dos.writeUTF(msg);
+                &#125;
+
+                if (&quot;886&quot;.equals(msg)) &#123;
+                    break;
+                &#125;
+            &#125;
+            // 4.释放资源
+            dis.close();
+            socket.close();
+        &#125; catch (IOException e) &#123;
+            System.out.println(&quot;读取线程数据失败：&quot; + e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">网络编程/TCP实现双向通信_群聊/TCPServer.java
+package 网络编程.TCP实现双向通信_群聊;
+
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+// 掌握TCP通信模式下：服务端接收客户端发过来的一条消息
+public class TCPServer &#123;
+    //别人需要拿到
+    public static List&lt;Socket&gt; onlineSocket = new ArrayList&lt;&gt;();
+    public static void main(String[] args) throws Exception &#123;
+        System.out.println(&quot;TCP服务端启动啦！&quot;);
+        // 1.创建服务端
+        ServerSocket serverSocket = new ServerSocket(10086);
+
+        // loop
+        while (true) &#123;
+            // 主线程负责接收客户端的链接
+            // 2.同意客户端的链接, 返回一个和客户端对应的Socket
+            Socket socket = serverSocket.accept();
+            System.out.println(&quot;一个客户端链接啦：&quot; + socket.getRemoteSocketAddress());
+
+            // 保存
+            onlineSocket.add(socket);
+            // 使用线程来处理客户端发送的数据
+            ServerReadThread t = new ServerReadThread(socket);
+            t.start();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Tomcat的本质-TCP服务端-线程池"><a href="#Tomcat的本质-TCP服务端-线程池" class="headerlink" title="Tomcat的本质(TCP服务端 + 线程池)"></a>Tomcat的本质(<u>TCP服务端 + 线程池</u>)</h5><pre><code class="java">package 网络编程.网站服务器;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 模拟网站服务器 BS
+ * 浏览器(底层为TCP)是客户端
+ * 京东服务器是(TCP)服务端 同意客户端链接，把数据返回给客户端
+ */
+public class Demo01 &#123;
+    public static void main(String[] args) throws IOException &#123;
+        System.out.println(&quot;网站服务器启动啦！&quot;);
+        ServerSocket serverSocket = new ServerSocket(9527);
+
+        // 手动创建线程池
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(
+                10,
+                200,
+                60,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue&lt;&gt;(200),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+
+        // 循环同意客户端的链接
+        while (true) &#123;
+            Socket socket = serverSocket.accept();
+            System.out.println(&quot;有人链接啦：&quot; + socket.getRemoteSocketAddress());
+
+            pool.submit(new Runnable() &#123; //提交给线程池去处理
+                @Override
+                public void run() &#123;
+                    try &#123;
+                        // 给客户端浏览器回数据
+                        OutputStream out = socket.getOutputStream();
+                        // HTTP协议有固定的格式
+                        // HTTP是对TCP协议做了封装，有固定的回复格式
+                        // 告诉浏览器服务器是正常的
+                        out.write(&quot;HTTP/1.1 200 OK\r\n&quot;.getBytes());
+                        // 高速浏览器服务器返回的是一个HTML网页，编码是UTF-8
+                        out.write(&quot;Content-Type:text/html;charset=UTF-8\r\n&quot;.getBytes());
+                        out.write(&quot;\r\n&quot;.getBytes());
+                        out.write(&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;你好，我是服务器&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&quot;.getBytes());
+                        out.close();
+                        socket.close();
+                    &#125; catch (IOException e) &#123;
+                        System.out.println(&quot;服务器数据回写失败：&quot; + e);
+                    &#125;
+                &#125;
+            &#125;);
+        &#125;
+    &#125;
+&#125;
+//localhost:9527
+</code></pre>
 
     </div>
 
