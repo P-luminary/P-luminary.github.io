@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ffa2c4>
+                <a href="/tags/面试" style=color:#00bcd4>
                     面试
                 </a>
             </span>
@@ -136,7 +136,7 @@
     </div>
 
     <div class="content" v-pre>
-        <h1 id="Redis篇"><a href="#Redis篇" class="headerlink" title="Redis篇"></a>Redis篇</h1><h6 id="我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？"><a href="#我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？" class="headerlink" title="我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？"></a>我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？</h6><ul>
+        <h1 id="Redis篇"><a href="#Redis篇" class="headerlink" title="Redis篇"></a>Redis篇</h1><h6 id="我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？"><a href="#我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？" class="headerlink" title="我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？"></a><span style = "color:red">我看你做的项目中，都用到了redis，你在最近的项目中哪些场景使用了redis呢？</span></h6><ul>
 <li>验证你项目场景的真实性，二是为了深入发问的切入点</li>
 <li><strong>缓存</strong> 缓存三兄弟(穿透、击穿、雪崩)、双写一致、持久化、数据过期策略、数据淘汰策略</li>
 <li><strong>分布式锁</strong> setnx、redisson</li>
@@ -186,7 +186,7 @@
 雪崩大量过期key，过期时间要随机。
 面试必考三兄弟，可用限流来保底。
 </code></pre>
-<h6 id="redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性"><a href="#redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性" class="headerlink" title="redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)"></a>redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)</h6><p><strong>一定、一定、一定要设置前提，介绍自己的业务背景</strong> (一致性要求高？允许延迟一致？)</p>
+<h6 id="redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性"><a href="#redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性" class="headerlink" title="redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)"></a><span style = "color:red">redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)</span></h6><p><strong>一定、一定、一定要设置前提，介绍自己的业务背景</strong> (一致性要求高？允许延迟一致？)</p>
 <blockquote>
 <p>① 介绍自己简历上的业务，我们当时是把文章的热点数据存入到了缓存中，虽然是热点数据，但是实时要求性并没有那么高，所以我们采用的是<strong>异步的方案同步的数据</strong></p>
 <p>② 我们当时是把抢卷的库存存入到了缓存中，这个需要实时的进行数据同步，为了保证数据的强一致性，我们当时擦爱用的是<strong>redission提供的读写锁</strong>来保证数据的同步</p>
@@ -215,6 +215,361 @@
 <li>使用MQ中间件，更新数据之后，通知缓存删除</li>
 <li>利用canal中间件，不需要修改业务代码，伪装为mysqls的一个从节点，canal通过读取binlog数据更新缓存</li>
 </ul>
+</li>
+</ul>
+<h6 id="Redis作为缓存，数据的持久化是怎么做的？"><a href="#Redis作为缓存，数据的持久化是怎么做的？" class="headerlink" title="Redis作为缓存，数据的持久化是怎么做的？"></a><span style = "color:red">Redis作为缓存，数据的持久化是怎么做的？</span></h6><p><strong>Redis持久化</strong>：RDB全称Redis Database Backup file(Redis数据备份文件)，也被叫做Redis数据快照，简单来说就是<u>把内存中的所有数据都记录到磁盘中</u>。当Redis实例故障重启后，从磁盘读取快照文件，数据恢复。</p>
+<pre><code class="mysql">[root@localhost ~]# redis-cli
+127.0.0.1:6379&gt; save          #由Redis主进程来执行RDB，会阻塞所有命令
+ok
+
+127.0.0.1:6379&gt; bgsave        #开启子进程执行RDB，避免主进程受到影响
+Background saving started
+</code></pre>
+<p>Redis内部有触发RDB的机制，可以在redis.conf文件中找到，格式如下：</p>
+<pre><code class="java">// 900秒内，如果至少有1个key被修改，则执行bgsave
+save 900 1
+save 300 10
+save 60 10000
+</code></pre>
+<p>&#x3D;&#x3D;<strong>RDB的执行原理？</strong>&#x3D;&#x3D;</p>
+<p>bgsave开始时会fork主进程得到子进程，子进程共享主进程的内存数据，完成fork后读取内存数据并写入RDB文件</p>
+<blockquote>
+<p>在LInux中主进程并无法直接读取物理内存，它只能通过虚拟内存去读。因此有<strong>页表</strong>(记录虚拟地址与物理地址的映射关系)去执行操作 同时 主进程也会fork(复制页表) 成为一个新的子进程(携带页表) → 写新RDB文件替换旧的RDB文件 → 磁盘</p>
+</blockquote>
+<p>fork采用的是copy-on-write技术：</p>
+<ul>
+<li>当主进程执行<strong>读操作</strong>时，访问共享内存</li>
+<li>当主进程执行<strong>写操作</strong>时，则会拷贝一份数据，执行写操作</li>
+</ul>
+<p>&#x3D;&#x3D;<strong>AOF</strong>&#x3D;&#x3D;</p>
+<p>AOF全称为Append Only File(追加文件)。Redis处理的每个写命令都会记录在AOF，可以看作是命令日志文件<br><u>AOF默认是关闭的，需要修改redis.conf配置文件来开启AOF</u>：</p>
+<pre><code class="mysql"># 是否开启AOF功能，默认是no
+appendonly yes
+# AOF文件的名称
+appendfilename &quot;appendonly.aof&quot;
+</code></pre>
+<p>AOF的命令记录的频率也可以通过redis.conf文件来配</p>
+<pre><code class="mysql"># 表示每执行一次写命令，立即记录到AOF文件
+appendfsync always
+# 写命令执行完毕先放入AOF缓冲区，然后表示每隔一秒将缓冲区数据写到AOF文件，是默认方案
+appendfsync everysec
+# 写命令执行完先放入AOF缓冲区，由操作系统决定何时将缓冲区内容写回磁盘
+appendfsync no
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="center">配置项</th>
+<th align="center">刷盘时机</th>
+<th align="center">优点</th>
+<th align="center">缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Always</td>
+<td align="center">同步刷盘</td>
+<td align="center">可靠性高，几乎不丢数据</td>
+<td align="center">性能影响大</td>
+</tr>
+<tr>
+<td align="center"><u><strong>everysec</strong></u></td>
+<td align="center"><u><strong>每秒刷盘</strong></u></td>
+<td align="center"><u><strong>性能适中</strong></u></td>
+<td align="center"><u><strong>最多丢失1秒数据</strong></u></td>
+</tr>
+<tr>
+<td align="center">no</td>
+<td align="center">操作系统控制</td>
+<td align="center">性能最好</td>
+<td align="center">可靠性较差，可能丢失大量数据</td>
+</tr>
+</tbody></table>
+<p>因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但<strong>只有最后一次写操作才有意义</strong>。<u>通过执行<code>bgrewriteaof</code>命令，可以让AOF文件执行重读功能，用最少的命令达到相同效</u>果</p>
+<p>Redis会在出发阈值时自动重写AOF文件。阈值也可以在redis.conf中配置</p>
+<pre><code class="mysql"># AOF文件比上次文件 增多超过多少百分比则触发重写
+auto-aof-rewrite-percentage 100
+# AOF文件体积最小多大以上才触发重写
+auto-aof-rewrite-min-size 64mb
+</code></pre>
+<p><strong>RDB与AOF对比</strong></p>
+<p>RDB和AOF各有优缺点，如果对数据安全性要求较高，在实际开发中往往会结合两者来使用<br>RDB是二进制文件，在保存时体积较小恢复较快，但也有可能丢失数据，我们通常在项目中使用AOF来恢复数据，虽然慢但丢失数据风险小，在AOF文件中可以设置刷盘策略(每秒批量写入一次命令)</p>
+<table>
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">RDB</th>
+<th align="center">AOF</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">持久化方式</td>
+<td align="center">定时对整个内存做快照哦</td>
+<td align="center">记录每一次执行的命令</td>
+</tr>
+<tr>
+<td align="center">数据完整性</td>
+<td align="center">不完整，两次备份之间会丢失</td>
+<td align="center">相对完整，取决于刷盘策略</td>
+</tr>
+<tr>
+<td align="center">文件大小</td>
+<td align="center">会有压缩，文件体积小</td>
+<td align="center">记录命令，文件体积大</td>
+</tr>
+<tr>
+<td align="center">宕机恢复速度</td>
+<td align="center">很快</td>
+<td align="center">慢</td>
+</tr>
+<tr>
+<td align="center">数据恢复优先级</td>
+<td align="center">低，因为数据完整性不如AOF</td>
+<td align="center">高，因为数据完整性更高</td>
+</tr>
+<tr>
+<td align="center">系统资源占用</td>
+<td align="center">高，大量CPU和内存消耗</td>
+<td align="center">低，主要是磁盘IO资源<br />但AOF重写时会占用大量CPU和内存资源</td>
+</tr>
+<tr>
+<td align="center">使用场景</td>
+<td align="center">可以容忍数分钟的数据丢失，追求更快的启动速度</td>
+<td align="center">对数据安全性要求较高常见</td>
+</tr>
+</tbody></table>
+<h6 id="假如Redis的key过期之后，会立即删除吗"><a href="#假如Redis的key过期之后，会立即删除吗" class="headerlink" title="假如Redis的key过期之后，会立即删除吗"></a><span style = "color:red">假如Redis的key过期之后，会立即删除吗</span></h6><p>Redis对数据设置数据的有效时间，数据过期以后就需要将数据从内存中删除掉。可以按照不同的规则进行删除，这种删除规则就被称之为数据的删除策略(数据过期策略)</p>
+<p>&#x3D;&#x3D;<strong>Redis数据删除策略-惰性删除</strong>&#x3D;&#x3D;</p>
+<p>惰性删除：设置该key过期时间后，我们不去管它，当需要该key时，我们在检查其是否过期，如果过期，我们就删掉它，反之返回该key</p>
+<pre><code class="mysql">set name zhangsan 10
+get name # 发现name过期了，直接删除key
+</code></pre>
+<p><strong>优点：</strong>对CPU友好，只会在使用该key时才会进行过期检查，对于很多用不到的key不会浪费时间进行过期检查<br><strong>缺点：</strong>对内存不友好，如果一个key已经过期，但是一直没有使用，那么该key就会一直存在内存中，内存永远不会释放</p>
+<p><strong>&#x3D;&#x3D;Redis数据删除策略-定期删除&#x3D;&#x3D;</strong></p>
+<p>定期删除：每隔一段时间，我们就会对一些key进行检查，删除里面过期的key (从一定数量的数据库中取出一定数量的随机key进行检查，并删除其中的过期key)</p>
+<p><strong>定期清理的两种模式：</strong></p>
+<ul>
+<li><strong>SLOW模式</strong>是定时模式，执行频率默认为10hz，每次不超过25ms，以通过修改配置文件<code>redis.conf</code>的hz选项来调整这个次数</li>
+<li><strong>FAST模式</strong>执行频率不固定，但两次间隔不低于2ms，每次耗时不超过1ms</li>
+</ul>
+<p><strong>优点：</strong>可以通过限制删除操作执行的时长和频率来减少删除操作对CPU的影响。另外定期删除，也能有效释放过期键占用的内存<br><strong>难点：</strong>难以确定删除操作执行的时长和频率</p>
+<p><strong>Redis过期删除策略：</strong> <strong><u>惰性删除 + 定期删除</u></strong> 两种策略进行配合使用</p>
+<h6 id="假如缓存过多，内存是有限的，内存被占满了怎么办？"><a href="#假如缓存过多，内存是有限的，内存被占满了怎么办？" class="headerlink" title="假如缓存过多，内存是有限的，内存被占满了怎么办？"></a><span style = "color:red">假如缓存过多，内存是有限的，内存被占满了怎么办？</span></h6><p>&#x3D;&#x3D;<strong>数据淘汰策略</strong>&#x3D;&#x3D;</p>
+<p>当Redis中的内存不够用时，此时在向Redis中添加新的key，那么Redis就会按照某一种规则将内存中的数据制除掉，这种数据的制除规则被称之为内存的淘汰策略</p>
+<p><strong>Redis支持8种不同策略来选择要删除的key:</strong></p>
+<ul>
+<li><p><strong>noeviction：</strong>不淘汰任何key，但是内存满时不允许写入新数据，<strong>默认就是这种策略</strong></p>
+<blockquote>
+<h6 id="maxmemory-policy-noeviction"><a href="#maxmemory-policy-noeviction" class="headerlink" title="maxmemory-policy noeviction"></a>maxmemory-policy noeviction</h6></blockquote>
+</li>
+<li><p><strong>volatile-ttl</strong>：对设置了TTL的key，比较key的剩余TTL值，TTL越小越先被淘汰 (<u>TTL:过期时间的key</u>)</p>
+</li>
+<li><p><strong>allkeys-random</strong>：对全体key，随机进行淘汰</p>
+</li>
+<li><p><strong>volatile-random</strong>：对设置了TTL的key，随机进行淘汰</p>
+</li>
+<li><p><strong>allkeys-lru</strong>：对全体key，基于LRU算法进行淘汰</p>
+<blockquote>
+<p><strong>LRU</strong>(Least <strong>Recently</strong> Used)：<strong>最近最少使用</strong>，用当前时间减去最后一次访问时间，这个值越大测淘汰优先级越高<br><strong>LFU</strong>(Least <strong>Frequently</strong> Used)：<strong>最少频率使用</strong>。会统计每个key的访问频率，值越小淘汰优先级越高。</p>
+</blockquote>
+</li>
+<li><p><strong>allkeys-lfu</strong>：对全体key，基于LFU算法进行淘汰</p>
+</li>
+<li><p><strong>volatile-lfu</strong>：对设置了TTL的key，基于LFU算法进行淘汰</p>
+</li>
+</ul>
+<p><strong>淘汰策略 - 使用建议</strong></p>
+<p>1.优先使用 <code>allkeys-lru</code> 策略。充分利用LRU算法的优势，把最近最常访问的数据留在缓存中，如果业务有明显的冷热数据区分，建议使用。<br>2.如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用<code>allkeys-random</code>，随机选择淘汰<br>3.如果业务i中有置顶的需求，可以使用<code>volatile-lru</code>策略，同时置顶数据不设置过期时间，这些数据就一直不会被删除，会淘汰其他设置过期时间的数据<br>4.如果业务中有短时高频访问的数据，可以使用<code>allkeys-lfu</code>或<code>volatile-lfu</code>策略</p>
+<h6 id="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"><a href="#数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？" class="headerlink" title="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"></a>数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？</h6><ul>
+<li>使用<code>allkeys-lru</code>(挑选最近最少使用的数据淘汰) 淘汰策略，留下来的都是经常访问的热点数据</li>
+</ul>
+<h6 id="Redis的内存用完了会发生什么？"><a href="#Redis的内存用完了会发生什么？" class="headerlink" title="Redis的内存用完了会发生什么？"></a>Redis的内存用完了会发生什么？</h6><ul>
+<li>主要看数据淘汰策略是什么？如果是默认的配置(noeviction)，会直接报错</li>
+</ul>
+<h6 id="redis分布式锁，是如何实现的？"><a href="#redis分布式锁，是如何实现的？" class="headerlink" title="redis分布式锁，是如何实现的？"></a><span style = "color:red">redis分布式锁，是如何实现的？</span></h6><p>需要结合项目中的业务进行回答，通常情况下，分布式锁的使用场景：<br>集群情况下的定时任务、抢单、幂等性场景<br>如果使用互斥锁的话 那么在集群项目有多个服务器就会出现问题<br><img src="https://raw.githubusercontent.com/P-luminary/images/0f81d6fe238b4774d88facda4329c5ebe4921aa0/Redis%E9%9D%A2%E8%AF%95_%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.jpg"></p>
+<p>&#x3D;&#x3D;<strong>Redis分布式锁</strong>&#x3D;&#x3D;</p>
+<p>Redis实现分布式锁主要利用Redis的<strong>setnx</strong>命令，setnx是**<u>SET if not exists</u>**(如果不存在，则SET)的简写</p>
+<ul>
+<li><p><strong>获取锁</strong></p>
+<blockquote>
+<p>添加锁，NX是互斥、EX是设置超时时间<br><strong>SET lock value NX EX 10</strong></p>
+</blockquote>
+</li>
+<li><p><strong>释放锁</strong></p>
+<blockquote>
+<p>释放锁，删除即可<br><strong>DEL key</strong></p>
+</blockquote>
+</li>
+</ul>
+<h6 id="Redis实现分布式锁如何合理的控制锁的有效时长？"><a href="#Redis实现分布式锁如何合理的控制锁的有效时长？" class="headerlink" title="Redis实现分布式锁如何合理的控制锁的有效时长？"></a><span style = "color:red">Redis实现分布式锁如何合理的控制锁的有效时长？</span></h6><ul>
+<li>根据业务执行时间预估</li>
+<li><strong>给锁续期</strong></li>
+</ul>
+<p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 执行流程</strong>&#x3D;&#x3D;</p>
+<blockquote>
+<p>加锁 ↓→ 加锁成功 → Watch dog(看门狗)<del>每隔(releaseTime&#x2F;3的时间做一次续期)</del> → Redis<br>↓        操作redis → Redis<br>↓→→ 释放锁↑ → 通知看门狗无需继续监听 → Redis</p>
+</blockquote>
+<blockquote>
+<p>加锁  → → → 是否加锁成功？→→→   ↓<br>↑←←while循环不断尝试获取锁←←←↓</p>
+</blockquote>
+<pre><code class="java">public void redisLock() throws InterruptedException&#123;
+    RLock lock = redissonClient.getLock(&quot;heimalock&quot;);
+ // boolean isLock = lock.tryLock(10, 30, TimeUnit.SECONDS);
+// 如果不设置中间的过期时间30 才会触发看门狗
+// 加锁，设置过期时间等操作都是基于lua脚本完成的[调用redis命令来保证多条命令的原子性]
+    boolean isLock = lock.tryLock(10, TimeUnit.SECONDS);
+    if(isLock)&#123;
+        try&#123;
+            sout(&quot;执行业务&quot;);
+        &#125; finally&#123;
+            lock.unlock();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 可重入</strong>&#x3D;&#x3D;</p>
+<blockquote>
+<p>redis实现分布式锁是不可重入的 但是 redisson实现分布式锁是可以重入的<br>可重入原理：它俩是同一个线程 每个线程都有唯一的线程id 根据线程id唯一标识做判断 判断之前获取锁是不是同一个线程<br><strong>利用hash结构</strong>记录<strong>线程id</strong>和<strong>重入次数</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">KEY</th>
+<th align="center">VALUE</th>
+<th align="center">VALUE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"></td>
+<td align="center">field</td>
+<td align="center">value</td>
+</tr>
+<tr>
+<td align="center">heimalock</td>
+<td align="center">thread1</td>
+<td align="center">0</td>
+</tr>
+</tbody></table>
+</blockquote>
+<pre><code class="java">public void add1()&#123;
+  RLock lock = redissonClient.getLock(&quot;heimalock&quot;);
+  boolean isLock = lock.tryLock();
+// 执行业务
+  add2();
+// 释放锁
+  lock.unlock();
+&#125;
+public void add2()&#123;
+  RLock lock = redissonClient.getLock(&quot;heimalock&quot;);
+  boolean isLock = lock.tryLock();
+// 执行业务
+// 释放锁 锁次数-1不完全释放
+  lock.unlock();
+&#125;
+</code></pre>
+<p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 主从一致性</strong>&#x3D;&#x3D;</p>
+<p>Redis Master主节点：主要负责<strong>写操作</strong>(增删改)<br>Redis Slave从节点：主要负责<strong>读操作</strong></p>
+<blockquote>
+<p>当RedisMaster主节点突然宕机后 Java应用会去格外获取锁 这时两个线程就同时持有一把锁 容易出现脏数据<br>怎么解决呢？↓</p>
+</blockquote>
+<ul>
+<li><strong>RedLock(红锁)<strong>：不能只在一个redis实例上创建锁，应该是在多个redis实例上创建锁</strong>(n&#x2F;2+1)<strong>，避免在一个redis实例【实现复杂、性能差、运维繁琐】怎么解决？→ <strong>CP思想</strong>：</strong>zookeeper</strong></li>
+</ul>
+<h6 id="Redis集群有哪些方案？"><a href="#Redis集群有哪些方案？" class="headerlink" title="Redis集群有哪些方案？"></a><span style = "color:red">Redis集群有哪些方案？</span></h6><ul>
+<li><p>&#x3D;&#x3D;<strong>主从复制</strong>&#x3D;&#x3D;</p>
+<p>单节点Redis的并发能力是有上限的，要进一步提高Redis的并发能力，就需要搭建主从集群，实现读写分离<br><u>主节点写操作→增删改</u>     <u>从节点读操作→查</u></p>
+<h6 id="介绍一下redis的主从同步"><a href="#介绍一下redis的主从同步" class="headerlink" title="介绍一下redis的主从同步"></a><span style = "color:red">介绍一下redis的主从同步</span></h6><blockquote>
+<p>单节点Redis的并发能力是有上限的，要进一步提高Redis的并发能力，就要搭建主从集群，实现读写分离。一般都是一主多从，主节点负责写数据，从节点负责读数据</p>
+</blockquote>
+<p><strong>主从数据同步原理：</strong></p>
+<ul>
+<li><span style="color:blue"><u>主从<strong>全量同步</strong></u>：</span></li>
+</ul>
+<p>slave从节点执行replicaof命令建立链接 → 请求master主节点数据同步(<u>replid+offset</u>) → master判断是否是第一次同步(判断replid是否一致) → 是第一次, 返回master的数据版本信息(<u>replid+offset</u>)  → slave保存版本信息 → master执行bgsave, 生成RDB → 发送RDB文件给slave → slave清空本地数据加载RDB数据 → 此时master记录RDB期间所有命令<code>repl_balklog</code> → 发送repl_backlog中的命令 → slave执行接收到的命令</p>
+<p><strong>Replication ld</strong>: 简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid,slave则会继承master节点的replid<br><strong>offse</strong>t: 偏移量，随着记录在repl baklog中的数据增多而逐渐增大。save完成同步时也会记录当前同步的ofset，如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。</p>
+<p><span style = "color:red"><strong>能说一下，主从同步数据的流程吗？</strong></span></p>
+<p><span style="color:pink"><strong>全量同步</strong></span></p>
+<blockquote>
+<p>1.从节点请求主节点同步数据(replication id、offset)<br>2.主节点判断是否为第一次请求，是第一次就与从节点同步版本信息(replication id和offset)<br>3.主节点执行bgsave, 生成RDB文件后, 发送给从节点去执行<br>4.在RDB生成执行期间, 主节点会从命令的方式记录到缓冲区(日志文件)</p>
+</blockquote>
+<ul>
+<li><span style="color:blue"><u>主从<strong>增量同步</strong></u></span><br>主从增量同步(slave重启或后期数据变化)</li>
+</ul>
+<p>① slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 是第一次, 返回主节点replid和offset → 保存版本信息<br>② slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 不是第一次, 回复continue向slave → master 去repl_baklog中获取offset后的数据 → 发送offset后的命令给slave → 执行命令</p>
+<p><span style="color:pink"><strong>增量同步</strong></span></p>
+<blockquote>
+<p>1.从节点请求主节点同步数据，主节点判断不是第一次请求，不是第一次就获取从节点的offset值<br>2.主节点从命令日志中获取offset值后的数据，发送给节点进行数据同步</p>
+</blockquote>
+</li>
+<li><p>&#x3D;&#x3D;<strong>哨兵模式</strong>&#x3D;&#x3D;<br>Redis提供了<strong>哨兵</strong>(Sentinel)机制来实现主从集群的自动故障恢复</p>
+<ul>
+<li><strong>监控</strong>：Sentinel会不断检查您的master和slave是否按预期工作</li>
+<li><strong>自动故障恢复</strong>：如果master故障，Sentinel会将一个slave提升为一个master。当故障实例恢复后也以新的master为主</li>
+<li><strong>通知：</strong>Sentinel充当Redis客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给Redis的客户端</li>
+</ul>
+<p><span style="color:blue"><strong>服务状态监控</strong></span><br>Sentinel基于心跳机制监测服务状态，每隔1秒向集群的每个实例发送ping命令 <code>期待回复pong</code></p>
+<ul>
+<li><strong>主观下线</strong>：如果某sentinel节点发现或某实例未在规定时间相应，则认为该实例<strong>主观下线</strong></li>
+<li><strong>客观下线</strong>：若超过指定数量(quorum)的sentinel都认为该实例主观下线，则该实例<strong>客观下线</strong>，quorum值最好超过Sentinel实例数量的一半</li>
+</ul>
+<p><span style="color:blue"><strong>哨兵选主规则</strong></span></p>
+<ul>
+<li>首先判断主与从节点断开时间长短，如超过指定值就排该从节点</li>
+<li>然后判断从节点的slave-priority值，越小优先级越高</li>
+<li><strong><u>如果slave-priority值一样，则判断slave节点的offset值，越大优先级越高</u></strong> (数据是最全的)</li>
+<li>最后是判断slave节点的运行id大小，越小优先级越高</li>
+</ul>
+<p><strong><span style="color:blue">redis集群(哨兵模式) 脑裂</span></strong><br>因网络问题 主节点和从节点分别在不同的网络分区 这样sentinel只会监控到一部分从节点网络分区 导致RedisClient继续写主节点的数据，这时网络恢复了，哨兵会将老的master强制降级到slave(携带着脑裂前的最新数据)，这个时候slave就会把自己数据清空去同步master数据，这时就存在真正的数据丢失了</p>
+<p><strong>怎么解决</strong>？</p>
+<blockquote>
+<p>redis中有两个配置参数：【若不能达成就拒绝客户端请求 这样就会避免大量数据丢失】<br>min-replicas-to-write 1      <strong>表示最少的salve节点为1</strong><br>min-replicas-max-lag 5      <strong>表示数据复制和同步的延迟不能超过5秒</strong></p>
+</blockquote>
+<p><span style = "color:red"><strong>怎么保证Redis的高并发高可用呢？</strong></span></p>
+<blockquote>
+<p>哨兵模式：实现主从集群的自动故障恢复(监控、自动故障恢复、通知)</p>
+</blockquote>
+<p><span style = "color:red"><strong>你们使用redis是单点还是集群，哪种集群？</strong></span></p>
+<blockquote>
+<p>主从(1主1从) + 哨兵就可以了。单节点不超过10G内存，如果Redis内存不足则可以给不同服务分配独立的Redis主从节点</p>
+</blockquote>
+<p><span style = "color:red"><strong>redis集群脑裂，该怎么解决？</strong></span></p>
+<blockquote>
+<p><strong>集群脑裂</strong>是由于主节点和从节点和sentinel处于不同网络分区，使得sentinel没有能够心跳感知到主节点，所以通过选举的方式提升了一个从节点为主，这样就存在了两个master，就像大脑分裂了一样，这样会导致客户端还在老的主节点那里写入数据，新节点无法同步数据，当为网络恢复后，sentinel会将老的主节点降为从节点，此时再从新master同步数据，就会导致数据丢失<br><strong>解决</strong>：我们可以修改redis的配置，可以设置最少的从节点数量以及缩短主从数据同步的延迟时间，达不到要求就拒绝请求，这样就会避免大量数据丢失。</p>
+</blockquote>
+</li>
+<li><p><strong>分片集群</strong></p>
+<p>主从和哨兵可以解决高可用、高并发读的问题，但是依然有两个问题没有解决：</p>
+<ul>
+<li>海量数据存储问题</li>
+<li>高并发写的问题</li>
+</ul>
+<p>使用分片集群可用解决上述问题，分片集群特征：</p>
+<ul>
+<li>集群中有多个master，每个master保存不同数据</li>
+<li>每个master都可用有多个slave节点</li>
+<li>master之间通过ping监测彼此健康状态</li>
+<li>客户端请求可用访问集群任意节点，最终都会被转发到正确节点</li>
+</ul>
+<p><strong><span style="color:blue">分片集群结果 - 数据读写</span></strong></p>
+<p>Redis分片集群引入了<strong>哈希槽</strong>的概念，Redis集群有16384个哈希值，每个key通过CRC16校验后对16384取模来决定放置哪个槽，集群的每个节点负责一部分hash槽</p>
+<blockquote>
+<p>存数据流程：<br>set name itheima → CRC16计算name的hash值(666666) → 666666%16384&#x3D;11306 → 根据11306找寻所对应哈希槽的范围 并且插入数据</p>
+</blockquote>
+<p><span style = "color:red"><strong>redis的分片集群有什么用？</strong></span></p>
+<blockquote>
+<ul>
+<li>集群中有多个master，每个master保存不同数据。(解决高并发<strong>写</strong>的问题)</li>
+<li>每个master都可以有多个slave节点。(解决高并发<strong>读</strong>的问题)</li>
+<li>master之间通过ping监测彼此健康状态</li>
+<li>客户端请求可用访问集群任意节点，最终都会被转发到正确节点</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>redis的分片集群中数据是怎么存储和读取的？</strong></span></p>
+<blockquote>
+<ul>
+<li>Redis 分片集群引入了哈希槽的概念，Redis 集群有16384个哈槽</li>
+<li>将16384个插槽分配到不同的实例</li>
+<li>读写数据:根据key的**<u>有效部分</u>**计算哈希值，对16384取余(有效部分，如果key前面有大括号，大括号的内容就是有效部分，如果没有，则以key本身做为有效部分)余数做为播槽，寻找插所在的实例</li>
+</ul>
+</blockquote>
 </li>
 </ul>
 
