@@ -161,11 +161,11 @@
 </ul>
 <p>&#x3D;&#x3D;<strong>缓存击穿</strong>&#x3D;&#x3D;：给某一个key设置了过期时间，当key过期的时候，恰好这个时间点对这个key有大量的并发请求过来，这些并发请求可能一瞬间把DB击穿</p>
 <ul>
-<li><p><strong>解决方案一</strong>：互斥锁【数据<strong>强一致性</strong> 性能差 (银行)】</p>
+<li><p><strong>解决方案一</strong>：<strong>互斥锁</strong>【数据<strong>强一致性</strong> 性能差 (银行)】</p>
 <p>1.查询缓存,未命中 → 2.<strong>获取互斥锁成功</strong> → 3.查询数据库重建缓存数据 → 4.写入缓存 → 5.释放锁</p>
 <p>1.查询缓存,未命中 → 2.<strong>获取互斥锁失败</strong> → 3.休眠一会再重试 → 4.写入缓存重试 → 5.缓存命中</p>
 </li>
-<li><p><strong>解决方案二</strong>：逻辑过期[不设置过期时间] 【高可用 性能优 不能保证数据绝对一致 (用户体验)】</p>
+<li><p><strong>解决方案二</strong>：<strong>逻辑过期</strong>[不设置过期时间] 【高可用 性能优 不能保证数据绝对一致 (用户体验)】</p>
 <blockquote>
 <p>在数据库一条数据里面添加一个          “expire”: 153213455</p>
 </blockquote>
@@ -189,7 +189,7 @@
 <h6 id="redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性"><a href="#redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性" class="headerlink" title="redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)"></a><span style = "color:red">redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)</span></h6><p><strong>一定、一定、一定要设置前提，介绍自己的业务背景</strong> (一致性要求高？允许延迟一致？)</p>
 <blockquote>
 <p>① 介绍自己简历上的业务，我们当时是把文章的热点数据存入到了缓存中，虽然是热点数据，但是实时要求性并没有那么高，所以我们采用的是<strong>异步的方案同步的数据</strong></p>
-<p>② 我们当时是把抢卷的库存存入到了缓存中，这个需要实时的进行数据同步，为了保证数据的强一致性，我们当时擦爱用的是<strong>redission提供的读写锁</strong>来保证数据的同步</p>
+<p>② 我们当时是把抢卷的库存存入到了缓存中，这个需要实时的进行数据同步，为了保证数据的强一致性，我们当时采用的是<strong>redission提供的读写锁</strong>来保证数据的同步</p>
 </blockquote>
 <p><strong>双写一致性：</strong>当修改了数据库的数据也要同时更新缓存的数据，缓存和数据库的数据要保持一致</p>
 <ul>
@@ -199,8 +199,8 @@
 </li>
 <li><p>&#x3D;&#x3D;<strong>基于redisson互斥锁</strong>：&#x3D;&#x3D;[放入缓存中的数据 读多写少] 【强一致性业务 性能低】</p>
 <ul>
-<li><strong>共享锁</strong>：读锁readLock，加锁之后，其他线程可以共享读操作</li>
-<li><strong>排他锁</strong>：独占锁writeLock也叫，加锁之后，阻塞其他线程读写操作</li>
+<li><strong>共享锁</strong>：读锁readLock，加锁之后，其他线程可以<strong>共享读操作</strong>，但**<u>不允许写操作</u>**</li>
+<li><strong>排他锁</strong>：独占锁writeLock也叫，加锁之后，阻塞其他线程读写操作(只允许一个用户或进程独占地对数据进行读取和写入操作)<del>排他锁确保了写操作的原子性和一致性</del></li>
 <li>读数据的时候添加<u>共享锁(</u>读不互斥、写互斥)  </li>
 <li>写数据的时候添加<u>排他锁</u>(阻塞其他线程的读写 因为读多写少)</li>
 </ul>
@@ -208,7 +208,15 @@
 <p>redissionClient.getReadWriteLock(“xxxx”);</p>
 </blockquote>
 </li>
-<li><p><strong>异步通知：</strong>异步通知保证数据的最终一致性(需要保证MQ的可靠性)</p>
+<li><p><strong>异步通知：</strong>异步通知保证数据的最终一致性(需要保证MQ的可靠性)<del>需要在Redis中更新数据的同时，通知另一个服务进行某些操作。</del></p>
+<ul>
+<li><strong>使用场景</strong>：<ul>
+<li><strong>缓存与数据库双写</strong>： 当应用需要同时更新Redis缓存和数据库时，可以先将数据写入Redis，然后通过异步通知机制触发数据库的更新操作。</li>
+<li><strong>跨地域数据复制</strong>： 在跨地域部署的服务中，为了实现数据的最终一致性，可以在一个地域写入数据后，通过异步通知机制在另一个地域进行数据复制。</li>
+<li><strong>系统间数据同步</strong>： 在微服务架构中，不同的服务可能有自己的数据存储。当一个服务更新了数据后，可以通过异步通知机制告知其他相关服务进行数据同步。</li>
+</ul>
+</li>
+</ul>
 </li>
 <li><p>&#x3D;&#x3D;<strong>基于Canal的异步通知</strong>&#x3D;&#x3D;：监听mysql的binlog</p>
 <ul>
@@ -272,10 +280,10 @@ appendfsync no
 <td align="center">性能影响大</td>
 </tr>
 <tr>
-<td align="center"><u><strong>everysec</strong></u></td>
-<td align="center"><u><strong>每秒刷盘</strong></u></td>
-<td align="center"><u><strong>性能适中</strong></u></td>
-<td align="center"><u><strong>最多丢失1秒数据</strong></u></td>
+<td align="center"><u>everysec</u></td>
+<td align="center"><u>每秒刷盘</u></td>
+<td align="center"><u>性能适中</u></td>
+<td align="center"><u>最多丢失1秒数据</u></td>
 </tr>
 <tr>
 <td align="center">no</td>
@@ -345,7 +353,7 @@ get name # 发现name过期了，直接删除key
 </code></pre>
 <p><strong>优点：</strong>对CPU友好，只会在使用该key时才会进行过期检查，对于很多用不到的key不会浪费时间进行过期检查<br><strong>缺点：</strong>对内存不友好，如果一个key已经过期，但是一直没有使用，那么该key就会一直存在内存中，内存永远不会释放</p>
 <p><strong>&#x3D;&#x3D;Redis数据删除策略-定期删除&#x3D;&#x3D;</strong></p>
-<p>定期删除：每隔一段时间，我们就会对一些key进行检查，删除里面过期的key (从一定数量的数据库中取出一定数量的随机key进行检查，并删除其中的过期key)</p>
+<p>定期删除：每隔一段时间，我们就会对一些key进行检查，删除里面过期的key (从一定数量的数据库中取出一定数量的<strong>随机key</strong>进行检查，并删除其中的过期key)</p>
 <p><strong>定期清理的两种模式：</strong></p>
 <ul>
 <li><strong>SLOW模式</strong>是定时模式，执行频率默认为10hz，每次不超过25ms，以通过修改配置文件<code>redis.conf</code>的hz选项来调整这个次数</li>
@@ -378,7 +386,7 @@ get name # 发现name过期了，直接删除key
 </li>
 </ul>
 <p><strong>淘汰策略 - 使用建议</strong></p>
-<p>1.优先使用 <code>allkeys-lru</code> 策略。充分利用LRU算法的优势，把最近最常访问的数据留在缓存中，如果业务有明显的冷热数据区分，建议使用。<br>2.如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用<code>allkeys-random</code>，随机选择淘汰<br>3.如果业务i中有置顶的需求，可以使用<code>volatile-lru</code>策略，同时置顶数据不设置过期时间，这些数据就一直不会被删除，会淘汰其他设置过期时间的数据<br>4.如果业务中有短时高频访问的数据，可以使用<code>allkeys-lfu</code>或<code>volatile-lfu</code>策略</p>
+<p>1.优先使用 <code>allkeys-lru</code> 策略。充分利用LRU算法的优势，把最近最常访问的数据留在缓存中，如果业务有明显的冷热数据区分，建议使用。<br>2.如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用<code>allkeys-random</code>，随机选择淘汰<br>3.如果业务中有置顶的需求，可以使用<code>volatile-lru</code>策略，同时<strong>置顶数据不设置过期时间</strong>，这些数据就一直不会被删除，会淘汰其他设置过期时间的数据<br>4.如果业务中有<strong>短时高频</strong>访问的数据，可以使用<code>allkeys-lfu</code>或<code>volatile-lfu</code>策略</p>
 <h6 id="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"><a href="#数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？" class="headerlink" title="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"></a>数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？</h6><ul>
 <li>使用<code>allkeys-lru</code>(挑选最近最少使用的数据淘汰) 淘汰策略，留下来的都是经常访问的热点数据</li>
 </ul>
@@ -406,7 +414,7 @@ get name # 发现name过期了，直接删除key
 </ul>
 <p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 执行流程</strong>&#x3D;&#x3D;</p>
 <blockquote>
-<p>加锁 ↓→ 加锁成功 → Watch dog(看门狗)<del>每隔(releaseTime&#x2F;3的时间做一次续期)</del> → Redis<br>↓        操作redis → Redis<br>↓→→ 释放锁↑ → 通知看门狗无需继续监听 → Redis</p>
+<p>加锁 ↓→ 加锁成功 → <strong>Watch dog(看门狗)<del>每隔(releaseTime&#x2F;3的时间做一次续期)</del></strong> → Redis<br>↓        操作redis → Redis<br>↓→→ 释放锁↑ → 通知看门狗无需继续监听 → Redis</p>
 </blockquote>
 <blockquote>
 <p>加锁  → → → 是否加锁成功？→→→   ↓<br>↑←←while循环不断尝试获取锁←←←↓</p>
@@ -484,7 +492,7 @@ public void add2()&#123;
 <li><span style="color:blue"><u>主从<strong>全量同步</strong></u>：</span></li>
 </ul>
 <p>slave从节点执行replicaof命令建立链接 → 请求master主节点数据同步(<u>replid+offset</u>) → master判断是否是第一次同步(判断replid是否一致) → 是第一次, 返回master的数据版本信息(<u>replid+offset</u>)  → slave保存版本信息 → master执行bgsave, 生成RDB → 发送RDB文件给slave → slave清空本地数据加载RDB数据 → 此时master记录RDB期间所有命令<code>repl_balklog</code> → 发送repl_backlog中的命令 → slave执行接收到的命令</p>
-<p><strong>Replication ld</strong>: 简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid,slave则会继承master节点的replid<br><strong>offse</strong>t: 偏移量，随着记录在repl baklog中的数据增多而逐渐增大。save完成同步时也会记录当前同步的ofset，如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。</p>
+<p><strong>Replication ld</strong>: 简称replid，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid,slave则会继承master节点的replid<br><strong>offset</strong>: 偏移量，随着记录在repl baklog中的数据增多而逐渐增大。save完成同步时也会记录当前同步的ofset，如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。</p>
 <p><span style = "color:red"><strong>能说一下，主从同步数据的流程吗？</strong></span></p>
 <p><span style="color:pink"><strong>全量同步</strong></span></p>
 <blockquote>
@@ -658,7 +666,7 @@ public void add2()&#123;
 <ul>
 <li>用户进程调用select，指定要监听的Socket集合</li>
 <li>内核监听对应的多个socket</li>
-<li>任意一个或多个sacket数据就绪则透回readable</li>
+<li>任意一个或多个sacket数据就绪则返回readable</li>
 <li>此过程中用户进程阻塞</li>
 </ul>
 <p><strong>阶段二</strong>:</p>
@@ -675,6 +683,313 @@ public void add2()&#123;
 </li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/9490d2cd8e67cb8fae7520ad15c0849821dbfac0/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B.png"></p>
+<h1 id="MySQL篇"><a href="#MySQL篇" class="headerlink" title="MySQL篇"></a>MySQL篇</h1><p><span style = "color:red"><strong>在MySQL中，如何定位慢查询？</strong></span></p>
+<blockquote>
+<p>1.介绍一下当时产生问题的场景(我们当时的一个接口测试的时候非常的慢，压测的结果大概5秒钟)<br>2.我们系统中当时采用了运维工具(<strong>Skywalking</strong>)，可以监测出哪个接口，最终因为是sql的问题<br>3.在mysql中开启了慢日志查询，我们设置的值就是2秒，一旦sql执行超过2秒就会记录到日志中(调试阶段)</p>
+</blockquote>
+<blockquote>
+<p>产生原因：</p>
+<ul>
+<li>聚合查询</li>
+<li>多表查询</li>
+<li>表数据量过大查询</li>
+<li>深度分页查询</li>
+</ul>
+</blockquote>
+<p><strong>方案一：</strong>&#x3D;&#x3D;<strong>开源工具</strong>&#x3D;&#x3D;[调试阶段才会开启  生产阶段不会开启]</p>
+<ul>
+<li>调试工具Arthas</li>
+<li>运维工具：Prometheus、SKywalking(接口访问时间)</li>
+</ul>
+<p><strong>方案二：</strong>&#x3D;&#x3D;<strong>MySQL自带慢日志</strong>&#x3D;&#x3D;</p>
+<p>慢查询日志记录了所有执行时间超过指定参数(long_query_time, 单位：秒，默认10秒)的所有SQL语句的日志，如果要开启慢查询日志，需要在MySQL的配置文件(&#x2F;etc&#x2F;my.cnf)中配置信息：</p>
+<pre><code class="mysql"># 开启MySQL慢日志查询开关
+slow_query_log = 1
+# 设置慢日志的时间为2秒，SQL语句执行时间超过2秒，就会被视为慢查询，记录慢查询日志
+long_query_time = 2
+</code></pre>
+<p><span style = "color:red"><strong>那这个SQL语句执行很慢，如何分析呢？</strong></span></p>
+<blockquote>
+<p>可以采用MySQL自带的分析工具 EXPLAIN</p>
+<ul>
+<li>通过key和key_len检查是否命中了索引(索引本身存在是否有失效的情况)</li>
+<li>通过type字段查看sql是否有进一步的优化空间，是否存在<strong>全索引扫描</strong>或<strong>全盘扫描</strong></li>
+<li>通过extra建议判断，是否出现了回表的情况，如果出现了，可以尝试添加索引或修改返回字段来修复</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>产生原因：</p>
+<ul>
+<li>聚合查询 → <strong><u>新增临时表的数据</u></strong></li>
+<li>多表查询 → <strong><u>优化SQL语句结构</u></strong></li>
+<li>表数据量过大查询 → <strong><u>添加索引</u></strong></li>
+<li>深度分页查询</li>
+</ul>
+</blockquote>
+<h5 id="一个SQL语句执行很慢，如何分析？"><a href="#一个SQL语句执行很慢，如何分析？" class="headerlink" title="一个SQL语句执行很慢，如何分析？"></a>一个SQL语句执行很慢，如何分析？</h5><p>可以采用<code>EXPLAIN</code>或者<code>DESC</code>命令获取MySQL如何执行SELECT语句的信息</p>
+<pre><code class="mysql"># 直接在select语句之前加上关键字 explain/desc
+EXPLAIN SELECT 字段列表 FROM 表名 WHERE 条件;
+</code></pre>
+<blockquote>
+<p>mysql &gt; explain select * from t_user where id &#x3D; ‘1’</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>Extra</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td>t_user</td>
+<td>NULL</td>
+<td>const</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>98</td>
+<td>const</td>
+<td>1</td>
+<td>100.00</td>
+<td>NULL</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>possible_key</strong>：当前sql可能会使用到的索引</li>
+<li><strong>key：</strong>当前sql实际命中的索引     <u>通过它俩查看是否可能会命中索引</u></li>
+<li><strong>key_len</strong>：索引占用的大小          <u>通过它俩查看是否可能会命中索引</u></li>
+<li><strong>Extra</strong>：额外的优化建议</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Extra</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Using where; Using Index</td>
+<td>查找使用了索引，需要的数据都在索引列中能找到，不需要回表查询数据</td>
+</tr>
+<tr>
+<td>Using index condition</td>
+<td>查找使用了索引，但是需要回表查询数据</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>type：</strong>这条sql的连接的类型，性能由好到差为 <ul>
+<li>NULL</li>
+<li>system：查询系统中的表</li>
+<li>const：根据主键查询</li>
+<li>eq_ref：主键索引查询或唯一索引查询</li>
+<li>ref：索引查询</li>
+<li>range：范围查询</li>
+<li><em>index：索引树扫描</em></li>
+<li><em>all：全盘扫描</em></li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>了解过索引吗？（什么是索引）</strong></span></p>
+<blockquote>
+<p>索引(index)是帮助MySQL高效获取数据的数据结构(有序)，在数据之外，数据库系统还维护着满足特定查找算法的数据结构**(B+树)**，这些数据结构以某种方式引用(指向)数据，这样就可以在这些数据结构上实现高级查找算法，这种数据结构就是索引</p>
+<ul>
+<li>索引(index)是帮助MySQL高效获取数据的数据结构(有序)</li>
+<li>提高数据检索的效率，降低数据库的IO成本(不需要全表扫描)</li>
+<li>通过索引列对数据进行排序，降低数据排序的成本，降低了CPU的消耗</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>索引的底层数据结构了解过吗？</strong></span></p>
+<blockquote>
+<p>MySQL的InnoDB引擎采用的B+树的数据结构来存储索引</p>
+<ul>
+<li>阶数更多，路径更短</li>
+<li>磁盘读写代价B+树更低，非叶子节点只存储指针，叶子阶段存储数据</li>
+<li>B+树便于扫库和区间查询，叶子节点是一个双向链表</li>
+</ul>
+</blockquote>
+<p>**<u>MySQL默认使用的索引底层数据结构是B+树</u>**。再聊B+树之前，先来聊聊二叉树和B树</p>
+<p>&#x3D;&#x3D;<strong>B Tree</strong>(<strong>矮胖树</strong>)&#x3D;&#x3D;，B树是一种多叉路衡查找树，相对于二叉树，B树每个节点可以有多个分支，即多叉。以一颗最大度数(max-degree)为5(5阶)的b-tree为例，那这个B树每个节点最多存储4个key</p>
+<p>&#x3D;&#x3D;<strong>B+Tree</strong>&#x3D;&#x3D; 是再BTree基础上的一种优化，使其更适合实现外存储索引结构，InnoDB存储引擎就是B+Tree实现其索引结构</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/264cd6bd9cf733e6fe23dd38f6959fe688dec2d9/B%20Tree%20%E5%92%8C%20B+Tree.png"></p>
+<p><strong>B树与B+树对比</strong>：</p>
+<ul>
+<li>磁盘读写代价B+树更低</li>
+<li>查询效率B+树更加稳定</li>
+<li>B+树便于扫库和区间查询</li>
+</ul>
+<blockquote>
+<p><strong>B树</strong>要找12 首先找38 左面小 再去缩小范围16和29 找到12 → 但是我们只想要12的数据 B树会额外的把38,16,29的数据全查一遍最后才到12的数据</p>
+<p><strong>B+树</strong>是在叶子节点才会存储数据，在非叶子节点全是指针，这样就没有其他乱七八糟的数据影响 。且查找路径是差不多的，效率较稳定</p>
+<p><strong>便于扫库</strong>：比如我们要查询6-34区间的数据，先去根节点扫描一次38 → 16-29 → 由于叶子节点之间有双向指针，就可以一次性把所有数据都给拿到[无需再去根节点找一次]</p>
+</blockquote>
+<p><span style = "color:red"><strong>什么是聚簇索引？什么是非聚簇索引(二级索引)？什么是回表？</strong></span></p>
+<blockquote>
+<ul>
+<li>**聚簇索引(聚集索引)**：数据与索引放到一块，B+树的叶子节点保存了整行数据，有且只有一个</li>
+<li>**非聚簇索引(二级索引)**：数据与索引分开存储，B+树的叶子节点保存对应的主键，可以有多个</li>
+<li><strong>回表查询</strong>：通过二级索引找到对应的主键值，到聚集索引中查找正行数据，这个过程就是回表</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="left">分类</th>
+<th align="left">含义</th>
+<th align="left">特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">&#x3D;&#x3D;<strong>聚集索引</strong>(Clustered Index)&#x3D;&#x3D;</td>
+<td align="left">将数据存储与索引放到了一块，索引结构的叶子节点保存了行数据</td>
+<td align="left">必须有, 而且只有一个</td>
+</tr>
+<tr>
+<td align="left">&#x3D;&#x3D;<strong>二级索引</strong>(Secondary Index)&#x3D;&#x3D;</td>
+<td align="left">将数据与索引分开存储，索引结构的叶子节点关联的是对应的主键</td>
+<td align="left">可以存在多个</td>
+</tr>
+</tbody></table>
+<p><strong>聚集索引选取规则：</strong></p>
+<ul>
+<li>如果存在主键，主键索引就是聚集索引</li>
+<li>如果不存在主键，将使用第一个唯一 (UNIQUE) 索引作为聚集索引</li>
+<li>如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引</li>
+</ul>
+<p><img src="https://github.com/P-luminary/images/blob/master/%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%20%E5%92%8C%20%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95.jpg?raw=true"></p>
+<p>&#x3D;&#x3D;<strong>回表查询</strong>&#x3D;&#x3D;</p>
+<p><code>select * from user where name = &#39;Arm&#39;;</code></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/25accb51fee1e0b8d57deebf6bfe38e3868b32bf/%E5%9B%9E%E8%A1%A8%E6%9F%A5%E8%AF%A2.png"></p>
+<p><span style = "color:red"><strong>知道什么叫覆盖索引吗？</strong></span></p>
+<blockquote>
+<p>覆盖索引是指查询使用了索引，返回的列，必须在索引中全部能够找到</p>
+<ul>
+<li>使用id查询，直接走聚集索引查询，一次索引描述，直接返回数据，性能高</li>
+<li>如果返回的列中没有创建索引，有可能会触发回表查询，尽量避免使用 **select *** <del>[除非用的聚簇索引(主键)]</del></li>
+</ul>
+</blockquote>
+<p>&#x3D;&#x3D;<strong>覆盖索引</strong>&#x3D;&#x3D;是指查询使用了索引，并且需要返回的列，在该索引中已经全部能够找到</p>
+<table>
+<thead>
+<tr>
+<th align="center"><span style = "color:red">id</span></th>
+<th align="center"><span style = "color:red">name</span></th>
+<th align="center">gender</th>
+<th align="center">createdate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">2</td>
+<td align="center">Arm</td>
+<td align="center">1</td>
+<td align="center">2021-01-01</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">Lily</td>
+<td align="center">0</td>
+<td align="center">2021-05-04</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td align="center">Rose</td>
+<td align="center">0</td>
+<td align="center">2021-04-21</td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td align="center">Zoo</td>
+<td align="center">1</td>
+<td align="center">2021-07-31</td>
+</tr>
+<tr>
+<td align="center">8</td>
+<td align="center">Doc</td>
+<td align="center">1</td>
+<td align="center">2021-02-26</td>
+</tr>
+<tr>
+<td align="center">11</td>
+<td align="center">Lee</td>
+<td align="center">1</td>
+<td align="center">2021-09-11</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>id为主键，默认是主键索引</strong></li>
+<li><strong>name字段为普通索引</strong></li>
+</ul>
+<pre><code class="mysql">select * from tb_user where id = 1;                     【覆盖索引】
+select id, name from tb_user where name = &#39;Arm&#39;         【覆盖索引】
+select id, name, gender from tb_user where name = &#39;Arm&#39; 【非覆盖索引】(需要回表查询)
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9b20975f94b299a861457b2214bd985ff4b2625d/%E8%A6%86%E7%9B%96%E7%B4%A2%E5%BC%95.jpg"></p>
+<p><span style = "color:red"><strong>MySQL超大分页怎么处理？</strong></span></p>
+<blockquote>
+<p>问题：再数据量比较大时，limit分页查询，需要对数据进行排序，效率低<br><strong>解决方案：</strong>可以用<strong>覆盖索引</strong> + <strong>子查询</strong>处理<br>[我们先分页查询获取表中的id 并且对表的id进行排序 就能筛选出分页后的id集合(因为id是覆盖索引效率高)  最后再根据id集合到原来的表中做关联查询就可以得到提升了]</p>
+</blockquote>
+<p>在数据量比较大时，如果用limit分页查询，在查询时，越往后，分页查询效率越低</p>
+<pre><code class="mysql">mysql &gt; select * from tb_sku limit 0,10;
+10 rows in set (0.00 sec)
+
+mysql &gt; select * from tb_sku limit 9000000,10;
+10 rows in set (11.05 sec)
+</code></pre>
+<p>因为，当在进行分页查询时，如果执行 limit  9000000,10，此时需要MySQL排序前9000010记录，仅仅返回9000000 - 9000010 的记录，其他记录丢失，查询排序的代价非常大。</p>
+<p>&#x3D;&#x3D;<strong>MySQL超大分页查询优化思路</strong>&#x3D;&#x3D;：一般分页查询时，通过创建<strong>覆盖索引</strong>能够比较好地提高性能，可以通过<strong>覆盖索引</strong>加<strong>子查询</strong>形式进行优化</p>
+<pre><code class="mysql"># 超大分页处理：先通过覆盖索引找到符合条件的id，再通过这个id的覆盖索引查询到所有的列
+select * 
+from tb_sku t,
+(select id from tb_sku order by id limit 9000000,10) a
+where t.id = a.id
+
+# 10 rows in set (7.15 sec)
+</code></pre>
+<p><span style = "color:red"><strong>索引创建原则有哪些？</strong></span></p>
+<blockquote>
+<p>① <strong>数据量较大，且查询比较频繁的表</strong><br>② <strong>常作为查询条件、排序、分组的字段</strong><br>③ 字段内容区分度高<br>④ 内容较长，使用前缀索引<br>⑤ <strong>尽量联合索引</strong><br>⑥ <strong>要控制索引的数量</strong><br>⑦ 如果索引列不能存储NULL值，请在创建表时使用NOT NULL约束它</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>先陈述自己再实际工作中是怎么用的</li>
+<li>主键索引</li>
+<li>唯一索引</li>
+<li>根据业务创建的索引(复合索引)</li>
+</ul>
+</blockquote>
+<ul>
+<li>针对数据量较大，且查询比较频繁的表建立索引。<strong>单表超过10万数据(增加用户体验)</strong></li>
+<li>针对常作为<strong>查询条件(where)、排序(order by)、分组(group by)</strong> 操作的字段建立索引</li>
+<li>尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高 (比如address都在北京市)</li>
+<li>如果是字符串类型的字段，字段的长度越长(描述信息…)，可以针对于字段的特点，建立前缀索引</li>
+<li>尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引(避免回表)，节省存储空间，提高查询效率</li>
+<li>要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率</li>
+<li>如果索引列不能存储NULL值，请在创建表时使用NOT NULL约束它。当优化器知道每列是否包含NULL值时，它可以更好地确定哪个索引最有效地用于查询。</li>
+</ul>
+<p><span style = "color:red"><strong>什么情况下索引会失效？</strong></span></p>
+<blockquote>
+<ul>
+<li>违反最左前缀法则</li>
+<li>范围查询右边的列，不能使用索引</li>
+<li>不要在索引列上进行运算操作，索引将失效</li>
+<li>字符串不加单引号，造成索引失效。(类型转换)</li>
+<li>以%开头的Like模糊查询，索引失效<br>[不影响正常查询业务 但未运用超大分页查询优化 会导致索引失效]</li>
+</ul>
+</blockquote>
+<p><strong>怎么哪块读判断索引是否失效了呢</strong>？</p>
+<pre><code class="mysql"># 执行计划explain
+</code></pre>
+<p><strong>什么情况下索引会失效？</strong><br>如果索引了多列，要遵守最左前缀法则。指的是查询从索引的最左前列开始，并且不跳过索引中的列。匹配最左前缀法则，走索引：<br><img src="https://github.com/P-luminary/images/blob/master/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88.png?raw=true" style="zoom:80%;" /></p>
 
     </div>
 
