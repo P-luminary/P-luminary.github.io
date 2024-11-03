@@ -1010,6 +1010,293 @@ where t.id = a.id
 <pre><code class="mysql"># 执行计划explain
 </code></pre>
 <p><strong>什么情况下索引会失效？</strong><br>如果索引了多列，要遵守最左前缀法则。指的是查询从索引的最左前列开始，并且不跳过索引中的列。匹配最左前缀法则，走索引：<br><img src="https://github.com/P-luminary/images/blob/master/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88.png?raw=true" style="zoom:80%;" /></p>
+<p><span style = "color:red"><strong>谈谈你对sql的优化经验？</strong></span></p>
+<blockquote>
+<ul>
+<li>表的设计优化，数据类型的选择</li>
+<li>索引优化，索引创建原则</li>
+<li>sql语句优化，避免索引失效，避免使用select</li>
+<li>主从复制、读写分离，不让数据的写入，影响读操作</li>
+<li>分库分表</li>
+</ul>
+</blockquote>
+<ul>
+<li><p>表的设计优化(<strong>参考阿里开发手册《嵩山版》</strong>)</p>
+<ul>
+<li>比如设置合适的数值(tinyint、int、bigint) ，要根据实际情况选择</li>
+<li>比如设置合适的字符串类型(char和varchar) char定长效率高，varchar可变长度，效率低</li>
+</ul>
+<blockquote>
+<p>候选人: 这个我们主要参考的阿里出的那个开发手册《嵩山版》，就比如，在定义字段的时候需要结合字段的内容来选择合适的类型，如果是数值的话，像tinyint、int、bigint这些类型，要根据实际情况选择。如果是字符串类型，也是结合存储的内容来选择char和varchar或者text类型</p>
+</blockquote>
+</li>
+<li><p><strong>索引优化</strong>(参考优化创建原则和索引失效)</p>
+</li>
+<li><p><strong>SQL语句优化</strong></p>
+<ul>
+<li><p>SELECT语句务必指明字段名称 (避免直使用select *)<del>回表</del></p>
+</li>
+<li><p>SQL语句要避免造成索引失效的写法</p>
+</li>
+<li><p>尽量使用union all代替union，union(不会重复)会多一次过滤, 效率低</p>
+<pre><code class="mysql">select * from t_user where id &gt; 2
+union all | union
+select * from t_user where id &lt; 5
+</code></pre>
+</li>
+<li><p>避免在where子句中对字段进行表达式操作</p>
+</li>
+<li><p>join优化 能用inner join 就不用left join,  right 如必须使用 一定要以小表为驱动；内链接会对两个表进行优化，<strong>优先把小表放到外边，把大表放到里边</strong>。left join 或 right  join，不会重新调整顺序</p>
+<pre><code class="java">for(int i = 0; i &lt; 3; i++)&#123; //只链接查询3次
+ for(int j = 0; j &lt; 1000; j++)&#123;
+
+ &#125;  
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>主从复制、读写分离</strong>(在生产环境下一般会搭建主库和从库 分开读操作和写操作)</p>
+<p>如果数据库的使用场景读的操作比较多的时候，为了避免写的操作所造成的性能影响 可以采用读写分离的架构。读写分离解决的是，<strong>数据库的写入</strong>，影响了查询的效率。[Master(写) 和 Slave(读)]</p>
+</li>
+<li><p><strong>分库分表(后面有介绍)</strong></p>
+</li>
+</ul>
+<p><span style = "color:red"><strong>事务的特性是什么？可以详细的说一下吗？</strong></span>【ACID】</p>
+<blockquote>
+<p>事务是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作要么同时成功，要么同时失败。</p>
+<p>候选人：嗯，这个比较清楚，ACID，分别指的是:原子性、一致性、隔离性、持久性;<br><strong>我举个例子</strong>：A向B转账500，转账成功，A扣除500元，B增加500元，原子操作体现在<u>要么都成功，要么都失败</u>。<br>在转账的过程中，数据要一致，A扣除了500，B必须增加500<br>在转账的过程中，隔离性体现在A像B转账，不能受其他事务干扰<br>在转账的过程中，持久性体现在事务提交后，要把数据持久化(可以说是落盘操作)</p>
+</blockquote>
+<ul>
+<li>**原子性(**Atomicity)：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。</li>
+<li><strong>一致性</strong>(Consistency)：事务完成时，必须使所有的数据都保持一致状态。</li>
+<li><strong>隔离性</strong>(lsolation)：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境运行</li>
+<li><strong>持久性</strong>(Durabiity)：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。</li>
+</ul>
+<p><span style = "color:red"><strong>并发事务带来哪些问题？怎么解决这些问题？MySQL默认隔离级别是？</strong></span></p>
+<blockquote>
+<ul>
+<li>&#x3D;&#x3D;<strong>并发事务问题</strong>&#x3D;&#x3D;：脏读、不可重复读、幻读</li>
+<li>&#x3D;&#x3D;<strong>隔离级别</strong>&#x3D;&#x3D;：读未提交、读已提交、<strong>可重复读</strong>、串行化</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">问题</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">脏读</td>
+<td>一个事务读到另外一个事务还没有提交的数据</td>
+</tr>
+<tr>
+<td align="center">不可重复读</td>
+<td>一个事务先后读取同一条事务，但两次读取的数据不同，称之为不可重复读</td>
+</tr>
+<tr>
+<td align="center">幻读</td>
+<td>一个事务按照条件查询数据时，没有对应的数据行，这同时另一个事务B(insert且commit)了事务，此时事务A在插入数据时候，又发现这行数据已经存在了，好像出现了”幻影“</td>
+</tr>
+</tbody></table>
+<h6 id="怎么解决并发事务的问题呢？？"><a href="#怎么解决并发事务的问题呢？？" class="headerlink" title="怎么解决并发事务的问题呢？？"></a>怎么解决并发事务的问题呢？？</h6><p><strong>对事务进行隔离</strong> (× 是代表可以解决此问题)</p>
+<table>
+<thead>
+<tr>
+<th align="center">隔离级别</th>
+<th align="center">脏读</th>
+<th align="center">不可重复读</th>
+<th align="center">幻读</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Read uncommitted 未提交读</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">Read committed 读已提交</td>
+<td align="center">×</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">&#x3D;&#x3D;<strong>Repeatable Read(默认) 可重复读</strong>&#x3D;&#x3D;</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">Serializable 串行化</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+</tr>
+</tbody></table>
+<p>注意：**<u>事务隔离级别越高，数据越安全，但是性能越低</u>**</p>
+<p><span style = "color:red"><strong>undo log 和 redo log的区别？</strong></span></p>
+<blockquote>
+<p><strong>redo log</strong>：记录的是数据页的物理变化，服务宕机可用来同步数据<br><strong>undo log</strong>：记录的是逻辑日志，当事务回滚时，通过逆操作恢复原来的数据<br><strong>redo log</strong> 保证了事务的持久性，undolog保证了事务的原子性和一致性</p>
+</blockquote>
+<ul>
+<li><strong>缓冲池</strong>(buffer pool)：主内存中的一个区域，里面可以缓存磁盘上经常操作的真实数据，在执行增删改査操作时，先操作缓冲池中的数据(若缓冲池没有数据，则从磁盘加载并缓存)，以一定频率刷新到磁盘，从而减少磁盘IO，加快处理速度</li>
+<li><strong>数据页</strong>(page)：是InnoD8 存储引擎磁盘管理的最小单元，每个页的大小默认为 16KB。页中存储的是行数据</li>
+</ul>
+<p>&#x3D;&#x3D;<strong>redo log</strong>&#x3D;&#x3D;</p>
+<p>重做日志，记录的是事务提交时数据页的物理修改，是<strong>用来实现事务的持久性</strong><br>该日志文件由两部分组冲：<strong>重做日志缓冲(redo log buffer)</strong> 以及 **重做日志文件(redo log file)**，前者是在内存中，后者是在磁盘中。当事务提交之后会把所有修改信息都保存到该日志文件中，用于在刷新脏页到磁盘，发生错误时，进行数据恢复使用。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f3e54069fe783271a5892cf6d0bf49247f2b0f4a/undo%20log%20%E5%92%8C%20redo%20log%E5%8C%BA%E5%88%AB.jpg"></p>
+<p>&#x3D;&#x3D;<strong>undo log</strong>&#x3D;&#x3D;</p>
+<p>回滚日志，用于记录数据被修改前的信息，作用包含两个：<strong>提供回滚</strong>和 <strong>MVCC</strong>(多版本并发控制)。undolog 和 redolog记录物理日志不一样，它是<strong>逻辑日志</strong></p>
+<ul>
+<li>可以认为当delete一条记录时，undo log中会记录一条对应的insert记录，反之亦然</li>
+<li>当update一条记录时，它记录一条对应相反的update记录。当执行rolback时，就可以从undolog中的逻辑记录读取到相应的内容并进行回滚。</li>
+</ul>
+<p><strong>undo log可以实现事务的一致性和原子性</strong></p>
+<p><span style = "color:red"><strong>事务中的隔离性是如何保证的呢？</strong></span></p>
+<blockquote>
+<p>排他锁 (如果一个事务获取到了一哥数据行的排他锁，其他事务就不能再获取该行的其他锁)<br>mvcc: 多版本并发控制  让MySQL中的多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突<br><strong>隐藏字段</strong>:<br>① trx _id(事务id)，记录每一次操作的事务id，是自增的<br>② roll _pointer(回滚指针)，指向上一个版本的事务版本记录地址</p>
+<p><strong>undo log</strong>:<br>① 回滚日志，存储老版本数据<br>② 版本链:多个事务并行操作某一行记录，记录不同事务修改数据的版本，通过rollpointer指针形成一个链表</p>
+<p><strong>readView</strong>：解决的是一个事务查询选择版本的问题<br>根据readView的匹配规则和当前的一些事务id判断该访问那个版本的数据》不同的隔离级别快照读是不一样的，最终的访问的结果不一样RC:每一次执行快照读时生成ReadView<br>RR:仅在事务中第一次执行快照读时生成ReadView，后续复用</p>
+</blockquote>
+<blockquote>
+<p><strong>面试官</strong>: 事务中的隔离性是如何保证的呢?(你解释一下MVCC)<br><strong>候选人</strong>: 事务的隔离性是由锁和mvcc实现的。<br>其中mnvcc的意思是多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突，它的底层实现主要是分为了三个部分，第一个是<u>隐藏字段</u>，第二个是<u>undolog日志</u>，第三个是<u>readView读视图</u><br>隐藏字段是指:在mysq!中给每个表都设置了隐藏字段，有一个是x_id(事务id)，记录每一次操作的事务id，是自增的;另一个字段是roll-pointer(回滚指针)，指向上一个版本的事务版本记录地址<br>undolog主要的作用是记录回滚日志，存储老版本数据，在内部会形成一个版本链，在多个事务并行探作某一行记录，记录不同事务修改数据的版本，通过roll_pointer指针形成一个链表<br>readview解决的是一个事务查询选择版本的问题，在内部定义了一些匹配规则和当前的一些事务id判断该访问那个版本的数据，不同的隔离级别快照读是不一样的，最终的访问的结果不一样。如果是rc隔离级别，每一次执行快照读时生成ReadView，如果是r隔离级别仅在事务中第一次执行快照读时生成ReadView，后续复用</p>
+</blockquote>
+<p><span style = "color:red"><strong>解释一下MVCC？</strong></span></p>
+<p>全程 <strong>Multi-Version Concurrency Control</strong>，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突</p>
+<h6 id="问题的来源：-橙色的-查询的是哪个事务版本的记录？"><a href="#问题的来源：-橙色的-查询的是哪个事务版本的记录？" class="headerlink" title="问题的来源：(橙色的)查询的是哪个事务版本的记录？"></a>问题的来源：(橙色的)查询的是哪个事务版本的记录？</h6><table>
+<thead>
+<tr>
+<th align="center">事务2</th>
+<th align="center">事务3</th>
+<th align="center">事务4</th>
+<th align="center">事务5</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">开始事务</td>
+<td align="center">开始事务</td>
+<td align="center">开始事务</td>
+<td align="center">开始事务</td>
+</tr>
+<tr>
+<td align="center">修改id为30记录, age改为3</td>
+<td align="center"></td>
+<td align="center">查询id为30的记录</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">提交事务</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">修改id为30记录, name改为A3</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"><span style = "color:orange"><strong>查询id为30的记录</strong></span></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">提交文件</td>
+<td align="center">修改id为30的记录, age改为10</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">查询id为30的记录</td>
+<td align="center"><span style = "color:orange"><strong>查询id为30的记录</strong></span></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">提交事务</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h6 id="MVCC-实现原理"><a href="#MVCC-实现原理" class="headerlink" title="MVCC-实现原理"></a>MVCC-实现原理</h6><ul>
+<li><strong>记录中的隐藏字段</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">age</th>
+<th align="center">name</th>
+<th align="center">DB_TRX_ID</th>
+<th align="center">DB_ROLL_PTR</th>
+<th align="center">DB_ROW_ID</th>
+</tr>
+</thead>
+</table>
+<ul>
+<li><strong>DB_TRX_ID</strong>：最近修改事务ID，记录插入这条记录或最后一次修改该记录的事务ID</li>
+<li><strong>DB_ROLL_PTR</strong>：回滚指针，指向这条记录的上一个版本，用于配合undo log, 指向上一个版本</li>
+<li><strong>DB_ROW_ID</strong>：隐藏主键，如果表结构没有指定主键，将会生成该隐藏字段</li>
+</ul>
+<h6 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h6><ul>
+<li>回滚日志，在insert、update、delete的时候产生的便于数据回滚的日志。</li>
+<li>当insert的时候，产生的undolog日志只在回滚时需要，在事务提交后，可被立即删除。</li>
+<li>而update、delete的时候，产生的undo log日志不仅在回滚时需要，mvcc版本访问也需要，不会立即被删除。</li>
+</ul>
+<h6 id="undo-log版本链"><a href="#undo-log版本链" class="headerlink" title="undo log版本链"></a>undo log版本链</h6><p>不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录</p>
+<ul>
+<li><strong>readview</strong></li>
+</ul>
+<p>ReadView(读视图) 是 <strong>快照读</strong> SQL执行时MVCC提取数据的依据，记录并维护系统当前活跃的事务(未提交的)id</p>
+<p>ReadView中包含了四个核心字段</p>
+<table>
+<thead>
+<tr>
+<th align="center">字段</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">m_ids</td>
+<td align="center">当前活跃的事务ID集合</td>
+</tr>
+<tr>
+<td align="center">min_trx_id</td>
+<td align="center">最小活跃事务ID</td>
+</tr>
+<tr>
+<td align="center">max_trx_id</td>
+<td align="center">预分配事务ID, 当前最大事务ID+1 (事务ID是自增的)</td>
+</tr>
+<tr>
+<td align="center">creator_trx_id</td>
+<td align="center">ReadView创建者的事务ID</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>当前读</strong></li>
+</ul>
+<p>读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如:select .. lock in share mode(共享锁)，select .. for update、update、insert、delete(排他锁)都是一种当前读。</p>
+<ul>
+<li><strong>快照读</strong></li>
+</ul>
+<p>简单的select(不加锁)就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。<br><strong>Read Committed</strong>:每次select，都生成一个快照读。<br><strong>Repeatable Read</strong>:开启事务后第一个select语句才是快照读的地方。</p>
+<p><span style = "color:red"><strong>MySQL主从同步原理？</strong></span></p>
+<p>MySQL主从复制的核心就是二进制日志</p>
+<blockquote>
+<p>二进制文件(BINLOG) 记录了所有的<strong>DDL(数据定义语言)语句</strong> 和 <strong>DML(数据操纵语言)语句</strong>，但不包括<u>数据查询(SELECT、SHOW)语句</u></p>
+</blockquote>
 
             
         </div>
@@ -1024,7 +1311,7 @@ where t.id = a.id
         
         <span class="tag">
             
-            <a href="/tags/面试" style=color:#879cff>
+            <a href="/tags/面试" style=color:#00bcd4>
                 面试
             </a>
         </span>
@@ -4613,7 +4900,7 @@ sout(newStr)
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -9435,6 +9722,755 @@ public class Demo01 &#123;
 &#125;
 //localhost:9527
 </code></pre>
+<h3 id="Junit单元测试"><a href="#Junit单元测试" class="headerlink" title="Junit单元测试"></a>Junit单元测试</h3><pre><code class="java">import org.junit.Test;
+
+/**
+ * 单元测试要素：要加@Test
+ * 1. 必须是public修饰
+ * 2. 返回值是void
+ * 3. 不能有参数
+ */
+
+public class TestFrist &#123;
+    @Test
+    public void testMax() &#123;
+        System.out.println(&quot;hello world&quot;);
+        System.out.println(10 / 5);
+
+        // 测试math类的max方法
+        System.out.println(Math.max(10, 20));
+    &#125;
+    @Test
+    public void testMax2() &#123;
+        System.out.println(&quot;test类用 world&quot;);;
+
+        // 测试math类的max方法
+        System.out.println(Math.max(10, 20));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h3><ul>
+<li>认识反射、<strong>获取类</strong></li>
+</ul>
+<p>以编程的方式获取类中的成分成员变量、方法、构造器等<br>拿到类中的成分</p>
+<h6 id="反射的应用场景"><a href="#反射的应用场景" class="headerlink" title="反射的应用场景"></a>反射的应用场景</h6><ul>
+<li>idea的<strong>智能提示</strong>利用了反射</li>
+<li>框架Spring&#x2F;SpringMVC&#x2F;Mybatis</li>
+</ul>
+<h5 id="反射学什么？"><a href="#反射学什么？" class="headerlink" title="反射学什么？"></a>反射学什么？</h5><ul>
+<li>① 加载类，获取类的字节码：<strong>Class对象</strong></li>
+<li>② 获取类的构造器</li>
+<li>③ 获取类的成员变量</li>
+<li>④ 获取类的成员方法</li>
+</ul>
+<blockquote>
+<p>★ 类名.class<br>★ 对象.getClass()<br>★ Class.forName(“全类名”)</p>
+</blockquote>
+<pre><code class="java">package demo02反射;
+// 一个类在内存中会有一个Class对象
+public class Employee &#123;
+    private String name;
+    private int age;
+    private double salary;
+    private double height;
+
+    public Employee() &#123;
+    &#125;
+    public Employee(String name, int age) &#123;
+        this.name = name;
+        this.age = age;
+    &#125;
+    protected Employee(String name) &#123;
+        this.name = name;
+    &#125;
+    private Employee(int age) &#123;
+        this.age = age;
+    &#125;
+
+    public String getName() &#123;
+        return name;
+    &#125;
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &quot;, age=&quot; + age +
+                &quot;, salary=&quot; + salary +
+                &quot;, height=&quot; + height +
+                &#39;&#125;&#39;;
+    &#125;
+
+Getter + Setter
+|
+</code></pre>
+<pre><code class="java">package demo02反射;
+
+public class Demo01三种获取Class方式 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 1. 获取Class对象方式一：类名.class
+    // Class对象可以理解成为一个容器，保存某个类中的所有信息
+        Class&lt;Employee&gt; cls = Employee.class;
+        System.out.println(cls);
+
+        // 2. 获取Class对象方式二：对象.getClass()
+        Employee e = new Employee();
+
+   //  Class&lt;? extends Employee&gt;：Class对象中保存的是Employee或子类的所有信息
+        Class&lt;? extends Employee&gt; cls2 = e.getClass();
+        System.out.println(cls2);
+
+        // 3. 获取Class对象方式三：Class.forName(&quot;全类名&quot;)
+        Class&lt;?&gt; cls3 = Class.forName(&quot;demo02反射.Employee&quot;);
+        System.out.println(cls3);
+
+        // 返回true 代表三种方式获取的都是同一个Class对象
+        System.out.println(cls == cls2 &amp;&amp; cls2 == cls3);
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>Class提供了从类中获取构造器的方法</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Constructor&lt;?&gt;[]  getConstructors()</td>
+<td>获取全部构造器（只能获取public修饰的）</td>
+</tr>
+<tr>
+<td>Constructor&lt;?&gt;[]  getDeclaredConstructors()</td>
+<td>获取全部构造器（只要存在就能拿到）</td>
+</tr>
+<tr>
+<td>Constructor<T>  getConstructor(Class&lt;?&gt;…  parameterTypes)</td>
+<td>获取某个构造器（只能获取public修饰的）</td>
+</tr>
+<tr>
+<td>Constructor<T>  getDeclaredConstructor(Class&lt;?&gt;…  parameterTypes)</td>
+<td>获取某个构造器（只要存在就能拿到）</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>获取类构造器的作用：依然是初始化对象返回</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Constructor提供的方法</th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T newInstance(Object… initargs)</td>
+<td>调用此构造器对象表示的构造器，并传入参数，完成对象的初始化并返回</td>
+</tr>
+<tr>
+<td>public void setAccessible(boolean flag)</td>
+<td>设置为true，表示禁止检查访问控制（暴力反射）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong><u>使用反射创建对象而不是常规方法创建对象，有以下几个主要原因：</u></strong><br><strong>动态性</strong>：灵活性：反射允许你在运行时动态地创建对象，而不需要在编译时确定类的具体类型。这对于插件系统、框架和库特别有用，因为它们需要在运行时根据配置或用户输入来加载和实例化类。<br>扩展性：<u>通过反射，可以轻松地扩展系统的功能，而不需要修改现有代码。</u>例如，Spring 框架使用反射来管理 Bean 的生命周期和依赖注入。</p>
+<p><strong>访问私有构造器</strong>：私有构造器：有时候类的构造器是私有的，常规方法无法直接调用。反射可以绕过这些限制，访问私有构造器并创建对象。这在**<u>单例模式、工厂模式</u>**等设计模式中非常有用。</p>
+<p><strong>配置驱动</strong>：配置文件：许多框架和应用使用配置文件（如 XML、JSON、Properties 文件）来定义类和对象的创建方式。反射可以根据配置文件中的信息动态地创建对象，而不需要硬编码类名。</p>
+<p><strong>泛型和类型安全</strong>：类型擦除：Java 泛型在运行时会被擦除，反射可以用来在运行时检查和处理泛型类型。这对于一些高级的类型操作和验证非常有用。</p>
+<p><strong>调试和测试</strong>：单元测试：在单元测试中，反射可以用来访问和修改私有字段和方法，以便更全面地测试类的行为。</p>
+</blockquote>
+<pre><code class="java">package demo02反射;
+
+import org.junit.Test;
+
+import java.lang.reflect.Constructor;
+
+public class Demo02反射获取构造器并使用 &#123;
+    /**
+     * 反射获取构造器的规律：
+     *      get: 表示获取
+     *      Constructor：表示构造器
+     *      Declared：表示存在的，没有Declared表示public的
+     *      s表示所有，没有s表示1哥
+     */
+    @Test
+    public void test01() &#123;
+        // 1.得到Employee类的Class对象
+        Class&lt;Employee&gt; cls = Employee.class;
+        // 2.得到所有public的构造器
+        Constructor&lt;?&gt;[] cs = cls.getConstructors();
+        // 3.得到所有存在的构造器
+        Constructor&lt;?&gt;[] cas = cls.getDeclaredConstructors();
+
+        for (Constructor&lt;?&gt; c : cs) &#123;
+            System.out.println(&quot;c = &quot; + c);
+        &#125;
+
+        for (Constructor&lt;?&gt; ca : cas) &#123;
+            System.out.println(&quot;cas = &quot; + ca);
+        &#125;
+    &#125;
+
+    @Test
+    public void test02() throws Exception &#123;
+        // 1.得到Employee类的Class对象
+        Class&lt;Employee&gt; cls = Employee.class;
+
+        // 2.得到一个public的构造器
+        Constructor&lt;Employee&gt; c1 = cls.getConstructor();
+        System.out.println(&quot;c1 = &quot; + c1);
+        // 反射使用构造器创建对象
+        Employee emp1 = c1.newInstance();
+        System.out.println(&quot;无参构造器创建对象 = &quot; + emp1);
+
+        // 3.得到一个存在的(私有的)构造器
+        Constructor&lt;Employee&gt; c2 = cls.getDeclaredConstructor(int.class);
+        System.out.println(&quot;c2 = &quot; + c2);
+        // 反射在使用私有private的时候 需要暴力反射setAccessible
+        // 私有的实际上不能new 但是反射可以
+        c2.setAccessible(true);
+        Employee emp2 = c2.newInstance(18);
+        System.out.println(&quot;emp2 = &quot; + emp2);
+
+        // 3.得到两个public的构造器
+        Constructor&lt;Employee&gt; c3 = cls.getConstructor(String.class, int.class);
+        System.out.println(&quot;c3 = &quot; + c3);
+
+        // 以前常规的对象操作：使用构造器创建对象
+    &#125;
+&#125;
+======================================================
+test01：
+c = public demo02反射.Employee()
+c = public demo02反射.Employee(java.lang.String,int)
+cas = private demo02反射.Employee(int)
+cas = protected demo02反射.Employee(java.lang.String)
+cas = public demo02反射.Employee()
+cas = public demo02反射.Employee(java.lang.String,int)
+
+test02：
+c1 = public demo02反射.Employee()
+无参构造器创建对象 = Employee&#123;name=&#39;null&#39;, age=0, salary=0.0, height=0.0&#125;
+c2 = private demo02反射.Employee(int)
+emp2 = Employee&#123;name=&#39;null&#39;, age=18, salary=0.0, height=0.0&#125;
+c3 = public demo02反射.Employee(java.lang.String,int)
+</code></pre>
+<ul>
+<li>Class<strong>提供了从类中获取成员变量的方法</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>方法</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public Field[] getFields()</td>
+<td>获取类的全部成员变量（只能获取public修饰的）</td>
+</tr>
+<tr>
+<td>public Field[] getDeclaredFields()</td>
+<td>获取类的全部成员变量（只要存在就能拿到）</td>
+</tr>
+<tr>
+<td>public Field getField(String name)</td>
+<td>获取类的某个成员变量（只能获取public修饰的）</td>
+</tr>
+<tr>
+<td>public Field getDeclaredField(String name)</td>
+<td>获取类的某个成员变量（只要存在就能拿到）</td>
+</tr>
+</tbody></table>
+<pre><code class="java">/**
+ * 反射获取成员变量规律：
+ *      field表示成员变量
+ *      有declared表示存在的，没有declared表示public的
+ *      需要获取私有的要暴力反射setAccessible(true)
+ *      有s表示所有的，没有s表示一个
+ */
+
+public class Demo03反射获取成员变量并使用 &#123;
+@Test
+    public void test02() throws Exception &#123;
+        // 1.得到Employee类的Class对象
+        Class&lt;Employee&gt; cls = Employee.class;
+//      Employee e = cls.getConstructor().newInstance();
+        Employee e = new Employee(); //这个和上面的一样功能
+
+        // 2.得到一个public的成员变量
+ //使用 getField 方法会抛出 NoSuchFieldException，因为 getField 只能获取public 成员变量
+        Field f1 = cls.getField(&quot;height&quot;);
+        System.out.println(&quot;f1 = &quot; + f1);
+        // 给成员变量赋值
+        f1.set(e,1.66);
+        System.out.println(&quot;修改后 e = &quot; + e);
+        System.out.println(&quot;获取height = &quot; + f1.get(e)); //相当于 e.height
+
+        // 3.得到一个存在的(私有的)成员变量
+        Field f2 = cls.getDeclaredField(&quot;name&quot;);
+        System.out.println(&quot;f2 = &quot; + f2);
+        // 私有的无法注入 需要暴力反射
+        f2.setAccessible(true);
+        f2.set(e,&quot;小明&quot;);
+        System.out.println(&quot;修改后 e = &quot; + e);
+        System.out.println(&quot;获取name = &quot; + f2.get(e)); //相当于 e.name
+    &#125;
+&#125;
+</code></pre>
+<h6 id="demo02反射-x2F-Demo04反射获取成员方法并使用-java"><a href="#demo02反射-x2F-Demo04反射获取成员方法并使用-java" class="headerlink" title="demo02反射&#x2F;Demo04反射获取成员方法并使用.java"></a>demo02反射&#x2F;Demo04反射获取成员方法并使用.java</h6><pre><code class="java">Employee.java
+package demo02反射;
+// 一个类在内存中会有一个Class对象
+public class Employee &#123;
+    private String name;
+    private int age;
+    public double salary;
+    public double height;
+
+    public Employee() &#123;
+    &#125;
+    public Employee(String name, int age) &#123;
+        this.name = name;
+        this.age = age;
+    &#125;
+    private int sleep(int hours) &#123;
+        System.out.println(&quot;睡眠：&quot;+hours+&quot;小时&quot;);
+        return hours * 2;
+    &#125;
+    protected Employee(String name) &#123;
+        this.name = name;
+    &#125;
+    private Employee(int age) &#123;
+        this.age = age;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Employee&#123;&quot; +
+                &quot;name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &quot;, age=&quot; + age +
+                &quot;, salary=&quot; + salary +
+                &quot;, height=&quot; + height +
+                &#39;&#125;&#39;;
+    &#125;
+Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">package demo02反射;
+
+import org.junit.Test;
+
+import java.lang.reflect.Method;
+
+public class Demo04反射获取成员方法并使用 &#123;
+    @Test
+    public void test01() throws Exception&#123;
+        Class&lt;Employee&gt; clazz = Employee.class;
+        Employee e = clazz.getConstructor().newInstance();
+        // 得到所有public成员方法(包含父类public方法)
+        Method[] ms = clazz.getMethods();
+        // 得到所有本类声明的成员方法(无父类)
+        Method[] ms1 = clazz.getDeclaredMethods();
+
+        // 获取指定方法
+        Method m1 = clazz.getMethod(&quot;setName&quot;, String.class);
+        Object r1 = m1.invoke(e, &quot;小王&quot;);
+        System.out.println(&quot;setName方法的返回值 r1 = &quot; + r1);
+
+        // 获取指定方法 一个存在的成员方法 ↓私有 所以要暴力
+        Method m2 = clazz.getDeclaredMethod(&quot;sleep&quot;, int.class);
+        System.out.println(&quot;m2 = &quot; + m2);
+        m2.setAccessible(true);
+        Object r2 = m2.invoke(e, 8);
+        System.out.println(&quot;age方法的返回值 r2 = &quot; + r2);
+
+        /* 以前的调用方法
+        Employee e = new Employee();
+        e.setName(&quot;张三&quot;); */
+
+        for (Method m : ms1) &#123;
+            System.out.println(m);
+        &#125;
+        for (Method m : ms) &#123;
+            System.out.println(m);
+        &#125;
+    &#125;
+&#125;
+/////////////////////////////////////////////////////////////////////////
+setName方法的返回值 r1 = null
+m2 = private int demo02反射.Employee.sleep(int)
+睡眠：8小时
+age方法的返回值 r2 = 16
+public java.lang.String demo02反射.Employee.getName()
+public java.lang.String demo02反射.Employee.toString()
+private int demo02反射.Employee.sleep(int)
+public void demo02反射.Employee.setName(java.lang.String)
+public void demo02反射.Employee.setSalary(double)
+public int demo02反射.Employee.getAge()
+public double demo02反射.Employee.getHeight()
+public void demo02反射.Employee.setHeight(double)
+public double demo02反射.Employee.getSalary()
+public void demo02反射.Employee.setAge(int)
+public java.lang.String demo02反射.Employee.getName()
+public java.lang.String demo02反射.Employee.toString()
+public void demo02反射.Employee.setName(java.lang.String)
+public void demo02反射.Employee.setSalary(double)
+public int demo02反射.Employee.getAge()
+public double demo02反射.Employee.getHeight()
+public void demo02反射.Employee.setHeight(double)
+public double demo02反射.Employee.getSalary()
+public void demo02反射.Employee.setAge(int)
+public boolean java.lang.Object.equals(java.lang.Object)
+public native int java.lang.Object.hashCode()
+public final native java.lang.Class java.lang.Object.getClass()
+public final native void java.lang.Object.notify()
+public final native void java.lang.Object.notifyAll()
+public final void java.lang.Object.wait(long) throws java.lang.InterruptedException
+public final void java.lang.Object.wait(long,int) throws java.lang.InterruptedException
+public final void java.lang.Object.wait() throws java.lang.InterruptedException
+
+Process finished with exit code 0
+</code></pre>
+<h5 id="使用反射做一个简易版的框架"><a href="#使用反射做一个简易版的框架" class="headerlink" title="使用反射做一个简易版的框架"></a>使用反射做一个简易版的框架</h5><p><strong>需求：</strong></p>
+<p><u>对于任意一个对象，该框架都可以把对象的字段名和对应的值，保存到文件中去。</u></p>
+<p><strong>实现步骤</strong>：</p>
+<p>① 定义一个方法，可以接收任意对象。</p>
+<p>② 每收到一个对象后，使用反射获取该对象的Class对象，然后获取全部的成员变量。</p>
+<p>③ 遍历成员变量，然后提取成员变量在该对象中的具体值。</p>
+<p>④ 把成员变量名、和其值，写出到文件中去即可。</p>
+<pre><code class="java">package 反射小案例;
+
+public class Student &#123;
+    private String name;
+    private int age;
+    private char sex;
+    private double height;
+    private String hobby;
+&#125; 空+满+Setter+Getter
+</code></pre>
+<pre><code class="java">package 反射小案例;
+
+public class Teacher &#123;
+    private String name;
+    private double salary;
+&#125;
+空+满+Setter+Getter
+</code></pre>
+<pre><code class="java">package 反射小案例;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
+
+public class ObjectDataFramework &#123;
+    /**
+     * 包任意对象的数据保存到文件中
+     * @param obj
+     */
+    public static void saveObject(Object obj) throws Exception &#123;
+        // 字节输出流、字符输出流、数据输出流、打印流
+        PrintStream ps = new PrintStream(new FileOutputStream(&quot;highlevel\\src\\反射小案例\\data.txt&quot;,true)); // 追加写
+
+        // 获取Class对象
+        Class&lt;?&gt; cls = obj.getClass();
+        ps.println(&quot;=====================&quot; + cls.getSimpleName() + &quot;=====================&quot;); //得到类名
+        // 获取所有的成员变量对象Field
+        Field[] fs = cls.getDeclaredFields();
+        // 遍历获取每个Field对象
+        for (Field f : fs) &#123;
+            // 暴力反射
+            f.setAccessible(true);
+            // 获取Field的名称、获取Field的值(成员变量值)
+            String fieldName = f.getName();
+            Object field = f.get(obj);
+            // 把这些数据写到文件中
+            ps.println(fieldName + &quot;=&quot; + field);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 反射小案例;
+
+public class Demo03 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 创建一个学生对象
+        Student s1 = new Student(&quot;小明&quot;, 23, &#39;男&#39;, 187, &quot;看书&quot;);
+        // 创建一个老师对象
+        Teacher t1 = new Teacher(&quot;老王&quot;, 50000);
+
+        // 方便访问就用静态对象 创建自定义的框架把对象保存到文件中
+        ObjectDataFramework.saveObject(s1);
+        ObjectDataFramework.saveObject(t1);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="txt">=====================Teacher=====================
+name=老王
+salary=50000.0
+</code></pre>
+<h3 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h3><ul>
+<li>注解就是Java代码里的特殊标记，比如：<code>@Override</code>、<code>@Test</code>等，作用是让其他程序根据注解信息来决定怎么执行该程序</li>
+<li>注解可以用在类上、构造器上、方法上、成员变量上……</li>
+</ul>
+<h6 id="自定义注解"><a href="#自定义注解" class="headerlink" title="自定义注解"></a>自定义注解</h6><ul>
+<li>就是自己定义注解</li>
+</ul>
+<p><strong>特殊属性名：Value</strong><br>如果注解中只有一个value属性，使用注解时，value名称可以不写！！<br><u>这是一种语法糖（Syntactic Sugar），即一种编程语言中的语法特性，使得某些表达方式更加简洁。</u></p>
+<blockquote>
+<p><strong>语法糖</strong>（Syntactic Sugar）：是指在编程语言中添加的一些语法特性，这些特性并不会增加语言的功能，但会使代码的编写更加简洁和直观。语法糖的主要目的是提高代码的可读性和可维护性，减少冗余代码，使程序员能够更高效地编写和理解代码</p>
+</blockquote>
+<pre><code class="java">package 注解;
+
+public @interface MyAnno1 &#123;
+    // 通过属性存储数据
+    public String bookName();
+    public String author();
+    // 默认值
+    public double price() default 9.9;
+&#125;
+</code></pre>
+<pre><code class="java">package 注解;
+
+public @interface MyAnno2 &#123;
+    public String value();
+&#125;
+</code></pre>
+<pre><code class="java">package 注解;
+// 使用注解时，注解的每个属性都必须有值
+@MyAnno1(bookName = &quot;java&quot;, author = &quot;james&quot;, price = 99)
+// 这是一种语法糖（Syntactic Sugar），即一种编程语言中的语法特性，使得某些表达方式更加简洁。
+@MyAnno2(&quot;水浒传&quot;)
+public class Demo01 &#123;
+    // public double price() default 9.9; 已搞了默认值可以不赋值
+    @MyAnno1(bookName = &quot;C++&quot;, author = &quot;lily&quot;)
+    public static void main(String[] args) &#123;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="元注解"><a href="#元注解" class="headerlink" title="元注解"></a>元注解</h6><p>含义：注解的注解</p>
+<p><code>@Target</code>：<strong>声明被修饰的注解只能在哪些位置使用</strong><br>1.TYPE，类，接口<br>2.FIELD, 成员变量<br>3.METHOD, 成员方法<br>4.PARAMETER, 方法参数<br>5.CONSTRUCTOR, 构造器<br>6.LOCAL_VARIABLE, 局部变量</p>
+<p><code>@Retention</code>：<strong>声明注解的保留周期</strong> (活多久)</p>
+<p>@Retention(RetentionPolicy.<em>RUNTIME</em>)<br><em>1.</em> <em>SOURCE</em>：只作用在源码阶段，字节码文件中不存在。<br><em>2.</em> <em>CLASS</em>（默认值)：保留到字节码文件阶段，运行阶段不存在.<br><em>3.RUNTIME</em>（开发常用)：一直保留到运行阶段。</p>
+<h6 id="注解的解析"><a href="#注解的解析" class="headerlink" title="注解的解析"></a>注解的解析</h6><p>就是判断类上、方法上、成员变量上是否存在注解，并把注解里的内容给解析出来。</p>
+<ul>
+<li>指导思想：要解析谁上面的注解，就应该先拿到谁。</li>
+<li>比如要解析类上面的注解，则应该先获取该类的Class对象，再通过Class对象解析其上面的注解。</li>
+<li>比如要解析成员方法上的注解，则应该获取到该成员方法的Method对象，再通过Method对象解析其上面的注解。</li>
+<li>Class 、 Method 、 Field , Constructor、都实现了AnnotatedElement接口，它们都拥有解析注解的能力。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>AnnotatedElement</strong>接口提供了解析注解的方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public  Annotation[] getDeclaredAnnotations()</td>
+<td>获取当前对象上面的注解。</td>
+</tr>
+<tr>
+<td>public  T getDeclaredAnnotation(Class<T> annotationClass)</td>
+<td>获取指定的注解对象</td>
+</tr>
+<tr>
+<td>public  boolean isAnnotationPresent(Class<Annotation> annotationClass)</td>
+<td>判断当前对象上是否存在某个注解</td>
+</tr>
+</tbody></table>
+<pre><code class="java">package 元注解;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
+//@Target(value = ElementType.TYPE) // 类或接口上面可以使用
+//@Target(ElementType.CONSTRUCTOR) // 构造器上面可以使用
+//@Target(ElementType.METHOD) // 方法上可以
+//@Target(ElementType.FIELD) // 成员变量上面可以
+//@Target(ElementType.LOCAL_VARIABLE) // 局部变量上可以
+//@Target(&#123;ElementType.LOCAL_VARIABLE, ElementType.FIELD&#125;) //局部变量和成员变量都可以
+
+/*
+@Retention(RetentionPolicy.RUNTIME)
+SOURCE：只作用在源码阶段，字节码文件中不存在。
+CLASS（默认值)：保留到字节码文件阶段，运行阶段不存在.
+RUNTIME（开发常用)：一直保留到运行阶段。*/
+public @interface MyAnno3 &#123;
+&#125;
+</code></pre>
+<pre><code class="java">package 元注解;
+
+@MyAnno3
+public class Demo01 &#123;
+    @MyAnno3
+    private int x;
+    @MyAnno3
+    public Demo01() &#123;&#125;
+    @MyAnno3
+    public void test() &#123;
+        int y = 10;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="使用注解开发出一个简易版的-Junit-框架"><a href="#使用注解开发出一个简易版的-Junit-框架" class="headerlink" title="使用注解开发出一个简易版的 Junit 框架"></a>使用注解开发出一个简易版的 Junit 框架</h6><p><strong>需求</strong></p>
+<p>定义若干个方法，只要加了MyTest注解，就会触发该方法执行。</p>
+<p><strong>分析</strong></p>
+<p>①定义一个自定义注解MyTest，只能注解方法，存活范围是一直都在。</p>
+<p>②定义若干个方法，部分方法加上@MyTest注解修饰，部分方法不加。</p>
+<p>③模拟一个junit程序，可以触发加了@MyTest注解的方法执行。</p>
+<pre><code class="java">Student.java
+package 模拟JUnit;
+
+public class Student &#123;
+    public void getUp()&#123;
+        System.out.println(&quot;学生起床啦！&quot;);
+    &#125;
+    @MyTest
+    public void eat()&#123;
+        System.out.println(&quot;学生吃东西啦！&quot;);
+    &#125;
+    @MyTest(5)
+    public void study()&#123;
+        System.out.println(&quot;学生学习啦！&quot;);
+    &#125;
+    public void sleep()&#123;
+        System.out.println(&quot;学生睡觉啦！&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 模拟JUnit;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyTest &#123;
+    public int value() default 1; // 表示方法运行次数
+&#125;
+</code></pre>
+<pre><code class="java">package 模拟JUnit;
+
+import java.lang.reflect.Method;
+
+public class Demo01 &#123;
+    /**
+     * 注解再谁上面，就先获取谁
+     * @param args
+     */
+    public static void main(String[] args) throws Exception &#123;
+        // 点击绿色三角形，程序就运行起来啦。但是它默认活在Class阶段
+        // @Retention(RetentionPolicy.RUNTIME)
+        // 1.获取Class对象
+        Class&lt;Student&gt; cls = Student.class;
+        // 使用无参构造器创建对象
+        Student stu = cls.getConstructor().newInstance();
+        // 2.获取类的所有方法
+        Method[] ms = cls.getDeclaredMethods();
+        // 3.遍历获取方法
+        for (Method m : ms) &#123;
+            // 4.判断方法上是否有@MyTest注解
+            boolean b = m.isAnnotationPresent(MyTest.class);
+            if (b) &#123;
+                // 5.如果方法有@MyTest注解，获取注解里的数据再调用方法
+                MyTest anno = m.getAnnotation(MyTest.class);
+                int value = anno.value();
+                for (int i = 0; i &lt; value; i++) &#123;
+                    m.invoke(stu); // 相当于：stu.xxx
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+===========================================================
+学生学习啦！
+学生学习啦！
+学生学习啦！
+学生学习啦！
+学生学习啦！
+学生吃东西啦！
+</code></pre>
+<h5 id="为Java对象创建一个代理对象"><a href="#为Java对象创建一个代理对象" class="headerlink" title="为Java对象创建一个代理对象"></a>为Java对象创建一个代理对象</h5><blockquote>
+<p><strong>public static</strong> Object <strong>newProxyInstance</strong>(ClassLoader loader, Class&lt;?&gt;[] interfaces, InvocationHandler h) </p>
+<p>参数一：用于指定用哪个类加载器，去加载生成的代理类<br>参数二：指定接口，这些接口用于指定生成的代理长什么，也就是有哪些方法<br>参数三：用来指定生成的代理对象要干什么事情</p>
+</blockquote>
+<pre><code class="java">Star.java
+package 动态代理;
+// 1.定义接口，规定代理要增强的方法
+public interface Star &#123;
+    // 唱歌
+    public abstract String sing(String name);
+
+    // 跳舞
+    public abstract void dance(String name);
+&#125;
+</code></pre>
+<pre><code class="java">WangBaoQiang.java
+package 动态代理;
+
+public class WangBaoQiang implements Star&#123;
+
+    @Override
+    public String sing(String name) &#123;
+        System.out.println(&quot;宝强唱：&quot; + name);
+        return &quot;ok&quot;;
+    &#125;
+
+    @Override
+    public void dance(String name) &#123;
+        System.out.println(&quot;宝强跳钢管舞&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Demo01.java
+package 动态代理;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Arrays;
+
+public class Demo01 &#123;
+    /**
+     * 参数：
+     *      ClassLoader loader: 指定当前目标对象使用的类加载器
+     *      Class&lt;?&gt;[] interfaces: 目标对象实现的接口类型
+     *      InvocationHandler h: 实现InvocationHandler接口的实例，我们一般使用匿名内部类
+     * @param args
+     */
+    public static void main(String[] args) &#123;
+        WangBaoQiang wbq = new WangBaoQiang();
+        // 创建一个代理对象
+        Star proxy =(Star) Proxy.newProxyInstance(
+              Demo01.class.getClassLoader(),
+                new Class[]&#123;Star.class&#125;,
+                new InvocationHandler() &#123;
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;
+                        System.out.println(&quot;invoke方法执行了 = &quot; + method.getName() + &quot;参数args = &quot;+ Arrays.toString(args));
+                        System.out.println(&quot;电话沟通&quot;);
+                        System.out.println(&quot;签合同，付首付&quot;);
+
+                        Object ret = method.invoke(wbq, args); //相当于：wbq.sing(&quot;北京欢迎你！&quot;);  wbq.dance(&quot;a&quot;);
+                        System.out.println(&quot;结尾款&quot;);
+                        return ret;
+                    &#125;
+                &#125;
+        );
+
+        // 使用代理对象调用方法都会执行到第三个参数的invoke
+        String ret1 = proxy.sing(&quot;北京欢迎你！&quot;);
+        System.out.println(&quot;ret1 = &quot; + ret1);
+
+        proxy.dance(&quot;a&quot;);
+    &#125;
+&#125;
+</code></pre>
 
             
         </div>
@@ -9449,7 +10485,7 @@ public class Demo01 &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -23080,7 +24116,7 @@ public class BusinessDataVO implements Serializable &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -24001,7 +25037,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#1bccbc>
                 前端
             </a>
         </span>
@@ -43664,7 +44700,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -46868,7 +47904,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
