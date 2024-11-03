@@ -133,6 +133,58 @@
 
 <div class="post">
 
+    <a href="/2024/11/03/后端/若依-AI/">
+        <h2>
+            若依+AI
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/11/3
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <p>1</p>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#1bccbc>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2024/11/03/后端/若依-AI/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2024/10/31/面试/Java八股文专项/">
         <h2>
             Java面试专项
@@ -1293,10 +1345,64 @@ select * from t_user where id &lt; 5
 </ul>
 <p>简单的select(不加锁)就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。<br><strong>Read Committed</strong>:每次select，都生成一个快照读。<br><strong>Repeatable Read</strong>:开启事务后第一个select语句才是快照读的地方。</p>
 <p><span style = "color:red"><strong>MySQL主从同步原理？</strong></span></p>
+<blockquote>
+<p>MySQL主从复制的核心就是二进制日志binlog[<strong>DDL(数据定义语言)语句</strong> 和 <strong>DML(数据操纵语言)语句</strong>]<br>主库在事务提交时，会把数据变更记录在二进制日志文件 Binlog 中。<br>从库读取主库的二进制日志文件 Binlog，写入到从库的中继日志 Relay Log。<br>从库重做中继日志中的事件，将改变反映它自己的数据。</p>
+</blockquote>
 <p>MySQL主从复制的核心就是二进制日志</p>
 <blockquote>
 <p>二进制文件(BINLOG) 记录了所有的<strong>DDL(数据定义语言)语句</strong> 和 <strong>DML(数据操纵语言)语句</strong>，但不包括<u>数据查询(SELECT、SHOW)语句</u></p>
 </blockquote>
+<img src="https://raw.githubusercontent.com/P-luminary/images/678966e16f791c838ee0d8be04e35897d7f4ae47/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E5%8E%9F%E7%90%86%E5%9B%BE.jpg" style="zoom:200%;" />
+
+<h6 id="复制分成三步："><a href="#复制分成三步：" class="headerlink" title="复制分成三步："></a>复制分成三步：</h6><ul>
+<li>Master主库在事务提交时，会把数据变更记录在二进制日志文件Binlog中</li>
+<li>从库读取主库的二进制日志文件Binlog，写入到从库的中继日志Relay Log</li>
+<li>slave重做中继日志中的事件，将改变反应他自己的数据</li>
+</ul>
+<p><span style = "color:red"><strong>你们项目用过分库分表吗？</strong></span></p>
+<blockquote>
+<ul>
+<li><p>业务介绍<br>1，根据自己简历上的项目，想一个数据量较大业务(请求数多或业务累积大)<br>2，达到了什么样的量级(单表1000万或超过20G)</p>
+</li>
+<li><p>具体拆分策略<br>1，水平分库，将一个库的数据拆分到多个库中，解决海量数据存储和高并发的问题<br>2，水平分表，解决单表存储和性能的问题<br>3，垂直分库，根据业务进行拆分，高并发下提高磁盘I0和网络连接数<br>4，垂直分表，冷热数据分离，多表互不影响</p>
+</li>
+</ul>
+</blockquote>
+<p><strong>分担了访问压力、解决存储压力</strong></p>
+<p>分库分表的时机：</p>
+<p>① <strong>前提</strong>：项目业务数据逐渐增多，业务发展比较迅速【单表数据量达1000W或20G以后】<br>② 优化解决不了性能问题(主从读写分离、查询索引)<br>③ <strong>IO瓶颈</strong>(磁盘IO、网络IO)、<strong>CPU瓶颈</strong>(聚合查询、连接数太多)</p>
+<p><strong>拆分策略</strong>【垂直 ≈ 微服务、水平 ≈ 分配数值】</p>
+<ul>
+<li>&#x3D;&#x3D;<strong>垂直拆分</strong>&#x3D;&#x3D;<ul>
+<li><strong>垂直分库</strong>：以表为依据，根据业务将不同表拆分到不同库中<br>(特点：按业务对数据分级管理、维护、监控、扩展；在高并发下，提高磁盘IO和数据量连接数)<ul>
+<li>tb_user → 用户微服务 </li>
+<li>tb_order → 订单微服务</li>
+<li>tb_sku → 商品微服务</li>
+</ul>
+</li>
+<li><strong>垂直分表</strong>：以字段为依据，根据字段属性将不同字段拆分到不同表中<br>(把不常用的字段单独放在一张表；把<strong>text, blob</strong>等大字段[描述]拆分出来放在附表中)<br>(特点：冷热数据分离、减少IO过渡争抢，两表互不影响)</li>
+</ul>
+</li>
+<li>&#x3D;&#x3D;<strong>水平拆分</strong>&#x3D;&#x3D;<ul>
+<li><strong>水平分库</strong>：将一个库的数据拆分到多个库中<br>(解决了单库大数量，高并发的性能瓶颈问题；提高了系统的稳定性和可用性)<br><u>路由规则</u><ul>
+<li>根据id节点取模</li>
+<li>按id也就是范围路由，节点1(1-100万)，节点2(100万-200万)</li>
+</ul>
+</li>
+<li><strong>水平分表</strong>：将一个库的数据拆分到多个表中(可以在同一个库内)<br>(优化单一表数据量过大而产生的性能问题；避免IO争抢并减少锁表的几率)</li>
+</ul>
+</li>
+</ul>
+<h6 id="分库后的问题：↓↓"><a href="#分库后的问题：↓↓" class="headerlink" title="分库后的问题：↓↓"></a>分库后的问题：↓↓</h6><ul>
+<li>分布式事务一致性问题</li>
+<li>跨节点关联查询</li>
+<li>跨节点分页、排序函数</li>
+<li>主键避重</li>
+</ul>
+<h6 id="使用分库分表中间件"><a href="#使用分库分表中间件" class="headerlink" title="使用分库分表中间件"></a>使用分库分表中间件</h6><ul>
+<li><span style = "color:blue"><strong>sharding-sphere</strong></span></li>
+<li><span style = "color:blue"><strong>mycat</strong></span></li>
+</ul>
 
             
         </div>
@@ -4263,7 +4369,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -10432,7 +10538,7 @@ package 动态代理;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.Proxy;G
 import java.util.Arrays;
 
 public class Demo01 &#123;
@@ -10485,7 +10591,7 @@ public class Demo01 &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ff7d73>
+            <a href="/tags/HM" style=color:#00bcd4>
                 HM
             </a>
         </span>
@@ -25037,7 +25143,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#1bccbc>
+            <a href="/tags/前端" style=color:#ff7d73>
                 前端
             </a>
         </span>
@@ -44700,7 +44806,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -47750,7 +47856,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -47758,160 +47864,6 @@ public enum Singleton8 &#123;
     </div>
 
     <a href="/2024/05/04/后端/Zookeeper-Dubbo应用与面试/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2024/04/17/英语/2024万能论据/">
-        <h2>
-            2024万能论据
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2024/4/17
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h2 id="健康"><a href="#健康" class="headerlink" title="健康"></a>健康</h2><pre><code class="java">1.sth contribute to one&#39;s health by giving sb some physical exercise.
-  某物能有助于身体健康通过给某人一些身体锻炼
-2.sth is harmful to/bad for/detrimental to health.
-  某物对健康有害
-3.sth exert great pressure on sb.
-  某物给某人施加重压
-4.sb may become more solitary and even suffer from certain mental illness.
-  某人可能变得孤僻甚至产生某些心理疾病
-5.Exercise can enhance immune function.
-  锻炼可以增强免疫力
-6.adopt a healthy and meaningful life style.
-  采取一个健康和有意义的生活方式
-7.release pressure.
-  ★减压 
-</code></pre>
-<h2 id="乐趣"><a href="#乐趣" class="headerlink" title="乐趣"></a>乐趣</h2><pre><code class="java">1.sth will make ones&#39;s life more enjoyable. That is to say, sth can add color to the dull routine of everyday life.
-  某物可以使某人的生活更加有乐趣，也就是说，某物为每天枯燥的生活增添了一些色彩
-2.sth have become the foucus of one&#39;s life and the source of one&#39;s happiness and contentment.
-  某物已成为某人生活的中心和快乐的来源
-</code></pre>
-<h2 id="能力"><a href="#能力" class="headerlink" title="能力"></a>能力</h2><pre><code class="java">1.equip sb with the ability to do sth.
-  ★使某人拥有做某事的能力
-2.be competent enough to do sth.
-  ★有能力做某事
-3.tell the useful information from the useless one.
-  ★从无用信息中挑出有用信息
-4.sth will provide sb with more opportunities to develop one’s interpersonal skills, which may put them in a favorable position in the future job markets.
-  某事会使某人有更多机会发展人际交往能力，而这对他（们）未来找工作是非常有好处的
-5.By doing sth, sb can not only improve one’s academic studies, but gain many abilities which he will never be able to get from the textbooks.
-  通过做某事，某人不仅能够提高他们的专业能力，而且能获得从课本上得不到的能力
-6.tap one&#39;s potential.
-  ★开发潜能
-7.sth will help people foster one&#39;s independence.
-  某物帮助某人培养独立
-8.help strengthen one&#39;s sense of responsibility.
-  ★帮助加强某人的责任感
-9.achieve one&#39;s goal.
-  ★达成某人的目标
-10.learn from mistake.
-  ★吸取教训
-11.surmount difficulities
-  ★战胜困难
-</code></pre>
-<h3 id="交流"><a href="#交流" class="headerlink" title="交流"></a>交流</h3><pre><code class="java">1.develop and cultivate character and interpersonal skills.
-  ★培养性格和人际交往的能力
-2.make eye contact.
-  ★做眼神交流
-3.live only in the virtual world.
-  ★仅仅生活在虚拟世界
-4.hinder communication.
-  ★阻碍沟通
-5.The over-dependence on mobile phones can harm the relationship among friends and family.
-  过度依赖手机会伤害朋友以及家人的关系
-6.At dinner tables, instead of chatting and laughing with each other, many people choose to chat with other friends online.
-  在饭桌前，人们不是相互聊天谈笑，而是选择和朋友在网上聊天
-7.Many people have become over-dependent on the Internet and neglected face-to-face communication.
-  很多人变得太依赖网络并且忽略了面对面交流。
-8.The Internet enables more effective communication in some situations, but over-dependence on it actually pulls people apart.
-  网络在一些情况下使交流更有效，但是过度依赖它实际是人们更疏远
-</code></pre>
-<h3 id="知识"><a href="#知识" class="headerlink" title="知识"></a>知识</h3><pre><code class="java">1.Little by little, our knowledge will be well enriched, and our horizons will be greatly broadened.
-  逐渐的，我们的知识会得到增加，我们的视野将会大大的拓宽
-2.reduce study load 
-  ★减轻学习负担
-3.sth can broaden people&#39;s minds to the extent which may not be reached previously.
-  某物可以扩大人们的视野到一个之前不能到达的程度
-</code></pre>
-<h3 id="方便"><a href="#方便" class="headerlink" title="方便"></a>方便</h3><pre><code class="java">1.sth can save sb a great deal of time, so sb would be able to concentrate more time and energy on one&#39;s academic work.
-  某物能节省大量时间，这会使某人有更多的时间和精力放在学习上
-2.sth have brought people great convenience in doing sth.
-  某物在人们做某事时带来了巨大的方便
-3.There is no denying that sth have greatly enhanced work/study efficiency.
-  毋庸置疑，某物很大的提升了工作/学习效率
-</code></pre>
-<h3 id="经济"><a href="#经济" class="headerlink" title="经济"></a>经济</h3><pre><code class="java">1.relieve one&#39;s families&#39; financial burden to some extent.
-  这在一定基础上可以缓解某人家庭的经济负担
-2.The welfare and salary have been improved greatly.
-  福利和收入得到了巨大的提升
-3.Money is so indispensable in people’s lives that without it no material comforts or well-being can be guaranteed.
-  钱在生活中必不可少，没有了钱，也就谈不上物质享受和幸福了
-4.Money doesn&#39;t necessarily ensure happiness or well-being. 
-  钱不一定能保证幸福
-5.can afford the huge cost of sth.
-  ★能够承担某物的高额
-6.bring huge economic loss to sb.
-  ★给某人带来巨大经济损失
-</code></pre>
-<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><pre><code class="java">1.sth pose a great threat to one&#39;s safety.
-  某物对某人的安全造成巨大威胁
-2.ensure the safety of sb. 
-  ★确保某人的安全
-3.sth add to the safety of sth.
-  某物增加了某事的安全
-4.food safety.
-  ★食品安全
-</code></pre>
-<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><pre><code class="java">1.To balance economic growth with environmental protection is highly important.
-  权衡经济发展和环境保护是高度重要的
-2.We all should bear in mind that environmental protection is everybody&#39;s duty.
-  我们都应该记住环境保护使每个人的职责
-3.sth help to build harmonious cooperation and effective communication, which helps to create a pleasant working atmosphere.
-  某事帮助建立和谐的合作关系和有效的沟通，这将帮助建立一个愉快的工作氛围
-</code></pre>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/英语" style=color:#1bccbc>
-                英语
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2024/04/17/英语/2024万能论据/ " class="go-post">
         阅读全文
     </a>
 </div>
