@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#879cff>
+                <a href="/tags/面试" style=color:#ffa2c4>
                     面试
                 </a>
             </span>
@@ -1331,6 +1331,168 @@ select * from t_user where id &lt; 5
 <li><span style = "color:blue"><strong>sharding-sphere</strong></span></li>
 <li><span style = "color:blue"><strong>mycat</strong></span></li>
 </ul>
+<p><span style = "color:red"><strong>Spring框架中的单例bean是线程安全的吗？</strong></span></p>
+<blockquote>
+<p>不是线程安全的，是这样的</p>
+<p>当多用户同时请求一个服务时，容器会给每一个请求分配一个线程，这是多个线程会并发执行该请求对应的业务逻辑(成员方法)，如果该处理逻辑中有对该单列状态的修改(体现为该单例的成员属性)，则必须考虑线程同步问题。</p>
+<p>Spring框架并没有对单例bean进行任何多线程的封装处理。关于单例bean的线程安全和并发问题需要开发者自行去搞定。<br>比如:我们通常在项目中使用的Springbean都是不可可变的状态(比如Service类和DAO类)，所以在某种程度上说Spring的单例bean是线程安全的。</p>
+<p>如果你的bean有多种状态的话(比如 View Model对象)，就需要自行保证线程安全。最浅显的解决办法就是将多态bean的作用由“singleton”变更为“prototype”。</p>
+</blockquote>
+<blockquote>
+<p>Spring框架中的bean是单例的1</p>
+<pre><code class="java">@Service
+@Scope(&quot;singleton&quot;)
+public class UserServiceImpl implements UserService&#123;
+    
+&#125;
+</code></pre>
+<ul>
+<li><strong>singleton</strong>：bean在每个Spring IOC容器中只有一个实例</li>
+<li><strong>prototype：</strong>一个bean的定义可以有多个实例</li>
+</ul>
+<p>Spring bean并没有可变的状态(比如Service类和DAO类), 所以在某种程度上说Spring的单例bean是线程安全的。但要尽可能的少创造可变参数比如count</p>
+<pre><code class="java">@Controller
+@RequeestMapping(&quot;/user&quot;)
+public class UserController&#123;
+    private int count; //成员方法需要考虑线程安全问题
+
+    @Autowired
+    private UserService userService;
+    
+    @GetMapping(&quot;/getById/&#123;id&#125;&quot;)
+    public User getById(@PathVariable(&quot;id&quot;) Integer id)&#123;
+        count++;
+        sout(count);
+        return userService.getById(id);
+    &#125;
+&#125;
+</code></pre>
+</blockquote>
+<p><span style = "color:red"><strong>什么是AOP，你们项目中有没有用到AOP？</strong></span></p>
+<p>AOP称为面向切面编程，用于将那些与业务无关，但却对多个对象产生影响的公共行为和逻辑，抽取并封装为一个可重用的模块，这个模块被命名为“切面”(Aspect)，减少系统中的重复代码，降低了模块间的耦合度，同时提高了系统的可维护性。</p>
+<h6 id="常见AOP使用场景："><a href="#常见AOP使用场景：" class="headerlink" title="常见AOP使用场景："></a>常见AOP使用场景：</h6><ul>
+<li><p><strong>记录操作日志</strong></p>
+<blockquote>
+<p>nginx → 新增用户 → @Around(“pointcut()”) <u><strong>环绕通知</strong></u></p>
+</blockquote>
+</li>
+<li><p><strong>缓存处理</strong></p>
+</li>
+<li><p><strong>Spring中内置的事务处理</strong></p>
+</li>
+</ul>
+<p><strong>Spring中的事务是如何实现的</strong><br>Spring支持 <strong>编程式事务管理</strong> 和 <strong>声明式事务</strong> 管理两种方式。</p>
+<ul>
+<li><strong>编程式事务控制</strong>：需使用TransactionTemplate来进行实现，对业务代码有侵入性，项目中很少使用</li>
+<li><strong>声明式事务管理</strong>：声明式事务管理建立在AOP之上的。其本质是通过AOP功能，对方法前后进行拦截，将事务处理的功能编织到拦截的方法中，也就是在目标方法开始之前加入一个事务，在执行完目标方法之后根据执行情况提交或者回滚事务。</li>
+</ul>
+<p><span style = "color:red"><strong>Spring中事务失效的场景有哪些？</strong></span></p>
+<blockquote>
+<p>异常捕获处理，自己处理了异常，没有抛出，解决:手动抛出<br>抛出检查异常，配置rollbackFor属性为Exception<br>非public方法导致的事务失效，改为public</p>
+</blockquote>
+<p>考察对spring框架的深入理解、复杂业务的编码经验</p>
+<blockquote>
+<ul>
+<li><p>&#x3D;&#x3D;<strong>异常捕获处理</strong>&#x3D;&#x3D;</p>
+<p><strong>原因</strong>：事务通知只有捉到了目标抛出的异常，才能进行后续的回滚处理，如果目标自己处理掉异常，事务通知无法知悉</p>
+<p><strong>解决</strong>：<u>在catch块添加throw new RuntimeException(“转账失败”)</u> 抛出</p>
+</li>
+<li><p>&#x3D;&#x3D;<strong>抛出检查异常</strong>&#x3D;&#x3D;</p>
+<p><strong>原因</strong>：Spring默认只会回滚非检查异常</p>
+<pre><code class="java">@Transactional
+public void update(...) throw FileNotFoundException&#123;
+    ...
+    new FileInputStream(&quot;dddd&quot;)
+    ...
+&#125;
+</code></pre>
+<p><strong>解决：</strong>配置<code>rollbackFor</code>属性</p>
+<pre><code class="java">@Transcational(rollbackFor=Exception.class)
+</code></pre>
+</li>
+<li><p>&#x3D;&#x3D;<strong>非public方法</strong>&#x3D;&#x3D;</p>
+<pre><code class="java">@Transcational(rollbackFor=Exception.class)
+void update(...) throw FileNotFoundException&#123;
+    ...
+    new FileInputStream(&quot;dddd&quot;)
+    ...
+&#125;
+</code></pre>
+<p><strong>原因：</strong>Spring为方法创建代理、添加事务通知、<u>前提条件都是该方法是<strong>public</strong>的</u><br><strong>解决：</strong>把方法改为<code>public</code></p>
+</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>Spring的bean的生命周期？</strong></span></p>
+<blockquote>
+<p>Spring容器是如何管理和创建bean实力<br>方便调试和解决问题</p>
+<p>① 通过BeanDefinition获取bean的定义信息<br>② 调用构造函数实例化bean<br>③ bean的依赖注入<br>④ 处理Aware接囗(BeanNameAware、BeanFactoryAware、ApplicationContextAware)<br>⑤ Bean的后置处理器BeanPostProcessor-前置<br>⑥ 初始化方法(InitializingBean、init-method)<br>⑦ Bean的后置处理器BeanPostProcessor-后置<br>⑧ 销毁bean</p>
+</blockquote>
+<p><strong>BeanDefinition</strong></p>
+<p>Spring容器在进行实例化时，会将xml配置的&lt; bean &gt;的信息封装成一个<strong>BeanDefinition</strong>对象，<u>Spring根据BeanDefinition来创建Bean对象，里面有很多的属性来描述Bean</u></p>
+<pre><code class="java">&lt;bean id=&quot;userDao&quot; class=&quot;com.itheima.dao.impl.UserDaolmpl&quot; lazy-init=&quot;true&quot;/&gt;&lt;bean id=&quot;userService&quot; class=&quot;com.itheima.service.UserServicelmpl&quot; scope=&quot;singleton&quot;&gt;
+  &lt;property name=&quot;userDao&quot; ref=&quot;userDao&quot;&gt;&lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+<p><img src="https://github.com/P-luminary/images/blob/master/Bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F.png?raw=true"></p>
+<p><span style = "color:red"><strong>Spring中的循环引用？</strong></span></p>
+<blockquote>
+<p>★ <strong>循环依赖</strong>:循环依赖其实就是循环引用,也就是两个或两个以上的bean互相持有对方,最终形成闭环。比如A依赖于B,B依赖于A<br>★ 循环依赖在spring中是允许存在，spring框架依据三级缓存已经解决了大部分的循环依赖<br>  ☆ <strong>一级缓存</strong>:单例池，缓存已经经历了完整的生命周期，已经初始化完成的bean对象<br>  ☆ <strong>二级缓存</strong>:缓存早期的bean对象(生命周期还没走完)<br>  ☆ <strong>三级缓存</strong>:缓存的是ObjectFactory，表示对象工厂，用来创建某个对象的</p>
+</blockquote>
+<p><span style = "color:red"><strong>构造方法出现了循环依赖怎么解决？</strong></span></p>
+<blockquote>
+<p>A依赖于B，B依赖于A，注入的方式是构造函数<br><strong>原因</strong>：由于bean的生命周期中构造函数是第一个执行的，spring框架并不能解决构造函数的的依赖注入<br><strong>解决方案</strong>：使用@Lazy进行懒加载，什么时候需要对象再进行bean对象的创建</p>
+<p>public A(@Lazy B b){<br>    sout(“A的构造方法执行了”);<br>    this.b&#x3D;b;<br>}</p>
+</blockquote>
+<blockquote>
+<p>@Component                                     @Component<br>public class A{          →      ←             public class B{<br>    @Autowired         ↑          ↑                 @Autowired<br>    private B b;       →↑          ↑←                private A a;<br>}                                                             } </p>
+</blockquote>
+<h6 id="什么是Spring的循环依赖？？"><a href="#什么是Spring的循环依赖？？" class="headerlink" title="什么是Spring的循环依赖？？"></a>什么是Spring的循环依赖？？</h6><p><u>&#x3D;&#x3D;<strong>一级缓存</strong>&#x3D;&#x3D;作用：限制bean在beanFactory中只存一份，即实现singleton scope，解决不了循环依赖</u></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/14e03913c1c2b7ca24702d5d2226a886bcc373de/%E4%BB%80%E4%B9%88%E6%98%AFSpring%E7%9A%84%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%961.jpg"></p>
+<p><u>如果想打破循环依赖，就需要一个中间人的参与，这个中间人就是&#x3D;&#x3D;<strong>二级缓存</strong>&#x3D;&#x3D;</u><del>如果一个对象是代理对象(被增强了)就不行</del><br><img src="https://github.com/P-luminary/images/blob/master/%E4%BA%8C%E7%BA%A7%E7%BC%93%E5%AD%98%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%962.jpg?raw=true"></p>
+<p><u>针对如果是代理对象的话如何解决呢？</u> → &#x3D;&#x3D;<strong>三级缓存</strong>&#x3D;&#x3D;<br><img src="https://github.com/P-luminary/images/blob/master/%E4%B8%89%E6%AC%A1%E7%BC%93%E5%AD%98%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96.jpg?raw=true"></p>
+<h6 id="那如果构造方法出现了循环依赖怎么解决？"><a href="#那如果构造方法出现了循环依赖怎么解决？" class="headerlink" title="那如果构造方法出现了循环依赖怎么解决？"></a>那如果构造方法出现了循环依赖怎么解决？</h6><blockquote>
+<p>@Component                                                                   @Component<br>public class A{                           →      ←                          public class B{<br>    private B b;                             ↑          ↑                             private A a;<br>    public A(B c){                       →↑          ↑←                        public B(A c){<br>          sout(“A的构造方法执行了”)                                          sout(“B的构造方法执行了”)<br>          this.b&#x3D;b;                                                                                 this.b&#x3D;b;<br>    }                                                                                               }<br>}                                                                                            } </p>
+<p>报错信息：Is there an unresolvable circular reference?<br>解决：<code>@Lazy </code> 延迟加载→什么时候需要对象的时候什么时候实例化对象</p>
+<pre><code class="java">public A(@Lazy B b)&#123;
+    sout(&quot;A的构造方法执行了&quot;);
+    this.b=b;
+&#125;
+</code></pre>
+</blockquote>
+<p><strong>Spring解决循环依赖是通过三级缓存</strong></p>
+<pre><code class="java">// 单实例对象注册器
+public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry &#123;
+private static final int SUPPRESSED EXCEPTIONS LIMIT= 100;  
+private final Map&lt;String, Object&gt;singletonObjects = new ConcurrentHashMap(256); 一级缓存
+private final Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = new HashMap(16); 三级缓存
+private final Map&lt;String, Object&gt; earlySingletonObjects = new ConcurrentHashMap(16); 二级缓存 
+&#125;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>缓存名称</th>
+<th>源码名称</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一级缓存</td>
+<td>singletonObject</td>
+<td>单例池，缓存已经经历了完整的生命周期，已经初始化完成的bean对象</td>
+</tr>
+<tr>
+<td>二级缓存</td>
+<td>earlySingletonObjects</td>
+<td>缓存早期的bean对象(生命周期还没走完)</td>
+</tr>
+<tr>
+<td>三级缓存</td>
+<td>singletonFactories</td>
+<td>缓存的是ObjectFactory，表示对象工厂，用来创建某个对象的</td>
+</tr>
+</tbody></table>
+<p>p22</p>
 
     </div>
 

@@ -133,6 +133,254 @@
 
 <div class="post">
 
+    <a href="/2022/07/11/后端/TankWar/">
+        <h2>
+            TankWar
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/7/11
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h2 id="绘制窗口-显示颜色"><a href="#绘制窗口-显示颜色" class="headerlink" title="绘制窗口 + 显示颜色"></a>绘制窗口 + 显示颜色</h2><ul>
+<li><strong>paint(Graphics g)</strong></li>
+</ul>
+<p><strong>java绘图时，最常使用到的就是paint(Graphics g)｛…内容…｝方法获取画笔，然后利用JPanel等容器作为画布,在JFrame内呈现出内容，很多情况下这种方式都还是很实用，</strong></p>
+<pre><code class="java">import javax.swing.*;
+import java.awt.*;
+
+public class GamePanel extends JFrame &#123;
+    int width = 800;
+    int height = 610;
+    public void launch()&#123;
+        setTitle(&quot;TankWar&quot;);
+        setSize(width,height);
+        setLocationRelativeTo(null); //使屏幕居中
+        setDefaultCloseOperation(3); //添加关闭事件
+        setResizable(false); //用户不能改变大小
+        setVisible(true); //使窗口可见
+        this.addKeyListener(new GamePanel.KeyMonitor()); //添加键盘监视器
+    &#125;
+
+    //paint()方法
+    @Override
+    public void paint(Graphics g)&#123;
+        g.setColor(Color.gray);
+        g.fillRect(0,0,width,height); //绘制实心矩形
+        g.setColor(Color.blue);
+        g.setFont(new Font(&quot;仿宋&quot;,Font.BOLD,50));
+        g.drawString(&quot;选择游戏模式&quot;,220,100);
+        g.drawString(&quot;单人模式&quot;,220,200);
+        g.drawString(&quot;双人模式&quot;,220,300);
+    &#125;
+
+    public static void main(String[] args) &#123;
+        GamePanel gp = new GamePanel();
+        gp.launch();
+    &#125;
+&#125;
+</code></pre>
+<h2 id="键盘监听"><a href="#键盘监听" class="headerlink" title="键盘监听"></a>键盘监听</h2><p>基于<strong>JFrame</strong>与<strong>KeyAdapter</strong></p>
+<pre><code class="java">class KeyMonitor extends KeyAdapter&#123; //键盘监视器
+        @Override //按下键盘
+        public void keyPressed(KeyEvent e)&#123;
+            System.out.println(e.getKeyChar()); //返回键值 输出按键
+        &#125;
+    &#125;
+</code></pre>
+<ul>
+<li><strong>printStackTrace()</strong></li>
+</ul>
+<p>当try语句中出现异常是时，会执行catch 中的语句，<a target="_blank" rel="noopener" href="http://www.haosou.com/s?q=java&ie=utf-8&src=wenda_link">j</a>ava运行时系统会自动将catch括号中的Exception e 初始化，也就是实例化Exception类型的对象。e是此对象异常名称。然后e（引用）会自动调用Exception类中指定的方法，也就出现了e.printStackTrace();。printStackTrace()方法的意思是：<strong>在命令行打印异常信息在程序中出错的位置及原因</strong>。（这是白话解释，比较容易理解）</p>
+<h2 id="添加图片tank指针"><a href="#添加图片tank指针" class="headerlink" title="添加图片tank指针"></a>添加图片tank指针</h2><pre><code class="java">public class GamePanel extends JFrame &#123; //指针图片
+Image select = Toolkit.getDefaultToolkit().getImage(&quot;images/selecttank.gif&quot;);
+&#125;
+            while(true)&#123; //重绘
+            repaint();
+            try &#123;
+                Thread.sleep(25);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+paint()方法&#123; g.drawImage(select,160,y,null); //绘制指针&#125;
+</code></pre>
+<h2 id="键盘监听2"><a href="#键盘监听2" class="headerlink" title="键盘监听2"></a>键盘监听2</h2><pre><code class="java">class KeyMonitor extends KeyAdapter&#123; //键盘监视器
+        @Override //按下键盘
+        public void keyPressed(KeyEvent e)&#123;
+            //返回键值
+            int key = e.getKeyCode();
+            switch (key)&#123;
+                case KeyEvent.VK_UP: //按键1的键值
+                    a = 1;
+                    y = 150;
+                    break;
+                case KeyEvent.VK_DOWN:
+                    a = 2;
+                    y = 250;
+                    break;
+                case KeyEvent.VK_ENTER:
+                    state = a;
+                    break;
+            &#125;
+//            System.out.println(e.getKeyChar()); //返回键值 输出按键
+        &#125;
+    &#125;
+
+public class GamePanel extends JFrame&#123;int a = 1; //当按下回车的时候去选择开始游戏模式&#125;
+</code></pre>
+<h2 id="双缓存机制"><a href="#双缓存机制" class="headerlink" title="双缓存机制"></a>双缓存机制</h2><p><strong>定义双缓存图片(重新创建一个空的图片，把所有组件先绘制到空图片上，再把绘制好的图片一次性绘制到主窗口当中)</strong></p>
+<pre><code class="java">public class GamePanel extends JFrame&#123;    Image offScreemImage = null; &#125;
+
+public void paint(Graphics g)&#123;
+        //创建和容器一样大小的Image图片
+        if(offScreemImage == null)&#123;
+            offScreemImage = this.createImage(width,height);
+        &#125;
+        //获取该图片的画笔
+        Graphics gImage = offScreemImage.getGraphics();
+&#125;
+...把元素绘制到新的图片上[g.drawString()变成gImage.drawString()] 
+gImage._______________________
+</code></pre>
+<hr>
+<hr>
+<h2 id="临时代码"><a href="#临时代码" class="headerlink" title="临时代码"></a>临时代码</h2><pre><code class="java">import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class GamePanel extends JFrame &#123;
+    int width = 800;
+    int height = 610;
+    //定义双缓存图片(重新创建一个空的图片，把所有组件先绘制到空图片上，再把绘制好的图片一次性绘制到主窗口当中)
+    Image offScreemImage = null;
+    //指针图片
+    Image select = Toolkit.getDefaultToolkit().getImage(&quot;images/selecttank.gif&quot;);
+    int y = 150; //指针初始纵坐标
+    int state = 0; //游戏模式 0 开始，1 单人模式，2 双人模式
+    int a = 1; //当按下回车的时候去选择开始游戏模式
+    public void launch()&#123;
+        setTitle(&quot;TankWar&quot;);
+        setSize(width,height);
+        setLocationRelativeTo(null); //使屏幕居中
+        setDefaultCloseOperation(3); //添加关闭事件
+        setResizable(false); //用户不能改变大小
+        setVisible(true); //使窗口可见
+        this.addKeyListener(new GamePanel.KeyMonitor()); //添加键盘监视器
+        while(true)&#123; //重绘
+            repaint();
+            try &#123;
+                Thread.sleep(25);
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+
+    //paint()方法
+    @Override
+    public void paint(Graphics g)&#123;
+        //创建和容器一样大小的Image图片
+        if(offScreemImage == null)&#123;
+            offScreemImage = this.createImage(width,height);
+        &#125;
+        //获取该图片的画笔
+        Graphics gImage = offScreemImage.getGraphics();
+        gImage.setColor(Color.gray);
+        gImage.fillRect(0,0,width,height); //绘制实心矩形
+        gImage.setColor(Color.blue);
+        gImage.setFont(new Font(&quot;仿宋&quot;,Font.BOLD,50));
+        if(state == 0) &#123; //state = 0, 游戏未开始
+            gImage.drawString(&quot;选择游戏模式&quot;, 220, 100);
+            gImage.drawString(&quot;单人模式&quot;, 220, 200);
+            gImage.drawString(&quot;双人模式&quot;, 220, 300);
+            gImage.drawImage(select, 160, y, null); //绘制指针
+        &#125;
+        else if(state == 1 || state == 2)&#123;
+            gImage.drawString(&quot;游戏开始&quot;,220,100);
+            if(state == 1)&#123;
+                gImage.drawString(&quot;单人模式&quot;,220,200);
+            &#125;else&#123;
+                gImage.drawString(&quot;双人模式&quot;,220,200);
+            &#125;
+        &#125;
+        /**将缓存区绘制好的图形整个绘制到容器的画布中**/
+        g.drawImage(offScreemImage,0,0,null);
+    &#125;
+
+    class KeyMonitor extends KeyAdapter&#123; //键盘监视器
+        @Override //按下键盘
+        public void keyPressed(KeyEvent e)&#123;
+            //返回键值
+            int key = e.getKeyCode();
+            switch (key)&#123;
+                case KeyEvent.VK_UP: //按键1的键值
+                    a = 1;
+                    y = 150;
+                    break;
+                case KeyEvent.VK_DOWN:
+                    a = 2;
+                    y = 250;
+                    break;
+                case KeyEvent.VK_ENTER:
+                    state = a;
+                    break;
+            &#125;
+//            System.out.println(e.getKeyChar()); //返回键值 输出按键
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        GamePanel gp = new GamePanel();
+        gp.launch();
+    &#125;
+&#125;
+</code></pre>
+<p><img src="C:\Users\faily\AppData\Roaming\Typora\typora-user-images\image-20220711105424955.png" alt="image-20220711105424955"></p>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#1bccbc>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2022/07/11/后端/TankWar/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2022/07/03/计算机/计算机基础概论、进制转换、中文字符/">
         <h2>
             计算机基础概论、进制转换、中文字符
@@ -991,7 +1239,7 @@
         
         <span class="tag">
             
-            <a href="/tags/计算机" style=color:#879cff>
+            <a href="/tags/计算机" style=color:#ffa2c4>
                 计算机
             </a>
         </span>
@@ -1111,7 +1359,7 @@
         
         <span class="tag">
             
-            <a href="/tags/数学" style=color:#00bcd4>
+            <a href="/tags/数学" style=color:#1bccbc>
                 数学
             </a>
         </span>
@@ -1273,7 +1521,7 @@ the north and the south grearly.
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -1459,7 +1707,7 @@ String Value :Hello World
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -1676,7 +1924,7 @@ write at least 120 words but no more than 180 words.
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -2175,7 +2423,7 @@ who定语从句中有动词：were looked  (原因：就是十九世纪的那场
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -3310,7 +3558,7 @@ Name : James Age : 20
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -3965,7 +4213,7 @@ public static void sort(Object[] a)
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -3973,103 +4221,6 @@ public static void sort(Object[] a)
     </div>
 
     <a href="/2022/04/28/后端/Java基础+对象和类+变量类型+修饰符+运算符+各种类+数组/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2022/04/22/英语/作文高分语句模板/">
-        <h2>
-            作文模板
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2022/4/22
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <span id="more"></span>
-
-<h1 id="画图作文"><a href="#画图作文" class="headerlink" title="画图作文"></a>画图作文</h1><h4 id="首段：图画描述"><a href="#首段：图画描述" class="headerlink" title="首段：图画描述"></a>首段：图画描述</h4><pre><code class="java">显然，这幅画能自然联系到做好小事的重要性
-This drawing, apparently, can be linked to the critical significance of doing small things.
-    
-图画中，一个年轻人表达了自己对“核废料处理”的担忧
-In the picture, the youngster express his worries about &quot;disposing of nuclear waste&quot;.
-    
-使他感到吃惊的是，他爸爸指着垃圾筐告诉他,如果能把垃圾筐清空，他就能做好一切
-To his surprise, his father points at the dustbin, telling him that if he can empty the dustbin there, he can do anything.
-</code></pre>
-<h4 id="二段：图画主题-现象-意义"><a href="#二段：图画主题-现象-意义" class="headerlink" title="二段：图画主题 + 现象 + 意义"></a>二段：图画主题 + 现象 + 意义</h4><pre><code class="java">父亲的意思是，如果年轻人想要成功
-The father means that if young people dream to achieve success,
-    - 
-就应该明智地从小的工作开始做起
-it is sensible for them to start with little jobs.
-</code></pre>
-<pre><code class="java">确实，在当今社会，很多年轻人忽略身边的各种小事已经成为一种常见现象
-Admittedly, in the present-day society, it is a common phenomenon for many teenagers to neglect tiny things in life.
-    
-例如打扫房间、洗衣服和清理垃圾筐
-such as cleaning rooms, washing clothes and emptying dustbins.
-    
-为什么？因为越来越多的年轻人觉得处理这些小事没有用。一个典型例子就是图画中的小孩。
-Why? The reason is that a growing number of young people find it rather useless to deal with these things.
-A typical example is the boy in the picture.
-</code></pre>
-<pre><code class="java">然而，正是这些小事确保年轻人能掌握足够的知识、能力和经验
-Nonetheless, it is these small tasks that ensure young people to master sufficient knowledge, competence and experience.
-    
-事实上，很多聪明人已经意识到这些小事的重要性
-Actually, wise people in large numbers have come to recognize the significance of these small things.
-
-做好这些小事带给我们技能，唤起我们对成功的热情，帮助我们进步
-Doing small things brings us skills, arouses our passion for success and helps us to make progress.
-</code></pre>
-<h4 id="尾段：观点-建议-展望"><a href="#尾段：观点-建议-展望" class="headerlink" title="尾段：观点 + 建议 + 展望"></a>尾段：观点 + 建议 + 展望</h4><pre><code class="java">作为一名大学生，我坚信年轻人很有必要通过做好小事提升自己的整体素质
-As a college student, I am convinced that it is exceedingly necessary for young people to strengthen our comprehensive
-quality by doing small things. 
-因此，我们应该教育和鼓励我们的朋友和熟人培养这种积极的意识和习惯
-Accordingly, we should educate and encourage our friends and acquaintances to foster this positive awareness and habit.
-如果我们不遗余力地这样来做，未来我们的工作和生活将充满光明和希望
-We, sparing no efforts to do so, may witness a hopeful and promising future of our work and study.
-每个人都应该就牢记大的成功源于每天小的进步
-Everyone should bear in mind that a big success originates from everyday small progress.
-</code></pre>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/英语" style=color:#ff7d73>
-                英语
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2022/04/22/英语/作文高分语句模板/ " class="go-post">
         阅读全文
     </a>
 </div>

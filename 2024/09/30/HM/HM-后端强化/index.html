@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || HM-API</title>
+    <title>P-luminary || HM后端强化</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>HM-API </h1>
+        <h1>HM后端强化 </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#1bccbc>
+                <a href="/tags/HM" style=color:#00bcd4>
                     HM
                 </a>
             </span>
@@ -5667,6 +5667,192 @@ public class Demo01 &#123;
         System.out.println(&quot;ret1 = &quot; + ret1);
 
         proxy.dance(&quot;a&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="模拟企业业务功能开发，并完成每个功能的性能统计"><a href="#模拟企业业务功能开发，并完成每个功能的性能统计" class="headerlink" title="模拟企业业务功能开发，并完成每个功能的性能统计"></a>模拟企业业务功能开发，并完成每个功能的性能统计</h6><p><strong>需求</strong><br>模拟某企业用户管理业务，需包含用户登录，用户删除，用户查询功能，并要统计每个功能的耗时优化的关键步骤<br>1.必须有接口，实现类要实现接口(代理通常是基于接口实现的)。<br>2.创建一个实现类的对象，该对象为业务对象<br>3.接着为业务对象做一个代理对象。</p>
+<pre><code class="java">package 动态代理.案例;
+
+/**
+ * 用户业务接口
+ */
+public interface UserService &#123;
+    // 登录功能
+    void login(String loginName, String passWord) throws Exception;
+
+    // 删除用户
+    void deleteUsers() throws Exception;
+&#125;
+</code></pre>
+<pre><code class="java">package 动态代理.案例;
+
+import java.util.Random;
+
+/**
+用户业务实现类（面向接口编程）
+
+long startTime = System.currentTimeMillis();
+long endTime = System.currentTimeMillis();
+System.out.println(&quot;方法名&quot; + &quot;方法执行耗时：&quot; + (endTime - startTime) / 1000.0 + &quot;s&quot;);
+ */
+public class UserServiceImpl implements UserService &#123;
+    @Override
+    public void login(String loginName, String password) throws Exception &#123;
+        Thread.sleep(new Random().nextInt(2000));
+        if (&quot;admin&quot;.equals(loginName) &amp;&amp; &quot;123456&quot;.equals(password)) &#123;
+            System.out.println(&quot;您登录成功，欢迎光临本系统~&quot;);
+        &#125; else &#123;
+            System.out.println(&quot;您登录失败，用户名或密码错误~&quot;);
+        &#125;
+    &#125;
+
+    @Override
+    public void deleteUsers() throws Exception &#123;
+        Thread.sleep(new Random().nextInt(2000));
+        System.out.println(&quot;成功删除了1万个用户~&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package 动态代理.案例;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+public class Demo02 &#123;
+    public static void main(String[] args) throws Exception &#123;
+        // 1.创建用户业务对象
+        UserServiceImpl userService = new UserServiceImpl();
+
+        // 使用代理对象 统计每个方法的耗时，把多个方法中重复的代码放到代理对象中
+        UserService proxy = (UserService) Proxy.newProxyInstance(
+                Demo02.class.getClassLoader(),
+                new Class[]&#123;UserService.class&#125;,
+                new InvocationHandler() &#123;
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;
+                        // 方法开始，记录一个时间
+                        long start = System.currentTimeMillis();
+
+                        // 调用真时功能
+                        Object ret = method.invoke(userService, args);
+
+                        // 方法结束，记录一个时间
+                        long end = System.currentTimeMillis();
+                        // 计算耗时
+                        System.out.println(method.getName() + &quot;方法耗时：&quot; + (end - start) + &quot;ms&quot;);
+                        return null;
+                    &#125;
+                &#125;
+        );
+        // 使用代理对象调用方法
+        proxy.login(&quot;admin&quot;, &quot;123&quot;);
+        proxy.deleteUsers();
+    &#125;
+&#125;
+//////////////////////////////////////////////////////////////////////////
+您登录失败，用户名或密码错误~
+login方法耗时：315ms
+成功删除了1万个用户~
+deleteUsers方法耗时：1488ms
+</code></pre>
+<p>StringBuilder：代表可变字符串对象，相当于一个容器，用来操作字符串的</p>
+<pre><code class="java">package Other;
+
+public class Demo01 &#123;
+    /**
+     * StringBuilder和StringBuffered区别
+     * 1. StringBuilder是线程不安全的，效率高，但是不能保证字符串的内容不改变
+     * 2. StringBuffered是线程安全的，效率低，但能保证字符串的内容不改变
+     * 3. StringBuilder和StringBuffered的效率对比
+     * @param args
+     */
+    public static void main(String[] args) &#123;
+        StringBuilder sb = new StringBuilder(&quot;广州黑马&quot;);
+     // 进行调查
+        //public StringBuilder append(任意类型)
+//        sb.append(&quot;黑马程序员&quot;);
+//        sb.append(123);
+//        sb.append(true);
+//        sb.append(&#39;a&#39;);
+        // 如果方法返回值是当前本身 就可以链式编程
+        sb.append(&quot;黑马程序员&quot;).append(123).append(true).append(5).append(&quot;你好&quot;);
+        System.out.println(&quot;添加后sb = &quot; + sb);
+
+        // 反转
+        sb.reverse();
+        System.out.println(&quot;反转后sb = &quot; + sb);
+
+        // 获取字符v长度
+        System.out.println(&quot;长度 = &quot; + sb.length());
+
+        // 把 StringBuilder 转成 String
+        String s = sb.toString();
+        System.out.println(&quot;s = &quot; + s);
+    &#125;
+&#125;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>String</th>
+<th>StringBuffer</th>
+<th>StringBuffer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>执行速度</td>
+<td>最差</td>
+<td>其次</td>
+<td>最高</td>
+</tr>
+<tr>
+<td>线程安全</td>
+<td>线程安全</td>
+<td>线程安全</td>
+<td>线程不安全</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>少量字符串操作</td>
+<td>多线程环境下大量操作</td>
+<td>单线程环境下大量操作</td>
+</tr>
+</tbody></table>
+<h5 id="BigDecimal"><a href="#BigDecimal" class="headerlink" title="BigDecimal"></a>BigDecimal</h5><ul>
+<li>用于解决浮点型运算时，出现结果失真问题</li>
+</ul>
+<pre><code class="java">package Other;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+public class Demo03 &#123;
+    public static void main(String[] args) &#123;
+        // 创建BigDecimal对象 不建议double转换为bigdecimal
+        BigDecimal bd1 = new BigDecimal(&quot;0.9&quot;);
+        System.out.println(&quot;bd1 = &quot; + bd1);
+        BigDecimal bd2 = BigDecimal.valueOf(0.4);
+        System.out.println(&quot;bd2 = &quot; + bd2);
+
+        BigDecimal subtract = bd1.subtract(bd2);
+        System.out.println(&quot;subtract = &quot; + subtract);
+
+        // 相除
+        BigDecimal divide = bd1.divide(bd2);
+        System.out.println(&quot;相除 = &quot; + divide);
+
+        // 除不尽
+        BigDecimal cbj1 = BigDecimal.valueOf(10);
+        BigDecimal cbj2 = BigDecimal.valueOf(3);
+
+//        BigDecimal divide2 = cbj1.divide(cbj2);
+//        System.out.println(&quot;divide2 = &quot; + divide2);
+        
+        // 舍弃模式 RoundingMode roundingMode = RoundingMode.HALF_UP;
+        BigDecimal divide3 = cbj1.divide(cbj2, 6, RoundingMode.HALF_UP);
+        System.out.println(&quot;除不尽的舍弃模式 = &quot; + divide3);
     &#125;
 &#125;
 </code></pre>
