@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ff7d73>
+                <a href="/tags/面试" style=color:#ffa2c4>
                     面试
                 </a>
             </span>
@@ -967,6 +967,27 @@ where t.id = a.id
 <li>根据业务创建的索引(复合索引)</li>
 </ul>
 </blockquote>
+<h6 id="创建索引的方式"><a href="#创建索引的方式" class="headerlink" title="创建索引的方式"></a>创建索引的方式</h6><pre><code class="mysql">① SQL的方式
+ALTER TABLE user_innodb ADD INDEX idx_name(name)
+
+② 在建表的时候 去指定索引
+...
+PRIMARY KEY(&#39;id&#39;),
+KEY &#39;idx_name&#39; (&#39;name&#39;) USING HASH
+
+③ 通过界面化工具去指定索引
+字段旁边有个`索引` 可以去添加
+
+=============================================
+单个字段的索引 → 单列索引
+多个字段的索引 → 联合索引
+</code></pre>
+<h6 id="索引的类型"><a href="#索引的类型" class="headerlink" title="索引的类型"></a>索引的类型</h6><p><u>索引可以增加查询速度 同时也增加了更新&#x2F;修改速度</u><del>因为更新的第一步就是查询</del></p>
+<blockquote>
+<p>① <strong>普通索引</strong>   经过特殊设计的数据结构<br>② <strong>唯一索引</strong>   唯一约束<br>[索引必须是唯一的 比如name就不行 因为名字可以很多建立普通索引]<br>③ <strong>主键索引</strong>   在主键索引上添加了<strong>非空约束</strong><br>④ <strong>全文索引</strong>   一般使用搜索引擎，因为对中文的搜索不太友好<del>美国英文开发的</del><br>[特殊的sql：select * from 表名 where match(字段名) against(‘马士兵教育’ IN NATURAL LANGUAGE MODE);]</p>
+<p>AVL树 右右型左旋 <strong><u>左子树与右子树的深度差绝对值不超过1</u></strong><br>树的节点里应该放：<strong>键值</strong>+<strong>Value值</strong>+<strong>左右子树的地址</strong><del>left+right</del><br>Innodb一次会加载16k(<u>16384字节&#x3D;Redis的槽位</u>) 内存到内存<br>不选红黑树是因为它是二叉的，我们需要多叉树<br>要用&#x3D;&#x3D;<strong>B+树</strong>&#x3D;&#x3D;全盘扫描能力更强 叶子节点是双向链表<br>因为稳定性比较好  B树非所见所得 B+树是稳定几层的查找数据<del>因为数据都在最后一层叶子节点上</del><br>Innodb的索引方法是BTREE 不能改成HASH</p>
+</blockquote>
+<p>**<u><span style = "color:red">数据结构可视化网</span></u>**：<a target="_blank" rel="noopener" href="https://www.cs.usfca.edu/~galles/visualization/Algorithms.html">Data Structure Visualization</a></p>
 <ul>
 <li>针对数据量较大，且查询比较频繁的表建立索引。<strong>单表超过10万数据(增加用户体验)</strong></li>
 <li>针对常作为<strong>查询条件(where)、排序(order by)、分组(group by)</strong> 操作的字段建立索引</li>
@@ -989,6 +1010,7 @@ where t.id = a.id
 <p><strong>怎么哪块读判断索引是否失效了呢</strong>？</p>
 <pre><code class="mysql"># 执行计划explain
 </code></pre>
+<p>【2024最新版MySQL索引讲解！一个视频带你彻底搞懂MySQL索引！！【马士兵】】<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV17z421i7Kb?vd_source=5966d6c3cf3709c10b3c53b278b0f4d3">https://www.bilibili.com/video/BV17z421i7Kb?vd_source=5966d6c3cf3709c10b3c53b278b0f4d3</a></p>
 <p><strong>什么情况下索引会失效？</strong><br>如果索引了多列，要遵守最左前缀法则。指的是查询从索引的最左前列开始，并且不跳过索引中的列。匹配最左前缀法则，走索引：<br><img src="https://github.com/P-luminary/images/blob/master/%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88.png?raw=true" style="zoom:80%;" /></p>
 <p><span style = "color:red"><strong>谈谈你对sql的优化经验？</strong></span></p>
 <blockquote>

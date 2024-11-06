@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -265,7 +265,281 @@ C:\Users\Pluminary\Desktop\itcast\RuoYi-Vue3&gt;npm run dev
 </tr>
 </tbody></table>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/e34a8982a14929c9b4d00cae2f337c3e043708da/%E8%8B%A5%E4%BE%9D-%E6%9D%83%E9%99%90%E6%8E%A7%E5%88%B6.jpg"></p>
-<h6 id="创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。"><a href="#创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。" class="headerlink" title="创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。"></a>创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。</h6><p>① 创建菜单<br>② 创建角色，并分配权限<br>③ 创建用户，并关联角色</p>
+<h6 id="创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。"><a href="#创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。" class="headerlink" title="创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。"></a>创建新用户小智并关联课研人员角色，仅限课程管理和统计分析菜单访问。</h6><p>① <strong>创建菜单</strong><br>② <strong>创建角色，并分配权限</strong><del>课研人员</del><br>③ <strong>创建用户，并关联角色</strong><del>xiaozhi</del></p>
+<pre><code class="java">若依通过简单的功能配置实现RBC的权限管理
+</code></pre>
+<h5 id="数据字典"><a href="#数据字典" class="headerlink" title="数据字典"></a>数据字典</h5><ul>
+<li>若依内置的数据字典，用于维护系统中常见的静态数据。例如：性别、状态</li>
+<li>功能包括：字典类型管理、字典数据管理</li>
+<li>表关系说明【一对多】</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>表名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sys_dict_type</td>
+<td>字典类型表</td>
+</tr>
+<tr>
+<td>sys_dict_data</td>
+<td>字典数据表</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>dict_id</th>
+<th>dict_name</th>
+<th><span style = "color:red">dict_type</span></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>用户性别</td>
+<td>sys_user_sex</td>
+</tr>
+<tr>
+<td>2</td>
+<td>菜单状态</td>
+<td>sys_show_hide</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>dict_code</th>
+<th>dict_sort</th>
+<th>dict_label</th>
+<th>dict_value</th>
+<th><span style = "color:red">dict_type</span></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>1</td>
+<td>男</td>
+<td>0</td>
+<td>sys_user_sex</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>女</td>
+<td>1</td>
+<td>sys_user_sex</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>未知</td>
+<td>2</td>
+<td>sys_user_sex</td>
+</tr>
+</tbody></table>
+<ul>
+<li><p><strong>将一些不经常修改的数据(课程管理的学科字段)改为数据字典维护，以免占用大量空间</strong></p>
+<ul>
+<li><p>添加字典类型和数据</p>
+<blockquote>
+<p>系统管理 → 字典管理 → 新增 → <strong>添加字典类型</strong><br>字典名称：学科<br>字典类型：course_subject<br>第二页点进去<strong>添加字典数据</strong><br>javaEE → 0 → 1 </p>
+</blockquote>
+</li>
+<li><p>修改代码生成信息</p>
+<blockquote>
+<p>系统工具 → 代码生成 → 编辑课程管理 → subject课程学科 显示类型从<strong>文本框</strong>改成<strong>下拉框</strong> → 字典类型 是学科 → 下载最新的代码<br>只需要修改前端vue组件 因为只改了从前端文本框到下拉框 和一些数据字典</p>
+</blockquote>
+</li>
+<li><p>下载代码，导入前端</p>
+<blockquote>
+<p>C:\Users\Pluminary\Downloads\ruoyi (1)\vue\views\course\course\index.vue去替换前端的index.vue  此时去若依前端查看课程管理→课程学科就会发现已经添加新的进去了</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>此时去<code>课程管理</code>里面找<code>课程学科：JavaEE</code>进行筛选不会出 因为若依底层<br><a target="_blank" rel="noopener" href="http://10.254.2.179/dev-api/course/course/list?pageNum=1&amp;pageSize=10&amp;subject=0">http://10.254.2.179/dev-api/course/course/list?pageNum=1&amp;pageSize=10&amp;subject=0</a><br>要从数据库里把JavaEE的subject改成0<br>优点：<strong>降低数据库的存储压力 提高磁盘利用率</strong></p>
+</blockquote>
+<h5 id="其他功能"><a href="#其他功能" class="headerlink" title="其他功能"></a>其他功能</h5><ul>
+<li><p><strong>参数设置</strong>：对系统中的参数进行动态维护</p>
+<blockquote>
+<p>系统管理 → 参数设置 → 验证码开关 → 修改 → 参数键值 → false<br>还可以开启是否 <u>用户注册功能</u> → 前端代码隐藏需要修改 → src&#x2F;views&#x2F;login.vue → 97行注册开关<br>const register &#x3D; ref(true) 此时登录界面就有立即注册 跳转注册</p>
+</blockquote>
+</li>
+<li><p><strong>通知公告(半成品)：</strong>促进组织内部信息传递</p>
+<blockquote>
+<p>系统管理 → 通知公告 → 新增</p>
+</blockquote>
+</li>
+<li><p><strong>日志管理：</strong>轻松追踪用户行为和系统运行状况</p>
+<blockquote>
+<p>系统管理 → 通知公告 → 日志管理 → 操作日志</p>
+</blockquote>
+</li>
+</ul>
+<h5 id="系统监控"><a href="#系统监控" class="headerlink" title="系统监控"></a>系统监控</h5><ul>
+<li><p>若依提供了一些列强大的监控工具，能够帮助开发者和运维快速了解应用程序的性能状态</p>
+<blockquote>
+<p>系统监控 → 在线用户 &amp;&amp; 缓存列表<br>数据监控【Druid Monitor】 → ruoyi &amp;&amp; 123456</p>
+</blockquote>
+</li>
+</ul>
+<h5 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h5><ul>
+<li><p>若依为定时任务功能提供方便友好的web界面，实现动态管理任务</p>
+<pre><code class="java">@Component
+public class MyTask&#123;
+  @Scheduled(cron = &quot;0/5 *****?&quot;)
+  public void showTime()&#123;
+     sout(&quot;定时任务开始执行：&quot; + new Date());
+  &#125;
+&#125;
+// 硬编码 改代码需要重新修改 重新编译 重新上传...
+</code></pre>
+</li>
+<li><p><strong>每间隔5秒，控制台输出系统时间</strong></p>
+<ul>
+<li><p>创建任务类</p>
+<blockquote>
+<p>创建一个类 <code>C:\Users\Pluminary\Desktop\RuoYi-Vue\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\MyTask.java</code></p>
+<pre><code class="java">package com.ruoyi.quartz.task;
+
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+
+@Component
+public class MyTask &#123;
+    public void showTime()&#123;
+        System.out.println(&quot;定时任务开始执行：&quot; + new Date());
+    &#125;
+&#125;
+</code></pre>
+</blockquote>
+</li>
+<li><p>添加任务规则</p>
+<blockquote>
+<p>系统监控 → 定时任务 → 新增 →<br>任务名称：输出时间        任务分组：默认<br>调用方式：myTask.showTime()<br>Cron表达式生成器：<u>从0秒开始，每5秒执行一次</u> → 0&#x2F;5 * * * * ?<br>开启输出时间 状态打开！</p>
+<h2 id="然后每间隔5秒就会向控制台输出时间"><a href="#然后每间隔5秒就会向控制台输出时间" class="headerlink" title="然后每间隔5秒就会向控制台输出时间"></a>然后每间隔5秒就会向控制台输出时间</h2><p>定时任务开始执行：Wed Nov 06 18:12:30 CST 2024<br>18:12:30.001 [quartzScheduler_Worker-4] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - &gt; Preparing: insert into sys_job_log( job_name, job_group, invoke_target, job_message, status, create_time )values( ?, ?, ?, ?, ?, sysdate() ) 18:12:30.002 [quartzScheduler_Worker-4] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - –&gt; Parameters: 输出时间(String), DEFAULT(String), myTask.showTime()(String), 输出时间 总共耗时：0毫秒(String), 0(String) 18:12:30.009 [quartzScheduler_Worker-4] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - &lt; Updates: 1 定时任务开始执行：Wed Nov 06 18:12:35 CST 2024 18:12:35.006 [quartzScheduler_Worker-5] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - &gt; Preparing: insert into sys_job_log( job_name, job_group, invoke_target, job_message, status, create_time )values( ?, ?, ?, ?, ?, sysdate() ) 18:12:35.006 [quartzScheduler_Worker-5] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - –&gt; Parameters: 输出时间(String), DEFAULT(String), myTask.showTime()(String), 输出时间 总共耗时：0毫秒(String), 0(String) 18:12:35.012 [quartzScheduler_Worker-5] DEBUG c.r.q.m.S.insertJobLog - [debug,135] - &lt; Updates: 1</p>
+</blockquote>
+</li>
+<li><p><strong>启动任务</strong></p>
+<p>官方有提供可以训练的模型</p>
+<blockquote>
+<p>在这里面：com&#x2F;ruoyi&#x2F;quartz&#x2F;task&#x2F;RyTask.java</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="表单构建"><a href="#表单构建" class="headerlink" title="表单构建"></a>表单构建</h5><ul>
+<li><h6 id="通过表单构建工具，单独制作一个添加课程的表单页面"><a href="#通过表单构建工具，单独制作一个添加课程的表单页面" class="headerlink" title="通过表单构建工具，单独制作一个添加课程的表单页面"></a>通过表单构建工具，单独制作一个添加课程的表单页面</h6><ul>
+<li><p>制作表单并导出</p>
+<blockquote>
+<p>系统工具 → 表单构建 → 左侧<strong>行容器</strong> → 拖入第一个单行文本 → 右侧可以改名字 如果想实现一行两个文本的化 就把<code>表单栅格调小一点</code> → 选择性组件的<strong>下拉选择</strong>托到右面 → 修改字段名、标题、表单栅格…<br>日期范围 → 课程有效期 → 选择型组件里的日期范围 命名为：课程有效期<br>文件上传组件 → 课程封面<br>评分 → 推荐指数<br>多行文本 → 课程介绍</p>
+</blockquote>
+</li>
+<li><p>复制到前端工程</p>
+<blockquote>
+<p>搞完后打开前端工程把add.vue它放在 src&#x2F;views&#x2F;course&#x2F;course&#x2F;中</p>
+</blockquote>
+</li>
+<li><p>创建动态菜单</p>
+<blockquote>
+<p>系统管理 → 菜单管理 → 添加菜单 →<br>菜单类型：菜单<br>菜单名称：添加课程<br>显示排序：1<br>路由地址：course&#x2F;add<br>组件路径：course&#x2F;course&#x2F;add<br>刷新界面 就会有菜单管理→添加课程了</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="系统工具"><a href="#系统工具" class="headerlink" title="系统工具"></a>系统工具</h4><h5 id="代码生成"><a href="#代码生成" class="headerlink" title="代码生成"></a>代码生成</h5><ul>
+<li>代码生成器，根据数据库表结构自动生成前后端CRUD代码</li>
+<li>提供三种生成模板：单表、树表、主子表(一对多)</li>
+<li>树表是一种展示层级数据的表格，能展开折叠，清晰呈现父子关系，便于管理</li>
+</ul>
+<blockquote>
+<p>系统工具 → 代码生成 → 导入部门表 → 编辑 → 生成信息 → 生成模板：树表 →<br>树编码字段：dept_id：部门id<br>树父编码字段：parent_id：父部门id<br>树名称字段：dept_name：部门名称<br>提交后下载代码<br>导入后就是 系统管理&#x2F;部门管理 的树型结构界面了</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>dept_id</th>
+<th>parent_id</th>
+<th>ancestors</th>
+<th>dept_name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>100</td>
+<td>0</td>
+<td>0</td>
+<td>若依科技</td>
+</tr>
+<tr>
+<td>101</td>
+<td>100</td>
+<td>0,100</td>
+<td>深圳总公司</td>
+</tr>
+<tr>
+<td><span style = "color:red">102</span></td>
+<td>100</td>
+<td>0,100</td>
+<td>长沙分公司</td>
+</tr>
+<tr>
+<td>108</td>
+<td><span style = "color:red">102</span></td>
+<td>0,100,101</td>
+<td>市场部门</td>
+</tr>
+<tr>
+<td>109</td>
+<td><span style = "color:red">102</span></td>
+<td>0,100,102</td>
+<td>财务部门</td>
+</tr>
+</tbody></table>
+<h5 id="系统接口"><a href="#系统接口" class="headerlink" title="系统接口"></a>系统接口</h5><ul>
+<li><p>Swagger，能够自动生成API的同步在线文档，并提供Web界面进行接口调用和测试</p>
+<blockquote>
+<p>系统工具 → 系统接口<br>若依的Token在应用程序里 需要搞token进去<br>测试：获取用户列表GET<br>得到Token(F12后找应用程序 → Cookie<del>若依</del> → 找到Admin-Token<del>一定是当前ip地址的Token</del> → 在Authorize中设置Token令牌 → 去后端改swagger的请求前缀pathMapping：&#x2F;<del>因为他的地址前面默认佩戴&#x2F;dev-api</del></p>
+<pre><code class="yaml"># Swagger配置
+swagger:
+  # 是否开启swagger
+  enabled: true
+  # 请求前缀
+  pathMapping: /
+</code></pre>
+<p>然后重启后台项目刷新浏览器打开接口再调用Token再去测试<br>此时就操作成功了</p>
+<pre><code class="json">&#123;
+  &quot;code&quot;: 200,
+  &quot;msg&quot;: &quot;操作成功&quot;,
+  &quot;data&quot;: [
+    &#123;
+      &quot;userId&quot;: 1,
+      &quot;username&quot;: &quot;admin&quot;,
+      &quot;password&quot;: &quot;admin123&quot;,
+      &quot;mobile&quot;: &quot;15888888888&quot;
+    &#125;,
+    &#123;
+      &quot;userId&quot;: 2,
+      &quot;username&quot;: &quot;ry&quot;,
+      &quot;password&quot;: &quot;admin123&quot;,
+      &quot;mobile&quot;: &quot;15666666666&quot;
+    &#125;
+  ]
+&#125;
+</code></pre>
+</blockquote>
+</li>
+</ul>
+<p><span style = "color:red"><strong>若依常用功能？</strong></span></p>
+<p>① <strong>权限控制</strong><br>② <strong>数据字典</strong><br>③ <strong>定时任务</strong><br>④ <strong>表单构建</strong><br>⑤ <strong>代码生成</strong></p>
+<h3 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h3><p>12</p>
 
     </div>
 
