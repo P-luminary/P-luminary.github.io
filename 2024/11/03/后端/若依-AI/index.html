@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -984,6 +984,241 @@ export function delCourse(id) &#123;
 </li>
 </ul>
 <img src="https://raw.githubusercontent.com/P-luminary/images/afd799acd589023d8452649e6565150168bee83b/BaseController%E5%86%85%E5%AE%B9.jpg" style="zoom:200%;" />
+
+<pre><code class="java">/**
+     * 查询课程管理列表
+     */
+    @PreAuthorize(&quot;@ss.hasPermi(&#39;course:course:list&#39;)&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public TableDataInfo list(Course course) &#123;
+        //1.开启分页
+        startPage();
+        //2.查询课程列表
+        List&lt;Course&gt; list = courseService.selectCourseList(course);
+        return getDataTable(list);
+    &#125;
+// 在分页查询那块会附带着两个封装好的sql语句
+// select * from tb_course where xxx 【逐步细分成两个小sql】
+  1. select count(*) from tb_course where xxx      //总记录数
+  2. select * from tb_course where xxx limit ?,?   //获取当前的数据列表
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/644e3ab525e8c4aaf75d6f6f3e3879cb2a196303/%E5%88%86%E9%A1%B5%E9%80%BB%E8%BE%91%E5%8E%9F%E7%90%86.jpg"></p>
+<h5 id="分页原理"><a href="#分页原理" class="headerlink" title="分页原理"></a>分页原理</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/14bbabe082a07e29da26ea9d5f0c648dcf91677a/%E5%88%86%E9%A1%B5%E9%80%BB%E8%BE%91%E5%8E%9F%E7%90%862.jpg"></p>
+<h5 id="AjaxResult：操作消息提醒"><a href="#AjaxResult：操作消息提醒" class="headerlink" title="AjaxResult：操作消息提醒"></a>AjaxResult：操作消息提醒</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/92f34019d9a098b23780c66e99a5bab18541ee9a/AjaxResult%E6%93%8D%E4%BD%9C%E4%BF%A1%E6%81%AF%E6%8F%90%E9%86%92.jpg"></p>
+<h5 id="权限解读"><a href="#权限解读" class="headerlink" title="权限解读"></a>权限解读</h5><ul>
+<li><code>@PreAuthorize</code>注解是Spring Security框架中用来做权限检查的。</li>
+<li>它在运行方法前先验证权限，权限够就放行，不够就拦截</li>
+</ul>
+<pre><code class="java">@RestController
+@RequestMapping(&quot;/course/course&quot;)
+public class CourseController extends BaseController &#123;
+    @Autowired
+    private ICourseService courseService;
+
+    /**
+     * 查询课程管理列表
+     */
+// 问题：我怎么知道该用户有没有权限呢？基于RBC权限模型 
+    @PreAuthorize(&quot;@ss.hasPermi(&#39;course:course:list&#39;)&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public TableDataInfo list(Course course) &#123;
+        startPage();
+        List&lt;Course&gt; list = courseService.selectCourseList(course);
+        return getDataTable(list);
+    &#125;
+&#125;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>菜单名称</th>
+<th>排序</th>
+<th>权限标识</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>课程管理</td>
+<td>1</td>
+<td>course:course:list</td>
+</tr>
+<tr>
+<td>课程管理查询</td>
+<td>1</td>
+<td>course:course:query</td>
+</tr>
+<tr>
+<td>课程管理新增</td>
+<td>2</td>
+<td>course:course:add</td>
+</tr>
+<tr>
+<td>课程管理修改</td>
+<td>3</td>
+<td>course:course:edit</td>
+</tr>
+<tr>
+<td>课程管理删除</td>
+<td>4</td>
+<td>course:course:remove</td>
+</tr>
+<tr>
+<td>课程管理导出</td>
+<td>5</td>
+<td>course:course:export</td>
+</tr>
+</tbody></table>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/623caf468a6f636c5fe27e119368bfabc1e20aa2/%E6%9D%83%E9%99%90%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg"></p>
+<pre><code class="java">PermissionService.java
+源码解读在后期
+
+/**
+ * RuoYi首创 自定义权限实现，ss取自SpringSecurity首字母
+ * 
+ * @author ruoyi
+ */
+@Service(&quot;ss&quot;)
+public class PermissionService
+&#123;
+    /**
+     * 验证用户是否具备某权限
+     * 
+     * @param permission 权限字符串
+     * @return 用户是否具备某权限
+     */
+    public boolean hasPermi(String permission)
+    &#123;
+        if (StringUtils.isEmpty(permission))
+        &#123;
+            return false;
+        &#125;
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        if (StringUtils.isNull(loginUser) || CollectionUtils.isEmpty(loginUser.getPermissions()))
+        &#123;
+            return false;
+        &#125;
+        PermissionContextHolder.setContext(permission);
+        return hasPermissions(loginUser.getPermissions(), permission);
+    &#125;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/7e976e8ec0b1bb90abd5f6fc94d23c9b8ba39a8b/%E5%89%8D%E5%90%8E%E8%81%94%E8%B0%83.jpg"></p>
+<h3 id="二次开发-——-苍穹外卖"><a href="#二次开发-——-苍穹外卖" class="headerlink" title="二次开发 —— 苍穹外卖"></a>二次开发 —— 苍穹外卖</h3><h5 id="若依框架修改器"><a href="#若依框架修改器" class="headerlink" title="若依框架修改器"></a>若依框架修改器</h5><ul>
+<li>若依框架修改器是一个可以一键修改RuoYi框架包名、项目名等的工具</li>
+</ul>
+<blockquote>
+<p>E:\Java实例项目1-20套\2024-Java若依框架专题课\01-基础篇\资料\04-二次开发\若依框架修改器.exe</p>
+</blockquote>
+<pre><code class="java">选择系列：RuoYi-Vue
+目录名称: sky
+项目名：sky
+包名：com.sky
+artifactId：sky
+groupId：com.sky
+站点名称：外卖管理系统
+
+
+C:\Users\Pluminary\Desktop\20241108150415\sky
+</code></pre>
+<h5 id="新建业务模块"><a href="#新建业务模块" class="headerlink" title="新建业务模块"></a>新建业务模块</h5><ul>
+<li><p>新建<code>sky-merchant</code>子模块<del>商家管理</del></p>
+<ul>
+<li><p>新建子模块<br><code>sky-merchant</code> → Advanced Settings → GroupId：com.sky</p>
+</li>
+<li><p>父工程版本锁定</p>
+<pre><code class="xml">pom.xml(sky总)
+&lt;!-- 商家管理--&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;com.sky&lt;/groupId&gt;
+                &lt;artifactId&gt;sky-merchant&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;sky.version&#125;&lt;/version&gt;
+            &lt;/dependency&gt;
+</code></pre>
+<pre><code class="xml">pom.xml(sky-merchant)
+&lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.sky&lt;/groupId&gt;
+            &lt;artifactId&gt;sky-framework&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+</li>
+<li><p>sky-admin添加依赖</p>
+<pre><code class="xml">pom.xml(sky-admin) 
+&lt;dependency&gt;
+            &lt;groupId&gt;com.sky&lt;/groupId&gt;
+            &lt;artifactId&gt;sky-merchant&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="菜品管理"><a href="#菜品管理" class="headerlink" title="菜品管理"></a>菜品管理</h3><ul>
+<li><strong>利用若依代码生成器(主子表模板)，生成菜品管理的前后端代码</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">tb_dish【菜品管理】</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><span style = "color:red"><strong>id</strong></span></td>
+</tr>
+<tr>
+<td align="left">name</td>
+</tr>
+<tr>
+<td align="left">price</td>
+</tr>
+<tr>
+<td align="left">image</td>
+</tr>
+<tr>
+<td align="left">description</td>
+</tr>
+<tr>
+<td align="left">status</td>
+</tr>
+<tr>
+<td align="left">create_time</td>
+</tr>
+<tr>
+<td align="left">update_time</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>tb_dish_flavor【菜品口味关系表】</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+</tr>
+<tr>
+<td><span style = "color:red"><strong>dish_id</strong></span></td>
+</tr>
+<tr>
+<td>name</td>
+</tr>
+<tr>
+<td>value</td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>准备SQL并导入数据库</p>
+<blockquote>
+<p>E:\Java实例项目1-20套\2024-Java若依框架专题课\01-基础篇\资料\04-二次开发\菜品管理</p>
+</blockquote>
+</li>
+<li><p>配置代码生成信息【主子表的生成】</p>
+<blockquote>
+<p>在若依代码生成 → 导入表<strong>tb_dish</strong> 和 <strong>tb_dish_flavor</strong></p>
+</blockquote>
+</li>
+<li><p>下载代码并导入项目</p>
+</li>
+</ul>
 
     </div>
 
