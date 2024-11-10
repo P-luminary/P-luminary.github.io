@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ff7d73>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -195,7 +195,7 @@
 <ul>
 <li><p>读操作：缓存命中，直接返回；缓存未命中查询数据库，写入缓存，设定超时时间</p>
 </li>
-<li><p>写操作：<strong>延迟双删</strong> [因为无论先删除缓存还是先删除数据库都可能会出数据不一致问题 <strong>有脏数据</strong>]</p>
+<li><p>写操作：<strong>延迟双删</strong> [因为无论<strong>先删除缓存</strong>还是<strong>先删除数据库</strong>都可能会出数据不一致问题 <strong>有脏数据</strong>]</p>
 </li>
 <li><p>&#x3D;&#x3D;<strong>基于redisson互斥锁</strong>：&#x3D;&#x3D;[放入缓存中的数据 读多写少] 【强一致性业务 性能低】</p>
 <ul>
@@ -208,7 +208,7 @@
 <p>redissionClient.getReadWriteLock(“xxxx”);</p>
 </blockquote>
 </li>
-<li><p><strong>异步通知：</strong>异步通知保证数据的最终一致性(需要保证MQ的可靠性)<del>需要在Redis中更新数据的同时，通知另一个服务进行某些操作。</del></p>
+<li><p><strong>异步通知：</strong><u>异步通知保证数据的最终一致性</u>(需要保证MQ的可靠性)<del>需要在Redis中更新数据的同时，通知另一个服务进行某些操作。</del></p>
 <ul>
 <li><strong>使用场景</strong>：<ul>
 <li><strong>缓存与数据库双写</strong>： 当应用需要同时更新Redis缓存和数据库时，可以先将数据写入Redis，然后通过异步通知机制触发数据库的更新操作。</li>
@@ -240,7 +240,7 @@ save 300 10
 save 60 10000
 </code></pre>
 <p>&#x3D;&#x3D;<strong>RDB的执行原理？</strong>&#x3D;&#x3D;</p>
-<p>bgsave开始时会fork主进程得到子进程，子进程共享主进程的内存数据，完成fork后读取内存数据并写入RDB文件</p>
+<p><strong><u>bgsave开始时会fork主进程得到子进程，子进程共享主进程的内存数据，完成fork后读取内存数据并写入RDB文件</u></strong></p>
 <blockquote>
 <p>在LInux中主进程并无法直接读取物理内存，它只能通过虚拟内存去读。因此有<strong>页表</strong>(记录虚拟地址与物理地址的映射关系)去执行操作 同时 主进程也会fork(复制页表) 成为一个新的子进程(携带页表) → 写新RDB文件替换旧的RDB文件 → 磁盘</p>
 </blockquote>

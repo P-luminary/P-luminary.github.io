@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-luminary || 若依+AI</title>
+    <title>P-luminary || 若依-AI &amp; 帝可得</title>
     <meta name="author" content="Asuna">
     <meta name="description" content=" ">
     <meta name="keywords" content=" ">
@@ -105,7 +105,7 @@
 <link rel="stylesheet" href="/css/post-body.css">
 <div class="article">
     <div>
-        <h1>若依+AI </h1>
+        <h1>若依-AI &amp; 帝可得 </h1>
     </div>
     <div class="info">
         <span class="date">
@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1218,6 +1218,393 @@ C:\Users\Pluminary\Desktop\20241108150415\sky
 </li>
 <li><p>下载代码并导入项目</p>
 </li>
+<li><p>修改代码 → 系统工具 → 代码生成 → 菜品管理(修改) → </p>
+<blockquote>
+<p>基本信息：实体类名称→Dish     作者→itheima</p>
+</blockquote>
+<p>字段信息<del>参考页面原型生成</del> → 系统管理 → 字典管理 →</p>
+<blockquote>
+<p>字典名称：售卖状态<br>字典类型：dish_status<br>第二页点进去售卖状态的字典类型 dish_status → 新增</p>
+<blockquote>
+<p>数据标签：停售  +  起售<br>数据键值：0  +  1<br>显示排序：1  +  2</p>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<p>​      回到系统工具 → 代码生成 → 菜品管理修改 → 售卖状态 → 显示类型：下拉框 → 字典类型：售卖状态</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f50e3c057b0a8fae3fb16f4e3bcc1c9b507ed227/%E8%8F%9C%E5%8D%95%E8%8B%A5%E4%BE%9D%E4%BD%BF%E7%94%A8.jpg"></p>
+<p>→ 代码生成 → 修改菜单配置信息 → 菜品</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/26b0d18887d1c565926b28e8d450fa2a773ccadb/%E6%B7%BB%E5%8A%A0%E8%8F%9C%E5%93%81.jpg"></p>
+<p>→ 上面的生成信息</p>
+<blockquote>
+<p>生成模板：主子表<br>生成模块名：merchant<br>生成业务名：dish<br>关联子表的表名：tb_dish_flavor：菜品口味关系表<br>子表关联的外键名：dish_id：菜品</p>
+</blockquote>
+<p>→ 在代码生成 → tb_dish_flavor菜品口味关系表 → 点击编辑</p>
+<blockquote>
+<p>基本信息：<br>实体名：DishFalvor</p>
+</blockquote>
+<p>→ 生成代码(main后端 + vue前端 + dishMenu.sql数据库动态菜单) → 动态sql导入进去 → 前端vue将merchant导入到.&#x2F;src&#x2F;api中，将views导入到views中 → 在前端中将java和resources导入到merchant模块中</p>
+<h4 id="对菜品管理进行升级改造"><a href="#对菜品管理进行升级改造" class="headerlink" title="对菜品管理进行升级改造"></a>对菜品管理进行升级改造</h4><h6 id="主键隐藏掉-售价前缀￥-修改时间时分秒"><a href="#主键隐藏掉-售价前缀￥-修改时间时分秒" class="headerlink" title="主键隐藏掉 售价前缀￥ 修改时间时分秒"></a>主键隐藏掉 售价前缀￥ 修改时间时分秒</h6><pre><code class="java">src\views\merchant\dish\index.vue 
+把  &lt;el-table-column label=&quot;主键&quot; align=&quot;center&quot; prop=&quot;id&quot; /&gt;  打注释符
+////////////////////////////////////////////////////////////////////////////
+插入￥流程：
+&lt;el-table-column label=&quot;售价&quot; align=&quot;center&quot; prop=&quot;price&quot; /&gt; 修改为 →
+&lt;el-table-column label=&quot;售价&quot; align=&quot;center&quot; prop=&quot;price&quot;&gt;
+        &lt;template #default=&quot;scope&quot;&gt;
+          &lt;div&gt;
+            ￥&#123;&#123; scope.row.price &#125;&#125;
+          &lt;/div&gt;
+        &lt;/template&gt;
+      &lt;/el-table-column&gt;
+通义灵码操作：
+先解析那行代码，然后输入使用vue3语法在售价前显示￥
+////////////////////////////////////////////////////////////////////////////
+生成年月日时分秒：
+&lt;el-table-column label=&quot;更新时间&quot; align=&quot;center&quot; prop=&quot;updateTime&quot; width=&quot;180&quot;&gt;
+        &lt;template #default=&quot;scope&quot;&gt;
+          &lt;span&gt;&#123;&#123; parseTime(scope.row.updateTime, '&#123;y&#125;-&#123;m&#125;-&#123;d&#125;') &#125;&#125;&lt;/span&gt;
+        &lt;/template&gt;
+      &lt;/el-table-column&gt;
+修改为：
+
+</code></pre>
+<h6 id="修改图片回显bug"><a href="#修改图片回显bug" class="headerlink" title="修改图片回显bug"></a>修改图片回显bug</h6><blockquote>
+<p>新增毛血旺的图片若依默认保存在了本地服务器而不是阿里云上<br><code>/profile/upload/2024/11/10/毛血旺_20241110093243A001.jpg</code></p>
+<p>C:\Users\Pluminary\Desktop\20241108150415\sky\sky-admin\src\main\resources\application.yml</p>
+<pre><code class="yaml"># 项目相关配置
+ruoyi:
+  # 名称
+  name: RuoYi
+  # 版本
+  version: 3.8.8
+  # 版权年份
+  copyrightYear: 2024
+  # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
+  profile: D:/ruoyi/uploadPath
+  # 获取ip地址开关
+  addressEnabled: false
+  # 验证码类型 math 数字计算 char 字符验证
+  captchaType: math
+</code></pre>
+<p><code>D:\ruoyi\uploadPath\upload\2024\11\10</code><br>文件上传组件标签修改 增加<code>&amp;&amp; item.indexOf(&quot;http&quot;) === -1</code></p>
+<pre><code class="js">watch(() =&gt; props.modelValue, val =&gt; &#123;
+  if (val) &#123;
+    // 首先将值转为数组
+    const list = Array.isArray(val) ? val : props.modelValue.split(&quot;,&quot;);
+    // 然后将数组转为对象数组
+    fileList.value = list.map(item =&gt; &#123;
+      if (typeof item === &quot;string&quot;) &#123;
+        if (item.indexOf(baseUrl) === -1 &amp;&amp; item.indexOf(&quot;http&quot;) === -1) &#123;
+          item = &#123; name: baseUrl + item, url: baseUrl + item &#125;;
+        &#125; else &#123;
+          item = &#123; name: item, url: item &#125;;
+        &#125;
+      &#125;
+      return item;
+    &#125;);
+  &#125; else &#123;
+    fileList.value = [];
+    return [];
+  &#125;
+&#125;,&#123; deep: true, immediate: true &#125;);
+</code></pre>
+</blockquote>
+<h6 id="修改口味列表数组格式-改为下拉框的口味搭配"><a href="#修改口味列表数组格式-改为下拉框的口味搭配" class="headerlink" title="修改口味列表数组格式 改为下拉框的口味搭配"></a>修改口味列表数组格式 改为下拉框的口味搭配</h6><pre><code class="js">src\views\merchant\dish\index.vue
+//------------------------------------------------
+// 定义口味名称和口味列表静态数据
+const dishFlavorListSelect = ref([
+  &#123;name:&quot;辣度&quot;, value:[&quot;不辣&quot;,&quot;微辣&quot;,&quot;中辣&quot;,&quot;重辣&quot;]&#125;,
+  &#123;name:&quot;忌口&quot;, value:[&quot;不要葱&quot;,&quot;不要蒜&quot;,&quot;不要香菜&quot;,&quot;不要辣&quot;]&#125;,
+  &#123;name:&quot;甜味&quot;, value:[&quot;无糖&quot;,&quot;少糖&quot;,&quot;半糖&quot;]&#125;
+]);
+//------------------------------------------------
+</code></pre>
+<pre><code class="js">src\views\merchant\dish\index.vue
+&lt;template #default=&quot;scope&quot;&gt;
+      &lt;!-- &lt;el-input v-model=&quot;scope.row.name&quot; placeholder=&quot;请输入口味名称&quot; /&gt; --&gt;
+               &lt;!-- label是最终看到下拉框的内容 value是用户提交的内容 --&gt;
+           &lt;el-select v-model=&quot;scope.row.name&quot;  placeholder=&quot;请选择口味名称&quot;&gt;
+                &lt;el-option
+                  v-for=&quot;dishFlavor in dishFlavorListSelect&quot;
+                  :key=&quot;dishFlavor.name&quot;
+                  :label=&quot;dishFlavor.name&quot; 
+                  :value=&quot;dishFlavor.name&quot;
+                &gt;
+                &lt;/el-option&gt;
+            &lt;/el-select&gt;
+           &lt;/template&gt;
+       &lt;/el-table-column&gt;
+</code></pre>
+<pre><code class="js">src\views\merchant\dish\index.vue【修改当选中辣度时候 后面的规格】
+// 存储当前选中口味列表数组
+const checkValueList = ref([]);
+// 定义改变口味名称时更新当前选中的口味列表
+function changeFlavorName(row)&#123;
+  // 清空当前行的value
+  row.value = [];
+  // 根据选中的name去查找静态数据的value
+  checkValueList.value = dishFlavorListSelect.value.find(item=&gt;item.name==row.name).value;
+&#125;
+</code></pre>
+<pre><code class="js">//增加了一个 @change   注意：如果是多选框一定要 → multiple
+
+&lt;el-table-column label=&quot;口味名称&quot; prop=&quot;name&quot; width=&quot;150&quot;&gt;
+            &lt;template #default=&quot;scope&quot;&gt;
+              &lt;!-- &lt;el-input v-model=&quot;scope.row.name&quot; placeholder=&quot;请输入口味名称&quot; /&gt; --&gt;
+               &lt;!-- label是最终看到下拉框的内容 value是用户提交的内容 --&gt;
+               &lt;el-select v-model=&quot;scope.row.name&quot;  placeholder=&quot;请选择口味名称&quot;
+               @change=&quot;changeFlavorName(scope.row)&quot;&gt;
+                &lt;el-option
+                  v-for=&quot;dishFlavor in dishFlavorListSelect&quot;
+                  :key=&quot;dishFlavor.name&quot;
+                  :label=&quot;dishFlavor.name&quot; 
+                  :value=&quot;dishFlavor.name&quot;
+                &gt;
+                &lt;/el-option&gt;
+               &lt;/el-select&gt;
+            &lt;/template&gt;
+          &lt;/el-table-column&gt;
+          &lt;el-table-column label=&quot;口味列表&quot; prop=&quot;value&quot; width=&quot;150&quot;&gt;
+            &lt;template #default=&quot;scope&quot;&gt;
+              &lt;!-- &lt;el-input v-model=&quot;scope.row.value&quot; placeholder=&quot;请输入口味列表&quot; /&gt; --&gt;
+          &lt;el-select v-model=&quot;scope.row.value&quot;  placeholder=&quot;请选择口味列表&quot; multiple&gt;
+                &lt;el-option
+                  v-for=&quot;value in checkValueList&quot;
+                  :key=&quot;value&quot;
+                  :label=&quot;value&quot; 
+                  :value=&quot;value&quot;
+                /&gt;
+          &lt;/el-select&gt;
+          &lt;/template&gt;
+          &lt;/el-table-column&gt;
+</code></pre>
+<pre><code class="js">//------------------------------------------------
+// 定义口味名称和口味列表静态数据
+const dishFlavorListSelect = ref([
+  &#123;name:&quot;辣度&quot;, value:[&quot;不辣&quot;,&quot;微辣&quot;,&quot;中辣&quot;,&quot;重辣&quot;]&#125;,
+  &#123;name:&quot;忌口&quot;, value:[&quot;不要葱&quot;,&quot;不要蒜&quot;,&quot;不要香菜&quot;,&quot;不要辣&quot;]&#125;,
+  &#123;name:&quot;甜味&quot;, value:[&quot;无糖&quot;,&quot;少糖&quot;,&quot;半糖&quot;]&#125;
+]);
+
+
+// 存储当前选中口味列表数组
+const checkValueList = ref([]);
+// 定义改变口味名称时更新当前选中的口味列表
+function changeFlavorName(row)&#123;
+  // 根据选中的name去查找静态数据的value
+  checkValueList.value =       dishFlavorListSelect.value.find(item=&gt;item.name==row.name).value;
+&#125;
+//------------------------------------------------
+</code></pre>
+<pre><code class="java">// 此时报错了 
+11:59:00.441 [http-nio-8080-exec-64] ERROR c.s.f.w.e.GlobalExceptionHandler - [handleRuntimeException,100] - 请求地址&#39;/merchant/dish&#39;,发生未知异常.
+org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `java.lang.String` from Array value (token `JsonToken.START_ARRAY`); nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Array value (token `JsonToken.START_ARRAY`)
+ at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 1, column: 239] (through reference chain: com.sky.system.domain.Dish[&quot;dishFlavorList&quot;]-&gt;java.util.ArrayList[0]-&gt;com.sky.system.domain.DishFlavor[&quot;value&quot;])
+    
+/*
+根据错误日志，问题出在请求地址 /merchant/dish 处理过程中，JSON 解析时出现了类型不匹配的问题。具体来说，Dish 对象中的 dishFlavorList 字段下的 DishFlavor 对象的 value 字段期望接收一个 String 类型的值，但实际接收到的是一个数组。
+*/
+</code></pre>
+<h6 id="解决序列化问题bug将口味列表中value通过JSON工具类转换为字符串"><a href="#解决序列化问题bug将口味列表中value通过JSON工具类转换为字符串" class="headerlink" title="解决序列化问题bug将口味列表中value通过JSON工具类转换为字符串"></a>解决序列化问题bug<del>将口味列表中value通过JSON工具类转换为字符串</del></h6><p>提交数据后是字符串 而不是数组</p>
+<pre><code class="js">在331行
+/** 提交按钮 */
+function submitForm() &#123;
+  proxy.$refs[&quot;dishRef&quot;].validate(valid =&gt; &#123;
+    if (valid) &#123;
+      form.value.dishFlavorList = dishFlavorList.value;
+      // 将口味列表中value通过JSON工具类转换为字符串
+      form.value.dishFlavorList.forEach(item=&gt;item.value = JSON.stringify(item.value))
+      if (form.value.id != null) &#123;
+        updateDish(form.value).then(response =&gt; &#123;
+          proxy.$modal.msgSuccess(&quot;修改成功&quot;);
+          open.value = false;
+          getList();
+        &#125;);
+      &#125; else &#123;
+        addDish(form.value).then(response =&gt; &#123;
+          proxy.$modal.msgSuccess(&quot;新增成功&quot;);
+          open.value = false;
+          getList();
+        &#125;);
+      &#125;
+    &#125;
+  &#125;);
+</code></pre>
+<h6 id="解决后端添加成功后-修改后口味列表无法回显再增加个非空判断"><a href="#解决后端添加成功后-修改后口味列表无法回显再增加个非空判断" class="headerlink" title="解决后端添加成功后 修改后口味列表无法回显再增加个非空判断"></a>解决后端添加成功后 修改后口味列表无法回显<del>再增加个非空判断</del></h6><p>因为前端提交了字符串給后端，后端再回去修改的时候无法解析字符串 <code>拿到字符串后返回JSON数组即可</code></p>
+<pre><code class="js">/** 修改按钮操作 */
+function handleUpdate(row) &#123;
+  reset();
+  const _id = row.id || ids.value
+  getDish(_id).then(response =&gt; &#123;
+    form.value = response.data;
+    dishFlavorList.value = response.data.dishFlavorList;
+    // 将口味列表的value字符串转成json数组
+    if(dishFlavorList.value!=null)&#123;
+      form.value.dishFlavorList.forEach(item=&gt;item.value = JSON.parse(item.value))
+    &#125;
+    open.value = true;
+    title.value = &quot;修改菜品管理&quot;;
+  &#125;);
+&#125;
+
+/** 提交按钮 */
+function submitForm() &#123;
+  proxy.$refs[&quot;dishRef&quot;].validate(valid =&gt; &#123;
+    if (valid) &#123;
+      form.value.dishFlavorList = dishFlavorList.value;
+      // 将口味列表中value通过JSON工具类转换为字符串
+      if(form.value.dishFlavorList!=null)&#123;
+        form.value.dishFlavorList.forEach(item=&gt;item.value = JSON.stringify(item.value))
+      &#125;
+      if (form.value.id != null) &#123;
+        updateDish(form.value).then(response =&gt; &#123;
+          proxy.$modal.msgSuccess(&quot;修改成功&quot;);
+          open.value = false;
+          getList();
+        &#125;);
+      &#125; else &#123;
+        addDish(form.value).then(response =&gt; &#123;
+          proxy.$modal.msgSuccess(&quot;新增成功&quot;);
+          open.value = false;
+          getList();
+        &#125;);
+      &#125;
+    &#125;
+  &#125;);
+&#125;
+</code></pre>
+<h6 id="解决修改时无法修改口味列表的下拉框"><a href="#解决修改时无法修改口味列表的下拉框" class="headerlink" title="解决修改时无法修改口味列表的下拉框"></a>解决修改时无法修改口味列表的下拉框</h6><blockquote>
+<p>給口味下拉框绑定一个获取焦点事件 再该事件内调用方法根据当前行的口味名称去查询静态数据 再赋值給静态数组</p>
+</blockquote>
+<pre><code class="js">// 删除清除策略
+// 定义口味列表获取焦点时更新当前选中的口味列表
+function FocusFlavorName(row)&#123;
+  // 根据选中的name去查找静态数据的value
+  checkValueList.value = dishFlavorListSelect.value.find(item=&gt;item.name==row.name).value;
+&#125;
+</code></pre>
+<pre><code class="js">// 加个 @focus
+&lt;el-table-column label=&quot;口味列表&quot; prop=&quot;value&quot; width=&quot;150&quot;&gt;
+            &lt;template #default=&quot;scope&quot;&gt;
+              &lt;!-- &lt;el-input v-model=&quot;scope.row.value&quot; placeholder=&quot;请输入口味列表&quot; /&gt; --&gt;
+              &lt;el-select v-model=&quot;scope.row.value&quot;  placeholder=&quot;请选择口味列表&quot; multiple
+              @focus = &quot;FocusFlavorName(scope.row)&quot;&gt;
+                &lt;el-option
+                  v-for=&quot;value in checkValueList&quot;
+                  :key=&quot;value&quot;
+                  :label=&quot;value&quot; 
+                  :value=&quot;value&quot;
+                /&gt;
+               &lt;/el-select&gt;
+            &lt;/template&gt;
+          &lt;/el-table-column&gt;
+</code></pre>
+<h3 id="二次开发——页面调整"><a href="#二次开发——页面调整" class="headerlink" title="二次开发——页面调整"></a>二次开发——页面调整</h3><h6 id="将原有的页面，调整为外卖管理系统的项目标识"><a href="#将原有的页面，调整为外卖管理系统的项目标识" class="headerlink" title="将原有的页面，调整为外卖管理系统的项目标识"></a>将原有的页面，调整为外卖管理系统的项目标识</h6><ul>
+<li>浏览器标签页icon、标题</li>
+<li>系统页面中的logo、标题</li>
+<li>去除源码 &amp; 文档 </li>
+<li>主题和自定义图标</li>
+<li>登录页面中标题、背景图</li>
+</ul>
+<blockquote>
+<p><strong>icon</strong>：public中的favicon.ico 改为 favicon.ico.bak 就作废了<br>把新的图标复制进来改成favicon.ico</p>
+<p><strong>标题</strong>：最外层index.html<br>&lt; title&gt; 外卖管理系统 &lt; &#x2F;title&gt;<br>但是改完没有效果 是因为运行环境給覆盖了<br><code>.env.development</code>修改一下</p>
+<p><strong>logo</strong>放在了静态资源页面<br>src\assets\logo\logo.png</p>
+<p><strong>修改顶部源码和文档图标内容</strong><br>src\layout\components\Navbar.vue</p>
+<pre><code class="js">&lt;!-- &lt;el-tooltip content=&quot;源码地址&quot; effect=&quot;dark&quot; placement=&quot;bottom&quot;&gt;
+          &lt;ruo-yi-git id=&quot;ruoyi-git&quot; class=&quot;right-menu-item hover-effect&quot; /&gt;
+        &lt;/el-tooltip&gt;
+
+        &lt;el-tooltip content=&quot;文档地址&quot; effect=&quot;dark&quot; placement=&quot;bottom&quot;&gt;
+          &lt;ruo-yi-doc id=&quot;ruoyi-doc&quot; class=&quot;right-menu-item hover-effect&quot; /&gt;
+        &lt;/el-tooltip&gt; --&gt;
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://www.iconfont.cn/">iconfont-阿里巴巴矢量图标库</a><br>下载一个<strong>菜品管理的小图标</strong><br>然后给它复制进去src\assets\icons\svg\菜品管理.svg<br>随后回到菜单管理修改图标就好</p>
+<p><strong>登录界面图片修改：</strong><br>src\views\login.vue 修改一下标题<br>背景图 → src\assets\images\login-background1.jpg<br>通过css样式修改背景图<br>171行<br> <code>background-image: url(&quot;../assets/images/login-background.jpg&quot;);</code><br>修改为<br><code> background-image: url(&quot;../assets/images/login-background1.jpg&quot;);</code></p>
+<pre><code class="css">.login &#123;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  height: 100%;
+  background-image: url(&quot;../assets/images/login-background1.jpg&quot;);
+  background-size: cover;
+&#125;
+</code></pre>
+</blockquote>
+<h6 id="給外卖商家的员工创建角色和用户分配菜单的权限-登录后只能看到自己的功能"><a href="#給外卖商家的员工创建角色和用户分配菜单的权限-登录后只能看到自己的功能" class="headerlink" title="給外卖商家的员工创建角色和用户分配菜单的权限 登录后只能看到自己的功能"></a>給外卖商家的员工创建角色和用户分配菜单的权限 登录后只能看到自己的功能</h6><blockquote>
+<p>系统管理 → 角色管理 →  新增 →<br>角色名称：商家员工<br>权限字符串：merchant<br>角色顺序：4<br>菜单权限：父子联动<br>√ 菜品管理</p>
+<p>再到用户管理 → 新增 → 添加用户 →<br>用户昵称：波妞<br>用户名称：boniu<br>用户密码：admin123<br>角色：商家员工</p>
+</blockquote>
+<h1 id="帝可得"><a href="#帝可得" class="headerlink" title="帝可得"></a>帝可得</h1><ul>
+<li><p>帝可得是一个基于<strong>物联网</strong>概念下的<strong>智能售货机</strong>运营管理系统</p>
+<ul>
+<li><p><strong>物联网</strong>(IOT)</p>
+<p>让各种物品通过互联网链接起来，实现信息的交换和通信</p>
+<ul>
+<li>智能家居</li>
+<li>共享充电桩</li>
+<li>智能售货机</li>
+</ul>
+</li>
+<li><p><strong>智能售货机</strong></p>
+<p>是物联网技术的一个典型应用</p>
+<ul>
+<li>物联网技术</li>
+<li>智能分析与推荐</li>
+<li>人员设备绑定管理</li>
+<li>线上线下融合</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><h6 id="售货机术语"><a href="#售货机术语" class="headerlink" title="售货机术语"></a>售货机术语</h6><ul>
+<li><p><strong>区域管理</strong></p>
+<p>为了更高效地进行经营管理，公司将运营范围划分为若干个逻辑区域</p>
+</li>
+<li><p><strong>点位选择</strong></p>
+<p>点位指的是智能售货机的具体放置位置</p>
+</li>
+<li><p><strong>售货机功能</strong></p>
+<p>自动小店，摆满了各种零食</p>
+</li>
+<li><p><strong>货道设计</strong></p>
+<p>售货机里的货道</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="角色与功能"><a href="#角色与功能" class="headerlink" title="角色与功能"></a>角色与功能</h3><ul>
+<li>一个完整的售货机系统由**<u>五端五角色</u>**组成:</li>
+<li><strong>管理员</strong>：对基础数据(区域、点位、设备、货道、商品等)进行管理</li>
+<li><strong>运维人员</strong>：投放设备、撤除设备、维修设备。</li>
+<li><strong>运营人员</strong>：补货。</li>
+<li><strong>合作商</strong>：仅提供点位，坐收渔翁之利。</li>
+<li><strong>消费者</strong>：在小程序或屏幕端下单购买商品。</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://ksg50j5gph.feishu.cn/docx/NxIqdCZVzo2tRfxNL6Nc1BD1nnf">帝可得在线功能文档_Docs</a></p>
+<h3 id="库表设计"><a href="#库表设计" class="headerlink" title="库表设计"></a>库表设计</h3><ul>
+<li>系统后台基础数据表关系说明：</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e677e01fa90ed813fd68cab1fabdde7b958ec9df/%E5%90%8E%E5%8F%B0%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%E6%95%B0%E6%8D%AE%E8%A1%A8%E5%85%B3%E7%B3%BB%E8%AF%B4%E6%98%8E.png"></p>
+<h3 id="AIGC"><a href="#AIGC" class="headerlink" title="AIGC"></a>AIGC</h3><ul>
+<li><p><strong>AI</strong> (Artificial Intelligence)：即<strong>人工智能</strong>，是指通过计算机系统模拟人类<strong>思维</strong>和<strong>行为</strong>一种技术</p>
+</li>
+<li><p>它通过机器学习、深度学习等算法，使计算机具备对数据分析、理解、推理和决策的能力</p>
+</li>
+<li><p><strong>AIGC</strong> (AI Generated content)：是AI领域的一个应用分支，专注于利用AI技术自动生成内容</p>
+</li>
+<li><p>国内常见的通用大模型(AGI)产品：</p>
+<ul>
+<li>文心一言</li>
+<li>讯飞星火</li>
+<li>通义千问</li>
+<li>KIMI</li>
+</ul>
+</li>
+</ul>
+<h3 id="Prompt的组成"><a href="#Prompt的组成" class="headerlink" title="Prompt的组成"></a>Prompt的组成</h3><ul>
+<li><strong>角色</strong>：給AI定义一个最匹配任务的角色，比如：[你是一位专业的后端程序员]</li>
+<li><strong>指令</strong>：对任务进行描述，比如：[撰写一篇关于最新AI技术发展的文章]</li>
 </ul>
 
     </div>
