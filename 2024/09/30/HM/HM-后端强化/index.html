@@ -5856,6 +5856,347 @@ public class Demo03 &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="Maven"><a href="#Maven" class="headerlink" title="Maven"></a>Maven</h3><h5 id="创建maven项目"><a href="#创建maven项目" class="headerlink" title="创建maven项目"></a>创建maven项目</h5><ul>
+<li>创建模块，选择New Module，填写模块信息，选择构建工具为Maven，点击create，创建完成<code>GroupId：公司域名、组织ID</code><u>注意：后期拉项目要改 手动重命名改容易出bug</u></li>
+<li>编写 HelloWorld，并运行</li>
+</ul>
+<h5 id="Maven坐标"><a href="#Maven坐标" class="headerlink" title="Maven坐标"></a>Maven坐标</h5><p>Ø Maven 中的坐标是资源(jar)的唯一标识，通过该坐标可以唯一定位资源位置。</p>
+<p>Ø 使用坐标来定义项目或引入项目中需要的依赖。</p>
+<h5 id="Maven-坐标主要组成"><a href="#Maven-坐标主要组成" class="headerlink" title="Maven 坐标主要组成"></a>Maven 坐标主要组成</h5><p>Ø <strong>groupId</strong>：定义当前Maven项目隶属组织名称（通常是域名反写，例如：com.itheima）<br>Ø <strong>artifactId</strong>：定义当前Maven项目名称（通常是模块名称，例如 order-service、goods-service）<br>Ø <strong>version</strong>：定义当前项目版本号<br>Ø <strong>SNAPSHOT</strong>: 功能不稳定、尚处于开发中的版本，即快照版本<br>Ø <strong>RELEASE</strong>: 功能趋于稳定、当前更新停止，可以用于发行的版本</p>
+<h5 id="在Maven项目中如何排除依赖？"><a href="#在Maven项目中如何排除依赖？" class="headerlink" title="在Maven项目中如何排除依赖？"></a>在Maven项目中如何排除依赖？</h5><pre><code class="xml">&lt;exclusions&gt;
+    &lt;exclusion&gt;...&lt;/exclusion&gt;
+&lt;/exclusions&gt;
+</code></pre>
+<h6 id="生命周期阶段"><a href="#生命周期阶段" class="headerlink" title="生命周期阶段"></a>生命周期阶段</h6><ul>
+<li><strong>clean</strong>：移除上一次构建生成的文件</li>
+<li><strong>compile</strong>：编译项目源代码</li>
+<li><strong>test</strong>：使用合适的单元测试框架运行测试(junit)</li>
+<li><strong>package</strong>：将编译后的文件打包，如：jar、war等</li>
+<li><strong>install</strong>：安装项目到本地仓库</li>
+</ul>
+<h5 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h5><ul>
+<li>在pom.xml中，引入JUnit的依赖。</li>
+<li>在test&#x2F;java目录下，创建测试类，并编写对应的测试方法，并在方法上声明@Test注解。</li>
+<li>运行单元测试 (测试通过：绿色；测试失败：红色)。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>注解</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Test</td>
+<td>测试类中的方法用它修饰才能成为测试方法，才能启动执行</td>
+<td>单元测试</td>
+</tr>
+<tr>
+<td>@<strong>BeforeEach</strong></td>
+<td>用来修饰一个实例方法，该方法会在<strong>每一个</strong>测试方法执行之前执行一次。</td>
+<td>初始化资源(准备工作)</td>
+</tr>
+<tr>
+<td>@<strong>AfterEach</strong></td>
+<td>用来修饰一个实例方法，该方法会在<strong>每一个</strong>测试方法执行之后执行一次。</td>
+<td>释放资源(清理工作)</td>
+</tr>
+<tr>
+<td>@<strong>BeforeAll</strong></td>
+<td>用来修饰一个静态方法，该方法会在所有测试方法之前<strong>只执行一次</strong>。</td>
+<td>初始化资源(准备工作)</td>
+</tr>
+<tr>
+<td>@<strong>AfterAll</strong></td>
+<td>用来修饰一个静态方法，该方法会在所有测试方法之后<strong>只执行一次</strong>。</td>
+<td>释放资源(清理工作)</td>
+</tr>
+<tr>
+<td>@ParameterizedTest</td>
+<td>参数化测试的注解 (可以让单个测试运行多次，每次运行时仅参数不同)</td>
+<td>用了该注解，就不需要@Test注解了</td>
+</tr>
+<tr>
+<td>@ValueSource</td>
+<td>参数化测试的参数来源，赋予测试方法参数</td>
+<td>与参数化测试注解配合使用</td>
+</tr>
+<tr>
+<td>@DisplayName</td>
+<td>指定测试类、测试方法显示的名称  （默认为类名、方法名）</td>
+<td></td>
+</tr>
+</tbody></table>
+<pre><code class="xml">&lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+            &lt;version&gt;5.8.2&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="java">com/imooc/UserService.java
+package com.imooc;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+
+public class UserService &#123;
+
+    /**
+     * 给定一个身份证号, 计算出该用户的年龄
+     *
+     * @param idcard 身份证号
+     */
+    public Integer getAge(String idcard) &#123;
+        String birthday = idcard.substring(6, 14);
+        LocalDate parse = LocalDate.parse(birthday, DateTimeFormatter.ofPattern(&quot;yyyyMMdd&quot;));
+        return Period.between(parse, LocalDate.now()).getYears();
+    &#125;
+
+    /**
+     * 给定一个身份证号, 计算出该用户的性别
+     *
+     * @param idcard 身份证号
+     */
+    public String getGender(String idcard) &#123;
+        return Integer.parseInt(idcard.substring(16, 17)) % 2 == 1 ? &quot;男&quot; : &quot;女&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">test/UserserviceTest.java
+import com.imooc.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+public class UserserviceTest &#123;
+    @DisplayName(&quot;测试时获取年龄&quot;)
+    @ParameterizedTest // 参数化测试
+    @ValueSource(strings = &#123;&quot;110101199001011234&quot;, &quot;110101199001011235&quot;, &quot;110101199001011236&quot;, &quot;110101199001011237&quot;, &quot;110101199001011238&quot;, &quot;110101199001011239&quot;, &quot;110101199001011240&quot;, &quot;110101199001011241&quot;, &quot;110101199001011242&quot;&#125;)
+    public void testGetAge(String idcard) &#123;
+        UserService userService = new UserService();
+        Integer age = userService.getAge(idcard);
+
+        // 获取身份证号的最后两个数字
+        String lastTwoDigits = idcard.substring(idcard.length() - 2);
+        int lastTwoDigitsInt = Integer.parseInt(lastTwoDigits);
+
+        System.out.println(&quot;身份证号: &quot; + idcard);
+        System.out.println(&quot;性别: &quot; + userService.getGender(idcard));
+        System.out.println(&quot;计算的年龄: &quot; + age);
+        System.out.println(&quot;最后两个数字: &quot; + lastTwoDigitsInt);
+        System.out.println(&quot;=============================&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="断言出错会自动提示"><a href="#断言出错会自动提示" class="headerlink" title="断言出错会自动提示"></a>断言<del>出错会自动提示</del></h5><p>JUnit提供了一些辅助方法，用来帮我们确定被测试的方法是否按照预期的效果正常工作，这种方式称为<strong>断言</strong>。</p>
+<pre><code class="java">System.out.println(&quot;性别: &quot; + userService.getGender(idcard));
+Assertions.assertEquals(&quot;男&quot;,userService.getGender(idcard),&quot;测试性别失败&quot;);
+//////////////////////////////////////////////
+身份证号: 110101199901011242
+性别: 女
+
+org.opentest4j.AssertionFailedError: 测试性别失败 ==&gt; 
+Expected :男
+Actual   :女
+
+-----------------------------------------------
+
+身份证号: 110101201301011241
+性别: 女
+
+org.opentest4j.AssertionFailedError: 测试性别失败 ==&gt; 
+Expected :男
+Actual   :女
+</code></pre>
+<h5 id="依赖范围"><a href="#依赖范围" class="headerlink" title="依赖范围"></a>依赖范围</h5><ul>
+<li>依赖的jar包，默认情况下，可以在任何地方使用。<br>通过<code>&lt;scope&gt; ... &lt;/scope&gt;</code>设置其作用范围</li>
+<li>作用范围：<ul>
+<li>主程序范围有效。（main文件夹范围内）</li>
+<li>测试程序范围有效。（test文件夹范围内）</li>
+<li>是否参与打包运行。（package指令范围内）</li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>scope值</th>
+<th><strong>主程序</strong></th>
+<th><strong>测试程序</strong></th>
+<th><strong>打包（运行）</strong></th>
+<th><strong>范例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile（默认）</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>log4j</td>
+</tr>
+<tr>
+<td>test</td>
+<td>-</td>
+<td>Y</td>
+<td>-</td>
+<td>junit</td>
+</tr>
+<tr>
+<td>provided</td>
+<td>Y</td>
+<td>Y</td>
+<td>-</td>
+<td>servlet-api</td>
+</tr>
+<tr>
+<td>runtime</td>
+<td>-</td>
+<td>Y</td>
+<td>Y</td>
+<td>jdbc驱动</td>
+</tr>
+</tbody></table>
+<h5 id="Maven常见问题解决方案"><a href="#Maven常见问题解决方案" class="headerlink" title="Maven常见问题解决方案"></a>Maven常见问题解决方案</h5><ul>
+<li><p>Maven项目中添加的依赖，未正确下载，造成右侧Maven面板中的依赖报红，再次reload重新加载也不会再下载。</p>
+</li>
+<li><p>产生原因：由于网络原因，依赖没有下载完整导致的，在maven仓库中生成了xxx.lastUpdated文件，该文件不删除，不会再重新下载。</p>
+</li>
+</ul>
+<p><strong>解决方案：</strong><br>1.<u>根据maven依赖的坐标，找到仓库中对应的 xxx.lastUpdated 文件，删除，删除之后重新加载项目即可</u>。<br>2.<u>通过命令 (<code>del /s *.lastUpdated</code>) 批量递归删除指定目录下的 xxx.lastUpdated 文件，删除之后重新加载项目即可</u>。<br>3.如果以上方法都不行就清除缓存 在Idea里<code>File → Invalidate Caches...</code></p>
+<h5 id="Logback"><a href="#Logback" class="headerlink" title="Logback"></a>Logback</h5><p>导入依赖：<code>logback-classic</code><br>导入依赖坐标之后就可以按照<code>logback.xml</code>去生成啦</p>
+<pre><code class="xml"> &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+            &lt;version&gt;5.8.2&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;log4j&lt;/groupId&gt;
+            &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+            &lt;version&gt;1.2.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.platform&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-platform-commons&lt;/artifactId&gt;
+            &lt;version&gt;1.8.2&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;!-- SLF4J API --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+            &lt;artifactId&gt;slf4j-api&lt;/artifactId&gt;
+            &lt;version&gt;1.7.30&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!-- Logback Classic (includes the core) --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+    &lt;!-- 控制台输出 --&gt;
+    &lt;appender name=&quot;STDOUT&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&gt;
+            &lt;!--格式化输出：%d 表示日期，%thread 表示线程名，%-5level表示级别从左显示5个字符宽度，%msg表示日志消息，%n表示换行符 --&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;50&#125;-%msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 按照每天生成日志文件 --&gt;
+    &lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy&quot;&gt;
+            &lt;!-- 日志文件输出的文件名, %i表示序号 --&gt;
+            &lt;FileNamePattern&gt;D:/tlias-%d&#123;yyyy-MM-dd&#125;-%i.log&lt;/FileNamePattern&gt;
+            &lt;!-- 最多保留的历史日志文件数量 --&gt;
+            &lt;MaxHistory&gt;30&lt;/MaxHistory&gt;
+            &lt;!-- 最大文件大小，超过这个大小会触发滚动到新文件，默认为 10MB --&gt;
+            &lt;maxFileSize&gt;10MB&lt;/maxFileSize&gt;
+        &lt;/rollingPolicy&gt;
+
+        &lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&gt;
+            &lt;!--格式化输出：%d 表示日期，%thread 表示线程名，%-5level表示级别从左显示5个字符宽度，%msg表示日志消息，%n表示换行符 --&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;50&#125;-%msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 日志输出级别 level =&gt; All是开启日志 OFF是关闭日志--&gt;
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;!--下面那行是控制台  32行是文件 删了就不会显示了--&gt;
+        &lt;appender-ref ref=&quot;STDOUT&quot; /&gt;
+        &lt;appender-ref ref=&quot;FILE&quot; /&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">package com.imooc;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Demo01 &#123;
+    // 创建Logback日志对象
+    public static final Logger LOGGER = LoggerFactory.getLogger(Demo01.class);
+
+    public static void main(String[] args) &#123;
+        // 打印日志(类似于输出语句)
+        divide(100,50);
+        LOGGER.info(&quot;Hello 启动啦!&quot;);
+        LOGGER.info(&quot;Hello 结束啦!&quot;);
+    &#125;
+
+    public static void divide(int a, int b) &#123;
+        LOGGER.info(&quot;开始计算, a=&#123;&#125;,b=&#123;&#125;&quot;,a,b);
+        int result = a / b;
+        LOGGER.info(&quot;计算结果为：c=&#123;&#125;&quot; + result);
+    &#125;
+&#125;
+//////////////////////////////////////////////////////////
+2024-11-11 17:49:40.759 [main] INFO  com.imooc.Demo01-开始计算, a=100,b=50
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-计算结果为：c=&#123;&#125;2
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-Hello 启动啦!
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-Hello 结束啦!
+</code></pre>
+<h5 id="日志级别"><a href="#日志级别" class="headerlink" title="日志级别"></a>日志级别</h5><ul>
+<li>日志级别指的是日志信息的类型，日志都会分级别，常见的日志级别如下（优先级依次升高）：</li>
+<li>只有日志的级别是大于或等于核心配置文件配置的日志级别，才会被记录，否则不记录。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>日志级别</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>trace</td>
+<td>追踪，指明程序运行轨迹</td>
+</tr>
+<tr>
+<td>debug</td>
+<td>调试，实际应用中一般将其作为最低级别，而  trace 则很少使用</td>
+</tr>
+<tr>
+<td>info</td>
+<td>输出重要的运行信息，数据连接、网络连接、IO操作等等，使用较多</td>
+</tr>
+<tr>
+<td>warn</td>
+<td>警告信息，可能会发生问题，使用较多</td>
+</tr>
+<tr>
+<td>error</td>
+<td>错误信息,   使用较多</td>
+</tr>
+</tbody></table>
 
     </div>
 

@@ -1702,7 +1702,7 @@ export function checkPhone()&#123;...&#125;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -3185,6 +3185,7 @@ function FocusFlavorName(row)&#123;
 <li><strong>消费者</strong>：在小程序或屏幕端下单购买商品。</li>
 </ul>
 <p><a target="_blank" rel="noopener" href="https://ksg50j5gph.feishu.cn/docx/NxIqdCZVzo2tRfxNL6Nc1BD1nnf">帝可得在线功能文档_Docs</a></p>
+<p>帝可得项目点击链接立即查看 <a target="_blank" rel="noopener" href="https://codesign.qq.com/s/426304924036117">https://codesign.qq.com/s/426304924036117</a></p>
 <h3 id="库表设计"><a href="#库表设计" class="headerlink" title="库表设计"></a>库表设计</h3><ul>
 <li>系统后台基础数据表关系说明：</li>
 </ul>
@@ -3206,8 +3207,300 @@ function FocusFlavorName(row)&#123;
 </li>
 </ul>
 <h3 id="Prompt的组成"><a href="#Prompt的组成" class="headerlink" title="Prompt的组成"></a>Prompt的组成</h3><ul>
-<li><strong>角色</strong>：給AI定义一个最匹配任务的角色，比如：[你是一位专业的后端程序员]</li>
-<li><strong>指令</strong>：对任务进行描述，比如：[撰写一篇关于最新AI技术发展的文章]</li>
+<li><strong>角色</strong>：给 AI 定义一个最匹配任务的角色，比如：「你是一位软件工程师」「你是一位小学老师」</li>
+<li><strong>指示</strong>：对任务进行描述</li>
+<li><strong>上下文</strong>：给出与任务相关的其它背景信息（尤其在多轮交互中）</li>
+<li><strong>例子</strong>：必要时给出举例，[实践证明其对输出正确性有帮助]</li>
+<li><strong>输入</strong>：任务的输入信息；在提示词中明确的标识出输入</li>
+<li><strong>输出</strong>：输出的格式描述，以便后继模块自动解析模型的输出结果，比如（JSON、Java）</li>
+</ul>
+<blockquote>
+<p>先定义角色，其实就是在<strong>开头把问题域收窄</strong>，减少二义性。</p>
+</blockquote>
+<p><strong>案例：</strong></p>
+<pre><code class="markdown">角色：你是一位专业的博客作者。
+
+指示：撰写一篇关于最新AI技术发展的文章。
+
+上下文：文章应该涵盖AI技术的当前状态和未来趋势。
+
+例子：可以引用最近的AI技术突破和行业专家的见解。
+
+输入：当前AI技术的相关信息和数据。
+
+输出：一篇结构清晰、观点鲜明的文章草稿。
+</code></pre>
+<pre><code class="markdown">角色：你是一位资深的Java开发工程师。
+
+指示：编写一个Java函数，该函数接收两个整数参数，并返回它们的和。
+
+上下文：这个函数将被用于一个简单的数学应用程序，该程序帮助学生练习基本的算术运算。
+
+例子：如果你调用函数 `addNumbers(3, 5)`，它应该返回 `8`。
+
+输入：两个整数参数，分别为 `int a` 和 `int b`。
+
+输出：返回这两个整数的和，类型为 `int`。
+</code></pre>
+<h3 id="常见的编程相关的Prompt"><a href="#常见的编程相关的Prompt" class="headerlink" title="常见的编程相关的Prompt"></a>常见的编程相关的Prompt</h3><h4 id="表结构-1"><a href="#表结构-1" class="headerlink" title="表结构"></a>表结构</h4><pre><code class="markdown">你是一个软件工程师，帮我生成MySQL的表结构
+需求如下：
+    1，课程管理表，表名tb_course，字段有主键id、课程编码、课程学科、课程名称、课程价格、适用人群、课程介绍
+其他要求：
+    1，每个表中都有创建时间(create_time)、修改时间(date_time)、创建人(create_by)、修改人(update_by)、备注(remark)这些字段
+    2，每个表的主键都是自增的
+    3，课程价格是整型、课程编码是字符串
+    4，请为每个字段都添加上comment
+    5，帮我给生成的表中插入一些IT课程示例数据
+        课程学科：Java、人工智能、大数据
+        适用人群：小白学员、中级程序员
+</code></pre>
+<h4 id="生成数据库说明文档"><a href="#生成数据库说明文档" class="headerlink" title="生成数据库说明文档"></a>生成数据库说明文档</h4><pre><code class="markdown">你是一个软件工程师，现在要根据数据库的sql脚本，编写数据库说明文档，sql脚本如下：
+CREATE TABLE `tb_course` (
+    `id` INT AUTO_INCREMENT COMMENT &#39;主键ID&#39;,
+    `course_code` VARCHAR(255) NOT NULL COMMENT &#39;课程编码&#39;,
+    `course_subject` VARCHAR(100) NOT NULL COMMENT &#39;课程学科&#39;,
+    `course_name` VARCHAR(255) NOT NULL COMMENT &#39;课程名称&#39;,
+    `course_price` INT COMMENT &#39;课程价格&#39;,
+    `target_audience` VARCHAR(100) COMMENT &#39;适用人群&#39;,
+    `course_introduction` TEXT COMMENT &#39;课程介绍&#39;,
+    `create_time` DATETIME COMMENT &#39;创建时间&#39;,
+    `update_time` DATETIME COMMENT &#39;修改时间&#39;,
+    `create_by` VARCHAR(64) COMMENT &#39;创建人&#39;,
+    `update_by` VARCHAR(64) COMMENT &#39;修改人&#39;,
+    `remark` VARCHAR(255) COMMENT &#39;备注&#39;,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=&#39;课程管理表&#39;;
+
+输出要求是：
+    1，每个表以及每个表的字段都要详细说明，包括，字段名称、类型、作用
+    2，使用markdown的输出格式，字段的描述需要使用表格展示
+    3，如果表之间有关系，需要描述清楚表之间的关系
+</code></pre>
+<h4 id="生成代码"><a href="#生成代码" class="headerlink" title="生成代码"></a>生成代码</h4><p>代码生成算是比较常规的方案，用的也比较多，分为了几种情况</p>
+<ul>
+<li>给出表生成代码（项目中常见）<ul>
+<li>给出表结构的ddl，可以输出这个表的增删改查的所有代码</li>
+<li>给出表结构的dll，可以输出增删改查的接口文档</li>
+</ul>
+</li>
+<li>补全代码<ul>
+<li>例1-给出实体类，帮助编写getter、setter、toString、构造方法等等</li>
+<li>例2-给出一个controller，帮助编写swagger注解等</li>
+</ul>
+</li>
+<li>提取结构（无含金量，费时间的编程）<ul>
+<li>例1-根据接口文档提取dto类或者vo类</li>
+</ul>
+</li>
+</ul>
+<h4 id="生成代码流程图"><a href="#生成代码流程图" class="headerlink" title="生成代码流程图"></a>生成代码流程图</h4><p>有一些比较复杂的业务流程，往往需要画出流程图，现在就可以使用ai协助我们画流程图</p>
+<pre><code class="java">你是一个软件工程师，为了方便理解代码执行流程，需要给出代码执行的流程图，代码如下：
+    // 创建工单
+    @Transactional
+    @Override
+    public int insertTaskDto(TaskDto taskDto) &#123;
+    //1. 查询售货机是否存在
+    VendingMachine vm = vendingMachineService.selectVendingMachineByInnerCode(taskDto.getInnerCode());
+    if (vm == null) &#123;
+        throw new ServiceException(&quot;设备不存在&quot;);
+    &#125;
+    //2. 校验售货机状态与工单类型是否相符
+    checkCreateTask(vm.getVmStatus(), taskDto.getProductTypeId());
+    //3. 校验这台设备是否有未完成的同类型工单，如果存在则不能创建
+    hasTask(taskDto.getInnerCode(), taskDto.getProductTypeId());
+    //4. 校验员工是否存在
+    Emp emp = empService.selectEmpById(taskDto.getUserId());
+    if (emp == null) &#123;
+        throw new ServiceException(&quot;员工不存在&quot;);
+    &#125;
+    // 5. 校验非同区域下的工作人员不能接受工单
+    if (emp.getRegionId() != vm.getRegionId()) &#123;
+        throw new ServiceException(&quot;非同区域下的工作人员不能接受工单&quot;);
+    &#125;
+    //6. 保存工单信息
+    Task task = new Task();
+    BeanUtil.copyProperties(taskDto, task);// 属性赋值
+    task.setCreateTime(DateUtils.getNowDate());// 创建时间
+    task.setTaskCode(generateTaskCode());// 工单编号 202405150001
+    task.setTaskStatus(DkdContants.TASK_STATUS_CREATE);// 创建工单
+    task.setAddr(vm.getAddr());
+    task.setRegionId(vm.getRegionId());
+    task.setUserName(emp.getUserName());
+    int taskResult = taskMapper.insertTask(task);
+    //7. 如果是补货工单，向工单明细表插入记录
+    if (task.getProductTypeId() == DkdContants.TASK_TYPE_SUPPLY) &#123;
+        if (CollUtil.isEmpty(taskDto.getDetails())) &#123;
+            throw new ServiceException(&quot;补货工单明细不能为空&quot;);
+        &#125;
+        List&lt;TaskDetails&gt; taskDetailsList = taskDto.getDetails().stream().map(details -&gt; &#123;
+            TaskDetails taskDetails = BeanUtil.copyProperties(details, TaskDetails.class);
+            taskDetails.setTaskId(task.getTaskId());
+            return taskDetails;
+        &#125;).collect(Collectors.toList());
+        taskDetailsService.insertBatch(taskDetailsList);
+    &#125;
+
+    return taskResult;
+&#125;
+
+输出：请使用mermaid语言来描述这个方法的流程
+</code></pre>
+<pre><code class="mermaid">graph TD;
+    A[查询售货机] --&gt; B(售货机不存在?)
+    B -- 是 --&gt; C[抛出异常: 设备不存在]
+    B -- 否 --&gt; D[校验售货机状态与工单类型]
+    D --&gt; E(校验失败?)
+    E -- 是 --&gt; F[抛出异常]
+    E -- 否 --&gt; G[检查未完成同类型工单]
+    G --&gt; H(存在未完成同类型工单?)
+    H -- 是 --&gt; I[抛出异常]
+    H -- 否 --&gt; J[查询员工]
+    J --&gt; K(员工不存在?)
+    K -- 是 --&gt; L[抛出异常: 员工不存在]
+    K -- 否 --&gt; M[校验员工区域与售货机区域是否一致]
+    M --&gt; N(不一致?)
+    N -- 是 --&gt; O[抛出异常: 非同区域工作人员不能接受工单]
+    N -- 否 --&gt; P[保存工单信息]
+    P --&gt; Q(保存成功?)
+    Q -- 否 --&gt; R[处理保存失败]
+    Q -- 是 --&gt; S(工单类型为补货?)
+    S -- 是 --&gt; T[处理补货工单明细]
+    T --&gt; U[补货明细处理结果?]
+    U -- 失败 --&gt; V[抛出异常: 补货工单明细不能为空]
+    U -- 成功 --&gt; END(结束)
+    S -- 否 --&gt; END
+</code></pre>
+<h3 id="项目搭建-后端"><a href="#项目搭建-后端" class="headerlink" title="项目搭建(后端)"></a>项目搭建(后端)</h3><blockquote>
+<p>复制gitee克隆的地址<code>https://gitee.com/Pluminary/dkd-parent.git</code>，在新的idea中找到<code>Get from Version Control</code>在URL中导入<code>xxx.git</code><br>若左列模块没有高亮 右侧找maven→clean→package<br>MySQL的配置和导入 → sql里的sql文件导入到Database<br>C:\Users\Pluminary\Desktop\dkd-parent\dkd-admin\src\main\resources\application-druid.yml<br>连接好数据库配置信息<br>Redis的配置(搞个密码)<br>为了方便学习我没有搞redis的password 项目里的是：root【application.yml的redis里面】<br>打开redis服务后就可以启动啦<code>dkd-parent\dkd-admin\src\main\java\com\dkd\DkdApplication.java</code></p>
+</blockquote>
+<h3 id="项目搭建-前端"><a href="#项目搭建-前端" class="headerlink" title="项目搭建(前端)"></a>项目搭建(前端)</h3><blockquote>
+<p>通过vscode克隆源码，仓库地址：<a target="_blank" rel="noopener" href="https://gitee.com/ys-gitee/dkd-vue.git/">https://gitee.com/ys-gitee/dkd-vue.git\</a></p>
+<ul>
+<li>打开VS Code，并确保已经安装了Git。如果未安装Git，请先下载并安装。</li>
+<li>在VS Code<strong>左侧的活动栏</strong>中点击”Source Control”图标，或者按下Ctrl+Shift+G，打开Git集成面板。</li>
+<li>在Git集成面板上方的输入框中，选择并输入要克隆的Git仓库地址。可以是HTTP或SSH地址。</li>
+<li>点击Enter键，VS Code将连接到Git仓库并拉取最新的代码</li>
+</ul>
+<p>在vscode中右上角第二个小框框 点击打开命令行 导入jar包 <code>npm install</code><br>然后<code>npm run dev</code>打开项目<br><a target="_blank" rel="noopener" href="http://10.254.1.228/index">帝可得管理系统 http://10.254.1.228/index</a></p>
+<pre><code class="java">在VSCode项目中运行npm install命令主要是用于安装项目所需的Node.js包依赖。以下是具体的作用和步骤：
+
+安装依赖包：当你创建一个Node.js项目或者从版本控制系统中克隆一个项目到本地时，项目中通常会包含一个package.json文件。这个文件里列出了项目所有依赖的包及其版本号。运行npm install命令会读取这个文件，然后从npm（Node Package Manager）仓库下载并安装所有列出的依赖包到项目的node_modules目录。
+
+确保环境一致性：通过npm install，可以确保在不同的开发环境和生产环境中，项目使用的是相同版本的依赖包，这有助于避免因为环境差异导致的bug。
+
+项目初始化：如果你是第一次在一个项目中运行npm install，它还会运行每个依赖包的install脚本，这些脚本可能会进行一些设置工作，比如编译代码、生成必要的文件等。
+
+脚本命令：在package.json中，除了依赖项，还可以定义一些脚本命令（scripts）。npm install会使得这些命令变为可用状态，你可以在项目目录下通过npm run &lt;script-name&gt;来执行这些脚本。
+</code></pre>
+<p>[npm 加速，命令行修改国内镜像源【附带国内最新几个镜像】超简约版<del>_npm 修改国内镜像-CSDN博客](<a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_52172586/article/details/142930356#">https://blog.csdn.net/m0_52172586/article/details/142930356#</a>:</del>:text&#x3D;1.查看目前的镜像源 &gt;npm get registry 2.设置镜像源 &gt;npm,config set registry https%3A %2F%2Fregistry.npmmirror.com 3.验证)</p>
+<pre><code class="java">1.查看目前的镜像源
+&gt; npm get registry
+2.设置镜像源
+&gt; npm config set registry https://registry.npmmirror.com
+3.验证
+&gt; npm get registry
+    
+/////////////////////////////////////////
+后端maven镜像就先设置好maven地址(非C盘)
+然后再去配置maven里的文件设置镜像
+</code></pre>
+</blockquote>
+<h1 id="点位管理"><a href="#点位管理" class="headerlink" title="点位管理"></a>点位管理</h1><h2 id="需求说明"><a href="#需求说明" class="headerlink" title="需求说明"></a>需求说明</h2><p><strong>业务场景</strong>： 假设我们的公司现在有一个宏伟的计划——在北京发展业务。首先，我们需要确定几个有潜力的区域，这些区域可能是人流量大、消费能力高的商业区或居民区。然后，我们要与这些区域内的潜在合作商进行洽谈，比如商场、写字楼、学校等地方的管理者或所有者。</p>
+<p>一旦我们与合作商达成协议，确定了合作的细节和点位，我们就可以安排工作人员去投放智能售货机了。这些点位将成为我们智能售货机的“家”，为消费者提供便捷的购买服务。</p>
+<p>点位管理主要涉及到三个功能模块，业务流程如下：</p>
+<ol>
+<li><strong>登录系统</strong>：后台管理人员登录后台系统</li>
+<li><strong>新增区域</strong>: 后台管理人员可以添加区域范围，区域范围与运维&#x2F;运维人员挂钩，区域下可关联点位。</li>
+<li><strong>新增合作商</strong>: 管理人员可以添加合作商，合作商与点位进行关联。</li>
+<li><strong>新增区域点位</strong>: 后台管理人员可以在特定区域内新增点位，这些点位是放置智能售货机的具体位置。</li>
+</ol>
+<pre><code class="mermaid">graph TD
+    A[登录系统] 
+    A --&gt; B[新增区域]
+    B --&gt; C[新增合作商]
+    C --&gt; D[新增区域点位]
+</code></pre>
+<h2 id="库表设计-1"><a href="#库表设计-1" class="headerlink" title="库表设计"></a>库表设计</h2><ul>
+<li>参考页面原型和具体需求完成库表设计</li>
+</ul>
+<blockquote>
+<p><strong>区域表</strong>: 主键id、区域名称、备注说明<br><strong>合作商表</strong>: 主键id、合作商名称、联系人、联系电话、分成比例、账号、密码<br><strong>点位表</strong>: 主键id、点位名称、详细地址、商圈类型、区域外键、合作商外键</p>
+</blockquote>
+<pre><code class="java">// 你是一位软件工程师，帮我生成MySQL的表结构
+需求如下：
+1，区域表，表名tb_region，字段有主键id、区域名称
+2，合作商表，表名tb_partner，字段有主键id、合作商名称、联系人、联系电话、分成比例（int类型）、账号、密码
+3，点位表，表名tb_node，字段有主键id、点位名称、详细地址、商圈类型（int类型）
+    
+其他要求：
+1，每张表中都有创建时间(create_time)、修改时间(date_time)、创建人(create_by)、修改人(update_by)、备注(remark)这些字段
+2，每张表的主键都是自增的
+3，区域与点位是一对多的关系，合作商与点位是一对多的关系，请用字段表示出来，并建立外键约束
+4，请为所有字段都添加上comment
+5，帮我给生成的表中插入一些北京城市相关区域、点位、合作商的测试数据
+</code></pre>
+<pre><code class="sql">CREATE TABLE `tb_region` (
+  `id` INT AUTO_INCREMENT COMMENT &#39;主键id&#39; PRIMARY KEY,
+  `region_name` VARCHAR(255) NOT NULL COMMENT &#39;区域名称&#39;,
+  `create_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `create_by` VARCHAR(64) COMMENT &#39;创建人&#39;,
+  `update_by` VARCHAR(64) COMMENT &#39;修改人&#39;,
+  `remark` TEXT COMMENT &#39;备注&#39;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=&#39;区域表&#39;;
+
+-- 插入测试数据
+INSERT INTO `tb_region` (`region_name`,`remark`) VALUES (&#39;北京市朝阳区&#39;,&#39;北京市朝阳区&#39;), (&#39;北京市海淀区&#39;,&#39;北京市海淀区&#39;), (&#39;北京市东城区&#39;,&#39;北京市东城区&#39;);
+
+CREATE TABLE `tb_partner` (
+  `id` INT AUTO_INCREMENT COMMENT &#39;主键id&#39; PRIMARY KEY,
+  `partner_name` VARCHAR(255) NOT NULL COMMENT &#39;合作商名称&#39;,
+  `contact_person` VARCHAR(64) COMMENT &#39;联系人&#39;,
+  `contact_phone` VARCHAR(15) COMMENT &#39;联系电话&#39;,
+  `profit_ratio` INT COMMENT &#39;分成比例&#39;,
+  `account` VARCHAR(64) COMMENT &#39;账号&#39;,
+  `password` VARCHAR(64) COMMENT &#39;密码&#39;,
+  `create_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `create_by` VARCHAR(64) COMMENT &#39;创建人&#39;,
+  `update_by` VARCHAR(64) COMMENT &#39;修改人&#39;,
+  `remark` TEXT COMMENT &#39;备注&#39;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=&#39;合作商表&#39;;
+
+-- 插入测试数据
+INSERT INTO `tb_partner` (`partner_name`, `contact_person`, `contact_phone`, `profit_ratio`, `account`, `password`) VALUES
+(&#39;合作商A&#39;, &#39;张三&#39;, &#39;13800138000&#39;, 30, &#39;a001&#39;, &#39;pwdA&#39;),
+(&#39;合作商B&#39;, &#39;李四&#39;, &#39;13912345678&#39;, 25, &#39;b002&#39;, &#39;pwdB&#39;);
+
+CREATE TABLE `tb_node` (
+  `id` INT AUTO_INCREMENT COMMENT &#39;主键id&#39; PRIMARY KEY,
+  `node_name` VARCHAR(255) NOT NULL COMMENT &#39;点位名称&#39;,
+  `address` VARCHAR(255) NOT NULL COMMENT &#39;详细地址&#39;,
+  `business_type` INT COMMENT &#39;商圈类型&#39;,
+  `region_id` INT COMMENT &#39;区域ID&#39;,
+  `partner_id` INT COMMENT &#39;合作商ID&#39;,
+  `create_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  `update_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;修改时间&#39;,
+  `create_by` VARCHAR(64) COMMENT &#39;创建人&#39;,
+  `update_by` VARCHAR(64) COMMENT &#39;修改人&#39;,
+  `remark` TEXT COMMENT &#39;备注&#39;,
+  FOREIGN KEY (`region_id`) REFERENCES `tb_region`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`partner_id`) REFERENCES `tb_partner`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=&#39;点位表&#39;;
+
+
+-- 插入测试数据
+-- 假设区域ID为1对应&#39;北京市朝阳区&#39;，合作商ID为1对应&#39;合作商A&#39;
+INSERT INTO `tb_node` (`node_name`, `address`, `business_type`, `region_id`, `partner_id`) VALUES
+(&#39;三里屯点位&#39;, &#39;北京市朝阳区三里屯路&#39;, 1, 1, 1),
+(&#39;五道口点位&#39;, &#39;北京市海淀区五道口&#39;, 2, 2, 2);
+</code></pre>
+<p>对于点位管理数据模型，下面是示意图：</p>
+<ul>
+<li><p>关系字段：region_id、partner_id</p>
+</li>
+<li><p>数据字典：business_type</p>
+</li>
 </ul>
 
             
@@ -3223,7 +3516,7 @@ function FocusFlavorName(row)&#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -7605,7 +7898,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -8242,7 +8535,7 @@ sout(newStr)
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
@@ -10846,7 +11139,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#1bccbc>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -16603,6 +16896,347 @@ public class Demo03 &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="Maven"><a href="#Maven" class="headerlink" title="Maven"></a>Maven</h3><h5 id="创建maven项目"><a href="#创建maven项目" class="headerlink" title="创建maven项目"></a>创建maven项目</h5><ul>
+<li>创建模块，选择New Module，填写模块信息，选择构建工具为Maven，点击create，创建完成<code>GroupId：公司域名、组织ID</code><u>注意：后期拉项目要改 手动重命名改容易出bug</u></li>
+<li>编写 HelloWorld，并运行</li>
+</ul>
+<h5 id="Maven坐标"><a href="#Maven坐标" class="headerlink" title="Maven坐标"></a>Maven坐标</h5><p>Ø Maven 中的坐标是资源(jar)的唯一标识，通过该坐标可以唯一定位资源位置。</p>
+<p>Ø 使用坐标来定义项目或引入项目中需要的依赖。</p>
+<h5 id="Maven-坐标主要组成"><a href="#Maven-坐标主要组成" class="headerlink" title="Maven 坐标主要组成"></a>Maven 坐标主要组成</h5><p>Ø <strong>groupId</strong>：定义当前Maven项目隶属组织名称（通常是域名反写，例如：com.itheima）<br>Ø <strong>artifactId</strong>：定义当前Maven项目名称（通常是模块名称，例如 order-service、goods-service）<br>Ø <strong>version</strong>：定义当前项目版本号<br>Ø <strong>SNAPSHOT</strong>: 功能不稳定、尚处于开发中的版本，即快照版本<br>Ø <strong>RELEASE</strong>: 功能趋于稳定、当前更新停止，可以用于发行的版本</p>
+<h5 id="在Maven项目中如何排除依赖？"><a href="#在Maven项目中如何排除依赖？" class="headerlink" title="在Maven项目中如何排除依赖？"></a>在Maven项目中如何排除依赖？</h5><pre><code class="xml">&lt;exclusions&gt;
+    &lt;exclusion&gt;...&lt;/exclusion&gt;
+&lt;/exclusions&gt;
+</code></pre>
+<h6 id="生命周期阶段"><a href="#生命周期阶段" class="headerlink" title="生命周期阶段"></a>生命周期阶段</h6><ul>
+<li><strong>clean</strong>：移除上一次构建生成的文件</li>
+<li><strong>compile</strong>：编译项目源代码</li>
+<li><strong>test</strong>：使用合适的单元测试框架运行测试(junit)</li>
+<li><strong>package</strong>：将编译后的文件打包，如：jar、war等</li>
+<li><strong>install</strong>：安装项目到本地仓库</li>
+</ul>
+<h5 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h5><ul>
+<li>在pom.xml中，引入JUnit的依赖。</li>
+<li>在test&#x2F;java目录下，创建测试类，并编写对应的测试方法，并在方法上声明@Test注解。</li>
+<li>运行单元测试 (测试通过：绿色；测试失败：红色)。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>注解</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Test</td>
+<td>测试类中的方法用它修饰才能成为测试方法，才能启动执行</td>
+<td>单元测试</td>
+</tr>
+<tr>
+<td>@<strong>BeforeEach</strong></td>
+<td>用来修饰一个实例方法，该方法会在<strong>每一个</strong>测试方法执行之前执行一次。</td>
+<td>初始化资源(准备工作)</td>
+</tr>
+<tr>
+<td>@<strong>AfterEach</strong></td>
+<td>用来修饰一个实例方法，该方法会在<strong>每一个</strong>测试方法执行之后执行一次。</td>
+<td>释放资源(清理工作)</td>
+</tr>
+<tr>
+<td>@<strong>BeforeAll</strong></td>
+<td>用来修饰一个静态方法，该方法会在所有测试方法之前<strong>只执行一次</strong>。</td>
+<td>初始化资源(准备工作)</td>
+</tr>
+<tr>
+<td>@<strong>AfterAll</strong></td>
+<td>用来修饰一个静态方法，该方法会在所有测试方法之后<strong>只执行一次</strong>。</td>
+<td>释放资源(清理工作)</td>
+</tr>
+<tr>
+<td>@ParameterizedTest</td>
+<td>参数化测试的注解 (可以让单个测试运行多次，每次运行时仅参数不同)</td>
+<td>用了该注解，就不需要@Test注解了</td>
+</tr>
+<tr>
+<td>@ValueSource</td>
+<td>参数化测试的参数来源，赋予测试方法参数</td>
+<td>与参数化测试注解配合使用</td>
+</tr>
+<tr>
+<td>@DisplayName</td>
+<td>指定测试类、测试方法显示的名称  （默认为类名、方法名）</td>
+<td></td>
+</tr>
+</tbody></table>
+<pre><code class="xml">&lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+            &lt;version&gt;5.8.2&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="java">com/imooc/UserService.java
+package com.imooc;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+
+public class UserService &#123;
+
+    /**
+     * 给定一个身份证号, 计算出该用户的年龄
+     *
+     * @param idcard 身份证号
+     */
+    public Integer getAge(String idcard) &#123;
+        String birthday = idcard.substring(6, 14);
+        LocalDate parse = LocalDate.parse(birthday, DateTimeFormatter.ofPattern(&quot;yyyyMMdd&quot;));
+        return Period.between(parse, LocalDate.now()).getYears();
+    &#125;
+
+    /**
+     * 给定一个身份证号, 计算出该用户的性别
+     *
+     * @param idcard 身份证号
+     */
+    public String getGender(String idcard) &#123;
+        return Integer.parseInt(idcard.substring(16, 17)) % 2 == 1 ? &quot;男&quot; : &quot;女&quot;;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">test/UserserviceTest.java
+import com.imooc.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+public class UserserviceTest &#123;
+    @DisplayName(&quot;测试时获取年龄&quot;)
+    @ParameterizedTest // 参数化测试
+    @ValueSource(strings = &#123;&quot;110101199001011234&quot;, &quot;110101199001011235&quot;, &quot;110101199001011236&quot;, &quot;110101199001011237&quot;, &quot;110101199001011238&quot;, &quot;110101199001011239&quot;, &quot;110101199001011240&quot;, &quot;110101199001011241&quot;, &quot;110101199001011242&quot;&#125;)
+    public void testGetAge(String idcard) &#123;
+        UserService userService = new UserService();
+        Integer age = userService.getAge(idcard);
+
+        // 获取身份证号的最后两个数字
+        String lastTwoDigits = idcard.substring(idcard.length() - 2);
+        int lastTwoDigitsInt = Integer.parseInt(lastTwoDigits);
+
+        System.out.println(&quot;身份证号: &quot; + idcard);
+        System.out.println(&quot;性别: &quot; + userService.getGender(idcard));
+        System.out.println(&quot;计算的年龄: &quot; + age);
+        System.out.println(&quot;最后两个数字: &quot; + lastTwoDigitsInt);
+        System.out.println(&quot;=============================&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="断言出错会自动提示"><a href="#断言出错会自动提示" class="headerlink" title="断言出错会自动提示"></a>断言<del>出错会自动提示</del></h5><p>JUnit提供了一些辅助方法，用来帮我们确定被测试的方法是否按照预期的效果正常工作，这种方式称为<strong>断言</strong>。</p>
+<pre><code class="java">System.out.println(&quot;性别: &quot; + userService.getGender(idcard));
+Assertions.assertEquals(&quot;男&quot;,userService.getGender(idcard),&quot;测试性别失败&quot;);
+//////////////////////////////////////////////
+身份证号: 110101199901011242
+性别: 女
+
+org.opentest4j.AssertionFailedError: 测试性别失败 ==&gt; 
+Expected :男
+Actual   :女
+
+-----------------------------------------------
+
+身份证号: 110101201301011241
+性别: 女
+
+org.opentest4j.AssertionFailedError: 测试性别失败 ==&gt; 
+Expected :男
+Actual   :女
+</code></pre>
+<h5 id="依赖范围"><a href="#依赖范围" class="headerlink" title="依赖范围"></a>依赖范围</h5><ul>
+<li>依赖的jar包，默认情况下，可以在任何地方使用。<br>通过<code>&lt;scope&gt; ... &lt;/scope&gt;</code>设置其作用范围</li>
+<li>作用范围：<ul>
+<li>主程序范围有效。（main文件夹范围内）</li>
+<li>测试程序范围有效。（test文件夹范围内）</li>
+<li>是否参与打包运行。（package指令范围内）</li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>scope值</th>
+<th><strong>主程序</strong></th>
+<th><strong>测试程序</strong></th>
+<th><strong>打包（运行）</strong></th>
+<th><strong>范例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>compile（默认）</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>log4j</td>
+</tr>
+<tr>
+<td>test</td>
+<td>-</td>
+<td>Y</td>
+<td>-</td>
+<td>junit</td>
+</tr>
+<tr>
+<td>provided</td>
+<td>Y</td>
+<td>Y</td>
+<td>-</td>
+<td>servlet-api</td>
+</tr>
+<tr>
+<td>runtime</td>
+<td>-</td>
+<td>Y</td>
+<td>Y</td>
+<td>jdbc驱动</td>
+</tr>
+</tbody></table>
+<h5 id="Maven常见问题解决方案"><a href="#Maven常见问题解决方案" class="headerlink" title="Maven常见问题解决方案"></a>Maven常见问题解决方案</h5><ul>
+<li><p>Maven项目中添加的依赖，未正确下载，造成右侧Maven面板中的依赖报红，再次reload重新加载也不会再下载。</p>
+</li>
+<li><p>产生原因：由于网络原因，依赖没有下载完整导致的，在maven仓库中生成了xxx.lastUpdated文件，该文件不删除，不会再重新下载。</p>
+</li>
+</ul>
+<p><strong>解决方案：</strong><br>1.<u>根据maven依赖的坐标，找到仓库中对应的 xxx.lastUpdated 文件，删除，删除之后重新加载项目即可</u>。<br>2.<u>通过命令 (<code>del /s *.lastUpdated</code>) 批量递归删除指定目录下的 xxx.lastUpdated 文件，删除之后重新加载项目即可</u>。<br>3.如果以上方法都不行就清除缓存 在Idea里<code>File → Invalidate Caches...</code></p>
+<h5 id="Logback"><a href="#Logback" class="headerlink" title="Logback"></a>Logback</h5><p>导入依赖：<code>logback-classic</code><br>导入依赖坐标之后就可以按照<code>logback.xml</code>去生成啦</p>
+<pre><code class="xml"> &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+            &lt;version&gt;5.8.2&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;log4j&lt;/groupId&gt;
+            &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+            &lt;version&gt;1.2.12&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.junit.platform&lt;/groupId&gt;
+            &lt;artifactId&gt;junit-platform-commons&lt;/artifactId&gt;
+            &lt;version&gt;1.8.2&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;!-- SLF4J API --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+            &lt;artifactId&gt;slf4j-api&lt;/artifactId&gt;
+            &lt;version&gt;1.7.30&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!-- Logback Classic (includes the core) --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+</code></pre>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;configuration&gt;
+    &lt;!-- 控制台输出 --&gt;
+    &lt;appender name=&quot;STDOUT&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&gt;
+            &lt;!--格式化输出：%d 表示日期，%thread 表示线程名，%-5level表示级别从左显示5个字符宽度，%msg表示日志消息，%n表示换行符 --&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;50&#125;-%msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 按照每天生成日志文件 --&gt;
+    &lt;appender name=&quot;FILE&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy&quot;&gt;
+            &lt;!-- 日志文件输出的文件名, %i表示序号 --&gt;
+            &lt;FileNamePattern&gt;D:/tlias-%d&#123;yyyy-MM-dd&#125;-%i.log&lt;/FileNamePattern&gt;
+            &lt;!-- 最多保留的历史日志文件数量 --&gt;
+            &lt;MaxHistory&gt;30&lt;/MaxHistory&gt;
+            &lt;!-- 最大文件大小，超过这个大小会触发滚动到新文件，默认为 10MB --&gt;
+            &lt;maxFileSize&gt;10MB&lt;/maxFileSize&gt;
+        &lt;/rollingPolicy&gt;
+
+        &lt;encoder class=&quot;ch.qos.logback.classic.encoder.PatternLayoutEncoder&quot;&gt;
+            &lt;!--格式化输出：%d 表示日期，%thread 表示线程名，%-5level表示级别从左显示5个字符宽度，%msg表示日志消息，%n表示换行符 --&gt;
+            &lt;pattern&gt;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;50&#125;-%msg%n&lt;/pattern&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 日志输出级别 level =&gt; All是开启日志 OFF是关闭日志--&gt;
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;!--下面那行是控制台  32行是文件 删了就不会显示了--&gt;
+        &lt;appender-ref ref=&quot;STDOUT&quot; /&gt;
+        &lt;appender-ref ref=&quot;FILE&quot; /&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">package com.imooc;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Demo01 &#123;
+    // 创建Logback日志对象
+    public static final Logger LOGGER = LoggerFactory.getLogger(Demo01.class);
+
+    public static void main(String[] args) &#123;
+        // 打印日志(类似于输出语句)
+        divide(100,50);
+        LOGGER.info(&quot;Hello 启动啦!&quot;);
+        LOGGER.info(&quot;Hello 结束啦!&quot;);
+    &#125;
+
+    public static void divide(int a, int b) &#123;
+        LOGGER.info(&quot;开始计算, a=&#123;&#125;,b=&#123;&#125;&quot;,a,b);
+        int result = a / b;
+        LOGGER.info(&quot;计算结果为：c=&#123;&#125;&quot; + result);
+    &#125;
+&#125;
+//////////////////////////////////////////////////////////
+2024-11-11 17:49:40.759 [main] INFO  com.imooc.Demo01-开始计算, a=100,b=50
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-计算结果为：c=&#123;&#125;2
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-Hello 启动啦!
+2024-11-11 17:49:40.763 [main] INFO  com.imooc.Demo01-Hello 结束啦!
+</code></pre>
+<h5 id="日志级别"><a href="#日志级别" class="headerlink" title="日志级别"></a>日志级别</h5><ul>
+<li>日志级别指的是日志信息的类型，日志都会分级别，常见的日志级别如下（优先级依次升高）：</li>
+<li>只有日志的级别是大于或等于核心配置文件配置的日志级别，才会被记录，否则不记录。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>日志级别</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>trace</td>
+<td>追踪，指明程序运行轨迹</td>
+</tr>
+<tr>
+<td>debug</td>
+<td>调试，实际应用中一般将其作为最低级别，而  trace 则很少使用</td>
+</tr>
+<tr>
+<td>info</td>
+<td>输出重要的运行信息，数据连接、网络连接、IO操作等等，使用较多</td>
+</tr>
+<tr>
+<td>warn</td>
+<td>警告信息，可能会发生问题，使用较多</td>
+</tr>
+<tr>
+<td>error</td>
+<td>错误信息,   使用较多</td>
+</tr>
+</tbody></table>
 
             
         </div>
@@ -16617,7 +17251,7 @@ public class Demo03 &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#00bcd4>
                 HM
             </a>
         </span>
@@ -27644,7 +28278,7 @@ public class BusinessDataVO implements Serializable &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -48228,7 +48862,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
