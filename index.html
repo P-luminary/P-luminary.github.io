@@ -1702,7 +1702,7 @@ export function checkPhone()&#123;...&#125;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#00bcd4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -3502,6 +3502,303 @@ INSERT INTO `tb_node` (`node_name`, `address`, `business_type`, `region_id`, `pa
 <li><p>数据字典：business_type</p>
 </li>
 </ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2aea3c59b88952c77f32514636619e7de0202c16/dkd%E5%BA%93%E8%A1%A8%E8%AE%BE%E8%AE%A1.jpg"></p>
+<h3 id="生成基础代码"><a href="#生成基础代码" class="headerlink" title="生成基础代码"></a>生成基础代码</h3><h6 id="使用若依代码生成器，生成区域管理、合作商管理、点位管理前后端基础代码，导入项目中："><a href="#使用若依代码生成器，生成区域管理、合作商管理、点位管理前后端基础代码，导入项目中：" class="headerlink" title="使用若依代码生成器，生成区域管理、合作商管理、点位管理前后端基础代码，导入项目中："></a>使用若依代码生成器，生成区域管理、合作商管理、点位管理前后端基础代码，导入项目中：</h6><ul>
+<li>创建目录菜单</li>
+<li>添加数据字典</li>
+<li>配置代码生成信息</li>
+<li>下载代码并导入项目</li>
+</ul>
+<blockquote>
+<p>系统管理 → 菜单管理 → 新增菜单<br>→ <u>主类目、点位管理、2、node</u></p>
+<p>→ 系统管理 → 字典管理<br>→ <u>字典名称：商圈类型</u><br>     <u>字典类型：business_type</u><br>→ 在第二页找到商圈类型点进去<br>→ <u>新增：旅游区</u><br>     &lt;u<u>&gt;数据标签：旅游区</u><br>     <u>数据键值：1</u><br>     <u>显示排序：1</u><br>→ 新增：商场写字楼、2、2；学校33、交通枢纽44</p>
+<p>→ 系统工具 → 代码生成 → 导入表(<u>tb_node、tb_partner、tb_region</u>)<br>分别配置表的生成信息<br>→ 点击<u><strong>区域表</strong></u> → <u>字段信息</u><br>→ 根据新增区域弹出菜单显示 需要增加<u>区域名称全打勾 备注说明除了查询全打勾 其余全×</u></p>
+<p>→ 点击**<u>合作商表</u>** → 生成信息<br>→ <u>包路径：com.dkd.manage、生成模块名：manage、生成业务名：region、生成功能名：区域管理、上级菜单：点位管理</u><br>→ 代码生成：Partner<br>→  基本信息：<br><u>实体类名称：Partner</u><br><u>作者：itheima</u><br>→ 字段信息：见**<u>帝可得后台管理系统.md</u>**<br>→ 生成信息：<br><u>生成包路径：com.dkd.manage</u><br><u>生成模块名：manage</u><br><u>生成功能名：合作商管理</u><br><u>上级菜单：点位管理</u></p>
+<p>→ 点击**<u>点位表</u>**<br>→ 生成信息：<br><u>生成包路径：com.dkd.manage</u><br><u>生成模块名：manage</u><br><u>生成功能名：点位管理</u><br><u>上级菜单：点位管理</u><br>→ 字段信息：见**<u>帝可得后台管理系统.md</u>**<br>→ 基本信息：<br><u>实体类名称：Node</u><br><u>表描述：点位表</u><br><u>作者：itheima</u></p>
+<p>回到代码生成 选中三张表 生成！！<br>分别在前后端和数据库 导入java&#x2F;manage、vue&#x2F;manage、sql代码</p>
+</blockquote>
+<blockquote>
+<p><strong>细节</strong>：如果当你创建一个模块以后 src.main.java里面没有任何代码 resources里面也没有 它提交仓库的时候是默认空的 所以可以手动添加一个占位符<code>.gitkeep</code>虽然什么都不是，但是可以提交空项目模块</p>
+</blockquote>
+<h3 id="区域管理改造"><a href="#区域管理改造" class="headerlink" title="区域管理改造"></a>区域管理改造</h3><h4 id="基础页面"><a href="#基础页面" class="headerlink" title="基础页面"></a>基础页面</h4><h4 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h4><ul>
+<li>参考页面原型，完成基础布局展示改造</li>
+</ul>
+<pre><code class="html">// 让前端页面自动排序
+src\views\manage\region\index.vue
+&lt;el-table-column label=&quot;序号&quot; type=&quot;index&quot; width=&quot;50&quot; align=&quot;center&quot; prop=&quot;id&quot; /&gt;
+</code></pre>
+<h5 id="区域管理改造-1"><a href="#区域管理改造-1" class="headerlink" title="区域管理改造"></a>区域管理改造</h5><ul>
+<li><p>查看详情，需要显示所有区域下所有点位列表(<strong>稍后完成</strong>)</p>
+</li>
+<li><p><strong>在查询区域列表时，同时显示每个区域的点位数，还要新增查看详情</strong></p>
+<p><span style="color:red; font-family: 'KaiTi';"><strong>修改<u>后端</u>要参考<u>接口文档</u>，修改<u>前端</u>要参考<u>产品原型</u></strong></span></p>
+</li>
+<li><p>实现此功能方案：</p>
+<p>(1) <strong>同步存储</strong>在区域表中有点位数的字段，当点位发生变化时候，同步区域表中的点位数(<u>在tb_region里面新增一个<code>node_count</code></u> 方案可行考虑缺点：每次点位数据变化时都要更新区域表[增加了工作量]，添加数据不一致也会)<br>(2) <span style="color:red"><strong>关联查询</strong></span>编写关联查询语句，在mapper层封装</p>
+</li>
+</ul>
+<p>SQL查询：先聚合统计每个区域的点位数，然后与区域表进行关联查询<br>[提前在idea中下面的通义灵码状态勾选 <code>本地补全模型</code>、<code>云端模型自动触发</code>]<br><span style="color:red; font-family: 'KaiTi';"><strong>数据库返回的数据 要结合前端所需要的返回数据来写</strong> </span><br><span style="color:blue; font-family: 'KaiTi';"><strong>比如接口文档需要返回remark id name nodeCount</strong> &#x3D;&#x3D;&gt; select r.id,r.region_name,r.remark,ifnull(n.node_count,0) as node_count</span></p>
+<pre><code class="sql">-- 传统模式
+-- 1.先聚合统计每个区域下的点位数
+-- 确定查询表 tb_node
+-- 确定分组字段 region_id
+select region_id,count(*) as node_count from tb_node group by region_id;
+-- 2.然后与区域表进行关联查询   内连接是两个表的交集
+select r.id,r.region_name,r.remark,ifnull(n.node_count,0) as node_count 
+   from tb_region r
+left join (select region_id,count(*) as node_count 
+   from tb_node group by region_id) n 
+on r.id=n.region_id;
+
+-- AI辅助编程模式
+-- 查询区域表所有的信息,需要显示每个区域的点位数
+SELECT r.*, COUNT(n.id) AS node_count FROM tb_region r LEFT JOIN tb_node n ON r.id = n.region_id GROUP BY r.id;
+</code></pre>
+<pre><code class="java">com/dkd/manage/domain/Region.java
+package com.dkd.manage.domain;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.dkd.common.annotation.Excel;
+import com.dkd.common.core.domain.BaseEntity;
+
+/**
+ * 区域管理对象 tb_region
+ * 
+ * @author itheima
+ * @date 2024-11-12
+ */
+public class Region extends BaseEntity
+&#123;
+    private static final long serialVersionUID = 1L;
+
+    /** 主键id */
+    private Long id;
+
+    /** 区域名称 */
+    @Excel(name = &quot;区域名称&quot;)
+    private String regionName;
+
+    public void setId(Long id) 
+    &#123;
+        this.id = id;
+    &#125;
+
+    public Long getId() 
+    &#123;
+        return id;
+    &#125;
+    public void setRegionName(String regionName) 
+    &#123;
+        this.regionName = regionName;
+    &#125;
+
+    public String getRegionName() 
+    &#123;
+        return regionName;
+    &#125;
+
+    @Override
+    public String toString() &#123;
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+            .append(&quot;id&quot;, getId())
+            .append(&quot;regionName&quot;, getRegionName())
+            .append(&quot;createTime&quot;, getCreateTime())
+            .append(&quot;updateTime&quot;, getUpdateTime())
+            .append(&quot;createBy&quot;, getCreateBy())
+            .append(&quot;updateBy&quot;, getUpdateBy())
+            .append(&quot;remark&quot;, getRemark())
+            .toString();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/dkd/manage/domain/vo/RegionVo.java
+package com.dkd.manage.domain.vo;
+
+import com.dkd.manage.domain.Region;
+import lombok.Data;
+
+@Data
+public class RegionVo extends Region &#123;
+    // 点位数量
+    private Integer nodeCount;
+
+&#125;
+</code></pre>
+<pre><code class="java">com/dkd/manage/mapper/RegionMapper.java
+/**
+     * 查询区域列表
+     * @param regionVo
+     * @return
+     */
+    public List&lt;RegionVo&gt; selectRegionVoList(RegionVo regionVo);
+</code></pre>
+<pre><code class="xml">mapper/manage/RegionMapper.xml    
+&lt;select id=&quot;selectRegionVoList&quot; resultType=&quot;com.dkd.manage.domain.vo.RegionVo&quot;&gt;
+        SELECT r.*, COUNT(n.id) AS node_count FROM tb_region r LEFT JOIN tb_node n ON r.id = n.region_id GROUP BY r.id
+    &lt;/select&gt;
+</code></pre>
+<h6 id="思考：上面的xml中提取的字段是-node-count-而前端让返回的是驼峰式命名-nodeCount-若依默认关闭了此功能需要手动开启此功能"><a href="#思考：上面的xml中提取的字段是-node-count-而前端让返回的是驼峰式命名-nodeCount-若依默认关闭了此功能需要手动开启此功能" class="headerlink" title="思考：上面的xml中提取的字段是 node_count 而前端让返回的是驼峰式命名 nodeCount,  若依默认关闭了此功能需要手动开启此功能"></a>思考：上面的xml中提取的字段是 <u>node_count</u> 而前端让返回的是驼峰式命名 <u>nodeCount</u>,  若依默认关闭了此功能需要手动开启此功能</h6><pre><code class="xml">dkd-parent → resources → mybatis → mybatis-config.xml
+&lt;!-- 使用驼峰命名法转换字段 --&gt;
+&lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+</code></pre>
+<h6 id="Ctrl-F9是热部署-在不新增文件的时候可以直接部署"><a href="#Ctrl-F9是热部署-在不新增文件的时候可以直接部署" class="headerlink" title="Ctrl+F9是热部署 在不新增文件的时候可以直接部署"></a>Ctrl+F9是热部署 在不新增文件的时候可以直接部署</h6><h4 id="RegionMapper"><a href="#RegionMapper" class="headerlink" title="RegionMapper"></a>RegionMapper</h4><pre><code class="java">/**
+ * 查询区域管理列表
+ * @param region
+ * @return RegionVo集合
+ */
+public List&lt;RegionVo&gt; selectRegionVoList(Region region);
+</code></pre>
+<h4 id="RegionMapper-xml"><a href="#RegionMapper-xml" class="headerlink" title="RegionMapper.xml"></a>RegionMapper.xml</h4><pre><code class="xml">&lt;select id=&quot;selectRegionVoList&quot; resultType=&quot;com.dkd.manage.domain.vo.RegionVo&quot;&gt;
+select r.id,r.region_name,r.remark,ifnull(n.node_count,0) as node_count from tb_region r
+    left join (select region_id,count(*) as node_count from tb_node group by region_id) n on r.id=n.region_id
+    &lt;where&gt;
+       &lt;if test=&quot;regionName != null  and regionName != &#39;&#39;&quot;&gt; and r.region_name like concat(&#39;%&#39;, #&#123;regionName&#125;, &#39;%&#39;)&lt;/if&gt;
+    &lt;/where&gt;
+&lt;/select&gt; 
+</code></pre>
+<h4 id="IRegionService"><a href="#IRegionService" class="headerlink" title="IRegionService"></a>IRegionService</h4><pre><code class="java">/**
+ * 查询区域管理列表
+ * @param region
+ * @return RegionVo集合
+ */
+public List&lt;RegionVo&gt; selectRegionVoList(Region region);
+</code></pre>
+<h4 id="RegionServiceImpl"><a href="#RegionServiceImpl" class="headerlink" title="RegionServiceImpl"></a>RegionServiceImpl</h4><pre><code class="java">/**
+ * 查询区域管理列表
+ * @param region
+ * @return RegionVo集合
+ */
+@Override
+public List&lt;RegionVo&gt; selectRegionVoList(Region region) &#123;
+    return regionMapper.selectRegionVoList(region);
+&#125;
+</code></pre>
+<h4 id="RegionController"><a href="#RegionController" class="headerlink" title="RegionController"></a>RegionController</h4><pre><code class="java">/**
+ * 查询区域管理列表
+ */
+@PreAuthorize(&quot;@ss.hasPermi(&#39;manage:region:list&#39;)&quot;)
+@GetMapping(&quot;/list&quot;)
+public TableDataInfo list(Region region)
+&#123;
+    startPage();
+    List&lt;RegionVo&gt; voList = regionService.selectRegionVoList(region);
+    return getDataTable(voList);
+&#125;
+</code></pre>
+<h4 id="region-x2F-index-vue"><a href="#region-x2F-index-vue" class="headerlink" title="region&#x2F;index.vue"></a>region&#x2F;index.vue</h4><pre><code class="vue">&lt;!-- 区域列表 --&gt;
+&lt;el-table v-loading=&quot;loading&quot; :data=&quot;regionList&quot; @selection-change=&quot;handleSelectionChange&quot;&gt;
+  &lt;el-table-column type=&quot;selection&quot; width=&quot;55&quot; align=&quot;center&quot; /&gt;
+  &lt;el-table-column label=&quot;序号&quot; type=&quot;index&quot; width=&quot;50&quot; align=&quot;center&quot; prop=&quot;id&quot; /&gt;
+  &lt;el-table-column label=&quot;区域名称&quot; align=&quot;center&quot; prop=&quot;regionName&quot; /&gt;
+  &lt;el-table-column label=&quot;点位数&quot; align=&quot;center&quot; prop=&quot;nodeCount&quot; /&gt;
+  &lt;el-table-column label=&quot;备注说明&quot; align=&quot;center&quot; prop=&quot;remark&quot; /&gt;
+  &lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot; class-name=&quot;small-padding fixed-width&quot;&gt;
+    &lt;template #default=&quot;scope&quot;&gt;
+      &lt;el-button link type=&quot;primary&quot;  @click=&quot;handleUpdate(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:region:edit&#39;]&quot;&gt;修改&lt;/el-button&gt;
+      &lt;el-button link type=&quot;primary&quot;  @click=&quot;handleDelete(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:region:remove&#39;]&quot;&gt;删除&lt;/el-button&gt;
+    &lt;/template&gt;
+  &lt;/el-table-column&gt;
+&lt;/el-table&gt;
+</code></pre>
+<h5 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h5><ul>
+<li><strong>区域列表改造步骤</strong><ul>
+<li>确定关联查询方案并编写sql</li>
+<li>创建RegionVo</li>
+<li>在RegionMapper和xml中添加查询Vo方法和sql</li>
+<li>在RegionService接口和实现类中添加查询Vo方法</li>
+<li>修改RegionController查询方法</li>
+<li>修改前端视图组件</li>
+</ul>
+</li>
+</ul>
+<h3 id="合作商改造-查看详情"><a href="#合作商改造-查看详情" class="headerlink" title="合作商改造-查看详情"></a>合作商改造-查看详情</h3><h5 id="密码是明文-改成密文"><a href="#密码是明文-改成密文" class="headerlink" title="密码是明文 改成密文"></a>密码是明文 改成密文</h5><pre><code class="html">&lt;el-form-item label=&quot;密码&quot; prop=&quot;password&quot;&gt;
+   &lt;el-input v-model=&quot;form.password&quot; type=&quot;password&quot; placeholder=&quot;请输入密码&quot; /&gt;
+&lt;/el-form-item&gt;
+</code></pre>
+<h5 id="隐藏修改时的账号密码id存在时隐藏不存在显示-因为修改和新增共用了一个对话框ui"><a href="#隐藏修改时的账号密码id存在时隐藏不存在显示-因为修改和新增共用了一个对话框ui" class="headerlink" title="隐藏修改时的账号密码id存在时隐藏不存在显示,因为修改和新增共用了一个对话框ui"></a>隐藏修改时的账号密码<del>id存在时隐藏不存在显示,因为修改和新增共用了一个对话框ui</del></h5><pre><code class="html">&lt;el-form-item label=&quot;账号&quot; prop=&quot;account&quot; v-if=&quot;form.id==null&quot;&gt;
+    &lt;el-input v-model=&quot;form.account&quot; placeholder=&quot;请输入账号&quot; /&gt;
+&lt;/el-form-item&gt;
+&lt;el-form-item label=&quot;密码&quot; prop=&quot;password&quot; v-if=&quot;form.id==null&quot;&gt;
+    &lt;el-input v-model=&quot;form.password&quot; type=&quot;password&quot; placeholder=&quot;请输入密码&quot; /&gt;
+&lt;/el-form-item&gt;
+</code></pre>
+<h5 id="前端需要返回创建时间因为数据返回时有，用v-if判断是否修改显示创建时间"><a href="#前端需要返回创建时间因为数据返回时有，用v-if判断是否修改显示创建时间" class="headerlink" title="前端需要返回创建时间因为数据返回时有，用v-if判断是否修改显示创建时间"></a>前端需要返回创建时间<del>因为数据返回时有，用v-if判断是否修改显示创建时间</del></h5><pre><code class="html"> &lt;el-form-item label=&quot;创建时间&quot; prop=&quot;contactPhone&quot; v-if=&quot;form.id!=null&quot;&gt;
+          &#123;&#123;form.createTime&#125;&#125;
+        &lt;/el-form-item&gt;
+</code></pre>
+<h5 id="新增时保存的数据是以明文保存到了数据库此时新增的合作商就是密文了"><a href="#新增时保存的数据是以明文保存到了数据库此时新增的合作商就是密文了" class="headerlink" title="新增时保存的数据是以明文保存到了数据库此时新增的合作商就是密文了"></a>新增时保存的数据是以明文保存到了数据库<del>此时新增的合作商就是密文了</del></h5><pre><code class="java">com/dkd/manage/service/impl/PartnerServiceImpl.java  
+/**
+     * 新增合作商管理
+     *
+     * @param partner 合作商管理
+     * @return 结果
+     */
+    @Override
+    public int insertPartner(Partner partner) &#123;
+        // 使用SpringSecurity工具类，对前端传入的密码进行加密
+        partner.setPassword(SecurityUtils.encryptPassword(partner.getPassword()));
+        partner.setCreateTime(DateUtils.getNowDate());
+        return partnerMapper.insertPartner(partner);
+    &#125;
+</code></pre>
+<h5 id="合作商管理改造—合作商详情"><a href="#合作商管理改造—合作商详情" class="headerlink" title="合作商管理改造—合作商详情"></a>合作商管理改造—合作商详情</h5><ul>
+<li>查看详情，需要显示合作商名称、联系人、联系电话、分成比例</li>
+<li>在查询合作商列表时，同时显示每个合作商的点位数</li>
+<li>重置密码，初始密码为123456</li>
+</ul>
+<pre><code class="js">/** 借鉴修改流程
+/** 修改按钮操作 */
+function handleUpdate(row) &#123;
+  reset();
+  const _id = row.id || ids.value
+  getPartner(_id).then(response =&gt; &#123;
+    form.value = response.data;
+    open.value = true;
+    title.value = &quot;修改合作商管理&quot;;
+  &#125;);
+&#125;
+</code></pre>
+<pre><code class="html">&lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot; class-name=&quot;small-padding fixed-width&quot;&gt;
+  &lt;template #default=&quot;scope&quot;&gt;
+    &lt;el-button link type=&quot;primary&quot; icon=&quot;Edit&quot; @click=&quot;getPartnerInfo(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:partner:query&#39;]&quot;&gt;查看详情&lt;/el-button&gt;
+  &lt;/template&gt;
+&lt;/el-table-column&gt;
+</code></pre>
+<pre><code class="java">com/dkd/manage/controller/PartnerController.java
+    /**
+     * 获取合作商管理详细信息
+     */
+    @PreAuthorize(&quot;@ss.hasPermi(&#39;manage:partner:query&#39;)&quot;)
+    @GetMapping(value = &quot;/&#123;id&#125;&quot;)
+    public AjaxResult getInfo(@PathVariable(&quot;id&quot;) Long id)
+    &#123;
+        return success(partnerService.selectPartnerById(id));
+    &#125;
+</code></pre>
+<pre><code class="js">/** 查看合作商详情 **/
+  const partnerInfoOpen = ref(false)
+  function getPartnerInfo(row)&#123;
+    reset();
+    const _id = row.id
+    getPartner(_id).then(response =&gt; &#123;
+      form.value = response.data;
+      partnerInfoOpen.value = true;
+    &#125;);
+  &#125;
+</code></pre>
+<pre><code class="html">    &lt;!-- 查看合作商详情对话框 --&gt;
+&lt;el-dialog title=&quot;合作商详情&quot; v-model=&quot;partnerInfoOpen&quot; width=&quot;500px&quot; append-to-body&gt;
+    &lt;!-- 使用el-descriptions组件以卡片形式展示信息，更加整洁 --&gt;
+    &lt;el-descriptions :column=&quot;2&quot; border&gt;
+        &lt;el-descriptions-item label=&quot;合作商名称&quot;&gt;&#123;&#123; form.partnerName &#125;&#125;&lt;/el-descriptions-item&gt;
+        &lt;el-descriptions-item label=&quot;联系人&quot;&gt;&#123;&#123; form.contactPerson &#125;&#125;&lt;/el-descriptions-item&gt;
+        &lt;el-descriptions-item label=&quot;联系电话&quot;&gt;&#123;&#123; form.contactPhone &#125;&#125;&lt;/el-descriptions-item&gt;
+        &lt;el-descriptions-item label=&quot;分成比例&quot;&gt;&#123;&#123; form.profitRatio &#125;&#125;%&lt;/el-descriptions-item&gt;
+    &lt;/el-descriptions&gt;
+&lt;/el-dialog&gt;
+</code></pre>
+<p>10</p>
 
             
         </div>
@@ -4946,7 +5243,7 @@ private final Map&lt;String, Object&gt; earlySingletonObjects = new ConcurrentHa
         
         <span class="tag">
             
-            <a href="/tags/面试" style=color:#ffa2c4>
+            <a href="/tags/面试" style=color:#879cff>
                 面试
             </a>
         </span>
@@ -7898,7 +8195,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -8535,7 +8832,7 @@ sout(newStr)
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#879cff>
+            <a href="/tags/HM" style=color:#1bccbc>
                 HM
             </a>
         </span>
@@ -11139,7 +11436,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ff7d73>
+            <a href="/tags/HM" style=color:#00bcd4>
                 HM
             </a>
         </span>
@@ -17237,6 +17534,74 @@ public class Demo01 &#123;
 <td>错误信息,   使用较多</td>
 </tr>
 </tbody></table>
+<h3 id="SpringBoot"><a href="#SpringBoot" class="headerlink" title="SpringBoot"></a>SpringBoot</h3><p><code>@RestController</code> 标识当前类是一个请求类，处理浏览器的请求，可以给浏览器响应数据</p>
+<h3 id="RestFul"><a href="#RestFul" class="headerlink" title="RestFul"></a>RestFul</h3><ul>
+<li><h6 id="REST，表达性状态转换，它是一种软件架构风格"><a href="#REST，表达性状态转换，它是一种软件架构风格" class="headerlink" title="REST，表达性状态转换，它是一种软件架构风格"></a>REST，表达性状态转换，它是一种软件架构风格</h6></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>传统风格url</th>
+<th>请求方式</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/user/getById?id=1">http://localhost:8080/user/getById?id=1</a></td>
+<td>GET</td>
+<td>查询id为1的用户</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/user/saveUser">http://localhost:8080/user/saveUser</a></td>
+<td>POST</td>
+<td>新增用户</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/user/updateUser">http://localhost:8080/user/updateUser</a></td>
+<td>POST</td>
+<td>修改用户</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/user/deleteUser?id=1">http://localhost:8080/user/deleteUser?id=1</a></td>
+<td>GET</td>
+<td>删除id为1的用户</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>REST风格url</th>
+<th>请求方式</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/users/1">http://localhost:8080/users/1</a></td>
+<td><strong>GET</strong></td>
+<td><strong>查询id为1的用户</strong></td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/users/1">http://localhost:8080/users/1</a></td>
+<td><strong>DELETE</strong></td>
+<td><strong>删除id为1的用户</strong></td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/users">http://localhost:8080/users</a></td>
+<td>POST</td>
+<td>新增用户</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="http://localhost:8080/users">http://localhost:8080/users</a></td>
+<td>PUT</td>
+<td>修改用户</td>
+</tr>
+</tbody></table>
+<h3 id="ApiFox"><a href="#ApiFox" class="headerlink" title="ApiFox"></a>ApiFox</h3><ul>
+<li><p><strong>介绍</strong>：Apifox是一款集成了Api文档、Api调试、Api Mock、Api测试的一体化协作平台。</p>
+<p><strong>作用</strong>：接口文档管理、接口请求测试、Mock服务。</p>
+<p><strong>官网</strong>： <a target="_blank" rel="noopener" href="https://apifox.com/">https://apifox.com/</a></p>
+</li>
+</ul>
 
             
         </div>
@@ -29199,7 +29564,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#1bccbc>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
