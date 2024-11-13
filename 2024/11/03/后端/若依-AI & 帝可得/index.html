@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#1bccbc>
                     后端
                 </a>
             </span>
@@ -2195,7 +2195,217 @@ function handleUpdate(row) &#123;
     &lt;/el-descriptions&gt;
 &lt;/el-dialog&gt;
 </code></pre>
-<p>10</p>
+<h3 id="合作商改造—列表查询点位管理→合作商管理→增加点位数"><a href="#合作商改造—列表查询点位管理→合作商管理→增加点位数" class="headerlink" title="合作商改造—列表查询点位管理→合作商管理→增加点位数"></a>合作商改造—列表查询<del>点位管理→合作商管理→增加点位数</del></h3><ul>
+<li>实现此功能方案：</li>
+</ul>
+<h4 id="后端改造"><a href="#后端改造" class="headerlink" title="后端改造"></a>后端改造</h4><p><strong>关联查询</strong>编写关联查询语句，在mapper层封装</p>
+<blockquote>
+<p><strong>tb_node</strong>(点位表)的partner_id(合作商ID)<br><u>关联</u><br><strong>tb_partner</strong>(合作商表)的id</p>
+<pre><code class="sql">-- 查询合作商表的所有信息，同时显示每个合作商的点位数
+select p.*, count(n.id) as node_count
+from tb_partner p
+    left join tb_node n on p.id = n.partner_id
+group by p.id
+</code></pre>
+</blockquote>
+<p><strong>首先先创建一个需要查询新东西的方法<del>增加</del></strong></p>
+<pre><code class="java">com/dkd/manage/domain/vo/PartnerVo.java
+package com.dkd.manage.domain.vo;
+
+import com.dkd.manage.domain.Partner;
+import lombok.Data;
+
+@Data
+public class PartnerVo extends Partner &#123;
+    // 点位数量
+    private Integer nodeCount;
+&#125;
+</code></pre>
+<pre><code class="java">com/dkd/manage/controller/PartnerController.java
+ /**
+     * 查询合作商管理列表
+     */
+    @PreAuthorize(&quot;@ss.hasPermi(&#39;manage:partner:list&#39;)&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public TableDataInfo list(Partner partner) &#123;
+        startPage();
+        List&lt;PartnerVo&gt; voList = partnerService.selectPartnerVoList(partner);
+        return getDataTable(voList);
+    &#125;
+</code></pre>
+<pre><code class="java">com/dkd/manage/service/IPartnerService.java
+/**
+     * 查询合作商列表
+     * @param partner
+     * @return
+     */
+    public List&lt;PartnerVo&gt; selectPartnerVoList(Partner partner);
+</code></pre>
+<pre><code class="java">com/dkd/manage/service/impl/PartnerServiceImpl.java
+/**
+     * 查询合作商列表
+     * @param partner
+     * @return
+     */
+    @Override
+    public List&lt;PartnerVo&gt; selectPartnerVoList(Partner partner) &#123;
+        return partnerMapper.selectPartnerVoList(partner);
+    &#125;
+</code></pre>
+<pre><code class="java">com/dkd/manage/mapper/PartnerMapper.java
+/**
+     * 查询合作商列表
+     * @param partner
+     * @return
+     */
+    public List&lt;PartnerVo&gt; selectPartnerVoList(Partner partner);
+</code></pre>
+<pre><code class="java">mapper/manage/PartnerMapper.xml
+&lt;/select&gt;
+        &lt;select id=&quot;selectPartnerVoList&quot; resultType=&quot;com.dkd.manage.domain.vo.PartnerVo&quot;&gt;
+        select p.*, count(n.id) as node_count
+        from tb_partner p
+                 left join tb_node n on p.id = n.partner_id
+        &lt;where&gt;
+            &lt;if test=&quot;partnerName != null  and partnerName != &#39;&#39;&quot;&gt; and partner_name like concat(&#39;%&#39;, #&#123;partnerName&#125;, &#39;%&#39;)&lt;/if&gt;
+        &lt;/where&gt;
+        group by p.id
+    &lt;/select&gt;
+</code></pre>
+<h4 id="前端改造"><a href="#前端改造" class="headerlink" title="前端改造"></a>前端改造</h4><pre><code class="html">&lt;el-table-column type=&quot;selection&quot; width=&quot;55&quot; align=&quot;center&quot; /&gt;
+      &lt;el-table-column label=&quot;序号&quot; type=&quot;index&quot; width=&quot;50&quot; align=&quot;center&quot; prop=&quot;id&quot; /&gt;
+      &lt;el-table-column label=&quot;合作商名称&quot; align=&quot;center&quot; prop=&quot;partnerName&quot; /&gt;
+      &lt;el-table-column label=&quot;点位数&quot; align=&quot;center&quot; prop=&quot;nodeCount&quot; /&gt;
+      &lt;el-table-column label=&quot;账号&quot; align=&quot;center&quot; prop=&quot;account&quot; /&gt;
+      &lt;el-table-column label=&quot;分成比例&quot; align=&quot;center&quot; prop=&quot;profitRatio&quot;&gt;
+        &lt;template #default=&quot;scope&quot;&gt;
+          &#123;&#123; scope.row.profitRatio + '%' &#125;&#125;
+        &lt;/template&gt;
+      &lt;/el-table-column&gt;
+      &lt;el-table-column label=&quot;联系人&quot; align=&quot;center&quot; prop=&quot;contactPerson&quot; /&gt;
+      &lt;el-table-column label=&quot;联系电话&quot; align=&quot;center&quot; prop=&quot;contactPhone&quot; /&gt;
+      &lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot; class-name=&quot;small-padding fixed-width&quot;&gt;
+</code></pre>
+<h3 id="合作商改造——重置密码"><a href="#合作商改造——重置密码" class="headerlink" title="合作商改造——重置密码"></a>合作商改造——重置密码</h3><ul>
+<li>查看详情，需要显示合作商名称、联系人、联系电话、分成比例</li>
+<li>在查询合作商列表时，同时显示每个合作商的点位数</li>
+<li>重置密码，初始密码为123456</li>
+</ul>
+<h4 id="后端部分"><a href="#后端部分" class="headerlink" title="后端部分"></a>后端部分</h4><p>在PartnerController中</p>
+<pre><code class="java">/**
+ * 重置合作商密码
+ */
+@PreAuthorize(&quot;@ss.hasPermi(&#39;manage:partner:edit&#39;)&quot;)
+@Log(title = &quot;重置合作商密码&quot;, businessType = BusinessType.UPDATE)
+@PutMapping(&quot;/resetPwd/&#123;id&#125;&quot;)
+public AjaxResult resetpwd(@PathVariable Long id) &#123;//1. 接收参数
+    //2. 创建合作商对象
+    Partner partner = new Partner();
+    partner.setId(id);// 设置id
+    partner.setPassword(SecurityUtils.encryptPassword(&quot;123456&quot;));// 设置加密后的初始密码
+    //3. 调用service更新密码
+    return toAjax(partnerService.updatePartner(partner));
+&#125;
+</code></pre>
+<h4 id="前端部分"><a href="#前端部分" class="headerlink" title="前端部分"></a>前端部分</h4><p>在<code>manage/partner.js</code>请求api中</p>
+<pre><code class="js">// 重置合作商密码
+export function resetPartnerPwd(id)&#123;
+  return request(&#123;
+    url: &#39;/manage/partner/resetPwd/&#39; + id,
+    method: &#39;put&#39;
+  &#125;)
+&#125;
+</code></pre>
+<p>在<code>partner/index.vue</code>视图组件中<del>参考@click&#x3D;”handleDelete”，此方法删除时弹出对话框</del></p>
+<pre><code class="vue">&lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot; class-name=&quot;small-padding fixed-width&quot; width=&quot;300px&quot;&gt;
+    &lt;template #default=&quot;scope&quot;&gt;
+        &lt;el-button link type=&quot;primary&quot; @click=&quot;resetPwd(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:partner:edit&#39;]&quot;&gt;重置密码&lt;/el-button&gt;
+    &lt;/template&gt;
+&lt;/el-table-column&gt;
+
+&lt;script&gt;
+    import &#123; listPartner, getPartner, delPartner, addPartner, updatePartner,resetPartnerPwd &#125; from &quot;@/api/manage/partner&quot;;
+    /* 重置合作商密码 */
+    function resetPwd(row) &#123;
+        proxy.$modal.confirm(&#39;你确定要重置该合作商密码吗？&#39;).then(function () &#123;
+            return resetPartnerPwd(row.id);
+        &#125;).then(() =&gt; &#123;
+            proxy.$modal.msgSuccess(&quot;重置成功&quot;);
+        &#125;).catch(() =&gt; &#123; &#125;);
+    &#125;
+&lt;/script&gt;
+</code></pre>
+<h3 id="点位管理改造——基础布局"><a href="#点位管理改造——基础布局" class="headerlink" title="点位管理改造——基础布局"></a>点位管理改造——基础布局</h3><p>修改前端更简单一些 可以把前端一次性请求1w条数据 后端接口就可以重复调用</p>
+<p>在<code>src\views\manage\node\index.vue</code>视图组件中</p>
+<pre><code class="js">import &#123;listRegion&#125; from &quot;@/api/manage/region&quot;;
+
+/* 查询所有条件对象 */
+const loadAllParams=reactive(&#123;
+  pageNum:1,
+  pageSize:10000
+&#125;)
+/** 查询区域列表 **/
+const regionList=ref([]);
+function getRegionList() &#123;
+  listRegion(loadAllParams).then(response=&gt;&#123;
+    regionList.value=response.rows;
+  &#125;)
+&#125;
+getRegionList();
+getList();
+</code></pre>
+<p>在<code>src\api\manage\region.js</code>中</p>
+<pre><code class="js">// 查询区域管理列表
+export function listRegion(query) &#123;
+  return request(&#123;
+    url: &#39;/manage/region/list&#39;,
+    method: &#39;get&#39;,
+    params: query
+  &#125;)
+&#125;
+</code></pre>
+<h6 id="新增点位管理的时候想把合作商输入的改成自动获取的下拉框"><a href="#新增点位管理的时候想把合作商输入的改成自动获取的下拉框" class="headerlink" title="新增点位管理的时候想把合作商输入的改成自动获取的下拉框"></a>新增点位管理的时候想把合作商输入的改成自动获取的下拉框</h6><ul>
+<li>定义js代码向后台发送请求，将请求后的结果封装给合作商parnterList集合</li>
+<li>将文本框改成下拉框来遍历展示每个合作商的名称，提交时关联合作商的id</li>
+</ul>
+<pre><code class="js">      &lt;el-table-column label=&quot;详细地址&quot; align=&quot;center&quot; prop=&quot;address&quot; show-overflow-tooltip/&gt; 详细地址多出的部分隐藏只有鼠标移动到才会显示
+
+
+import &#123;listPartner&#125; from &quot;@/api/manage/partner&quot;
+
+&lt;el-form-item label=&quot;合作商ID&quot; prop=&quot;partnerId&quot;&gt;
+          &lt;!-- &lt;el-input v-model=&quot;form.partnerId&quot; placeholder=&quot;请输入合作商ID&quot; /&gt; --&gt;
+           &lt;el-select v-model=&quot;form.partnerId&quot; placeholder=&quot;请选择合作商&quot;&gt;
+            &lt;el-option
+              v-for=&quot;item in partnerList&quot;
+              :key=&quot;item.id&quot;
+              :label=&quot;item.partnerName&quot;
+              :value=&quot;item.id&quot;&gt;
+            &lt;/el-option&gt;
+           &lt;/el-select&gt;
+&lt;/el-form-item&gt;
+
+/* 查询合作商列表 */
+const partnerList=ref([]);
+function getPartnerList()&#123;
+  listPartner(loadAllParams).then(response=&gt;&#123;
+    partnerList.value = response.rows;
+  &#125;)
+&#125;
+getPartnerList();
+</code></pre>
+<h6 id="避免每次都要写pageSize：10000-直接搞入js里面"><a href="#避免每次都要写pageSize：10000-直接搞入js里面" class="headerlink" title="避免每次都要写pageSize：10000 直接搞入js里面"></a>避免每次都要写pageSize：10000 直接搞入js里面</h6><pre><code class="java">src\api\page.js
+/* 查询所有条件对象 */
+// const loadAllParams=reactive(&#123;
+//   pageNum:1,
+//   pageSize:10000
+// &#125;) →
+
+export const loadAllParams = reactive(&#123;
+  pageNum: 1,
+  pageSize: 10000,
+&#125;);
+</code></pre>
 
     </div>
 
