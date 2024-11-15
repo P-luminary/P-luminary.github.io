@@ -6265,6 +6265,1009 @@ public class Demo01 &#123;
 <p><strong>官网</strong>： <a target="_blank" rel="noopener" href="https://apifox.com/">https://apifox.com/</a></p>
 </li>
 </ul>
+<h3 id="Tails教学辅助系统"><a href="#Tails教学辅助系统" class="headerlink" title="Tails教学辅助系统"></a>Tails教学辅助系统</h3><pre><code class="java">com/itheima/controller/DeptController.java
+package com.itheima.controller;
+
+import com.itheima.pojo.Dept;
+import org.apache.commons.io.IOUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+public class DeptController &#123;
+    /**
+     * 部门列表查询
+     * @return 返回所有部门数据
+     */
+    @RequestMapping(&quot;/depts&quot;)
+    public List&lt;Dept&gt; list() throws IOException &#123;
+        // 创建一个文件输入流
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;dept.txt&quot;);
+        List&lt;String&gt; lines = IOUtils.readLines(in, &quot;UTF-8&quot;);
+        List&lt;Dept&gt; deptList = new ArrayList&lt;&gt;();
+
+        for (String line : lines) &#123;
+            String[] split = line.split(&quot;,&quot;); // 按照逗号分割
+            int id = Integer.parseInt(split[0]); //id由&quot;1&quot;→1
+            String name = split[1];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            // 使用DateTimeFormatter 解析字符串为LocalDateTime
+            LocalDateTime updateTime = LocalDateTime.parse(split[2], formatter);
+
+            // 创建Dept对象，保存部门数据
+            Dept dept = new Dept(id, name, updateTime);
+            deptList.add(dept);
+        &#125;
+        return deptList;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/pojo/Dept.java
+package com.itheima.pojo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Dept &#123;
+    private Integer id;
+    private String name;
+    private LocalDateTime updatedDateTime;
+&#125;
+</code></pre>
+<p><img src="C:\Users\Pluminary\AppData\Roaming\Typora\typora-user-images\image-20241114105044267.png" alt="image-20241114105044267"></p>
+<ul>
+<li><code>@ResponseBody</code>注解：<ul>
+<li>类型：<strong>方法注解、类注解</strong></li>
+<li>位置：Controller方法上&#x2F;类上</li>
+<li>作用：将方法返回值直接响应，如果返回值类型是 集合对象&#x2F;集合，会转换为JSON格式对象</li>
+<li>说明：<code>@RestController = @controller + @RequeseBody</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="返回统一响应结果Result是静态的可以后面直接返回"><a href="#返回统一响应结果Result是静态的可以后面直接返回" class="headerlink" title="返回统一响应结果Result是静态的可以后面直接返回"></a>返回统一响应结果<del>Result是静态的可以后面直接返回</del></h5><p>return Result.xxx</p>
+<ul>
+<li>成功了？失败了？</li>
+<li>响应的错误提示信息？</li>
+<li>响应的数据？</li>
+</ul>
+<pre><code class="java">@Data
+public class Result &#123;
+   // 编码：1成功，0失败   
+    private Integer code; 
+   // 错误信息    
+    private String msg; 
+   // 数据    
+    private Object data; 
+&#125;
+============规范==============
+&#123;
+    &quot;code&quot;: 1,
+    &quot;msg&quot;: &quot;操作成功&quot;,
+    “data”: 数据
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.pojo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+/**
+ * 后端统一返回结果
+ */
+/*
+    Lombok介绍: 帮助类生成无参构造,满参构造,get/set/toString, 在编译后生成
+
+    使用:
+        1.导入lombok依赖
+        2.使用注解: alt + 7看类中的结构
+            @Data: 给类生成get/set/equals/toString方法
+            @AllArgsConstructor: 满参构造
+            @NoArgsConstructor: 无参构造
+ */
+@Data
+public class Result &#123;
+
+    private Integer code; // 编码：1成功，0为失败
+    private String msg; // 错误信息
+    private Object data; // 数据
+
+    public static Result success() &#123;
+        Result result = new Result();
+        result.code = 1;
+        result.msg = &quot;success&quot;;
+        return result;
+    &#125;
+
+    public static Result success(Object object) &#123;
+        Result result = new Result();
+        result.data = object;
+        result.code = 1;
+        result.msg = &quot;success&quot;;
+        return result;
+    &#125;
+
+    public static Result error(String msg) &#123;
+        Result result = new Result();
+        result.msg = msg;
+        result.code = 0;
+        return result;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 重要的是上面改Result类名 底下return用static类去操作
+package com.itheima.controller;
+
+import com.itheima.pojo.Dept;
+import com.itheima.pojo.Result;
+import org.apache.commons.io.IOUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController //类上写 相当于在所有方法上写
+
+public class DeptController &#123;
+    /**
+     * 部门列表查询
+     * @return 返回所有部门数据
+     */
+    @GetMapping(&quot;/depts&quot;)
+    public Result list() throws IOException &#123;
+        // 创建一个文件输入流
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;dept.txt&quot;);
+        List&lt;String&gt; lines = IOUtils.readLines(in, &quot;UTF-8&quot;);
+        List&lt;Dept&gt; deptList = new ArrayList&lt;&gt;();
+
+        for (String line : lines) &#123;
+            String[] split = line.split(&quot;,&quot;); // 按照逗号分割
+            int id = Integer.parseInt(split[0]); //id由&quot;1&quot;→1
+            String name = split[1];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            // 使用DateTimeFormatter 解析字符串为LocalDateTime
+            LocalDateTime updateTime = LocalDateTime.parse(split[2], formatter);
+
+            // 创建Dept对象，保存部门数据
+            Dept dept = new Dept(id, name, updateTime);
+            deptList.add(dept);
+        &#125;
+        return Result.success(deptList);
+    &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>用nginx把前端放入html中 → localhost:90&#x2F;index</p>
+</blockquote>
+<pre><code class="js">Nginx/conf/nginx.conf
+server &#123;
+   listen 90;
+   #省略...
+   location ^~ /api/ &#123;
+      rewrite ^/api/(.*)$ /$1 break;
+      proxy_pass http://localhost:8080;
+   &#125;
+&#125;
+
+/*
+location：用于定义匹配特定uri请求的规则。
+^~ /api/：表示精确匹配，即只匹配以/api/开头的路径。
+rewrite：该指令用于重写匹配到的uri路径。$1表示第一个匹配的数据
+proxy_pass：该指令用于代理转发，它将匹配到的请求转发给位于后端的指令服务器。
+
+*/
+</code></pre>
+<h3 id="三层结构"><a href="#三层结构" class="headerlink" title="三层结构"></a>三层结构</h3><ul>
+<li><strong>Controller</strong>：控制层，接收前端发送的请求，对<strong>请求进行处理，并响应数据</strong>。</li>
+<li><strong>Service</strong>：业务逻辑层，<strong>处理具体的业务逻辑</strong>。</li>
+<li><strong>Dao</strong>：数据访问层(Data Access Object)（持久层），<strong>负责数据访问操作，包括数据的增、删、改、查。</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/99be6c5f130db87a73cd362c030a6cfd88c6322c/%E4%B8%89%E5%A4%A7%E7%BB%93%E6%9E%84%E7%9A%84%E6%B5%81%E7%A8%8B.jpg"></p>
+<h5 id="将源代码拆分成三层结构"><a href="#将源代码拆分成三层结构" class="headerlink" title="将源代码拆分成三层结构"></a>将源代码拆分成三层结构</h5><pre><code class="java">package com.itheima.controller;
+
+import com.itheima.pojo.Dept;
+import com.itheima.pojo.Result;
+import com.itheima.service.impl.DeptServiceImpl;
+import org.apache.commons.io.IOUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController //类上写 相当于在所有方法上写
+
+public class DeptController &#123;
+    // 控制器需要业务层处理数据
+    private DeptServiceImpl deptService = new DeptServiceImpl();
+    /**
+     * 部门列表查询
+     * @return 返回所有部门数据
+     */
+    @GetMapping(&quot;/depts&quot;)
+    public Result list() throws IOException &#123;
+        List&lt;Dept&gt; deptList = deptService.list();
+
+        return Result.success(deptList);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.dao.impl;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+// 数据访问层
+public class DeptDaoImpl &#123;
+    // 专门操作数据
+    public List&lt;String&gt; list() throws IOException &#123;
+        // 创建一个文件输入流
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;dept.txt&quot;);
+        List&lt;String&gt; lines = IOUtils.readLines(in, &quot;UTF-8&quot;);
+        return lines;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service.impl;
+
+import com.itheima.dao.impl.DeptDaoImpl;
+import com.itheima.pojo.Dept;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class DeptServiceImpl&#123;
+    // 业务层需要Dao操作数据
+    private DeptDaoImpl deptDao = new DeptDaoImpl();
+
+    // 专门处理部门的业务逻辑
+    public List&lt;Dept&gt; list() throws IOException &#123;
+        // 调用Dao获取数据
+        List&lt;String&gt; lines = deptDao.list();
+
+        List&lt;Dept&gt; deptList = new ArrayList&lt;&gt;();
+
+        for (String line : lines) &#123;
+            String[] split = line.split(&quot;,&quot;); // 按照逗号分割
+            int id = Integer.parseInt(split[0]); //id由&quot;1&quot;→1
+            String name = split[1];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            // 使用DateTimeFormatter 解析字符串为LocalDateTime
+            LocalDateTime updateTime = LocalDateTime.parse(split[2], formatter);
+
+            // 创建Dept对象，保存部门数据
+            Dept dept = new Dept(id, name, updateTime);
+            deptList.add(dept);
+        &#125;
+        return deptList;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="程序优化"><a href="#程序优化" class="headerlink" title="程序优化"></a>程序优化</h5><pre><code class="java">package com.itheima.controller;
+
+import com.itheima.pojo.Dept;
+import com.itheima.pojo.Result;
+import com.itheima.service.impl.DeptServiceImpl;
+import org.apache.commons.io.IOUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController //类上写 相当于在所有方法上写
+
+public class DeptController &#123;
+    // 控制器需要业务层处理数据  面向接口编程(多态)
+    private DeptServiceImpl deptService = new DeptServiceImpl();
+    /**
+     * 部门列表查询
+     * @return 返回所有部门数据
+     */
+    @GetMapping(&quot;/depts&quot;)
+    public Result list() throws IOException &#123;
+        List&lt;Dept&gt; deptList = deptService.list();
+
+        return Result.success(deptList);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service;
+
+import com.itheima.pojo.Dept;
+
+import java.io.IOException;
+import java.util.List;
+
+public interface DeptService &#123;
+    public List&lt;Dept&gt; list() throws IOException;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service.impl;
+
+import com.itheima.dao.DeptDao;
+import com.itheima.dao.impl.DeptDaoImpl;
+import com.itheima.pojo.Dept;
+import com.itheima.service.DeptService;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class DeptServiceImpl implements DeptService &#123;
+    // 业务层需要Dao操作数据
+    private DeptDaoImpl deptDao = new DeptDaoImpl();
+
+    // 专门处理部门的业务逻辑
+    public List&lt;Dept&gt; list() throws IOException &#123;
+        // 调用Dao获取数据
+        List&lt;String&gt; lines = deptDao.list();
+
+        List&lt;Dept&gt; deptList = new ArrayList&lt;&gt;();
+
+        for (String line : lines) &#123;
+            String[] split = line.split(&quot;,&quot;); // 按照逗号分割
+            int id = Integer.parseInt(split[0]); //id由&quot;1&quot;→1
+            String name = split[1];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            // 使用DateTimeFormatter 解析字符串为LocalDateTime
+            LocalDateTime updateTime = LocalDateTime.parse(split[2], formatter);
+
+            // 创建Dept对象，保存部门数据
+            Dept dept = new Dept(id, name, updateTime);
+            deptList.add(dept);
+        &#125;
+        return deptList;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.dao;
+
+import java.io.IOException;
+import java.util.List;
+
+public interface DeptDao &#123;
+    public List&lt;String&gt; list() throws IOException;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.dao.impl;
+
+import com.itheima.dao.DeptDao;
+import com.itheima.service.DeptService;
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+// 数据访问层
+public class DeptDaoImpl implements DeptDao &#123;
+    // 专门操作数据
+    public List&lt;String&gt; list() throws IOException &#123;
+        // 创建一个文件输入流
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;dept.txt&quot;);
+        List&lt;String&gt; lines = IOUtils.readLines(in, &quot;UTF-8&quot;);
+        return lines;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="分层解耦"><a href="#分层解耦" class="headerlink" title="分层解耦"></a>分层解耦</h3><ul>
+<li><p>耦合：衡量软件中各个层&#x2F;模块之间的依赖、关联的程度。</p>
+</li>
+<li><p>内聚：软件中各个功能模块内部的功能联系。</p>
+</li>
+<li><p>软件设计原则：高内聚低耦合。</p>
+<ul>
+<li><p><strong>控制反转：</strong> Inversion Of Control，简称IOC。对象的创建控制权由程序自身转移到外部（容器），这种思想称为控制反转。**<u><i>让容器创建对象</i></u>**</p>
+</li>
+<li><p><strong>依赖注入：</strong> Dependency Injection，简称DI。容器为应用程序提供运行时，所依赖的资源，称之为依赖注入。**<u><i>给成员变量赋值</i></u>**</p>
+</li>
+<li><p><strong>Bean</strong>对象：IOC容器中创建、管理的对象，称之为Bean。IoC容器&#x2F;Spring容器</p>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="IOC-amp-DI-入门"><a href="#IOC-amp-DI-入门" class="headerlink" title="IOC &amp; DI 入门"></a>IOC &amp; DI 入门</h5><ul>
+<li><p><strong><u>将Dao 及 Service层的实现类，交给IOC容器管理。</u></strong></p>
+</li>
+<li><p><strong><u>为Controller 及 Service注入运行时所依赖的对象。</u></strong></p>
+</li>
+<li><p>将Service 及 Dao层的实现类，交给IOC容器管理。</p>
+</li>
+<li><p>为Controller 及 Service注入运行时所依赖的对象。</p>
+</li>
+</ul>
+<blockquote>
+<p>&#x3D;&#x3D;@<strong>Component</strong>&#x3D;&#x3D; 当前类自动new对象是首字母小写 IoC容器会管理这个对象<del>类名上面加@Component</del><br><u>Bean对象：IOC容器中创建、管理的对象，称之为Bean</u><br>&#x3D;&#x3D;@<strong>Autowired</strong>&#x3D;&#x3D; 依赖注入，从容器中找一个类型相同的对象赋值给这个变量</p>
+</blockquote>
+<h5 id="程序继续优化"><a href="#程序继续优化" class="headerlink" title="程序继续优化"></a><span style="color:red">程序继续优化</span></h5><pre><code class="java">package com.itheima.controller;
+
+import com.itheima.pojo.Dept;
+import com.itheima.pojo.Result;
+import com.itheima.service.impl.DeptServiceImpl;
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController //类上写 相当于在所有方法上写
+
+public class DeptController &#123;
+    // 控制器需要业务层处理数据  面向接口编程(多态)
+    @Autowired
+    private DeptServiceImpl deptService;
+    /**
+     * 部门列表查询
+     * @return 返回所有部门数据
+     */
+    @GetMapping(&quot;/depts&quot;)
+    public Result list() throws IOException &#123;
+        List&lt;Dept&gt; deptList = deptService.list();
+
+        return Result.success(deptList);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.dao.impl;
+
+import com.itheima.dao.DeptDao;
+import com.itheima.service.DeptService;
+import org.apache.commons.io.IOUtils;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+// 数据访问层
+// 组件，声明Bean，默认将当前对象首字母小写：deptDaoImpl = new DeptDaoImpl();
+@Component
+public class DeptDaoImpl implements DeptDao &#123;
+    // 专门操作数据
+    public List&lt;String&gt; list() throws IOException &#123;
+        // 创建一个文件输入流
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(&quot;dept.txt&quot;);
+        List&lt;String&gt; lines = IOUtils.readLines(in, &quot;UTF-8&quot;);
+        return lines;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service.impl;
+
+import com.itheima.dao.DeptDao;
+import com.itheima.dao.impl.DeptDaoImpl;
+import com.itheima.pojo.Dept;
+import com.itheima.service.DeptService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+// 声明Bean，相当于deptServiceImpl = new DeptServiceImpl(); IoC容器会管理这个对象
+@Component
+public class DeptServiceImpl implements DeptService &#123;
+    // 业务层需要Dao操作数据
+    // 依赖注入，从容器中找一个类型相同的对象赋值给这个变量
+    @Autowired
+    private DeptDaoImpl deptDao;
+
+    // 专门处理部门的业务逻辑
+    public List&lt;Dept&gt; list() throws IOException &#123;
+        // 调用Dao获取数据
+        List&lt;String&gt; lines = deptDao.list();
+
+        List&lt;Dept&gt; deptList = new ArrayList&lt;&gt;();
+
+        for (String line : lines) &#123;
+            String[] split = line.split(&quot;,&quot;); // 按照逗号分割
+            int id = Integer.parseInt(split[0]); //id由&quot;1&quot;→1
+            String name = split[1];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            // 使用DateTimeFormatter 解析字符串为LocalDateTime
+            LocalDateTime updateTime = LocalDateTime.parse(split[2], formatter);
+
+            // 创建Dept对象，保存部门数据
+            Dept dept = new Dept(id, name, updateTime);
+            deptList.add(dept);
+        &#125;
+        return deptList;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="IOC详解"><a href="#IOC详解" class="headerlink" title="IOC详解"></a>IOC详解</h5><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>说明</th>
+<th align="center">位置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>@Component</td>
+<td>声明bean的基础注解</td>
+<td align="center">不属于以下三类时，用此注解</td>
+</tr>
+<tr>
+<td>@Controller</td>
+<td>@Component的衍生注解</td>
+<td align="center">标注在控制层类上</td>
+</tr>
+<tr>
+<td>@Service</td>
+<td>@Component的衍生注解</td>
+<td align="center">标注在业务层类上</td>
+</tr>
+<tr>
+<td>@Repository</td>
+<td>@Component的衍生注解</td>
+<td align="center">标注在数据访问层类上（由于与mybatis整合，用的少）</td>
+</tr>
+</tbody></table>
+<p><u>声明bean的时候，可以通过注解的value属性指定bean的名字，如果没有指定，默认为类名首字母小写。<del>@Repository(“deptDao2”)</del></u></p>
+<ul>
+<li>前面声明bean的四大注解，要想生效，还需要被组件扫描注解<code>@ComponentScan</code>扫描。</li>
+<li>该注解虽然没有显式配置，但是实际上已经包含在了启动类声明注解 <code>@SpringBootApplication</code> 中，默认<strong>扫描的范围是启动类</strong>所在包及其子包。<del>所以启动类放在最外面！！</del><ul>
+<li>在Springboot集成web开发中，声明控制器bean只能用@Controller。</li>
+<li>声明bean的注解要想生效，需要被扫描到，启动类默认扫描当前包及其子包</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">package com.itheima;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+// SpringBoot的启动类
+// 注意: 我们写的代码要在启动类的包或者子包中
+// @SpringBootApplication注解中包含了 @ComponentScan，没有指定扫描哪个包，默认扫描当前类所在的包和子包
+@SpringBootApplication
+public class Day15TliasManagement01IocDiApplication &#123;
+    // 启动项目, 内嵌的Tomcat会启动, 把项目部署到这个内嵌Tomcat中
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Day15TliasManagement01IocDiApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="DI详解"><a href="#DI详解" class="headerlink" title="DI详解"></a>DI详解</h5><ul>
+<li><p><strong>@Autowired</strong>注解，默认是按照<strong>类型</strong>进行，如果存在多个相同类型的bean，将会报出如下错误：</p>
+<ul>
+<li><strong>@Primary</strong></li>
+</ul>
+<pre><code class="java">@Primary
+@Component
+public class DeptServiceImpl implements DeptService &#123;
+    @Override
+    public List&lt;String&gt; queryDeptList()&#123;
+        //省略 ……
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>@Qualifier</strong><del>可以指定Bean名称</del></li>
+</ul>
+<pre><code class="java">@RestController
+public class DeptController &#123;
+    @Autowired
+    @Qualifier(&quot;deptServiceImpl&quot;)
+    private DeptService deptService;
+&#125;
+</code></pre>
+<ul>
+<li>@<strong>Resource</strong><del>&#x3D;@Autowired+@Qualifier</del></li>
+</ul>
+<pre><code class="java">@RestController
+public class DeptController &#123;
+    @Resource(name = &quot;deptServiceImpl&quot;)
+    private DeptService deptService;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h6 id="Resource-与-Autowired区别"><a href="#Resource-与-Autowired区别" class="headerlink" title="@Resource 与 @Autowired区别 ?"></a>@Resource 与 @Autowired区别 ?</h6><ul>
+<li>@<strong>Autowired</strong>是Spring框架提供的注解，而@<strong>Resource</strong>是JavaEE规范提供的</li>
+<li><span style = "color:red">@<strong>Autowired</strong>默认是按照类型注入，而@<strong>Resource</strong>默认是按照名称注入</span></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/aa2405d532d8e6606845f6a1a4da8456b797e115/%E6%B3%A8%E8%A7%A3%E5%A4%A7%E6%B1%87%E6%80%BB.png"></p>
+<h3 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h3><pre><code class="mysql">-- 编写SQL语句
+-- 查询所有数据库
+
+-- 创建数据库
+
+-- 切换数据库
+
+
+
+-- DDL: 创建user用户表，包含(id, username, name, age, gender)字段
+
+
+
+-- DDL: 创建表 - 约束
+-- primary key : 主键约束 -- auto_increment(从1开始增长)
+-- not null : 非空约束
+-- unique: 唯一约束
+-- default: 默认约束
+
+
+-- 案例： 设计员工表
+
+
+
+-- 查询当前数据库有哪些表
+
+-- 查看表的基本信息
+
+-- 查看表的建表语句
+
+
+
+-- 表结构修改: 添加字段 add
+
+-- 表结构修改: 修改字段类型 modify
+
+-- 表结构修改: 修改字段名 和 字段类型 change
+
+-- 表结构修改: 删除字段 drop
+
+-- 表结构修改: 修改表名
+
+
+-- 删除表
+
+
+
+
+
+-- DML: 数据操作语言
+-- DML: 插入数据 - insert
+-- 1.为 emp 表的 username, password, name, gender, phone 字段插入值
+
+
+-- 2.为 emp 表的 所有字段插入值
+
+
+-- 3.批量为 emp 表的 username, password, name, gender, phone  字段插入数据
+
+
+
+-- DML: 更新数据 - update
+-- 1.将 emp 表的ID为1员工 姓名name字段更新为 &#39;张三&#39;
+
+
+-- 2.将 emp 表的所有员工的 入职日期(entry_date) 更新为 &#39;2010-01-01&#39;
+
+
+
+-- DML : 删除数据 - delete
+-- 1.删除 emp 表中 ID为1的员工
+
+
+-- 2.删除 emp 表中的所有员工
+
+</code></pre>
+<h5 id="DDL-表→增删改查"><a href="#DDL-表→增删改查" class="headerlink" title="DDL(表→增删改查)"></a>DDL(表→增删改查)</h5><pre><code class="mysql">create table tablename(
+  字段1 字段类型 [约束] [comment 字段1注释],
+  ......
+  字段2 字段类型 [约束] [comment 字段2注释]
+)[comment 表注释];
+</code></pre>
+<pre><code class="mysql">create table User(
+  id int comment &#39;唯一标识&#39;
+  username varchar(20) comment &#39;用户名&#39;,
+  name varchar(20) comment &#39;姓名&#39;,
+  age int comment &#39;年龄&#39;,
+  gender varchar(2)
+) comment &#39;用户表&#39;;
+</code></pre>
+<ul>
+<li><p>约束：约束是作用于表中字段上的规则，用于限制存储在表中的数据。</p>
+</li>
+<li><p>目的：保证数据库中数据的正确性、有效性和完整性。</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>约束</strong></th>
+<th><strong>描述</strong></th>
+<th><strong>关键字</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>非空约束</td>
+<td>限制该字段值不能为null</td>
+<td>not null</td>
+</tr>
+<tr>
+<td>唯一约束</td>
+<td>保证字段的所有数据都是唯一、不重复的</td>
+<td>unique</td>
+</tr>
+<tr>
+<td>主键约束</td>
+<td>主键是一行数据的唯一标识，要求非空且唯一</td>
+<td>primary key</td>
+</tr>
+<tr>
+<td>默认约束</td>
+<td>保存数据时，如果未指定该字段值，则采用默认值</td>
+<td>default</td>
+</tr>
+<tr>
+<td>外键约束</td>
+<td>让两张表的数据建立连接，保证数据的一致性和完整性</td>
+<td>foreign key</td>
+</tr>
+</tbody></table>
+<p><code>Shift + table</code>可以往左回退格</p>
+<pre><code class="mysql">-- DDL: 创建表 - 约束
+-- primary key : 主键约束 -- auto_increment(从1开始增长)
+-- not null : 非空约束
+-- unique: 唯一约束
+-- default: 默认约束
+create table user(
+     id int auto_increment primary key comment &#39;唯一标识&#39;,
+     username varchar(20) not null unique comment &#39;用户名&#39;,
+     name varchar(10) not null comment &#39;姓名&#39;,
+     age int comment &#39;年龄&#39;,
+     gender varchar(2) default &#39;男&#39;
+)comment &#39;用户表&#39;;
+</code></pre>
+<p><code>char(10)</code>：最多只能存10个字符，不足10个字符，占用10个字符空间<br><code>varchar(10)</code>：最多只能存10个字符，不足10个字符，按照实际长度存储</p>
+<blockquote>
+<p><strong>手机号</strong>                                  char(11)<br><strong>用户名</strong>                                  varchar(12)<br><strong>生日</strong>(日期值)                        date<br><strong>下单时间</strong>(年月日时分秒)     datetime</p>
+</blockquote>
+<pre><code class="mysql">-- 案例： 设计员工表
+# 使用tinyint可以节省存储空间：tinyint 类型占用 1 字节的存储空间，而 unsigned 表示无符号，可以存储从 0 到 255 的整数。对于只有 5 个职位的情况，这个范围完全足够，同时也不会浪费存储空间
+# 性能优化：较小的数据类型在数据库操作中通常会有更好的性能表现，尤其是在索引和查询方面。
+# 数据完整性：通过定义明确的范围，可以确保职位编号不会出现负数或超出预期的值，从而保证数据的完整性和一致性。
+create table emp(
+    username varchar(20) not null unique comment &#39;用户名&#39;,
+    name varchar(10) not null comment &#39;姓名&#39;,
+    gender tinyint unsigned not null comment &#39;性别：0男，1女&#39;,
+    phone char(11) not null unique comment &#39;手机号&#39;,
+    job tinyint unsigned comment &#39;职位: 0班主任，1讲师，2学工主管，3教研主管，4咨询师&#39;,
+    salary decimal(7,2) comment &#39;薪资&#39;,
+    image varchar(255) comment &#39;头像&#39;,
+    entry_date date comment &#39;入职日期&#39;,
+    create_time datetime comment &#39;创建时间&#39;,
+    update_time datetime comment &#39;更新时间&#39;
+) comment &#39;员工表&#39;;
+</code></pre>
+<h5 id="DML-数据操作语言"><a href="#DML-数据操作语言" class="headerlink" title="DML(数据操作语言)"></a>DML(数据操作语言)</h5><ul>
+<li>添加数据 <strong>INSERT</strong></li>
+<li>修改数据 <strong>UPDATE</strong></li>
+<li>删除数据 <strong>DELETE</strong></li>
+</ul>
+<h5 id="DQL基础语法"><a href="#DQL基础语法" class="headerlink" title="DQL基础语法"></a>DQL基础语法</h5><pre><code class="mysql">--  =================== DQL: 基本查询 ======================
+-- 1.查询指定字段 name,entry_date 并返回
+select name, entry_date from emp;
+
+-- 2.查询返回所有字段
+-- 方式二 (学习)
+select * from emp;
+
+
+-- 3.查询所有员工的 name,entry_date, 并起别名(姓名、入职日期)
+select name 姓名, entry_date 入职日期 from emp;
+
+-- 4.查询已有的员工关联了哪几种职位(不要重复) - distinct
+select distinct job 职位 from emp;
+</code></pre>
+<h5 id="DQL条件查询"><a href="#DQL条件查询" class="headerlink" title="DQL条件查询"></a>DQL条件查询</h5><table>
+<thead>
+<tr>
+<th><strong>比较运算符</strong></th>
+<th><strong>功能</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&gt;</td>
+<td>大于</td>
+</tr>
+<tr>
+<td>&gt;&#x3D;</td>
+<td>大于等于</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>小于</td>
+</tr>
+<tr>
+<td>&lt;&#x3D;</td>
+<td>小于等于</td>
+</tr>
+<tr>
+<td>&#x3D;</td>
+<td>等于</td>
+</tr>
+<tr>
+<td>&lt;&gt; 或 !&#x3D;</td>
+<td>不等于</td>
+</tr>
+<tr>
+<td>between<del>小范围</del> …  and …<del>大范围</del></td>
+<td>在某个范围之内(含最小、最大值)</td>
+</tr>
+<tr>
+<td>in(…)</td>
+<td>在in之后的列表中的值，多选一</td>
+</tr>
+<tr>
+<td>like 占位符</td>
+<td>模糊匹配(_匹配单个字符, %匹配任意个字符)</td>
+</tr>
+<tr>
+<td>is null</td>
+<td>是null</td>
+</tr>
+<tr>
+<td>and 或 &amp;&amp;</td>
+<td>并且 (多个条件同时成立)</td>
+</tr>
+<tr>
+<td>or 或 ||</td>
+<td>或者 (多个条件任意一个成立)</td>
+</tr>
+<tr>
+<td>not 或 !</td>
+<td>非 , 不是</td>
+</tr>
+</tbody></table>
+<pre><code class="sql">--  =================== DQL: 条件查询 ======================
+-- 1.查询 姓名 为 柴进 的员工
+select * from emp where name = &#39;柴进&#39;;
+
+-- 2.查询 薪资小于等于5000 的员工信息
+select * from emp where salary &lt;= 5000;
+
+-- 3.查询 没有分配职位 的员工信息
+select * from emp where job is null;
+
+-- 4.查询 有职位 的员工信息
+select * from emp where job is not null;
+
+-- 5.查询 密码不等于 &#39;123456&#39; 的员工信息
+select * from emp where password &lt;&gt; &#39;123456&#39;;
+
+-- 6.查询 入职日期 在 &#39;2000-01-01&#39; (包含) 到 &#39;2010-01-01&#39;(包含) 之间的员工信息
+select * from emp where entry_date between &#39;2000-01-01&#39; and &#39;2010-01-01&#39;;
+select * from emp where entry_date &gt;= &#39;2000-01-01&#39; and entry_date &lt;= &#39;2010-01-01&#39;;
+
+-- 7.查询 入职时间 在 &#39;2000-01-01&#39; (包含) 到 &#39;2010-01-01&#39;(包含) 之间 且 性别为女 的员工信息
+select * from emp where entry_date between &#39;2000-01-01&#39; and &#39;2010-01-01&#39; and gender = 2;
+
+-- 8.查询 职位是 2 (讲师), 3 (学工主管), 4 (教研主管) 的员工信息
+-- 方式一
+select * from emp where job = 2 or job = 3 or job = 4;
+-- 方式二
+select * from emp where job in (2,3,4);
+
+
+-- 9.查询 姓名 为两个字的员工信息 -like
+select * from emp where name like &#39;__&#39;;
+
+
+-- 10.查询 姓 &#39;李&#39; 的员工信息
+select * from emp where name like &#39;%李%&#39;;
+
+-- 11.查询 姓名中包含 &#39;二&#39; 的员工信息
+select * from emp where name like &#39;%二%&#39;;
+</code></pre>
+<h5 id="DQL-分组查询"><a href="#DQL-分组查询" class="headerlink" title="DQL: 分组查询"></a>DQL: 分组查询</h5><ul>
+<li>聚合函数：将一列数据作为一个整体，进行纵向计算</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>函数</strong></th>
+<th><strong>功能</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>count</td>
+<td>统计数量</td>
+</tr>
+<tr>
+<td>max</td>
+<td>最大值</td>
+</tr>
+<tr>
+<td>min</td>
+<td>最小值</td>
+</tr>
+<tr>
+<td>avg</td>
+<td>平均值</td>
+</tr>
+<tr>
+<td>sum</td>
+<td>求和</td>
+</tr>
+</tbody></table>
+<pre><code class="mysql">--  =================== DQL: 分组查询 ======================
+-- 聚合函数
+-- 1.统计该企业员工数量 - count : count(*) ~ count(常量) &gt; count(字段)
+-- count(字段)
+select count(name) from emp;
+select count(salary) from emp; -- NULL不参与
+
+-- count(*)
+select count(*) from emp;
+
+-- count(常量)
+select count(1) from emp;
+
+-- 2.统计该企业员工的平均薪资
+select avg(salary) from emp;
+
+-- 3.统计该企业员工的最低薪资
+select min(salary) from emp;
+
+-- 4.统计该企业员工的最高薪资
+select max(salary) from emp;
+
+-- 5.统计该企业每月要给员工发放的薪资总额(薪资之和)
+select sum(salary) from emp;
+</code></pre>
+<h5 id="DQL-分组查询-1"><a href="#DQL-分组查询-1" class="headerlink" title="DQL-分组查询"></a>DQL-分组查询</h5><blockquote>
+<p><strong>select</strong> 字段列表 <strong>from</strong> 表名 [<strong>where</strong> 条件列表] <strong>group by</strong> 分组字段名 [<strong>having</strong> 分组后过滤条件];<br>where是分组前的函数<br>having是fen’zu</p>
+</blockquote>
+<h6 id="where与having的区别：where在分组前过滤，having在分组后过滤"><a href="#where与having的区别：where在分组前过滤，having在分组后过滤" class="headerlink" title="where与having的区别：where在分组前过滤，having在分组后过滤"></a><strong>where与having的区别</strong>：<del>where在分组前过滤，having在分组后过滤</del></h6><p>1.<strong>执行时机不同</strong>：<span style = "color:red">where是分组之前进行过滤，不满足where条件，不参与分组；而having是分组之后对结果进行过滤。</span><br>2.<strong>判断条件不同</strong>：<span style = "color:red"><strong>where不能对聚合函数进行判断</strong><del>后面不能有聚合函数</del>，而<code>having</code>可以。</span></p>
 
     </div>
 
