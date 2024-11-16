@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#ffa2c4>
+                <a href="/tags/HM" style=color:#00bcd4>
                     HM
                 </a>
             </span>
@@ -7265,9 +7265,226 @@ select max(salary) from emp;
 select sum(salary) from emp;
 </code></pre>
 <h5 id="DQL-分组查询-1"><a href="#DQL-分组查询-1" class="headerlink" title="DQL-分组查询"></a>DQL-分组查询</h5><blockquote>
-<p><strong>select</strong> 字段列表 <strong>from</strong> 表名 [<strong>where</strong> 条件列表] <strong>group by</strong> 分组字段名 [<strong>having</strong> 分组后过滤条件];<br>where是分组前的函数<br>having是fen’zu</p>
+<p><strong>select</strong> 字段列表 <strong>from</strong> 表名 [<strong>where</strong> 条件列表] <strong>group by</strong> 分组字段名 [<strong>having</strong> 分组后过滤条件];<br>where是分组前的函数<br>having是分组后的函数</p>
 </blockquote>
 <h6 id="where与having的区别：where在分组前过滤，having在分组后过滤"><a href="#where与having的区别：where在分组前过滤，having在分组后过滤" class="headerlink" title="where与having的区别：where在分组前过滤，having在分组后过滤"></a><strong>where与having的区别</strong>：<del>where在分组前过滤，having在分组后过滤</del></h6><p>1.<strong>执行时机不同</strong>：<span style = "color:red">where是分组之前进行过滤，不满足where条件，不参与分组；而having是分组之后对结果进行过滤。</span><br>2.<strong>判断条件不同</strong>：<span style = "color:red"><strong>where不能对聚合函数进行判断</strong><del>后面不能有聚合函数</del>，而<code>having</code>可以。</span></p>
+<h5 id="DQL-分页查询"><a href="#DQL-分页查询" class="headerlink" title="DQL-分页查询"></a>DQL-分页查询</h5><ul>
+<li><strong>排序查询</strong></li>
+</ul>
+<blockquote>
+<p><strong>select</strong> 字段 <strong>from</strong> 表名 [<strong>where</strong> 条件] [<strong>group by</strong> 分组字段 <strong>having</strong> 过滤条件] [<strong>order by</strong> 排序字段] <strong>limit</strong> 起始索引,查询记录数;</p>
+</blockquote>
+<pre><code class="mysql">--  =================== 分页查询 ======================
+-- 1.从起始索引0开始查询员工数据, 每页展示5条记录
+select * from emp limit 0,5;
+select * from emp limit 5;
+
+
+-- 2.查询 第1页 员工数据, 每页展示5条记录
+select * from emp limit 5,5;
+
+
+-- 3.查询 第2页 员工数据, 每页展示5条记录
+select * from emp limit 10,5;
+
+
+-- 4.查询 第3页 员工数据, 每页展示5条记录
+select * from emp limit 15,5;
+</code></pre>
+<h3 id="MyBatis"><a href="#MyBatis" class="headerlink" title="MyBatis"></a>MyBatis</h3><pre><code class="java">spring.application.name=day17-springboot-mybatis-quickstart
+spring.datasource.url=jdbc:mysql://localhost:3306/test
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=root
+
+// 更好的学习mybatis
+mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
+</code></pre>
+<pre><code class="java">com/itheima/mapper/UserMapper.java
+package com.itheima.mapper;
+
+import com.itheima.pojo.User;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
+
+@Mapper
+public interface UserMapper &#123;
+    @Select(&quot;select * from user&quot;)
+    public List&lt;User&gt; findAll();
+
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+// SpringBoot的启动类
+// 注意: 我们写的代码要在启动类的包或者子包中
+@SpringBootApplication
+@MapperScan(&quot;com.itheima.mapper&quot;)
+public class Day17SpringbootMyBatisQuickstartApplication &#123;
+    // 启动项目, 内嵌的Tomcat会启动, 把项目部署到这个内嵌Tomcat中
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Day17SpringbootMyBatisQuickstartApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">Test/com/itheima/Day17SpringbootMyBatisQuickstartApplicationTests.java
+package com.itheima;
+
+import com.itheima.mapper.UserMapper;
+import com.itheima.pojo.User;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
+
+@SpringBootTest
+class Day17SpringbootMyBatisQuickstartApplicationTests &#123;
+    @Autowired
+    private UserMapper userMapper;
+    @Test
+    public void testFindAll()&#123;
+        List&lt;User&gt; userList = userMapper.findAll();
+        for (User user : userList) &#123;
+            System.out.println(user);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;!-- 继承SpringBoot父工程 --&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;3.1.6&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+
+    &lt;!-- 当前项目的坐标 --&gt;
+    &lt;groupId&gt;com.itheima&lt;/groupId&gt;
+    &lt;artifactId&gt;day17-springboot-mybatis-quickstart&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- MySQL驱动 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;8.0.33&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- MyBatis依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;3.0.3&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- Lombok依赖 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="sql">create table user(
+    id int unsigned primary key auto_increment comment &#39;ID,主键&#39;,
+    username varchar(20) comment &#39;用户名&#39;,
+    password varchar(32) comment &#39;密码&#39;,
+    name varchar(10) comment &#39;姓名&#39;,
+    age tinyint unsigned comment &#39;年龄&#39;
+) comment &#39;用户表&#39;;
+
+insert into user(id, username, password, name, age)
+values (1, &#39;daqiao&#39;, &#39;123456&#39;, &#39;大乔&#39;, 22),
+       (2, &#39;xiaoqiao&#39;, &#39;123456&#39;, &#39;小乔&#39;, 18),
+       (3, &#39;diaochan&#39;, &#39;123456&#39;, &#39;貂蝉&#39;, 24),
+       (4, &#39;lvbu&#39;, &#39;123456&#39;, &#39;吕布&#39;, 28),
+       (5, &#39;zhaoyun&#39;, &#39;12345678&#39;, &#39;赵云&#39;, 27);
+</code></pre>
+<h3 id="数据库连接池"><a href="#数据库连接池" class="headerlink" title="数据库连接池"></a>数据库连接池</h3><ul>
+<li>数据库连接池是个容器，负责分配、管理数据库连接(Connection)。</li>
+<li>它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个。</li>
+<li>释放空闲时间超过最大空闲时间的连接，来避免因为没有释放连接而引起的数据库连接遗漏。</li>
+<li>优势：</li>
+</ul>
+<p>​    1.资源重用</p>
+<p>​    2.提升系统响应速度</p>
+<p>​    3.避免数据库连接遗漏</p>
+<h3 id="继续mybatis"><a href="#继续mybatis" class="headerlink" title="继续mybatis"></a>继续mybatis</h3><h5 id="记住在resources里面创建mapper的时候-创建包名一定要用-x3D-x3D-gt-com-itheima-mapper"><a href="#记住在resources里面创建mapper的时候-创建包名一定要用-x3D-x3D-gt-com-itheima-mapper" class="headerlink" title="记住在resources里面创建mapper的时候 创建包名一定要用/ &#x3D;&#x3D;&gt;com/itheima/mapper"></a>记住在resources里面创建mapper的时候 创建包名一定要用<code>/</code> &#x3D;&#x3D;&gt;<code>com/itheima/mapper</code></h5><ul>
+<li>XML映射文件的定义规则 ？<ul>
+<li>XML文件名称与Mapper接口名称一致，并且放置在相同包下（同包同名）。</li>
+<li>XML文件的namespace属性为Mapper接口全限定名一致。</li>
+<li>XML文件中sql语句的id与Mapper 接口中的方法名一致。</li>
+</ul>
+</li>
+</ul>
+<h4 id="Mybatis数据封装"><a href="#Mybatis数据封装" class="headerlink" title="Mybatis数据封装"></a>Mybatis数据封装</h4><ul>
+<li>实体类属性名 和 数据库表查询返回的字段名一致，mybatis会自动封装。</li>
+<li>如果实体类属性名 和 数据库表查询返回的字段名不一致，不能自动封装。</li>
+</ul>
+<p><strong>手动结果映射</strong>：通过 @Results及@Result 进行手动结果映射。</p>
+<pre><code class="java">// column：表中的字段名    property：类中的成员变量名
+@Results(&#123;
+    @Result(column = &quot;create_time&quot;, property = &quot;createTime&quot;),
+    @Result(column = &quot;update_time&quot;, property = &quot;updateTime&quot;)
+&#125;)
+@Select(&quot;select * from dept&quot;)
+public List&lt;Dept&gt; list();
+</code></pre>
+<p><strong>起别名</strong>：在SQL语句中，对不一样的列名起别名，别名和实体类属性名一样。</p>
+<pre><code class="java">@Select(&quot;select id, name, create_time createTime, update_time updateTime from dept&quot;)
+public List&lt;Dept&gt; list();
+</code></pre>
+<p><strong>开启驼峰命名</strong>：如果字段名与属性名符合驼峰命名规则，mybatis会自动通过驼峰命名规则映射。</p>
+<pre><code class="xml">mybatis.configuration.map-underscore-to-camel-case=true
+</code></pre>
+<h5 id="通过id查询一个部门"><a href="#通过id查询一个部门" class="headerlink" title="通过id查询一个部门"></a>通过id查询一个部门</h5><pre><code class="java">// #&#123;参数名&#125;：参数占位符 #&#123;&#125;
+ /**
+     * 通过id查询一个部门
+     * @param id
+     * @return
+     */
+    // #&#123;参数名&#125;：参数占位符，#&#123;&#125;
+    @Select(&quot;SELECT * FROM dept WHERE id = #&#123;id&#125;;&quot;)
+    public Dept findById(Integer id);
+</code></pre>
 
     </div>
 
