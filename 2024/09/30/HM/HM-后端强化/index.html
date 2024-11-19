@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#1bccbc>
+                <a href="/tags/HM" style=color:#ff7d73>
                     HM
                 </a>
             </span>
@@ -7484,6 +7484,194 @@ public List&lt;Dept&gt; list();
     // #&#123;参数名&#125;：参数占位符，#&#123;&#125;
     @Select(&quot;SELECT * FROM dept WHERE id = #&#123;id&#125;;&quot;)
     public Dept findById(Integer id);
+</code></pre>
+<h3 id="打通后端"><a href="#打通后端" class="headerlink" title="打通后端"></a>打通后端</h3><h5 id="Controller接收参数"><a href="#Controller接收参数" class="headerlink" title="Controller接收参数"></a>Controller接收参数</h5><p>方式一：通过原始的 HttpServletRequest 对象获取请求参数。<br>方式二：通过Spring提供的 @RequestParam 注解，将请求参数绑定给方法形参。<br>方式三：如果请求参数名与形参变量名相同，直接定义方法形参即可接收。（省略@RequestParam）<br><code>接收请求参数：DELETE  /depts?id=8</code></p>
+<pre><code class="java">@DeleteMapping(&quot;/depts&quot;)
+public Result delete(@RequestParam(&quot;id&quot;) Integer id)&#123;
+    System.out.println(&quot;根据ID删除部门: &quot; + id);
+    return Result.success();
+&#125;
+</code></pre>
+<blockquote>
+<p>@RequestParam注解required属性默认为true，代表该参数必须传递，如果不传递将报错。 如果参数可选，可以将属性设置为false。</p>
+</blockquote>
+<h6 id="Mybaatis中-与-的区别是什么"><a href="#Mybaatis中-与-的区别是什么" class="headerlink" title="Mybaatis中#与$的区别是什么"></a>Mybaatis中#与$的区别是什么</h6><ul>
+<li><code>#</code> 是占位符，会替换为？生成预编译SQL</li>
+<li><code>$</code> 是字符串拼接符号，将参数值直接拼接在SQL中</li>
+</ul>
+<h6 id="如何接收路径参数-？"><a href="#如何接收路径参数-？" class="headerlink" title="如何接收路径参数 ？"></a>如何接收路径参数 ？</h6><p>@PathVariable 注解来声明获取的是路径参数</p>
+<h6 id="在url中是否可以携带多个路径参数呢-，如：-x2F-depts-x2F-1-x2F-0"><a href="#在url中是否可以携带多个路径参数呢-，如：-x2F-depts-x2F-1-x2F-0" class="headerlink" title="在url中是否可以携带多个路径参数呢 ，如：&#x2F;depts&#x2F;1&#x2F;0"></a>在url中是否可以携带多个路径参数呢 ，如：&#x2F;depts&#x2F;1&#x2F;0</h6><p>可以，接收方式如下</p>
+<pre><code class="java">@GetMapping(&quot;/depts/&#123;id&#125;/&#123;sta&#125;&quot;)
+public Result getInfo(@PathVariable Integer id, @PathVariable Integer sta)&#123;
+    //...
+&#125;
+</code></pre>
+<h5 id="外键约束"><a href="#外键约束" class="headerlink" title="外键约束"></a>外键约束</h5><ul>
+<li>可以在创建表时 或 表结构创建完成后，为字段添加外键约束。 具体语法如下：</li>
+</ul>
+<pre><code class="sql">-- 创建表时指定
+create table 表名(
+    字段名 数据类型,
+    ...
+    [constraint] [外键名称] foreign key (外键字段名) references 主表 (字段名)    
+);
+
+////////////////////////////////////////////////////////////
+
+-- 建完表后，添加外键
+alter table 表名 add constraint 外键名称 foreign key (外键字段名) references 主表(字段名);
+</code></pre>
+<h6 id="物理外键"><a href="#物理外键" class="headerlink" title="物理外键"></a>物理外键</h6><blockquote>
+<p>概念：使用 foreign key 定义外键关联另外一张表。</p>
+<p>缺点：</p>
+<p>1.影响增、删、改的效率（需要检查外键关系）。</p>
+<p>2.仅用于单节点数据库，不适用与分布式、集群场景。</p>
+<p>3.容易引发数据库的死锁问题，消耗性能。</p>
+</blockquote>
+<h6 id="逻辑外键"><a href="#逻辑外键" class="headerlink" title="逻辑外键"></a>逻辑外键</h6><blockquote>
+<p>概念：在业务层逻辑中，解决外键关联。<br>通过逻辑外键，就可以很方便的解决上述问题。</p>
+</blockquote>
+<h6 id="一对一"><a href="#一对一" class="headerlink" title="一对一"></a>一对一</h6><ul>
+<li>案例: 用户 与 身份证信息 的关系</li>
+<li>关系: 一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他字段放在另一张表中，以提升操作效率</li>
+<li>实现: <strong>在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的(UNIQUE)</strong></li>
+</ul>
+<h3 id="多表关系"><a href="#多表关系" class="headerlink" title="多表关系"></a>多表关系</h3><p>双向的一对多就是多对多</p>
+<ul>
+<li>案例: 学生 与 课程的关系</li>
+<li>关系: 一个学生可以选修多门课程，一门课程也可以供多个学生选择</li>
+<li>实现: <strong>建立第三张中间表，中间表至少包含两个外键，分别关联两方主键</strong></li>
+</ul>
+<blockquote>
+<p>黛绮丝选择了Java，PHP，MySQL<br>谢逊选择了Java，Hadoop</p>
+<p>怎么搞？建立一张中间表tb_student_course</p>
+</blockquote>
+<h6 id="tb-student"><a href="#tb-student" class="headerlink" title="tb_student"></a>tb_student</h6><table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>黛绮丝</td>
+</tr>
+<tr>
+<td>2</td>
+<td>谢逊</td>
+</tr>
+</tbody></table>
+<h6 id="tb-course"><a href="#tb-course" class="headerlink" title="tb_course"></a>tb_course</h6><table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Java</td>
+</tr>
+<tr>
+<td>2</td>
+<td>PHP</td>
+</tr>
+<tr>
+<td>3</td>
+<td>MySQL</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Hadoop</td>
+</tr>
+</tbody></table>
+<h6 id="tb-student-course"><a href="#tb-student-course" class="headerlink" title="tb_student_course"></a><span style = "color:red">tb_student_course</span></h6><table>
+<thead>
+<tr>
+<th>id</th>
+<th>studentid</th>
+<th>courseid</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2</td>
+<td>1</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2</td>
+<td>4</td>
+</tr>
+</tbody></table>
+<h3 id="多表查询"><a href="#多表查询" class="headerlink" title="多表查询"></a>多表查询</h3><ul>
+<li>多表查询: 指从多张表中查询数据</li>
+<li>笛卡尔积: 笛卡尔乘积是指在数学中，两个集合(A集合 和 B集合)的所有组合情况。<br>(<strong><u>在多表查询时，需要消除无效的笛卡尔积</u></strong>) &#x3D;&gt; 称为<strong>表连接条件</strong></li>
+</ul>
+<pre><code class="sql"># 多表查询时多张表的数据会相乘，要找到有用的数据，通常是从表的外键值 = 主表的主键值
+select * from emp, dept where dept_id = dept.id;
+</code></pre>
+<ul>
+<li>连接查询</li>
+</ul>
+<p>​    Ø 内连接：相当于查询A、B交集部分数据</p>
+<p>​    Ø 外连接</p>
+<p>​       左外连接：查询左表所有数据(包括两张表交集部分数据)</p>
+<p>​       右外连接：查询右表所有数据(包括两张表交集部分数据)</p>
+<ul>
+<li>子查询</li>
+</ul>
+<h3 id="内连接"><a href="#内连接" class="headerlink" title="内连接"></a>内连接</h3><ul>
+<li>内连接查询的是两张表交集部分的数据。</li>
+</ul>
+<pre><code class="mysql">-- 1.隐式内连接 (常见)
+select 字段列表 from 表1 , 表2 where 连接条件 ...;
+
+# 查询所有员工的ID，姓名，及所属部门名称（隐式、显式内连接实现）
+select emp.id, emp.name, dept.name from emp, dept where emp.dept_id = dept.id;
+
+-- ★★★ 2.显式内连接 ★★★
+select 字段列表 from 表1 [inner] join 表2 on 连接条件 ... ;
+
+# 查询所有员工的ID，姓名，及所属部门名称（隐式、显式内连接实现）
+select emp.id, emp.name, dept.name from emp inner join dept on emp.dept_id = dept.id
+# 可以给表取别名后续只能使用别名，原始的表名将失效
+select e.id, e.name, d.name from emp e inner join dept d on e.dept_id = d.id
+
+# 查询 性别为男，且工资高于8000的员工ID，姓名，及所属部门的名称（隐+显） 【on里面放表连接条件 where是其他条件】
+select e.id 序号, e.name 姓名,d.name 部门名,e.salary 工资 from emp e inner join dept d on e.dept_id = d.id where salary &gt;= 8000 and gender = 1
+
+-- 1.给表起别名,来简化书写
+select 字段列表 from 表1 as 别名1, 表2 as 别名2 where 条件 ...;
+</code></pre>
+<h3 id="外链接不满足的也能要"><a href="#外链接不满足的也能要" class="headerlink" title="外链接不满足的也能要"></a>外链接<del>不满足的也能要</del></h3><ul>
+<li>外连接分为左外连接和右外连接。具体语法为：</li>
+</ul>
+<pre><code class="mysql">-- 1.左外连接 (常见)
+select 字段列表 from 表1 left [outer] join 表2 on 连接条件 ...;
+
+-- 2.右外连接
+select 字段列表 from 表1 right [outer] join 表2 on 连接条件 ...;
+
+# 查询员工表 所有 员工的姓名，和对应的部门名称（左外连接） 
+-- 左外链接：左表不满足的也显示
+select emp.name, dept.name from emp left outer join dept on emp.dept_id = dept_id;
 </code></pre>
 
     </div>

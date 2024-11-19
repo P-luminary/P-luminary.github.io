@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -2665,7 +2665,152 @@ public TableDataInfo list(Node node)
   &lt;/el-table-column&gt;
 &lt;/el-table&gt;
 </code></pre>
-<p>14</p>
+<h3 id="区域管理改造-地区详情新增查看详情"><a href="#区域管理改造-地区详情新增查看详情" class="headerlink" title="区域管理改造-地区详情新增查看详情"></a>区域管理改造-地区详情<del>新增查看详情</del></h3><pre><code class="html">src\views\manage\region\index.vue
+&lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot; class-name=&quot;small-padding fixed-width&quot;&gt;
+        &lt;template #default=&quot;scope&quot;&gt;
+          &lt;el-button link type=&quot;primary&quot;  @click=&quot;getRegionInfo(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:region:list&#39;]&quot;&gt;查看详情&lt;/el-button&gt;
+          &lt;el-button link type=&quot;primary&quot;  @click=&quot;handleUpdate(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:region:edit&#39;]&quot;&gt;修改&lt;/el-button&gt;
+          &lt;el-button link type=&quot;primary&quot;  @click=&quot;handleDelete(scope.row)&quot; v-hasPermi=&quot;[&#39;manage:region:remove&#39;]&quot;&gt;删除&lt;/el-button&gt;
+        &lt;/template&gt;
+      &lt;/el-table-column&gt;
+
+&lt;!-- 
+template 插槽：
+#default=&quot;scope&quot;：定义默认插槽，scope 是当前行的数据对象。
+
+@click=&quot;getRegionInfo(scope.row)&quot;：点击按钮时调用 getRegionInfo 函数，并传入当前行的数据。
+--&gt;
+
+...
+...
+
+/* 查看详情操作按钮 */
+function getRegionInfo(row) &#123;
+  // 查询区域信息
+  reset();
+  const _id = row.id
+  getRegion(_id).then(response =&gt; &#123;
+    form.value = response.data
+  &#125;);
+&#125;
+
+&lt;!-- 
+nodeList 变量：
+
+const nodeList = ref([])：定义一个响应式数组 nodeList，用于存储点位列表。
+getRegionInfo 函数：
+
+reset()：调用 reset 函数，可能用于重置表单或其他状态。
+const _id = row.id：获取当前行的 id。
+getRegion(_id).then(response =&gt; &#123; form.value = response.data &#125;)：调用 getRegion 函数查询区域信息，并将返回的数据赋值给 form.value。
+loadAllParams.regionId = row.id：设置 loadAllParams 对象的 regionId 属性为当前行的 id。
+listNode(loadAllParams).then(response =&gt; &#123; nodeList.value = response.rows &#125;)：调用 listNode 函数查询点位列表，并将返回的行数据赋值给 nodeList.value。
+--&gt;
+</code></pre>
+<h5 id="区域管理里引入点位的api文件"><a href="#区域管理里引入点位的api文件" class="headerlink" title="区域管理里引入点位的api文件"></a>区域管理里引入点位的api文件</h5><pre><code class="js">import &#123; listNode &#125; from &quot;@/api/manage/node&quot;;
+import &#123; loadAllParams &#125; from &quot;@/api/page&quot;;
+...
+/* 查看详情操作按钮 */
+const nodeList = ref([]);
+function getRegionInfo(row) &#123;
+  // 查询区域信息
+  reset();
+  const _id = row.id
+  getRegion(_id).then(response =&gt; &#123;
+    form.value = response.data
+  &#125;);
+  // 查看点位列表
+  loadAllParams.regionId=row_id
+  listNode(loadAllParams).then(response =&gt; &#123;
+    nodeList.value = response.rows;
+  &#125;);
+&#125;
+</code></pre>
+<h6 id="添加区域管理对话框"><a href="#添加区域管理对话框" class="headerlink" title="添加区域管理对话框"></a>添加区域管理对话框</h6><pre><code class="html"> &lt;!-- 添加或修改区域管理对话框 --&gt;
+    &lt;el-dialog :title=&quot;title&quot; v-model=&quot;open&quot; width=&quot;500px&quot; append-to-body&gt;
+      &lt;el-form ref=&quot;regionRef&quot; :model=&quot;form&quot; :rules=&quot;rules&quot; label-width=&quot;80px&quot;&gt;
+        &lt;el-form-item label=&quot;区域名称&quot; prop=&quot;regionName&quot;&gt;
+          &lt;el-input v-model=&quot;form.regionName&quot; placeholder=&quot;请输入区域名称&quot; /&gt;
+        &lt;/el-form-item&gt;
+        &lt;el-form-item label=&quot;备注说明&quot; prop=&quot;remark&quot;&gt;
+          &lt;el-input v-model=&quot;form.remark&quot; type=&quot;textarea&quot; placeholder=&quot;请输入内容&quot; /&gt;
+        &lt;/el-form-item&gt;
+      &lt;/el-form&gt;
+      &lt;template #footer&gt;
+        &lt;div class=&quot;dialog-footer&quot;&gt;
+          &lt;el-button type=&quot;primary&quot; @click=&quot;submitForm&quot;&gt;确 定&lt;/el-button&gt;
+          &lt;el-button @click=&quot;cancel&quot;&gt;取 消&lt;/el-button&gt;
+        &lt;/div&gt;
+      &lt;/template&gt;
+    &lt;/el-dialog&gt;
+   &lt;!-- 查看详情对话框 --&gt;
+&lt;el-dialog title=&quot;区域详情&quot; v-model=&quot;regionInfoOpen&quot; width=&quot;500px&quot; append-to-body&gt;
+    &lt;el-form-item label=&quot;区域名称&quot; prop=&quot;regionName&quot;&gt;
+        &lt;el-input v-model=&quot;form.regionName&quot; disabled /&gt;
+    &lt;/el-form-item&gt;
+    &lt;label&gt;包含点位：&lt;/label&gt;
+    &lt;el-table :data=&quot;nodeList&quot;&gt;
+        &lt;el-table-column label=&quot;序号&quot; type=&quot;index&quot; width=&quot;50&quot; align=&quot;center&quot; /&gt;
+        &lt;el-table-column label=&quot;点位名称&quot; align=&quot;center&quot; prop=&quot;nodeName&quot; /&gt;
+        &lt;el-table-column label=&quot;设备数量&quot; align=&quot;center&quot; prop=&quot;vmCount&quot; /&gt;
+    &lt;/el-table&gt;
+&lt;/el-dialog&gt;
+</code></pre>
+<pre><code class="js">/* 查看详情操作按钮 */
+const nodeList = ref([]);
+const regionInfoOpen=ref(false);
+function getRegionInfo(row) &#123;
+  // 查询区域信息
+  reset();
+  const _id = row.id
+  getRegion(_id).then(response =&gt; &#123;
+    form.value = response.data
+  &#125;);
+  // 查看点位列表
+  loadAllParams.regionId=row_id
+  listNode(loadAllParams).then(response =&gt; &#123;
+    nodeList.value = response.rows;
+  &#125;);
+  regionInfoOpen.value=true;
+&#125;
+</code></pre>
+<h5 id="数据完整性"><a href="#数据完整性" class="headerlink" title="数据完整性"></a>数据完整性</h5><ul>
+<li>在删除区域或合作商数据时，关联的点位数据该如何处理？</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/05e49c8d5a61f85f41c20ded647d7f32c03ae296/%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7_%E5%AD%97%E6%AE%B5%E4%BE%9D%E8%B5%96.png"></p>
+<blockquote>
+<p>tb_region(区域表)                     tb_node(点位表)                       tb_partner(合作商表)<br>id           ←region_id:id ←        region_id                                                  id<br>                                                    partner_id             partner_id:id →→→↑     </p>
+</blockquote>
+<p>找到设置外键约束<del>(取消约束)</del><code>dkd → tb_node → Modify Table(old)</code> 找到<code>Foreign Keys</code>  双击打开后将<u>Update rule</u>和<u>Delete rule</u>修改为：<strong>no action</strong></p>
+<blockquote>
+<p>**CASCADE（级联操作）:**当父表中的某行记录被删除或更新时，与其关联的所有子表中的匹配行也会自动被删除或更新。这种方式适用于希望保持数据一致性的场景，即父记录不存在时，相关的子记录也应该被移除。</p>
+<p>**SET NULL（设为空）:**若父表中的记录被删除或更新，子表中对应的外键字段会被设置为NULL。选择此选项的前提是子表的外键列允许为NULL值。这适用于那些子记录不再需要明确关联到任何父记录的情况。</p>
+<p>**RESTRICT（限制）:**在尝试删除或更新父表中的记录之前，数据库首先检查是否有相关联的子记录存在。如果有，则拒绝执行删除或更新操作，以防止意外丢失数据或破坏数据关系的完整性。这是一种保守策略，确保数据间的引用完整性。</p>
+<p>**NO ACTION（无操作）:**在标准SQL中，NO ACTION是一个关键字，它要求数据库在父表记录被删除或更新前，检查是否会影响子表中的相关记录。在MySQL中，NO ACTION的行为与RESTRICT相同，即如果子表中有匹配的行，则禁止执行父表的删除或更新操作。这意味着如果存在依赖关系，操作将被阻止，从而保护数据的参照完整性。</p>
+</blockquote>
+<p>修改完毕后，如果你尝试进行删除操作，会发现数据库的完整性约束生效了，它会阻止删除操作并给出错误提示。但是，这个错误提示信息可能对于用户来说不够友好，可能会让用户感到困惑。</p>
+<p><code>SQLIntegrityConstraintViolationException</code>是Java中的一个异常类，这个类通常用于表示SQL数据库操作中的完整性约束违反异常</p>
+<p>例如：外键约束、唯一约束等。当数据库操作违反了这些约束时，就会抛出这个异常。</p>
+<p>这个错误是由于外键约束导致的。它表明在删除或更新父表的行时，存在外键约束，子表中的相关行会受到影响。</p>
+<p>是因为在删除tb_region表中的行时，tb_node表中的region_id外键约束会阻止操作。</p>
+<p>如果你在使用Spring框架进行数据库操作，可能会先遇到DataIntegrityViolationException，它是对SQLIntegrityConstraintViolationException的一个更高层次的抽象，旨在提供一种更加面向应用的错误表示。</p>
+<p>而SQLIntegrityConstraintViolationException是更底层的异常，直接来源于数据库驱动，包含更多底层数据库相关的细节。</p>
+<p>在实际开发中，推荐捕获并处理DataIntegrityViolationException，因为它更符合Spring应用的异常处理模式，同时也可以通过其内部的cause（原因）属性来获取具体的SQLIntegrityConstraintViolationException，进而获取详细的错误信息。</p>
+<p>为了提升用户体验，我们可以使用Spring Boot框架的全局异常处理器来捕获这些错误信息，并返回更友好的提示信息给用户。这样，当用户遇到这种情况时，他们将收到一个清晰、易懂的提示，告知他们操作无法完成的原因。</p>
+<pre><code class="java">com/dkd/framework/web/exception/GlobalExceptionHandler.java
+/**
+     * 数据完整性异常
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public AjaxResult handleDataIntegrityViolationException(DataIntegrityViolationException e) &#123;
+        log.error(e.getMessage(), e);
+        if (e.getMessage().contains(&quot;foreign&quot;)) &#123;
+            return AjaxResult.error(&quot;无法删除该数据，有其他数据引用&quot;);
+        &#125;
+        return AjaxResult.error(&quot;数据完整性异常，请联系管理员&quot;);
+    &#125;
+</code></pre>
+<p>16</p>
 
     </div>
 

@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ffa2c4>
+                <a href="/tags/面试" style=color:#00bcd4>
                     面试
                 </a>
             </span>
@@ -2056,6 +2056,73 @@ public @interface EnableAutoConfiguration &#123;
 <li>合适的才是最好的</li>
 </ul>
 <p><img src="https://github.com/P-luminary/images/blob/master/data/CAP%E5%AE%9A%E7%90%86.jpg?raw=true"></p>
+<p><span style = "color:red"><strong>你们采用哪种分布式事务解决方案？</strong></span></p>
+<blockquote>
+<p>● 简历上写的微服务，只要是发生了多个服务之间的<strong>写操作</strong>，都需要进行分布式事务控制</p>
+<p>● 描述项目中采用的哪种方案(seataMQ)<br>⚪ seata的XA模式，CP，需要互相等待各个分支事务提交，可以保证强一致性，性能差 (<span style = "color:red"><strong>银行业务</strong></span> )<br>⚪ seata的AT模式，AP，底层使用undolog 实现，性能好 (<span style = "color:red"><strong>互联网业务</strong></span> )<br>⚪ seata的TCC模式，AP，性能较好，不过需要人工编码实现 (<span style = "color:red"><strong>银行业务</strong></span> )<br>⚪ MQ模式实现分布式事务，在A服务写数据的时候，需要在同一个事务内发送消息到另外一个事务异步，性能最好 (<span style = "color:red"><strong>互联网业务</strong></span> )</p>
+</blockquote>
+<ul>
+<li>Seata框架(XA、AT、TCC)</li>
+<li>MQ</li>
+</ul>
+<h5 id="Seata架构"><a href="#Seata架构" class="headerlink" title="Seata架构"></a>Seata架构</h5><ul>
+<li><strong>TC</strong>(Transaction Coordinator) - <strong>事务协调者</strong>：维护全局和分支事务的状态，协调全局事务提交或回滚</li>
+<li><strong>TM</strong>(Transaction Manager) - <strong>事务管理器</strong>：定义全局事务的范围、开启全局事务、提交或回滚全局事务</li>
+<li><strong>RM</strong>(Resource Manager) - <strong>资源管理器</strong>：管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/30dd6983ec4340d3f3f4118f3d5ccf89e4199555/XA%2CAT%2CTCC.png"></p>
+<p><span style = "color:red"><strong>分布式服务的<u>接口幂等性</u>如何设计？</strong></span></p>
+<blockquote>
+<ul>
+<li>幕等: 多次调用方法或者接口不务状态，可以<strong>保证重复调用的结果和单次调用的结果一致</strong></li>
+<li>如果是**<u>新增数据</u>**，可以使用数据库的唯一索引</li>
+<li>如果是**<u>新增或修改数据</u>**<ul>
+<li>分布式锁，性能较低</li>
+<li>使用token+redis来实现，性能较好<br>●  第一次请求，生成一个唯一token存入redis，返回给前端<br>●  第二次请求，业务处理，携带之前的token，到redis进行验证，如果存在，可以执行业务，删除token; 如果不存在，则直接返回，不处理业务</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><strong>幂等</strong>：<u>多次调用方法或者接口不会改变业务状态，可以保证重复调用的结果和单次调用的结果一致</u></p>
+<h6 id="需要幂等场景"><a href="#需要幂等场景" class="headerlink" title="需要幂等场景"></a>需要幂等场景</h6><ul>
+<li>用户重复点击(网络波动)</li>
+<li>MQ消息重复</li>
+<li>应用使用失败或超时</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>请求方式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td>查询操作，天然幂等</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>新增操作，请求一次与请求多次造成的结果不同，<strong>不是幂等的</strong></td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>更新操作，如果是以绝对值更新，则是幂等的。如果是通过增量的方式更新，则<strong>不是幂等的</strong></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>删除操作，根据唯一值删除，是幂等的</td>
+</tr>
+</tbody></table>
+<pre><code class="mysql">update a set money = 500 where id = 1 【幂等】
+update a set money = money + 500 where id = 1; 【非幂等】
+</code></pre>
+<ul>
+<li><p><strong>数据库唯一索引</strong>【新增】</p>
+</li>
+<li><p><strong>&#x3D;&#x3D;token + redis&#x3D;&#x3D;</strong> 【新增+修改】**<u>AND</u>**  <strong>&#x3D;&#x3D;分布式锁&#x3D;&#x3D;</strong> 【新增+修改】</p>
+<h6 id="创建商品、提交订单、转账、支付等操作"><a href="#创建商品、提交订单、转账、支付等操作" class="headerlink" title="创建商品、提交订单、转账、支付等操作"></a>创建商品、提交订单、转账、支付等操作</h6></li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/58b8b5385bf3e40c1661e824f613b15f57686549/token+redis%20AND%20%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.png" style="zoom:200%;" />
 
     </div>
 
