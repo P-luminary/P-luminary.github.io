@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#ff7d73>
+                <a href="/tags/HM" style=color:#ffa2c4>
                     HM
                 </a>
             </span>
@@ -7672,6 +7672,299 @@ select 字段列表 from 表1 right [outer] join 表2 on 连接条件 ...;
 # 查询员工表 所有 员工的姓名，和对应的部门名称（左外连接） 
 -- 左外链接：左表不满足的也显示
 select emp.name, dept.name from emp left outer join dept on emp.dept_id = dept_id;
+</code></pre>
+<h3 id="Transactional"><a href="#Transactional" class="headerlink" title="@Transactional"></a>@Transactional</h3><h6 id="属性-rollbackFor"><a href="#属性-rollbackFor" class="headerlink" title="属性-rollbackFor"></a>属性-rollbackFor</h6><ul>
+<li>默认情况下，只有出现 RuntimeException 才回滚异常。</li>
+<li>rollbackFor属性用于控制出现何种异常类型，回滚事务。</li>
+</ul>
+<h6 id="属性-propagation"><a href="#属性-propagation" class="headerlink" title="属性-propagation"></a>属性-propagation</h6><ul>
+<li>事务传播行为：指的就是当一个事务方法被另一个事务方法调用时，这个事务方法应该如何进行事务控制。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>属性值</strong></th>
+<th><strong>含义</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>REQUIRED</strong></td>
+<td>【默认值】需要事务，有则加入，无则创建新事务</td>
+</tr>
+<tr>
+<td><strong>REQUIRES_NEW</strong></td>
+<td>需要新事务，无论有无，总是创建新事务</td>
+</tr>
+<tr>
+<td>SUPPORTS</td>
+<td>支持事务，有则加入，无则在无事务状态中运行</td>
+</tr>
+<tr>
+<td>NOT_SUPPORTED</td>
+<td>不支持事务，在无事务状态下运行,如果当前存在已有事务,则挂起当前事务</td>
+</tr>
+<tr>
+<td>MANDATORY</td>
+<td>必须有事务，否则抛异常</td>
+</tr>
+<tr>
+<td>NEVER</td>
+<td>必须没事务，否则抛异常</td>
+</tr>
+</tbody></table>
+<pre><code class="java">// 表示所有异常都回滚
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void save(Emp emp) &#123;
+        try &#123;
+            // 补全字段
+            emp.setCreateTime(LocalDateTime.now());
+            emp.setUpdateTime(LocalDateTime.now());
+            empMapper.save(emp);
+
+            // 模拟异常
+            int i = 1 / 0;
+
+//            // 把新的员工id保存到EmpExpr员工经历对象中
+//            emp.getExprList().forEach(expr -&gt; expr.setEmpId(emp.getId()));
+
+            // 如果员工有经历就添加员工经历
+            if (emp.getExprList() != null &amp;&amp; emp.getExprList().size() &gt; 0) &#123;
+                // 把新的员工id保存到EmpExpr员工经历对象中
+                emp.getExprList().forEach(expr -&gt; expr.setEmpId(emp.getId()));
+                empExprMapper.insertBatch(emp.getExprList());
+            &#125;
+        &#125; finally &#123;
+            // 记录日志
+            EmpLog empLog = new EmpLog(null, LocalDateTime.now(),&quot;新增员工&quot; + emp);
+            empLogService.insertLog(empLog);
+        &#125;
+    &#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service.impl;
+
+import com.itheima.mapper.EmpLogMapper;
+import com.itheima.pojo.EmpLog;
+import com.itheima.service.EmpLogService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class EmpLogServiceImpl implements EmpLogService &#123;
+
+    @Autowired
+    private EmpLogMapper empLogMapper;
+    
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void insertLog(EmpLog empLog) &#123;
+        empLogMapper.insert(empLog);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="1-事务的传播行为控制的是什么"><a href="#1-事务的传播行为控制的是什么" class="headerlink" title="1.事务的传播行为控制的是什么 ?"></a>1.事务的传播行为控制的是什么 ?</h6><ul>
+<li>一个事务方法,调用另外一个事务方法时,事务应该如何控制(加入? 新建? …)</li>
+</ul>
+<h6 id="2-常见的传播行为及应用场景-？"><a href="#2-常见的传播行为及应用场景-？" class="headerlink" title="2.常见的传播行为及应用场景 ？"></a>2.常见的传播行为及应用场景 ？</h6><ul>
+<li>REQUIRED：大部分场景</li>
+<li>REQUIRES_NEW：希望两个方法在独立的事务中运行，互不影响</li>
+</ul>
+<h4 id="随机字符串"><a href="#随机字符串" class="headerlink" title="随机字符串"></a>随机字符串</h4><p><code>UUID.randomUUID()</code></p>
+<h6 id="在SpringBoot中，文件上传，默认单个文件允许最大大小为-1M。如果需要上传大文件，可以进行如下配置："><a href="#在SpringBoot中，文件上传，默认单个文件允许最大大小为-1M。如果需要上传大文件，可以进行如下配置：" class="headerlink" title="在SpringBoot中，文件上传，默认单个文件允许最大大小为 1M。如果需要上传大文件，可以进行如下配置："></a>在SpringBoot中，文件上传，默认单个文件允许最大大小为 1M。如果需要上传大文件，可以进行如下配置：</h6><pre><code class="mysql">#文件上传配置#配置单个文件最大上传大小
+spring.servlet.multipart.max-file-size=10MB
+
+#配置单个请求最大上传大小(一次请求可以上传多个文件)
+spring.servlet.multipart.max-request-size=100MB
+</code></pre>
+<h6 id="如何将上传的文件存储在服务器本地"><a href="#如何将上传的文件存储在服务器本地" class="headerlink" title="如何将上传的文件存储在服务器本地 ?"></a>如何将上传的文件存储在服务器本地 ?</h6><p><strong>MultipartFile</strong></p>
+<p>•transferTo(File dest): 将接收到的文件转存到磁盘文件中</p>
+<p>•getOriginalFilename(): 获取原始文件名</p>
+<p>•getSize(): 获取文件的大小，单位：字节</p>
+<p>•getBytes(): 获取文件内容的字节数组</p>
+<p>•getInputStream(): 获取接收到的文件内容的输入流</p>
+<h6 id="ConfigurationProperties"><a href="#ConfigurationProperties" class="headerlink" title="@ConfigurationProperties"></a>@ConfigurationProperties</h6><p>高级注解 比@Value好用</p>
+<pre><code class="js">aliyun:
+ oss:
+  endpoint: xxx
+  backetName: web2025
+</code></pre>
+<pre><code class="java">@Data
+@Component
+@ConfigurationProperties(prefix = &quot;aliyun.oss&quot;) //自动读取配置
+public class AliyunOSSProperties&#123;
+    private String endpoint;
+    private String bucketName;
+&#125;
+</code></pre>
+<pre><code class="xml">&lt;dependency&gt;    
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-configuration-processor&lt;/artifactId&gt;
+    &lt;optional&gt;true&lt;/optional&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h6 id="全局异常处理器"><a href="#全局异常处理器" class="headerlink" title="全局异常处理器"></a>全局异常处理器</h6><p><code>@RestControllerAdvice</code><br><code>@Exception</code></p>
+<pre><code class="java"> // @RequestParam代表这个ids参数一定要
+    @DeleteMapping
+    public Result delete(@RequestParam List&lt;Integer&gt; ids) &#123;
+//        int a = 10 / 0;
+        if (ids == null || ids.size() == 0) &#123;
+            // 创建异常
+            throw new DeleteIdNotNullException(&quot;删除ID不能为空&quot;);
+        &#125;
+        empService.delete(ids);
+        return Result.success();
+    &#125;
+</code></pre>
+<pre><code class="java">package com.itheima.exception;
+
+public class DeleteIdNotNullException extends RuntimeException&#123;
+    public DeleteIdNotNullException() &#123;
+    &#125;
+
+    public DeleteIdNotNullException(String message) &#123;
+        super(message);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="工作经历多层联合回显"><a href="#工作经历多层联合回显" class="headerlink" title="工作经历多层联合回显"></a>工作经历多层联合回显</h3><pre><code class="xml">&lt;!--  多条经历联合共回显  --&gt;
+    &lt;select id=&quot;getInfo&quot; resultMap=&quot;empMap&quot;&gt;
+        select emp.*, emp_expr.id ee_id, emp_expr.emp_id ee_emp_id, emp_expr.begin ee_begin, emp_expr.end ee_end, emp_expr.company ee_company, emp_expr.job ee_job
+        from emp
+            left outer join emp_expr
+                on emp.id = emp_expr.emp_id
+        where emp.id = #&#123;id&#125;;
+    &lt;/select&gt;
+&lt;!--
+resultMap标签：处理查询的返回值类型，通常是多表查询，需要通过resultMap来映射多个表，告诉mybatis如何把查询的结果映射到java对象中
+id属性：唯一标识
+type属性：查询的数据要封装的对象
+
+id标签：指定主键的对应关系
+column属性：数据库表中的字段名
+property属性：对象中的属性名/成员变量名
+
+--&gt;
+    &lt;resultMap id=&quot;empMap&quot; type=&quot;com.itheima.pojo.Emp&quot;&gt;
+&lt;!--  这里的字段 对应Emp.java中的对象   将来会有很多经历 就放进去collection集合  --&gt;
+        &lt;id column=&quot;id&quot; property=&quot;id&quot;/&gt;
+        &lt;result column=&quot;username&quot; property=&quot;username&quot;/&gt;
+        &lt;result column=&quot;password&quot; property=&quot;password&quot;/&gt;
+        &lt;result column=&quot;name&quot; property=&quot;name&quot;/&gt;
+        &lt;result column=&quot;gender&quot; property=&quot;gender&quot;/&gt;
+        &lt;result column=&quot;phone&quot; property=&quot;phone&quot;/&gt;
+        &lt;result column=&quot;job&quot; property=&quot;job&quot;/&gt;
+        &lt;result column=&quot;salary&quot; property=&quot;salary&quot;/&gt;
+        &lt;result column=&quot;image&quot; property=&quot;image&quot;/&gt;
+        &lt;result column=&quot;entry_date&quot; property=&quot;entryDate&quot;/&gt;
+        &lt;result column=&quot;dept_id&quot; property=&quot;deptId&quot;/&gt;
+        &lt;result column=&quot;create_time&quot; property=&quot;createTime&quot;/&gt;
+        &lt;result column=&quot;update_time&quot; property=&quot;updateTime&quot;/&gt;
+
+&lt;!--
+Collection：往集合封装数据
+property：类中成员变量名
+ofType：集合的泛型，数据要封装的对象
+--&gt;
+        &lt;collection property=&quot;exprList&quot; ofType=&quot;com.itheima.pojo.EmpExpr&quot;&gt;
+            &lt;id column=&quot;ee_id&quot; property=&quot;id&quot;/&gt;
+            &lt;result column=&quot;ee_emp_id&quot; property=&quot;empId&quot;/&gt;
+            &lt;result column=&quot;ee_begin&quot; property=&quot;begin&quot;/&gt;
+            &lt;result column=&quot;ee_end&quot; property=&quot;end&quot;/&gt;
+            &lt;result column=&quot;ee_company&quot; property=&quot;company&quot;/&gt;
+            &lt;result column=&quot;ee_job&quot; property=&quot;job&quot;/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+</code></pre>
+<h5 id="修改员工"><a href="#修改员工" class="headerlink" title="修改员工"></a>修改员工</h5><ul>
+<li><p>Controller</p>
+<blockquote>
+<p>1.接收请求参数</p>
+<p>2.调用Service方法</p>
+<p>3.响应结果</p>
+</blockquote>
+</li>
+<li><p>Service<del>（先删除再添加）</del></p>
+<blockquote>
+<p>1.根据ID修改员工的基本信息</p>
+<p>2.根据ID修改工作经历信息</p>
+</blockquote>
+</li>
+<li><p>Mapper</p>
+<blockquote>
+<p><strong>SQL:</strong></p>
+<p>update emp set ….</p>
+<p>delete emp_expr where…</p>
+<p>insert into emp_expr…</p>
+</blockquote>
+</li>
+</ul>
+<h5 id="重要bug"><a href="#重要bug" class="headerlink" title="重要bug"></a>重要bug</h5><blockquote>
+<p>2024-11-23 13:56:42 [http-nio-8080-exec-1] ERROR o.a.c.c.C.[.[localhost].[&#x2F;].[dispatcherServlet] - Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): com.itheima.mapper.ReportMapper.empJobData] with root cause<br>org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): com.itheima.mapper.ReportMapper.empJobData<br>    at org.apache.ibatis.binding.MapperMethod$SqlCommand.<init>(MapperMethod.java:229)<br>    at org.apache.ibatis.binding.MapperMethod.<init>(MapperMethod.java:53)</p>
+</blockquote>
+<p>在 Java 项目中，资源文件（如 XML 配置文件）的目录结构必须与 Java 包结构相对应，但是在文件系统中，包名中的点（<code>.</code>）被替换为路径分隔符（在 Windows 上是反斜杠 <code>\</code>，在 UNIX&#x2F;Linux&#x2F;macOS 上是正斜杠 <code>/</code>）。这是因为文件系统不使用点来分隔目录，而是使用斜杠。</p>
+<p>以下是为什么需要使用 <code>com/itheima/mapper</code> 而不是 <code>com.itheima.mapper</code> 的原因：</p>
+<ol>
+<li><strong>文件系统结构</strong>：文件系统中的目录结构是扁平的，每个目录名之间用路径分隔符分隔。而 Java 包名是分层级的，使用点来分隔每一层。</li>
+<li><strong>Maven 或 Gradle 构建工具</strong>：在使用 Maven 或 Gradle 等构建工具时，资源文件通常放置在 <code>src/main/resources</code> 目录下。为了确保构建工具能正确地将资源文件打包到最终的 JAR 文件中，并让 MyBatis 等框架能够找到这些资源文件，资源文件的目录结构需要与 Java 包结构相对应，但是使用路径分隔符。</li>
+</ol>
+<h3 id="班级操作"><a href="#班级操作" class="headerlink" title="班级操作"></a>班级操作</h3><pre><code class="java">@Override
+    public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
+        List&lt;Map&gt; genderDataList = reportMapper.empGenderData();
+        List&lt;Map&lt;String, Object&gt;&gt; result = genderDataList.stream().map(map -&gt; &#123;
+            Map&lt;String, Object&gt; entry = new HashMap&lt;&gt;();
+            String gender = (String) map.get(&quot;name&quot;);
+            long count = (long) map.get(&quot;value&quot;);
+            if (&quot;1&quot;.equals(gender)) &#123;
+                entry.put(&quot;name&quot;, &quot;男性员工&quot;);
+                entry.put(&quot;value&quot;, (int) count);
+            &#125; else if (&quot;2&quot;.equals(gender)) &#123;
+                entry.put(&quot;name&quot;, &quot;女性员工&quot;);
+                entry.put(&quot;value&quot;, (int) count);
+            &#125;
+            return entry;
+        &#125;).collect(Collectors.toList());
+        return result;
+    &#125;
+</code></pre>
+<pre><code class="java">   @Override
+    public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
+        List&lt;Map&gt; genderDataList = reportMapper.empGenderData();
+        List&lt;Map&lt;String, Object&gt;&gt; result = genderDataList.stream()
+                .map(map -&gt; &#123;
+                    Object genderObj = map.get(&quot;gender&quot;);
+                    // 判断 genderObj 是不是 Integer 类型，如果是，则转换为字符串; 否则直接转换为字符串
+                    String gender = genderObj instanceof Integer ? String.valueOf(genderObj) : (String) genderObj;
+                    long count = (long) map.get(&quot;value&quot;);
+                    GenderData entry = GenderData.builder()
+                            .name(gender.equals(&quot;1&quot;) ? &quot;男性员工&quot; : &quot;女性员工&quot;)
+                            .value((int) count)
+                            .build();
+                    return entry.toMap();
+                &#125;)
+                .collect(Collectors.toList());
+        return result;
+    &#125;
+/*
+  非builder建造者模式 直接创建List的Map集合
+@Override
+public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
+    List&lt;Map&gt; genderDataList = reportMapper.empGenderData();
+    List&lt;Map&lt;String, Object&gt;&gt; result = genderDataList.stream()
+            .map(map -&gt; &#123;
+                Object genderObj = map.get(&quot;gender&quot;);
+                String gender = genderObj instanceof Integer ? String.valueOf(genderObj) : (String) genderObj;
+                long count = (long) map.get(&quot;value&quot;);
+                Map&lt;String, Object&gt; entry = new HashMap&lt;&gt;();
+                entry.put(&quot;name&quot;, gender.equals(&quot;1&quot;) ? &quot;男性员工&quot; : &quot;女性员工&quot;);
+                entry.put(&quot;value&quot;, (int) count);
+                return entry;
+            &#125;)
+            .collect(Collectors.toList());
+    return result;
+&#125;
+*/
 </code></pre>
 
     </div>
