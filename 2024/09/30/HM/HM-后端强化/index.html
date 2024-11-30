@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#ffa2c4>
+                <a href="/tags/HM" style=color:#ff7d73>
                     HM
                 </a>
             </span>
@@ -7966,7 +7966,1488 @@ public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
 &#125;
 */
 </code></pre>
+<h6 id="会话技术"><a href="#会话技术" class="headerlink" title="会话技术"></a>会话技术</h6><p><strong>会话</strong>：用户打开浏览器，访问web服务器的资源，会话建立，直到有一方断开连接，会话结束。在一次会话中可以包含多次请求和响应。</p>
+<p><strong>会话跟踪</strong>：一种维护浏览器状态的方法，服务器需要识别多次请求是否来自于同一浏览器，以便在同一次会话的多次请求间共享数据。</p>
+<p>会话跟踪方案：</p>
+<p>客户端会话跟踪技术：Cookie</p>
+<p>服务端会话跟踪技术：Session</p>
+<p>令牌技术</p>
+<p>优点：HTTP协议中支持的技术</p>
+<p>缺点：</p>
+<p> 移动端APP无法使用Cookie</p>
+<p>不安全，用户可以自己禁用Cookie</p>
+<p> Cookie不能跨域</p>
+<h6 id="1-Cookie会话跟踪方案的原理"><a href="#1-Cookie会话跟踪方案的原理" class="headerlink" title="1.Cookie会话跟踪方案的原理 ?"></a>1.Cookie会话跟踪方案的原理 ?</h6><p>响应头：Set-Cookie</p>
+<p>请求头：Cookie</p>
+<h6 id="2-Cookie会话跟踪方案的优缺点"><a href="#2-Cookie会话跟踪方案的优缺点" class="headerlink" title="2.Cookie会话跟踪方案的优缺点 ?"></a>2.Cookie会话跟踪方案的优缺点 ?</h6><p>优点：HTTP协议中支持的技术</p>
+<p>缺点：</p>
+<p>Ø 移动端APP无法使用Cookie</p>
+<p>Ø 不安全，用户可以自己禁用Cookie</p>
+<p>Ø Cookie不能跨域</p>
+<h6 id="令牌方案"><a href="#令牌方案" class="headerlink" title="令牌方案"></a>令牌方案</h6><p><strong>优点</strong>：</p>
+<p>u 支持PC端、移动端</p>
+<p>u 解决集群环境下的认证问题</p>
+<p>u 减轻服务器端存储压力</p>
+<p>l缺点：需要自己实现</p>
+<h6 id="JWT令牌"><a href="#JWT令牌" class="headerlink" title="JWT令牌"></a>JWT令牌</h6><p>全称：JSON Web Token （<a target="_blank" rel="noopener" href="https://jwt.io/%EF%BC%89">https://jwt.io/）</a></p>
+<p>定义了一种简洁的、自包含的格式，用于在通信双方以json数据格式安全的传输信息。</p>
+<p>组成：</p>
+<p>Ø 第一部分：Header(头），记录令牌类型、签名算法等。 例如：{“alg”:”HS256”,”type”:”JWT”}</p>
+<p>Ø 第二部分：Payload(有效载荷），携带一些自定义信息、默认信息等。 例如：{“id”:”1”,”username”:”Tom”}</p>
+<p>Ø 第三部分：Signature(签名），防止Token被篡改、确保安全性。将header、payload融入，并加入指定秘钥，通过指定签名算法计算而来。</p>
+<h6 id="Base64：是一种基于64个可打印字符（A-Z-a-z-0-9-x2F-）来表示二进制数据的编码方式。"><a href="#Base64：是一种基于64个可打印字符（A-Z-a-z-0-9-x2F-）来表示二进制数据的编码方式。" class="headerlink" title="Base64：是一种基于64个可打印字符（A-Z a-z 0-9 + &#x2F;）来表示二进制数据的编码方式。"></a>Base64：是一种基于64个可打印字符（A-Z a-z 0-9 + &#x2F;）来表示二进制数据的编码方式。</h6><pre><code class="java">package com.itheima;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@SpringBootTest
+public class JWTTest &#123;
+    /**
+     * 测试生成JWT
+     */
+    @Test
+    public void testGenerateJWT() &#123;
+        // 准备要保存的数据
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;id&quot;, &quot;23241&quot;);
+        map.put(&quot;username&quot;, &quot;张三疯了&quot;);
+
+        // 生成JWT  Expiration过期时间
+        String jwt = Jwts.builder()
+                .signWith(SignatureAlgorithm.HS256, &quot;gzheima&quot;)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setClaims(map) //自己存的数据
+                .compact();//生成JWT
+        System.out.println(&quot;生成JWT = &quot; + jwt);
+    &#125;
+
+    /**
+     * 测试解析JWT
+     */
+    @Test
+    public void testParseJWT() &#123;
+        // 解析JWT
+        String jwt = &quot;eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjIzMjQxIiwidXNlcm5hbWUiOiLlvKDkuInnlq_kuoYifQ.S5BYVidgdg01VakWI5z8EerDA0Mdhzapx9p_WDgxfxU&quot;;
+        Claims claims = Jwts.parser()
+                .setSigningKey(&quot;gzheima&quot;)
+                .parseClaimsJws(jwt)
+                .getBody();
+        System.out.println(&quot;解析出来的数据 = &quot; + claims);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="放到tilas中"><a href="#放到tilas中" class="headerlink" title="放到tilas中"></a>放到tilas中</h6><pre><code class="java">package com.itheima.utils;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+import java.util.Date;
+import java.util.Map;
+
+public class JwtUtils &#123;
+
+    private static String signKey = &quot;SVRIRUlNQQ==&quot;;
+    private static Long expire = 43200000L;
+
+    /**
+     * 生成JWT令牌
+     * @return
+     */
+    public static String generateJwt(Map&lt;String,Object&gt; claims)&#123;
+        String jwt = Jwts.builder()
+                .addClaims(claims)
+                .signWith(SignatureAlgorithm.HS256, signKey)
+                .setExpiration(new Date(System.currentTimeMillis() + expire))
+                .compact();
+        return jwt;
+    &#125;
+
+    /**
+     * 解析JWT令牌
+     * @param jwt JWT令牌
+     * @return JWT第二部分负载 payload 中存储的内容
+     */
+    public static Claims parseJWT(String jwt)&#123;
+        Claims claims = Jwts.parser()
+                .setSigningKey(signKey)
+                .parseClaimsJws(jwt)
+                .getBody();
+        return claims;
+    &#125;
+    @Override
+    public LoginInfo login(Emp emp) &#123;
+        // 调用mapper根据账号密码查询用户
+        Emp dbEmp = empMapper.getByUsernameAndPassword(emp);
+        if (dbEmp != null) &#123;
+            // 匹配成功 登陆成功
+            return null;
+            // 匹配失败 登录失败
+        &#125; else &#123;
+            // 账号密码匹配成功，登录成功，把相关信息放到LoginInfo对象中
+            // 生成JWT 令牌Token
+            Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+            map.put(&quot;id&quot;, dbEmp.getId());
+            map.put(&quot;username&quot;, dbEmp.getUsername());
+            map.put(&quot;name&quot;, dbEmp.getName());
+
+            String jwt = JwtUtils.generateJwt(map);
+            log.info(&quot;生成JWT令牌: &quot; + jwt);
+            LoginInfo loginInfo = new LoginInfo(dbEmp.getId(), dbEmp.getUsername(), dbEmp.getName(), jwt);
+            return loginInfo;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="过滤器："><a href="#过滤器：" class="headerlink" title="过滤器："></a>过滤器：</h3><p>概念：Filter 过滤器，是 JavaWeb 三大组件(Servlet、Filter、Listener)之一。</p>
+<p>过滤器可以把对资源的请求拦截下来，从而实现一些特殊的功能。</p>
+<p>过滤器一般完成一些通用的操作，比如：登录校验、统一编码处理、敏感字符处理等。</p>
+<h5 id="Filter快速入门"><a href="#Filter快速入门" class="headerlink" title="Filter快速入门"></a>Filter快速入门</h5><p>1.<strong>定义Filter</strong>：定义一个类，实现 Filter 接口，并重写其所有方法。</p>
+<p>2.<strong>配置Filter</strong>：Filter类上加@WebFilter注解，配置拦截路径。引导类上加 @ServletComponentScan 开启Servlet组件支持。</p>
+<pre><code class="java">package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;)
+public class DemoFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;过滤器放行前&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;过滤器放行后&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>要记得在启动类加注解<code>@ServletComponentScan</code></p>
+<pre><code class="java">package com.itheima;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+
+// SpringBoot的启动类
+// 注意: 我们写的代码要在启动类的包或者子包中
+// @SpringBootApplication注解中包含了 @ComponentScan, 没有指定扫描哪个包, 默认扫描当前类所在的包和子包
+@SpringBootApplication
+@ServletComponentScan
+public class Day23TliasManagement05ClazzStudentApplication &#123;
+    // 启动项目, 内嵌的Tomcat会启动, 把项目部署到这个内嵌Tomcat中
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Day23TliasManagement05ClazzStudentApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<p>1.Filter的开发步骤 ?</p>
+<p>定义：定义一个类实现Filter接口</p>
+<p>配置：</p>
+<p>Ø @WebFilter(urlPatterns&#x3D;”&#x2F;*”)</p>
+<p>Ø @ServletComponentScan</p>
+<p>2.注意事项</p>
+<p>如果过滤器中不执行放行操作，过滤器拦截到请求之后，就不会访问对应的资源。</p>
+<p>放行：chain.doFilter(request,response)</p>
+<h6 id="Filter—拦截路径"><a href="#Filter—拦截路径" class="headerlink" title="Filter—拦截路径"></a>Filter—拦截路径</h6><blockquote>
+<p>Filter 可以根据需求，配置不同的拦截资源路径：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>拦截路径</th>
+<th>urlPatterns值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>拦截具体路径</td>
+<td>&#x2F;login</td>
+<td>只有访问 &#x2F;login 路径时，才会被拦截</td>
+</tr>
+<tr>
+<td>目录拦截</td>
+<td>&#x2F;emps&#x2F;*</td>
+<td>访问&#x2F;emps下的所有资源，都会被拦截</td>
+</tr>
+<tr>
+<td>拦截所有</td>
+<td>&#x2F;*</td>
+<td>访问所有资源，都会被拦截</td>
+</tr>
+</tbody></table>
+<h6 id="Filter—过滤器链"><a href="#Filter—过滤器链" class="headerlink" title="Filter—过滤器链"></a>Filter—过滤器链</h6><p><strong>介绍</strong>：一个web应用中，可以配置多个过滤器，这多个过滤器就形成了一个过滤器链。<br><strong>顺序</strong>：**<u>注解配置的Filter，优先级是按照过滤器类名（字符串）的自然排序。</u>**</p>
+<pre><code class="java">filterA
+package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;) // 拦截所有请求
+//@WebFilter(urlPatterns = &quot;/emp/*&quot;) // 表示拦截emp下的所有请求
+public class AFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;==================================================== A过滤器放行前 ====================================================&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;==================================================== A过滤器放行后 ====================================================&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">filterB
+package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;) // 拦截所有请求
+//@WebFilter(urlPatterns = &quot;/emp/*&quot;) // 表示拦截emp下的所有请求
+public class BFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;==================================================== B过滤器放行前 ====================================================&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;==================================================== B过滤器放行后 ====================================================&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="登录校验Filter"><a href="#登录校验Filter" class="headerlink" title="登录校验Filter"></a>登录校验Filter</h3><p><strong>思考</strong>：</p>
+<p>所有的请求，拦截到了之后，都需要校验令牌吗？<br><strong>有一个例外，登录请求</strong></p>
+<p>拦截到请求后，什么情况下才可以放行，执行业务操作？<br><strong>有令牌，且令牌校验通过（合法）；否则都返回未登录错误结果</strong></p>
+<h6 id="登录校验Filter—流程"><a href="#登录校验Filter—流程" class="headerlink" title="登录校验Filter—流程"></a>登录校验Filter—流程</h6><p>1.获取请求url。</p>
+<p>2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。</p>
+<p>3.<strong>获取请求头中的令牌（token）</strong>。</p>
+<p>4.<strong>判断令牌是否存在，如果不存在，响应401</strong>。(自动跳转登录)</p>
+<p>5.<strong>解析token，如果解析失败，响应401</strong> 。</p>
+<p>6.放行。</p>
+<pre><code class="java">package com.itheima.filter;
+
+import com.itheima.utils.JwtUtils;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+
+// 登录拦截过滤器
+@WebFilter(&quot;/*&quot;)
+public class TokenFilter implements Filter &#123;
+    /**
+     * 0，把ServletRequest和ServletResponse转成HttpServletRequest和HttpServletResponse
+     * 1.获取请求url。
+     * 2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。
+     * 3.获取请求头中的令牌（token）。
+     * 4.判断令牌是否存在，如果不存在，响应401**。(自动跳转登录)
+     * 5.解析token，如果解析失败，响应401 。
+     * 6.放行。
+     * @param servletRequest
+     * @param servletResponse
+     * @param filterChain
+     * @throws IOException
+     * @throws ServletException
+     */
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        String url = request.getRequestURI().toString();
+        System.out.println(&quot;过滤器拦截的url = &quot; + url);
+        // http://localhost:8080/emps
+        // http://localhost:8080/login
+        // http://localhost:8080/dept
+        // http://localhost:8080/clazz
+
+        // 2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。
+        if (url.contains(&quot;/login&quot;)) &#123;
+            System.out.println(&quot;登录请求，直接放行&quot;);
+            filterChain.doFilter(servletRequest, servletResponse);
+            return; //放行后不往下走了 结束方法
+        &#125;
+        // 登录失败是没有token的 EmpServiceImpl.java
+        // 3.获取请求头中的令牌（token）登陆成功才有
+        String jwt = request.getHeader(&quot;token&quot;);
+
+        // 4.判断令牌是否存在，如果不存在，响应401 (自动跳转登录)
+//        if (jwt == null &amp;&amp; jwt.equals(&quot;&quot;)) &#123; //没有令牌
+//
+//        &#125;
+        // org.springframework.util.StringUtils.isEmpty(str)
+        if (StringUtils.hasLength(jwt)) &#123;
+            System.out.println(&quot;jwt为空，令牌不存在&quot;);
+            response.setStatus(401); // 前端收到401会跳转到登录页面
+            return; //结束代码 后面不执行
+        &#125;
+        // 5.解析token，如果解析失败，响应401
+        try &#123;
+            JwtUtils.parseJWT(jwt);
+        &#125; catch (Exception e) &#123;
+            System.out.println(&quot;jwt = &quot; + jwt);
+            System.out.println(&quot;令牌解析失败&quot;);
+            response.setStatus(401);
+            return;
+        &#125;
+        // 6.放行
+        System.out.println(&quot;jwt解析成功，放行！！&quot;);
+        filterChain.doFilter(servletRequest, servletResponse);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java"> @Override
+    public LoginInfo login(Emp emp) &#123;
+        // 调用mapper根据账号密码查询用户
+        Emp dbEmp = empMapper.getByUsernameAndPassword(emp);
+        if (dbEmp == null) &#123;
+            // 匹配成功 登陆成功
+            return null;
+            // 匹配失败 登录失败
+        &#125; else &#123;
+            // 账号密码匹配成功，登录成功，把相关信息放到LoginInfo对象中
+            // 生成JWT 令牌Token
+            Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+            map.put(&quot;id&quot;, dbEmp.getId());
+            map.put(&quot;username&quot;, dbEmp.getUsername());
+            map.put(&quot;name&quot;, dbEmp.getName());
+
+            String jwt = JwtUtils.generateJwt(map);
+            log.info(&quot;生成JWT令牌: &quot; + jwt);
+            LoginInfo loginInfo = new LoginInfo(dbEmp.getId(), dbEmp.getUsername(), dbEmp.getName(), jwt);
+            return loginInfo;
+        &#125;
+    &#125;
+</code></pre>
+<h5 id="要用APIFox的时候-记得在全局环境里添加Token"><a href="#要用APIFox的时候-记得在全局环境里添加Token" class="headerlink" title="要用APIFox的时候 记得在全局环境里添加Token"></a>要用APIFox的时候 记得在全局环境里添加Token</h5><h3 id="拦截器（Interceptor）"><a href="#拦截器（Interceptor）" class="headerlink" title="拦截器（Interceptor）"></a>拦截器（Interceptor）</h3><ul>
+<li><p><strong>概念</strong>：是一种动态拦截方法调用的机制，类似于过滤器。Spring框架中提供的，主要用来动态拦截控制器方法的执行。</p>
+</li>
+<li><p><strong>作用</strong>：拦截请求，在指定的方法调用前后，根据业务需要执行预先设定的代码。</p>
+</li>
+</ul>
+<h5 id="Interceptor快速入门"><a href="#Interceptor快速入门" class="headerlink" title="Interceptor快速入门"></a>Interceptor快速入门</h5><p>1.定义拦截器，实现HandlerInterceptor接口，并重写其所有方法。</p>
+<p>2.注册拦截器</p>
+<pre><code class="java">package com.itheima.interceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+@Component
+public class DemoInterceptor implements HandlerInterceptor &#123;
+    // 在拦截的方法前执行，类似于过滤器放行前
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(&quot;preHandler 拦截方法前&quot;);
+        return true;
+    &#125;
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+        System.out.println(&quot;postHandle 拦截方法后&quot;);
+    &#125;
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+        System.out.println(&quot;afterCompletion 拦截方法最后执行&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.config;
+
+import com.itheima.interceptor.DemoInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration // 表示当前类是一个配置类，对SpringMVC进行配置
+public class WebConfig implements WebMvcConfigurer &#123;
+    @Autowired
+    private DemoInterceptor demoInterceptor;
+
+    // 实现添加拦截器的方法，用于添加拦截器
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) &#123;
+        // addInterceptor：添加拦截器
+        // addPathPatterns：添加拦截路径   /**：表示拦截所有请求
+        registry.addInterceptor(demoInterceptor).addPathPatterns(&quot;/**&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="拦截器—拦截路径"><a href="#拦截器—拦截路径" class="headerlink" title="拦截器—拦截路径"></a>拦截器—拦截路径</h6><ul>
+<li>拦截器可以根据需求，配置不同的拦截路径：</li>
+</ul>
+<pre><code class="java">
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>拦截路径</th>
+<th>含义</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#x2F;*</td>
+<td>一级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;emps，&#x2F;login，不能匹配 &#x2F;depts&#x2F;1</td>
+</tr>
+<tr>
+<td>&#x2F;**</td>
+<td>任意级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;depts&#x2F;1，&#x2F;depts&#x2F;1&#x2F;2</td>
+</tr>
+<tr>
+<td>&#x2F;depts&#x2F;*</td>
+<td>&#x2F;depts下的一级路径</td>
+<td>能匹配&#x2F;depts&#x2F;1，不能匹配&#x2F;depts&#x2F;1&#x2F;2，&#x2F;depts</td>
+</tr>
+<tr>
+<td>&#x2F;depts&#x2F;**</td>
+<td>&#x2F;depts下的任意级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;depts&#x2F;1，&#x2F;depts&#x2F;1&#x2F;2，不能匹配&#x2F;emps&#x2F;1</td>
+</tr>
+</tbody></table>
+<h6 id="1-拦截器中的拦截路径-x2F-与-x2F-的区别是什么"><a href="#1-拦截器中的拦截路径-x2F-与-x2F-的区别是什么" class="headerlink" title="1.拦截器中的拦截路径 &#x2F;* 与 &#x2F;** 的区别是什么 ?"></a>1.拦截器中的拦截路径 &#x2F;* 与 &#x2F;** 的区别是什么 ?</h6><p>&#x2F;*：只能拦截一级路径，如：&#x2F;depts，&#x2F;emps</p>
+<p>&#x2F;**：拦截任意级路径，如：&#x2F;depts，&#x2F;depts&#x2F;1</p>
+<h6 id="2-过滤器与拦截的区别"><a href="#2-过滤器与拦截的区别" class="headerlink" title="2.过滤器与拦截的区别 ?"></a>2.过滤器与拦截的区别 ?</h6><p>接口规范不同</p>
+<p>拦截范围不同</p>
+<blockquote>
+<p>过滤器是Servlet规范的 实现Filter接口<br>拦截器SpringMVC提供的实现HandlerInterceptor接口<br>请求 先经过过滤器，后经过拦截器，才到控制器</p>
+</blockquote>
+<h3 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h3><p><strong>AOP：</strong>Aspect Oriented Programming（面向切面编程、面向方面编程），其实就是面向特定方法编程。</p>
+<p>场景：案例中部分业务方法运行较慢，定位执行耗时较长的接口，此时需要统计每一个业务方法的执行耗时。</p>
+<pre><code class="xml">        &lt;!-- AOP --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">package com.itheima.aop;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
+// 声明Bean，Spring容器会创建该Bean的实例对象
+@Component
+@Aspect
+public class RecordTimeAspect &#123;
+    // 统计方法耗时
+    @Around(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object recordTime(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 编写对方法进行增强的代码
+        // 1.记录开始时间
+        long start = System.currentTimeMillis();
+        // 2.调用原始方法
+        Object ret = pjp.proceed();
+        // 3.记录结束时间
+        long end = System.currentTimeMillis();
+        System.out.println(&quot;方法执行耗时：&quot; + (end - start));
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="1-SpringAOP程序的开发步骤"><a href="#1-SpringAOP程序的开发步骤" class="headerlink" title="1.SpringAOP程序的开发步骤 ?"></a>1.SpringAOP程序的开发步骤 ?</h6><p>引入AOP的依赖</p>
+<p>编写AOP的程序(公共的逻辑代码)</p>
+<h6 id="2-SpringAOP的应用场景"><a href="#2-SpringAOP的应用场景" class="headerlink" title="2.SpringAOP的应用场景 ?"></a>2.SpringAOP的应用场景 ?</h6><p>记录系统的操作日志</p>
+<p>权限控制</p>
+<p>事务管理</p>
+<h3 id="AOP核心概念"><a href="#AOP核心概念" class="headerlink" title="AOP核心概念"></a>AOP核心概念</h3><p><strong>连接点：</strong>JoinPoint，可以被AOP控制的方法（暗含方法执行时的相关信息）</p>
+<p><strong>通知：</strong>Advice，指那些重复的逻辑，也就是共性功能（最终体现为一个方法）</p>
+<p><strong>切入点：</strong>PointCut，匹配连接点的条件，通知仅会在切入点方法执行时被应用</p>
+<p><strong>切面：</strong>Aspect，描述通知与切入点的对应关系（通知+切入点）</p>
+<p><strong>目标对象：</strong>Target，通知所应用的对象</p>
+<p>切面类 &#x3D; 通知+切入点表达式</p>
+<p><img src="https://github.com/P-luminary/images/blob/master/AOP%E5%88%87%E9%9D%A2.png?raw=true" alt="AOP图片"></p>
+<h6 id="根据通知方法执行时机的不同，将通知类型分为以下常见的五类："><a href="#根据通知方法执行时机的不同，将通知类型分为以下常见的五类：" class="headerlink" title="根据通知方法执行时机的不同，将通知类型分为以下常见的五类："></a>根据通知方法执行时机的不同，将通知类型分为以下常见的五类：</h6><p>1.@Around：环绕通知，此注解标注的通知方法在目标方法前、后都被执行</p>
+<p>2.@Before：前置通知，此注解标注的通知方法在目标方法前被执行</p>
+<p>3.@After ：后置通知，此注解标注的通知方法在目标方法后被执行，无论是否有异常都会执行</p>
+<p>4.@AfterReturning： 返回后通知，此注解标注的通知方法在目标方法后被执行，有异常不会执行</p>
+<p>5.@AfterThrowing ： 异常后通知，此注解标注的通知方法发生异常后执行</p>
+<h3 id="环绕通知与其他通知的区别"><a href="#环绕通知与其他通知的区别" class="headerlink" title="环绕通知与其他通知的区别"></a>环绕通知与其他通知的区别</h3><p>在 AOP（面向切面编程）中，通知（Advice）是在特定的连接点（Join Point）执行的代码块。Spring AOP 支持多种类型的通知，每种通知在目标方法的不同阶段执行。以下是环绕通知与其他几种常见通知的区别：</p>
+<ol>
+<li><p><strong>前置通知（Before Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法调用之前执行。</li>
+<li><strong>用途</strong>：通常用于日志记录、权限校验等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@Before(&quot;pt()&quot;)
+public void before() &#123;
+    log.info(&quot;前置通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>后置通知（After Returning Advice）</strong>：</p>
+<ul>
+<li><p><strong>执行时机</strong>：在目标方法成功返回之后执行。</p>
+</li>
+<li><p><strong>用途</strong>：通常用于日志记录、资源释放等。</p>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="java">@AfterReturning(&quot;pt()&quot;)
+public void afterReturning() &#123;
+    log.info(&quot;后置通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>异常通知（After Throwing Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法抛出异常之后执行。</li>
+<li><strong>用途</strong>：通常用于异常处理、日志记录等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@AfterThrowing(&quot;pt()&quot;)
+public void afterThrowing() &#123;
+    log.info(&quot;异常通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>最终通知（After (Finally) Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法执行完毕后执行，无论目标方法是否抛出异常。</li>
+<li><strong>用途</strong>：通常用于资源清理、日志记录等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@After(&quot;pt()&quot;)
+public void afterFinally() &#123;
+    log.info(&quot;最终通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>环绕通知（Around Advice）</strong>：</p>
+<ul>
+<li><p><strong>执行时机</strong>：在目标方法调用前后都执行。</p>
+</li>
+<li><p><strong>用途</strong>：可以完全控制目标方法的执行流程，包括是否执行目标方法、何时执行目标方法、如何处理返回值等。</p>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="java">@Around(&quot;pt()&quot;)
+public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+    Object retVal = null;
+    try &#123;
+        log.info(&quot;环绕通知-前置通知&quot;);
+        retVal = pjp.proceed(); // 执行目标方法
+        log.info(&quot;环绕通知-后置通知&quot;);
+    &#125; catch (Throwable throwable) &#123;
+        log.info(&quot;环绕通知-异常通知&quot;);
+        throw throwable; // 重新抛出异常
+    &#125; finally &#123;
+        log.info(&quot;环绕通知-最终通知&quot;);
+    &#125;
+    return retVal;
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><strong>前置通知</strong>：仅在目标方法调用前执行。</li>
+<li><strong>后置通知</strong>：仅在目标方法成功返回后执行。</li>
+<li><strong>异常通知</strong>：仅在目标方法抛出异常后执行。</li>
+<li><strong>最终通知</strong>：在目标方法执行完毕后执行，无论是否抛出异常。</li>
+<li><strong>环绕通知</strong>：在目标方法调用前后都执行，可以完全控制目标方法的执行流程。</li>
+</ul>
+<p>环绕通知是最强大的通知类型，因为它可以控制目标方法的执行流程，包括是否执行目标方法、何时执行目标方法、如何处理返回值等。其他通知类型则相对简单，分别在特定的时间点执行。</p>
+<blockquote>
+<p>@Around环绕通知需要自己调用 ProceedingJoinPoint.proceed() 来让原始方法执行，其他通知不需要考虑目标方法执行<br>@Around环绕通知方法的返回值，必须指定为Object，来接收原始方法的返回值。</p>
+</blockquote>
+<pre><code class="java">AdviceType.java
+package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+// 将通知类型分为以下常见的五类
+// 前置通知：在目标方法执行前执行，比如日志记录，权限校验等
+// 后置通知：在目标方法执行后执行，比如日志记录，权限校验等
+// 环绕通知：在目标方法执行前后都执行，比如日志记录，权限校验等
+// 异常通知：在目标方法抛出异常时执行，比如日志记录，权限校验等
+// 最终通知：在目标方法执行后，无论目标方法正常还是异常，都会执行，比如日志记录，权限校验等
+@Aspect
+@Slf4j
+public class AdviceType &#123;
+
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void befor()&#123;
+        log.info(&quot;前置通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void after()&#123;
+        log.info(&quot;后置通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void exception()&#123;
+        log.info(&quot;异常通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void finallys()&#123;
+        log.info(&quot;最终通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object around(ProceedingJoinPoint pjp)&#123;
+        Object retVal = null;
+        try &#123;
+            log.info(&quot;环绕通知-前置通知&quot;);
+            retVal = pjp.proceed();
+            log.info(&quot;环绕通知-后置通知&quot;);
+        &#125; catch (Throwable throwable) &#123;
+            log.info(&quot;环绕通知-异常通知&quot;);
+            throwable.printStackTrace();
+        &#125; finally &#123;
+            log.info(&quot;环绕通知-最终通知&quot;);
+        &#125;
+        return retVal;
+    &#125;
+&#125;
+----------------------------  改装版本  --------------------------------
+package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+
+// 将通知类型分为以下常见的五类
+// 前置通知：在目标方法执行前执行，比如日志记录，权限校验等
+// 后置通知：在目标方法执行后执行，比如日志记录，权限校验等
+// 环绕通知：在目标方法执行前后都执行，比如日志记录，权限校验等
+// 异常通知：在目标方法抛出异常时执行，比如日志记录，权限校验等
+// 最终通知：在目标方法执行后，无论目标方法正常还是异常，都会执行，比如日志记录，权限校验等
+@Aspect
+@Slf4j
+public class AdviceType &#123;
+    // 抽取切入点表达式
+    @Pointcut(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void pt()&#123;
+    // private：仅能在当前切面类中引用该表达式
+    // public：在其他外部的切面类中也可以引用该表达式
+    &#125;
+
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void befor()&#123;
+        log.info(&quot;前置通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void after()&#123;
+        log.info(&quot;后置通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void exception()&#123;
+        log.info(&quot;异常通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void finallys()&#123;
+        log.info(&quot;最终通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public Object around(ProceedingJoinPoint pjp)&#123;
+        Object retVal = null;
+        try &#123;
+            log.info(&quot;环绕通知-前置通知&quot;);
+            retVal = pjp.proceed();
+            log.info(&quot;环绕通知-后置通知&quot;);
+        &#125; catch (Throwable throwable) &#123;
+            log.info(&quot;环绕通知-异常通知&quot;);
+            throwable.printStackTrace();
+        &#125; finally &#123;
+            log.info(&quot;环绕通知-最终通知&quot;);
+        &#125;
+        return retVal;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP进阶"><a href="#AOP进阶" class="headerlink" title="AOP进阶"></a>AOP进阶</h3><h5 id="通知顺序"><a href="#通知顺序" class="headerlink" title="通知顺序"></a>通知顺序</h5><p>当有多个切面的切入点都匹配到了目标方法，目标方法运行时，多个通知方法都会被执行。</p>
+<h6 id="执行顺序："><a href="#执行顺序：" class="headerlink" title="执行顺序："></a>执行顺序：</h6><ul>
+<li><p>不同切面类中，默认按照切面类的类名字母排序：<code>MyAdviceA</code>、<code>MyAdviceB</code></p>
+<ul>
+<li>目标方法前的通知方法：字母排名靠前的先执行</li>
+<li>目标方法后的通知方法：字母排名靠前的后执行</li>
+</ul>
+</li>
+<li><p>用 <code>@Order(数字)</code> 加在切面类上来控制顺序</p>
+<ul>
+<li>目标方法前的通知方法：数字小的先执行</li>
+<li>目标方法后的通知方法：数字小的后执行</li>
+</ul>
+</li>
+</ul>
+<h6 id="切入点表达式："><a href="#切入点表达式：" class="headerlink" title="切入点表达式："></a>切入点表达式：</h6><ul>
+<li><p>介绍：描述切入点方法的一种表达式。</p>
+</li>
+<li><p>作用：用来决定项目中的哪些方法需要加入通知</p>
+</li>
+<li><p>常见形式：</p>
+<p> 1.execution(……)：根据方法的签名来匹配</p>
+<p> 2.@annotation(……) ：根据注解匹配</p>
+</li>
+</ul>
+<h5 id="切入点表达式—execution"><a href="#切入点表达式—execution" class="headerlink" title="切入点表达式—execution"></a>切入点表达式—execution</h5><p>execution 主要根据方法的返回值、包名、类名、方法名、方法参数等信息来匹配，语法为：<br><code>execution(访问修饰符? 返回值 包名.类名.?方法名(方法参数) throws 异常?)</code></p>
+<p><strong>其中带 ? 的表示可以省略的部分</strong></p>
+<p>1.访问修饰符：可省略（比如: public、protected）</p>
+<p>2.包名.类名： 可省略</p>
+<p>3.throws 异常：可省略（注意是方法上声明抛出的异常，不是实际抛出的异常）</p>
+<h6 id="可以使用通配符描述切入点先在前面写-Aspect再写-Pointcut-“execution-……-”"><a href="#可以使用通配符描述切入点先在前面写-Aspect再写-Pointcut-“execution-……-”" class="headerlink" title="可以使用通配符描述切入点先在前面写@Aspect再写@Pointcut(“execution(……)”)"></a><span style = "color:red">可以使用通配符描述切入点</span><del>先在前面写@Aspect再写@Pointcut(“execution(……)”)</del></h6><p>1.* ：单个独立的任意符号，可以通配任意返回值、包名、类名、方法名、任意类型的一个参数，也可以通配包、类、方法名的一部分</p>
+<blockquote>
+<p>execution(* com.<em>.service.</em>.update*(*))</p>
+</blockquote>
+<p>2… ：多个连续的任意符号，可以通配任意层级的包，或任意类型、任意个数的参数</p>
+<blockquote>
+<p>execution(* com.itheima..DeptService.*(..))</p>
+</blockquote>
+<p>根据业务需要，可以使用 且（&amp;&amp;）、或（||）、非（!） 来组合比较复杂的切入点表达式。</p>
+<h6 id="1-execution切入点表达式的完整语法"><a href="#1-execution切入点表达式的完整语法" class="headerlink" title="1.execution切入点表达式的完整语法 ?"></a>1.execution切入点表达式的完整语法 ?</h6><p>lexecution(访问修饰符? 返回值 包名.类名.?方法名(方法参数) throws 异常?)</p>
+<h6 id="2-通配符有哪些"><a href="#2-通配符有哪些" class="headerlink" title="2.通配符有哪些 ?"></a>2.通配符有哪些 ?</h6><p>a.* ：单个独立的任意符号</p>
+<p>b… ：多个连续的任意符号</p>
+<h6 id="3-书写建议"><a href="#3-书写建议" class="headerlink" title="3.书写建议"></a>3.书写建议</h6><p>a.所有业务<strong>方法名</strong>在<strong>命名</strong>时尽量<strong>规范</strong>，方便切入点表达式快速匹配。如：findXxx，updateXxx。</p>
+<p>b.描述切入点方法通常<strong>基于接口描述</strong>，而不是直接描述实现类，<strong>增强拓展性</strong>。</p>
+<p>c.在满足业务需要的前提下，<strong>尽量缩小切入点的匹配范围</strong>。如：包名尽量不使用..，使用*匹配单个包。</p>
+<h5 id="切入点表达式—-annotation"><a href="#切入点表达式—-annotation" class="headerlink" title="切入点表达式—@annotation"></a>切入点表达式—@annotation</h5><ul>
+<li>@annotation 切入点表达式，用于匹配标识有特定注解的方法。<br><code>@annotation(com.itheima.anno.Log)</code></li>
+</ul>
+<pre><code class="java">package com.itheima.anno;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyLog &#123;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@Aspect
+public class MyAdviceExpression &#123;
+    @Pointcut(&quot;@annotation(com.itheima.anno.MyLog)&quot;)
+    public void pt()&#123;
+
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void before()&#123;
+        log.info(&quot;MyAdviceExpression.before()&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">  @MyLog
+    @Override
+    public void delete(Integer id) &#123;
+        // 业务层调用mapper删除部门
+        deptMapper.deleteById(id);
+    &#125;
+</code></pre>
+<h5 id="连接点"><a href="#连接点" class="headerlink" title="连接点"></a>连接点</h5><ul>
+<li><p>在Spring中用JoinPoint抽象了连接点，用它可以获得方法执行时的相关信息，如目标类名、方法名、方法参数等。</p>
+<ul>
+<li><p>对于 @Around 通知，获取连接点信息只能使用 ProceedingJoinPoint</p>
+</li>
+<li><p>对于其它四种通知，获取连接点信息只能使用 JoinPoint ，它是 ProceedingJoinPoint 的父类型</p>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.stereotype.Component;
+
+@Component
+@Aspect
+@Slf4j
+public class AspectJointPoint &#123;
+    // 前置通知
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void before(JoinPoint jp) &#123;
+        // jp：正在处理的连接点（切入点/要增强的方法）
+
+        // 获取切入所在类名（目标对象的类名）
+        String targetClassName = jp.getTarget().getClass().getName();
+        log.info(&quot;环绕通知 获取切入点所在类名:&#123;&#125;&quot;, targetClassName);
+
+        // 获取目标方法签名(切入点/要增强的方法签名)
+        Signature signature = jp.getSignature();
+        log.info(&quot;前置通知 获取目标方法签名:&#123;&#125;&quot;, signature);
+
+        // 获取目标方法名（切入点/要增强的方法名）
+        String methodName = jp.getSignature().getName();
+        log.info(&quot;前置通知 获取目标方法名:&#123;&#125;&quot;, methodName);
+
+        // 获取目标方法的参数
+        Object[] args = jp.getArgs();
+        log.info(&quot;环绕通知 获取目标方法的参数:&#123;&#125;&quot;, args);
+    &#125;
+
+    // 环绕通知
+    @Around(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // pjp：正在处理的连接点（切入点/要增强的方法）
+
+        // 获取切入所在类名（目标对象的类名）
+        String targetClassName = pjp.getTarget().getClass().getName();
+        log.info(&quot;环绕通知 获取切入点所在类名:&#123;&#125;&quot;, targetClassName);
+
+        // 获取目标方法签名(切入点/要增强的方法签名)
+        Signature signature = pjp.getSignature();
+        log.info(&quot;环绕通知 获取目标方法签名:&#123;&#125;&quot;, signature);
+
+        // 获取目标方法名（切入点/要增强的方法名）
+        String methodName = pjp.getSignature().getName();
+        log.info(&quot;环绕通知 获取目标方法名:&#123;&#125;&quot;, methodName);
+
+        // 获取目标方法的参数
+        Object[] args = pjp.getArgs();
+        log.info(&quot;环绕通知 获取目标方法的参数:&#123;&#125;&quot;, args);
+
+        // 执行目标方法
+        Object ret = pjp.proceed();
+        log.info(&quot;环绕通知&quot;);
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP案例"><a href="#AOP案例" class="headerlink" title="AOP案例"></a>AOP案例</h3><h6 id="将案例中增、删、改相关接口的操作日志记录到数据库表中。"><a href="#将案例中增、删、改相关接口的操作日志记录到数据库表中。" class="headerlink" title="将案例中增、删、改相关接口的操作日志记录到数据库表中。"></a>将案例中增、删、改相关接口的操作日志记录到数据库表中。</h6><ul>
+<li><p><strong>日志信息</strong>包含：操作人、操作时间、执行方法的全类名、执行方法名、方法运行时参数、返回值、方法执行时长</p>
+</li>
+<li><p>采用哪种通知类型 ？<br><code>@Around</code>环绕通知</p>
+</li>
+<li><p>切入点表达式使用哪种形式 ？<br><code>由于增、删、改 方法名没有规律，可以自定义@Log注解匹配目标方法更便捷</code></p>
+</li>
+</ul>
+<pre><code class="java">com/itheima/anno/Log.java
+package com.itheima.anno;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.Aspect;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+// 自定义注解，作为切入点表达式
+@Aspect
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Log &#123;
+// 操作人的信息 id 从token里面拿(令牌解析) 去里面解析用户id
+    String operateEmpId() default &quot;1&quot;;
+&#125;
+</code></pre>
+<h6 id="一定要记得在所有的Controller的增删改中加-Log才有用"><a href="#一定要记得在所有的Controller的增删改中加-Log才有用" class="headerlink" title="一定要记得在所有的Controller的增删改中加@Log才有用"></a>一定要记得在所有的Controller的增删改中加<code>@Log</code>才有用</h6><pre><code class="java">com/itheima/aop/OperateLogAscept.java
+package com.itheima.aop;
+
+import com.itheima.mapper.OperateLogMapper;
+import com.itheima.pojo.OperateLog;
+import com.itheima.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
+// 增删改日志操作切面类
+@Component
+@Aspect
+@Slf4j
+public class OperateLogAscept &#123;
+    // 环绕通知 带log的方法都会被增强
+    @Autowired
+    private OperateLogMapper operatorLogMapper;
+    @Autowired // IOC里面已经有这个对象了 只需要注入就行
+    private HttpServletRequest request;
+    @Around(&quot;@annotation(com.itheima.anno.Log)&quot;)
+    public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 操作人的id，拿到请求对象，拿到token这个请求头，解析token拿到操作人id
+        String jwt = request.getHeader(&quot;token&quot;);
+        // 有效载荷，是一个Map
+        Claims claims = JwtUtils.parseJWT(jwt);
+        Integer operateEmpId = (Integer) claims.get(&quot;id&quot;);
+
+        // 操作时间
+        LocalDateTime operateTime = LocalDateTime.now();
+
+        // 目标方法所在类名
+        String className = pjp.getTarget().getClass().getName();
+        Signature signature = pjp.getSignature();
+
+        // 目标方法名
+        String methodName = signature.getName();
+
+        // 目标方法的参数
+        Object[] args = pjp.getArgs();
+            // 超长字符串截取
+        String methodParams = Arrays.toString(args);
+
+        // 目标方法的返回值
+        long start = System.currentTimeMillis();
+        Object ret = pjp.proceed();
+        String returnValue = ret.toString();
+        long end = System.currentTimeMillis();
+        Long costTime = end - start;
+
+        // 把数据保存到对象中
+        OperateLog log = new OperateLog(null, operateEmpId, operateTime, className, methodName, methodParams, returnValue, costTime, null);
+        operatorLogMapper.insert(log);
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="AOP切面扩展-统计只有高管可以看id-gt-10"><a href="#AOP切面扩展-统计只有高管可以看id-gt-10" class="headerlink" title="AOP切面扩展(统计只有高管可以看id&gt;10)"></a>AOP切面扩展(统计只有高管可以看id&gt;10)</h5><pre><code class="java">com/itheima/aop/StatisticsAspect.java
+package com.itheima.aop;
+
+import com.itheima.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+// 统计访问权限的切面
+@Component
+@Aspect
+@Slf4j
+public class StatisticsAspect &#123;
+    @Autowired
+    private HttpServletRequest request;
+    // 环绕通知
+    @Around(&quot;execution(* com.itheima.controller.ReportController.*(..))&quot;)
+    public Object arround(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 获取登录的员工id
+        String jwt = request.getHeader(&quot;token&quot;);
+        Claims claims = JwtUtils.parseJWT(jwt);
+        Integer empId = (Integer) claims.get(&quot;id&quot;);
+        // 如果员工id&lt;10 执行目标方法
+        if (empId &lt; 10) &#123;
+            // 是高管，可以执行目标方法
+            Object ret = pjp.proceed();
+            return ret;
+        &#125; else &#123;
+            // 如果员工id&gt;=10 不执行目标方法
+            return null;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="lSpringBoot-除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。"><a href="#lSpringBoot-除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。" class="headerlink" title="lSpringBoot 除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。"></a>lSpringBoot 除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。</h6><p>Ø Java系统属性：<code>-Dserver.port = 9000</code><br>Ø 命令行参数：<code>--servrt.port = 10010</code></p>
+<h5 id="SrpingBoot配置优先级（低-gt-高）："><a href="#SrpingBoot配置优先级（低-gt-高）：" class="headerlink" title="SrpingBoot配置优先级（低 -&gt; 高）："></a>SrpingBoot配置优先级（低 -&gt; 高）：</h5><p>1.application.yaml（忽略）</p>
+<p>2.application.yml</p>
+<p>3.application.properties</p>
+<p>4.java系统属性（-Dxxx&#x3D;xxx）</p>
+<p>5.命令行参数（–xxx&#x3D;xxx）</p>
+<h5 id="获取bean"><a href="#获取bean" class="headerlink" title="获取bean"></a>获取bean</h5><ul>
+<li><p>默认情况下，Spring项目启动时，会把bean都创建好放在IOC容器中。如果要获取到容器对象，可以通过如下方式：</p>
+<pre><code class="java">@Autowired
+private ApplicationContext applicationContext;
+</code></pre>
+</li>
+<li><p>如果想要主动获取这些bean，可以通过如下方式：</p>
+</li>
+</ul>
+<p>​    1.根据name获取bean：<code>Object getBean(String name)</code></p>
+<p>​    2.根据类型获取bean：<code>&lt;T&gt; T getBean(Class&lt;T&gt; requiredType)</code></p>
+<p>​    3.根据name获取bean（带类型转换）：<code>&lt;T&gt; T getBean(String name, Class&lt;T&gt; requiredType</code></p>
+<pre><code class="java">package com.itheima;
+
+import com.itheima.controller.DeptController;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootTest
+class SpringbootWebConfig2ApplicationTests &#123;
+
+    @Autowired // 是Spring的IOC容器
+    private ApplicationContext applicationContext;
+    // 获取bean对象
+    @Test
+    public void testGetBean() &#123;
+        // 根据bean的名称获取
+        Object bean1 = applicationContext.getBean(&quot;deptController&quot;);
+        System.out.println(&quot;bean1 = &quot; + bean1);
+        // 根据bean的类型获取
+        DeptController bean2 = applicationContext.getBean(DeptController.class);
+        System.out.println(&quot;bean2 = &quot; + bean2);
+
+        // 根据bean的名称 及 类型获取
+        DeptController bean3 = applicationContext.getBean(&quot;deptController&quot;, DeptController.class);
+        System.out.println(&quot;bean3 = &quot; + bean3);
+
+    &#125;
+
+
+    // bean的作用域
+    @Test
+    public void testScope() &#123;
+
+    &#125;
+
+    // 第三方bean的管理
+    @Test
+    public void testThirdBean() throws Exception &#123;
+        SAXReader saxReader = new SAXReader();
+
+        Document document = saxReader.read(this.getClass().getClassLoader().getResource(&quot;1.xml&quot;));
+        Element rootElement = document.getRootElement();
+        String name = rootElement.element(&quot;name&quot;).getText();
+        String age = rootElement.element(&quot;age&quot;).getText();
+
+        System.out.println(name + &quot; : &quot; + age);
+    &#125;
+&#125;
+---------------------------------------------------------------
+bean1 = com.itheima.controller.DeptController@504b8705
+bean2 = com.itheima.controller.DeptController@504b8705
+bean3 = com.itheima.controller.DeptController@504b8705
+</code></pre>
+<h5 id="Bean作用域"><a href="#Bean作用域" class="headerlink" title="Bean作用域"></a>Bean作用域</h5><table>
+<thead>
+<tr>
+<th><strong>作用域</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>singleton</td>
+<td>容器内同  名称 的 bean 只有一个实例（单例）（默认）</td>
+</tr>
+<tr>
+<td>prototype</td>
+<td>每次使用该  bean 时会创建新的实例（非单例）</td>
+</tr>
+<tr>
+<td>request</td>
+<td>每个请求范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+<tr>
+<td>session</td>
+<td>每个会话范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+<tr>
+<td>application</td>
+<td>每个应用范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>默认singleton的bean，在容器启动时被创建，可以使用@Lazy注解来延迟初始化（延迟到第一次使用时）。<br>prototype的bean，每一次使用该bean的时候都会创建一个新的实例。<br>实际开发当中，绝大部分的Bean是单例的，也就是说绝大部分Bean不需要配置scope属性。</p>
+</blockquote>
+<pre><code class="java">@Scope(&quot;prototype&quot;)
+@Slf4j
+@RequestMapping(&quot;/depts&quot;)
+@RestController
+public class DeptController &#123;
+...
+&#125;
+---------------------------------------------------------------
+bean1 = com.itheima.controller.DeptController@21abda60
+bean2 = com.itheima.controller.DeptController@dd20ebc
+bean3 = com.itheima.controller.DeptController@6c70b7c3
+</code></pre>
+<h6 id="1-bean的常见的作用域有哪些-？"><a href="#1-bean的常见的作用域有哪些-？" class="headerlink" title="1.bean的常见的作用域有哪些 ？"></a>1.bean的常见的作用域有哪些 ？</h6><p><code>singleton(默认) </code>&#x3D;&gt; 饿汉式<del>要想实现懒汉式可以在<code>@Bean</code>注解上添加<code>@Lazy</code>注解</del></p>
+<p><code>prototype</code>：每次请求该Bean时都会创建一个新的实例<del>创建的结果对象不一样</del></p>
+<h6 id="2-如何设置bean的作用域-？"><a href="#2-如何设置bean的作用域-？" class="headerlink" title="2.如何设置bean的作用域 ？"></a>2.如何设置bean的作用域 ？</h6><p>@Scope(“singleton”) 单例模式<br>@Scope(“prototype”) 多例模式</p>
+<h6 id="3-默认单例的bean什么时候创建-？"><a href="#3-默认单例的bean什么时候创建-？" class="headerlink" title="3. 默认单例的bean什么时候创建 ？"></a>3. 默认单例的bean什么时候创建 ？</h6><p>默认单例的bean，在容器启动时被创建</p>
+<h5 id="第三方bean"><a href="#第三方bean" class="headerlink" title="第三方bean"></a>第三方bean</h5><ul>
+<li><p>如果要管理的bean对象来自于第三方（不是自定义的），是无法用 @Component 及衍生注解声明bean的，就需要用到 @Bean注解。</p>
+</li>
+<li><p>若要管理的第三方bean对象，建议对这些bean进行集中分类配置，可以通过@Configuration注解声明一个配置类。</p>
+<ul>
+<li><pre><code class="java">@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">// 不推荐
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+    @Bean //将方法返回值交给IOC容器管理,成为IOC容器的bean对象
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 推荐
+@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">package com.itheima;
+
+import com.itheima.controller.DeptController;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootTest
+class SpringbootWebConfig2ApplicationTests &#123;
+
+    @Autowired // 是Spring的IOC容器
+    private ApplicationContext applicationContext;
+    // 获取bean对象
+    @Test
+    public void testGetBean() &#123;
+        // 根据bean的名称获取
+        Object bean1 = applicationContext.getBean(&quot;deptController&quot;);
+        System.out.println(&quot;bean1 = &quot; + bean1);
+        // 根据bean的类型获取
+        DeptController bean2 = applicationContext.getBean(DeptController.class);
+        System.out.println(&quot;bean2 = &quot; + bean2);
+
+        // 根据bean的名称 及 类型获取
+        DeptController bean3 = applicationContext.getBean(&quot;deptController&quot;, DeptController.class);
+        System.out.println(&quot;bean3 = &quot; + bean3);
+
+    &#125;
+
+
+    // bean的作用域
+    @Test
+    public void testScope() &#123;
+
+    &#125;
+======================================================================
+    // 第三方bean的管理
+    @Test
+    public void testThirdBean() throws Exception &#123;
+        SAXReader saxReader = new SAXReader();
+
+        Document document = saxReader.read(this.getClass().getClassLoader().getResource(&quot;1.xml&quot;));
+        Element rootElement = document.getRootElement();
+        String name = rootElement.element(&quot;name&quot;).getText();
+        String age = rootElement.element(&quot;age&quot;).getText();
+
+        System.out.println(name + &quot; : &quot; + age);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 放在启动类中【只需要一个 用下面的就要把上面注释】
+package com.itheima;
+
+import org.dom4j.io.SAXReader;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SpringbootWebConfigApplication.class, args);
+    &#125;
+    // 声明第三方的Bean，本质上是IoC容器调用@Bean修饰的方法
+    // 把方法的返回值放到IoC容器中管理
+    // 默认使用方法名作为bean的名字，可以在@Bean(名字)，修改bean的名字
+    @Bean()
+    public SAXReader getSaxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 放在特定的地方
+package com.itheima.config;
+
+import org.dom4j.io.SAXReader;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+// 声明为配置类，spring会扫描这个类中的注解
+@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader getSaxReader() &#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h3><p>SpringBoot的自动配置就是当spring容器启动后，一些配置类、bean对象就自动存入到了IOC容器中，不需要我们手动去声明，从而简化了开发，省去了繁琐的配置操作。</p>
+<blockquote>
+<p>先加个依赖后才可以搞喔</p>
+</blockquote>
+<pre><code class="java">// 测试自动配置Bean：spring容器启动时候自动创建对象放到IoC容器中 
+    @Autowired
+    private Gson gson;
+    @Test
+    public void testAutoBean01() &#123;
+        Result result = Result.success(&quot;自动配置bean666&quot;);
+        System.out.println(gson.toJson(result));
+    &#125;
+</code></pre>
+<h4 id="自动配置实现"><a href="#自动配置实现" class="headerlink" title="自动配置实现"></a>自动配置实现</h4><h6 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a><span style = "color:red">方案一</span></h6><p><code>@ComponentScan</code>：默认扫描当前类所在的包和子包<br><code>basePackages</code>：基包，指定扫描哪些包中的注解</p>
+<p>扫描多个包：</p>
+<h6 id="使用-ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。"><a href="#使用-ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。" class="headerlink" title="使用@ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。"></a>使用@ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。</h6><pre><code class="java">@ComponentScan(basePackages=&#123;&quot;com.itheima&quot;,&quot;com.alibaba&quot;&#125;)
+</code></pre>
+<p>工作 爱情 家庭</p>
+<h6 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a><span style = "color:red">方案二</span></h6><p><code>@Import</code> 导入。使用@Import导入的类会被Spring加载到IOC容器中，导入形式主要有以下几种：</p>
+<p>1.导入 普通类</p>
+<p>2.导入 配置类</p>
+<p>3.导入 ImportSelector 接口实现类</p>
+<p>4.@EnableXxxx注解，封装@Import注解 </p>
+<pre><code class="java">// 普通类
+@Import(TokenParser.class)
+// 配置类
+@Import(HeaderConfig.class)
+// 接口实现类
+@Import(MyImportSelector.class)
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+......
+&#125;
+</code></pre>
+<pre><code class="java">为什么第三方依赖中使用@Component及其衍生注解声明bean不生效?
+基于@Component及其衍生注解声明的bean要想生效,需要被组件扫描注解扫描到。
+有哪些方案可以使其生效呢?
+通过@ComponentScan注解扫描指定的包
+通过@Import注解将其导入到IOC容器中(四种常见方式)[最后注解可以封装import]
+普通类、配置类、ImportSelector实现列、@EnableXxx
+</code></pre>
+<h3 id="分模块开发设计"><a href="#分模块开发设计" class="headerlink" title="分模块开发设计"></a>分模块开发设计</h3><p>创建maven模块 tlias-pojo，存放实体类。</p>
+<p>创建maven模块 tlias-utils，存放相关工具类。</p>
+<h5 id="继承与聚合"><a href="#继承与聚合" class="headerlink" title="继承与聚合"></a>继承与聚合</h5><ul>
+<li><p>概念：继承描述的是两个工程间的关系，与java中的继承相似，子工程可以继承父工程中的配置信息，常见于依赖关系的继承。</p>
+</li>
+<li><p>作用：简化依赖配置、统一管理依赖</p>
+</li>
+</ul>
+<p>实现：**&lt; parent&gt; … &lt; &#x2F;parent&gt;**</p>
+<h5 id="继承关系实现"><a href="#继承关系实现" class="headerlink" title="继承关系实现"></a>继承关系实现</h5><p>① 创建maven模块tlias-parent，该工程为父工程，设置打包方式pom(默认jar)。</p>
+<p>② 在子工程的pom.xml文件中，配置继承关系。</p>
+<p>③ 在父工程中配置各个工程共有的依赖（子工程会自动继承父工程的依赖）</p>
+<blockquote>
+<p>jar：普通模块打包，springboot项目基本都是jar包（内嵌tomcat运行）<br>war：普通web程序打包，需要部署在外部的tomcat服务器中运行<br>pom：父工程或聚合工程，该模块不写代码，仅进行依赖管理</p>
+</blockquote>
+<h6 id="Maven的继承关系实现步骤"><a href="#Maven的继承关系实现步骤" class="headerlink" title="Maven的继承关系实现步骤 ?"></a>Maven的继承关系实现步骤 ?</h6><p>① 创建父工程，设置打包方式为pom。并继承 spring-boot-starter-parent<br>② 在子工程中配置继承关系<br>③ 在父工程中配置各个工程的共有依赖</p>
+<ul>
+<li>在子工程中，配置了继承关系之后，坐标中的groupId是可以省略的，因为会自动继承父工程的 。</li>
+<li>relativePath指定父工程的pom文件的相对位置（如果不指定，将从本地仓库&#x2F;远程仓库查找该工程）。</li>
+<li>若父子工程都配置了同一个依赖的不同版本，以子工程的为准。</li>
+</ul>
+<h5 id="版本锁定【自定义属性-x2F-引用属性】"><a href="#版本锁定【自定义属性-x2F-引用属性】" class="headerlink" title="版本锁定【自定义属性&#x2F;引用属性】"></a>版本锁定【自定义属性&#x2F;引用属性】</h5><ul>
+<li>在maven中，可以在父工程的pom文件中通过 <code>&lt;dependencyManagement&gt;</code> 来统一管理依赖版本。</li>
+</ul>
+<pre><code class="xml">&lt;properties&gt;
+    &lt;lombok.version&gt;1.18.30&lt;/lombok.version&gt;
+    &lt;jjwt.version&gt;0.9.1&lt;/jjwt.version&gt;
+&lt;/properties&gt;
+</code></pre>
+<pre><code class="xml">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+        &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;version&gt;$&#123;lombok.version&#125;&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
+<pre><code class="xml">&lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+        &lt;!--JWT令牌--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.jsonwebtoken&lt;/groupId&gt;
+            &lt;artifactId&gt;jjwt&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;jjwt.version&#125;&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+</code></pre>
+<h3 id="聚合"><a href="#聚合" class="headerlink" title="聚合"></a>聚合</h3><ul>
+<li><p>聚合</p>
+<p> 将多个模块组织成一个整体，同时进行项目的构建。</p>
+</li>
+<li><p>聚合工程</p>
+<p> 一个不具有业务功能的“空”工程（有且仅有一个pom文件）</p>
+</li>
+<li><p>作用</p>
+<p> 快速构建项目（无需根据依赖关系手动构建，直接在聚合工程上构建即可）</p>
+</li>
+</ul>
+<pre><code class="xml">            &lt;!--父工程 聚合--&gt;
+&lt;modules&gt;
+    &lt;module&gt;../tlias-pojo&lt;/module&gt;
+    &lt;module&gt;../tlias-utils&lt;/module&gt;
+    &lt;module&gt;../tlias-web-management&lt;/module&gt;
+&lt;/modules&gt;
+</code></pre>
+<blockquote>
+<p>聚合工程中所包含的模块，在构建时，会自动根据模块间的依赖关系设置构建顺序，与聚合工程中模块的配置书写位置无关。</p>
+</blockquote>
+<h6 id="1-maven中如何实现聚合关系"><a href="#1-maven中如何实现聚合关系" class="headerlink" title="1.maven中如何实现聚合关系 ?"></a>1.maven中如何实现聚合关系 ?</h6><blockquote>
+<p>&lt; modules&gt; … &lt; &#x2F;modules&gt;</p>
+</blockquote>
+<h6 id="2-maven中继承与聚合的联系与区别"><a href="#2-maven中继承与聚合的联系与区别" class="headerlink" title="2.maven中继承与聚合的联系与区别 ?"></a>2.maven中继承与聚合的联系与区别 ?</h6><p>联系：继承与聚合都属于设计型模块，打包方式都为pom，常将两种关系制作到同一个pom文件中</p>
+<p>区别：</p>
+<p>1.继承用于简化依赖配置、统一管理依赖版本，是在子工程中配置继承关系<br>2.聚合用于快速构建项目，是在父工程中配置聚合的模块</p>
+<h3 id="搭建Maven仓库私服Maven是共享jar包的"><a href="#搭建Maven仓库私服Maven是共享jar包的" class="headerlink" title="搭建Maven仓库私服Maven是共享jar包的"></a>搭建Maven仓库私服<del>Maven是共享jar包的</del></h3><blockquote>
+<p>D:\nexus-3.55.0-01\nexus-3.55.0-01\bin</p>
+</blockquote>
+<p>1.解压:apache-maven-nexus.zip<br>2.进入目录:apache-maven-nexusinexus-3.39.0-01\bin<br>3.启动服务:双击 start.bat<br>4.访问服务:localhost:8081</p>
+<p>访问私服：<a target="_blank" rel="noopener" href="http://localhost:8081/">http://localhost:8081</a></p>
+<p>访问密码：admin&#x2F;admin</p>
+<p>使用私服，需要在maven的<code>settings.xml</code>配置文件中，做如下配置：</p>
+<ol>
+<li><p>需要在 <strong>servers</strong> 标签中，配置访问私服的个人凭证(访问的用户名和密码)</p>
+<pre><code class="xml">&lt;server&gt;
+    &lt;id&gt;maven-releases&lt;/id&gt;
+    &lt;username&gt;admin&lt;/username&gt;
+    &lt;password&gt;admin&lt;/password&gt;
+&lt;/server&gt;
+    
+&lt;server&gt;
+    &lt;id&gt;maven-snapshots&lt;/id&gt;
+    &lt;username&gt;admin&lt;/username&gt;
+    &lt;password&gt;admin&lt;/password&gt;
+&lt;/server&gt;
+</code></pre>
+</li>
+<li><p>在 <strong>mirrors</strong> 中只配置我们自己私服的连接地址(如果之前配置过阿里云，需要直接替换掉)</p>
+<pre><code class="xml">&lt;mirror&gt;
+    &lt;id&gt;maven-public&lt;/id&gt;
+    &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+    &lt;url&gt;http://localhost:8081/repository/maven-public/&lt;/url&gt;
+&lt;/mirror&gt;
+</code></pre>
+</li>
+<li><p>需要在 <strong>profiles</strong> 中，增加如下配置，来指定snapshot快照版本的依赖，依然允许使用</p>
+<pre><code class="xml">&lt;profile&gt;
+    &lt;id&gt;allow-snapshots&lt;/id&gt;
+        &lt;activation&gt;
+            &lt;activeByDefault&gt;true&lt;/activeByDefault&gt;
+        &lt;/activation&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;maven-public&lt;/id&gt;
+            &lt;url&gt;http://localhost:8081/repository/maven-public/&lt;/url&gt;
+            &lt;releases&gt;
+                &lt;enabled&gt;true&lt;/enabled&gt;
+            &lt;/releases&gt;
+            &lt;snapshots&gt;
+                &lt;enabled&gt;true&lt;/enabled&gt;
+            &lt;/snapshots&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+&lt;/profile&gt;
+</code></pre>
+</li>
+<li><p>如果需要上传自己的项目到私服上，需要在项目的pom.xml文件中，增加如下配置，来配置项目发布的地址(也就是私服的地址)</p>
+<pre><code class="xml">&lt;distributionManagement&gt;
+    &lt;!-- release版本的发布地址 --&gt;
+    &lt;repository&gt;
+        &lt;id&gt;maven-releases&lt;/id&gt;
+        &lt;url&gt;http://localhost:8081/repository/maven-releases/&lt;/url&gt;
+    &lt;/repository&gt;
+    
+    &lt;!-- snapshot版本的发布地址 --&gt;
+    &lt;snapshotRepository&gt;
+        &lt;id&gt;maven-snapshots&lt;/id&gt;
+        &lt;url&gt;http://localhost:8081/repository/maven-snapshots/&lt;/url&gt;
+    &lt;/snapshotRepository&gt;
+&lt;/distributionManagement&gt;
+</code></pre>
+</li>
+<li><p>发布项目，直接运行 deploy 生命周期即可 (发布时，建议跳过单元测试)</p>
+</li>
+</ol>
+<p>​        </p>
+<h1 id="开始前端强化之旅！！！"><a href="#开始前端强化之旅！！！" class="headerlink" title="开始前端强化之旅！！！"></a>开始前端强化之旅！！！</h1>
     </div>
 
     

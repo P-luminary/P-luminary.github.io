@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ff7d73>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -2192,6 +2192,18 @@ update a set money = money + 500 where id = 1; 【非幂等】
 <li>幂等方案：【分布式锁、数据库锁(悲观锁、乐观锁)】</li>
 </ul>
 <p><span style = "color:red"><strong>RabbitMQ中死信交换机？(RabbitMQ延迟队列有了解过吗)</strong></span></p>
+<blockquote>
+<ul>
+<li>我们当时一个什么业务使用到了延迟队列（超时订单、限时优惠、定时发布）</li>
+<li>其中延迟队列就用到了死信交换机和TTL（消息存活时间）实现的</li>
+<li>消息超时未消费就会变成死信（死信的其他情况：拒绝被消费，队列满了）</li>
+</ul>
+<p>延迟队列插件实现延迟队列<code>DelayExchange</code></p>
+<ul>
+<li>声明一个交换机，添加delayed属性未true</li>
+<li>发送消息时，添加<code>x-delay</code>头，值为超过时间</li>
+</ul>
+</blockquote>
 <h6 id="延迟队列-x3D-死信交换机-TTL-生存时间"><a href="#延迟队列-x3D-死信交换机-TTL-生存时间" class="headerlink" title="延迟队列 &#x3D; 死信交换机 + TTL (生存时间)"></a>延迟队列 &#x3D; 死信交换机 + TTL (生存时间)</h6><ul>
 <li><strong>延迟队列</strong>：进入队列的消息会被延迟消费的队列</li>
 <li><strong>场景</strong>：超时订单、限时优惠，定时发布</li>
@@ -2203,6 +2215,106 @@ update a set money = money + 500 where id = 1; 【非幂等】
 <li>要投递的队列消息堆积满了，最早的消息可能成为死信</li>
 </ul>
 <p>如果该队列配置了<code>dead-letter-exchange</code>属性，指定了一个交换机，那么队列中的死信就会投递到这个交换机中，而这个交换机称为<strong>死信交换机</strong>(Dead Letter Exchange，简称DLX)</p>
+<pre><code class="java">@Bean
+public QUeue ttlQueue()&#123;
+    return QueueBuilder.durable(&quot;simple.queue&quot;) // 指定队列名称，并持久化
+        .ttl(10000) // 设置队列的超时时间 10秒
+        .deadLetterExchange(&quot;dl.direct&quot;) // 指定死信交换机
+        .build();
+&#125;
+</code></pre>
+<h6 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h6><p>TTL(Time-To-Live)。如果一个队列中的消息TTL结束仍未消费，则会变成死信，ttl超时分为两种情况：</p>
+<ul>
+<li>消息所在的队列设置了存活时间</li>
+<li>消息本身设置了存活时间</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/50eb7d1338c4fdae6ee9c65274b3116ac361514d/%E6%AD%BB%E4%BF%A1%E4%BA%A4%E6%8D%A2%E6%9C%BA.png" alt="死信图片"></p>
+<p><span style = "color:red"><strong>RabbitMQ如果有100万消息堆积在MQ，如何解决(消息堆积怎么解决)？</strong><br></span></p>
+<blockquote>
+<p>**解决消息堆积有三种思路 **</p>
+<ul>
+<li>增加更多消费者，提高消费速度</li>
+<li>在消费者内开启线程池加快消息处理速度</li>
+<li>扩大队列容积，提高堆积上限<ul>
+<li>在声明队列的时候可以设置<code>x-queue-model</code>为lazy，即为惰性队列</li>
+<li>基于磁盘存储，消息上限高</li>
+<li>性能比较稳定，但基于磁盘存储，受限于磁盘IO，时效性会jiang’di</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>当生产者发送消息的速度超过了消费者处理消息的速度，就会导致队列中的消息堆积，直到队列存储消息达到上限。之后发送的消息就会成为死信，可能会被丢弃，这就是堆积问题</p>
+<p>**解决消息堆积有三种思路 **</p>
+<ul>
+<li>增加更多消费者，提高消费速度</li>
+<li>在消费者内开启线程池加快消息处理速度</li>
+<li>扩大队列容积，提高堆积上限</li>
+</ul>
+<h6 id="惰性队列"><a href="#惰性队列" class="headerlink" title="惰性队列"></a>惰性队列</h6><p>惰性队列特征如下：</p>
+<ul>
+<li>接收到消息后直接存入磁盘而非内存</li>
+<li>消费者要消费消息时才会从磁盘中读取并加载到内存</li>
+<li>支持数百万条的消息存储</li>
+</ul>
+<pre><code class="java">@Bean
+public Queue lazyQueue()&#123;
+    return QueueBuilder
+            .durable(&quot;lazy.queue&quot;)
+            .lazy()
+            .build();
+&#125;
+</code></pre>
+<pre><code class="java">@RabbitListener(queuesToDeclare = @Queue)&#123;
+    name = &quot;lazy.queue&quot;,
+    durable = &quot;true&quot;,
+    arguments = @Argument(name = &quot;x-queue-mode&quot;), value=&quot;lazy&quot;
+&#125;
+public void listenLazyQUeue(String msg)&#123;
+    log.info(&quot;接收到lazy.queue的消息：&#123;&#125;&quot;,msg);
+&#125;
+</code></pre>
+<p><span style = "color:red"><strong>RabbitMQ高可用机制有了解过吗？</strong><br></span></p>
+<blockquote>
+<p>我们当时的项目在生产环境下，采用的是镜像模式搭建的集群，共有3个节点<br>镜像队列结构是一主多从(从就是镜像)，所有操作都是主节点完成，然后同步给镜像节点<br>主宕机后，镜像节点会代替成为新的主(如果在主从同步完成前，主就已经宕机，可能出现数据丢失)</p>
+</blockquote>
+<p><span style = "color:red"><strong>那出现丢数据怎么解决呢？</strong><br></span></p>
+<blockquote>
+<p>我们可以采用仲裁队列，与镜像队列一样，都是主从模式，支持主从数据同步，主从同步基于Raft协议，强一致性，并且使用起来也非常简单，不需要格外的配置，在声明队列的时候只需要指定这个是仲裁队列即可</p>
+</blockquote>
+<ul>
+<li>在生产环境下，使用集群来保证高可用性</li>
+<li>普通集群、<strong>镜像集群</strong>、仲裁队列</li>
+</ul>
+<h5 id="普通集群"><a href="#普通集群" class="headerlink" title="普通集群"></a>普通集群</h5><p>普通集群，或者叫标准集群(classic cluster)</p>
+<ul>
+<li>会在集群的各个节点间共享部分数据，包括：交换机、队列元信息。不包含队列中的信息</li>
+<li>当访问集群某节点时，如果队列不在该节点，会从数据所在节点传递到当前节点并返回</li>
+<li>队列所在节点宕机，队列中的消息就会丢失</li>
+</ul>
+<h5 id="镜像集群"><a href="#镜像集群" class="headerlink" title="镜像集群"></a>镜像集群</h5><p>镜像集群：本质是主从模式，具备下面的特征</p>
+<ul>
+<li>交换机、队列、队列中的消息会在各个mq的镜像节点之间同步备份</li>
+<li>创建队列的节点被称为该队列的<strong>主节点</strong>，备份到的其他节点叫做该队列的<strong>镜像</strong>节点</li>
+<li>一个队列的主节点可能是另一个队列的镜像节点</li>
+<li>所有操作都是主节点完成，然后同步给镜像节点</li>
+<li>主宕机后，镜像节点会替代成新的主</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/59b655f55c1f3031f72c5790425b8ae8e76e9d1f/%E9%95%9C%E5%83%8F%E9%9B%86%E7%BE%A4.png" style="zoom:150%;" />
+
+<h5 id="仲裁队列："><a href="#仲裁队列：" class="headerlink" title="仲裁队列："></a>仲裁队列：</h5><p>仲裁队列是3.8版本以后才有的新功能，用来替代镜像队列</p>
+<ul>
+<li>与镜像队列一样，都是主从模式，支持主从数据同步</li>
+<li>使用非常简单，没有复杂的配置</li>
+<li>主从同步基于<strong>Raft</strong>协议，强一致性</li>
+</ul>
+<pre><code class="java">@Bean
+public Queue quorumQueue()&#123;
+    return QueueBuilder
+            .durable(&quot;quorum.queue&quot;) // 持久化
+            .quorum() // 仲裁队列
+            .build();
+&#125;
+</code></pre>
 
     </div>
 

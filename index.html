@@ -507,6 +507,1394 @@ class IUserServiceTest &#123;
 <td>无</td>
 </tr>
 </tbody></table>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/thinkingandworkinghard/p/10482929.html">解决在IDEA 的Maven下 出现 Cannot access in offline mode 问题 - Doyourself! - 博客园</a></p>
+<p><a target="_blank" rel="noopener" href="http://localhost:8080/doc.html">管理接口文档</a></p>
+<pre><code class="java">UserController.java
+package com.itheima.mp.controller;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.itheima.mp.domain.po.User;
+
+import com.itheima.mp.domain.dto.UserFormDTO;
+
+import com.itheima.mp.domain.vo.UserVO;
+import com.itheima.mp.service.IUserService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Api(tags = &quot;用户管理接口&quot;)
+@RequiredArgsConstructor
+@RestController
+@RequestMapping(&quot;users&quot;)
+public class UserController &#123;
+
+    private final IUserService userService;
+
+    @PostMapping
+    @ApiOperation(&quot;新增用户&quot;)
+    public void saveUser(@RequestBody UserFormDTO userFormDTO) &#123;
+        // 1.转换DTO为PO
+        User user = BeanUtil.copyProperties(userFormDTO, User.class);
+        // 2.新增
+        userService.save(user);
+    &#125;
+
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;删除用户&quot;)
+    public void removeUserById(@PathVariable(&quot;id&quot;) Long userId) &#123;
+        userService.removeById(userId);
+    &#125;
+
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询用户&quot;)
+    public UserVO queryUserById(@PathVariable(&quot;id&quot;) Long userId) &#123;
+        // 1.查询用户
+        User user = userService.getById(userId);
+        // 2.处理vo
+        return BeanUtil.copyProperties(user, UserVO.class);
+    &#125;
+
+    @GetMapping
+    @ApiOperation(&quot;根据id集合查询用户&quot;)
+    public List&lt;UserVO&gt; queryUserByIds(@RequestParam(&quot;ids&quot;) List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+        List&lt;User&gt; users = userService.listByIds(ids);
+        // 2.处理vo
+        return BeanUtil.copyToList(users, UserVO.class);
+    &#125;
+
+    @PutMapping(&quot;&#123;id&#125;/deduction/&#123;money&#125;&quot;)
+    @ApiOperation(&quot;扣减用户余额&quot;)
+    public void deductBalance(@ApiParam(&quot;用户id&quot;) @PathVariable(&quot;id&quot;) Long id, @ApiParam(&quot;扣减的金额&quot;) @PathVariable(&quot;money&quot;) Integer money) &#123;
+        userService.deductBalance(id, money);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserFormDTO.java
+package com.itheima.mp.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户表单实体&quot;)
+public class UserFormDTO &#123;
+
+    @ApiModelProperty(&quot;id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;密码&quot;)
+    private String password;
+
+    @ApiModelProperty(&quot;注册手机号&quot;)
+    private String phone;
+
+    @ApiModelProperty(&quot;详细信息，JSON风格&quot;)
+    private String info;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+&#125;
+</code></pre>
+<pre><code class="java">UserQuery.java
+package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery &#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+package com.itheima.mp.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.mp.domain.po.User;
+import com.itheima.mp.mapper.UserMapper;
+import com.itheima.mp.service.IUserService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements IUserService &#123;
+    @Override
+    public void deductBalance(Long id, Integer money) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        // 2.判断用户状态
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 3.判断用户余额
+        if (user.getBalance() &lt; money) &#123;
+            throw new RuntimeException(&quot;用户余额不足&quot;);
+        &#125;
+        // 4.扣减余额
+        baseMapper.deductMoneyById(id, money);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.mp.mapper;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
+import com.itheima.mp.domain.po.User;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
+
+public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+
+    List&lt;User&gt; queryUserByIds(@Param(&quot;ids&quot;) List&lt;Long&gt; ids);
+
+    void updateBalanceByIds(@Param(Constants.WRAPPER) QueryWrapper&lt;User&gt; wrapper, @Param(&quot;amount&quot;) int amount);
+
+    @Update(&quot;UPDATE user SET balance = balance - #&#123;money&#125; WHERE id = #&#123;id&#125;&quot;)
+    void deductMoneyById(Long id, Integer money);
+&#125;
+</code></pre>
+<h3 id="Iservice的Lambda方法"><a href="#Iservice的Lambda方法" class="headerlink" title="Iservice的Lambda方法"></a>Iservice的Lambda方法</h3><h6 id="需求：实现一个根据复杂条件查询用户的接口，查询条件如下："><a href="#需求：实现一个根据复杂条件查询用户的接口，查询条件如下：" class="headerlink" title="需求：实现一个根据复杂条件查询用户的接口，查询条件如下："></a>需求：实现一个根据复杂条件查询用户的接口，查询条件如下：</h6><p><strong>name</strong>：用户名关键字，可以为空<br><strong>status</strong>：用户状态，可以为空<br><strong>minBalance</strong>：最小余额，可以为空<br><strong>maxBalance</strong>：最大余额，可以为空</p>
+<pre><code class="mysql">&lt;select id=&quot;queryUsers&quot; resultType=&quot;com.itheima.mp.domain.po.User&quot;&gt;
+    SELECT *
+    FROM tb_user
+    &lt;where&gt;
+        &lt;if test=&quot;name != null&quot;&gt;
+            AND username LIKE CONCAT(&#39;%&#39;, #&#123;name&#125;, &#39;%&#39;)
+        &lt;/if&gt;
+        &lt;if test=&quot;status != null&quot;&gt;
+            AND `status` = #&#123;status&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;minBalance != null and maxBalance != null&quot;&gt;
+            AND balance BETWEEN #&#123;minBalance&#125; AND #&#123;maxBalance&#125;
+        &lt;/if&gt;
+    &lt;/where&gt;
+&lt;/select&gt;
+</code></pre>
+<h6 id="UserQuery-java"><a href="#UserQuery-java" class="headerlink" title="UserQuery.java"></a>UserQuery.java</h6><pre><code class="java">package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery &#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<h6 id="UserController-java"><a href="#UserController-java" class="headerlink" title="UserController.java"></a>UserController.java</h6><pre><code class="java">    @ApiOperation(&quot;根据复杂条件查询用户接口&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public List&lt;UserVO&gt; queryUsers(UserQuery query) &#123;
+        // 1.查询用户PO
+        List&lt;User&gt; users = userService.queryUsers(query.getName(), query.getStatus(), query.getMinBalance(), query.getMaxBalance());
+        // 2.把po拷贝到vo
+        return BeanUtil.copyToList(users, UserVO.class);
+    &#125;
+</code></pre>
+<h6 id="IUserService-java"><a href="#IUserService-java" class="headerlink" title="IUserService.java"></a>IUserService.java</h6><pre><code class="java">package com.itheima.mp.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.itheima.mp.domain.po.User;
+
+import java.util.List;
+
+public interface IUserService extends IService&lt;User&gt; &#123;
+    void deductBalance(Long id, Integer money);
+
+    List&lt;User&gt; queryUsers(String name, Integer status, Integer minBalance, Integer maxBalance);
+&#125;
+</code></pre>
+<h6 id="UserServiceImpl-java"><a href="#UserServiceImpl-java" class="headerlink" title="UserServiceImpl.java"></a>UserServiceImpl.java</h6><pre><code class="java">package com.itheima.mp.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.mp.domain.po.User;
+import com.itheima.mp.mapper.UserMapper;
+import com.itheima.mp.service.IUserService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements IUserService &#123;
+   @Override
+    public List&lt;User&gt; queryUsers(String name, Integer status, Integer minBalance, Integer maxBalance) &#123;
+        return lambdaQuery()
+                .like(name!=null, User::getUsername,name)
+                .eq(status!=null, User::getStatus,status)
+                .gt(minBalance!=null, User::getBalance,minBalance) // 大于
+                .lt(maxBalance!=null, User::getBalance,maxBalance) // 小于
+                .list();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="IService的Lambda更新LambdaUpdate-、LambdaQuery"><a href="#IService的Lambda更新LambdaUpdate-、LambdaQuery" class="headerlink" title="IService的Lambda更新LambdaUpdate()、LambdaQuery()"></a>IService的Lambda更新<del>LambdaUpdate()、LambdaQuery()</del></h3><h6 id="改造根据id修改用户余额的接口，要求如下"><a href="#改造根据id修改用户余额的接口，要求如下" class="headerlink" title="改造根据id修改用户余额的接口，要求如下"></a>改造根据id修改用户余额的接口，要求如下</h6><ul>
+<li><p>完成对用户状态校验</p>
+</li>
+<li><p>完成对用户余额校验</p>
+</li>
+<li><p>如果扣减后余额为0，则将用户status修改为冻结状态 (2)</p>
+<h6 id="UserController-java-1"><a href="#UserController-java-1" class="headerlink" title="UserController.java"></a>UserController.java</h6></li>
+</ul>
+<pre><code class="java"> @PutMapping(&quot;&#123;id&#125;/deduction/&#123;money&#125;&quot;)
+    @ApiOperation(&quot;扣减用户余额&quot;)
+    public void deductBalance(@ApiParam(&quot;用户id&quot;) @PathVariable(&quot;id&quot;) Long id, @ApiParam(&quot;扣减的金额&quot;) @PathVariable(&quot;money&quot;) Integer money) &#123;
+        userService.deductBalance(id, money);
+    &#125;
+</code></pre>
+<h6 id="UserServiceImpl-java-1"><a href="#UserServiceImpl-java-1" class="headerlink" title="UserServiceImpl.java"></a>UserServiceImpl.java</h6><pre><code class="java"> @Override
+    public void deductBalance(Long id, Integer money) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        // 2.判断用户状态
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 3.判断用户余额
+        if (user.getBalance() &lt; money) &#123;
+            throw new RuntimeException(&quot;用户余额不足&quot;);
+        &#125;
+        // 4.扣减余额 update tb_user set balance = balance - ?
+        int remainBalance = user.getBalance() - money;
+        lambdaUpdate()
+                .set(User::getBalance, remainBalance)
+                .set(remainBalance == 0,User::getStatus, 2)
+                .eq(User::getId, id)
+                .eq(User::getBalance, user.getBalance()) // 乐观锁
+                .update();
+    &#125;
+</code></pre>
+<h3 id="IService的批量新增"><a href="#IService的批量新增" class="headerlink" title="IService的批量新增"></a>IService的批量新增</h3><h6 id="批量插入10万条用户数据，并作出对比："><a href="#批量插入10万条用户数据，并作出对比：" class="headerlink" title="批量插入10万条用户数据，并作出对比："></a>批量插入10万条用户数据，并作出对比：</h6><ul>
+<li>普通for循环插入<del>4分钟</del></li>
+<li><strong>IService的批量插入</strong><del>30秒</del></li>
+<li>开启<strong>rewriteBatchedStatements&#x3D;true</strong>参数【6秒】<del>重写Statement语句，在application.yaml的sql中url拼接</del></li>
+</ul>
+<pre><code class="java">Test  com/itheima/mp/service/IUserServiceTest.java
+@Test
+    void testSaveOneByOne() &#123;
+        long b = System.currentTimeMillis();
+        for (int i = 1; i &lt;= 100000; i++) &#123;
+            userService.save(buildUser(i));
+        &#125;
+        long e = System.currentTimeMillis();
+        System.out.println(&quot;耗时：&quot; + (e - b));
+    &#125;
+
+    private User buildUser(int i) &#123;
+        User user = new User();
+        user.setUsername(&quot;user_&quot; + i);
+        user.setPassword(&quot;123&quot;);
+        user.setPhone(&quot;&quot; + (18688190000L + i));
+        user.setBalance(2000);
+        user.setInfo(&quot;&#123;\&quot;age\&quot;: 24, \&quot;intro\&quot;: \&quot;英文老师\&quot;, \&quot;gender\&quot;: \&quot;female\&quot;&#125;&quot;);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(user.getCreateTime());
+        return user;
+    &#125;
+</code></pre>
+<h6 id="MyBatisPlus的批处理"><a href="#MyBatisPlus的批处理" class="headerlink" title="MyBatisPlus的批处理"></a>MyBatisPlus的批处理</h6><pre><code class="java">@Test
+void testSaveBatch() &#123;
+    // 准备10万条数据
+    List&lt;User&gt; list = new ArrayList&lt;&gt;(1000);
+    long b = System.currentTimeMillis();
+    for (int i = 1; i &lt;= 100000; i++) &#123;
+        list.add(buildUser(i));
+        // 每1000条批量插入一次
+        if (i % 1000 == 0) &#123;
+            userService.saveBatch(list);
+            list.clear();
+        &#125;
+    &#125;
+    long e = System.currentTimeMillis();
+    System.out.println(&quot;耗时：&quot; + (e - b));
+&#125;
+</code></pre>
+<p>可以看到使用了批处理以后，比逐条新增效率提高了10倍左右，性能还是不错的。</p>
+<p>可以发现其实<code>MybatisPlus</code>的批处理是基于<code>PrepareStatement</code>的预编译模式，然后批量提交，最终在数据库执行时还是会有多条insert语句，逐条插入数据。SQL类似这样：</p>
+<pre><code class="SQL">Preparing: INSERT INTO user ( username, password, phone, info, balance, create_time, update_time ) VALUES ( ?, ?, ?, ?, ?, ?, ? )
+Parameters: user_1, 123, 18688190001, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+Parameters: user_2, 123, 18688190002, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+Parameters: user_3, 123, 18688190003, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+</code></pre>
+<p>而如果想要得到最佳性能，最好是将多条SQL合并为一条，像这样：</p>
+<pre><code class="SQL">INSERT INTO user ( username, password, phone, info, balance, create_time, update_time )
+VALUES 
+(user_1, 123, 18688190001, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_2, 123, 18688190002, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_3, 123, 18688190003, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_4, 123, 18688190004, &quot;&quot;, 2000, 2023-07-01, 2023-07-01);
+</code></pre>
+<p>该怎么做呢？</p>
+<p>MySQL的客户端连接参数中有这样的一个参数：<code>rewriteBatchedStatements</code>。顾名思义，就是重写批处理的<code>statement</code>语句。参考文档：</p>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements</a></p>
+<p>这个参数的默认值是false，我们需要修改连接参数，将其配置为true</p>
+<p>修改项目中的application.yml文件，在jdbc的url后面添加参数<code>&amp;rewriteBatchedStatements=true</code>:</p>
+<pre><code class="YAML">spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/mp?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;serverTimezone=Asia/Shanghai&amp;rewriteBatchedStatements=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: MySQL123
+</code></pre>
+<h3 id="扩展功能-——-代码生成器生成代码的代码"><a href="#扩展功能-——-代码生成器生成代码的代码" class="headerlink" title="扩展功能 —— 代码生成器生成代码的代码"></a>扩展功能 —— 代码生成器<del>生成代码的代码</del></h3><h2 id="3-1-代码生成"><a href="#3-1-代码生成" class="headerlink" title="3.1 代码生成"></a><strong>3.1 代码生成</strong></h2><p>在使用MybatisPlus以后，基础的<code>Mapper</code>、<code>Service</code>、<code>PO</code>代码相对固定，重复编写也比较麻烦。因此MybatisPlus官方提供了代码生成器根据数据库表结构生成<code>PO</code>、<code>Mapper</code>、<code>Service</code>等相关代码。只不过代码生成器同样要编码使用，也很麻烦。</p>
+<p>这里推荐大家使用一款<code>MybatisPlus</code>的插件，它可以基于图形化界面完成<code>MybatisPlus</code>的代码生成，非常简单。</p>
+<h3 id="3-1-1-安装插件"><a href="#3-1-1-安装插件" class="headerlink" title="3.1.1.安装插件"></a><strong>3.1.1.安装插件</strong></h3><p>在<code>Idea</code>的plugins市场中搜索并安装<code>MyBatisPlus</code>插件：</p>
+<p>然后重启你的Idea即可使用。</p>
+<h3 id="3-1-2-使用"><a href="#3-1-2-使用" class="headerlink" title="3.1.2.使用"></a><strong>3.1.2.使用</strong></h3><p>刚好数据库中还有一张address表尚未生成对应的实体和mapper等基础代码。我们利用插件生成一下。 首先需要配置数据库地址，在Idea顶部菜单中，找到<code>other</code>，选择<code>Config Database</code>：</p>
+<p>点击OK保存。</p>
+<p>然后再次点击Idea顶部菜单中的other，然后选择<code>Code Generator</code>:</p>
+<p>在弹出的表单中填写信息：</p>
+<p><img src="https://b11et3un53m.feishu.cn/space/api/box/stream/download/asynccode/?code=NzY1ZmEzNjMxODM4NjkzMjUzZDkxMGY1NDdlZjUzNmRfMjQweXV3NE1lRmpkWGNzcU5pOGxyMW1yaGoxNmtJamZfVG9rZW46WlRqemI4SGVjb080VWp4Sko0ZWNZR2lTbnRoXzE3MzI0MTU0NDQ6MTczMjQxOTA0NF9WNA" alt="img"></p>
+<p>最终，代码自动生成到指定的位置了：</p>
+<h3 id="扩展功能-——-DB静态工具两个Service相互注入"><a href="#扩展功能-——-DB静态工具两个Service相互注入" class="headerlink" title="扩展功能 —— DB静态工具两个Service相互注入"></a>扩展功能 —— DB静态工具<del>两个Service相互注入</del></h3><ul>
+<li>改造根据id查询用户的接口，查询用户的同时<del>user表</del>，查询出用户对应的所有地址<del>address表</del></li>
+<li>改造根据id批量查询用户的接口，查询用户的同时，查询出用户对应的所有地址</li>
+<li>实现根据用户id查询收货地址功能，需要验证用户状态，冻结用户抛出异常(练习)</li>
+</ul>
+<h2 id="3-2-静态工具"><a href="#3-2-静态工具" class="headerlink" title="3.2.静态工具"></a><strong>3.2.静态工具</strong></h2><p><img src="https://raw.githubusercontent.com/P-luminary/images/76848ff08a98edaf6d5d07285cd76e50f42e7c5b/DB%E9%9D%99%E6%80%81%E5%B7%A5%E5%85%B7.jpg"></p>
+<p>有的时候Service之间也会相互调用，为了避免出现循环依赖问题，MybatisPlus提供一个静态工具类：<code>Db</code>，其中的一些静态方法与<code>IService</code>中方法签名基本一致，也可以帮助我们实现CRUD功能：</p>
+<pre><code class="java">UserController.java
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询用户&quot;)
+    public UserVO queryUserById(@PathVariable(&quot;id&quot;) Long id) &#123;
+        // 1.查询用户
+//        User user = userService.getById(userId);
+        // 2.处理vo
+        return userService.queryUserAndAddressById(id);
+    &#125;
+</code></pre>
+<pre><code class="java">IUserService.java
+public interface IUserService extends IService&lt;User&gt; &#123;
+    UserVO queryUserAndAddressById(Long id);
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public UserVO queryUserAndAddressById(Long id) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 2.查询方法
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class)
+                .eq(Address::getUserId, id).list();
+        // 3.封装VO
+        // 3.1 转User的PO为VO
+        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        if (CollUtil.isEmpty(addresses)) &#123;
+           userVO.setAddresses(BeanUtil.copyToList(addresses, AddressVO.class));
+        &#125;
+        return userVO;
+    &#125;
+</code></pre>
+<h3 id="扩展功能—DB静态工具-练习"><a href="#扩展功能—DB静态工具-练习" class="headerlink" title="扩展功能—DB静态工具(练习)"></a>扩展功能—DB静态工具(练习)</h3><pre><code class="java">UserController.java
+@GetMapping
+    @ApiOperation(&quot;根据id集合查询用户&quot;)
+    public List&lt;UserVO&gt; queryUserByIds(@RequestParam(&quot;ids&quot;) List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+//        List&lt;User&gt; users = userService.listByIds(ids);
+        // 2.处理vo
+        return userService.queryUserAndAddressByIds(ids);
+    &#125;
+</code></pre>
+<pre><code class="java">IUserService.java
+public interface IUserService extends IService&lt;User&gt; &#123;
+    List&lt;UserVO&gt; queryUserAndAddressByIds(List&lt;Long&gt; ids);
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public List&lt;UserVO&gt; queryUserAndAddressByIds(List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+        List&lt;User&gt; users = listByIds(ids);
+        if (CollUtil.isEmpty(users)) &#123;
+            return Collections.emptyList();
+        &#125;
+        // 2.查询地址
+        // 2.1 获取用户id集合
+        List&lt;Long&gt; userIds = users.stream().map(User::getId).collect(Collectors.toList());
+        // 2.2 根据用户id查询地址 这是全部地址
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class).in(Address::getUserId, userIds).list();
+        // 2.3 转换地址VO
+        List&lt;AddressVO&gt; addressVOList = BeanUtil.copyToList(addresses, AddressVO.class);
+        // 2.4 梳理地址集合分组处理，分类整理，相同用户放入一个集合(组)中
+        Map&lt;Long, List&lt;AddressVO&gt;&gt; addressMap = new HashMap&lt;&gt;(0);
+        if (CollUtil.isNotEmpty(addressVOList))&#123;
+            addressMap = addressVOList.stream().collect(Collectors.groupingBy(AddressVO::getUserId));
+        &#125;
+        // 3.转换VO返回
+        List&lt;UserVO&gt; list = new ArrayList&lt;&gt;(users.size());
+        for (User user : users) &#123;
+            // 3.1 转换User的Po为VO
+            UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+            list.add(userVO);
+
+            // 3.2 转换地址VO
+            userVO.setAddresses(addressMap.get(user.getId()));
+        &#125;
+        return null;
+    &#125;
+</code></pre>
+<h3 id="扩展功能—逻辑删除要在数据库里面创建一个deleted表"><a href="#扩展功能—逻辑删除要在数据库里面创建一个deleted表" class="headerlink" title="扩展功能—逻辑删除要在数据库里面创建一个deleted表"></a>扩展功能—逻辑删除<del>要在数据库里面创建一个deleted表</del></h3><h6 id="订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息"><a href="#订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息" class="headerlink" title="订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息"></a>订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息</h6><p><strong>逻辑删除</strong>就是基于代码逻辑模拟删除效果，但并不会真正删除数据。思路如下：</p>
+<ul>
+<li>在表中添加一个字段标记数据是否被删除</li>
+<li>当删除数据时把标记置为1</li>
+<li>查询时只查询标记为0的数据</li>
+</ul>
+<p>例如逻辑删除字段为deleted：</p>
+<p>• 删除操作：</p>
+<pre><code class="mysql"># 是0才删除 是1就不用删除 所以用AND
+UPDATE user SET deleted = 1 WHERE id = 1 AND deleted = 0
+</code></pre>
+<p>• 查询操作：</p>
+<pre><code class="mysql"># 查询未删除的数据
+SELECT * FROM user WHERE deleted = 0
+</code></pre>
+<h5 id="逻辑删除"><a href="#逻辑删除" class="headerlink" title="逻辑删除"></a>逻辑删除</h5><p><strong>MybatisPlus</strong>提供了逻辑删除功能，无需改变方法调用的方式，而是在底层帮我们自动修改CRUD的语句。我们要做的就是在application.yaml文件中配置逻辑删除的字段名称和值即可：</p>
+<pre><code class="yaml">mybatis-plus: 
+  global-config:    
+   db-config:
+    logic-delete-field: flag # 全局逻辑删除的实体字段名，字段类型可以是boolean、integer
+    logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+    logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+</code></pre>
+<h6 id="逻辑删除本身也有自己的问题，比如："><a href="#逻辑删除本身也有自己的问题，比如：" class="headerlink" title="逻辑删除本身也有自己的问题，比如："></a>逻辑删除本身也有自己的问题，比如：</h6><p>• 会导致数据库表垃圾数据越来越多，影响查询效率<br>• SQL中全都需要对逻辑删除字段做判断，影响查询效率</p>
+<p>因此，我不太推荐采用逻辑删除功能，如果数据不能删除，可以采用把数据迁移到其它表的办法。</p>
+<h3 id="扩展功能—枚举处理器"><a href="#扩展功能—枚举处理器" class="headerlink" title="扩展功能—枚举处理器"></a>扩展功能—枚举处理器</h3><p>像这种字段我们一般会定义一个枚举，做业务判断的时候就可以直接基于枚举做比较。但是我们数据库采用的是<code>int</code>类型，对应的PO也是<code>Integer</code>。因此业务操作时必须手动把<code>枚举</code>与<code>Integer</code>转换，非常麻烦。</p>
+<p>因此，MybatisPlus提供了一个处理枚举的类型转换器，可以帮我们<strong>把枚举类型与数据库类型自动转换</strong>。</p>
+<h3 id="3-3-1-定义枚举"><a href="#3-3-1-定义枚举" class="headerlink" title="3.3.1.定义枚举"></a><strong>3.3.1.定义枚举</strong></h3><p>我们定义一个用户状态的枚举：</p>
+<pre><code class="java">User.java //使用枚举类型
+// 使用状态(1正常 2冻结)
+private UserStatus status;
+</code></pre>
+<p>要让<code>MybatisPlus</code>处理枚举与数据库类型自动转换，我们必须告诉<code>MybatisPlus</code>，枚举中的哪个字段的值作为数据库值。 <code>MybatisPlus</code>提供了<code>@EnumValue</code>注解来标记枚举属性：</p>
+<pre><code class="java">package com.itheima.mp.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import lombok.Getter;
+
+@Getter
+public enum UserStatus &#123;
+    NORMAL(1, &quot;正常&quot;),
+    FREEZE(2, &quot;冻结&quot;)
+    ;
+    @EnumValue
+    private final int value;
+    private final String desc;
+
+    UserStatus(int value, String desc) &#123;
+        this.value = value;
+        this.desc = desc;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="3-3-2-配置枚举处理器MP增加了Enum和JSON处理器"><a href="#3-3-2-配置枚举处理器MP增加了Enum和JSON处理器" class="headerlink" title="3.3.2.配置枚举处理器MP增加了Enum和JSON处理器"></a>3.3.2.配置枚举处理器<del>MP增加了Enum和JSON处理器</del></h3><p>在application.yaml文件中添加配置：</p>
+<pre><code class="YAML">mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+</code></pre>
+<pre><code class="java">UserVO.java
+package com.itheima.mp.domain.vo;
+
+import com.itheima.mp.enums.UserStatus;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@ApiModel(description = &quot;用户VO实体&quot;)
+public class UserVO &#123;
+
+    @ApiModelProperty(&quot;用户id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;详细信息&quot;)
+    private String info;
+
+    @ApiModelProperty(&quot;使用状态（1正常 2冻结）&quot;)
+    private UserStatus status;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+
+    @ApiModelProperty(&quot;用户的收货地址&quot;)
+    private List&lt;AddressVO&gt; addresses;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+ @Override
+    public UserVO queryUserAndAddressById(Long id) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        if (user == null || user.getStatus() == UserStatus.FREEZE) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 2.查询方法
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class)
+                .eq(Address::getUserId, id).list();
+        // 3.封装VO
+        // 3.1 转User的PO为VO
+        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        if (CollUtil.isEmpty(addresses)) &#123;
+           userVO.setAddresses(BeanUtil.copyToList(addresses, AddressVO.class));
+        &#125;
+        return userVO;
+    &#125;
+</code></pre>
+<h6 id="想要前端返回正常还是冻结-JsonValue"><a href="#想要前端返回正常还是冻结-JsonValue" class="headerlink" title="想要前端返回正常还是冻结  @JsonValue"></a>想要前端返回正常还是冻结 <code> @JsonValue</code></h6><pre><code class="java">package com.itheima.mp.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
+
+@Getter
+public enum UserStatus &#123;
+    NORMAL(1, &quot;正常&quot;),
+    FREEZE(2, &quot;冻结&quot;)
+    ;
+    @EnumValue
+    private final int value;
+    @JsonValue
+    private final String desc;
+
+    UserStatus(int value, String desc) &#123;
+        this.value = value;
+        this.desc = desc;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="扩展功能—JSON处理器AbstractJsonTypeHandler"><a href="#扩展功能—JSON处理器AbstractJsonTypeHandler" class="headerlink" title="扩展功能—JSON处理器AbstractJsonTypeHandler"></a>扩展功能—JSON处理器<del>AbstractJsonTypeHandler</del></h3><p>数据库中user表中有一个json类型的字段</p>
+<blockquote>
+<p><strong>名称   数据类型      注释</strong><br>info    JSON            详细信息<br>。。。。。。。。。。。。</p>
+<p>JSON：<br>{ “age”:20,<br>“intro”: “”青年”,<br>“gender”:”male”}</p>
+</blockquote>
+<p>这样一来，我们要读取info中的属性时就非常不方便。如果要方便获取，info的类型最好是一个<code>Map</code>或者实体类。</p>
+<p>而一旦我们把<code>info</code>改为<code>对象</code>类型，就需要在写入数据库时手动转为<code>String</code>，再读取数据库时，手动转换为<code>对象</code>，这会非常麻烦。</p>
+<p>因此MybatisPlus提供了很多特殊类型字段的类型处理器，解决特殊字段类型与数据库类型转换的问题。例如处理JSON就可以使用<code>JacksonTypeHandler</code>处理器。</p>
+<h6 id="接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器："><a href="#接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器：" class="headerlink" title="接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器："></a>接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器：</h6><p><code>@TableField(typeHandler = JacksonTypeHandler.class)</code> 定义类型处理器<br><code>@TableName(value = &quot;user&quot;, autoResultMap = true)</code></p>
+<pre><code class="java">User.java
+@Data
+@TableName(value = &quot;user&quot;, autoResultMap = true)
+public class User &#123;
+
+    /**
+     * 用户id
+     */
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 详细信息
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private UserInfo info;
+&#125;
+</code></pre>
+<pre><code class="java">UserVO.java
+package com.itheima.mp.domain.vo;
+
+import com.itheima.mp.domain.po.UserInfo;
+import com.itheima.mp.enums.UserStatus;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@ApiModel(description = &quot;用户VO实体&quot;)
+public class UserVO &#123;
+
+    @ApiModelProperty(&quot;用户id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;详细信息&quot;)
+    private UserInfo info;
+
+    @ApiModelProperty(&quot;使用状态（1正常 2冻结）&quot;)
+    private UserStatus status;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+
+    @ApiModelProperty(&quot;用户的收货地址&quot;)
+    private List&lt;AddressVO&gt; addresses;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.mp.domain.po;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor(staticName = &quot;of&quot;)
+public class UserInfo &#123;
+    private Integer age;
+    private String intro;
+    private String gender;
+    // 添加静态方法 of
+    public static UserInfo of(Integer age, String intro, String gender) &#123;
+        return new UserInfo(age, intro, gender);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserMapperTest.java
+@SpringBootTest
+class UserMapperTest &#123;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void testInsert() &#123;
+        User user = new User();
+        user.setId(5L);
+        user.setUsername(&quot;Lucy&quot;);
+        user.setPassword(&quot;123&quot;);
+        user.setPhone(&quot;18688990011&quot;);
+        user.setBalance(200);
+        user.setInfo(UserInfo.of(14, &quot;英文老师&quot;, &quot;female&quot;));
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.insert(user);
+    &#125;
+</code></pre>
+<h3 id="插件功能—分页插件基本用法"><a href="#插件功能—分页插件基本用法" class="headerlink" title="插件功能—分页插件基本用法"></a>插件功能—分页插件基本用法</h3><p>MyBatisPlus提供的内置拦截器有下面这些：</p>
+<table>
+<thead>
+<tr>
+<th><strong>序号</strong></th>
+<th><strong>拦截器</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>TenantLineInnerInterceptor</td>
+<td>多租户插件</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DynamicTableNameInnerInterceptor</td>
+<td>动态表名插件</td>
+</tr>
+<tr>
+<td>3</td>
+<td>PaginationInnerInterceptor</td>
+<td>分页插件</td>
+</tr>
+<tr>
+<td>4</td>
+<td>OptimisticLockerInnerInterceptor</td>
+<td>乐观锁插件</td>
+</tr>
+<tr>
+<td>5</td>
+<td>IllegalSQLInnerInterceptor</td>
+<td>SQL性能规范插件，检测并拦截垃圾SQL</td>
+</tr>
+<tr>
+<td>6</td>
+<td>BlockAttackInnerInterceptor</td>
+<td>防止全表更新和删除的插件</td>
+</tr>
+</tbody></table>
+<h6 id="首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】"><a href="#首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】" class="headerlink" title="首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】"></a>首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】</h6><pre><code class="java">@Configuration
+public class MybatisConfig &#123;
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() &#123;
+        // 1. 初始化核心插件
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        // 2. 添加分页插件
+        PaginationInnerInterceptor pageInterceptor = new PaginationInnerInterceptor(DbType.MYSQL);
+        pageInterceptor.setMaxLimit(1000L); // 设置分页上限
+        interceptor.addInnerInterceptor(pageInterceptor);
+        return interceptor;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="接着，就可以使用分页的API了：-IService里面就有"><a href="#接着，就可以使用分页的API了：-IService里面就有" class="headerlink" title="接着，就可以使用分页的API了：[IService里面就有]"></a>接着，就可以使用分页的API了：[IService里面就有]</h6><pre><code class="java">@Test
+    void testPageQuery() &#123;
+        // 1. 查询
+        int pageNo = 1, pageSize = 5;
+        // 1.1. 分页参数
+        Page&lt;User&gt; page = Page.of(pageNo, pageSize);
+        // 1.2. 排序参数, 通过OrderItem来指定
+        page.addOrder(new OrderItem(&quot;balance&quot;, true));
+        // 先按balance排序 再按id排序
+        page.addOrder(new OrderItem(&quot;id&quot;, true));
+        // 1.3. 分页查询
+        Page&lt;User&gt; p = userService.page(page);
+        // 2. 总条数
+        System.out.println(&quot;total = &quot; + p.getTotal());
+        // 3. 总页数
+        System.out.println(&quot;pages = &quot; + p.getPages());
+        // 4. 分页数据
+        List&lt;User&gt; records = p.getRecords();
+        records.forEach(System.out::println);
+    &#125;
+</code></pre>
+<h3 id="插件功能—通用分页实体"><a href="#插件功能—通用分页实体" class="headerlink" title="插件功能—通用分页实体"></a>插件功能—通用分页实体</h3><h6 id="遵循下面的接口规范，编写一个UserController接口，实现User的分页查询"><a href="#遵循下面的接口规范，编写一个UserController接口，实现User的分页查询" class="headerlink" title="遵循下面的接口规范，编写一个UserController接口，实现User的分页查询"></a>遵循下面的接口规范，编写一个UserController接口，实现User的分页查询</h6><table>
+<thead>
+<tr>
+<th><strong>参数</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>请求方式</td>
+<td>GET</td>
+</tr>
+<tr>
+<td>请求路径</td>
+<td>&#x2F;users&#x2F;page</td>
+</tr>
+<tr>
+<td>请求参数</td>
+<td>“pageNo”: 1<br/>“pageSize”: 5<br/>“sortBy”: “balance”<br/>“isAsc”: false<br/>“name”: “jack”<br/>“status”: 1</td>
+</tr>
+<tr>
+<td>返回值</td>
+<td>“total”: 1005<br/>“pages”: 201<br/>“list”: 包含两个元素的数组，每个元素都是一个对象，包含以下键值对：<br/>“id”: 1 或 2<br/>“username”: “Jack” 或 “Rose”<br/>“info”: 包含以下键值对的对象：<br/>“age”: 21 或 20<br/>“gender”: “male” 或 “female”<br/>“intro”: “佛系青年” 或 “文艺青年”<br/>“status”: “正常” 或 “冻结”<br/>“balance”: 2000 或 1000</td>
+</tr>
+<tr>
+<td>特殊说明</td>
+<td>如果排序字段为空，默认按照更新时间排序  •排序字段不为空，则按照排序字段排序</td>
+</tr>
+</tbody></table>
+<h6 id="准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】"><a href="#准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】" class="headerlink" title="准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】"></a>准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】</h6><p><code>写一个 【统一的分页条件】 和 【统一的分页结果】</code></p>
+<pre><code class="java">com/itheima/mp/domain/query/UserQuery.java
+// 要记得继承哦
+package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery extends PageQuery&#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/query/PageQuery.java
+package com.itheima.mp.domain.query;
+
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;分页查询实体&quot;)
+public class PageQuery &#123;
+    @ApiModelProperty(&quot;页码&quot;)
+    private Integer pageNo;
+    @ApiModelProperty(&quot;页码个数&quot;)
+    private Integer pageSize;
+    @ApiModelProperty(&quot;排序字段&quot;)
+    private String sortBy;
+    @ApiModelProperty(&quot;是否升序&quot;)
+    private Boolean isAsc;
+
+    public &lt;T&gt;  Page&lt;T&gt; toMpPage(OrderItem ... orders)&#123;
+        // 1.分页条件
+        Page&lt;T&gt; p = Page.of(pageNo, pageSize);
+        // 2.排序条件
+        // 2.1.先看前端有没有传排序字段
+        if (sortBy != null) &#123;
+            p.addOrder(new OrderItem(sortBy, isAsc));
+            return p;
+        &#125;
+        // 2.2.再看有没有手动指定排序字段
+        if(orders != null)&#123;
+            p.addOrder(orders);
+        &#125;
+        return p;
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPage(String defaultSortBy, boolean isAsc)&#123;
+        return this.toMpPage(new OrderItem(defaultSortBy, isAsc));
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByCreateTimeDesc() &#123;
+        return toMpPage(&quot;create_time&quot;, false);
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByUpdateTimeDesc() &#123;
+        return toMpPage(&quot;update_time&quot;, false);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/dto/PageDTO.java
+package com.itheima.mp.domain.dto;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Data
+@ApiModel(description = &quot;分页结果&quot;)
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageDTO&lt;V&gt; &#123;
+    @ApiModelProperty(&quot;总条数&quot;)
+    private Long total;
+    @ApiModelProperty(&quot;总页数&quot;)
+    private Long pages;
+    @ApiModelProperty(&quot;集合&quot;)
+    private List&lt;V&gt; list;
+
+    /**
+     * 返回空分页结果
+     * @param p MybatisPlus的分页结果
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; empty(Page&lt;P&gt; p)&#123;
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), Collections.emptyList());
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果
+     * @param p MybatisPlus的分页结果
+     * @param voClass 目标VO类型的字节码
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Class&lt;V&gt; voClass) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = BeanUtil.copyToList(records, voClass);
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果，允许用户自定义PO到VO的转换方式
+     * @param p MybatisPlus的分页结果
+     * @param convertor PO到VO的转换函数
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Function&lt;P, V&gt; convertor) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = records.stream().map(convertor).collect(Collectors.toList());
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">com/itheima/mp/controller/UserController.java
+@ApiOperation(&quot;根据复杂条件查询用户接口&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public List&lt;UserVO&gt; queryUsers(UserQuery query) &#123;
+        return (List&lt;UserVO&gt;) userService.queryUsersPage(query);
+    &#125;
+</code></pre>
+<pre><code class="java">// 如果你想在字符串中表示一个大于号，
+你可以直接输入 &gt;，或者使用HTML实体 &amp;gt; 
+小于号可以使用 &lt; 或者 &amp;lt;，
+等于号可以使用 = 或者 &amp;equals
+</code></pre>
+<h3 id="插件功能—通用分页实体与MP转换"><a href="#插件功能—通用分页实体与MP转换" class="headerlink" title="插件功能—通用分页实体与MP转换"></a>插件功能—通用分页实体与MP转换</h3><p>需求：</p>
+<ul>
+<li>在PageQuery中定义方法，将PageQuery对象转为MyBatisPlus中的Page对象</li>
+<li>在PageDTO中定义方法，将MyBatisPlus中的Page结果转为PageDTO结果</li>
+</ul>
+<h6 id="最好直接封装通用部分"><a href="#最好直接封装通用部分" class="headerlink" title="最好直接封装通用部分"></a>最好直接封装通用部分</h6><h5 id="封装查询"><a href="#封装查询" class="headerlink" title="封装查询"></a>封装查询</h5><pre><code class="java"> @Override
+    public PageDTO&lt;UserVO&gt; queryUsersPage(UserQuery query) &#123;
+        String name = query.getName();
+        Integer status = query.getStatus();
+        // 1.构建查询条件
+        // 1.1 分页条件
+        Page&lt;User&gt; page = Page.of(query.getPageNo(), query.getPageSize());
+        // 1.2 排序条件
+        if (StrUtil.isNotBlank(query.getSortBy())) &#123;
+            // 不为空
+            page.addOrder(new OrderItem(query.getSortBy(), query.getIsAsc()));
+        &#125;else &#123;
+            // 为空，默认按照更新时间排序
+            page.addOrder(new OrderItem(&quot;update_time&quot;, false));
+        &#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/query/PageQuery.java
+package com.itheima.mp.domain.query;
+
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;分页查询实体&quot;)
+public class PageQuery &#123;
+    @ApiModelProperty(&quot;页码&quot;)
+    private Integer pageNo;
+    @ApiModelProperty(&quot;页码个数&quot;)
+    private Integer pageSize;
+    @ApiModelProperty(&quot;排序字段&quot;)
+    private String sortBy;
+    @ApiModelProperty(&quot;是否升序&quot;)
+    private Boolean isAsc;
+
+    public &lt;T&gt;  Page&lt;T&gt; toMpPage(OrderItem ... orders)&#123;
+        // 1.分页条件
+        Page&lt;T&gt; p = Page.of(pageNo, pageSize);
+        // 2.排序条件
+        // 2.1.先看前端有没有传排序字段
+        if (sortBy != null) &#123;
+            p.addOrder(new OrderItem(sortBy, isAsc));
+            return p;
+        &#125;
+        // 2.2.再看有没有手动指定排序字段
+        if(orders != null)&#123;
+            p.addOrder(orders);
+        &#125;
+        return p;
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPage(String defaultSortBy, boolean isAsc)&#123;
+        return this.toMpPage(new OrderItem(defaultSortBy, isAsc));
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByCreateTimeDesc() &#123;
+        return toMpPage(&quot;create_time&quot;, false);
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByUpdateTimeDesc() &#123;
+        return toMpPage(&quot;update_time&quot;, false);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="封装结果"><a href="#封装结果" class="headerlink" title="封装结果"></a>封装结果</h5><pre><code class="java">// 3.封装VO结果
+        PageDTO&lt;UserVO&gt; dto = new PageDTO&lt;&gt;();
+        // 3.1 总条数
+        dto.setTotal(p.getTotal());
+        // 3.2 总页数
+        dto.setPages(p.getPages());
+        // 3.3 当前页数据
+        List&lt;User&gt; records = p.getRecords();
+        if (CollUtil.isEmpty(records)) &#123;
+            dto.setList(Collections.emptyList());
+            return dto;
+        &#125;
+        // 3.4 拷贝user的VO
+        dto.setList(BeanUtil.copyToList(records, UserVO.class));
+        // 4.返回
+        return dto;
+    &#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/dto/PageDTO.java
+package com.itheima.mp.domain.dto;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Data
+@ApiModel(description = &quot;分页结果&quot;)
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageDTO&lt;V&gt; &#123;
+    @ApiModelProperty(&quot;总条数&quot;)
+    private Long total;
+    @ApiModelProperty(&quot;总页数&quot;)
+    private Long pages;
+    @ApiModelProperty(&quot;集合&quot;)
+    private List&lt;V&gt; list;
+
+    /**
+     * 返回空分页结果
+     * @param p MybatisPlus的分页结果
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; empty(Page&lt;P&gt; p)&#123;
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), Collections.emptyList());
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果
+     * @param p MybatisPlus的分页结果
+     * @param voClass 目标VO类型的字节码
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Class&lt;V&gt; voClass) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = BeanUtil.copyToList(records, voClass);
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果，允许用户自定义PO到VO的转换方式
+     * @param p MybatisPlus的分页结果
+     * @param convertor PO到VO的转换函数
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Function&lt;P, V&gt; convertor) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = records.stream().map(convertor).collect(Collectors.toList());
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public PageDTO&lt;UserVO&gt; queryUsersPage(UserQuery query) &#123;
+        String name = query.getName();
+        Integer status = query.getStatus();
+        // 1.构建查询条件
+        // 1.1 分页条件
+        Page&lt;User&gt; page = query.toMpPageDefaultSortByUpdateTimeDesc();
+        // 2. 分页查询
+        Page&lt;User&gt; p = lambdaQuery()
+                .like(name != null, User::getUsername, name)
+                .eq(status != null, User::getStatus, status)
+                .page(page);
+        // 3. 封装VO结果
+//        return PageDTO.of(p, UserVO.class); 属性转换 ↓
+        return PageDTO.of(p, user -&gt; &#123;
+            // 1.拷贝基础属性
+            UserVO vo = BeanUtil.copyProperties(user, UserVO.class);
+            // 2.处理特殊逻辑 密码加**
+            vo.setUsername(vo.getUsername().substring(0, vo.getUsername().length()-2)+&quot;**&quot;);
+            return vo;
+        &#125;);
+    &#125;
+</code></pre>
+<hr>
+<hr>
+<hr>
+<h3 id="tilas-all-成功案例"><a href="#tilas-all-成功案例" class="headerlink" title="tilas-all 成功案例"></a>tilas-all 成功案例</h3><pre><code class="java">package com.itheima.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class GenderStatisticsDTO &#123;
+    private String name;
+    private Integer value;
+
+&#125;
+==================================================
+package com.itheima.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@TableName(&quot;emp&quot;)
+public class JobStatisticsDTO &#123;
+    private List&lt;String&gt; jobList;
+    private List&lt;Long&gt; dataList;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.itheima.domain.dto.CombinedStatisticsDTO;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.pojo.Emp;
+
+import java.util.List;
+
+public interface ReportService extends IService&lt;Emp&gt; &#123;
+    List&lt;GenderStatisticsDTO&gt; getGenderStatistics(); // 获取性别统计信息
+    JobStatisticsDTO getJobStatistics(); // 获取职位统计信息
+&#125;
+
+
+//    CombinedStatisticsDTO getCombinedStatistics();
+</code></pre>
+<pre><code class="java">com/itheima/controller/ReportController.java
+package com.itheima.controller;
+
+import com.itheima.domain.dto.CombinedStatisticsDTO;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.pojo.Result;
+import com.itheima.service.ReportService;
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@Api(tags = &quot;报表统计接口&quot;)
+@RestController
+@RequestMapping(&quot;/report&quot;)
+@RequiredArgsConstructor
+public class ReportController &#123;
+
+    private final ReportService reportService;
+
+    // 获取合并后的统计信息
+//    @GetMapping(&quot;/statistics&quot;)
+//    public Result&lt;CombinedStatisticsDTO&gt; getStatistics() &#123;
+//        CombinedStatisticsDTO combinedStatistics = reportService.getCombinedStatistics();
+//        return Result.success(combinedStatistics);
+//    &#125;
+
+    // 获取员工性别统计信息
+    @GetMapping(&quot;/empGenderData&quot;)
+    public Result&lt;List&lt;GenderStatisticsDTO&gt;&gt; getEmployeeGenderStatistics() &#123;
+        List&lt;GenderStatisticsDTO&gt; genderStatistics = reportService.getGenderStatistics();
+        return Result.success(genderStatistics);
+    &#125;
+
+    // 获取员工职位统计信息
+    @GetMapping(&quot;/empJobData&quot;)
+    public Result&lt;JobStatisticsDTO&gt; getEmployeeJobStatistics() &#123;
+        JobStatisticsDTO jobStatistics = reportService.getJobStatistics();
+        return Result.success(jobStatistics);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/service/impl/ReportServiceImpl.java
+package com.itheima.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.mapper.ReportMapper;
+import com.itheima.pojo.Emp;
+import com.itheima.service.ReportService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class ReportServiceImpl extends ServiceImpl&lt;ReportMapper, Emp&gt; implements ReportService &#123;
+
+    private final ReportMapper reportMapper;
+
+    @Autowired
+    public ReportServiceImpl(ReportMapper reportMapper) &#123;
+        this.reportMapper = reportMapper;
+    &#125;
+
+    // 获取员工职位统计信息
+    @Override
+    public JobStatisticsDTO getJobStatistics() &#123;
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+
+        // 修改查询字段，注意这里你仍然需要写正确的字段名
+        wrapper.select(&quot;CASE job WHEN 1 THEN &#39;班主任&#39; WHEN 2 THEN &#39;讲师&#39; WHEN 3 THEN &#39;学工主管&#39; WHEN 4 THEN &#39;校研主管&#39; WHEN 5 THEN &#39;咨询师&#39; ELSE &#39;其他&#39; END AS 职位&quot;,
+                        &quot;COUNT(*) AS 数量&quot;)
+                .groupBy(&quot;job&quot;);
+
+        // 通过 selectMaps 执行查询
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 创建两个列表来存储职位和数量
+        List&lt;String&gt; jobTitles = new ArrayList&lt;&gt;();
+        List&lt;Long&gt; counts = new ArrayList&lt;&gt;();
+
+        // 遍历查询结果并填充列表
+        for (Map&lt;String, Object&gt; stat : statistics) &#123;
+            jobTitles.add((String) stat.get(&quot;职位&quot;));
+            counts.add((Long) stat.get(&quot;数量&quot;));
+        &#125;
+
+        // 返回JobStatisticsDTO对象，传入两个列表
+        return new JobStatisticsDTO(jobTitles, counts);
+    &#125;
+
+    // 获取员工性别统计信息
+    @Override
+    public List&lt;GenderStatisticsDTO&gt; getGenderStatistics() &#123;
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+        wrapper.select(&quot;gender&quot;, &quot;COUNT(gender) AS value&quot;)
+                .groupBy(&quot;gender&quot;);
+
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 转换为 GenderStatisticsDTO
+        return statistics.stream()
+                .map(stat -&gt; &#123;
+                    String genderName = &quot;1&quot;.equals(String.valueOf(stat.get(&quot;gender&quot;))) ? &quot;男性员工&quot; : &quot;女性员工&quot;;
+                    int count = ((Number) stat.get(&quot;value&quot;)).intValue();
+                    return new GenderStatisticsDTO(genderName, count);
+                &#125;)
+                .collect(Collectors.toList());
+    &#125;
+&#125;
+</code></pre>
+<h6 id="上面的获取员工职位属性已修改为高级版本"><a href="#上面的获取员工职位属性已修改为高级版本" class="headerlink" title="上面的获取员工职位属性已修改为高级版本"></a>上面的获取员工职位属性已修改为高级版本</h6><pre><code class="java">// 获取员工职位统计信息
+    @Override
+    public JobStatisticsDTO getJobStatistics() &#123;
+        // 1. 构建查询条件
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+        wrapper.select(&quot;job&quot;, &quot;COUNT(*) AS count&quot;)
+                .groupBy(&quot;job&quot;);
+
+        // 2. 查询数据
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 如果返回结果为 null 或为空列表，返回默认对象
+        if (statistics == null || statistics.isEmpty()) &#123;
+            return new JobStatisticsDTO(new ArrayList&lt;&gt;(), new ArrayList&lt;&gt;());
+        &#125;
+
+        // 3. 转换结果：处理 `null` 值和字段映射
+        List&lt;String&gt; jobTitles = new ArrayList&lt;&gt;();
+        List&lt;Long&gt; counts = new ArrayList&lt;&gt;();
+
+        for (Map&lt;String, Object&gt; stat : statistics) &#123;
+            if (stat == null) &#123;
+                continue; // 跳过 null 数据
+            &#125;
+
+            // 使用 `getOrDefault` 方法，确保不会返回 null
+            Integer jobCode = (Integer) stat.getOrDefault(&quot;job&quot;, -1);
+            Long count = stat.get(&quot;count&quot;) == null ? 0L : ((Number) stat.get(&quot;count&quot;)).longValue();
+
+            // 如果 jobCode 是 -1 或其他无效值，则视为“其他”
+            String jobTitle = switch (jobCode) &#123;
+                case 1 -&gt; &quot;班主任&quot;;
+                case 2 -&gt; &quot;讲师&quot;;
+                case 3 -&gt; &quot;学工主管&quot;;
+                case 4 -&gt; &quot;校研主管&quot;;
+                case 5 -&gt; &quot;咨询师&quot;;
+                default -&gt; &quot;其他&quot;;
+            &#125;;
+
+            jobTitles.add(jobTitle);
+            counts.add(count);
+        &#125;
+
+        // 返回封装好的 DTO 对象
+        return new JobStatisticsDTO(jobTitles, counts);
+    &#125;
+</code></pre>
 
             
         </div>
@@ -521,7 +1909,7 @@ class IUserServiceTest &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -1297,7 +2685,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/攻略" style=color:#ffa2c4>
+            <a href="/tags/攻略" style=color:#1bccbc>
                 攻略
             </a>
         </span>
@@ -2866,6 +4254,8 @@ export function checkPhone()&#123;...&#125;
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<hr>
+<hr>
 
             
         </div>
@@ -2880,7 +4270,7 @@ export function checkPhone()&#123;...&#125;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ff7d73>
+            <a href="/tags/HM" style=color:#ffa2c4>
                 HM
             </a>
         </span>
@@ -7699,6 +9089,18 @@ update a set money = money + 500 where id = 1; 【非幂等】
 <li>幂等方案：【分布式锁、数据库锁(悲观锁、乐观锁)】</li>
 </ul>
 <p><span style = "color:red"><strong>RabbitMQ中死信交换机？(RabbitMQ延迟队列有了解过吗)</strong></span></p>
+<blockquote>
+<ul>
+<li>我们当时一个什么业务使用到了延迟队列（超时订单、限时优惠、定时发布）</li>
+<li>其中延迟队列就用到了死信交换机和TTL（消息存活时间）实现的</li>
+<li>消息超时未消费就会变成死信（死信的其他情况：拒绝被消费，队列满了）</li>
+</ul>
+<p>延迟队列插件实现延迟队列<code>DelayExchange</code></p>
+<ul>
+<li>声明一个交换机，添加delayed属性未true</li>
+<li>发送消息时，添加<code>x-delay</code>头，值为超过时间</li>
+</ul>
+</blockquote>
 <h6 id="延迟队列-x3D-死信交换机-TTL-生存时间"><a href="#延迟队列-x3D-死信交换机-TTL-生存时间" class="headerlink" title="延迟队列 &#x3D; 死信交换机 + TTL (生存时间)"></a>延迟队列 &#x3D; 死信交换机 + TTL (生存时间)</h6><ul>
 <li><strong>延迟队列</strong>：进入队列的消息会被延迟消费的队列</li>
 <li><strong>场景</strong>：超时订单、限时优惠，定时发布</li>
@@ -7710,6 +9112,106 @@ update a set money = money + 500 where id = 1; 【非幂等】
 <li>要投递的队列消息堆积满了，最早的消息可能成为死信</li>
 </ul>
 <p>如果该队列配置了<code>dead-letter-exchange</code>属性，指定了一个交换机，那么队列中的死信就会投递到这个交换机中，而这个交换机称为<strong>死信交换机</strong>(Dead Letter Exchange，简称DLX)</p>
+<pre><code class="java">@Bean
+public QUeue ttlQueue()&#123;
+    return QueueBuilder.durable(&quot;simple.queue&quot;) // 指定队列名称，并持久化
+        .ttl(10000) // 设置队列的超时时间 10秒
+        .deadLetterExchange(&quot;dl.direct&quot;) // 指定死信交换机
+        .build();
+&#125;
+</code></pre>
+<h6 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h6><p>TTL(Time-To-Live)。如果一个队列中的消息TTL结束仍未消费，则会变成死信，ttl超时分为两种情况：</p>
+<ul>
+<li>消息所在的队列设置了存活时间</li>
+<li>消息本身设置了存活时间</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/50eb7d1338c4fdae6ee9c65274b3116ac361514d/%E6%AD%BB%E4%BF%A1%E4%BA%A4%E6%8D%A2%E6%9C%BA.png" alt="死信图片"></p>
+<p><span style = "color:red"><strong>RabbitMQ如果有100万消息堆积在MQ，如何解决(消息堆积怎么解决)？</strong><br></span></p>
+<blockquote>
+<p>**解决消息堆积有三种思路 **</p>
+<ul>
+<li>增加更多消费者，提高消费速度</li>
+<li>在消费者内开启线程池加快消息处理速度</li>
+<li>扩大队列容积，提高堆积上限<ul>
+<li>在声明队列的时候可以设置<code>x-queue-model</code>为lazy，即为惰性队列</li>
+<li>基于磁盘存储，消息上限高</li>
+<li>性能比较稳定，但基于磁盘存储，受限于磁盘IO，时效性会jiang’di</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>当生产者发送消息的速度超过了消费者处理消息的速度，就会导致队列中的消息堆积，直到队列存储消息达到上限。之后发送的消息就会成为死信，可能会被丢弃，这就是堆积问题</p>
+<p>**解决消息堆积有三种思路 **</p>
+<ul>
+<li>增加更多消费者，提高消费速度</li>
+<li>在消费者内开启线程池加快消息处理速度</li>
+<li>扩大队列容积，提高堆积上限</li>
+</ul>
+<h6 id="惰性队列"><a href="#惰性队列" class="headerlink" title="惰性队列"></a>惰性队列</h6><p>惰性队列特征如下：</p>
+<ul>
+<li>接收到消息后直接存入磁盘而非内存</li>
+<li>消费者要消费消息时才会从磁盘中读取并加载到内存</li>
+<li>支持数百万条的消息存储</li>
+</ul>
+<pre><code class="java">@Bean
+public Queue lazyQueue()&#123;
+    return QueueBuilder
+            .durable(&quot;lazy.queue&quot;)
+            .lazy()
+            .build();
+&#125;
+</code></pre>
+<pre><code class="java">@RabbitListener(queuesToDeclare = @Queue)&#123;
+    name = &quot;lazy.queue&quot;,
+    durable = &quot;true&quot;,
+    arguments = @Argument(name = &quot;x-queue-mode&quot;), value=&quot;lazy&quot;
+&#125;
+public void listenLazyQUeue(String msg)&#123;
+    log.info(&quot;接收到lazy.queue的消息：&#123;&#125;&quot;,msg);
+&#125;
+</code></pre>
+<p><span style = "color:red"><strong>RabbitMQ高可用机制有了解过吗？</strong><br></span></p>
+<blockquote>
+<p>我们当时的项目在生产环境下，采用的是镜像模式搭建的集群，共有3个节点<br>镜像队列结构是一主多从(从就是镜像)，所有操作都是主节点完成，然后同步给镜像节点<br>主宕机后，镜像节点会代替成为新的主(如果在主从同步完成前，主就已经宕机，可能出现数据丢失)</p>
+</blockquote>
+<p><span style = "color:red"><strong>那出现丢数据怎么解决呢？</strong><br></span></p>
+<blockquote>
+<p>我们可以采用仲裁队列，与镜像队列一样，都是主从模式，支持主从数据同步，主从同步基于Raft协议，强一致性，并且使用起来也非常简单，不需要格外的配置，在声明队列的时候只需要指定这个是仲裁队列即可</p>
+</blockquote>
+<ul>
+<li>在生产环境下，使用集群来保证高可用性</li>
+<li>普通集群、<strong>镜像集群</strong>、仲裁队列</li>
+</ul>
+<h5 id="普通集群"><a href="#普通集群" class="headerlink" title="普通集群"></a>普通集群</h5><p>普通集群，或者叫标准集群(classic cluster)</p>
+<ul>
+<li>会在集群的各个节点间共享部分数据，包括：交换机、队列元信息。不包含队列中的信息</li>
+<li>当访问集群某节点时，如果队列不在该节点，会从数据所在节点传递到当前节点并返回</li>
+<li>队列所在节点宕机，队列中的消息就会丢失</li>
+</ul>
+<h5 id="镜像集群"><a href="#镜像集群" class="headerlink" title="镜像集群"></a>镜像集群</h5><p>镜像集群：本质是主从模式，具备下面的特征</p>
+<ul>
+<li>交换机、队列、队列中的消息会在各个mq的镜像节点之间同步备份</li>
+<li>创建队列的节点被称为该队列的<strong>主节点</strong>，备份到的其他节点叫做该队列的<strong>镜像</strong>节点</li>
+<li>一个队列的主节点可能是另一个队列的镜像节点</li>
+<li>所有操作都是主节点完成，然后同步给镜像节点</li>
+<li>主宕机后，镜像节点会替代成新的主</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/59b655f55c1f3031f72c5790425b8ae8e76e9d1f/%E9%95%9C%E5%83%8F%E9%9B%86%E7%BE%A4.png" style="zoom:150%;" />
+
+<h5 id="仲裁队列："><a href="#仲裁队列：" class="headerlink" title="仲裁队列："></a>仲裁队列：</h5><p>仲裁队列是3.8版本以后才有的新功能，用来替代镜像队列</p>
+<ul>
+<li>与镜像队列一样，都是主从模式，支持主从数据同步</li>
+<li>使用非常简单，没有复杂的配置</li>
+<li>主从同步基于<strong>Raft</strong>协议，强一致性</li>
+</ul>
+<pre><code class="java">@Bean
+public Queue quorumQueue()&#123;
+    return QueueBuilder
+            .durable(&quot;quorum.queue&quot;) // 持久化
+            .quorum() // 仲裁队列
+            .build();
+&#125;
+</code></pre>
 
             
         </div>
@@ -7724,7 +9226,7 @@ update a set money = money + 500 where id = 1; 【非幂等】
         
         <span class="tag">
             
-            <a href="/tags/面试" style=color:#00bcd4>
+            <a href="/tags/面试" style=color:#1bccbc>
                 面试
             </a>
         </span>
@@ -10676,7 +12178,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -13917,7 +15419,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#00bcd4>
+            <a href="/tags/HM" style=color:#ffa2c4>
                 HM
             </a>
         </span>
@@ -21784,7 +23286,1488 @@ public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
 &#125;
 */
 </code></pre>
+<h6 id="会话技术"><a href="#会话技术" class="headerlink" title="会话技术"></a>会话技术</h6><p><strong>会话</strong>：用户打开浏览器，访问web服务器的资源，会话建立，直到有一方断开连接，会话结束。在一次会话中可以包含多次请求和响应。</p>
+<p><strong>会话跟踪</strong>：一种维护浏览器状态的方法，服务器需要识别多次请求是否来自于同一浏览器，以便在同一次会话的多次请求间共享数据。</p>
+<p>会话跟踪方案：</p>
+<p>客户端会话跟踪技术：Cookie</p>
+<p>服务端会话跟踪技术：Session</p>
+<p>令牌技术</p>
+<p>优点：HTTP协议中支持的技术</p>
+<p>缺点：</p>
+<p> 移动端APP无法使用Cookie</p>
+<p>不安全，用户可以自己禁用Cookie</p>
+<p> Cookie不能跨域</p>
+<h6 id="1-Cookie会话跟踪方案的原理"><a href="#1-Cookie会话跟踪方案的原理" class="headerlink" title="1.Cookie会话跟踪方案的原理 ?"></a>1.Cookie会话跟踪方案的原理 ?</h6><p>响应头：Set-Cookie</p>
+<p>请求头：Cookie</p>
+<h6 id="2-Cookie会话跟踪方案的优缺点"><a href="#2-Cookie会话跟踪方案的优缺点" class="headerlink" title="2.Cookie会话跟踪方案的优缺点 ?"></a>2.Cookie会话跟踪方案的优缺点 ?</h6><p>优点：HTTP协议中支持的技术</p>
+<p>缺点：</p>
+<p>Ø 移动端APP无法使用Cookie</p>
+<p>Ø 不安全，用户可以自己禁用Cookie</p>
+<p>Ø Cookie不能跨域</p>
+<h6 id="令牌方案"><a href="#令牌方案" class="headerlink" title="令牌方案"></a>令牌方案</h6><p><strong>优点</strong>：</p>
+<p>u 支持PC端、移动端</p>
+<p>u 解决集群环境下的认证问题</p>
+<p>u 减轻服务器端存储压力</p>
+<p>l缺点：需要自己实现</p>
+<h6 id="JWT令牌"><a href="#JWT令牌" class="headerlink" title="JWT令牌"></a>JWT令牌</h6><p>全称：JSON Web Token （<a target="_blank" rel="noopener" href="https://jwt.io/%EF%BC%89">https://jwt.io/）</a></p>
+<p>定义了一种简洁的、自包含的格式，用于在通信双方以json数据格式安全的传输信息。</p>
+<p>组成：</p>
+<p>Ø 第一部分：Header(头），记录令牌类型、签名算法等。 例如：{“alg”:”HS256”,”type”:”JWT”}</p>
+<p>Ø 第二部分：Payload(有效载荷），携带一些自定义信息、默认信息等。 例如：{“id”:”1”,”username”:”Tom”}</p>
+<p>Ø 第三部分：Signature(签名），防止Token被篡改、确保安全性。将header、payload融入，并加入指定秘钥，通过指定签名算法计算而来。</p>
+<h6 id="Base64：是一种基于64个可打印字符（A-Z-a-z-0-9-x2F-）来表示二进制数据的编码方式。"><a href="#Base64：是一种基于64个可打印字符（A-Z-a-z-0-9-x2F-）来表示二进制数据的编码方式。" class="headerlink" title="Base64：是一种基于64个可打印字符（A-Z a-z 0-9 + &#x2F;）来表示二进制数据的编码方式。"></a>Base64：是一种基于64个可打印字符（A-Z a-z 0-9 + &#x2F;）来表示二进制数据的编码方式。</h6><pre><code class="java">package com.itheima;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@SpringBootTest
+public class JWTTest &#123;
+    /**
+     * 测试生成JWT
+     */
+    @Test
+    public void testGenerateJWT() &#123;
+        // 准备要保存的数据
+        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+        map.put(&quot;id&quot;, &quot;23241&quot;);
+        map.put(&quot;username&quot;, &quot;张三疯了&quot;);
+
+        // 生成JWT  Expiration过期时间
+        String jwt = Jwts.builder()
+                .signWith(SignatureAlgorithm.HS256, &quot;gzheima&quot;)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setClaims(map) //自己存的数据
+                .compact();//生成JWT
+        System.out.println(&quot;生成JWT = &quot; + jwt);
+    &#125;
+
+    /**
+     * 测试解析JWT
+     */
+    @Test
+    public void testParseJWT() &#123;
+        // 解析JWT
+        String jwt = &quot;eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjIzMjQxIiwidXNlcm5hbWUiOiLlvKDkuInnlq_kuoYifQ.S5BYVidgdg01VakWI5z8EerDA0Mdhzapx9p_WDgxfxU&quot;;
+        Claims claims = Jwts.parser()
+                .setSigningKey(&quot;gzheima&quot;)
+                .parseClaimsJws(jwt)
+                .getBody();
+        System.out.println(&quot;解析出来的数据 = &quot; + claims);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="放到tilas中"><a href="#放到tilas中" class="headerlink" title="放到tilas中"></a>放到tilas中</h6><pre><code class="java">package com.itheima.utils;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+import java.util.Date;
+import java.util.Map;
+
+public class JwtUtils &#123;
+
+    private static String signKey = &quot;SVRIRUlNQQ==&quot;;
+    private static Long expire = 43200000L;
+
+    /**
+     * 生成JWT令牌
+     * @return
+     */
+    public static String generateJwt(Map&lt;String,Object&gt; claims)&#123;
+        String jwt = Jwts.builder()
+                .addClaims(claims)
+                .signWith(SignatureAlgorithm.HS256, signKey)
+                .setExpiration(new Date(System.currentTimeMillis() + expire))
+                .compact();
+        return jwt;
+    &#125;
+
+    /**
+     * 解析JWT令牌
+     * @param jwt JWT令牌
+     * @return JWT第二部分负载 payload 中存储的内容
+     */
+    public static Claims parseJWT(String jwt)&#123;
+        Claims claims = Jwts.parser()
+                .setSigningKey(signKey)
+                .parseClaimsJws(jwt)
+                .getBody();
+        return claims;
+    &#125;
+    @Override
+    public LoginInfo login(Emp emp) &#123;
+        // 调用mapper根据账号密码查询用户
+        Emp dbEmp = empMapper.getByUsernameAndPassword(emp);
+        if (dbEmp != null) &#123;
+            // 匹配成功 登陆成功
+            return null;
+            // 匹配失败 登录失败
+        &#125; else &#123;
+            // 账号密码匹配成功，登录成功，把相关信息放到LoginInfo对象中
+            // 生成JWT 令牌Token
+            Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+            map.put(&quot;id&quot;, dbEmp.getId());
+            map.put(&quot;username&quot;, dbEmp.getUsername());
+            map.put(&quot;name&quot;, dbEmp.getName());
+
+            String jwt = JwtUtils.generateJwt(map);
+            log.info(&quot;生成JWT令牌: &quot; + jwt);
+            LoginInfo loginInfo = new LoginInfo(dbEmp.getId(), dbEmp.getUsername(), dbEmp.getName(), jwt);
+            return loginInfo;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="过滤器："><a href="#过滤器：" class="headerlink" title="过滤器："></a>过滤器：</h3><p>概念：Filter 过滤器，是 JavaWeb 三大组件(Servlet、Filter、Listener)之一。</p>
+<p>过滤器可以把对资源的请求拦截下来，从而实现一些特殊的功能。</p>
+<p>过滤器一般完成一些通用的操作，比如：登录校验、统一编码处理、敏感字符处理等。</p>
+<h5 id="Filter快速入门"><a href="#Filter快速入门" class="headerlink" title="Filter快速入门"></a>Filter快速入门</h5><p>1.<strong>定义Filter</strong>：定义一个类，实现 Filter 接口，并重写其所有方法。</p>
+<p>2.<strong>配置Filter</strong>：Filter类上加@WebFilter注解，配置拦截路径。引导类上加 @ServletComponentScan 开启Servlet组件支持。</p>
+<pre><code class="java">package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;)
+public class DemoFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;过滤器放行前&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;过滤器放行后&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<p>要记得在启动类加注解<code>@ServletComponentScan</code></p>
+<pre><code class="java">package com.itheima;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+
+// SpringBoot的启动类
+// 注意: 我们写的代码要在启动类的包或者子包中
+// @SpringBootApplication注解中包含了 @ComponentScan, 没有指定扫描哪个包, 默认扫描当前类所在的包和子包
+@SpringBootApplication
+@ServletComponentScan
+public class Day23TliasManagement05ClazzStudentApplication &#123;
+    // 启动项目, 内嵌的Tomcat会启动, 把项目部署到这个内嵌Tomcat中
+    public static void main(String[] args) &#123;
+        SpringApplication.run(Day23TliasManagement05ClazzStudentApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<p>1.Filter的开发步骤 ?</p>
+<p>定义：定义一个类实现Filter接口</p>
+<p>配置：</p>
+<p>Ø @WebFilter(urlPatterns&#x3D;”&#x2F;*”)</p>
+<p>Ø @ServletComponentScan</p>
+<p>2.注意事项</p>
+<p>如果过滤器中不执行放行操作，过滤器拦截到请求之后，就不会访问对应的资源。</p>
+<p>放行：chain.doFilter(request,response)</p>
+<h6 id="Filter—拦截路径"><a href="#Filter—拦截路径" class="headerlink" title="Filter—拦截路径"></a>Filter—拦截路径</h6><blockquote>
+<p>Filter 可以根据需求，配置不同的拦截资源路径：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>拦截路径</th>
+<th>urlPatterns值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>拦截具体路径</td>
+<td>&#x2F;login</td>
+<td>只有访问 &#x2F;login 路径时，才会被拦截</td>
+</tr>
+<tr>
+<td>目录拦截</td>
+<td>&#x2F;emps&#x2F;*</td>
+<td>访问&#x2F;emps下的所有资源，都会被拦截</td>
+</tr>
+<tr>
+<td>拦截所有</td>
+<td>&#x2F;*</td>
+<td>访问所有资源，都会被拦截</td>
+</tr>
+</tbody></table>
+<h6 id="Filter—过滤器链"><a href="#Filter—过滤器链" class="headerlink" title="Filter—过滤器链"></a>Filter—过滤器链</h6><p><strong>介绍</strong>：一个web应用中，可以配置多个过滤器，这多个过滤器就形成了一个过滤器链。<br><strong>顺序</strong>：**<u>注解配置的Filter，优先级是按照过滤器类名（字符串）的自然排序。</u>**</p>
+<pre><code class="java">filterA
+package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;) // 拦截所有请求
+//@WebFilter(urlPatterns = &quot;/emp/*&quot;) // 表示拦截emp下的所有请求
+public class AFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;==================================================== A过滤器放行前 ====================================================&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;==================================================== A过滤器放行后 ====================================================&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">filterB
+package com.itheima.filter;
+
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+
+import java.io.IOException;
+
+// 过滤器入门
+@WebFilter(urlPatterns = &quot;/*&quot;) // 拦截所有请求
+//@WebFilter(urlPatterns = &quot;/emp/*&quot;) // 表示拦截emp下的所有请求
+public class BFilter implements Filter &#123;
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException &#123;
+        System.out.println(&quot;过滤器初始化了...&quot;);
+    &#125;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        System.out.println(&quot;==================================================== B过滤器放行前 ====================================================&quot;);
+
+        // 放行
+        filterChain.doFilter(servletRequest, servletResponse);
+        System.out.println(&quot;==================================================== B过滤器放行后 ====================================================&quot;);
+    &#125;
+
+    @Override
+    public void destroy() &#123;
+        System.out.println(&quot;过滤器销毁了...&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="登录校验Filter"><a href="#登录校验Filter" class="headerlink" title="登录校验Filter"></a>登录校验Filter</h3><p><strong>思考</strong>：</p>
+<p>所有的请求，拦截到了之后，都需要校验令牌吗？<br><strong>有一个例外，登录请求</strong></p>
+<p>拦截到请求后，什么情况下才可以放行，执行业务操作？<br><strong>有令牌，且令牌校验通过（合法）；否则都返回未登录错误结果</strong></p>
+<h6 id="登录校验Filter—流程"><a href="#登录校验Filter—流程" class="headerlink" title="登录校验Filter—流程"></a>登录校验Filter—流程</h6><p>1.获取请求url。</p>
+<p>2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。</p>
+<p>3.<strong>获取请求头中的令牌（token）</strong>。</p>
+<p>4.<strong>判断令牌是否存在，如果不存在，响应401</strong>。(自动跳转登录)</p>
+<p>5.<strong>解析token，如果解析失败，响应401</strong> 。</p>
+<p>6.放行。</p>
+<pre><code class="java">package com.itheima.filter;
+
+import com.itheima.utils.JwtUtils;
+import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+
+// 登录拦截过滤器
+@WebFilter(&quot;/*&quot;)
+public class TokenFilter implements Filter &#123;
+    /**
+     * 0，把ServletRequest和ServletResponse转成HttpServletRequest和HttpServletResponse
+     * 1.获取请求url。
+     * 2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。
+     * 3.获取请求头中的令牌（token）。
+     * 4.判断令牌是否存在，如果不存在，响应401**。(自动跳转登录)
+     * 5.解析token，如果解析失败，响应401 。
+     * 6.放行。
+     * @param servletRequest
+     * @param servletResponse
+     * @param filterChain
+     * @throws IOException
+     * @throws ServletException
+     */
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        String url = request.getRequestURI().toString();
+        System.out.println(&quot;过滤器拦截的url = &quot; + url);
+        // http://localhost:8080/emps
+        // http://localhost:8080/login
+        // http://localhost:8080/dept
+        // http://localhost:8080/clazz
+
+        // 2.判断请求url中是否包含login，如果包含，说明是登录操作，放行。
+        if (url.contains(&quot;/login&quot;)) &#123;
+            System.out.println(&quot;登录请求，直接放行&quot;);
+            filterChain.doFilter(servletRequest, servletResponse);
+            return; //放行后不往下走了 结束方法
+        &#125;
+        // 登录失败是没有token的 EmpServiceImpl.java
+        // 3.获取请求头中的令牌（token）登陆成功才有
+        String jwt = request.getHeader(&quot;token&quot;);
+
+        // 4.判断令牌是否存在，如果不存在，响应401 (自动跳转登录)
+//        if (jwt == null &amp;&amp; jwt.equals(&quot;&quot;)) &#123; //没有令牌
+//
+//        &#125;
+        // org.springframework.util.StringUtils.isEmpty(str)
+        if (StringUtils.hasLength(jwt)) &#123;
+            System.out.println(&quot;jwt为空，令牌不存在&quot;);
+            response.setStatus(401); // 前端收到401会跳转到登录页面
+            return; //结束代码 后面不执行
+        &#125;
+        // 5.解析token，如果解析失败，响应401
+        try &#123;
+            JwtUtils.parseJWT(jwt);
+        &#125; catch (Exception e) &#123;
+            System.out.println(&quot;jwt = &quot; + jwt);
+            System.out.println(&quot;令牌解析失败&quot;);
+            response.setStatus(401);
+            return;
+        &#125;
+        // 6.放行
+        System.out.println(&quot;jwt解析成功，放行！！&quot;);
+        filterChain.doFilter(servletRequest, servletResponse);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java"> @Override
+    public LoginInfo login(Emp emp) &#123;
+        // 调用mapper根据账号密码查询用户
+        Emp dbEmp = empMapper.getByUsernameAndPassword(emp);
+        if (dbEmp == null) &#123;
+            // 匹配成功 登陆成功
+            return null;
+            // 匹配失败 登录失败
+        &#125; else &#123;
+            // 账号密码匹配成功，登录成功，把相关信息放到LoginInfo对象中
+            // 生成JWT 令牌Token
+            Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();
+            map.put(&quot;id&quot;, dbEmp.getId());
+            map.put(&quot;username&quot;, dbEmp.getUsername());
+            map.put(&quot;name&quot;, dbEmp.getName());
+
+            String jwt = JwtUtils.generateJwt(map);
+            log.info(&quot;生成JWT令牌: &quot; + jwt);
+            LoginInfo loginInfo = new LoginInfo(dbEmp.getId(), dbEmp.getUsername(), dbEmp.getName(), jwt);
+            return loginInfo;
+        &#125;
+    &#125;
+</code></pre>
+<h5 id="要用APIFox的时候-记得在全局环境里添加Token"><a href="#要用APIFox的时候-记得在全局环境里添加Token" class="headerlink" title="要用APIFox的时候 记得在全局环境里添加Token"></a>要用APIFox的时候 记得在全局环境里添加Token</h5><h3 id="拦截器（Interceptor）"><a href="#拦截器（Interceptor）" class="headerlink" title="拦截器（Interceptor）"></a>拦截器（Interceptor）</h3><ul>
+<li><p><strong>概念</strong>：是一种动态拦截方法调用的机制，类似于过滤器。Spring框架中提供的，主要用来动态拦截控制器方法的执行。</p>
+</li>
+<li><p><strong>作用</strong>：拦截请求，在指定的方法调用前后，根据业务需要执行预先设定的代码。</p>
+</li>
+</ul>
+<h5 id="Interceptor快速入门"><a href="#Interceptor快速入门" class="headerlink" title="Interceptor快速入门"></a>Interceptor快速入门</h5><p>1.定义拦截器，实现HandlerInterceptor接口，并重写其所有方法。</p>
+<p>2.注册拦截器</p>
+<pre><code class="java">package com.itheima.interceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+@Component
+public class DemoInterceptor implements HandlerInterceptor &#123;
+    // 在拦截的方法前执行，类似于过滤器放行前
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
+        System.out.println(&quot;preHandler 拦截方法前&quot;);
+        return true;
+    &#125;
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
+        System.out.println(&quot;postHandle 拦截方法后&quot;);
+    &#125;
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
+        System.out.println(&quot;afterCompletion 拦截方法最后执行&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.config;
+
+import com.itheima.interceptor.DemoInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration // 表示当前类是一个配置类，对SpringMVC进行配置
+public class WebConfig implements WebMvcConfigurer &#123;
+    @Autowired
+    private DemoInterceptor demoInterceptor;
+
+    // 实现添加拦截器的方法，用于添加拦截器
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) &#123;
+        // addInterceptor：添加拦截器
+        // addPathPatterns：添加拦截路径   /**：表示拦截所有请求
+        registry.addInterceptor(demoInterceptor).addPathPatterns(&quot;/**&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="拦截器—拦截路径"><a href="#拦截器—拦截路径" class="headerlink" title="拦截器—拦截路径"></a>拦截器—拦截路径</h6><ul>
+<li>拦截器可以根据需求，配置不同的拦截路径：</li>
+</ul>
+<pre><code class="java">
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>拦截路径</th>
+<th>含义</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#x2F;*</td>
+<td>一级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;emps，&#x2F;login，不能匹配 &#x2F;depts&#x2F;1</td>
+</tr>
+<tr>
+<td>&#x2F;**</td>
+<td>任意级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;depts&#x2F;1，&#x2F;depts&#x2F;1&#x2F;2</td>
+</tr>
+<tr>
+<td>&#x2F;depts&#x2F;*</td>
+<td>&#x2F;depts下的一级路径</td>
+<td>能匹配&#x2F;depts&#x2F;1，不能匹配&#x2F;depts&#x2F;1&#x2F;2，&#x2F;depts</td>
+</tr>
+<tr>
+<td>&#x2F;depts&#x2F;**</td>
+<td>&#x2F;depts下的任意级路径</td>
+<td>能匹配&#x2F;depts，&#x2F;depts&#x2F;1，&#x2F;depts&#x2F;1&#x2F;2，不能匹配&#x2F;emps&#x2F;1</td>
+</tr>
+</tbody></table>
+<h6 id="1-拦截器中的拦截路径-x2F-与-x2F-的区别是什么"><a href="#1-拦截器中的拦截路径-x2F-与-x2F-的区别是什么" class="headerlink" title="1.拦截器中的拦截路径 &#x2F;* 与 &#x2F;** 的区别是什么 ?"></a>1.拦截器中的拦截路径 &#x2F;* 与 &#x2F;** 的区别是什么 ?</h6><p>&#x2F;*：只能拦截一级路径，如：&#x2F;depts，&#x2F;emps</p>
+<p>&#x2F;**：拦截任意级路径，如：&#x2F;depts，&#x2F;depts&#x2F;1</p>
+<h6 id="2-过滤器与拦截的区别"><a href="#2-过滤器与拦截的区别" class="headerlink" title="2.过滤器与拦截的区别 ?"></a>2.过滤器与拦截的区别 ?</h6><p>接口规范不同</p>
+<p>拦截范围不同</p>
+<blockquote>
+<p>过滤器是Servlet规范的 实现Filter接口<br>拦截器SpringMVC提供的实现HandlerInterceptor接口<br>请求 先经过过滤器，后经过拦截器，才到控制器</p>
+</blockquote>
+<h3 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h3><p><strong>AOP：</strong>Aspect Oriented Programming（面向切面编程、面向方面编程），其实就是面向特定方法编程。</p>
+<p>场景：案例中部分业务方法运行较慢，定位执行耗时较长的接口，此时需要统计每一个业务方法的执行耗时。</p>
+<pre><code class="xml">        &lt;!-- AOP --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">package com.itheima.aop;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
+// 声明Bean，Spring容器会创建该Bean的实例对象
+@Component
+@Aspect
+public class RecordTimeAspect &#123;
+    // 统计方法耗时
+    @Around(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object recordTime(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 编写对方法进行增强的代码
+        // 1.记录开始时间
+        long start = System.currentTimeMillis();
+        // 2.调用原始方法
+        Object ret = pjp.proceed();
+        // 3.记录结束时间
+        long end = System.currentTimeMillis();
+        System.out.println(&quot;方法执行耗时：&quot; + (end - start));
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="1-SpringAOP程序的开发步骤"><a href="#1-SpringAOP程序的开发步骤" class="headerlink" title="1.SpringAOP程序的开发步骤 ?"></a>1.SpringAOP程序的开发步骤 ?</h6><p>引入AOP的依赖</p>
+<p>编写AOP的程序(公共的逻辑代码)</p>
+<h6 id="2-SpringAOP的应用场景"><a href="#2-SpringAOP的应用场景" class="headerlink" title="2.SpringAOP的应用场景 ?"></a>2.SpringAOP的应用场景 ?</h6><p>记录系统的操作日志</p>
+<p>权限控制</p>
+<p>事务管理</p>
+<h3 id="AOP核心概念"><a href="#AOP核心概念" class="headerlink" title="AOP核心概念"></a>AOP核心概念</h3><p><strong>连接点：</strong>JoinPoint，可以被AOP控制的方法（暗含方法执行时的相关信息）</p>
+<p><strong>通知：</strong>Advice，指那些重复的逻辑，也就是共性功能（最终体现为一个方法）</p>
+<p><strong>切入点：</strong>PointCut，匹配连接点的条件，通知仅会在切入点方法执行时被应用</p>
+<p><strong>切面：</strong>Aspect，描述通知与切入点的对应关系（通知+切入点）</p>
+<p><strong>目标对象：</strong>Target，通知所应用的对象</p>
+<p>切面类 &#x3D; 通知+切入点表达式</p>
+<p><img src="https://github.com/P-luminary/images/blob/master/AOP%E5%88%87%E9%9D%A2.png?raw=true" alt="AOP图片"></p>
+<h6 id="根据通知方法执行时机的不同，将通知类型分为以下常见的五类："><a href="#根据通知方法执行时机的不同，将通知类型分为以下常见的五类：" class="headerlink" title="根据通知方法执行时机的不同，将通知类型分为以下常见的五类："></a>根据通知方法执行时机的不同，将通知类型分为以下常见的五类：</h6><p>1.@Around：环绕通知，此注解标注的通知方法在目标方法前、后都被执行</p>
+<p>2.@Before：前置通知，此注解标注的通知方法在目标方法前被执行</p>
+<p>3.@After ：后置通知，此注解标注的通知方法在目标方法后被执行，无论是否有异常都会执行</p>
+<p>4.@AfterReturning： 返回后通知，此注解标注的通知方法在目标方法后被执行，有异常不会执行</p>
+<p>5.@AfterThrowing ： 异常后通知，此注解标注的通知方法发生异常后执行</p>
+<h3 id="环绕通知与其他通知的区别"><a href="#环绕通知与其他通知的区别" class="headerlink" title="环绕通知与其他通知的区别"></a>环绕通知与其他通知的区别</h3><p>在 AOP（面向切面编程）中，通知（Advice）是在特定的连接点（Join Point）执行的代码块。Spring AOP 支持多种类型的通知，每种通知在目标方法的不同阶段执行。以下是环绕通知与其他几种常见通知的区别：</p>
+<ol>
+<li><p><strong>前置通知（Before Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法调用之前执行。</li>
+<li><strong>用途</strong>：通常用于日志记录、权限校验等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@Before(&quot;pt()&quot;)
+public void before() &#123;
+    log.info(&quot;前置通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>后置通知（After Returning Advice）</strong>：</p>
+<ul>
+<li><p><strong>执行时机</strong>：在目标方法成功返回之后执行。</p>
+</li>
+<li><p><strong>用途</strong>：通常用于日志记录、资源释放等。</p>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="java">@AfterReturning(&quot;pt()&quot;)
+public void afterReturning() &#123;
+    log.info(&quot;后置通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>异常通知（After Throwing Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法抛出异常之后执行。</li>
+<li><strong>用途</strong>：通常用于异常处理、日志记录等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@AfterThrowing(&quot;pt()&quot;)
+public void afterThrowing() &#123;
+    log.info(&quot;异常通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>最终通知（After (Finally) Advice）</strong>：</p>
+<ul>
+<li><strong>执行时机</strong>：在目标方法执行完毕后执行，无论目标方法是否抛出异常。</li>
+<li><strong>用途</strong>：通常用于资源清理、日志记录等。</li>
+<li><strong>示例</strong>：<pre><code class="java">@After(&quot;pt()&quot;)
+public void afterFinally() &#123;
+    log.info(&quot;最终通知&quot;);
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><strong>环绕通知（Around Advice）</strong>：</p>
+<ul>
+<li><p><strong>执行时机</strong>：在目标方法调用前后都执行。</p>
+</li>
+<li><p><strong>用途</strong>：可以完全控制目标方法的执行流程，包括是否执行目标方法、何时执行目标方法、如何处理返回值等。</p>
+</li>
+<li><p><strong>示例</strong>：</p>
+<pre><code class="java">@Around(&quot;pt()&quot;)
+public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+    Object retVal = null;
+    try &#123;
+        log.info(&quot;环绕通知-前置通知&quot;);
+        retVal = pjp.proceed(); // 执行目标方法
+        log.info(&quot;环绕通知-后置通知&quot;);
+    &#125; catch (Throwable throwable) &#123;
+        log.info(&quot;环绕通知-异常通知&quot;);
+        throw throwable; // 重新抛出异常
+    &#125; finally &#123;
+        log.info(&quot;环绕通知-最终通知&quot;);
+    &#125;
+    return retVal;
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><strong>前置通知</strong>：仅在目标方法调用前执行。</li>
+<li><strong>后置通知</strong>：仅在目标方法成功返回后执行。</li>
+<li><strong>异常通知</strong>：仅在目标方法抛出异常后执行。</li>
+<li><strong>最终通知</strong>：在目标方法执行完毕后执行，无论是否抛出异常。</li>
+<li><strong>环绕通知</strong>：在目标方法调用前后都执行，可以完全控制目标方法的执行流程。</li>
+</ul>
+<p>环绕通知是最强大的通知类型，因为它可以控制目标方法的执行流程，包括是否执行目标方法、何时执行目标方法、如何处理返回值等。其他通知类型则相对简单，分别在特定的时间点执行。</p>
+<blockquote>
+<p>@Around环绕通知需要自己调用 ProceedingJoinPoint.proceed() 来让原始方法执行，其他通知不需要考虑目标方法执行<br>@Around环绕通知方法的返回值，必须指定为Object，来接收原始方法的返回值。</p>
+</blockquote>
+<pre><code class="java">AdviceType.java
+package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+// 将通知类型分为以下常见的五类
+// 前置通知：在目标方法执行前执行，比如日志记录，权限校验等
+// 后置通知：在目标方法执行后执行，比如日志记录，权限校验等
+// 环绕通知：在目标方法执行前后都执行，比如日志记录，权限校验等
+// 异常通知：在目标方法抛出异常时执行，比如日志记录，权限校验等
+// 最终通知：在目标方法执行后，无论目标方法正常还是异常，都会执行，比如日志记录，权限校验等
+@Aspect
+@Slf4j
+public class AdviceType &#123;
+
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void befor()&#123;
+        log.info(&quot;前置通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void after()&#123;
+        log.info(&quot;后置通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void exception()&#123;
+        log.info(&quot;异常通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void finallys()&#123;
+        log.info(&quot;最终通知&quot;);
+    &#125;
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object around(ProceedingJoinPoint pjp)&#123;
+        Object retVal = null;
+        try &#123;
+            log.info(&quot;环绕通知-前置通知&quot;);
+            retVal = pjp.proceed();
+            log.info(&quot;环绕通知-后置通知&quot;);
+        &#125; catch (Throwable throwable) &#123;
+            log.info(&quot;环绕通知-异常通知&quot;);
+            throwable.printStackTrace();
+        &#125; finally &#123;
+            log.info(&quot;环绕通知-最终通知&quot;);
+        &#125;
+        return retVal;
+    &#125;
+&#125;
+----------------------------  改装版本  --------------------------------
+package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+
+// 将通知类型分为以下常见的五类
+// 前置通知：在目标方法执行前执行，比如日志记录，权限校验等
+// 后置通知：在目标方法执行后执行，比如日志记录，权限校验等
+// 环绕通知：在目标方法执行前后都执行，比如日志记录，权限校验等
+// 异常通知：在目标方法抛出异常时执行，比如日志记录，权限校验等
+// 最终通知：在目标方法执行后，无论目标方法正常还是异常，都会执行，比如日志记录，权限校验等
+@Aspect
+@Slf4j
+public class AdviceType &#123;
+    // 抽取切入点表达式
+    @Pointcut(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void pt()&#123;
+    // private：仅能在当前切面类中引用该表达式
+    // public：在其他外部的切面类中也可以引用该表达式
+    &#125;
+
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void befor()&#123;
+        log.info(&quot;前置通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void after()&#123;
+        log.info(&quot;后置通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void exception()&#123;
+        log.info(&quot;异常通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void finallys()&#123;
+        log.info(&quot;最终通知&quot;);
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public Object around(ProceedingJoinPoint pjp)&#123;
+        Object retVal = null;
+        try &#123;
+            log.info(&quot;环绕通知-前置通知&quot;);
+            retVal = pjp.proceed();
+            log.info(&quot;环绕通知-后置通知&quot;);
+        &#125; catch (Throwable throwable) &#123;
+            log.info(&quot;环绕通知-异常通知&quot;);
+            throwable.printStackTrace();
+        &#125; finally &#123;
+            log.info(&quot;环绕通知-最终通知&quot;);
+        &#125;
+        return retVal;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP进阶"><a href="#AOP进阶" class="headerlink" title="AOP进阶"></a>AOP进阶</h3><h5 id="通知顺序"><a href="#通知顺序" class="headerlink" title="通知顺序"></a>通知顺序</h5><p>当有多个切面的切入点都匹配到了目标方法，目标方法运行时，多个通知方法都会被执行。</p>
+<h6 id="执行顺序："><a href="#执行顺序：" class="headerlink" title="执行顺序："></a>执行顺序：</h6><ul>
+<li><p>不同切面类中，默认按照切面类的类名字母排序：<code>MyAdviceA</code>、<code>MyAdviceB</code></p>
+<ul>
+<li>目标方法前的通知方法：字母排名靠前的先执行</li>
+<li>目标方法后的通知方法：字母排名靠前的后执行</li>
+</ul>
+</li>
+<li><p>用 <code>@Order(数字)</code> 加在切面类上来控制顺序</p>
+<ul>
+<li>目标方法前的通知方法：数字小的先执行</li>
+<li>目标方法后的通知方法：数字小的后执行</li>
+</ul>
+</li>
+</ul>
+<h6 id="切入点表达式："><a href="#切入点表达式：" class="headerlink" title="切入点表达式："></a>切入点表达式：</h6><ul>
+<li><p>介绍：描述切入点方法的一种表达式。</p>
+</li>
+<li><p>作用：用来决定项目中的哪些方法需要加入通知</p>
+</li>
+<li><p>常见形式：</p>
+<p> 1.execution(……)：根据方法的签名来匹配</p>
+<p> 2.@annotation(……) ：根据注解匹配</p>
+</li>
+</ul>
+<h5 id="切入点表达式—execution"><a href="#切入点表达式—execution" class="headerlink" title="切入点表达式—execution"></a>切入点表达式—execution</h5><p>execution 主要根据方法的返回值、包名、类名、方法名、方法参数等信息来匹配，语法为：<br><code>execution(访问修饰符? 返回值 包名.类名.?方法名(方法参数) throws 异常?)</code></p>
+<p><strong>其中带 ? 的表示可以省略的部分</strong></p>
+<p>1.访问修饰符：可省略（比如: public、protected）</p>
+<p>2.包名.类名： 可省略</p>
+<p>3.throws 异常：可省略（注意是方法上声明抛出的异常，不是实际抛出的异常）</p>
+<h6 id="可以使用通配符描述切入点先在前面写-Aspect再写-Pointcut-“execution-……-”"><a href="#可以使用通配符描述切入点先在前面写-Aspect再写-Pointcut-“execution-……-”" class="headerlink" title="可以使用通配符描述切入点先在前面写@Aspect再写@Pointcut(“execution(……)”)"></a><span style = "color:red">可以使用通配符描述切入点</span><del>先在前面写@Aspect再写@Pointcut(“execution(……)”)</del></h6><p>1.* ：单个独立的任意符号，可以通配任意返回值、包名、类名、方法名、任意类型的一个参数，也可以通配包、类、方法名的一部分</p>
+<blockquote>
+<p>execution(* com.<em>.service.</em>.update*(*))</p>
+</blockquote>
+<p>2… ：多个连续的任意符号，可以通配任意层级的包，或任意类型、任意个数的参数</p>
+<blockquote>
+<p>execution(* com.itheima..DeptService.*(..))</p>
+</blockquote>
+<p>根据业务需要，可以使用 且（&amp;&amp;）、或（||）、非（!） 来组合比较复杂的切入点表达式。</p>
+<h6 id="1-execution切入点表达式的完整语法"><a href="#1-execution切入点表达式的完整语法" class="headerlink" title="1.execution切入点表达式的完整语法 ?"></a>1.execution切入点表达式的完整语法 ?</h6><p>lexecution(访问修饰符? 返回值 包名.类名.?方法名(方法参数) throws 异常?)</p>
+<h6 id="2-通配符有哪些"><a href="#2-通配符有哪些" class="headerlink" title="2.通配符有哪些 ?"></a>2.通配符有哪些 ?</h6><p>a.* ：单个独立的任意符号</p>
+<p>b… ：多个连续的任意符号</p>
+<h6 id="3-书写建议"><a href="#3-书写建议" class="headerlink" title="3.书写建议"></a>3.书写建议</h6><p>a.所有业务<strong>方法名</strong>在<strong>命名</strong>时尽量<strong>规范</strong>，方便切入点表达式快速匹配。如：findXxx，updateXxx。</p>
+<p>b.描述切入点方法通常<strong>基于接口描述</strong>，而不是直接描述实现类，<strong>增强拓展性</strong>。</p>
+<p>c.在满足业务需要的前提下，<strong>尽量缩小切入点的匹配范围</strong>。如：包名尽量不使用..，使用*匹配单个包。</p>
+<h5 id="切入点表达式—-annotation"><a href="#切入点表达式—-annotation" class="headerlink" title="切入点表达式—@annotation"></a>切入点表达式—@annotation</h5><ul>
+<li>@annotation 切入点表达式，用于匹配标识有特定注解的方法。<br><code>@annotation(com.itheima.anno.Log)</code></li>
+</ul>
+<pre><code class="java">package com.itheima.anno;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyLog &#123;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@Aspect
+public class MyAdviceExpression &#123;
+    @Pointcut(&quot;@annotation(com.itheima.anno.MyLog)&quot;)
+    public void pt()&#123;
+
+    &#125;
+    @Before(&quot;pt()&quot;)
+    public void before()&#123;
+        log.info(&quot;MyAdviceExpression.before()&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">  @MyLog
+    @Override
+    public void delete(Integer id) &#123;
+        // 业务层调用mapper删除部门
+        deptMapper.deleteById(id);
+    &#125;
+</code></pre>
+<h5 id="连接点"><a href="#连接点" class="headerlink" title="连接点"></a>连接点</h5><ul>
+<li><p>在Spring中用JoinPoint抽象了连接点，用它可以获得方法执行时的相关信息，如目标类名、方法名、方法参数等。</p>
+<ul>
+<li><p>对于 @Around 通知，获取连接点信息只能使用 ProceedingJoinPoint</p>
+</li>
+<li><p>对于其它四种通知，获取连接点信息只能使用 JoinPoint ，它是 ProceedingJoinPoint 的父类型</p>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">package com.itheima.aop;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.stereotype.Component;
+
+@Component
+@Aspect
+@Slf4j
+public class AspectJointPoint &#123;
+    // 前置通知
+    @Before(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public void before(JoinPoint jp) &#123;
+        // jp：正在处理的连接点（切入点/要增强的方法）
+
+        // 获取切入所在类名（目标对象的类名）
+        String targetClassName = jp.getTarget().getClass().getName();
+        log.info(&quot;环绕通知 获取切入点所在类名:&#123;&#125;&quot;, targetClassName);
+
+        // 获取目标方法签名(切入点/要增强的方法签名)
+        Signature signature = jp.getSignature();
+        log.info(&quot;前置通知 获取目标方法签名:&#123;&#125;&quot;, signature);
+
+        // 获取目标方法名（切入点/要增强的方法名）
+        String methodName = jp.getSignature().getName();
+        log.info(&quot;前置通知 获取目标方法名:&#123;&#125;&quot;, methodName);
+
+        // 获取目标方法的参数
+        Object[] args = jp.getArgs();
+        log.info(&quot;环绕通知 获取目标方法的参数:&#123;&#125;&quot;, args);
+    &#125;
+
+    // 环绕通知
+    @Around(&quot;execution(* com.itheima.service.impl.DeptServiceImpl.*(..))&quot;)
+    public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // pjp：正在处理的连接点（切入点/要增强的方法）
+
+        // 获取切入所在类名（目标对象的类名）
+        String targetClassName = pjp.getTarget().getClass().getName();
+        log.info(&quot;环绕通知 获取切入点所在类名:&#123;&#125;&quot;, targetClassName);
+
+        // 获取目标方法签名(切入点/要增强的方法签名)
+        Signature signature = pjp.getSignature();
+        log.info(&quot;环绕通知 获取目标方法签名:&#123;&#125;&quot;, signature);
+
+        // 获取目标方法名（切入点/要增强的方法名）
+        String methodName = pjp.getSignature().getName();
+        log.info(&quot;环绕通知 获取目标方法名:&#123;&#125;&quot;, methodName);
+
+        // 获取目标方法的参数
+        Object[] args = pjp.getArgs();
+        log.info(&quot;环绕通知 获取目标方法的参数:&#123;&#125;&quot;, args);
+
+        // 执行目标方法
+        Object ret = pjp.proceed();
+        log.info(&quot;环绕通知&quot;);
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="AOP案例"><a href="#AOP案例" class="headerlink" title="AOP案例"></a>AOP案例</h3><h6 id="将案例中增、删、改相关接口的操作日志记录到数据库表中。"><a href="#将案例中增、删、改相关接口的操作日志记录到数据库表中。" class="headerlink" title="将案例中增、删、改相关接口的操作日志记录到数据库表中。"></a>将案例中增、删、改相关接口的操作日志记录到数据库表中。</h6><ul>
+<li><p><strong>日志信息</strong>包含：操作人、操作时间、执行方法的全类名、执行方法名、方法运行时参数、返回值、方法执行时长</p>
+</li>
+<li><p>采用哪种通知类型 ？<br><code>@Around</code>环绕通知</p>
+</li>
+<li><p>切入点表达式使用哪种形式 ？<br><code>由于增、删、改 方法名没有规律，可以自定义@Log注解匹配目标方法更便捷</code></p>
+</li>
+</ul>
+<pre><code class="java">com/itheima/anno/Log.java
+package com.itheima.anno;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.Aspect;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+// 自定义注解，作为切入点表达式
+@Aspect
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Log &#123;
+// 操作人的信息 id 从token里面拿(令牌解析) 去里面解析用户id
+    String operateEmpId() default &quot;1&quot;;
+&#125;
+</code></pre>
+<h6 id="一定要记得在所有的Controller的增删改中加-Log才有用"><a href="#一定要记得在所有的Controller的增删改中加-Log才有用" class="headerlink" title="一定要记得在所有的Controller的增删改中加@Log才有用"></a>一定要记得在所有的Controller的增删改中加<code>@Log</code>才有用</h6><pre><code class="java">com/itheima/aop/OperateLogAscept.java
+package com.itheima.aop;
+
+import com.itheima.mapper.OperateLogMapper;
+import com.itheima.pojo.OperateLog;
+import com.itheima.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
+// 增删改日志操作切面类
+@Component
+@Aspect
+@Slf4j
+public class OperateLogAscept &#123;
+    // 环绕通知 带log的方法都会被增强
+    @Autowired
+    private OperateLogMapper operatorLogMapper;
+    @Autowired // IOC里面已经有这个对象了 只需要注入就行
+    private HttpServletRequest request;
+    @Around(&quot;@annotation(com.itheima.anno.Log)&quot;)
+    public Object around(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 操作人的id，拿到请求对象，拿到token这个请求头，解析token拿到操作人id
+        String jwt = request.getHeader(&quot;token&quot;);
+        // 有效载荷，是一个Map
+        Claims claims = JwtUtils.parseJWT(jwt);
+        Integer operateEmpId = (Integer) claims.get(&quot;id&quot;);
+
+        // 操作时间
+        LocalDateTime operateTime = LocalDateTime.now();
+
+        // 目标方法所在类名
+        String className = pjp.getTarget().getClass().getName();
+        Signature signature = pjp.getSignature();
+
+        // 目标方法名
+        String methodName = signature.getName();
+
+        // 目标方法的参数
+        Object[] args = pjp.getArgs();
+            // 超长字符串截取
+        String methodParams = Arrays.toString(args);
+
+        // 目标方法的返回值
+        long start = System.currentTimeMillis();
+        Object ret = pjp.proceed();
+        String returnValue = ret.toString();
+        long end = System.currentTimeMillis();
+        Long costTime = end - start;
+
+        // 把数据保存到对象中
+        OperateLog log = new OperateLog(null, operateEmpId, operateTime, className, methodName, methodParams, returnValue, costTime, null);
+        operatorLogMapper.insert(log);
+        return ret;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="AOP切面扩展-统计只有高管可以看id-gt-10"><a href="#AOP切面扩展-统计只有高管可以看id-gt-10" class="headerlink" title="AOP切面扩展(统计只有高管可以看id&gt;10)"></a>AOP切面扩展(统计只有高管可以看id&gt;10)</h5><pre><code class="java">com/itheima/aop/StatisticsAspect.java
+package com.itheima.aop;
+
+import com.itheima.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+// 统计访问权限的切面
+@Component
+@Aspect
+@Slf4j
+public class StatisticsAspect &#123;
+    @Autowired
+    private HttpServletRequest request;
+    // 环绕通知
+    @Around(&quot;execution(* com.itheima.controller.ReportController.*(..))&quot;)
+    public Object arround(ProceedingJoinPoint pjp) throws Throwable &#123;
+        // 获取登录的员工id
+        String jwt = request.getHeader(&quot;token&quot;);
+        Claims claims = JwtUtils.parseJWT(jwt);
+        Integer empId = (Integer) claims.get(&quot;id&quot;);
+        // 如果员工id&lt;10 执行目标方法
+        if (empId &lt; 10) &#123;
+            // 是高管，可以执行目标方法
+            Object ret = pjp.proceed();
+            return ret;
+        &#125; else &#123;
+            // 如果员工id&gt;=10 不执行目标方法
+            return null;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="lSpringBoot-除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。"><a href="#lSpringBoot-除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。" class="headerlink" title="lSpringBoot 除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。"></a>lSpringBoot 除了支持配置文件属性配置，还支持Java系统属性和命令行参数的方式进行属性配置。</h6><p>Ø Java系统属性：<code>-Dserver.port = 9000</code><br>Ø 命令行参数：<code>--servrt.port = 10010</code></p>
+<h5 id="SrpingBoot配置优先级（低-gt-高）："><a href="#SrpingBoot配置优先级（低-gt-高）：" class="headerlink" title="SrpingBoot配置优先级（低 -&gt; 高）："></a>SrpingBoot配置优先级（低 -&gt; 高）：</h5><p>1.application.yaml（忽略）</p>
+<p>2.application.yml</p>
+<p>3.application.properties</p>
+<p>4.java系统属性（-Dxxx&#x3D;xxx）</p>
+<p>5.命令行参数（–xxx&#x3D;xxx）</p>
+<h5 id="获取bean"><a href="#获取bean" class="headerlink" title="获取bean"></a>获取bean</h5><ul>
+<li><p>默认情况下，Spring项目启动时，会把bean都创建好放在IOC容器中。如果要获取到容器对象，可以通过如下方式：</p>
+<pre><code class="java">@Autowired
+private ApplicationContext applicationContext;
+</code></pre>
+</li>
+<li><p>如果想要主动获取这些bean，可以通过如下方式：</p>
+</li>
+</ul>
+<p>​    1.根据name获取bean：<code>Object getBean(String name)</code></p>
+<p>​    2.根据类型获取bean：<code>&lt;T&gt; T getBean(Class&lt;T&gt; requiredType)</code></p>
+<p>​    3.根据name获取bean（带类型转换）：<code>&lt;T&gt; T getBean(String name, Class&lt;T&gt; requiredType</code></p>
+<pre><code class="java">package com.itheima;
+
+import com.itheima.controller.DeptController;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootTest
+class SpringbootWebConfig2ApplicationTests &#123;
+
+    @Autowired // 是Spring的IOC容器
+    private ApplicationContext applicationContext;
+    // 获取bean对象
+    @Test
+    public void testGetBean() &#123;
+        // 根据bean的名称获取
+        Object bean1 = applicationContext.getBean(&quot;deptController&quot;);
+        System.out.println(&quot;bean1 = &quot; + bean1);
+        // 根据bean的类型获取
+        DeptController bean2 = applicationContext.getBean(DeptController.class);
+        System.out.println(&quot;bean2 = &quot; + bean2);
+
+        // 根据bean的名称 及 类型获取
+        DeptController bean3 = applicationContext.getBean(&quot;deptController&quot;, DeptController.class);
+        System.out.println(&quot;bean3 = &quot; + bean3);
+
+    &#125;
+
+
+    // bean的作用域
+    @Test
+    public void testScope() &#123;
+
+    &#125;
+
+    // 第三方bean的管理
+    @Test
+    public void testThirdBean() throws Exception &#123;
+        SAXReader saxReader = new SAXReader();
+
+        Document document = saxReader.read(this.getClass().getClassLoader().getResource(&quot;1.xml&quot;));
+        Element rootElement = document.getRootElement();
+        String name = rootElement.element(&quot;name&quot;).getText();
+        String age = rootElement.element(&quot;age&quot;).getText();
+
+        System.out.println(name + &quot; : &quot; + age);
+    &#125;
+&#125;
+---------------------------------------------------------------
+bean1 = com.itheima.controller.DeptController@504b8705
+bean2 = com.itheima.controller.DeptController@504b8705
+bean3 = com.itheima.controller.DeptController@504b8705
+</code></pre>
+<h5 id="Bean作用域"><a href="#Bean作用域" class="headerlink" title="Bean作用域"></a>Bean作用域</h5><table>
+<thead>
+<tr>
+<th><strong>作用域</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>singleton</td>
+<td>容器内同  名称 的 bean 只有一个实例（单例）（默认）</td>
+</tr>
+<tr>
+<td>prototype</td>
+<td>每次使用该  bean 时会创建新的实例（非单例）</td>
+</tr>
+<tr>
+<td>request</td>
+<td>每个请求范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+<tr>
+<td>session</td>
+<td>每个会话范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+<tr>
+<td>application</td>
+<td>每个应用范围内会创建新的实例（web环境中，了解）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>默认singleton的bean，在容器启动时被创建，可以使用@Lazy注解来延迟初始化（延迟到第一次使用时）。<br>prototype的bean，每一次使用该bean的时候都会创建一个新的实例。<br>实际开发当中，绝大部分的Bean是单例的，也就是说绝大部分Bean不需要配置scope属性。</p>
+</blockquote>
+<pre><code class="java">@Scope(&quot;prototype&quot;)
+@Slf4j
+@RequestMapping(&quot;/depts&quot;)
+@RestController
+public class DeptController &#123;
+...
+&#125;
+---------------------------------------------------------------
+bean1 = com.itheima.controller.DeptController@21abda60
+bean2 = com.itheima.controller.DeptController@dd20ebc
+bean3 = com.itheima.controller.DeptController@6c70b7c3
+</code></pre>
+<h6 id="1-bean的常见的作用域有哪些-？"><a href="#1-bean的常见的作用域有哪些-？" class="headerlink" title="1.bean的常见的作用域有哪些 ？"></a>1.bean的常见的作用域有哪些 ？</h6><p><code>singleton(默认) </code>&#x3D;&gt; 饿汉式<del>要想实现懒汉式可以在<code>@Bean</code>注解上添加<code>@Lazy</code>注解</del></p>
+<p><code>prototype</code>：每次请求该Bean时都会创建一个新的实例<del>创建的结果对象不一样</del></p>
+<h6 id="2-如何设置bean的作用域-？"><a href="#2-如何设置bean的作用域-？" class="headerlink" title="2.如何设置bean的作用域 ？"></a>2.如何设置bean的作用域 ？</h6><p>@Scope(“singleton”) 单例模式<br>@Scope(“prototype”) 多例模式</p>
+<h6 id="3-默认单例的bean什么时候创建-？"><a href="#3-默认单例的bean什么时候创建-？" class="headerlink" title="3. 默认单例的bean什么时候创建 ？"></a>3. 默认单例的bean什么时候创建 ？</h6><p>默认单例的bean，在容器启动时被创建</p>
+<h5 id="第三方bean"><a href="#第三方bean" class="headerlink" title="第三方bean"></a>第三方bean</h5><ul>
+<li><p>如果要管理的bean对象来自于第三方（不是自定义的），是无法用 @Component 及衍生注解声明bean的，就需要用到 @Bean注解。</p>
+</li>
+<li><p>若要管理的第三方bean对象，建议对这些bean进行集中分类配置，可以通过@Configuration注解声明一个配置类。</p>
+<ul>
+<li><pre><code class="java">@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">// 不推荐
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+    @Bean //将方法返回值交给IOC容器管理,成为IOC容器的bean对象
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 推荐
+@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader saxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">package com.itheima;
+
+import com.itheima.controller.DeptController;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootTest
+class SpringbootWebConfig2ApplicationTests &#123;
+
+    @Autowired // 是Spring的IOC容器
+    private ApplicationContext applicationContext;
+    // 获取bean对象
+    @Test
+    public void testGetBean() &#123;
+        // 根据bean的名称获取
+        Object bean1 = applicationContext.getBean(&quot;deptController&quot;);
+        System.out.println(&quot;bean1 = &quot; + bean1);
+        // 根据bean的类型获取
+        DeptController bean2 = applicationContext.getBean(DeptController.class);
+        System.out.println(&quot;bean2 = &quot; + bean2);
+
+        // 根据bean的名称 及 类型获取
+        DeptController bean3 = applicationContext.getBean(&quot;deptController&quot;, DeptController.class);
+        System.out.println(&quot;bean3 = &quot; + bean3);
+
+    &#125;
+
+
+    // bean的作用域
+    @Test
+    public void testScope() &#123;
+
+    &#125;
+======================================================================
+    // 第三方bean的管理
+    @Test
+    public void testThirdBean() throws Exception &#123;
+        SAXReader saxReader = new SAXReader();
+
+        Document document = saxReader.read(this.getClass().getClassLoader().getResource(&quot;1.xml&quot;));
+        Element rootElement = document.getRootElement();
+        String name = rootElement.element(&quot;name&quot;).getText();
+        String age = rootElement.element(&quot;age&quot;).getText();
+
+        System.out.println(name + &quot; : &quot; + age);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 放在启动类中【只需要一个 用下面的就要把上面注释】
+package com.itheima;
+
+import org.dom4j.io.SAXReader;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(SpringbootWebConfigApplication.class, args);
+    &#125;
+    // 声明第三方的Bean，本质上是IoC容器调用@Bean修饰的方法
+    // 把方法的返回值放到IoC容器中管理
+    // 默认使用方法名作为bean的名字，可以在@Bean(名字)，修改bean的名字
+    @Bean()
+    public SAXReader getSaxReader()&#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 放在特定的地方
+package com.itheima.config;
+
+import org.dom4j.io.SAXReader;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+// 声明为配置类，spring会扫描这个类中的注解
+@Configuration
+public class CommonConfig &#123;
+    @Bean
+    public SAXReader getSaxReader() &#123;
+        return new SAXReader();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="自动配置"><a href="#自动配置" class="headerlink" title="自动配置"></a>自动配置</h3><p>SpringBoot的自动配置就是当spring容器启动后，一些配置类、bean对象就自动存入到了IOC容器中，不需要我们手动去声明，从而简化了开发，省去了繁琐的配置操作。</p>
+<blockquote>
+<p>先加个依赖后才可以搞喔</p>
+</blockquote>
+<pre><code class="java">// 测试自动配置Bean：spring容器启动时候自动创建对象放到IoC容器中 
+    @Autowired
+    private Gson gson;
+    @Test
+    public void testAutoBean01() &#123;
+        Result result = Result.success(&quot;自动配置bean666&quot;);
+        System.out.println(gson.toJson(result));
+    &#125;
+</code></pre>
+<h4 id="自动配置实现"><a href="#自动配置实现" class="headerlink" title="自动配置实现"></a>自动配置实现</h4><h6 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a><span style = "color:red">方案一</span></h6><p><code>@ComponentScan</code>：默认扫描当前类所在的包和子包<br><code>basePackages</code>：基包，指定扫描哪些包中的注解</p>
+<p>扫描多个包：</p>
+<h6 id="使用-ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。"><a href="#使用-ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。" class="headerlink" title="使用@ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。"></a>使用@ComponentScan组件扫描注解，手动扫描引入的第三方依赖中的bean。</h6><pre><code class="java">@ComponentScan(basePackages=&#123;&quot;com.itheima&quot;,&quot;com.alibaba&quot;&#125;)
+</code></pre>
+<p>工作 爱情 家庭</p>
+<h6 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a><span style = "color:red">方案二</span></h6><p><code>@Import</code> 导入。使用@Import导入的类会被Spring加载到IOC容器中，导入形式主要有以下几种：</p>
+<p>1.导入 普通类</p>
+<p>2.导入 配置类</p>
+<p>3.导入 ImportSelector 接口实现类</p>
+<p>4.@EnableXxxx注解，封装@Import注解 </p>
+<pre><code class="java">// 普通类
+@Import(TokenParser.class)
+// 配置类
+@Import(HeaderConfig.class)
+// 接口实现类
+@Import(MyImportSelector.class)
+@SpringBootApplication
+public class SpringbootWebConfigApplication &#123;
+......
+&#125;
+</code></pre>
+<pre><code class="java">为什么第三方依赖中使用@Component及其衍生注解声明bean不生效?
+基于@Component及其衍生注解声明的bean要想生效,需要被组件扫描注解扫描到。
+有哪些方案可以使其生效呢?
+通过@ComponentScan注解扫描指定的包
+通过@Import注解将其导入到IOC容器中(四种常见方式)[最后注解可以封装import]
+普通类、配置类、ImportSelector实现列、@EnableXxx
+</code></pre>
+<h3 id="分模块开发设计"><a href="#分模块开发设计" class="headerlink" title="分模块开发设计"></a>分模块开发设计</h3><p>创建maven模块 tlias-pojo，存放实体类。</p>
+<p>创建maven模块 tlias-utils，存放相关工具类。</p>
+<h5 id="继承与聚合"><a href="#继承与聚合" class="headerlink" title="继承与聚合"></a>继承与聚合</h5><ul>
+<li><p>概念：继承描述的是两个工程间的关系，与java中的继承相似，子工程可以继承父工程中的配置信息，常见于依赖关系的继承。</p>
+</li>
+<li><p>作用：简化依赖配置、统一管理依赖</p>
+</li>
+</ul>
+<p>实现：**&lt; parent&gt; … &lt; &#x2F;parent&gt;**</p>
+<h5 id="继承关系实现"><a href="#继承关系实现" class="headerlink" title="继承关系实现"></a>继承关系实现</h5><p>① 创建maven模块tlias-parent，该工程为父工程，设置打包方式pom(默认jar)。</p>
+<p>② 在子工程的pom.xml文件中，配置继承关系。</p>
+<p>③ 在父工程中配置各个工程共有的依赖（子工程会自动继承父工程的依赖）</p>
+<blockquote>
+<p>jar：普通模块打包，springboot项目基本都是jar包（内嵌tomcat运行）<br>war：普通web程序打包，需要部署在外部的tomcat服务器中运行<br>pom：父工程或聚合工程，该模块不写代码，仅进行依赖管理</p>
+</blockquote>
+<h6 id="Maven的继承关系实现步骤"><a href="#Maven的继承关系实现步骤" class="headerlink" title="Maven的继承关系实现步骤 ?"></a>Maven的继承关系实现步骤 ?</h6><p>① 创建父工程，设置打包方式为pom。并继承 spring-boot-starter-parent<br>② 在子工程中配置继承关系<br>③ 在父工程中配置各个工程的共有依赖</p>
+<ul>
+<li>在子工程中，配置了继承关系之后，坐标中的groupId是可以省略的，因为会自动继承父工程的 。</li>
+<li>relativePath指定父工程的pom文件的相对位置（如果不指定，将从本地仓库&#x2F;远程仓库查找该工程）。</li>
+<li>若父子工程都配置了同一个依赖的不同版本，以子工程的为准。</li>
+</ul>
+<h5 id="版本锁定【自定义属性-x2F-引用属性】"><a href="#版本锁定【自定义属性-x2F-引用属性】" class="headerlink" title="版本锁定【自定义属性&#x2F;引用属性】"></a>版本锁定【自定义属性&#x2F;引用属性】</h5><ul>
+<li>在maven中，可以在父工程的pom文件中通过 <code>&lt;dependencyManagement&gt;</code> 来统一管理依赖版本。</li>
+</ul>
+<pre><code class="xml">&lt;properties&gt;
+    &lt;lombok.version&gt;1.18.30&lt;/lombok.version&gt;
+    &lt;jjwt.version&gt;0.9.1&lt;/jjwt.version&gt;
+&lt;/properties&gt;
+</code></pre>
+<pre><code class="xml">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+        &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;version&gt;$&#123;lombok.version&#125;&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
+<pre><code class="xml">&lt;dependencyManagement&gt;
+    &lt;dependencies&gt;
+        &lt;!--JWT令牌--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.jsonwebtoken&lt;/groupId&gt;
+            &lt;artifactId&gt;jjwt&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;jjwt.version&#125;&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+</code></pre>
+<h3 id="聚合"><a href="#聚合" class="headerlink" title="聚合"></a>聚合</h3><ul>
+<li><p>聚合</p>
+<p> 将多个模块组织成一个整体，同时进行项目的构建。</p>
+</li>
+<li><p>聚合工程</p>
+<p> 一个不具有业务功能的“空”工程（有且仅有一个pom文件）</p>
+</li>
+<li><p>作用</p>
+<p> 快速构建项目（无需根据依赖关系手动构建，直接在聚合工程上构建即可）</p>
+</li>
+</ul>
+<pre><code class="xml">            &lt;!--父工程 聚合--&gt;
+&lt;modules&gt;
+    &lt;module&gt;../tlias-pojo&lt;/module&gt;
+    &lt;module&gt;../tlias-utils&lt;/module&gt;
+    &lt;module&gt;../tlias-web-management&lt;/module&gt;
+&lt;/modules&gt;
+</code></pre>
+<blockquote>
+<p>聚合工程中所包含的模块，在构建时，会自动根据模块间的依赖关系设置构建顺序，与聚合工程中模块的配置书写位置无关。</p>
+</blockquote>
+<h6 id="1-maven中如何实现聚合关系"><a href="#1-maven中如何实现聚合关系" class="headerlink" title="1.maven中如何实现聚合关系 ?"></a>1.maven中如何实现聚合关系 ?</h6><blockquote>
+<p>&lt; modules&gt; … &lt; &#x2F;modules&gt;</p>
+</blockquote>
+<h6 id="2-maven中继承与聚合的联系与区别"><a href="#2-maven中继承与聚合的联系与区别" class="headerlink" title="2.maven中继承与聚合的联系与区别 ?"></a>2.maven中继承与聚合的联系与区别 ?</h6><p>联系：继承与聚合都属于设计型模块，打包方式都为pom，常将两种关系制作到同一个pom文件中</p>
+<p>区别：</p>
+<p>1.继承用于简化依赖配置、统一管理依赖版本，是在子工程中配置继承关系<br>2.聚合用于快速构建项目，是在父工程中配置聚合的模块</p>
+<h3 id="搭建Maven仓库私服Maven是共享jar包的"><a href="#搭建Maven仓库私服Maven是共享jar包的" class="headerlink" title="搭建Maven仓库私服Maven是共享jar包的"></a>搭建Maven仓库私服<del>Maven是共享jar包的</del></h3><blockquote>
+<p>D:\nexus-3.55.0-01\nexus-3.55.0-01\bin</p>
+</blockquote>
+<p>1.解压:apache-maven-nexus.zip<br>2.进入目录:apache-maven-nexusinexus-3.39.0-01\bin<br>3.启动服务:双击 start.bat<br>4.访问服务:localhost:8081</p>
+<p>访问私服：<a target="_blank" rel="noopener" href="http://localhost:8081/">http://localhost:8081</a></p>
+<p>访问密码：admin&#x2F;admin</p>
+<p>使用私服，需要在maven的<code>settings.xml</code>配置文件中，做如下配置：</p>
+<ol>
+<li><p>需要在 <strong>servers</strong> 标签中，配置访问私服的个人凭证(访问的用户名和密码)</p>
+<pre><code class="xml">&lt;server&gt;
+    &lt;id&gt;maven-releases&lt;/id&gt;
+    &lt;username&gt;admin&lt;/username&gt;
+    &lt;password&gt;admin&lt;/password&gt;
+&lt;/server&gt;
+    
+&lt;server&gt;
+    &lt;id&gt;maven-snapshots&lt;/id&gt;
+    &lt;username&gt;admin&lt;/username&gt;
+    &lt;password&gt;admin&lt;/password&gt;
+&lt;/server&gt;
+</code></pre>
+</li>
+<li><p>在 <strong>mirrors</strong> 中只配置我们自己私服的连接地址(如果之前配置过阿里云，需要直接替换掉)</p>
+<pre><code class="xml">&lt;mirror&gt;
+    &lt;id&gt;maven-public&lt;/id&gt;
+    &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+    &lt;url&gt;http://localhost:8081/repository/maven-public/&lt;/url&gt;
+&lt;/mirror&gt;
+</code></pre>
+</li>
+<li><p>需要在 <strong>profiles</strong> 中，增加如下配置，来指定snapshot快照版本的依赖，依然允许使用</p>
+<pre><code class="xml">&lt;profile&gt;
+    &lt;id&gt;allow-snapshots&lt;/id&gt;
+        &lt;activation&gt;
+            &lt;activeByDefault&gt;true&lt;/activeByDefault&gt;
+        &lt;/activation&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;maven-public&lt;/id&gt;
+            &lt;url&gt;http://localhost:8081/repository/maven-public/&lt;/url&gt;
+            &lt;releases&gt;
+                &lt;enabled&gt;true&lt;/enabled&gt;
+            &lt;/releases&gt;
+            &lt;snapshots&gt;
+                &lt;enabled&gt;true&lt;/enabled&gt;
+            &lt;/snapshots&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+&lt;/profile&gt;
+</code></pre>
+</li>
+<li><p>如果需要上传自己的项目到私服上，需要在项目的pom.xml文件中，增加如下配置，来配置项目发布的地址(也就是私服的地址)</p>
+<pre><code class="xml">&lt;distributionManagement&gt;
+    &lt;!-- release版本的发布地址 --&gt;
+    &lt;repository&gt;
+        &lt;id&gt;maven-releases&lt;/id&gt;
+        &lt;url&gt;http://localhost:8081/repository/maven-releases/&lt;/url&gt;
+    &lt;/repository&gt;
+    
+    &lt;!-- snapshot版本的发布地址 --&gt;
+    &lt;snapshotRepository&gt;
+        &lt;id&gt;maven-snapshots&lt;/id&gt;
+        &lt;url&gt;http://localhost:8081/repository/maven-snapshots/&lt;/url&gt;
+    &lt;/snapshotRepository&gt;
+&lt;/distributionManagement&gt;
+</code></pre>
+</li>
+<li><p>发布项目，直接运行 deploy 生命周期即可 (发布时，建议跳过单元测试)</p>
+</li>
+</ol>
+<p>​        </p>
+<h1 id="开始前端强化之旅！！！"><a href="#开始前端强化之旅！！！" class="headerlink" title="开始前端强化之旅！！！"></a>开始前端强化之旅！！！</h1>
             
         </div>
     </div>
@@ -21798,7 +24781,7 @@ public List&lt;Map&lt;String, Object&gt;&gt; empGenderData() &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
