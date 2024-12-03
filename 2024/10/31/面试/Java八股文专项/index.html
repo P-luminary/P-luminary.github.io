@@ -2315,6 +2315,56 @@ public Queue quorumQueue()&#123;
             .build();
 &#125;
 </code></pre>
+<p><span style = "color:red"><strong>Kafka是如何保证消息不丢失？</strong><br></span></p>
+<blockquote>
+<p>需要从三个层面去解决这个问题</p>
+<ul>
+<li><p>生产者发送消息到Brocker丢失</p>
+<ul>
+<li>设置异步发送，发送失败使用回调进行记录或重发</li>
+<li>失败重试，参数配置，可以设置重试次数消息</li>
+</ul>
+</li>
+<li><p>在Brocker中存储丢失</p>
+<p>发送确认acks，选择all，让所有的副本都参与保存数据后确认</p>
+</li>
+<li><p>消费者从Brocker接收消息丢失</p>
+<ul>
+<li>关闭自动提交偏移量，开启手动提交偏移量</li>
+<li>提交方式：最好是<strong>同步+异步提交</strong></li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>使用Kafka在消息的收发过程中都会出现消息丢失，Kafka分别给出了解决方案</p>
+<ul>
+<li>生产者发送消息到Brocker丢失</li>
+<li>消息在Brocker中存储丢失</li>
+<li>消费者从Brocker接收消息丢失</li>
+</ul>
+</blockquote>
+<p>kafka-高产出的<a target="_blank" rel="noopener" href="https://cloud.tencent.com/product/ckafka?from_column=20065&from=20065">分布式消息系统</a>(A high-throughput distributed messaging system)。</p>
+<p>Kafka是一个高吞吐、分布式、基于发布订阅的消息系统，利用Kafka技术可以在廉价的PC Server上搭建起大规模消息系统。</p>
+<h5 id="Kafka的特性："><a href="#Kafka的特性：" class="headerlink" title="Kafka的特性："></a><strong>Kafka的特性：</strong></h5><ul>
+<li>高吞吐量、低延迟：kafka每秒可以处理几十万条消息，它的延迟最低只有几毫秒，每个topic可以分多个partition, consumer group 对partition进行consume操作；</li>
+<li>可扩展性：kafka集群支持热扩展；</li>
+<li>持久性、可靠性：消息被持久化到本地磁盘，并且支持<a target="_blank" rel="noopener" href="https://cloud.tencent.com/solution/backup?from_column=20065&from=20065">数据备份</a>防止数据丢失；</li>
+<li>容错性：允许集群中节点失败（若副本数量为n,则允许n-1个节点失败）；</li>
+<li>高并发：支持数千个客户端同时读写；</li>
+<li>支持实时在线处理和离线处理：可以使用Storm这种实时流处理系统对消息进行实时进行处理，同时还可以使用Hadoop这种批处理系统进行离线处理；</li>
+</ul>
+<p>Kafka和其他组件比较，具有消息持久化、高吞吐、分布式、多客户端支持、实时等特性，适用于离线和在线的消息消费，如常规的消息收集、网站活性跟踪、聚合统计系统运营数据（监控数据）、日志收集等大量数据的互联网服务的数据收集场景。</p>
+<ol>
+<li>日志收集：一个公司可以用Kafka可以收集各种服务的log，通过kafka以统一接口服务的方式开放给各种consumer，例如Hadoop、Hbase、Solr等；</li>
+<li>消息系统：解耦和生产者和消费者、缓存消息等；</li>
+<li>用户活动跟踪：Kafka经常被用来记录web用户或者app用户的各种活动，如浏览网页、搜索、点击等活动，这些活动信息被各个服务器发布到kafka的topic中，然后订阅者通过订阅这些topic来做实时的监控分析，或者装载到Hadoop、数据仓库中做离线分析和挖掘；</li>
+<li>运营指标：Kafka也经常用来记录运营监控数据。包括收集各种分布式应用的数据，生产各种操作的集中反馈，比如报警和报告；</li>
+<li>流式处理：比如spark streaming和storm；</li>
+<li>事件源；</li>
+<li>kafka在FusionInsight中的位置：</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/fcebf13cb4e2d12dc10727d9d5942720bbd114e6/Kafka%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1.png"></p>
 
     </div>
 
