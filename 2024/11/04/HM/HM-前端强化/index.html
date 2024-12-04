@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#1bccbc>
+                <a href="/tags/HM" style=color:#879cff>
                     HM
                 </a>
             </span>
@@ -3872,6 +3872,1271 @@ const save = async () =&gt; &#123;
 &lt;/template&gt;
 
 &lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<h3 id="修改部门数据回显"><a href="#修改部门数据回显" class="headerlink" title="修改部门数据回显"></a>修改部门数据回显</h3><ul>
+<li>对于修改操作，通常会分为两步进行：① 查询回显、② 保存修改 。</li>
+</ul>
+<p><strong>交互逻辑</strong>：</p>
+<p>Ø 点击 编辑 按钮，根据ID进行查询，弹出对话框，完成页面回显展示。（查询回显）</p>
+<p>Ø 点击 确定 按钮，保存修改后的数据，完成数据更新操作。（保存修改）</p>
+<pre><code class="vue">src\views\dept\index.vue
+
+&lt;script setup lang=&quot;ts&quot;&gt;
+// import &#123; el &#125; from &#39;element-plus/es/locale&#39;;
+import &#123; onMounted, ref &#125; from &#39;vue&#39;;
+import type &#123; DeptModel, DeptModelArray&#125; from &#39;@/api/model/model.ts&#39;;
+import &#123; queryAllApi, addApi, queryInfoApi&#125; from &#39;@/api/dept&#39;;
+import &#123; ElMessage &#125; from &#39;element-plus&#39;;
+// 表格修改按钮事件
+const update = async (id: number) =&gt; &#123;
+  console.log(&#39;修改部门：&#39; + id)
+  // 弹出对话框
+  dialogFormVisible.value = true;
+  // 修改标题：修改部门   清空表单的数据
+  dialogTitle.value = &#39;修改部门&#39;;
+  deptForm.value = &#123; 
+    name: &#39;&#39; 
+  &#125;
+  // 发送请求给服务器，根据id获取部门信息
+  const result = await queryInfoApi(id);
+  // 把部门数据绑定到对话框的表单上
+  if(result.code) &#123;
+    // 获取部门成功
+    deptForm.value = result.data;
+  &#125; else&#123;
+    // 获取部门失败
+    ElMessage.error(&#39;获取部门信息失败！错误消息：&#39; + result.msg)
+  &#125;
+&#125;
+&lt;/script&gt;
+</code></pre>
+<h3 id="修改部门"><a href="#修改部门" class="headerlink" title="修改部门"></a>修改部门</h3><h6 id="怎么判断是新增部门还是修改部门？"><a href="#怎么判断是新增部门还是修改部门？" class="headerlink" title="怎么判断是新增部门还是修改部门？"></a>怎么判断是新增部门还是修改部门？</h6><blockquote>
+<p>修改部门的时候会返回response的时候有部门id<br>新增的时候没有</p>
+</blockquote>
+<pre><code class="js">import &#123; queryAllApi, addApi, queryInfoApi, updateApi &#125; from &#39;@/api/dept&#39;;
+...
+// 向服务器发送请求添加部门
+const save = async () =&gt; &#123;
+  // 判断数据是否有id，
+  let result;
+  if (deptForm.value.id) &#123;
+    // 如果有id就是修改
+     result = await updateApi(deptForm.value);
+  &#125; else &#123;
+    // 如果没有id就是新增
+    // 发送Ajax请求给服务器，得到结果，如果是成功，重新查询所有部门，失败给提示
+     result = await addApi(deptForm.value);
+  &#125;
+
+  // 发送Ajax请求给服务器，得到结果，如果是成功，重新查询所有部门，失败给提示 
+  // 记得在上方导入addApi 因为要用新增部门的请求(优化过的 请求返回响应 方法)
+  //新增部门
+  // export const addApi = (dept: DeptModel) =&gt; request.post&lt;any, ResultModel&gt;(&#39;/depts&#39;, dept)
+  // 用await是等待请求响应结果
+  //  result = await addApi(deptForm.value);
+  if (result.code) &#123;
+    // 成功提示操作成功 关闭对话框 重新查询部门数据 
+    ElMessage.success(&#39;添加部门成功&#39;)
+    dialogFormVisible.value = false;
+    queryAll();
+  &#125; else &#123;
+    // 如果失败给提示
+    ElMessage.error(&#39;添加部门失败！错误消息：&#39; + result.msg)
+  &#125;
+&#125;
+</code></pre>
+<h3 id="删除部门"><a href="#删除部门" class="headerlink" title="删除部门"></a>删除部门</h3><ul>
+<li>点击删除按钮，需要删除当前这条数据，删除完成之后，刷新页面，展示出最新的数据。</li>
+<li>由于删除是一个比较危险的操作，为避免误操作，通常会在点击删除之后，弹出确认框进行确认。</li>
+<li>Element 组件：ElMessageBox消息弹出框组件</li>
+</ul>
+<pre><code class="js">import &#123; queryAllApi, addApi, queryInfoApi, updateApi, deleteApi &#125; from &#39;@/api/dept&#39;;
+...
+
+// 表格删除按钮事件
+const handleDelete = async (id: number) =&gt; &#123;
+  console.log(&#39;删除部门：&#39; + id)
+  // 消息弹出对话框
+  ElMessageBox.confirm(
+    &#39;您真的要删除这个部门吗?&#39;,
+    &#39;警告&#39;,
+    &#123;
+      confirmButtonText: &#39;确定&#39;,
+      cancelButtonText: &#39;取消&#39;,
+      type: &#39;warning&#39;,
+    &#125;
+  ).then(async () =&gt; &#123;
+    // 点击了确定 删除部门发送请求给部门
+    let result = await deleteApi(id);
+    if (result.code) &#123;
+      // 删除成功
+      ElMessage.success(&#39;删除部门成功&#39;);
+      // 重新查询部门数据
+      queryAll();
+    &#125; else &#123;
+      // 删除失败
+      ElMessage.error(&#39;删除部门失败！错误消息：&#39; + result.msg);
+    &#125;
+  &#125;).catch(() =&gt; &#123;
+    // 点击了取消
+    ElMessage(&#123;
+      type: &#39;info&#39;,
+      message: &#39;您取消了删除部门&#39;,
+    &#125;)
+  &#125;)
+&#125;
+...
+
+&lt;template&gt;
+  &lt;h1&gt;部门管理&lt;/h1&gt;
+  &lt;el-button type=&quot;primary&quot; v-on:click=&quot;add&quot;&gt;+ 新增部门&lt;/el-button&gt;
+  &lt;!-- 表格 --&gt;
+  &lt;el-table :data=&quot;tableData&quot; border style=&quot;width: 100%&quot;&gt;
+    &lt;el-table-column type=&quot;index&quot; label=&quot;序号&quot; width=&quot;100&quot; algin=&quot;center&quot; /&gt;
+    &lt;el-table-column prop=&quot;name&quot; label=&quot;部门名称&quot; width=&quot;280&quot; algin=&quot;center&quot; /&gt;
+    &lt;el-table-column prop=&quot;updateTime&quot; label=&quot;最后操作时间&quot; width=&quot;380&quot; algin=&quot;center&quot; /&gt;
+    &lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot;&gt;
+      &lt;template #default=&quot;scope&quot;&gt;
+        &lt;el-button size=&quot;small&quot; type=&quot;primary&quot; @click=&quot;update(scope.row.id)&quot;&gt;
+          修改
+        &lt;/el-button&gt;
+        &lt;el-button size=&quot;small&quot; type=&quot;danger&quot; @click=&quot;handleDelete(scope.row.id)&quot;&gt;
+          删除
+        &lt;/el-button&gt;
+      &lt;/template&gt;
+    &lt;/el-table-column&gt;
+  &lt;/el-table&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="表单绑定规则"><a href="#表单绑定规则" class="headerlink" title="表单绑定规则"></a>表单绑定规则</h3><ul>
+<li><p>在ElementPlus提供的form表单组件中，就提供了对应的表单校验的功能。 具体步骤如下：</p>
+<p>Ø 通过ref属性注册元素的引用。</p>
+<p>Ø 定义表单校验规则，通过rules属性与表单绑定，并通过prop属性绑定对应的表单项。</p>
+<p>Ø 表单提交时，校验表单，校验通过，则允许提交表单。</p>
+</li>
+</ul>
+<p>Form 组件允许你验证用户的输入是否符合规范，来帮助你找到和纠正错误。</p>
+<p><code>Form</code> 组件提供了表单验证的功能，只需为 <code>rules</code> 属性传入约定的验证规则，并将 <code>form-Item</code> 的 <code>prop</code> 属性设置为需要验证的特殊键值即可。 校验规则参见 <a target="_blank" rel="noopener" href="https://github.com/yiminghe/async-validator">async-validator
+</a></p>
+<pre><code class="vue">&lt;script setup lang=&quot;ts&quot;&gt;
+// import &#123; el &#125; from &#39;element-plus/es/locale&#39;;
+import &#123; onMounted, ref &#125; from &#39;vue&#39;;
+import type &#123; DeptModel, DeptModelArray &#125; from &#39;@/api/model/model.ts&#39;;
+import &#123; queryAllApi, addApi, queryInfoApi, updateApi, deleteApi &#125; from &#39;@/api/dept&#39;;
+import &#123; ElMessage, ElMessageBox, type FormRules &#125; from &#39;element-plus&#39;;
+
+...
+// 定义表单规则 FormRules是elementPlus导入包  RuleForm是自定义的接口
+const rules = ref&lt;FormRules&lt;DeptModel&gt;&gt;(&#123;
+  name: [
+    &#123; required: true, message: &#39;部门名称不能空&#39;, trigger: &#39;blur&#39; &#125;,
+    &#123; min: 2, max: 10, message: &#39;部门名称长度为2-10位&#39;, trigger: &#39;blur&#39; &#125;,
+  ],
+&#125;)
+&lt;/script&gt;
+
+...
+&lt;!-- 添加/编辑部门对话框 v-bind绑定标题--&gt;
+  &lt;el-dialog v-model=&quot;dialogFormVisible&quot; v-bind:title=&quot;dialogTitle&quot; width=&quot;500&quot;&gt;
+    &lt;el-form :model=&quot;deptForm&quot; :rules=&quot;rules&quot;&gt;
+      &lt;!-- prop=&quot;name&quot;表单输入框运用此规则 --&gt;
+      &lt;el-form-item label=&quot;部门名称&quot; :label-width=&quot;formLabelWidth&quot; prop=&quot;name&quot;&gt;
+        &lt;el-input v-model=&quot;deptForm.name&quot; autocomplete=&quot;off&quot; /&gt;
+      &lt;/el-form-item&gt;
+      &#123;&#123; deptForm &#125;&#125;
+    &lt;/el-form&gt;
+    &lt;template #footer&gt;
+      &lt;div class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;dialogFormVisible = false&quot;&gt;取消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;save&quot;&gt;
+          确定
+        &lt;/el-button&gt;
+      &lt;/div&gt;
+    &lt;/template&gt;
+  &lt;/el-dialog&gt;
+</code></pre>
+<h3 id="表单校验规则"><a href="#表单校验规则" class="headerlink" title="表单校验规则"></a>表单校验规则</h3><ol>
+<li>创建表单校验实例</li>
+<li><code>el-from</code>里面要绑定</li>
+<li>点击的时候校验规则</li>
+<li>写校验规则的方法</li>
+</ol>
+<pre><code class="js">
+// 表单校验对象：FormInstance从elementplus引入的
+const ruleFormRef = ref&lt;FormInstance&gt;();
+
+...
+ &lt;!-- 添加/编辑部门对话框 v-bind绑定标题--&gt;
+  &lt;el-dialog v-model=&quot;dialogFormVisible&quot; v-bind:title=&quot;dialogTitle&quot; width=&quot;500&quot;&gt;
+    &lt;!-- ：rules：表单绑定规则 --&gt;
+    &lt;el-form :model=&quot;deptForm&quot; :rules=&quot;rules&quot; ref=&quot;ruleFormRef&quot;&gt;
+      &lt;!-- prop=&quot;name&quot;表单输入框运用此规则 --&gt; ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆
+      &lt;el-form-item label=&quot;部门名称&quot; :label-width=&quot;formLabelWidth&quot; prop=&quot;name&quot;&gt;
+        &lt;el-input v-model=&quot;deptForm.name&quot; autocomplete=&quot;off&quot; /&gt;
+      &lt;/el-form-item&gt;
+      &#123;&#123; deptForm &#125;&#125;
+    &lt;/el-form&gt;
+    &lt;template #footer&gt;
+      &lt;div class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;dialogFormVisible = false&quot;&gt;取消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;save(ruleFormRef)&quot;&gt;
+          确定
+        &lt;/el-button&gt;
+      &lt;/div&gt;
+    &lt;/template&gt;
+  &lt;/el-dialog&gt;
+&lt;/template&gt;
+
+...
+// 提交表单校验规则
+const save = async (formEl: FormInstance | undefined) =&gt; &#123;
+  if (!formEl) return // 没有校验规则，直接返回
+  await formEl.validate(async (valid, fields) =&gt; &#123;
+    if (valid) &#123;
+      // 所有的规则都通过
+      console.log(&#39;submit!&#39;)
+      // 判断数据是否有id，
+    let result;
+    if (deptForm.value.id) &#123;
+      // 如果有id就是修改
+      result = await updateApi(deptForm.value);
+    &#125; else &#123;
+      // 如果没有id就是新增
+      // 发送Ajax请求给服务器，得到结果，如果是成功，重新查询所有部门，失败给提示
+      result = await addApi(deptForm.value);
+    &#125;
+
+    // 发送Ajax请求给服务器，得到结果，如果是成功，重新查询所有部门，失败给提示 
+    // 记得在上方导入addApi 因为要用新增部门的请求(优化过的 请求返回响应 方法)
+    //新增部门
+    // export const addApi = (dept: DeptModel) =&gt; request.post&lt;any, ResultModel&gt;(&#39;/depts&#39;, dept)
+    // 用await是等待请求响应结果
+    //  result = await addApi(deptForm.value);
+    if (result.code) &#123;
+      // 成功提示操作成功 关闭对话框 重新查询部门数据 
+      ElMessage.success(&#39;添加部门成功&#39;)
+      dialogFormVisible.value = false;
+      queryAll();
+    &#125; else &#123;
+      // 如果失败给提示
+      ElMessage.error(&#39;添加部门失败！错误消息：&#39; + result.msg)
+    &#125;
+      &#125; else &#123;
+        // 规则不通过
+        console.log(&#39;error submit!&#39;, fields)
+      &#125;
+    &#125;)
+&#125;
+</code></pre>
+<h3 id="重置校验规则重置表单规则方法，新增对话框-修改对话框新增重置规则"><a href="#重置校验规则重置表单规则方法，新增对话框-修改对话框新增重置规则" class="headerlink" title="重置校验规则重置表单规则方法，新增对话框+修改对话框新增重置规则"></a>重置校验规则<del>重置表单规则方法，新增对话框+修改对话框新增重置规则</del></h3><pre><code class="js">const resetForm = (formEl: FormInstance | undefined) =&gt; &#123;
+  if (!formEl) return
+  formEl.resetFields()
+&#125;
+
+...
+
+// 表单校验对象：FormInstance从elementplus引入的
+const ruleFormRef = ref&lt;FormInstance&gt;();
+
+...
+
+// 弹出添加部门对话框
+const add = () =&gt; &#123;
+  dialogFormVisible.value = true;
+  // 设置对话框标题为：新增部门
+  dialogTitle.value = &#39;新增部门&#39;;
+  // 清空表单数据
+  deptForm.value = &#123;
+    name: &#39;&#39;
+  &#125;
+  // 重置表单规则
+  resetForm(ruleFormRef.value);
+&#125;
+
+...
+
+// 表格修改按钮事件
+const update = async (id: number) =&gt; &#123;
+  console.log(&#39;修改部门：&#39; + id)
+  // 弹出对话框
+  dialogFormVisible.value = true;
+  // 修改标题：修改部门   清空表单的数据
+  dialogTitle.value = &#39;修改部门&#39;;
+  deptForm.value = &#123;
+    name: &#39;&#39;
+  &#125;
+  // 重置表单规则
+  resetForm(ruleFormRef.value);
+  // 发送请求给服务器，根据id获取部门信息
+  const result = await queryInfoApi(id);
+  // 把部门数据绑定到对话框的表单上
+  if (result.code) &#123;
+    // 获取部门成功
+    deptForm.value = result.data;
+  &#125; else &#123;
+    // 获取部门失败
+    ElMessage.error(&#39;获取部门信息失败！错误消息：&#39; + result.msg)
+  &#125;
+&#125;
+</code></pre>
+<h3 id="员工管理—搜索栏"><a href="#员工管理—搜索栏" class="headerlink" title="员工管理—搜索栏"></a>员工管理—搜索栏</h3><h6 id="条件分页查询"><a href="#条件分页查询" class="headerlink" title="条件分页查询"></a>条件分页查询</h6><pre><code class="ts">src\api\model\model.ts
+//员工搜索条件接口
+export interface SearchEmpModel &#123;
+  name: string, //姓名
+  gender: string, //性别
+  begin: string, //开始时间
+  end: string, //结束时间
+  date: string[] //时间范围
+&#125;
+</code></pre>
+<pre><code class="vue">src\views\emp\index.vue
+&lt;script setup lang=&quot;ts&quot;&gt;
+import type &#123; SearchEmpModel &#125; from &#39;@/api/model/model&#39;;
+import &#123; ref &#125; from &#39;vue&#39;;
+// 搜索栏的员工数据
+const searchEmp = ref&lt;SearchEmpModel&gt;(&#123;
+  name: &#39;&#39;,
+  gender: &#39;&#39;,
+  begin: &#39;&#39;,
+  end: &#39;&#39;,
+  date: []
+&#125;)
+&lt;/script&gt;
+
+&lt;template&gt;
+&#123;&#123;searchEmp&#125;&#125;
+  &lt;!-- 搜索栏 --&gt;
+  &lt;el-form :inline=&quot;true&quot; :model=&quot;searchEmp&quot; class=&quot;demo-form-inline&quot;&gt;
+    &lt;el-form-item label=&quot;姓名&quot;&gt;
+      &lt;el-input v-model=&quot;searchEmp.name&quot; placeholder=&quot;请输入姓名&quot;/&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item label=&quot;性别&quot;&gt;
+      &lt;el-select v-model=&quot;searchEmp.gender&quot; placeholder=&quot;请选择&quot;&gt;
+        &lt;el-option label=&quot;男&quot; value=&quot;1&quot; /&gt;
+        &lt;el-option label=&quot;女&quot; value=&quot;2&quot; /&gt;
+      &lt;/el-select&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item label=&quot;入职时间&quot;&gt;
+      &lt;el-date-picker
+        v-model=&quot;searchEmp.date&quot;
+        type=&quot;daterange&quot;
+        range-separator=&quot;到&quot;
+        start-placeholder=&quot;开始时间&quot;
+        end-placeholder=&quot;结束时间&quot;
+        value-format=&quot;YYYY-MM-DD&quot;
+      /&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item&gt;
+      &lt;el-button type=&quot;primary&quot; @click=&quot;&quot;&gt;查询&lt;/el-button&gt;
+      &lt;el-button @click=&quot;&quot;&gt;清空&lt;/el-button&gt;
+    &lt;/el-form-item&gt;
+  &lt;/el-form&gt;
+
+  &lt;!-- 功能按钮 --&gt;
+  &lt;el-button type=&quot;success&quot; @click=&quot;&quot;&gt;+ 新增员工&lt;/el-button&gt;
+  &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 批量删除&lt;/el-button&gt;
+  &lt;br&gt;&lt;br&gt;
+
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+
+&lt;/style&gt;
+</code></pre>
+<h3 id="watch监听date改变"><a href="#watch监听date改变" class="headerlink" title="watch监听date改变"></a>watch监听date改变</h3><ul>
+<li><p>作用：侦听一个或多个响应式数据源，并在数据源变化时调用所给的回调函数。</p>
+</li>
+<li><p>用法：</p>
+</li>
+</ul>
+<p>​    1.导入watch函数</p>
+<p>​    2.执行watch函数，传入要侦听的响应式数据源（ref对象）和回调函数；</p>
+<pre><code class="js">import &#123; ref, watch &#125; from &#39;vue&#39;
+const a = ref&lt;string&gt;(&#39;&#39;)
+watch(a, (newVal , oldVal) =&gt; &#123; //侦听a的变化
+  console.log(`a的值为: newVal: $&#123;newVal&#125;, oldVal: $&#123;oldVal&#125;`);
+&#125;) 
+</code></pre>
+<h6 id="小练习"><a href="#小练习" class="headerlink" title="小练习"></a>小练习</h6><pre><code class="js">src\views\emp\index.vue
+import &#123; ref, watch &#125; from &#39;vue&#39;;
+
+---------------------------------
+
+// watch学习：watch(要监听的数据，数据改变时的函数)
+// 1. watch监听简单数据
+const count = ref&lt;number&gt;(0);
+watch(count,(newValue, oldValue)=&gt;&#123;
+  console.log(&#39;newValue = $&#123;newValue&#125;, oldValue = $&#123;oldValue&#125;&#39;)
+&#125;);
+
+// 2. watch监听响应式对象的属性：watch(() =&gt; 对象的属性，数据改变的函数)
+watch(() =&gt; searchEmp.value.name, (newValue, oldValue) =&gt; &#123;
+  console.log(&#39;newValue2 = $&#123;newValue&#125;, oldValue2 = $&#123;oldValue&#125;&#39;)
+&#125;);
+
+// 3. watch监听响应式对象的所有属性(深度监听)：watch(对象，数据改变时的函数，(deep: true))
+watch(() =&gt; searchEmp.value, (newValue, oldValue) =&gt; &#123;
+  console.log(&#39;newValue3 = $&#123;newValue&#125;, oldValue3 = $&#123;oldValue&#125;&#39;)
+&#125;, &#123;deep: true&#125;);
+
+
+---------------------------------
+
+&lt;!-- 功能按钮 --&gt;
+&lt;el-button type=&quot;success&quot; @click=&quot;count++&quot;&gt;+ 新增员工&lt;/el-button&gt;
+</code></pre>
+<p><strong>员工管理</strong></p>
+<p>姓名[searchEmp.name]<br>性别[searchEmp.gender]<br>入职时间[searchEmp.date]</p>
+<h6 id="监听date把它拆分成begin和end"><a href="#监听date把它拆分成begin和end" class="headerlink" title="监听date把它拆分成begin和end"></a>监听date把它拆分成begin和end</h6><pre><code class="vue">//搜索表单对象
+let searchEmp = ref&lt;SearchEmpModel&gt;(&#123;
+    begin: &#39;2023-01-01&#39;, 
+    end: &#39;2023-12-31&#39;, 
+    date: [&#39;2023-01-01&#39;, &#39;2023-12-31&#39;], 
+    name: &#39;&#39;,
+    gender: &#39;&#39;
+&#125;) 
+</code></pre>
+<h3 id="表格和分页组件布局"><a href="#表格和分页组件布局" class="headerlink" title="表格和分页组件布局"></a>表格和分页组件布局</h3><pre><code class="ts">emp.ts
+import type &#123; EmpModel, ResultModel, PageResultModel &#125; from &#39;@/api/model/model&#39;
+import request from &#39;@/utils/request&#39;
+
+//分页条件查询
+export const queryPageApi = (begin: string, end: string, gender: string, name: string, page: number, pageSize: number) =&gt; 
+  request.get&lt;any, PageResultModel&gt;(`/emps?begin=$&#123;begin&#125;&amp;end=$&#123;end&#125;&amp;gender=$&#123;gender&#125;&amp;name=$&#123;name&#125;&amp;page=$&#123;page&#125;&amp;pageSize=$&#123;pageSize&#125;`)
+
+//新增员工
+export const addApi = (emp: EmpModel) =&gt; request.post&lt;any, ResultModel&gt;(&#39;/emps&#39;, emp)
+
+//根据ID查询员工
+export const queryInfoApi = (id: number) =&gt; request.get&lt;any, ResultModel&gt;(`/emps/$&#123;id&#125;`)
+
+//更新员工
+export const updateApi = (emp: EmpModel) =&gt; request.put&lt;any, ResultModel&gt;(`/emps`, emp)
+
+//删除员工
+export const deleteApi = (ids: string) =&gt; request.delete&lt;any, ResultModel&gt;(`/emps?ids=$&#123;ids&#125;`)
+
+//查询全部员工信息
+export const queryAllApi = () =&gt; request.get&lt;any, ResultModel&gt;(&#39;/emps/list&#39;) 
+</code></pre>
+<pre><code class="js">import type &#123; SearchEmpModel, EmpModel, EmpModelArray&#125; from &#39;@/api/model/model&#39;;
+// 搜索栏的员工数据
+const searchEmp = ref&lt;SearchEmpModel&gt;(&#123;
+  name: &#39;&#39;,
+  gender: &#39;&#39;,
+  begin: &#39;&#39;,
+  end: &#39;&#39;,
+  date: []
+&#125;)
+// 表格的员工数据
+const empList = ref&lt;EmpModelArray&gt;([])
+</code></pre>
+<h6 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h6><pre><code class="vue">// 分页控件的数据
+const pagination = ref&lt;PaginationParam&gt;(&#123;
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+&#125;)
+----------------------------------------
+&lt;!-- 分页组件Pagination --&gt;
+  &lt;el-pagination
+    v-model:current-page=&quot;pagination.currentPage&quot;
+    v-model:page-size=&quot;pagination.pageSize&quot;
+    :page-sizes=&quot;[5, 10, 20, 50, 100]&quot;
+    layout=&quot;total, sizes, prev, pager, next, jumper&quot;
+    :total=&quot;pagination.total&quot;
+    @size-change=&quot;handleSizeChange&quot;
+    @current-change=&quot;handleCurrentChange&quot;
+  /&gt;
+</code></pre>
+<pre><code class="ts">src\api\model\model.ts
+//统一响应结果接口
+export interface ResultModel &#123;
+  code: number,
+  msg: string,
+  data: any
+&#125;
+
+//分页结果接口
+export interface PageModel &#123;
+  total: number,
+  rows: any[]
+&#125;
+
+//统一响应结果接口
+export interface PageResultModel &#123;
+  code: number,
+  msg: string,
+  data: PageModel
+&#125;
+
+//分页参数接口
+export interface PaginationParam &#123;
+  currentPage: number,
+  pageSize: number,
+  total: number
+&#125;
+</code></pre>
+<h4 id="获取员工数据-amp-amp-清空员工数据"><a href="#获取员工数据-amp-amp-清空员工数据" class="headerlink" title="获取员工数据 &amp;&amp; 清空员工数据"></a>获取员工数据 &amp;&amp; 清空员工数据</h4><pre><code class="js">&lt;script setup lang=&quot;ts&quot;&gt;
+import &#123; ref, watch, onMounted&#125; from &#39;vue&#39;;
+import type &#123; SearchEmpModel, EmpModel, EmpModelArray, PaginationParam&#125; from &#39;@/api/model/model&#39;;
+import &#123; queryPageApi&#125; from &#39;@/api/emp&#39;;
+import &#123; ElMessage &#125; from &#39;element-plus&#39;;
+
+--------------------------------------------
+// 表格的员工数据
+const empList = ref&lt;EmpModelArray&gt;([])
+
+// 分页控件的数据
+const pagination = ref&lt;PaginationParam&gt;(&#123;
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+&#125;)
+
+--------------------------------------------
+// 页面挂在完成调用
+onMounted(() =&gt; &#123;
+  // 页面加载完毕，立即调用查询员工列表数据的方法
+  queryPage();
+&#125;)
+
+// 员工条件分页查询
+const queryPage = async () =&gt; &#123;
+  // 通过Ajax发送请求给服务器获取员工列表数据
+  const result = await queryPageApi(
+    searchEmp.value.begin, 
+    searchEmp.value.end, 
+    searchEmp.value.gender, 
+    searchEmp.value.name, 
+    pagination.value.currentPage, 
+    pagination.value.pageSize
+  );
+// 处理结果
+  if(result.code)&#123;
+    // 成功，把员工数据赋值给empList让表格显示
+    empList.value = result.data.rows
+    // 把总数量给分页组件
+    pagination.value.total = result.data.total
+  &#125;else&#123;
+    // 失败
+    ElMessage.error(&#39;分页条件查询员工失败，失败原因：&#39; + result.msg);
+  &#125;
+&#125;
+--------------------------------------------
+// 点击清空按钮，清空数据并查询
+const clean = () =&gt; &#123;
+  // 清空数据
+  searchEmp.value = &#123;
+    name: &#39;&#39;,
+    gender: &#39;&#39;,
+    begin: &#39;&#39;,
+    end: &#39;&#39;,
+    date: []
+  &#125;
+  // 重新查询
+  queryPage();
+&#125;
+
+// 每页发生变化执行
+const handleSizeChange = (val: number) =&gt; &#123;
+  console.log(`$&#123;val&#125; items per page`);
+  // 每页显示多少条数据
+  pagination.value.pageSize = val;
+  // 重新查询
+  queryPage();
+&#125;
+
+// 当前页码发生变化执行
+const handleCurrentChange = (val: number) =&gt; &#123;
+  console.log(`current page: $&#123;val&#125;`);
+  // 当前页码
+  pagination.value.currentPage = val;
+  // 重新查询
+  queryPage();
+&#125;
+--------------------------------------------
+ &lt;!-- 分页组件Pagination --&gt;
+  &lt;el-pagination
+    v-model:current-page=&quot;pagination.currentPage&quot;
+    v-model:page-size=&quot;pagination.pageSize&quot;
+    :page-sizes=&quot;[5, 10, 20, 50, 100]&quot;
+    layout=&quot;total, sizes, prev, pager, next, jumper&quot;
+    :total=&quot;pagination.total&quot;
+    @size-change=&quot;handleSizeChange&quot;
+    @current-change=&quot;handleCurrentChange&quot;
+  /&gt;
+---------------------------------------------
+  &lt;!-- 功能按钮 一定要用 @click = queryPage --&gt;
+ &lt;el-form-item&gt;
+      &lt;el-button type=&quot;primary&quot; @click=&quot;queryPage&quot;&gt;查询&lt;/el-button&gt;
+      &lt;el-button @click=&quot;clean&quot;&gt;清空&lt;/el-button&gt;
+ &lt;/el-form-item&gt;
+  &lt;br&gt;&lt;br&gt;
+</code></pre>
+<h3 id="新增修改员工对话框"><a href="#新增修改员工对话框" class="headerlink" title="新增修改员工对话框"></a>新增修改员工对话框</h3><ul>
+<li><strong>新增员工的数据包括</strong>：员工的基本数据、员工的工作经历数据</li>
+</ul>
+<pre><code class="js">// 新增 / 修改员工对话框显示隐藏
+const dialogFormVisible = ref(true)
+// 新增 / 修改员工对话框文字宽度
+const formLabelWidth = &#39;140px&#39;
+// 新增 / 修改员工对话框标题
+const dialogTitle = ref&lt;string&gt;(&#39;&#39;)
+
+
+
+&lt;!-- 新增 / 修改  员工对话框 --&gt;
+  &lt;!-- 新增员工 / 修改员工的 DiaLog对话框 --&gt;
+  &lt;el-dialog v-model=&quot;dialogFormVisible&quot; title=&quot;新增员工&quot;&gt;
+    &lt;el-form :model=&quot;emp&quot;&gt;
+      &lt;!-- 第一行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;用户名&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.username&quot; placeholder=&quot;请输入用户名, 2-20个字&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;姓名&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.name&quot; placeholder=&quot;请输入姓名, 2-20个字&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第二行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;性别&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.gender&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;手机号&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.phone&quot; placeholder=&quot;请输入员工手机号&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第三行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;薪资&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.salary&quot; placeholder=&quot;请输入员工薪资&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;入职日期&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-date-picker v-model=&quot;emp.entryDate&quot; type=&quot;date&quot; placeholder=&quot;请选择入职日期&quot; value-format=&quot;YYYY-MM-DD&quot;
+              style=&quot;width: 100%;&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第四行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;所属部门&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.deptId&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;教研部&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.job&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;班主任&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第五行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;头像&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-upload class=&quot;avatar-uploader&quot; 
+              action=&quot;https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15&quot;
+              :show-file-list=&quot;false&quot; 
+              :on-success=&quot;handleAvatarSuccess&quot; 
+              :before-upload=&quot;beforeAvatarUpload&quot;
+              &gt;
+              &lt;img v-if=&quot;emp.image&quot; :src=&quot;emp.image&quot; class=&quot;avatar&quot; /&gt;
+              &lt;el-icon v-else class=&quot;avatar-uploader-icon&quot;&gt;
+                &lt;Plus /&gt;
+              &lt;/el-icon&gt;
+            &lt;/el-upload&gt;
+            &lt;el-input v-model=&quot;emp.image&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第六行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;24&quot;&gt;
+          &lt;el-form-item label=&quot;工作经历&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-button type=&quot;success&quot; size=&quot;small&quot; @click=&quot;&quot;&gt;+ 添加工作经历&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第七行 --&gt;
+      &lt;el-row :gutter=&quot;5&quot;&gt;
+        &lt;el-col :span=&quot;10&quot;&gt;
+          &lt;el-form-item label=&quot;时间&quot; size=&quot;small&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-date-picker type=&quot;daterange&quot; range-separator=&quot;至&quot; start-placeholder=&quot;开始时间&quot; end-placeholder=&quot;结束时间&quot;
+              value-format=&quot;YYYY-MM-DD&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;公司&quot; size=&quot;small&quot;&gt;
+            &lt;el-input placeholder=&quot;公司名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; size=&quot;small&quot;&gt;
+            &lt;el-input placeholder=&quot;职位名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;2&quot;&gt;
+          &lt;el-form-item size=&quot;small&quot;&gt;
+            &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 删除&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+    &lt;/el-form&gt;
+
+    &lt;template #footer&gt;
+      &lt;span class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;dialogFormVisible = false&quot;&gt;取消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;dialogFormVisible = false&quot;&gt;保存&lt;/el-button&gt;
+      &lt;/span&gt;
+    &lt;/template&gt;
+  &lt;/el-dialog&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="新增员工上传头像"><a href="#新增员工上传头像" class="headerlink" title="新增员工上传头像"></a>新增员工上传头像</h3><pre><code class="js">// 头像上传成功会执行
+const handleAvatarSuccess: UploadProps[&#39;onSuccess&#39;] = (
+  response,
+  uploadFile
+) =&gt; &#123;
+  // 把上传成功的图片地址保存到emp的image属性中
+  emp.value.image = URL.createObjectURL(uploadFile.raw!)
+&#125;
+
+// 上传头像之前会执行
+const beforeAvatarUpload: UploadProps[&#39;beforeUpload&#39;] = (rawFile) =&gt; &#123;
+  if (rawFile.type !== &#39;image/jpeg&#39; &amp;&amp; rawFile.type !== &#39;image/png&#39;) &#123;
+    ElMessage.error(&#39;图片必须是JPG或PNG格式&#39;)
+    return false
+  &#125; else if (rawFile.size / 1024 / 1024 &gt; 2) &#123;
+    ElMessage.error(&#39;图片必须小于2MB!&#39;)
+    return false
+  &#125;
+  return true
+&#125;
+
+
+&lt;style scoped&gt;
+.avatar-uploader .avatar &#123;
+  width: 178px;
+  height: 178px;
+  display: block;
+&#125;
+.avatar-uploader .el-upload &#123;
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+&#125;
+
+.avatar-uploader .el-upload:hover &#123;
+  border-color: var(--el-color-primary);
+&#125;
+
+.el-icon.avatar-uploader-icon &#123;
+  border: 1px dashed  #cacfd6;
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+&#125;
+&lt;/style&gt;
+</code></pre>
+<h6 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h6><pre><code class="vue">src\views\emp\index.vue
+&lt;script setup lang=&quot;ts&quot;&gt;
+import &#123; ref, watch, onMounted &#125; from &#39;vue&#39;;
+import type &#123; SearchEmpModel, EmpModel, EmpModelArray, PaginationParam &#125; from &#39;@/api/model/model&#39;;
+import &#123; queryPageApi &#125; from &#39;@/api/emp&#39;;
+import &#123; ElMessage &#125; from &#39;element-plus&#39;;
+
+// 搜索栏的员工数据
+const searchEmp = ref&lt;SearchEmpModel&gt;(&#123;
+  name: &#39;&#39;,
+  gender: &#39;&#39;,
+  begin: &#39;&#39;,
+  end: &#39;&#39;,
+  date: []
+&#125;)
+// 表格的员工数据
+const empList = ref&lt;EmpModelArray&gt;([])
+
+// 分页控件的数据
+const pagination = ref&lt;PaginationParam&gt;(&#123;
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+&#125;)
+
+
+// // watch学习：watch(要监听的数据，数据改变时的函数)
+// // watch监听简单数据
+// const count = ref&lt;number&gt;(0);
+// watch(count,(newValue, oldValue)=&gt;&#123;
+//   console.log(&#39;newValue = $&#123;newValue&#125;, oldValue = $&#123;oldValue&#125;&#39;)
+// &#125;);
+
+// // watch监听响应式对象的属性：watch(() =&gt; 对象的属性，数据改变的函数)
+// watch(() =&gt; searchEmp.value.name, (newValue, oldValue) =&gt; &#123;
+//   console.log(&#39;newValue2 = $&#123;newValue&#125;, oldValue2 = $&#123;oldValue&#125;&#39;)
+// &#125;);
+
+// // watch监听响应式对象的所有属性(深度监听)：watch(对象，数据改变时的函数，(deep: true))
+// watch(() =&gt; searchEmp.value, (newValue, oldValue) =&gt; &#123;
+//   console.log(&#39;newValue3 = $&#123;newValue&#125;, oldValue3 = $&#123;oldValue&#125;&#39;)
+// &#125;, &#123;deep: true&#125;);
+
+// 监听searchEmp的date属性
+watch(() =&gt; searchEmp.value.date, (newValue, oldValue) =&gt; &#123;
+  // newValue = [&#39;时间1&#39;, &#39;时间2&#39;]
+  if (newValue.length &gt; 0) &#123;
+    // 用户选择了入职时间   0索引
+    searchEmp.value.begin = newValue[0];
+    searchEmp.value.end = newValue[1];
+  &#125; else &#123;
+    // 用户清空了入职时间
+    searchEmp.value.begin = &#39;&#39;;
+    searchEmp.value.end = &#39;&#39;;
+  &#125;
+&#125;);
+
+// 页面挂在完成调用
+onMounted(() =&gt; &#123;
+  // 页面加载完毕，立即调用查询员工列表数据的方法
+  queryPage();
+&#125;)
+
+// 员工条件分页查询
+const queryPage = async () =&gt; &#123;
+  // 通过Ajax发送请求给服务器获取员工列表数据
+  const result = await queryPageApi(
+    searchEmp.value.begin,
+    searchEmp.value.end,
+    searchEmp.value.gender,
+    searchEmp.value.name,
+    pagination.value.currentPage,
+    pagination.value.pageSize
+  );
+  // 处理结果
+  if (result.code) &#123;
+    // 成功，把员工数据赋值给empList让表格显示
+    empList.value = result.data.rows
+    // 把总数量给分页组件
+    pagination.value.total = result.data.total
+  &#125; else &#123;
+    // 失败
+    ElMessage.error(&#39;分页条件查询员工失败，失败原因：&#39; + result.msg);
+  &#125;
+&#125;
+
+// 点击清空按钮，清空数据并查询
+const clean = () =&gt; &#123;
+  // 清空数据
+  searchEmp.value = &#123;
+    name: &#39;&#39;,
+    gender: &#39;&#39;,
+    begin: &#39;&#39;,
+    end: &#39;&#39;,
+    date: []
+  &#125;
+  // 重新查询
+  queryPage();
+&#125;
+
+// 每页发生变化执行
+const handleSizeChange = (val: number) =&gt; &#123;
+  console.log(`$&#123;val&#125; items per page`);
+  // 每页显示多少条数据
+  pagination.value.pageSize = val;
+  // 重新查询
+  queryPage();
+&#125;
+
+// 当前页码发生变化执行
+const handleCurrentChange = (val: number) =&gt; &#123;
+  console.log(`current page: $&#123;val&#125;`);
+  // 当前页码
+  pagination.value.currentPage = val;
+  // 重新查询
+  queryPage();
+&#125;
+
+// 新增 / 修改员工对话框显示隐藏
+const dialogFormVisible = ref(true)
+// 新增 / 修改员工对话框文字宽度
+const labelWidth = &#39;80px&#39;
+// 新增 / 修改员工对话框标题
+const dialogTitle = ref&lt;string&gt;(&#39;&#39;)
+
+// 新增 / 修改员工对话框员工数据
+const emp = ref&lt;EmpModel&gt;(&#123;
+  deptId: &#39;&#39;,
+  deptName: &#39;&#39;,
+  entryDate: &#39;&#39;,
+  exprList: [],
+  gender: &#39;&#39;,
+  id: undefined,
+  image: &#39;&#39;,
+  job: &#39;&#39;,
+  name: &#39;&#39;,
+  password: &#39;&#39;,
+  phone: &#39;&#39;,
+  salary: &#39;&#39;,
+  username: &#39;&#39;
+&#125;)
+// 头像上传成功会执行
+const handleAvatarSuccess: UploadProps[&#39;onSuccess&#39;] = (
+  response,
+  uploadFile
+) =&gt; &#123;
+  // 把上传成功的图片地址保存到emp的image属性中
+  emp.value.image = URL.createObjectURL(uploadFile.raw!)
+&#125;
+
+// 上传头像之前会执行
+const beforeAvatarUpload: UploadProps[&#39;beforeUpload&#39;] = (rawFile) =&gt; &#123;
+  if (rawFile.type !== &#39;image/jpeg&#39; &amp;&amp; rawFile.type !== &#39;image/png&#39;) &#123;
+    ElMessage.error(&#39;图片必须是JPG或PNG格式&#39;)
+    return false
+  &#125; else if (rawFile.size / 1024 / 1024 &gt; 2) &#123;
+    ElMessage.error(&#39;图片必须小于2MB!&#39;)
+    return false
+  &#125;
+  return true
+&#125;
+
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;h1&gt;员工管理&lt;/h1&gt;
+  &#123;&#123; searchEmp &#125;&#125; &lt;br&gt;
+  &#123;&#123; pagination &#125;&#125;
+  &lt;!-- 搜索栏 --&gt;
+  &lt;el-form :inline=&quot;true&quot; :model=&quot;searchEmp&quot; class=&quot;demo-form-inline&quot;&gt;
+    &lt;el-form-item label=&quot;姓名&quot;&gt;
+      &lt;el-input v-model=&quot;searchEmp.name&quot; placeholder=&quot;请输入姓名&quot; /&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item label=&quot;性别&quot;&gt;
+      &lt;el-select v-model=&quot;searchEmp.gender&quot; placeholder=&quot;请选择&quot;&gt;
+        &lt;el-option label=&quot;男&quot; value=&quot;1&quot; /&gt;
+        &lt;el-option label=&quot;女&quot; value=&quot;2&quot; /&gt;
+      &lt;/el-select&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item label=&quot;入职时间&quot;&gt;
+      &lt;el-date-picker v-model=&quot;searchEmp.date&quot; type=&quot;daterange&quot; range-separator=&quot;到&quot; start-placeholder=&quot;开始时间&quot;
+        end-placeholder=&quot;结束时间&quot; value-format=&quot;YYYY-MM-DD&quot; /&gt;
+    &lt;/el-form-item&gt;
+
+    &lt;el-form-item&gt;
+      &lt;el-button type=&quot;primary&quot; @click=&quot;queryPage&quot;&gt;查询&lt;/el-button&gt;
+      &lt;el-button @click=&quot;clean&quot;&gt;清空&lt;/el-button&gt;
+    &lt;/el-form-item&gt;
+  &lt;/el-form&gt;
+
+  &lt;!-- 功能按钮 --&gt;
+  &lt;el-button type=&quot;success&quot; @click=&quot;count++&quot;&gt;+ 新增员工&lt;/el-button&gt;
+  &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 批量删除&lt;/el-button&gt;
+  &lt;br&gt;&lt;br&gt;
+
+  &lt;!-- 表格 --&gt;
+
+
+  &lt;!-- 列表展示 --&gt;
+  &lt;el-table :data=&quot;empList&quot; border style=&quot;width: 100%&quot; fit&gt;
+    &lt;el-table-column prop=&quot;name&quot; label=&quot;姓名&quot; align=&quot;center&quot; width=&quot;130px&quot; /&gt;
+    &lt;el-table-column label=&quot;性别&quot; align=&quot;center&quot; width=&quot;100px&quot;&gt;
+      &lt;template #default=&quot;scope&quot;&gt;
+        &#123;&#123; scope.row.gender == 1 ? '男' : '女' &#125;&#125;
+      &lt;/template&gt;
+    &lt;/el-table-column&gt;
+    &lt;el-table-column prop=&quot;image&quot; label=&quot;头像&quot; align=&quot;center&quot;&gt;
+      &lt;template #default=&quot;scope&quot;&gt;
+        &lt;img :src=&quot;scope.row.image&quot; height=&quot;40&quot;&gt;
+      &lt;/template&gt;
+    &lt;/el-table-column&gt;
+    &lt;el-table-column prop=&quot;deptName&quot; label=&quot;所属部门&quot; align=&quot;center&quot; /&gt;
+    &lt;el-table-column prop=&quot;job&quot; label=&quot;职位&quot; align=&quot;center&quot; width=&quot;100px&quot;&gt;
+      &lt;template #default=&quot;scope&quot;&gt;
+        &lt;span v-if=&quot;scope.row.job == 1&quot;&gt;班主任&lt;/span&gt;
+        &lt;span v-else-if=&quot;scope.row.job == 2&quot;&gt;讲师&lt;/span&gt;
+        &lt;span v-else-if=&quot;scope.row.job == 3&quot;&gt;学工主管&lt;/span&gt;
+        &lt;span v-else-if=&quot;scope.row.job == 4&quot;&gt;教研主管&lt;/span&gt;
+        &lt;span v-else-if=&quot;scope.row.job == 5&quot;&gt;咨询师&lt;/span&gt;
+        &lt;span v-else&gt;其他&lt;/span&gt;
+      &lt;/template&gt;
+    &lt;/el-table-column&gt;
+    &lt;el-table-column prop=&quot;entryDate&quot; label=&quot;入职时间&quot; align=&quot;center&quot; width=&quot;130px&quot; /&gt;
+    &lt;el-table-column prop=&quot;updateTime&quot; label=&quot;最后修改时间&quot; align=&quot;center&quot; /&gt;
+    &lt;el-table-column label=&quot;操作&quot; align=&quot;center&quot;&gt;
+      &lt;template #default=&quot;scope&quot;&gt;
+        &lt;el-button type=&quot;primary&quot; size=&quot;small&quot; @click=&quot;&quot;&gt;编辑&lt;/el-button&gt;
+        &lt;el-button type=&quot;danger&quot; size=&quot;small&quot; @click=&quot;&quot;&gt;删除&lt;/el-button&gt;
+      &lt;/template&gt;
+    &lt;/el-table-column&gt;
+  &lt;/el-table&gt;
+  &lt;br&gt;
+
+  &lt;!-- 分页组件Pagination --&gt;
+  &lt;el-pagination v-model:current-page=&quot;pagination.currentPage&quot; v-model:page-size=&quot;pagination.pageSize&quot;
+    :page-sizes=&quot;[5, 10, 20, 50, 100]&quot; layout=&quot;total, sizes, prev, pager, next, jumper&quot; :total=&quot;pagination.total&quot;
+    @size-change=&quot;handleSizeChange&quot; @current-change=&quot;handleCurrentChange&quot; /&gt;
+
+  &lt;!-- 新增 / 修改  员工对话框 --&gt;
+  &lt;!-- 新增员工 / 修改员工的 DiaLog对话框 --&gt;
+  &lt;el-dialog v-model=&quot;dialogFormVisible&quot; title=&quot;新增员工&quot;&gt;
+    &lt;el-form :model=&quot;emp&quot;&gt;
+      &lt;!-- 第一行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;用户名&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.username&quot; placeholder=&quot;请输入用户名, 2-20个字&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;姓名&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.name&quot; placeholder=&quot;请输入姓名, 2-20个字&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第二行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;性别&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.gender&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;手机号&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.phone&quot; placeholder=&quot;请输入员工手机号&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第三行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;薪资&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.salary&quot; placeholder=&quot;请输入员工薪资&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;入职日期&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-date-picker v-model=&quot;emp.entryDate&quot; type=&quot;date&quot; placeholder=&quot;请选择入职日期&quot; value-format=&quot;YYYY-MM-DD&quot;
+              style=&quot;width: 100%;&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第四行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;所属部门&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.deptId&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;教研部&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.job&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;班主任&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第五行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;头像&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-upload 
+              class=&quot;avatar-uploader&quot; 
+              action=&quot;/api/upload&quot;
+              :show-file-list=&quot;false&quot; 
+              :on-success=&quot;handleAvatarSuccess&quot; 
+              :before-upload=&quot;beforeAvatarUpload&quot;
+              &gt;
+              &lt;img v-if=&quot;emp.image&quot; :src=&quot;emp.image&quot; class=&quot;avatar&quot; /&gt;
+              &lt;el-icon v-else class=&quot;avatar-uploader-icon&quot;&gt;&lt;Plus /&gt;&lt;/el-icon&gt;
+            &lt;/el-upload&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第六行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;24&quot;&gt;
+          &lt;el-form-item label=&quot;工作经历&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-button type=&quot;success&quot; size=&quot;small&quot; @click=&quot;&quot;&gt;+ 添加工作经历&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+      &lt;!-- 第七行 --&gt;
+      &lt;el-row :gutter=&quot;5&quot;&gt;
+        &lt;el-col :span=&quot;10&quot;&gt;
+          &lt;el-form-item label=&quot;时间&quot; size=&quot;small&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-date-picker type=&quot;daterange&quot; range-separator=&quot;至&quot; start-placeholder=&quot;开始时间&quot; end-placeholder=&quot;结束时间&quot;
+              value-format=&quot;YYYY-MM-DD&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;公司&quot; size=&quot;small&quot;&gt;
+            &lt;el-input placeholder=&quot;公司名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; size=&quot;small&quot;&gt;
+            &lt;el-input placeholder=&quot;职位名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;2&quot;&gt;
+          &lt;el-form-item size=&quot;small&quot;&gt;
+            &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 删除&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+    &lt;/el-form&gt;
+
+    &lt;template #footer&gt;
+      &lt;span class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;dialogFormVisible = false&quot;&gt;取消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;dialogFormVisible = false&quot;&gt;保存&lt;/el-button&gt;
+      &lt;/span&gt;
+    &lt;/template&gt;
+  &lt;/el-dialog&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+.avatar-uploader .avatar &#123;
+  width: 178px;
+  height: 178px;
+  display: block;
+&#125;
+.avatar-uploader .el-upload &#123;
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+&#125;
+
+.avatar-uploader .el-upload:hover &#123;
+  border-color: var(--el-color-primary);
+&#125;
+
+.el-icon.avatar-uploader-icon &#123;
+  border: 1px dashed  #cacfd6;
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+&#125;
+&lt;/style&gt;
+</code></pre>
+<h3 id="新增员工经历"><a href="#新增员工经历" class="headerlink" title="新增员工经历"></a>新增员工经历</h3><pre><code class="js">// 添加一项工作经历
+const addWorkExprItem = () =&gt;&#123;
+  emp.value.exprList.push(&#123;
+    exprDate: [],
+    begin: &#39;&#39;,
+    end: &#39;&#39;,
+    company: &#39;&#39;,
+    job: &#39;&#39;
+  &#125;);
+&#125;
+// 监听员工经历时间变化【深度监听】
+watch(emp.value.exprList, (newValue, oldValue) =&gt; &#123;
+  console.log(newValue);
+  // newValue就是监听的对象：emp.value.exprList
+  if(emp.value.exprList.length &gt; 0)&#123;
+    // 有员工经历，遍历员工经历数组，获取每个员工经历
+    emp.value.exprList.forEach(expr =&gt;&#123;
+      expr.begin = expr.exprDate[0];
+      expr.end = expr.exprDate[1];
+    &#125;);
+  &#125;
+&#125;, &#123;deep: true&#125;);
+&lt;/script&gt;
+
+
+&lt;!-- 第六行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;24&quot;&gt;
+          &lt;el-form-item label=&quot;工作经历&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-button type=&quot;success&quot; size=&quot;small&quot; @click=&quot;addWorkExprItem&quot;&gt;+ 添加工作经历&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+  &lt;!-- 第七行 --&gt;
+      &lt;el-row :gutter=&quot;5&quot; v-for=&quot;(expr, index) in emp.exprList&quot; :key=&quot;index&quot;&gt;
+        &lt;el-col :span=&quot;10&quot;&gt;
+          &lt;el-form-item label=&quot;时间&quot; size=&quot;small&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-date-picker v-model=&quot;expr.exprDate&quot; type=&quot;daterange&quot; range-separator=&quot;至&quot; start-placeholder=&quot;开始时间&quot; end-placeholder=&quot;结束时间&quot;
+              value-format=&quot;YYYY-MM-DD&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;公司&quot; size=&quot;small&quot;&gt;
+            &lt;el-input v-model=&quot;expr.company&quot; placeholder=&quot;公司名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;6&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; size=&quot;small&quot;&gt;
+            &lt;el-input v-model=&quot;expr.job&quot; placeholder=&quot;职位名称&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+
+        &lt;el-col :span=&quot;2&quot;&gt;
+          &lt;el-form-item size=&quot;small&quot;&gt;
+            &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 删除&lt;/el-button&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+    &lt;/el-form&gt;
 </code></pre>
 
     </div>
