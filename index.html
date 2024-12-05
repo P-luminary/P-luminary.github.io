@@ -1909,7 +1909,7 @@ public class ReportServiceImpl extends ServiceImpl&lt;ReportMapper, Emp&gt; impl
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -2524,7 +2524,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -2685,7 +2685,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/攻略" style=color:#ff7d73>
+            <a href="/tags/攻略" style=color:#00bcd4>
                 攻略
             </a>
         </span>
@@ -7738,7 +7738,7 @@ watch(emp.value.exprList, (newValue, oldValue) =&gt; &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
@@ -12730,6 +12730,60 @@ public Queue quorumQueue()&#123;
 <li>kafka在FusionInsight中的位置：</li>
 </ol>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/fcebf13cb4e2d12dc10727d9d5942720bbd114e6/Kafka%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1.png"></p>
+<p><span style = "color:red"><strong>Kafka是如何保证消费的顺序性？</strong><br></span></p>
+<blockquote>
+<p><strong>问题原因：</strong><br>一个topic的数据可能存储在不同的分区中 ，每个分区都有一个按照顺序的存储的偏移量，如果消费者关联了多个分区不能保证顺序性</p>
+<p>&#x3D;&#x3D;<strong>解决方案：</strong>&#x3D;&#x3D;</p>
+<ul>
+<li>发送消息时指定分区号</li>
+<li>发送消息时按照相同的业务设置相同的key</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>应用场景：</p>
+<ul>
+<li>即时消息中的单对单聊天和群聊，保证发送方消息发送顺序与接收方的顺序一致</li>
+<li>充值转账两个渠道在同一个时间进行金额变更，短信通知必须要有顺序</li>
+</ul>
+</blockquote>
+<p>承接上图<code>消费者从Brocker接收消息丢失</code>：<br><strong>如何做</strong>？→ topic分区中消息只能由消费者组中的唯一一个消费者处理，所以消息肯定是按照先后顺序进行处理的。但是它也仅仅是保证Topic的一个分区顺序处理，不能保证跨分区的消息先后处理顺序。所以，如果你想要顺序的处理Topic的所有消息，那就只提供一个分区。</p>
+<pre><code class="java">// 指定分区
+kafkaTemplate.sent(&quot;springboot-kafka-topic&quot;,0,&quot;key-001&quot;,&quot;value-001&quot;);
+// 相同的业务key
+kafkaTemplate.sent(&quot;springboot-kafka-topic&quot;,&quot;key-001&quot;,&quot;value-001&quot;);
+</code></pre>
+<p>会计算key的hashcode值推断出它在哪个分区，如果要求有顺序性 就可以设置同一个key，此时hash值都是一样的 就可以在同一个分区存储</p>
+<p><span style = "color:red"><strong>Kafka的高可用机制有了解过吗？</strong><br></span></p>
+<blockquote>
+<ul>
+<li><p>&#x3D;&#x3D;<strong>集群模式</strong>&#x3D;&#x3D;</p>
+<p>一个kafka集群由多个broker实例组成，即使某一台宕机，也不会耽误其他broker继续对外提供服务</p>
+</li>
+<li><p>&#x3D;&#x3D;<strong>分区备份机制</strong>&#x3D;&#x3D;</p>
+<ul>
+<li>一个topic有多个分区，每个分区有多个副本，有一个leader，其余的是follower，副本存储在不同的broker中</li>
+<li>所有的分区副本的内容都是相同的，如果leader发生故障时，会自动将其中一个follower提升为leader，保证了系统的容错性、高可用性</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>解释一下复制机制中的ISR？</strong><br></span></p>
+<blockquote>
+<p>ISR (in-sync replica) 需要同步复制保存的follower<br>分区副本分为了两类，一个是ISR，与leader副本同步保存数据，另外一个普通的副本，是异步同步数据，当leader挂掉后，会优先从ISR副本列表中选取一个作为leader</p>
+</blockquote>
+<pre><code class="java">// 一个topic默认分区的replication个数，不能大于集群中broker的个数。默认为1
+default.replication.factor=3
+// 最小的ISR副本个数
+min.insync.replicas=2
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/b273ced4f6ca9b43b9fb5279e651199e7ad52e9f/Kafka%E9%AB%98%E5%8F%AF%E7%94%A8%E6%9C%BA%E5%88%B6(%E9%9B%86%E7%BE%A4+%E5%88%86%E5%8C%BA%E5%A4%87%E4%BB%BD%E6%9C%BA%E5%88%B6).png"></p>
+<p><span style = "color:red"><strong>Kafka数据清理机制了解过吗？</strong><br></span></p>
+<blockquote>
+<ul>
+<li>kafka文件存储机制</li>
+<li>数据清理机制</li>
+</ul>
+</blockquote>
 
             
         </div>
@@ -15696,7 +15750,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -18937,7 +18991,7 @@ public class SnakeApp &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#00bcd4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -28299,7 +28353,7 @@ public class SpringbootWebConfigApplication &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#00bcd4>
+            <a href="/tags/HM" style=color:#879cff>
                 HM
             </a>
         </span>
