@@ -2470,6 +2470,129 @@ min.insync.replicas=2
 </li>
 </ul>
 <h6 id="时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系"><a href="#时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系" class="headerlink" title="时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系"></a>时间复杂度：全称是<code>渐进空间复杂度</code>，表示算法占用的额外<code>存储空间</code>和<code>数据规模之间</code>的增长关系</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/a0d4930dbc47574f03c8f4db7b995944fb4418e3/%E6%97%B6%E7%A9%BA%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90.png"></p>
+<h3 id="List相关面试题"><a href="#List相关面试题" class="headerlink" title="List相关面试题"></a><span style = "color:red"><strong>List相关面试题</strong></span></h3><blockquote>
+<ul>
+<li><p>数组是一种用<strong>连续的内存空间</strong>存储<strong>相同数据类型</strong>数组的线性数据结构</p>
+</li>
+<li><p>数组下标为什么从0开始</p>
+<p>寻址公式是：<code>baseAddress + i * data TypeSize</code> 计算下标的内存地址效率较高</p>
+</li>
+<li><p>查找的时间复杂度</p>
+<ul>
+<li>随机(<strong>通过下标</strong>)查询的时间复杂度是O(1)</li>
+<li>查找元素(<strong>未知下标</strong>)的时间复杂度是O(n)</li>
+<li>查找元素(<strong>未知下标但排序</strong>)通过二分查找的时间复杂度是O(logn)</li>
+</ul>
+</li>
+<li><p>插入和删除时间复杂度</p>
+<p>插入和删除的时候，为了保证数组的内存连续性，需要挪动数组元素，平均复杂度为O(n)</p>
+</li>
+</ul>
+</blockquote>
+<h6 id="底层实现"><a href="#底层实现" class="headerlink" title="底层实现"></a>底层实现</h6><ul>
+<li>数据结构—数组</li>
+<li>ArrayList源码分析</li>
+</ul>
+<h6 id="面试问题"><a href="#面试问题" class="headerlink" title="面试问题"></a>面试问题</h6><ul>
+<li>ArrayList底层的实现原理是什么</li>
+<li>ArrayList list &#x3D; new ArrayList(10)中的list扩容几次</li>
+<li>如何实现数组和List之间的转换</li>
+<li>ArrayList和LinkedList的区别是什么</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9c400fc7d26d51223654eb4c997ae331fed38ac8/%E6%95%B0%E7%BB%84%E4%B8%8B%E6%A0%87%E4%B8%BA%E4%BB%80%E4%B9%880%E5%BC%80%E5%A7%8B.png"></p>
+<p><span style = "color:red"><strong>ArrayList源码分析</strong></span></p>
+<blockquote>
+<p>List&lt; Integer &gt; list &#x3D; new ArrayList&lt; Integer &gt;();<br>list.add(1)</p>
+</blockquote>
+<pre><code class="java">public class ArrayList&lt;E&gt; extends AbstractList&lt;E&gt;
+        implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable&#123;
+
+    private static final long serialVersionUID = 8683452581122892189L;
+
+    /**
+     * Default initial capacity.
+     */
+    private static final int DEFAULT_CAPACITY = 10;
+
+    /**
+     * 用于空实例的共享空数组实例
+     */
+    private static final Object[] EMPTY_ELEMENTDATA = &#123;&#125;;
+
+    /**
+     * 用于默认大小的空实例的共享空数组实例
+     * 与上面的区分开，以了解添加第一个元素时要膨胀多少
+     */
+    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = &#123;&#125;;
+  
+    /* 存储ArrayList元素的数组缓冲区，ArrayList的容量就是这个数组缓冲区的长度 */
+    transient Object[] elementData; // non-private to simplify nested class access
+
+    /**
+     * ArrayList的大小(包含的元素数量)
+     * @serial
+     */
+    private int size;
+...
+&#125;
+
+--------------------------------------------------------------------------------
+
+public ArrayList(int initialCapacity) &#123;
+        if (initialCapacity &gt; 0) &#123;
+       // 创建一个真正存储集合位置的数组
+            this.elementData = new Object[initialCapacity];
+        &#125; else if (initialCapacity == 0) &#123;
+    // 如果容量是0则创建一个新的数组给elementData
+            this.elementData = EMPTY_ELEMENTDATA;
+        &#125; else &#123;
+            throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+
+                                               initialCapacity);
+        &#125;
+    &#125;
+    public ArrayList() &#123; 
+         // 无参构造函数，默认创建空集合
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    &#125;
+
+-------------------------------------------------------------------------------
+// Collection是所有单列集合的父接口
+// 将 Collection 对象转换成数组，然后将数组的地址赋给 elementData
+ public ArrayList(Collection&lt;? extends E&gt; c) &#123;
+        elementData = c.toArray();
+        if ((size = elementData.length) != 0) &#123;
+            // 判断集合类型是否为不为object[] 
+            // 在其他jdk此处是 ?? == ArrayList.class
+            if (elementData.getClass() != Object[].class)
+                // 不是的话就拷贝到数组elementData中
+                elementData = Arrays.copyOf(elementData, size, Object[].class);
+        &#125; else &#123;
+            // replace with empty array.
+            this.elementData = EMPTY_ELEMENTDATA;
+        &#125;
+    &#125;
+</code></pre>
+<h6 id="ArrayList源码分析-添加和扩容操作-第1次添加数据"><a href="#ArrayList源码分析-添加和扩容操作-第1次添加数据" class="headerlink" title="ArrayList源码分析-添加和扩容操作(第1次添加数据)"></a>ArrayList源码分析-添加和扩容操作(第1次添加数据)</h6><img src="https://raw.githubusercontent.com/P-luminary/images/94991acfd36ad12ca17dfd7578011cfeffe34022/ArrayList%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.png" style="zoom: 67%;" />
+
+
+
+<p><span style = "color:red"><strong>ArrayList底层的实现原理是什么</strong></span></p>
+<ul>
+<li>ArrayList底层是用动态数组实现的</li>
+<li>ArrayList初始容量为0，当第一次添加数据的时候才会初始化容量为10</li>
+<li>ArrayList在进行扩容的时候是原来容量的1.5倍，每次扩容都需要拷贝数组</li>
+<li>ArrayList在添加数据的时候<ul>
+<li>确保数组已使用长度(size)加1之后足够存下下一个数据</li>
+<li>计算数组的容量，如果当前数组已使用长度+1后的大于当前的数组长度，则调用<code>grow</code>方法扩容<del>(原来的1.5倍)</del></li>
+<li>确保新增的数据有地方存储之后，则将新元素添加到位于size的位置上</li>
+<li>返回添加成功布尔值</li>
+</ul>
+</li>
+</ul>
+<p><span style = "color:red"><strong>ArrayList list &#x3D; new ArrayList(10)中的list扩容几次</strong></span></p>
+<ul>
+<li>该语句只是声明和实例了一个<code>ArrayList</code>，指定了容量为10，未扩容</li>
+</ul>
 
     </div>
 
