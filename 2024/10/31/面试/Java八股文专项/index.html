@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#00bcd4>
+                <a href="/tags/面试" style=color:#879cff>
                     面试
                 </a>
             </span>
@@ -2415,10 +2415,61 @@ min.insync.replicas=2
 <p><span style = "color:red"><strong>Kafka数据清理机制了解过吗？</strong><br></span></p>
 <blockquote>
 <ul>
-<li>kafka文件存储机制</li>
-<li>数据清理机制</li>
+<li>kafka文件存储机制<ul>
+<li>Kafka中topic的数据存储在分区上，分区如果文件过大会分段存储segment</li>
+<li>每个分段都在磁盘上以索引(xxxx.index)和日志文件(xxx.log)的形式存储</li>
+<li>分段的好处是，第一能够减少单个文件内容的大小，查找数据方便，第二方便kafka进行日志清理</li>
+</ul>
+</li>
+<li>数据清理机制<ul>
+<li>根据消息的保留时间，当消息保存的时间超过了指定的时间，就会触发清理，默认168小时(7天)</li>
+<li>根据topic存储的数据大小，当topic所占的日志文件大小大于一定的阈值，则开始删除最久的消息(默认关闭)</li>
+</ul>
+</li>
 </ul>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/dbab52581ab3ed1350e8310825216f279c66d7f7/Kafka%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86.png"></p>
+<p><span style = "color:red"><strong>Kafka中实现高性能的设计有了解过吗？</strong><br></span></p>
+<blockquote>
+<ul>
+<li><span style = "color:blue">消息分区：不受单台服务器的限制，可以不受限的处理更多的数据</span></li>
+<li><span style = "color:blue">顺序读写：磁盘顺序读写，提升读写效率</span></li>
+<li><span style = "color:blue">页缓存：把磁盘中的数据缓存到内存中，把对磁盘的访问变为对内存的访问</span></li>
+<li><span style = "color:blue">零拷贝：减少上下文切换及数据拷贝</span></li>
+<li>消息压缩：减少磁盘IO和网络IO</li>
+<li>分批发送：将消息打包批量发送，减少网络开销</li>
+</ul>
+</blockquote>
+<h5 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/86a930ef22442fc6b9460ee88b64b21983cc9847/kafka%E9%9B%B6%E6%8B%B7%E8%B4%9D.png"></p>
+<h2 id="集合面试篇"><a href="#集合面试篇" class="headerlink" title="集合面试篇"></a><span style = "color:red"><strong>集合面试篇</strong></span></h2><p><img src="https://raw.githubusercontent.com/P-luminary/images/9f0a0968283f4255bf0047d1761499c7b493ed97/java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E4%BD%93%E7%B3%BBpng.png"></p>
+<p><span style = "color:orange"><strong>算法复杂度分析</strong><br></span></p>
+<blockquote>
+<p>什么是算法时间复杂度？</p>
+<ul>
+<li>时间复杂度表示了算法的<strong>执行时间</strong>与<strong>数据规模</strong>之间的增长关系</li>
+</ul>
+<p>常见的时间复杂度有哪些？<del>口诀：常对幂指阶</del></p>
+<ul>
+<li>O(1)、O(n)、O(n^2)、O(logn)</li>
+</ul>
+<p>什么是算法的空间复杂度？</p>
+<ul>
+<li>表示算法占用的额外<code>存储空间</code>和<code>数据规模之间</code>的增长关系<br>常见的空间复杂度：O(1)、O(n)、O(n^2)</li>
+</ul>
+</blockquote>
+<h6 id="为什么要进行复杂度分析？"><a href="#为什么要进行复杂度分析？" class="headerlink" title="为什么要进行复杂度分析？"></a>为什么要进行复杂度分析？</h6><ul>
+<li>指导你编写出性能更优的代码</li>
+<li>评判别人写的代码的好坏</li>
+</ul>
+<h6 id="时间复杂度分析：来评估代码的执行耗时的"><a href="#时间复杂度分析：来评估代码的执行耗时的" class="headerlink" title="时间复杂度分析：来评估代码的执行耗时的"></a>时间复杂度分析：来评估代码的执行耗时的</h6><ul>
+<li><p>大O表示法：不具体表示代码真正的执行时间，而是表示<strong>代码执行时间随数据规模增长的变化趋势</strong></p>
+</li>
+<li><p>只要代码的执行时间**<u>不随着n的增大而增大</u><strong>，这样的代码复杂度都是</strong>O(1)**</p>
+</li>
+<li><p>复杂度分析就是要弄清楚代码的<strong>执行次数</strong>和<strong>数据规模n</strong>之间的关系</p>
+</li>
+</ul>
+<h6 id="时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系"><a href="#时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系" class="headerlink" title="时间复杂度：全称是渐进空间复杂度，表示算法占用的额外存储空间和数据规模之间的增长关系"></a>时间复杂度：全称是<code>渐进空间复杂度</code>，表示算法占用的额外<code>存储空间</code>和<code>数据规模之间</code>的增长关系</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/a0d4930dbc47574f03c8f4db7b995944fb4418e3/%E6%97%B6%E7%A9%BA%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90.png"></p>
 
     </div>
 

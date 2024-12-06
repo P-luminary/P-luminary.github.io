@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#1bccbc>
+                <a href="/tags/HM" style=color:#879cff>
                     HM
                 </a>
             </span>
@@ -5137,6 +5137,769 @@ watch(emp.value.exprList, (newValue, oldValue) =&gt; &#123;
         &lt;/el-col&gt;
       &lt;/el-row&gt;
     &lt;/el-form&gt;
+</code></pre>
+<h3 id="删除工作经历给按钮绑定点击事件传入索引后删除"><a href="#删除工作经历给按钮绑定点击事件传入索引后删除" class="headerlink" title="删除工作经历给按钮绑定点击事件传入索引后删除"></a>删除工作经历<del>给按钮绑定点击事件传入索引后删除</del></h3><p>根据索引<code>index</code>去选要删除第几个</p>
+<pre><code class="js">// 删除工作经历
+const deleteExpr = (index: number) =&gt; &#123;
+  console.log(&#39;删除工作经历&#39; + index);
+  emp.value.exprList.splice(index, 1);
+&#125;
+
+
+&lt;!-- 第七行 --&gt;
+ &lt;el-col :span=&quot;2&quot;&gt;
+   &lt;el-form-item size=&quot;small&quot;&gt;
+     &lt;el-button type=&quot;danger&quot; @click=&quot;deleteExpr(index)&quot;&gt;- 删除&lt;/el-button&gt;
+   &lt;/el-form-item&gt;
+ &lt;/el-col&gt;
+ 
+</code></pre>
+<h3 id="绑定职位和性别数据"><a href="#绑定职位和性别数据" class="headerlink" title="绑定职位和性别数据"></a>绑定职位和性别数据</h3><h6 id="原始方法可以逐行写el-option"><a href="#原始方法可以逐行写el-option" class="headerlink" title="原始方法可以逐行写el-option"></a>原始方法可以逐行写el-option</h6><pre><code class="js">   &lt;!-- 第四行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;所属部门&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.deptId&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;教研部&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.job&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;!-- &lt;el-option label=&quot;班主任&quot; value=&quot;1&quot; /&gt; --&gt;
+              &lt;!-- &lt;el-option label=&quot;讲师&quot; value=&quot;1&quot; /&gt;
+              &lt;el-option label=&quot;助教&quot; value=&quot;1&quot; /&gt;
+              &lt;el-option label=&quot;教研主管&quot; value=&quot;1&quot; /&gt; --&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+</code></pre>
+<h6 id="新增方法修改单独新增数组作为数据-单独维护"><a href="#新增方法修改单独新增数组作为数据-单独维护" class="headerlink" title="新增方法修改单独新增数组作为数据(单独维护)"></a>新增方法修改<del>单独新增数组作为数据(单独维护)</del></h6><pre><code class="js">职位数据.ts里面的数据拷贝到这里
+
+//职位列表数据
+const jobs = ref([&#123; name: &#39;班主任&#39;, value: 1 &#125;,&#123; name: &#39;讲师&#39;, value: 2 &#125;,&#123; name: &#39;学工主管&#39;, value: 3 &#125;,&#123; name: &#39;教研主管&#39;, value: 4 &#125;,&#123; name: &#39;咨询师&#39;, value: 5 &#125;,&#123; name: &#39;其他&#39;, value: 6 &#125;])
+
+//性别列表数据
+const genders = ref([&#123; name: &#39;男&#39;, value: 1 &#125;, &#123; name: &#39;女&#39;, value: 2 &#125;])
+&lt;/script&gt;
+
+      &lt;!-- 第二行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;性别&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.gender&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option :label=&quot;gender.name&quot; :value=&quot;gender.value&quot;  v-for=&quot;(gender, index) in genders&quot; :key=&quot;index&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;手机号&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-input v-model=&quot;emp.phone&quot; placeholder=&quot;请输入员工手机号&quot; /&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+
+    &lt;!-- 第四行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;所属部门&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.deptId&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option label=&quot;教研部&quot; value=&quot;1&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.job&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;!-- 绑定数据属性要写v-bind 但是它可以省略 直接 :label --&gt;
+              &lt;el-option v-bind:label=&quot;job.name&quot; :value=&quot;job.value&quot; v-for=&quot;(job,index) in jobs&quot; :key=&quot;index&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+</code></pre>
+<h3 id="动态获取部门数据并绑定挂载的时候去查一下数据库"><a href="#动态获取部门数据并绑定挂载的时候去查一下数据库" class="headerlink" title="动态获取部门数据并绑定挂载的时候去查一下数据库"></a>动态获取部门数据并绑定<del>挂载的时候去查一下数据库</del></h3><p><strong>性能问题</strong>：如果每次点击新增员工弹出对话框都去请求，请求很频繁，**<u>员工管理页面挂载完成才请求，请求次数少</u>**</p>
+<pre><code class="js">// 页面挂载完成调用 【一定要记得加挂载噢】
+onMounted(() =&gt; &#123;
+  // 页面加载完毕，立即调用查询员工列表数据的方法
+  queryPage();
+  queryAllDept();
+&#125;)
+
+const deptList = ref&lt;DeptModelArray&gt;([]);
+// 查询所有部门
+const queryAllDept = async () =&gt; &#123;
+  // 调用ajax请求服务器获取所有部门
+  const result = await queryAllDeptApi();
+  if(result.code)&#123;
+    // 成功 部门变量存起来
+    deptList.value = result.data;
+  &#125;else&#123;
+    // 失败
+    ElMessage.error(&#39;获取所有部门失败，失败原因&#39; + result.msg)
+  &#125;
+&#125;
+&lt;/script&gt;
+
+      &lt;!-- 第四行 --&gt;
+      &lt;el-row&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;所属部门&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.deptId&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;el-option :label=&quot;dept.name&quot; :value=&quot;dept.id&quot; v-for=&quot;(dept, index) in deptList&quot; :key=&quot;index&quot;/&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+        &lt;el-col :span=&quot;12&quot;&gt;
+          &lt;el-form-item label=&quot;职位&quot; :label-width=&quot;labelWidth&quot;&gt;
+            &lt;el-select v-model=&quot;emp.job&quot; placeholder=&quot;请选择&quot; style=&quot;width: 100%;&quot;&gt;
+              &lt;!-- 绑定数据属性要写v-bind 但是它可以省略 直接 :label --&gt;
+              &lt;el-option v-bind:label=&quot;job.name&quot; :value=&quot;job.value&quot; v-for=&quot;(job,index) in jobs&quot; :key=&quot;index&quot; /&gt;
+            &lt;/el-select&gt;
+          &lt;/el-form-item&gt;
+        &lt;/el-col&gt;
+      &lt;/el-row&gt;
+</code></pre>
+<h3 id="新增员工保存save"><a href="#新增员工保存save" class="headerlink" title="新增员工保存save"></a>新增员工保存<del>save</del></h3><pre><code class="js">// 新增一个addApi from emp
+&lt;script setup lang=&quot;ts&quot;&gt;
+import &#123; ref, watch, onMounted &#125; from &#39;vue&#39;;
+import type &#123; SearchEmpModel, EmpModel, EmpModelArray, PaginationParam, EmpExprModel, DeptModelArray &#125; from &#39;@/api/model/model&#39;;
+import &#123; queryPageApi, addApi &#125; from &#39;@/api/emp&#39;;
+import &#123;  queryAllApi as queryAllDeptApi &#125; from &#39;@/api/dept&#39;;
+import &#123; ElMessage &#125; from &#39;element-plus&#39;;
+
+
+// 点击保存按钮执行
+const save = async () =&gt; &#123;
+  // 1.关闭对话框
+  dialogFormVisible.value = false;
+  // 2.发送请求新增员工
+  const result = await addApi(emp.value);
+  if (result.code) &#123;
+    // 成功！
+    ElMessage.success(&#39;添加员工成功&#39;);
+    // 重新查询所有员工
+    queryPage();
+  &#125; else &#123;
+    // 失败！
+    ElMessage.error(&#39;添加员工失败！错误消息：&#39; + result.msg)
+  &#125;
+&#125;
+
+
+&lt;template #footer&gt;
+      &lt;span class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;dialogFormVisible = false&quot;&gt;取消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;save&quot;&gt;保存&lt;/el-button&gt;
+      &lt;/span&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="点击新增员工按钮弹出对话框"><a href="#点击新增员工按钮弹出对话框" class="headerlink" title="点击新增员工按钮弹出对话框"></a>点击新增员工按钮弹出对话框</h3><pre><code class="js">// 新增 / 修改员工对话框显示隐藏
+const dialogFormVisible = ref(false)
+
+  &lt;!-- 功能按钮 --&gt;
+  &lt;el-button type=&quot;success&quot; @click=&quot;showAddEmpDialog&quot;&gt;+ 新增员工&lt;/el-button&gt;
+  &lt;el-button type=&quot;danger&quot; @click=&quot;&quot;&gt;- 批量删除&lt;/el-button&gt;
+
+// 点击新增员工按钮，弹出新增员工对话框
+const showAddEmpDialog = () =&gt; &#123;
+  // 显示对话框显示
+  dialogFormVisible.value = true;
+  // 设置标题为 新增员工
+  dialogTitle.value = &#39;新增员工&#39;
+  // 清空之前的员工数据
+  emp.value = &#123;
+    deptId: &#39;&#39;,
+    deptName: &#39;&#39;,
+    entryDate: &#39;&#39;,
+    exprList: [],
+    gender: &#39;&#39;,
+    image: &#39;&#39;,
+    job: &#39;&#39;,
+    name: &#39;&#39;,
+    password: &#39;&#39;,
+    phone: &#39;&#39;,
+    salary: &#39;&#39;,
+    username: &#39;&#39;
+  &#125;
+&#125;
+&lt;/script&gt;
+</code></pre>
+<h3 id="批量删除员工-拼接要删除的员工id"><a href="#批量删除员工-拼接要删除的员工id" class="headerlink" title="批量删除员工_拼接要删除的员工id"></a>批量删除员工_拼接要删除的员工id</h3><pre><code class="js">// 表格多选框选中或取消执行的函数
+const handleSelectionChange = (val: EmpModelArray[]) =&gt; &#123;
+  multipleSelection.value = val
+&#125;
+&lt;/script&gt;
+
+// const不能变 let可以变
+let idsStr = &#39;&#39;
+// 表格多选框选中或取消执行的函数
+const handleSelectionChange = (val: EmpModelArray) =&gt; &#123;
+  console.log(&#39;选中了: &#39; + val);
+  console.log(val);
+  // val是一个员工对象的数组
+  let ids = [];
+  // 遍历获取每个员工对象，拿到员工的id
+  for(let emp of val)&#123; // 得到每个员工
+    ids.push(emp.id);
+  &#125;
+  console.log(&#39;ids = &#39; + ids); //[52,13,53]
+  // 把ids数组内容拼接为字符串：&#39;id1, id2, id3&#39;
+  idsStr = ids.join(&#39;,&#39;);
+  console.log(&#39;idsStr = &#39; + idsStr);
+&#125;
+</code></pre>
+<h3 id="批量删除员工完成"><a href="#批量删除员工完成" class="headerlink" title="批量删除员工完成"></a>批量删除员工完成</h3><pre><code class="ts">emp.ts // 要注意接口文档实时变化 之前的后端接口文档是不带路径参数的
+//删除员工
+export const deleteApi = (ids: string) =&gt; request.delete&lt;any, ResultModel&gt;(`/emps?ids=$&#123;ids&#125;`)
+</code></pre>
+<pre><code class="js">import &#123; queryPageApi, addApi, deleteApi &#125; from &#39;@/api/emp&#39;;
+import &#123; ElMessage, ElMessageBox, type UploadProps &#125; from &#39;element-plus&#39;;
+
+// 通过id批量删除
+const deleteByIds = async () =&gt; &#123;
+  ElMessageBox.confirm(
+    &#39;你真的要删除这批员工吗?&#39;,
+    &#39;警告&#39;,
+    &#123;
+      confirmButtonText: &#39;确定&#39;,
+      cancelButtonText: &#39;取消&#39;,
+      type: &#39;warning&#39;,
+    &#125;
+  )
+    .then(async() =&gt; &#123;
+      // 点击了确定，发送请求批量删除
+      const result = await deleteApi(idsStr);
+      if (result.code) &#123;
+        // 删除成功
+        ElMessage.success(&#39;批量删除员工成功&#39;);
+        // 重新查询员工数据
+        queryPage();
+      &#125; else &#123;
+        // 删除失败
+        ElMessage.error(&#39;删除员工失败！错误消息：&#39; + result.msg);
+      &#125;
+    &#125;).catch(() =&gt; &#123;
+      // 点击了取消
+  
+      ElMessage(&#123;
+        type: &#39;info&#39;,
+        message: &#39;取消批量删除&#39;,
+      &#125;)
+    &#125;)
+&#125;
+&lt;/script&gt;
+
+  &lt;!-- 功能按钮 --&gt;
+  &lt;el-button type=&quot;success&quot; @click=&quot;showAddEmpDialog&quot;&gt;+ 新增员工&lt;/el-button&gt;
+  &lt;el-button type=&quot;danger&quot; @click=&quot;deleteByIds&quot;&gt;- 批量删除&lt;/el-button&gt;
+  &lt;br&gt;&lt;br&gt;
+</code></pre>
+<h3 id="每个请求添加token"><a href="#每个请求添加token" class="headerlink" title="每个请求添加token"></a>每个请求添加token</h3><p>[拦截器 | Axios中文文档 | Axios中文网] (<a target="_blank" rel="noopener" href="https://www.axios-http.cn/docs/interceptors">https://www.axios-http.cn/docs/interceptors</a>)</p>
+<h6 id="Pinia-使用Store"><a href="#Pinia-使用Store" class="headerlink" title="Pinia - 使用Store"></a>Pinia - 使用Store</h6><ul>
+<li>在后续的每一次Ajax请求中都获取<code>Pinia</code>中的令牌，在请求头中将令牌携带到服务端</li>
+</ul>
+<pre><code class="js">src\utils\request.ts【添加请求拦截器】
+import axios from &#39;axios&#39;
+
+//创建axios实例对象
+const request = axios.create(&#123;
+  baseURL: &#39;/api&#39;,
+  timeout: 600000
+&#125;)
+
+// 添加请求拦截器
+request.interceptors.request.use(function (config) &#123;
+  // 在发送请求之前做些什么, 添加Token请求和值
+  // 从Pinia中取出之前登录保存的数据
+  const loginInfo = loginStore.getLoginInfo();
+  // 判断是否有token
+  if (loginInfo.token) &#123;
+    // 添加请求头, 请求头的名字叫token, 值就是token的值
+    config.headers[&#39;token&#39;] = loginInfo.token;
+  &#125;
+  return config;
+&#125;, function (error) &#123;
+  // 对请求错误做些什么
+  return Promise.reject(error);
+&#125;);
+
+
+
+//axios的响应 response 拦截器
+request.interceptors.response.use(
+  (response) =&gt; &#123; //成功回调
+    return response.data
+  &#125;,
+  (error) =&gt; &#123; //失败回调
+    // 如果响应的状态码为401, 跳转到登录页面
+    if (error.response.status == 401) &#123;
+      ElMessage.error(&#39;登录失效, 请重新登录!&#39;);
+      router.push(&#39;/login&#39;)
+    &#125;
+    
+    return Promise.reject(error)
+  &#125;
+)
+
+export default request
+</code></pre>
+<pre><code class="ts">src\stores\LoginStore.ts
+import&#123;ref,computed&#125; from &#39;vue&#39;
+import &#123;defineStore&#125; from &#39;pinia&#39;
+import type &#123; LoginInfo &#125; from &#39;@/api/model/model&#39;
+
+export const useLoginStore = defineStore(&#39;loginData&#39;, () =&gt; &#123;
+  // 数据
+  const LoginInfo = ref&lt;LoginInfo&gt;(&#123;&#125;)
+
+  // set修改数据
+  const setLoginInfo = (info: LoginInfo) =&gt; &#123;
+    LoginInfo.value = info
+  &#125;
+
+  // get获取数据
+  const getLoginInfo = () =&gt;&#123;
+    return LoginInfo.value;
+  &#125;
+
+  return &#123;LoginInfo, setLoginInfo, getLoginInfo&#125;
+&#125;)
+</code></pre>
+<p>此时浏览器里面会有Token</p>
+<blockquote>
+<p>accept: application&#x2F;json, text&#x2F;plain, <em>&#x2F;</em><br>host: 127.0.0.1:5173<br>referer: <a target="_blank" rel="noopener" href="http://127.0.0.1:5173/dept">http://127.0.0.1:5173/dept</a><br>sec-ch-ua-platform: “Windows”<br>sec-fetch-dest: empty<br>sec-fetch-mode: cors<br>sec-fetch-site: same-origin<br><strong><u>token: aaaaaaa</u></strong><br>user-agent: Mozilla&#x2F;5.0 (Windows NT 10.0; Win64; x64) AppleWebKit&#x2F;537.36 (KHTML, like Gecko) Chrome&#x2F;131.0.0.0 Safari&#x2F;537.36 Edg&#x2F;131.0.0.0</p>
+</blockquote>
+<h3 id="完善响应401跳转到登录页面"><a href="#完善响应401跳转到登录页面" class="headerlink" title="完善响应401跳转到登录页面"></a>完善响应401跳转到登录页面</h3><pre><code class="js">src\utils\request.ts
+// 添加请求拦截器
+request.interceptors.request.use(function (config) &#123;
+  // 在发送请求之前做些什么, 添加Token请求和值
+  // 从Pinia中取出之前登录保存的数据
+  const loginInfo = loginStore.getLoginInfo();
+  // 判断是否有token
+  if (loginInfo.token) &#123;
+    // 添加请求头, 请求头的名字叫token, 值就是token的值
+    config.headers[&#39;token&#39;] = loginInfo.token;
+  &#125;
+  return config;
+&#125;, function (error) &#123;
+  // 对请求错误做些什么
+  return Promise.reject(error);
+&#125;);
+
+//axios的响应 response 拦截器
+request.interceptors.response.use(
+  (response) =&gt; &#123; //成功回调
+    return response.data
+  &#125;,
+  (error) =&gt; &#123; //失败回调
+    // 如果响应的状态码为401, 跳转到登录页面
+    if (error.response.status == 401) &#123;
+      ElMessage.error(&#39;登录失效, 请重新登录!&#39;);
+      router.push(&#39;/login&#39;)
+    &#125;
+    
+    return Promise.reject(error)
+  &#125;
+)
+
+export default request
+</code></pre>
+<h6 id="后端操作"><a href="#后端操作" class="headerlink" title="后端操作"></a>后端操作</h6><pre><code class="java">package com.itheima.config;
+
+import com.itheima.interceptor.DemoInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+// 配置类
+@Configuration // 声明Bean
+public class WebConfig implements WebMvcConfigurer &#123;
+    // 注入拦截器
+    @Autowired
+    private DemoInterceptor demoInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) &#123;
+        // 添加拦截器: addInterceptor
+        // 添加拦截器的拦截路径: addPathPatterns
+        // 排除拦截器的拦截路径: excludePathPatterns
+        // 添加拦截器, 拦截所有请求, 排除登录请求/login
+         registry.addInterceptor(demoInterceptor)
+                 .addPathPatterns(&quot;/**&quot;)
+                 .excludePathPatterns(&quot;/login&quot;);
+    &#125;
+
+    // 允许跨域
+    @Override
+    public void addCorsMappings(CorsRegistry registry) &#123;
+        registry.addMapping(&quot;/**&quot;)
+                // 是否发送Cookie
+                .allowCredentials(true)
+                //放行哪些原始域
+                .allowedOriginPatterns(&quot;*&quot;)
+                .allowedMethods(new String[]&#123;&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;&#125;)
+                .allowedHeaders(&quot;*&quot;)
+                .exposedHeaders(&quot;*&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="完善Pinia持久性"><a href="#完善Pinia持久性" class="headerlink" title="完善Pinia持久性"></a>完善Pinia持久性</h3><ul>
+<li>问题：页面刷新之后，pinia中存储的令牌数据，就消失了，再次请求就获取不到令牌数据了。</li>
+<li>原因：页面刷新，原来的Vue实例卸载，Pinia的Store是挂载在Vue实例上的，故刷新后原有的数据也就丢失了。</li>
+<li>方案：Pinia持久化（基于<a target="_blank" rel="noopener" href="https://prazdevs.github.io/pinia-plugin-persistedstate/zh/">pinia</a><a target="_blank" rel="noopener" href="https://prazdevs.github.io/pinia-plugin-persistedstate/zh/">-plugin-</a><a target="_blank" rel="noopener" href="https://prazdevs.github.io/pinia-plugin-persistedstate/zh/">persistedstate</a>）。</li>
+</ul>
+<pre><code class="ts">main.ts
+import piniaPluginPersistedstate from &#39;pinia-plugin-persistedstate&#39;
+//应用pinia
+app.use(createPinia().use(piniaPluginPersistedstate))
+</code></pre>
+<pre><code class="ts">stores/loginEmp.ts
+//定义Store(存储数据 - 用户登录信息) --&gt; 第一个参数, 是唯一表示 
+export const useLoginEmpStore = defineStore(&#39;loginEmp&#39;, () =&gt; &#123;
+  //...
+  return &#123; loginEmp, setLoginEmp, getLoginEmp, removeLoginEmp &#125;
+&#125;, &#123;persist: true&#125;)
+</code></pre>
+<pre><code class="ts">main.ts
+import &#123; createApp &#125; from &#39;vue&#39;
+import &#123; createPinia &#125; from &#39;pinia&#39;
+import piniaPluginPersistedstate from &#39;pinia-plugin-persistedstate&#39;
+
+//导入
+import App from &#39;./App.vue&#39;
+import router from &#39;./router&#39;
+import &#39;./assets/main.css&#39;
+
+//导入ElementPlus
+import ElementPlus from &#39;element-plus&#39;
+import &#39;element-plus/dist/index.css&#39;
+import zhCn from &#39;element-plus/dist/locale/zh-cn.mjs&#39;
+import * as ElementPlusIconsVue from &#39;@element-plus/icons-vue&#39;
+
+//创建vue的应用实例
+const app = createApp(App)
+
+//注册ElementPlus的Icon组件
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) &#123;
+  app.component(key, component)
+&#125;
+
+//应用pinia router elementPlus
+app.use(createPinia().use(piniaPluginPersistedstate))
+app.use(router)
+app.use(ElementPlus, &#123;locale: zhCn&#125;)
+
+app.mount(&#39;#app&#39;)
+</code></pre>
+<pre><code class="ts">LoginStore.ts
+import &#123; ref, computed &#125; from &#39;vue&#39;
+import &#123; defineStore &#125; from &#39;pinia&#39;
+import type &#123; LoginInfo &#125; from &#39;@/api/model/model&#39;
+
+export const useLoginStore = defineStore(&#39;loginData&#39;, () =&gt; &#123;
+  // 数据
+  const loginInfo = ref&lt;LoginInfo&gt;(&#123;&#125;)
+
+  // set修改数据
+  const setLoginInfo = (info: LoginInfo) =&gt; &#123;
+    loginInfo.value = info;
+  &#125;
+
+  // get获取数据
+  const getLoginInfo = () =&gt; &#123;
+    return loginInfo.value;
+  &#125;
+
+  return &#123; loginInfo, setLoginInfo, getLoginInfo &#125;
+&#125;, &#123;persist: true&#125;)
+</code></pre>
+<h3 id="退出登录"><a href="#退出登录" class="headerlink" title="退出登录"></a>退出登录</h3><blockquote>
+<p>原来的不是按钮 是a标签</p>
+<ol>
+<li>跳转到登录页面</li>
+<li>清除Pinia中的数据</li>
+<li>提示退出登录</li>
+</ol>
+</blockquote>
+<pre><code class="js">src\views\layout\index.vue
+&lt;script setup lang=&quot;ts&quot;&gt;
+
+import router from &#39;@/router/index&#39;
+import &#123;useLoginStore&#125; from &#39;@/stores/LoginStore.ts&#39;
+import &#123; ElMessage &#125; from &#39;element-plus&#39;;
+const loginStore = useLoginStore();
+
+const logout = () =&gt; &#123;
+  // 1.跳转到登录页面
+  router.push(&#39;/login&#39;);
+  // 2.清除Pinia中的数据, 传入空对象
+  loginStore.setLoginInfo(&#123;&#125;);
+  // 3.提示退出成功
+  ElMessage.success(&#39;退出成功!&#39;);
+&#125;
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class=&quot;common-layout&quot;&gt;
+    &lt;el-container&gt;
+      &lt;!-- 头部 --&gt;
+      &lt;el-header class=&quot;header&quot;&gt;
+        &lt;span class=&quot;title&quot;&gt;Tlias 智能学习辅助系统&lt;/span&gt;
+
+        &lt;span class=&quot;right_a&quot;&gt;
+          &lt;a href=&quot;&quot;&gt;&lt;el-icon&gt;
+              &lt;EditPen /&gt;
+            &lt;/el-icon&gt;修改密码&lt;/a&gt; &amp;nbsp;&amp;nbsp;&amp;nbsp;
+          &lt;a href=&quot;javascript:void(0)&quot; @click=&quot;logout&quot;&gt;&lt;el-icon&gt;
+              &lt;SwitchButton /&gt;
+            &lt;/el-icon&gt;退出登录【&#123;&#123;loginStore.getLoginInfo().name&#125;&#125;】&lt;/a&gt;
+        &lt;/span&gt;
+      &lt;/el-header&gt;
+      &lt;el-container&gt;
+        &lt;!-- 左侧菜单 --&gt;
+        &lt;el-aside width=&quot;200px&quot; class=&quot;aside&quot;&gt;
+          &lt;el-scrollbar&gt;
+            &lt;el-menu router&gt;
+              &lt;!-- 首页菜单 --&gt;
+              &lt;el-menu-item index=&quot;/index&quot;&gt;
+                &lt;el-icon&gt;
+                  &lt;Promotion /&gt;
+                &lt;/el-icon&gt; 首页
+              &lt;/el-menu-item&gt;
+
+              &lt;!-- 班级管理菜单 --&gt;
+              &lt;el-sub-menu index=&quot;/manage&quot;&gt;
+                &lt;template #title&gt;
+                  &lt;el-icon&gt;
+                    &lt;Menu /&gt;
+                  &lt;/el-icon&gt; 班级学员管理
+                &lt;/template&gt;
+                &lt;el-menu-item index=&quot;/clazz&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;HomeFilled /&gt;
+                  &lt;/el-icon&gt;班级管理
+                &lt;/el-menu-item&gt;
+                &lt;el-menu-item index=&quot;/stu&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;UserFilled /&gt;
+                  &lt;/el-icon&gt;学员管理
+                &lt;/el-menu-item&gt;
+              &lt;/el-sub-menu&gt;
+
+              &lt;!-- 系统信息管理 --&gt;
+              &lt;el-sub-menu index=&quot;/system&quot;&gt;
+                &lt;template #title&gt;
+                  &lt;el-icon&gt;
+                    &lt;Tools /&gt;
+                  &lt;/el-icon&gt;系统信息管理
+                &lt;/template&gt;
+                &lt;el-menu-item index=&quot;/dept&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;HelpFilled /&gt;
+                  &lt;/el-icon&gt;部门管理
+                &lt;/el-menu-item&gt;
+                &lt;el-menu-item index=&quot;/emp&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;Avatar /&gt;
+                  &lt;/el-icon&gt;员工管理
+                &lt;/el-menu-item&gt;
+              &lt;/el-sub-menu&gt;
+
+              &lt;!-- 数据统计管理 --&gt;
+              &lt;el-sub-menu index=&quot;/report&quot;&gt;
+                &lt;template #title&gt;
+                  &lt;el-icon&gt;
+                    &lt;Histogram /&gt;
+                  &lt;/el-icon&gt;数据统计管理
+                &lt;/template&gt;
+                &lt;el-menu-item index=&quot;/empReport&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;InfoFilled /&gt;
+                  &lt;/el-icon&gt;员工信息统计
+                &lt;/el-menu-item&gt;
+                &lt;el-menu-item index=&quot;/stuReport&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;Share /&gt;
+                  &lt;/el-icon&gt;学员信息统计
+                &lt;/el-menu-item&gt;
+                &lt;el-menu-item index=&quot;/log&quot;&gt;
+                  &lt;el-icon&gt;
+                    &lt;Document /&gt;
+                  &lt;/el-icon&gt;日志信息统计
+                &lt;/el-menu-item&gt;
+              &lt;/el-sub-menu&gt;
+            &lt;/el-menu&gt;
+          &lt;/el-scrollbar&gt;
+        &lt;/el-aside&gt;
+
+        &lt;!-- 主区域 --&gt;
+        &lt;el-main&gt;
+          &lt;!-- 路由展示组件: 展示 路径 对应的 组件 --&gt;
+          &lt;RouterView&gt;&lt;/RouterView&gt;
+        &lt;/el-main&gt;
+      &lt;/el-container&gt;
+    &lt;/el-container&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+.aside &#123;
+  width: 220px;
+  border: 1px solid #ccc;
+  height: 690px;
+&#125;
+
+
+.header &#123;
+  background-image: linear-gradient(to right, #d16ba5, #c777b9, #ba83ca, #aa8fd8, #9a9ae1, #8aa7ec, #79b3f4, #69bff8, #52cffe, #41dfff, #46eefa, #5ffbf1);
+&#125;
+
+.title &#123;
+  color: white;
+  font-size: 40px;
+  line-height: 60px;
+&#125;
+
+.right_a &#123;
+  float: right;
+  line-height: 60px;
+
+&#125;
+
+/* xx yy: 表示xx下一级的yy */
+.right_a a &#123;
+  color: white;
+  text-decoration: none;
+&#125;&lt;/style&gt;
+</code></pre>
+<pre><code class="ts">src\stores\LoginStore.ts
+import &#123; ref, computed &#125; from &#39;vue&#39;
+import &#123; defineStore &#125; from &#39;pinia&#39;
+import type &#123; LoginInfo &#125; from &#39;@/api/model/model&#39;
+
+export const useLoginStore = defineStore(&#39;loginData&#39;, () =&gt; &#123;
+  // 数据
+  const loginInfo = ref&lt;LoginInfo&gt;(&#123;&#125;)
+
+  // set修改数据
+  const setLoginInfo = (info: LoginInfo) =&gt; &#123;
+    loginInfo.value = info;
+  &#125;
+
+  // get获取数据
+  const getLoginInfo = () =&gt; &#123;
+    return loginInfo.value;
+  &#125;
+
+  return &#123; loginInfo, setLoginInfo, getLoginInfo &#125;
+&#125;, &#123;persist: true&#125;)
+</code></pre>
+<h3 id="打包部署到Nginx"><a href="#打包部署到Nginx" class="headerlink" title="打包部署到Nginx"></a>打包部署到Nginx</h3><ul>
+<li><p>介绍：Nginx是一款轻量级的Web服务器&#x2F;反向代理服务器及电子邮件（IMAP&#x2F;POP3）代理服务器。其特点是占有内存少，并发能力强，在各大型互联网公司都有非常广泛的使用。</p>
+</li>
+<li><p>官网：<a target="_blank" rel="noopener" href="https://nginx.org/">https://nginx.org/</a>   →  [nginx: download] (<a target="_blank" rel="noopener" href="https://nginx.org/en/download.html">https://nginx.org/en/download.html</a>)</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/73c7166aa675e93a175d7cb0bbbe6f79e712263a/%E6%8B%A6%E6%88%AA%E5%99%A8%E4%B8%8E%E6%89%93%E5%8C%85.png"></p>
+<p><code>E:\广州黑马JavaEE就业198期授课资料\day31-前端Web案例-登录&amp;退出\5-资料\04. 打包部署\nginx-1.26.1.zip</code></p>
+<p>把<code>dist</code>里面打包好的文件放在<code>nginx-1.26.1(纯净版)</code>的html中</p>
+<p>切换端口代理的地址：<code>nginx.conf</code>直接复制替换纯净版的<code>conf/nginx.conf</code><br><code>server &#123; listen 90;&#125;</code><br><code>location / &#123;...&#125;</code></p>
+<pre><code class="json">部署：将打包好的 dist 目录下的文件，复制到nginx安装目录的html目录下。
+启动：双击 nginx.exe 文件即可，Nginx服务器默认占用 80 端口号。
+
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events &#123;
+    worker_connections  1024;
+&#125;
+
+
+http &#123;
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server &#123;
+        listen       90;
+        server_name  localhost;
+        client_max_body_size 10m;
+        
+        location / &#123;
+            root   html;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        &#125;
+
+        location ^~ /api/ &#123;
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://localhost:8080;
+        &#125;
+        
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html &#123;
+            root   html;
+        &#125;
+    &#125;
+
+&#125;
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events &#123;
+    worker_connections  1024;
+&#125;
+
+
+http &#123;
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server &#123;
+        listen       90;
+        server_name  localhost;
+        client_max_body_size 10m;
+        
+        location / &#123;
+            root   html;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        &#125;
+
+        location ^~ /api/ &#123;
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass http://localhost:8080;
+        &#125;
+        
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html &#123;
+            root   html;
+        &#125;
+    &#125;
+&#125;
 </code></pre>
 
     </div>
