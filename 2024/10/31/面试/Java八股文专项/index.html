@@ -2762,6 +2762,83 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/d2fa5788e2f2f5c7e75e724c8bef242b6661c10c/HashMap%E7%9A%84put%E6%96%B9%E6%B3%95%E7%9A%84%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B.png"></p>
 <p><span style = "color:red"><strong>讲一下HashMap的扩容机制</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/c4e2b5bca4f89ece679358c70cdb042f8028aa81/HashMap%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6.png"></p>
+<p><span style = "color:red"><strong>HashMap源码分析</strong></span></p>
+<p>桶下标是hash值取模数组(长度)下标 capacity</p>
+<p><span style = "color:red"><strong>HashMap的寻址算法</strong></span></p>
+<p>Hash值右移16位后与原来的hash值进行异或运算【扰动算法<del>hash值更加均匀,减少hash冲突</del>】<br>数组长度必须是2的n次幂 按位与运算的效果才能代替取模</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/85bdc4d076df91ec3d29294926d65f55713b2d26/HashMap%E5%AF%BB%E5%9D%80%E7%AE%97w%E6%B3%95.png"></p>
+<p><span style = "color:red"><strong>HashMap在1.7情况下的多线程死循环问题</strong></span></p>
+<p>jdk7的数据结构是：数组+链表<br>在数组进行扩容的时候，因为链表是<strong>头插法</strong>，在进行数据迁移的过程中，有可能导致死循环</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/1be6d73360d8cdf5baa6b2fea0b1fc8fa8b7fadc/HashMap%E5%9C%A81.7%E6%83%85%E5%86%B5%E4%B8%8B%E7%9A%84%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%AD%BB%E5%BE%AA%E7%8E%AF%E9%97%AE%E9%A2%98.png"></p>
+<h4 id="线程和进程的区别？"><a href="#线程和进程的区别？" class="headerlink" title="线程和进程的区别？"></a><span style = "color:red">线程和进程的区别？</span></h4><blockquote>
+<h6 id="两者对比："><a href="#两者对比：" class="headerlink" title="两者对比："></a>两者对比：</h6><ul>
+<li>进程是整个在运行程序的实例，进程中包含了线程，每个线程执行不同的任务</li>
+<li>不同的进程使用不同的内存空间，在当前进程下的所有线程可以共享内存空间</li>
+<li>线程更轻量，线程上下文切换成本一般上要比进程上下文切换低(上下文切换指的是从一个线程切换到另一个线程)</li>
+</ul>
+</blockquote>
+<p>程序由<strong>指令</strong>和<strong>数据</strong>组成，但这些指令要运行，数据要读写，就必须将指令加载至CPU，数据加载至内存。在指令运行过程中还需要用到磁盘、网络等设备，<strong>进程</strong>就是用来加载指令、管理内存、管理IO的。<br>当一个程序被运行，从磁盘加载这个程序的代码至内存，这时就开启了一个**<u>进程</u>**</p>
+<p>一个线程就是一个指令流，将指令流中的一条条指令以一定的顺序交给CPU执行。一个进程之内可以分为一到多个线程</p>
+<blockquote>
+<p>core → 线程1[指令1，指令2，指令3…]   线程2[指令1，指令2，指令3…] </p>
+</blockquote>
+<h4 id="并行和并发的区别？"><a href="#并行和并发的区别？" class="headerlink" title="并行和并发的区别？"></a><span style = "color:red">并行和并发的区别？</span></h4><blockquote>
+<p>并发 (concurrent) 是同一时间应对 (dealing with) 多件事情的能力<br>并行 (parallel) 是同一时间动手做 (doing) 多件事情的能力</p>
+<ul>
+<li>家庭主妇做饭、打扫卫生、给孩子喂奶，她一个人轮流交替做这么多件事，这就是<strong>并发</strong>【单核CPU】</li>
+<li>家庭主妇雇了个保姆，她们一起做这些事，这时既有并发，也有并行【会产生竞争，例如锅只有一个，一个人用锅时，另一个人就要等待】</li>
+<li>雇了3个保姆，一个专门做饭，一个专门打扫卫生，一个专门喂奶，互不干扰，这就是<strong>并行</strong></li>
+</ul>
+</blockquote>
+<p>&#x3D;&#x3D;<strong>单核CPU</strong>&#x3D;&#x3D; → 单核CPU下线程实际还是串行执行的</p>
+<ul>
+<li>操作系统中有一个组件叫做任务调度器，将cpu的时间片(windows下时间片最小约为15ms)分给不同的程序使用，只是由于cpu在线程间(时间片很短)的切换非常快，人类感觉是同时运行的</li>
+<li>每个时间片只能用有一个线程被执行</li>
+<li>总结一句话：**<u>微观串行，宏观并行</u>**</li>
+<li>一般会将这种线程轮流使用CPU的做法称为并发(concurrent)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>CPU</th>
+<th>时间片1</th>
+<th>时间片2</th>
+<th>时间片3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>core</td>
+<td>线程1</td>
+<td>线程2</td>
+<td>线程3</td>
+</tr>
+</tbody></table>
+<p><strong>&#x3D;&#x3D;多核CPU&#x3D;&#x3D;</strong> → 每个核(core)都可以调度运行线程，这个时候线程是可以并行的</p>
+<table>
+<thead>
+<tr>
+<th>CPU</th>
+<th>时间片1</th>
+<th>时间片2</th>
+<th>时间片3</th>
+<th>时间片4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>core1</td>
+<td>线程1</td>
+<td>线程2</td>
+<td>线程3</td>
+<td>线程3</td>
+</tr>
+<tr>
+<td>core2</td>
+<td>线程2</td>
+<td>线程4</td>
+<td>线程2</td>
+<td>线程4</td>
+</tr>
+</tbody></table>
 
     </div>
 
