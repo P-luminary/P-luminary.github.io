@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ff7d73>
+                <a href="/tags/面试" style=color:#879cff>
                     面试
                 </a>
             </span>
@@ -2783,11 +2783,10 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <p>core → 线程1[指令1，指令2，指令3…]   线程2[指令1，指令2，指令3…] </p>
 </blockquote>
 <h4 id="并行和并发的区别？"><a href="#并行和并发的区别？" class="headerlink" title="并行和并发的区别？"></a><span style = "color:red">并行和并发的区别？</span></h4><blockquote>
-<p>并发 (concurrent) 是同一时间应对 (dealing with) 多件事情的能力<br>并行 (parallel) 是同一时间动手做 (doing) 多件事情的能力</p>
+<p>现在都是多核CPU，在多核CPU下</p>
 <ul>
-<li>家庭主妇做饭、打扫卫生、给孩子喂奶，她一个人轮流交替做这么多件事，这就是<strong>并发</strong>【单核CPU】</li>
-<li>家庭主妇雇了个保姆，她们一起做这些事，这时既有并发，也有并行【会产生竞争，例如锅只有一个，一个人用锅时，另一个人就要等待】</li>
-<li>雇了3个保姆，一个专门做饭，一个专门打扫卫生，一个专门喂奶，互不干扰，这就是<strong>并行</strong></li>
+<li>并发是同一时间应对多件事情的能力，多个线程轮流使用一个或多个CPU</li>
+<li>并行是同一时间动手做多件事的能力，4核CPU同时执行4个线程</li>
 </ul>
 </blockquote>
 <p>&#x3D;&#x3D;<strong>单核CPU</strong>&#x3D;&#x3D; → 单核CPU下线程实际还是串行执行的</p>
@@ -2839,6 +2838,293 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <td>线程4</td>
 </tr>
 </tbody></table>
+<blockquote>
+<p>并发 (concurrent) 是同一时间应对 (dealing with) 多件事情的能力<br>并行 (parallel) 是同一时间动手做 (doing) 多件事情的能力</p>
+<ul>
+<li>家庭主妇做饭、打扫卫生、给孩子喂奶，她一个人轮流交替做这么多件事，这就是<strong>并发</strong>【单核CPU】</li>
+<li>家庭主妇雇了个保姆，她们一起做这些事，这时既有并发，也有并行【会产生竞争，例如锅只有一个，一个人用锅时，另一个人就要等待】</li>
+<li>雇了3个保姆，一个专门做饭，一个专门打扫卫生，一个专门喂奶，互不干扰，这就是<strong>并行</strong></li>
+</ul>
+</blockquote>
+<h4 id="创建线程的方式有哪些？"><a href="#创建线程的方式有哪些？" class="headerlink" title="创建线程的方式有哪些？"></a><span style = "color:red">创建线程的方式有哪些？</span></h4><ul>
+<li><h5 id="继承Thread类，重写run方法"><a href="#继承Thread类，重写run方法" class="headerlink" title="继承Thread类，重写run方法"></a>继承Thread类，重写run方法</h5></li>
+</ul>
+<pre><code class="java">public class MyThread extends Thread&#123;
+    @Override
+    public void run()&#123;
+        sout(&quot;MyThread...run...&quot;);
+    &#125;
+    public static void main(String[] args)&#123;
+        // 创建MyThread对象
+        MyThread t1 = new MyThread();
+        MyThread t2 = new MyThread();
+        
+        // 调用start方法启动线程
+        t1.start();
+        t2.start();
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><h5 id="实现Runnable接口，重写run方法"><a href="#实现Runnable接口，重写run方法" class="headerlink" title="实现Runnable接口，重写run方法"></a>实现Runnable接口，重写run方法</h5></li>
+</ul>
+<pre><code class="java">public class MyRunnable implements Runnable &#123;
+
+    @Override
+    public void run() &#123;
+        // 在这里编写要执行的任务
+        System.out.println(&quot;线程正在执行任务...&quot;);
+    &#125;
+    public static void main(String[] args) &#123;
+        // 创建MyRunnable实例
+        MyRunnable myRunnable = new MyRunnable();
+        
+        // 创建线程并启动
+        Thread t1 = new Thread(myRunnable);
+        Thread t2 = new Thread(myRunnable);
+        // 调用start方法启动线程
+        t1.start();
+        t2.start();
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><h5 id="实现Callable-lt-T-gt-接口，重写call方法泛型和重写方法一致"><a href="#实现Callable-lt-T-gt-接口，重写call方法泛型和重写方法一致" class="headerlink" title="实现Callable&lt; T &gt;接口，重写call方法泛型和重写方法一致"></a>实现Callable&lt; T &gt;接口，重写call方法<del>泛型和重写方法一致</del></h5></li>
+</ul>
+<pre><code class="java">public class MyCallable implements Callable&lt;String&gt; &#123;
+ @Override
+    public String call() throws Exception &#123;
+        sout(Thread.currentThread().getName());
+        return &quot;ok&quot;;
+    &#125;
+     public static void main(String[] args) &#123;
+        // 创建MyCallable实例
+        MyCallable myCallable = new MyCallable();
+        
+        // 使用FutureTask来包装Callable对象
+        FutureTask&lt;String&gt; ft = new FutureTask&lt;String&gt;(myCallable);
+        
+        // 创建并启动线程
+        Thread t1 = new Thread(ft);
+        t1.start();
+        // 调用ft的get方法获取执行结果
+        String result = ft.get();
+        sout(result)
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><h5 id="线程池创建线程-项目中使用的方式"><a href="#线程池创建线程-项目中使用的方式" class="headerlink" title="线程池创建线程 (项目中使用的方式)"></a><span style = "color:blue">线程池创建线程 (项目中使用的方式)</span></h5></li>
+</ul>
+<pre><code class="java">public class MyExecutors implements Runnable&#123;
+    @Override
+    public void run()&#123;
+        sout(&quot;MyRunnable...run...&quot;);
+    &#125;
+    public static void main(String[] args)&#123;
+        // 创建线程池对象
+        ExecutorService threadPool = Executors.newFixedThreadPool(3);
+        threadPool.submit(new MyExecutors()); 
+        //submit用来提交线程
+        
+        // 关闭线程池
+        threadPool.shutdown();
+    &#125;
+&#125;
+</code></pre>
+<h6 id="刚刚你说过，使用runnable和callable都可以创建线程，它们有什么区别呢？"><a href="#刚刚你说过，使用runnable和callable都可以创建线程，它们有什么区别呢？" class="headerlink" title="刚刚你说过，使用runnable和callable都可以创建线程，它们有什么区别呢？"></a><span style = "color:red">刚刚你说过，使用runnable和callable都可以创建线程，它们有什么区别呢？</span></h6><blockquote>
+<ul>
+<li>Runnable 接口run方法没有返回值</li>
+<li>Callable接口call方法有返回值，要结合FutureTask配合可以用来获取异步执行的结果</li>
+<li>Callable接口的call()方法允许抛出异常；而Runnabble接口的run()方法的异常只能在内部消化，不能继续上抛</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>在启动线程的时候，可以使用run方法吗？run()和start()有什么区别？</strong></span></p>
+<p>start()是开启一个线程   run()跟开启普通方法一样</p>
+<blockquote>
+<p><strong>start()：</strong>用来启动线程，通过该线程调用run方法执行run方法中所定义的逻辑代码。start方法只能被调用一次<br><strong>run()：</strong>封装了要被线程执行的代码，可以被调用多次</p>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/807ae461bb166b0aa6a755a66e43d57c0166323c/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86%E7%82%B9.png"></p>
+<h4 id="线程包括哪些状态，状态之间是如何变化的？"><a href="#线程包括哪些状态，状态之间是如何变化的？" class="headerlink" title="线程包括哪些状态，状态之间是如何变化的？"></a><span style = "color:red"><strong>线程包括哪些状态，状态之间是如何变化的？</strong></span></h4><blockquote>
+<p>状态：<br><strong>新建</strong>New、<strong>可运行</strong>Runnable、<strong>阻塞</strong>Blocked、<strong>等待</strong>Waiting、<strong>时间等待</strong>Timed_waiting、<strong>终止</strong>Terminated</p>
+<p>线程状态之间如何变化：</p>
+<ul>
+<li>创建线程对象是<strong>新建状态</strong></li>
+<li>调用了start()方法转变为<strong>可执行状态</strong></li>
+<li>线程获取到了CPU的执行权，执行结束是<strong>终止状态</strong></li>
+<li>在可执行状态的过程中，如果没有获取CPU的执行权，可能会切换其他状态<ul>
+<li>如果没有获取锁(synchronized或lock) 进入<strong>阻塞状态</strong>，获得锁再切换为可执行状态</li>
+<li>如果线程调用了wait()方法进入<strong>等待状态</strong>，其他线程调用notify()唤醒后可转换为可执行状态</li>
+<li>如果线程调用了sleep(50)方法，进入<strong>计时等待状态</strong>，到时间后可切换为可执行状态</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<pre><code class="java">Thread.java
+public enum State &#123;
+    /**
+     * 新建状态。线程已经被创建，但尚未启动。
+     */
+    NEW,
+
+    /**
+     * 可运行状态。线程在JVM中是可运行的，这并不意味着它一定在运行，它可能在等待其他线程或操作系统的资源。
+     */
+    RUNNABLE,
+
+    /**
+     * 阻塞状态。线程正在等待监视器锁，以进入一个同步块/方法，或者在调用Object.wait后等待重新进入同步块/方法。
+     */
+    BLOCKED,
+
+    /**
+     * 等待状态。线程在等待另一个线程执行特定操作。例如，一个线程调用了Thread.join，它在等待指定的线程终止。
+     */
+    WAITING,
+
+    /**
+     * 超时等待状态。线程在等待另一个线程执行特定操作，但它设置了超时时间。如果线程在指定时间内没有等待到所需条件，它将自动返回。
+     */
+    TIMED_WAITING,
+
+    /**
+     * 终止状态。线程已经完成了执行。
+     */
+    TERMINATED;
+&#125;
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/981d7e954005439be7e8261b142100e3e87f800b/%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81%E4%B9%8B%E9%97%B4%E7%9A%84%E8%BD%AC%E6%8D%A2.png"></p>
+<p><span style = "color:red"><strong>新建T1、T2、T3三个线程，如何保证它们按顺序执行？</strong></span></p>
+<p>可以使用线程中的join方法解决<br><code>join() 等待线程运行结束</code></p>
+<pre><code class="java">t.join() 阻塞调用此方法的线程进入timed_waiting 直到线程t执行完毕后，此线程再继续执行
+</code></pre>
+<pre><code class="java">Thread t1 = new Thread(()-&gt;&#123;
+    sout(&quot;t1&quot;);
+&#125;);
+Thread t2 = new Thread(()-&gt;&#123;
+    try&#123;
+        t1.join();
+    &#125;catch(InterruptedException e)&#123;
+        e.printStackTrance();
+    &#125;
+    sout(&quot;t2&quot;);
+&#125;)
+Thread t3 = new Thread(()-&gt;&#123;
+    try&#123;
+        t2.join();
+    &#125;catch(InterruptedException e)&#123;
+        e.printStackTrance();
+    &#125;
+    sout(&quot;t3&quot;);
+&#125;);
+// 启动线程
+t1.start();
+t2.start();
+t3.start();
+</code></pre>
+<p><span style = "color:red"><strong>notify() 和 notifyAll() 有什么区别？</strong></span></p>
+<blockquote>
+<ul>
+<li><strong>notifyAll</strong>：唤醒所有wait的线程</li>
+<li><strong>notify</strong>：只随机唤醒一个wait线程</li>
+</ul>
+</blockquote>
+<p><span style = "color:red"><strong>java中wait和sleep方法有什么区别？</strong></span><del>wait要和synchronized一起使用</del></p>
+<h6 id="共同点"><a href="#共同点" class="headerlink" title="共同点"></a>共同点</h6><p>wait()，wait(long)和sleep(long)的效果都是让当前线程暂时放弃CPU的使用权，进入阻塞状态</p>
+<h6 id="不同点"><a href="#不同点" class="headerlink" title="不同点"></a>不同点</h6><ul>
+<li><p>方法归属不同</p>
+<ul>
+<li>sleep(long)是Thread的静态方法</li>
+<li>而wait()，wait(long)都是Object的成员方法，每个对象都有</li>
+</ul>
+</li>
+<li><p>醒来时机不同</p>
+<ul>
+<li>执行sleep(long)和wait(long)的线程都会在等待相应毫秒后醒来</li>
+<li>wait(long)和wait()还可以被notify唤醒，wait()如果不唤醒就一直等下去</li>
+<li>它们都可以被打断唤醒</li>
+</ul>
+</li>
+<li><p><strong>锁特性不同</strong>【重点】</p>
+<ul>
+<li>wait方法的调用必须先获取wait对象的锁，而sleep则无此限制</li>
+<li>wait方法执行后会释放锁对象，允许其他线程获得该锁对象 (我放弃cpu，但你们还可以用)</li>
+<li>而sleep如果在synchronized代码块中执行，并不会释放锁对象 (我放弃cpu，你们也用不了)</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/5541d691652184639a4936426271a2f6ea03d2fb/wait%E5%92%8Csleep%E6%96%B9%E6%B3%95%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB.png"></p>
+<p><span style = "color:red"><strong>如何停止一个正在运行的线程？</strong></span></p>
+<h6 id="有三种方式可以停止线程"><a href="#有三种方式可以停止线程" class="headerlink" title="有三种方式可以停止线程"></a>有三种方式可以停止线程</h6><ul>
+<li>使用退出标志，使线程正常退出，也就是当run方法完成后线程终止</li>
+<li>使用stop方法强行终止(不推荐，方法已作废)</li>
+<li>使用interrupt方法中断线程<ul>
+<li>打断阻塞的线程(sleep, wait, join)的线程，线程会抛出InterruptedException异常</li>
+<li>打断正常的线程，可以根据打断状态来标记是否退出线程</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/64f320ea60791a6cc20d9e238d50be95345d1485/%E5%A6%82%E4%BD%95%E5%81%9C%E6%AD%A2%E4%B8%80%E4%B8%AA%E6%AD%A3%E5%9C%A8%E8%BF%90%E8%A1%8C%E7%9A%84%E7%BA%BF%E7%A8%8B.png"></p>
+<p><span style = "color:red"><strong>synchronized关键字的底层原理？</strong></span><del>底层：Monitor</del></p>
+<blockquote>
+<ul>
+<li>synchronized【对象锁】采用互斥的方式让同一时刻至多只有一个线程能持有【对象锁】</li>
+<li>它的底层由monitor实现的，monitor**是jvm级别的现象(C++实现)**，线程获得锁需要使用对象(锁)关联monitor</li>
+<li>在monitor内部有三个属性，分别是<code>owner、entrylist、waitset</code><ul>
+<li>owner是关联的获得锁的线程，并且只能关联一个线程；</li>
+<li>entrylist关联的是处于阻塞状态的线程；</li>
+<li>waitset关联的是处于Waiting状态的线程；</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/4fd1c205a0d2d906c28c4a924b883b4082605a78/Synchronized%E4%B8%8ELock%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86.png"></p>
+<p><span style = "color:red"><strong>synchronized关键字的底层原理—进阶</strong></span></p>
+<p><span style = "color:red"><strong><u>Monitor实现的锁属于重量级锁，你了解过锁升级吗？</u></strong></span></p>
+<blockquote>
+<h4 id="一旦锁发生了竞争，都会升级为重量级锁"><a href="#一旦锁发生了竞争，都会升级为重量级锁" class="headerlink" title="一旦锁发生了竞争，都会升级为重量级锁"></a>一旦锁发生了竞争，都会升级为重量级锁</h4><p>Java中的synchronized有偏向锁、轻量级锁、重量级锁三种形式，分别对应了锁只被一个线程持有、不同线程交替持有锁、多线程竞争锁三种情况。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>重量级锁</td>
+<td>底层使用的Monitor实现，里面涉及到了用户态和内核态的切换、进程的上下文切换，成本较高，性能比较低</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>线程加锁的时间是错开的(也就是没有竞争)可以使用轻量级锁来优化。轻量级修改了对象头的锁标志，相对重量级锁性能提升很多。每次修改都是CAS操作，保证原子性</td>
+</tr>
+<tr>
+<td>偏向锁</td>
+<td>一段很长的时间内都只被一个线程使用锁，可以使用了偏向锁，在第一次获得锁时，会有一个CAS操作，之后该线程再获取锁，只需要判断mark word中是否是自己的线程id即可，而不是开销相对较大的CAS命令</td>
+</tr>
+</tbody></table>
+</blockquote>
+<ul>
+<li>Monitor实现的锁属于重量级锁，里面涉及到了用户态<del>权限低</del>和内核态<del>权限高</del>的切换、进程的上下文切换，成本较高，性能比较低</li>
+<li>在JDK1.6引入了两种新型锁机制：<strong>偏向锁和轻量级锁</strong>，它们的引入是为了解决在没有多线程竞争或基本没有竞争的场景下使用传统锁机制带来的性能开销问题</li>
+</ul>
+<h6 id="Monitor重量级锁"><a href="#Monitor重量级锁" class="headerlink" title="Monitor重量级锁"></a>Monitor重量级锁</h6><p>每个Java对象都可以关联一个Monitor对象，如果使用 synchronized 给对象上锁(重量级)之后，该对象头的Mark Word中就被设置指向Monitor对象的指针</p>
+<h6 id="加锁流程"><a href="#加锁流程" class="headerlink" title="加锁流程"></a>加锁流程</h6><ul>
+<li>在线程栈中创建一个Lock Record，将其obj字段指向锁对象。</li>
+<li>通过CAS指令将Lock Record的地址存储在对象头的mark word中，如果对象处于无锁状态则修改成功，代表该线程获得了轻量级锁。</li>
+<li>如果是当前线程已经持有该锁了，代表这是一次锁重入。设置Lock Record第一部分为nul，起到了一个重入计数器的作用。</li>
+<li>如果CAS修改失败，说明发生了竞争，需要膨胀为重量级锁。</li>
+</ul>
+<h6 id="解锁过程"><a href="#解锁过程" class="headerlink" title="解锁过程"></a>解锁过程</h6><ul>
+<li>遍历线程栈,找到所有obj字段等于当前锁对象的Lock Record.</li>
+<li>如果Lock Record的Mark Word为null，代表这是一次重入，将obj设置为null后continue。</li>
+<li>如果Lock Record的 Mark Word不为nul，则利用CAS指令将对象头的mark word恢复成为无锁状态。如果失败则膨胀为重量级锁。</li>
+</ul>
+<h6 id="偏向锁性能比轻量级锁好"><a href="#偏向锁性能比轻量级锁好" class="headerlink" title="偏向锁性能比轻量级锁好"></a>偏向锁<del>性能比轻量级锁好</del></h6><ul>
+<li>轻量级锁在没有竞争时(就自己这个线程)每次重入仍然需要执行 CAS 操作。</li>
+<li>Java6 中引入了偏向锁来做进一步优化：只有第一次使用 CAS 将线程 ID 设置到对象的 Mark Word 头，之后发现这个线程 ID 是自己的就表示没有竞争，不用重新 CAS。以后只要不发生竞争，这个对象就归该线程所有</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/d930bb7ad0d897e72b69faa5bb15fa1f387b728a/synchronized%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86%5B%E9%87%8D%E9%87%8F%E7%BA%A7%E9%94%81%5D%E2%80%94%E8%BF%9B%E9%98%B6%E7%AF%87.png"></p>
 
     </div>
 
