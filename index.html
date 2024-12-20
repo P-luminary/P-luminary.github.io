@@ -166,7 +166,7 @@
 </ul>
 <p>vo：接收有前端界面那一层的数据【放在web】<br>dto：微服务出分布式架构后才会用dto【订单 → 用户】[后端自己调自己] [中州养老不该有dto]<br>pojo：持久化对象实体类 跟数据表一一对应<br>entity &#x3D; vo + dto + pojo</p>
 <p>@RestController &#x3D; @ResponseBody(只要不是String 对象转成json) + @Controller<br>@Component<br>@RequestMapping 控制请求url</p>
-<h4 id="项目展示"><a href="#项目展示" class="headerlink" title="项目展示"></a>项目展示</h4><p>项目展示地址：<a target="_blank" rel="noopener" href="https://zhyl-admin.itheima.net/">https://zhyl-admin.itheima.net/</a><br>默认账号：<a href="mailto:&#x61;&#x64;&#109;&#x69;&#110;&#x40;&#113;&#113;&#x2e;&#99;&#x6f;&#109;">&#x61;&#x64;&#109;&#x69;&#110;&#x40;&#113;&#113;&#x2e;&#99;&#x6f;&#109;</a><br>密码：132itheima.CN032@.20241128</p>
+<h4 id="项目展示"><a href="#项目展示" class="headerlink" title="项目展示"></a>项目展示</h4><p>项目展示地址：<a target="_blank" rel="noopener" href="https://zhyl-admin.itheima.net/">https://zhyl-admin.itheima.net/</a><br>默认账号：<a href="mailto:&#97;&#x64;&#x6d;&#x69;&#x6e;&#64;&#113;&#113;&#x2e;&#99;&#x6f;&#x6d;">&#97;&#x64;&#x6d;&#x69;&#x6e;&#64;&#113;&#113;&#x2e;&#99;&#x6f;&#x6d;</a><br>密码：132itheima.CN032@.20241128</p>
 <blockquote>
 <p>密码说明：132itheima.CN032@.yyyyMMdd</p>
 </blockquote>
@@ -1356,6 +1356,257 @@ public class AutoFillInterceptor implements Interceptor &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="小程序登录校验"><a href="#小程序登录校验" class="headerlink" title="小程序登录校验"></a>小程序登录校验</h3><h4 id="接口文档"><a href="#接口文档" class="headerlink" title="接口文档"></a>接口文档</h4><p>我们在项目中对接任何的第三方接口，最重要的参考永远都是官方给提供的接口文档。所以大家一定要具备阅读接口文档的能力才能更好的对接接口使用。</p>
+<p>那接口文档该怎么阅读呢？</p>
+<p>其实跟我们定义的接口差不了太多，也必然会包含接口的四要素（请求路径、请求方式、入参、出参）</p>
+<p>我们来看一下微信官方给提供的这个接口，这个是用于微信登录的接口，链接如下：</p>
+<p><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html">https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html</a></p>
+<p>这个文档中比较关键的部分就是：</p>
+<p>http和https的区别</p>
+<ul>
+<li>http是明文传输 请求和相应  【内网可以走】</li>
+<li>https是密文传输 非对称的加解密来保证其安全</li>
+</ul>
+<h3 id="请求参数"><a href="#请求参数" class="headerlink" title="请求参数"></a>请求参数</h3><table>
+<thead>
+<tr>
+<th align="left">属性</th>
+<th align="left">类型</th>
+<th align="left">必填</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">appid</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">小程序 appId</td>
+</tr>
+<tr>
+<td align="left">secret</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">小程序 appSecret</td>
+</tr>
+<tr>
+<td align="left">js_code</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">登录时获取的 code，可通过<a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.login.html">wx.login</a>获取</td>
+</tr>
+<tr>
+<td align="left">grant_type</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">授权类型，此处只需填写 authorization_code</td>
+</tr>
+</tbody></table>
+<h3 id="返回参数"><a href="#返回参数" class="headerlink" title="返回参数"></a>返回参数</h3><table>
+<thead>
+<tr>
+<th align="left">属性</th>
+<th align="left">类型</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">session_key</td>
+<td align="left">string</td>
+<td align="left">会话密钥</td>
+</tr>
+<tr>
+<td align="left"><strong><span style = "color:red">unionid</span></strong></td>
+<td align="left">string</td>
+<td align="left">用户在开放平台的唯一标识符，若当前小程序已绑定到微信开放平台账号下会返回，详见 <a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/union-id.html">UnionID 机制说明</a>。</td>
+</tr>
+<tr>
+<td align="left">errmsg</td>
+<td align="left">string</td>
+<td align="left">错误信息</td>
+</tr>
+<tr>
+<td align="left"><strong>openid</strong></td>
+<td align="left">string</td>
+<td align="left">用户唯一标识</td>
+</tr>
+<tr>
+<td align="left">errcode</td>
+<td align="left">int32</td>
+<td align="left">错误码</td>
+</tr>
+</tbody></table>
+<p>一般用openid 什么时候用unionid？没有过期 只要分配就定档<br>小程序集成小程序可以用unionid 都是同一个微信小程序的 </p>
+<h2 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h2><blockquote>
+<p>示例说明: HTTPS请求</p>
+</blockquote>
+<h3 id="请求数据示例"><a href="#请求数据示例" class="headerlink" title="请求数据示例"></a>请求数据示例</h3><pre><code class="json">GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&amp;secret=SECRET&amp;js_code=JSCODE&amp;grant_type=authorization_code 
+</code></pre>
+<h3 id="返回数据示例"><a href="#返回数据示例" class="headerlink" title="返回数据示例"></a>返回数据示例</h3><pre><code class="json">&#123;
+&quot;openid&quot;:&quot;xxxxxx&quot;,
+&quot;session_key&quot;:&quot;xxxxx&quot;,
+&quot;unionid&quot;:&quot;xxxxx&quot;,
+&quot;errcode&quot;:0,
+&quot;errmsg&quot;:&quot;xxxxx&quot;
+&#125;
+ 
+</code></pre>
+<h3 id="错误码"><a href="#错误码" class="headerlink" title="错误码"></a>错误码</h3><table>
+<thead>
+<tr>
+<th align="left">错误码</th>
+<th align="left">错误码取值</th>
+<th align="left">解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">40029</td>
+<td align="left">code 无效</td>
+<td align="left">js_code无效</td>
+</tr>
+<tr>
+<td align="left">45011</td>
+<td align="left">api minute-quota reach limit mustslower retry next minute</td>
+<td align="left">API 调用太频繁，请稍候再试</td>
+</tr>
+<tr>
+<td align="left">40226</td>
+<td align="left">code blocked</td>
+<td align="left">高风险等级用户，小程序登录拦截 。风险等级详见<a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/framework/operation.html">用户安全解方案</a></td>
+</tr>
+<tr>
+<td align="left">-1</td>
+<td align="left">system error</td>
+<td align="left">系统繁忙，此时请开发者稍候再试</td>
+</tr>
+</tbody></table>
+<pre><code class="java">HTTP客户端工具有很多
+- HttpClient    体量庞大，jdk11以上支持不好
+- OkHttp        学习成本较高
+- Spring提供的RestTemplate    后期课程feign会重点讲解
+- Hutool工具包，使用说明地址：https://doc.hutool.cn/pages/http/
+</code></pre>
+<h3 id="Hutool工具常见方法"><a href="#Hutool工具常见方法" class="headerlink" title="Hutool工具常见方法"></a>Hutool工具常见方法</h3><p>我们可以参考Hutool工具的官方文档，来快速感受一下这个工具类：<a target="_blank" rel="noopener" href="https://doc.hutool.cn/pages/http/">https://doc.hutool.cn/pages/http/</a></p>
+<ul>
+<li>准备：在zzyl-web模块中添加测试启动器依赖</li>
+</ul>
+<pre><code class="XML">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">HttpUtilTest.java
+package com.zzyl.test;
+
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
+import cn.hutool.json.JSONUtil;
+import com.aliyun.oss.HttpMethod;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class HttpUtilTest &#123;
+    @Test
+    public void testGet()&#123;
+        String result = HttpUtil.get(&quot;https://www.baidu.com&quot;);
+        System.out.println(&quot;result = &quot; + result);
+    &#125;
+//    @Test
+//    public void testPost&#123;
+//        // 护理项目分页查询
+//        HttpUtil.post(&quot;http://localhost:9995/nursiong_project&quot;)
+//    &#125;
+    @Test
+    public void testPost2()&#123;
+        // 护理项目分页查询  此方法更加灵活 带参数  智能的将map拼接到url后面
+        // NursingProjectController.java
+        Map&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;pageNum&quot;,1);
+        paramMap.put(&quot;pageSize&quot;,10);// result带着响应体
+        String result = HttpUtil.get(&quot;http://localhost:9995/nursing_project&quot;, paramMap);
+        System.out.println(&quot;result = &quot; + result);
+    &#125;
+
+    // 放请求头 带参数的get请求
+    @Test
+    public void testCreateGetRequest()&#123;
+        Map&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;pageNum&quot;,1);
+        paramMap.put(&quot;pageSize&quot;,10);// execute可以获取更详细的相应信息
+        HttpResponse response = HttpUtil.createRequest(Method.GET, &quot;http://localhost:9995/nursing_project&quot;)
+                .form(paramMap)
+                .execute();
+        if (response.getStatus() == 200) &#123;
+            System.out.println(response.body());
+        &#125;
+    &#125;
+
+    @Test
+    public void testPost()&#123; // 测试护理项目新增 里面要放很多东西 名称排序单位...
+        String url = &quot;http://localhost:9995/nursing_project&quot;;
+        HashMap&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;name&quot;, &quot;护理项目测试&quot;);
+        paramMap.put(&quot;orderNo&quot;, 1);
+        paramMap.put(&quot;unit&quot;, &quot;次&quot;);
+        paramMap.put(&quot;price&quot;, 10.00);
+        paramMap.put(&quot;image&quot;, &quot;https://yjy-slwl-oss.oss-cn-hangzhou.aliyuncs.com/ae7cf766-fb7b-49ff-a73c-c86c25f280e1.png&quot;);
+        paramMap.put(&quot;nursingRequirement&quot;, &quot;无特殊要求&quot;);
+        paramMap.put(&quot;status&quot;, 1); // 转成json字符串 因为controller需要返回的json类
+        String result = HttpUtil.post(url, JSONUtil.toJsonStr(paramMap));
+        System.out.println(result);
+    &#125;
+
+    @Test
+    public void testPost3() &#123;
+        String url = &quot;http://localhost:9995/nursing_project&quot;;
+        HashMap&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;name&quot;, &quot;护理项目测试666&quot;);
+        paramMap.put(&quot;orderNo&quot;, 1);
+        paramMap.put(&quot;unit&quot;, &quot;次&quot;);
+        paramMap.put(&quot;price&quot;, 10.00);
+        paramMap.put(&quot;image&quot;, &quot;https://yjy-slwl-oss.oss-cn-hangzhou.aliyuncs.com/ae7cf766-fb7b-49ff-a73c-c86c25f280e1.png&quot;);
+        paramMap.put(&quot;nursingRequirement&quot;, &quot;无特殊要求&quot;);
+        paramMap.put(&quot;status&quot;, 1); // 转成json字符串 因为controller需要返回的json类
+        HttpResponse response = HttpUtil.createRequest(Method.POST, url)
+                .body(JSONUtil.toJsonStr(paramMap))
+                .execute();
+        if (response.getStatus()==200) &#123;
+            System.out.println(response.body());
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>主要用于测试向指定 URL 发送 POST 请求的功能。</p>
+<p><strong>具体来说</strong>：<br>功能：此方法通过发送一个包含护理项目详细信息的 POST 请求来测试后端接口是否能够正确接收并处理这些数据。</p>
+<p><strong>应用场景</strong>：<br>开发阶段：在开发新的护理项目管理功能时，可以通过这个测试方法验证后端接口的正确性和稳定性。<br>回归测试：在对系统进行修改或升级后，运行这个测试方法可以确保原有的护理项目创建功能没有被破坏。<br>持续集成：将这个测试方法集成到持续集成流程中，可以在每次代码提交后自动运行，确保代码质量。</p>
+<p><strong>使用时机</strong><br>开发新功能：当你新增或修改护理项目相关的接口时，可以使用这个测试方法来验证接口的正确性。<br>修复 Bug：如果你发现护理项目创建功能有问题，可以运行这个测试方法来复现问题并进行调试。<br>系统维护：定期运行这个测试方法，确保系统的稳定性和可靠性。<br>希望这能帮助你更好地理解这段代码的作用和应用场景。</p>
+<p>以上两个方法调用相对简单，如果请求参数中没有额外的条件设置，就可以使用上述的两个方法，但是，有的时候三方接口调用需要使用到header或者是文件上传，则不能使用上述两个方法</p>
+<p>我们可以使用<code>HttpUtil.</code>*<code>createRequest</code>*方法来去构建更多的条件参数</p>
+<pre><code class="java">使用 HttpUtil.createRequest(Method.POST, url).body(JSONUtil.toJsonStr(paramMap)).execute(); 而不是 HttpUtil.post(url, JSONUtil.toJsonStr(paramMap)); 有以下几点优点和好处：
+灵活性更高：
+createRequest 方法提供了更多的配置选项，例如设置请求头、超时时间、重试机制等。这对于复杂的请求场景非常有用。
+你可以更细粒度地控制请求的各个方面，而不仅仅是发送一个简单的 POST 请求。
+可读性和可维护性：
+使用链式调用的方式使得代码更加清晰易读，每一步操作都一目了然。
+如果未来需要添加更多的配置或处理逻辑，使用 createRequest 方式更容易扩展和维护。
+错误处理更灵活：
+createRequest 返回的是一个 HttpRequest 对象，你可以在这个对象上添加更多的错误处理逻辑，例如捕获异常、重试请求等。
+例如，你可以使用 .timeout(5000) 设置超时时间，或者使用 .header(&quot;Content-Type&quot;, &quot;application/json&quot;) 设置请求头。
+调试更方便：
+在请求执行之前，你可以插入断点或日志输出，检查请求的各个部分是否符合预期。
+例如，你可以在 .body(JSONUtil.toJsonStr(paramMap)) 之后插入日志输出，查看请求体的内容。
+</code></pre>
+<h3 id="查询天气预报案例"><a href="#查询天气预报案例" class="headerlink" title="查询天气预报案例"></a><strong>查询天气预报案例</strong></h3><p>接口文档说明：<a target="_blank" rel="noopener" href="https://market.aliyun.com/products/57096001/cmapi013828.html?spm=5176.730005.result.10.27823524RFEJhP&amp;innerSource=search_%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5#sku=yuncode782800000">https://market.aliyun.com/products/57096001/cmapi013828.html?spm=5176.730005.result.10.27823524RFEJhP&amp;innerSource=search_%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5#sku=yuncode782800000</a></p>
+<h3 id="查询快递物流信息-练习"><a href="#查询快递物流信息-练习" class="headerlink" title="查询快递物流信息-练习"></a>查询快递物流信息-练习</h3><p>通过我们学习的三方接口对接的方式，根据快递单号查询快递详情</p>
+<ul>
+<li>接口开通地址：<a target="_blank" rel="noopener" href="https://market.aliyun.com/products/57126001/cmapi00061252.html?spm=5176.21213303.J_qCOwPWspKEuWcmp8qiZNQ.21.db122f3dXfAGSX&scm=20140722.S_market@@API%E5%B8%82%E5%9C%BA@@cmapi00061252._.ID_market@@API%E5%B8%82%E5%9C%BA@@cmapi00061252-RL_%E8%BF%90%E5%8D%95%E5%8F%B7%E6%9F%A5%E8%AF%A2-LOC_llm-OR_ser-V_3-RK_rerank-P0_2#sku=yuncode55252000013">快递查询</a></li>
+<li>找一个自己的或同学的快递单号（不限快递公司）作为条件进行查询</li>
+<li>注意：顺丰快递查询要传递手机号请求参数</li>
+<li>运行样例：</li>
+</ul>
+<p>[‌‍﻿‍﻿‬‌﻿⁠‌‌﻿﻿⁠‍‍﻿﻿‬‬‍‌‌﻿Day06-讲义 - 飞书云文档] (<a target="_blank" rel="noopener" href="https://baxsu7o100e.feishu.cn/docx/FtjAdqHkVo0F8Pxkxd6cB0m5nYd">https://baxsu7o100e.feishu.cn/docx/FtjAdqHkVo0F8Pxkxd6cB0m5nYd</a>)</p>
 
             
         </div>
@@ -1370,7 +1621,7 @@ public class AutoFillInterceptor implements Interceptor &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -1415,7 +1666,7 @@ public class AutoFillInterceptor implements Interceptor &#123;
 <ul>
 <li><p>设置用户信息 </p>
 <p>git config –global user.name “wangwu”</p>
-<p>git config –global user.email “<a href="mailto:&#x77;&#x61;&#110;&#103;&#119;&#x75;&#64;&#105;&#116;&#99;&#97;&#115;&#x74;&#x2e;&#x63;&#110;">&#x77;&#x61;&#110;&#103;&#119;&#x75;&#64;&#105;&#116;&#99;&#97;&#115;&#x74;&#x2e;&#x63;&#110;</a>“</p>
+<p>git config –global user.email “<a href="mailto:&#x77;&#97;&#110;&#103;&#x77;&#x75;&#x40;&#x69;&#116;&#99;&#x61;&#x73;&#x74;&#x2e;&#99;&#110;">&#x77;&#97;&#110;&#103;&#x77;&#x75;&#x40;&#x69;&#116;&#99;&#x61;&#x73;&#x74;&#x2e;&#99;&#110;</a>“</p>
 </li>
 <li><p>查看配置信息</p>
 <p>git config –list</p>
@@ -1690,6 +1941,8 @@ target/
 <h3 id="Idea如何关联远程仓库"><a href="#Idea如何关联远程仓库" class="headerlink" title="Idea如何关联远程仓库"></a>Idea如何关联远程仓库</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/f2264f94fe84adf0e23c92faa691e5b88ca574df/%E5%9C%A8IDEA%E4%B8%AD%E4%BD%BFs%E7%94%A8Git.png"></p>
 <h3 id="克隆代码到本地并导入IDEA入公司的重要操作"><a href="#克隆代码到本地并导入IDEA入公司的重要操作" class="headerlink" title="克隆代码到本地并导入IDEA入公司的重要操作"></a>克隆代码到本地并导入IDEA<del>入公司的重要操作</del></h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/733943069aea5517a774a37d45a8cb87e247a8d9/Idea%E8%A7%A3%E5%86%B3Git%E5%86%B2%E7%AA%81.png"></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/f1eb94b8e3523a49a6d923a9936eeb7d9f618f26/idea%E7%9A%84%E5%88%86%E6%94%AF%E4%B8%8E%E5%90%88%E5%B9%B6.png"></p>
+<h3 id="‎提交记录如何不推送主分支"><a href="#‎提交记录如何不推送主分支" class="headerlink" title="[‎提交记录如何不推送主分支]"></a>[<code>‎提交记录如何不推送主分支</code>]</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/d4fae06a6919a9070c3b818811bfc34335826429/%E6%8F%90%E4%BA%A4%E8%AE%B0%E5%BD%95%E5%A6%82%E4%BD%95%E4%B8%8D%E6%8E%A8%E9%80%81%E4%B8%BB%E5%88%86%E6%94%AF.png" alt="[`‎提交记录如何不推送主分支`](https://github.com/P-luminary/images/commit/d4fae06a6919a9070c3b818811bfc34335826429#diff-4a7ee86038d5899030a767ec598ff37ff0cbb63c8b7f44e51fcefdf538cb65e6)"></p>
+<h3 id="回滚提交项目日志"><a href="#回滚提交项目日志" class="headerlink" title="[回滚提交项目日志]"></a>[<code>回滚提交项目日志</code>]</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/e33d94f2cbd92ed932a6222bd87a50d3a6c3efd9/%E5%9B%9E%E6%BB%9A%E6%8F%90%E4%BA%A4%E9%A1%B9%E7%9B%AE%E6%97%A5%E5%BF%97.png"></p>
 
             
         </div>
@@ -1704,7 +1957,7 @@ target/
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -2655,7 +2908,7 @@ kill -9 xxxxx
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#1bccbc>
+            <a href="/tags/HM" style=color:#ff7d73>
                 HM
             </a>
         </span>
@@ -5060,7 +5313,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -5221,7 +5474,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/攻略" style=color:#ffa2c4>
+            <a href="/tags/攻略" style=color:#879cff>
                 攻略
             </a>
         </span>
@@ -11037,7 +11290,7 @@ http &#123;
         
         <span class="tag">
             
-            <a href="/tags/HM" style=color:#ffa2c4>
+            <a href="/tags/HM" style=color:#00bcd4>
                 HM
             </a>
         </span>
@@ -13763,7 +14016,7 @@ function getRegionInfo(row) &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -16421,7 +16674,7 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <p>当我们往HashMap中put元素时，利用key的hashCode重新hash计算出当前对象的元素在数组中的下标</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/27826dde4b711105a212f30f6381f8097eca69ba/HashMap%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png"></p>
 <h4 id="HashMap的put方法的具体流程"><a href="#HashMap的put方法的具体流程" class="headerlink" title="HashMap的put方法的具体流程"></a><span style = "color:red"><strong>HashMap的put方法的具体流程</strong></span></h4><blockquote>
-<p>1.判断键值对数组table是否为空或为null，否则执行resize()进行扩容 [初始化]<br>2.根据键值key计算hash值得到数组索引<br>3.判断table[i] &#x3D;&#x3D; null，条件成立，直接新建节点添加<br>4.如果table[i] &#x3D;&#x3D; null，不成立<br>4.1 判断table[i]的首个元素是否和key一样，如果相同直接覆盖value<br>4.2 判断table[i]是否为treeNode，即table[i]是否是红黑树，如果是红黑树，则直接在树中插入键值对<br>4.3 遍历table[i]，链表的尾部插入数据，然后判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，遍历过程中若发现key已经存在直接覆盖value</p>
+<p>1.判断键值对数组table是否为空或为null，否则执行resize()进行扩容 [初始化]<br>2.根据键值key计算hash值得到数组索引<br>3.判断table[i] &#x3D;&#x3D; null，条件成立，直接新建节点添加<br>4.如果table[i] &#x3D;&#x3D; null，不成立<br>4.1 判断table[i]的首个元素是否和key一样，如果相同直接覆盖value<br>4.2 判断table[i]是否为<strong>treeNode</strong>，即table[i]是否是红黑树，如果是红黑树，则直接在树中插入键值对<br>4.3 遍历table[i]，链表的尾部插入数据，然后判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，遍历过程中若发现key已经存在直接覆盖value</p>
 </blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/d2fa5788e2f2f5c7e75e724c8bef242b6661c10c/HashMap%E7%9A%84put%E6%96%B9%E6%B3%95%E7%9A%84%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B.png"></p>
 <p><span style = "color:red"><strong>讲一下HashMap的扩容机制</strong></span></p>
@@ -16789,6 +17042,155 @@ t3.start();
 <li>Java6 中引入了偏向锁来做进一步优化：只有第一次使用 CAS 将线程 ID 设置到对象的 Mark Word 头，之后发现这个线程 ID 是自己的就表示没有竞争，不用重新 CAS。以后只要不发生竞争，这个对象就归该线程所有</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/d930bb7ad0d897e72b69faa5bb15fa1f387b728a/synchronized%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86%5B%E9%87%8D%E9%87%8F%E7%BA%A7%E9%94%81%5D%E2%80%94%E8%BF%9B%E9%98%B6%E7%AF%87.png"></p>
+<h4 id="你谈谈JMM-Java内存模型"><a href="#你谈谈JMM-Java内存模型" class="headerlink" title="你谈谈JMM (Java内存模型)"></a><span style = "color:red"><strong>你谈谈JMM (Java内存模型)</strong></span></h4><h6 id="Java内存模型"><a href="#Java内存模型" class="headerlink" title="Java内存模型"></a>Java内存模型</h6><ul>
+<li>JMM(Java Memory Model)Java内存模型，定义了<strong>共享内存</strong>中<strong>多线程程序读写操作</strong>的行为规范，通过这些规则来规范对内存的读写操作从而保证指令的正确性</li>
+<li>JMM把内存分为两块，一块是私有线程的工作区域(工作内存)，一块是所有线程的共享区域(主内存)</li>
+<li>线程跟线程之间是相互隔离，线程跟线程相互需要通过主内存</li>
+</ul>
+<p><span style = "color:red"><strong>CAS你知道吗？</strong></span></p>
+<blockquote>
+<ul>
+<li>CAS全称是：Compare And Swap(比较再交换)，它体现的一种乐观锁的思想，在无锁情况下保证线程操作共享数据的原子性。</li>
+<li>CAS使用到的地方很多：AQS框架、AtomicXXX类</li>
+<li>在操作共享变量的时候使用自旋锁，效率上更高一些</li>
+<li>CAS的底层是调用的Unsafe类中的方法，都是操作系统提供的，其他语言实现</li>
+</ul>
+</blockquote>
+<p>在JUC(java.util.concurrent)包下实现的很多类都用到了CAS操作</p>
+<ul>
+<li>AbstractQueuedSynchronizer (AQS框架)</li>
+<li>AtomicXXX类</li>
+</ul>
+<p><span style = "color:red"><strong>乐观锁和悲观锁的区别？</strong></span></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ed89cde4cab6a88d6f2a86f3430be2b28a5e3626/JMM%20(Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)+CAS.png"></p>
+<p><span style = "color:red"><strong>谈一谈你对volatile的理解？</strong></span></p>
+<p>一旦一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，那么就具备了两层语义：</p>
+<ul>
+<li><h5 id="保证线程间的可见性"><a href="#保证线程间的可见性" class="headerlink" title="保证线程间的可见性"></a>保证线程间的可见性</h5><p>用volatile修饰共享变量，能够防止编译器等优化发生，让一个线程对共享变量的修改对另一个线程可见</p>
+</li>
+<li><h5 id="禁止进行指令重排序"><a href="#禁止进行指令重排序" class="headerlink" title="禁止进行指令重排序"></a>禁止进行指令重排序</h5><p>用volatile修饰共享变量会在读、写共享变量时加入不同的屏障，阻止其他读写操作越过屏障，从而达到阻止重排序的效果</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2ce52eb544e19cacdc7c7d22cb6fa3135b27e6a3/volatile%E6%B7%B1%E5%B1%82%E6%AC%A1%E7%90%86%E8%A7%A3[%E7%BA%BF%E7%A8%8B%E9%97%B4%E5%8F%AF%E8%A7%81+%E7%A6%81%E6%AD%A2%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E5%BA%8F].png"></p>
+<p><span style = "color:red"><strong>什么是AQS？</strong></span></p>
+<blockquote>
+<ul>
+<li>是多线程中的队列同步器。是一种锁机制，它是做为一个<strong>基础框架</strong>使用的，像ReentrantLock、Semaphore都是基于AQS实现的</li>
+<li>AQS内部维护了一个**<u>先进先出的双向队列</u>**，队列中存储的排队的线程</li>
+<li>在AQS内部还有一个属性state，这个state就相当于是一个资源，默认是0(无所状态)，如果队列中有一个线程修改成功了state为1，则当前线程就相当于获取了资源。</li>
+<li>在对state修改的时候使用CAS(compare and swap)操作，保证多个线程修改的情况下原子性</li>
+</ul>
+</blockquote>
+<p>AQS(<strong>A</strong>bstract<strong>Q</strong>ueued<strong>S</strong>ynchronizer)，即抽象队列同步器。它是构建锁或者其他同步组件的<strong>基础框架</strong></p>
+<h6 id="AQS与Synchronized的区别"><a href="#AQS与Synchronized的区别" class="headerlink" title="AQS与Synchronized的区别"></a>AQS与Synchronized的区别</h6><table>
+<thead>
+<tr>
+<th align="center">synchronized</th>
+<th align="center">AQS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">关键字，C++语言实现</td>
+<td align="center">java语言实现</td>
+</tr>
+<tr>
+<td align="center">悲观锁，自动释放锁</td>
+<td align="center">悲观锁，手动开启和关闭</td>
+</tr>
+<tr>
+<td align="center">锁竞争激励都会升级为<strong>重量级锁</strong>，性能差</td>
+<td align="center">锁竞争激烈的情况下，提供了多种解决方案</td>
+</tr>
+</tbody></table>
+<h6 id="AQS常见的实现类"><a href="#AQS常见的实现类" class="headerlink" title="AQS常见的实现类"></a>AQS常见的实现类</h6><ul>
+<li><strong>ReentrantLock 阻塞式锁</strong></li>
+<li>Semaphore 信号量</li>
+<li>CountDownLatch 倒计时锁</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2dd56a7110e36eebc67c093ce454bd7052a1ad30/%E4%BB%80%E4%B9%88%E6%98%AFAQS.png"></p>
+<p><span style = "color:red"><strong>ReentrantLock [rɪ’entrənt]lock 的实现原理？</strong></span><del>[关联HashMap线程不安全需加锁(synchronized或ReentrantLock)]</del></p>
+<blockquote>
+<p>ReentrantLock主要利用<strong>CAS+AQS队列</strong><del>CompareAndSwap+AbstractQueuedSynchronized</del>来实现。**<u>它支持公平锁和非公平锁</u><strong>，两者的实现类似构造方法接受一个可选的公平参数(<strong>默认非公平锁</strong>)，</strong><u>当设置为true时，表示公平锁，否则为非公平锁</u>**。公平锁的效率往往没有非公平锁的效率高，在许多线程访问的情况下，公平锁表现出较低的吞吐量。</p>
+</blockquote>
+<p>ReentrantLock翻译过来是可重入锁，相对于synchronized它具备以下特点：</p>
+<ul>
+<li>可中断<del>synchronized不可中断</del></li>
+<li>可设置超时时间<del>没有获得锁时只能进入等待</del>[<u>没有获取锁可以放弃锁</u>]</li>
+<li>可以设置公平锁<del>synchronized只有非公平锁</del>[也支持非公平锁]</li>
+<li>支持多个条件变量</li>
+<li>与synchronized一样，都支持重入</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9279a890a6163298e551a9f594f3c0b921a438ad/ReentrantLock%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png"></p>
+<p><span style = "color:red"><strong>synchronized和Lock有什么区别？</strong></span></p>
+<ul>
+<li><strong>语法层面</strong></li>
+</ul>
+<p>synchronized是关键字，源码在jvm中，用c++语言实现<br>Lock是接口，源码由jdk提供，用java语言实现<br>使用synchronized时，退出同步代码块锁会自动释放，而使用Lock时，需要手动调用unlock方法释放锁</p>
+<ul>
+<li><strong>功能层面</strong></li>
+</ul>
+<p>二者均属于悲观锁、都具备基本的互斥、同步、锁重入功能<br>Lock提供了许多synchronized不具备的功能，例如<strong>公平锁、可打断、可超时、多条件变量</strong><br>Lock有适合不同场景的实现，如ReentrantLock、ReentrantReadWeiteLock(读写锁)</p>
+<hr>
+<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1.概述"></a>1.概述</h2><p>ThreadLocal是Java中的一个线程局部变量工具类，它提供了一种在多线程环境下，每个线程都可以独立访问自己的变量副本的机制。ThreadLocal中存储的数据对于每个线程来说都是独立的，互不干扰。</p>
+<h2 id="2-使用场景"><a href="#2-使用场景" class="headerlink" title="2. 使用场景"></a>2. 使用场景</h2><p>ThreadLocal适用于以下场景：</p>
+<ul>
+<li>在多线程环境下，需要保持线程安全性的数据访问。</li>
+<li>需要在多个方法之间共享数据，但又不希望使用传递参数的方式。<ul>
+<li>在传递登录用户id是非常方便且适用</li>
+</ul>
+</li>
+</ul>
+<p>以后获取用户id不用再解析token了，线程拿仅仅拿当前线程的数据 每个登录的用户都有自己的threadlocal数据</p>
+<p><strong>ThreadLocal</strong>并不是一个Thread，<strong>而是Thread的局部变量</strong>【可以存储数据】<br>ThreadLocal<strong>为每个线程提供单独一份存储空间</strong>，具有线程隔离的效果，只有在线程内才能获取到对应的值，线程外则不能访问。**<u>ThreadLocal实现一个线程内传递数据</u>**[就不用一个个参数往后传递了]<br>注意：客户端发送的每次请求，后端的tomcat服务器都会分配一个单独的线程来处理请求</p>
+<ul>
+<li><strong><u>一个请求是一个线程</u></strong>[意义：在第一个线程里面使用ThreadLocal存储用户Id 在后面controller或service中就可以取出来用户id]</li>
+<li>第二个请求就是另一个线程 线程池用完第一个放回线程池 也有可能把上一个线程接着给它用</li>
+</ul>
+<h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h2><h3 id="3-1-创建ThreadLocal对象"><a href="#3-1-创建ThreadLocal对象" class="headerlink" title="3.1 创建ThreadLocal对象"></a>3.1 创建ThreadLocal对象</h3><p>首先，我们需要创建一个ThreadLocal对象来存储线程局部变量。可以使用ThreadLocal的默认构造函数创建一个新的实例。【给每个线程拷贝一份 synchn + Lock锁】</p>
+<pre><code class="Java">ThreadLocal&lt;String&gt; threadLocal = new ThreadLocal&lt;&gt;();
+</code></pre>
+<h3 id="3-2-设置线程局部变量的值"><a href="#3-2-设置线程局部变量的值" class="headerlink" title="3.2 设置线程局部变量的值"></a>3.2 设置线程局部变量的值</h3><p>使用<code>set()</code>方法可以设置当前线程的局部变量的值。</p>
+<pre><code class="Java">threadLocal.set(&quot;value&quot;);
+</code></pre>
+<h3 id="3-3-获取线程局部变量的值"><a href="#3-3-获取线程局部变量的值" class="headerlink" title="3.3 获取线程局部变量的值"></a>3.3 获取线程局部变量的值</h3><p>使用<code>get()</code>方法可以获取当前线程的局部变量的值。</p>
+<pre><code class="Java">String value = threadLocal.get();
+</code></pre>
+<h3 id="3-4-清除线程局部变量的值"><a href="#3-4-清除线程局部变量的值" class="headerlink" title="3.4 清除线程局部变量的值"></a>3.4 清除线程局部变量的值</h3><p>使用<code>remove()</code>方法可以清除当前线程的局部变量的值，建议在整个请求使用完一定要执行remove清除数据，不然可能会发生内存泄漏问题。</p>
+<pre><code class="Java">threadLocal.remove();
+</code></pre>
+<h6 id="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"><a href="#下面是一个简单的示例代码，演示了如何使用ThreadLocal。" class="headerlink" title="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"></a>下面是一个简单的示例代码，演示了如何使用ThreadLocal。</h6><pre><code class="Java">public class ThreadLocalTest &#123;
+
+    private static final ThreadLocal THREAD_LOCAL = new ThreadLocal();
+
+    public static void main(String[] args) &#123;
+
+        Thread t1 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itheima&quot;);
+            getData(&quot;t1&quot;);
+        &#125;, &quot;t1&quot;);
+
+        Thread t2 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itcast&quot;);
+            getData(&quot;t2&quot;);
+        &#125;, &quot;t1&quot;);
+
+        t1.start();
+        t2.start();
+
+    &#125;
+
+    private static void getData(String threadName)&#123;
+        Object data = THREAD_LOCAL.get();
+        System.out.println(threadName+&quot;-&quot;+data);
+    &#125;
+&#125;
+</code></pre>
+<p>运行以上代码，输出结果为：</p>
+<pre><code class="Plain">t1-itheima
+t2-itcast
+</code></pre>
+<p>在任意位置都可以调用Threadlocal，线程隔离互不影响，解决了线程安全问题：[每个线程存一份 线程不共享]</p>
+<p>用mybatis+建造者模式 一定要在类里面加 一定要具有有参和无参构造缺一不可 否则mybatis数据封装无法映射<br>@AllArgsConstructor<br>@NoArgsConstructor<br>@Builder</p>
 
             
         </div>
@@ -19755,7 +20157,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>

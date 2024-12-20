@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2291,6 +2291,101 @@ spring:
 <li>我也是刚刚开始找工作…</li>
 </ul>
 <h4 id="你可以接受加班吗"><a href="#你可以接受加班吗" class="headerlink" title="你可以接受加班吗"></a>你可以接受加班吗</h4><p>(必须完全接受全部加班 先拿到offer再说)</p>
+<h4 id="Controller和RestController的区别"><a href="#Controller和RestController的区别" class="headerlink" title="Controller和RestController的区别"></a>Controller和RestController的区别</h4><p>@RestController &#x3D; @Controller + @ResponseBody</p>
+<p>@Controller如果要返回JSON&#x2F;XML等格式的数据给客户端，必须显式的使用@ResponseBody注解将返回的对象转换为HTTP响应体内容。<br>@RestController 专门为构建RESTful Web服务设计的控制器。它简化了创建API的过程，因为所有方法默认都会将返回值直接写入HTTP响应体中作为JSON或XML格式的数据。</p>
+<p>@Controller可以声明一个类为一个bean 控制器用<br>@ResponseBody 具体方法和类都可以 不是包装类和字符 都可以自动转成json数据格式 更符合restful风格</p>
+<h4 id="在yaml文件中定义了一些参数，该怎么调用"><a href="#在yaml文件中定义了一些参数，该怎么调用" class="headerlink" title="在yaml文件中定义了一些参数，该怎么调用"></a><strong>在yaml文件中定义了一些参数，该怎么调用</strong></h4><ul>
+<li>使用 @Value 注解，这是最直接的方式，适用于简单的属性注入。是bean的注解 <strong>用${key}还可以用#</strong><ul>
+<li><code>$&#123;&#125;</code>：用于注入外部配置文件的值。它告诉Spring需要从环境变量、属性文件、系统属性等地方查找相应的值。</li>
+<li><code>#&#123;&#125;</code>：用于执行SpEL（Spring Expression Language，Spring表达式语言）表达式。它允许你在注入值时执行一些简单的计算或逻辑。</li>
+<li>如果在多个类里引用 配置多 杂乱  可以写个配置类写一堆的属性 提供get set方法 配置类.get获取到配置</li>
+</ul>
+</li>
+<li>使用 @ConfigurationProperties 注解，通常会指定一个<strong>前缀</strong>（<strong>prefix</strong>），这个前缀用于指定配置文件中哪些属性应该被绑定到这个 Bean 上。<br><code>@ConfigurationProperties(prefix = &quot;prefix&quot;)</code></li>
+</ul>
+<h4 id="IOC和DI有了解过吗，它们的好处是什么"><a href="#IOC和DI有了解过吗，它们的好处是什么" class="headerlink" title="IOC和DI有了解过吗，它们的好处是什么"></a>IOC和DI有了解过吗，它们的好处是什么</h4><p><span style = "color:red">它们的目的是为了<strong>解耦</strong></span><br>IOC(控制反转)是Spring的两大核心之一，DI(依赖注入)<br>IOC把控制权交给spring容器<br>对象创建好之后 之间会有依赖关系 DI因此而生<br>实现方式：DI通常有四种实现方式</p>
+<ul>
+<li><p><strong>属性注入</strong> <del>注解注入</del></p>
+<ul>
+<li><code>@Autowired</code> 是 Spring 提供的注解，用于自动装配 Bean。它可以用于字段、构造函数、方法或设置器上。当 Spring 容器启动时，它会自动查找并注入匹配的 Bean。<ul>
+<li>偶尔有不影响程序运行的报错？写spring技术人员是根据jdk写，怕别人不用。</li>
+</ul>
+</li>
+<li><code>@Resource</code> 是 Java 的注解[JDK的]，用于依赖注入，它也可以用于字段、方法或设置器上。与 <code>@Autowired</code> 不同的是，<code>@Resource</code> 默认通过名称进行匹配，如果未指定名称，则尝试通过类型进行匹配。</li>
+<li>两者区别<ul>
+<li>@Autowired 先根据<strong>属性类型</strong> 去容器里面找 如果找不到 再根据**属性名称[字段]**去找 如果实在找不到就会报错 [@Autowired永远不会放弃你的 尽其所能去帮你找]</li>
+<li>@Resource 先根据属性名称去找 要么找不到 要么找到一个 找到就去注入 如果找不到 可以再根据属性类型去找 [类型找不到 或者 找到多个 也会报错]</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>构造函数注入</strong> [默认生成空参构造方法 若写有参构造原来无参会被覆盖 参数根据类型去找和@Autowired类型一样 可以写多个构造方法 如果去多个构造方法重载会报错 怎么办？加个<code>@Autowired[属性,构造方法,参数]都可加</code> 不可多个方法都加@Autowired  反射会触发构造方法 @Bean &#x3D;&gt; new ] </p>
+</li>
+<li><p>Set方法注入[原生spring 用xml去定义才有 SpringBoot没有这个注入 ]</p>
+</li>
+<li><p><strong>普通方法注入</strong></p>
+</li>
+</ul>
+<h4 id="测试过程有没有出现反复的困扰"><a href="#测试过程有没有出现反复的困扰" class="headerlink" title="测试过程有没有出现反复的困扰?"></a>测试过程有没有出现反复的困扰?</h4><p>客户<strong>需求频繁更改</strong><br>测试用例没有覆盖到<br>开发和测试环境未协调</p>
+<p>太复杂的改动要先报备技术经理、项目经理</p>
+<p>测试：自测 单元测试 专业人员</p>
+<h4 id="公司使用哪些技术？"><a href="#公司使用哪些技术？" class="headerlink" title="公司使用哪些技术？"></a>公司使用哪些技术？</h4><p>后端：Redis RabbitMQ 搜索引擎 微服务常用组件 远程调用 统一网关 Springboot Springcloud MybatisPlus</p>
+<h4 id="项目有多少个成员？"><a href="#项目有多少个成员？" class="headerlink" title="项目有多少个成员？"></a>项目有多少个成员？</h4><p>2前 8后 1测 1运维 1项目经理(小公司约13人左右) 要具体人数<br>自研公司？外包？</p>
+<p><strong>自研公司</strong>：</p>
+<ul>
+<li>创业型自研公司：通常员工人数在10-50人之间，初期可能更少，只有几人到十几人。</li>
+<li>成熟自研公司：员工人数可能从几十人到几百人甚至更多。</li>
+</ul>
+<p><strong>外包公司</strong>：</p>
+<ul>
+<li>小型外包公司：员工人数可能在10-50人之间。</li>
+<li>中型外包公司：员工人数可能在50-200人之间。</li>
+<li>大型外包公司：员工人数可能超过200人。</li>
+</ul>
+<h4 id="HashMap底层原理"><a href="#HashMap底层原理" class="headerlink" title="HashMap底层原理"></a>HashMap底层原理</h4><h5 id="底层数据结构"><a href="#底层数据结构" class="headerlink" title="底层数据结构"></a>底层数据结构</h5><p>jdk1.8之前底层结构是<strong>数组+链表</strong>(key+value)  数据结构通用的[键值对+哈希表的数据结构]<br>jdk1.8以后在解决哈希冲突时有了较大的变化，当链表长度大于阈值（默认为8）时且数组长度大于64时，将链表转化为红黑树，以减少搜索时间。扩容 时，红黑树拆分成的树的结点数小于等于临界值6个，则退化成链表。后期使用map获取值时，直接找到hash值对应的下标，在进一步判断key是否相同，从而找到对应值。<br>底层的地址运算出来 如果地址不一样计算出来的hashcode不一样，hashcode一般是数字[整数(±或0)] 通过key进行hashcode运算 对数组长度取模 eg：任何整数去取模10   可以定位到value可以放在哪个桶下面</p>
+<p>hashcode本身不同的对象算出来的hashcde值是相同的怎么办呢？<br>两个value不可能放在同一个桶 这就是hash冲突  如果数组长度是8 算出来一个hashcode值是8 和 16 此时取模余数相同这样的情况也是相同。所以此时应该用<strong>拉链法</strong>[小葡萄串]，即使桶一样 可以用指针一个个指，此时的链表是单项链表[linkedlist才是双向链表]。拉链法的解决哈希冲突。<br>在1.8后指出如果同一个桶的葡萄串太多了，此时要拿出数据，时间复杂度就是O(n)，如果没有很多就是O(1)数组的长度。红黑树的引入是解决链表过长的问题。<br>红黑树是树形的高级数据结构 时间复杂度O(logn)<br>二叉树在某些情况下会退化成链表 右子树永远比根节点大<br>红黑树会旋转自平衡[局部旋转达到平衡] 超过多少层会旋转 不至于退化成链表。</p>
+<h5 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h5><p>new的初始化 数组为空<br>当第一次put的时候才不会为空 为16<br>扩容因子为什么是0.75？hashmap不仅仅java 其他语言也有这种数据结构 但扩容因子可能不同，是通过大量的数学概率统计出的最好最平衡的值。达到12的时候会扩容成2倍<br>new一个hashmap可以指定数组长度为7 此时数组长度是8【hashmap的长度永远是2的幂次方 比你传入的长度永远大 且 是2的幂次方】 为什么2的幂次方？因为1.7要数组取模 怎么打这个符号 shift+5 &#x3D;&gt; %，1.8之后用了位运算，&gt;&gt;2 &lt;&lt;2 让你的取模运算更快。如果出现hash冲突会拉链 当它的<strong>数组长度</strong>大于64 并且 <strong>链表长度</strong>大于8时，当链表长度小于等于6临界值会变回来【为什么是6？避免频繁切换(离8太近) 链表 ←→ 红黑树[消耗性能]】</p>
+<p>链表1.7之前是头插法 会产生一条首尾相接的死循环【并发情况<del>[但是hashmap线程不安全不会用在并发，要用ConcurrentHashMap]</del>一起put 且 同一个桶】<br>1.8之后是尾插法，并发情况下不会出现cpu飙高，</p>
+<h5 id="HashSet底层数据结构"><a href="#HashSet底层数据结构" class="headerlink" title="HashSet底层数据结构"></a>HashSet底层数据结构</h5><p>底层是包装了一个hashmap，无序 key不允许重复  value可重复<br>HashSet单列无序不重复的 key就是那个元素 value就是new了一个无意义的object对象</p>
+<p>ArrayList和LinkedList不是线程安全的 用什么？</p>
+<ul>
+<li>Vector 读写都加锁。</li>
+<li>CopyOnWriteArrayList读不加锁 写加锁</li>
+</ul>
+<p>ConcurrentHashMap能存null吗？不允许使用 <code>null</code> 作为键，但是允许使用 <code>null</code> 作为值。<br>HashMap：null默认放在第一个桶下面 下标写死为0</p>
+<h6 id="Hashcode相同equals一定相同吗？"><a href="#Hashcode相同equals一定相同吗？" class="headerlink" title="Hashcode相同equals一定相同吗？"></a>Hashcode相同equals一定相同吗？</h6><p><code>hashCode()</code> 相同不一定意味着 <code>equals()</code> 相同，但 <code>equals()</code> 相同则 <code>hashCode()</code> 必须相同。</p>
+<ul>
+<li><code>equals()</code> 方法用于判断两个对象是否逻辑上相等。</li>
+<li><code>hashCode()</code> 方法用于返回对象的哈希码，这个哈希码通常用于哈希表的快速查找。</li>
+</ul>
+<p>key可以放复合对象，要注意要重写 hashcode()和equals() 如果不重写 new了的两个对象有可能会相同<br><code>&quot;重地&quot;</code> 和 <code>&quot;通话&quot;</code> 。计算hashcode会比equals更快，一个对象new出来后hashcode已经计算出来了。equals要比较每个对象值，所以先判断hashcode 再判断equals   重写：@Override 用属性里面的hashcode，user里面包含了复杂对象order 此时order也要重写。包装类已经重写了hashcode，要整个对象返回true才为正确的，要层层递进去判断。hashmap重写复杂对象就一定要重写那俩个 ∵ 是比较对象里的属性值<br>list 有序可重复单列<br>map 双列key不能重复value可重复  treemap是有序的<br>set 单列不重复无序 hashset 无序 treeset 有序 </p>
+<p>&#x3D;&#x3D; 值 + 地址值<br>equals 是对象属性值是否一 一相等</p>
+<h4 id="HashMap是线程安全的吗"><a href="#HashMap是线程安全的吗" class="headerlink" title="HashMap是线程安全的吗"></a>HashMap是线程安全的吗</h4><p>不安全的，可以使用ConcurrentHashMap、Collections.synchronizedMap()、<strong>HashTable</strong><br><strong>线程安全</strong>：多线程对同一个数据进行增删改是否受到影响<br>怎么办？</p>
+<ul>
+<li><p><strong>加锁</strong></p>
+<ul>
+<li>synchronized</li>
+<li>ReentrantLock</li>
+</ul>
+<p>加锁为什么能解决线程安全问题？线程访问资源的先后顺序<br>多线程访问同一个数据 &#x3D;&gt; 多个线程访问同一个数据<br><strong>秒杀</strong> &#x3D;&gt;[思想] 1w个人买 对 100个库存进行扣减，只搞100个线程 把100个库存分成10份 其中每份有10个</p>
+<pre><code class="java">初始化库存： 创建一个共享的库存计数器，初始值为100。
+创建线程： 创建100个线程，每个线程在启动时分配到一个特定的库存分片。
+扣减库存： 每个线程尝试扣减其分配到的库存分片中的一个商品。扣减操作必须是原子的，以确保线程安全。
+同步机制： 使用适当的同步机制（如synchronized关键字、ReentrantLock等）来保护库存扣减操作，防止并发问题。
+库存检查： 在扣减前，线程需要检查当前分片是否有剩余库存。如果没有，则线程可以终止或进行其他处理。
+</code></pre>
+<p>hashtable不管读写都会用synchronized加锁，并发一起来读都加锁 没必要，所以用了ConcurrentHashMap读不加锁 写加锁。<br>随着时间的推移，<code>Hashtable</code> 已经被认为是遗留代码，现代Java代码更倾向于使用 <code>HashMap</code>（非线程安全）或 <code>ConcurrentHashMap</code>（线程安全）。</p>
+</li>
+</ul>
+<h4 id="红黑树查询效率高的原因"><a href="#红黑树查询效率高的原因" class="headerlink" title="红黑树查询效率高的原因"></a>红黑树查询效率高的原因</h4><p>红黑树是一种自平衡的二叉搜索树，它通过特定的规则来保持树的平衡，这些规则确保了树的高度大约是log(n)<br>自平衡 局部旋转 </p>
+<p>hashMap时间复杂度</p>
+<ul>
+<li>O(1)：不涉及到拉链</li>
+<li>O(n)：拉链不是树</li>
+<li>O(logn)：桶为红黑树</li>
+</ul>
+<h4 id="这个测试是你做的吗，还是你们团队去做的？"><a href="#这个测试是你做的吗，还是你们团队去做的？" class="headerlink" title="这个测试是你做的吗，还是你们团队去做的？"></a>这个测试是你做的吗，还是你们团队去做的？</h4><p>像自测的话是我自己去做的(测试用例、apifox)，然后交给专业测试人员</p>
+<h4 id="团队是怎么协作的？"><a href="#团队是怎么协作的？" class="headerlink" title="团队是怎么协作的？"></a>团队是怎么协作的？</h4><p>像我们团队的话，有使用禅道来做我们的文档管理，需求管理和需求的变更控制，和工作的一个统计报表，大部分的协作任务都可以在禅道上完成，代码这一块我们是使用git来做一个代码管理和协作的。</p>
 
     </div>
 

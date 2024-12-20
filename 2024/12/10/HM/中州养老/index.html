@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/HM" style=color:#879cff>
+                <a href="/tags/HM" style=color:#1bccbc>
                     HM
                 </a>
             </span>
@@ -146,7 +146,7 @@
 </ul>
 <p>vo：接收有前端界面那一层的数据【放在web】<br>dto：微服务出分布式架构后才会用dto【订单 → 用户】[后端自己调自己] [中州养老不该有dto]<br>pojo：持久化对象实体类 跟数据表一一对应<br>entity &#x3D; vo + dto + pojo</p>
 <p>@RestController &#x3D; @ResponseBody(只要不是String 对象转成json) + @Controller<br>@Component<br>@RequestMapping 控制请求url</p>
-<h4 id="项目展示"><a href="#项目展示" class="headerlink" title="项目展示"></a>项目展示</h4><p>项目展示地址：<a target="_blank" rel="noopener" href="https://zhyl-admin.itheima.net/">https://zhyl-admin.itheima.net/</a><br>默认账号：<a href="mailto:&#x61;&#x64;&#109;&#x69;&#110;&#x40;&#113;&#113;&#x2e;&#99;&#x6f;&#109;">&#x61;&#x64;&#109;&#x69;&#110;&#x40;&#113;&#113;&#x2e;&#99;&#x6f;&#109;</a><br>密码：132itheima.CN032@.20241128</p>
+<h4 id="项目展示"><a href="#项目展示" class="headerlink" title="项目展示"></a>项目展示</h4><p>项目展示地址：<a target="_blank" rel="noopener" href="https://zhyl-admin.itheima.net/">https://zhyl-admin.itheima.net/</a><br>默认账号：<a href="mailto:&#97;&#x64;&#x6d;&#x69;&#x6e;&#64;&#113;&#113;&#x2e;&#99;&#x6f;&#x6d;">&#97;&#x64;&#x6d;&#x69;&#x6e;&#64;&#113;&#113;&#x2e;&#99;&#x6f;&#x6d;</a><br>密码：132itheima.CN032@.20241128</p>
 <blockquote>
 <p>密码说明：132itheima.CN032@.yyyyMMdd</p>
 </blockquote>
@@ -1336,6 +1336,257 @@ public class AutoFillInterceptor implements Interceptor &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="小程序登录校验"><a href="#小程序登录校验" class="headerlink" title="小程序登录校验"></a>小程序登录校验</h3><h4 id="接口文档"><a href="#接口文档" class="headerlink" title="接口文档"></a>接口文档</h4><p>我们在项目中对接任何的第三方接口，最重要的参考永远都是官方给提供的接口文档。所以大家一定要具备阅读接口文档的能力才能更好的对接接口使用。</p>
+<p>那接口文档该怎么阅读呢？</p>
+<p>其实跟我们定义的接口差不了太多，也必然会包含接口的四要素（请求路径、请求方式、入参、出参）</p>
+<p>我们来看一下微信官方给提供的这个接口，这个是用于微信登录的接口，链接如下：</p>
+<p><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html">https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html</a></p>
+<p>这个文档中比较关键的部分就是：</p>
+<p>http和https的区别</p>
+<ul>
+<li>http是明文传输 请求和相应  【内网可以走】</li>
+<li>https是密文传输 非对称的加解密来保证其安全</li>
+</ul>
+<h3 id="请求参数"><a href="#请求参数" class="headerlink" title="请求参数"></a>请求参数</h3><table>
+<thead>
+<tr>
+<th align="left">属性</th>
+<th align="left">类型</th>
+<th align="left">必填</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">appid</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">小程序 appId</td>
+</tr>
+<tr>
+<td align="left">secret</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">小程序 appSecret</td>
+</tr>
+<tr>
+<td align="left">js_code</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">登录时获取的 code，可通过<a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.login.html">wx.login</a>获取</td>
+</tr>
+<tr>
+<td align="left">grant_type</td>
+<td align="left">string</td>
+<td align="left">是</td>
+<td align="left">授权类型，此处只需填写 authorization_code</td>
+</tr>
+</tbody></table>
+<h3 id="返回参数"><a href="#返回参数" class="headerlink" title="返回参数"></a>返回参数</h3><table>
+<thead>
+<tr>
+<th align="left">属性</th>
+<th align="left">类型</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">session_key</td>
+<td align="left">string</td>
+<td align="left">会话密钥</td>
+</tr>
+<tr>
+<td align="left"><strong><span style = "color:red">unionid</span></strong></td>
+<td align="left">string</td>
+<td align="left">用户在开放平台的唯一标识符，若当前小程序已绑定到微信开放平台账号下会返回，详见 <a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/union-id.html">UnionID 机制说明</a>。</td>
+</tr>
+<tr>
+<td align="left">errmsg</td>
+<td align="left">string</td>
+<td align="left">错误信息</td>
+</tr>
+<tr>
+<td align="left"><strong>openid</strong></td>
+<td align="left">string</td>
+<td align="left">用户唯一标识</td>
+</tr>
+<tr>
+<td align="left">errcode</td>
+<td align="left">int32</td>
+<td align="left">错误码</td>
+</tr>
+</tbody></table>
+<p>一般用openid 什么时候用unionid？没有过期 只要分配就定档<br>小程序集成小程序可以用unionid 都是同一个微信小程序的 </p>
+<h2 id="调用示例"><a href="#调用示例" class="headerlink" title="调用示例"></a>调用示例</h2><blockquote>
+<p>示例说明: HTTPS请求</p>
+</blockquote>
+<h3 id="请求数据示例"><a href="#请求数据示例" class="headerlink" title="请求数据示例"></a>请求数据示例</h3><pre><code class="json">GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&amp;secret=SECRET&amp;js_code=JSCODE&amp;grant_type=authorization_code 
+</code></pre>
+<h3 id="返回数据示例"><a href="#返回数据示例" class="headerlink" title="返回数据示例"></a>返回数据示例</h3><pre><code class="json">&#123;
+&quot;openid&quot;:&quot;xxxxxx&quot;,
+&quot;session_key&quot;:&quot;xxxxx&quot;,
+&quot;unionid&quot;:&quot;xxxxx&quot;,
+&quot;errcode&quot;:0,
+&quot;errmsg&quot;:&quot;xxxxx&quot;
+&#125;
+ 
+</code></pre>
+<h3 id="错误码"><a href="#错误码" class="headerlink" title="错误码"></a>错误码</h3><table>
+<thead>
+<tr>
+<th align="left">错误码</th>
+<th align="left">错误码取值</th>
+<th align="left">解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">40029</td>
+<td align="left">code 无效</td>
+<td align="left">js_code无效</td>
+</tr>
+<tr>
+<td align="left">45011</td>
+<td align="left">api minute-quota reach limit mustslower retry next minute</td>
+<td align="left">API 调用太频繁，请稍候再试</td>
+</tr>
+<tr>
+<td align="left">40226</td>
+<td align="left">code blocked</td>
+<td align="left">高风险等级用户，小程序登录拦截 。风险等级详见<a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/framework/operation.html">用户安全解方案</a></td>
+</tr>
+<tr>
+<td align="left">-1</td>
+<td align="left">system error</td>
+<td align="left">系统繁忙，此时请开发者稍候再试</td>
+</tr>
+</tbody></table>
+<pre><code class="java">HTTP客户端工具有很多
+- HttpClient    体量庞大，jdk11以上支持不好
+- OkHttp        学习成本较高
+- Spring提供的RestTemplate    后期课程feign会重点讲解
+- Hutool工具包，使用说明地址：https://doc.hutool.cn/pages/http/
+</code></pre>
+<h3 id="Hutool工具常见方法"><a href="#Hutool工具常见方法" class="headerlink" title="Hutool工具常见方法"></a>Hutool工具常见方法</h3><p>我们可以参考Hutool工具的官方文档，来快速感受一下这个工具类：<a target="_blank" rel="noopener" href="https://doc.hutool.cn/pages/http/">https://doc.hutool.cn/pages/http/</a></p>
+<ul>
+<li>准备：在zzyl-web模块中添加测试启动器依赖</li>
+</ul>
+<pre><code class="XML">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">HttpUtilTest.java
+package com.zzyl.test;
+
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
+import cn.hutool.json.JSONUtil;
+import com.aliyun.oss.HttpMethod;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class HttpUtilTest &#123;
+    @Test
+    public void testGet()&#123;
+        String result = HttpUtil.get(&quot;https://www.baidu.com&quot;);
+        System.out.println(&quot;result = &quot; + result);
+    &#125;
+//    @Test
+//    public void testPost&#123;
+//        // 护理项目分页查询
+//        HttpUtil.post(&quot;http://localhost:9995/nursiong_project&quot;)
+//    &#125;
+    @Test
+    public void testPost2()&#123;
+        // 护理项目分页查询  此方法更加灵活 带参数  智能的将map拼接到url后面
+        // NursingProjectController.java
+        Map&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;pageNum&quot;,1);
+        paramMap.put(&quot;pageSize&quot;,10);// result带着响应体
+        String result = HttpUtil.get(&quot;http://localhost:9995/nursing_project&quot;, paramMap);
+        System.out.println(&quot;result = &quot; + result);
+    &#125;
+
+    // 放请求头 带参数的get请求
+    @Test
+    public void testCreateGetRequest()&#123;
+        Map&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;pageNum&quot;,1);
+        paramMap.put(&quot;pageSize&quot;,10);// execute可以获取更详细的相应信息
+        HttpResponse response = HttpUtil.createRequest(Method.GET, &quot;http://localhost:9995/nursing_project&quot;)
+                .form(paramMap)
+                .execute();
+        if (response.getStatus() == 200) &#123;
+            System.out.println(response.body());
+        &#125;
+    &#125;
+
+    @Test
+    public void testPost()&#123; // 测试护理项目新增 里面要放很多东西 名称排序单位...
+        String url = &quot;http://localhost:9995/nursing_project&quot;;
+        HashMap&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;name&quot;, &quot;护理项目测试&quot;);
+        paramMap.put(&quot;orderNo&quot;, 1);
+        paramMap.put(&quot;unit&quot;, &quot;次&quot;);
+        paramMap.put(&quot;price&quot;, 10.00);
+        paramMap.put(&quot;image&quot;, &quot;https://yjy-slwl-oss.oss-cn-hangzhou.aliyuncs.com/ae7cf766-fb7b-49ff-a73c-c86c25f280e1.png&quot;);
+        paramMap.put(&quot;nursingRequirement&quot;, &quot;无特殊要求&quot;);
+        paramMap.put(&quot;status&quot;, 1); // 转成json字符串 因为controller需要返回的json类
+        String result = HttpUtil.post(url, JSONUtil.toJsonStr(paramMap));
+        System.out.println(result);
+    &#125;
+
+    @Test
+    public void testPost3() &#123;
+        String url = &quot;http://localhost:9995/nursing_project&quot;;
+        HashMap&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        paramMap.put(&quot;name&quot;, &quot;护理项目测试666&quot;);
+        paramMap.put(&quot;orderNo&quot;, 1);
+        paramMap.put(&quot;unit&quot;, &quot;次&quot;);
+        paramMap.put(&quot;price&quot;, 10.00);
+        paramMap.put(&quot;image&quot;, &quot;https://yjy-slwl-oss.oss-cn-hangzhou.aliyuncs.com/ae7cf766-fb7b-49ff-a73c-c86c25f280e1.png&quot;);
+        paramMap.put(&quot;nursingRequirement&quot;, &quot;无特殊要求&quot;);
+        paramMap.put(&quot;status&quot;, 1); // 转成json字符串 因为controller需要返回的json类
+        HttpResponse response = HttpUtil.createRequest(Method.POST, url)
+                .body(JSONUtil.toJsonStr(paramMap))
+                .execute();
+        if (response.getStatus()==200) &#123;
+            System.out.println(response.body());
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>主要用于测试向指定 URL 发送 POST 请求的功能。</p>
+<p><strong>具体来说</strong>：<br>功能：此方法通过发送一个包含护理项目详细信息的 POST 请求来测试后端接口是否能够正确接收并处理这些数据。</p>
+<p><strong>应用场景</strong>：<br>开发阶段：在开发新的护理项目管理功能时，可以通过这个测试方法验证后端接口的正确性和稳定性。<br>回归测试：在对系统进行修改或升级后，运行这个测试方法可以确保原有的护理项目创建功能没有被破坏。<br>持续集成：将这个测试方法集成到持续集成流程中，可以在每次代码提交后自动运行，确保代码质量。</p>
+<p><strong>使用时机</strong><br>开发新功能：当你新增或修改护理项目相关的接口时，可以使用这个测试方法来验证接口的正确性。<br>修复 Bug：如果你发现护理项目创建功能有问题，可以运行这个测试方法来复现问题并进行调试。<br>系统维护：定期运行这个测试方法，确保系统的稳定性和可靠性。<br>希望这能帮助你更好地理解这段代码的作用和应用场景。</p>
+<p>以上两个方法调用相对简单，如果请求参数中没有额外的条件设置，就可以使用上述的两个方法，但是，有的时候三方接口调用需要使用到header或者是文件上传，则不能使用上述两个方法</p>
+<p>我们可以使用<code>HttpUtil.</code>*<code>createRequest</code>*方法来去构建更多的条件参数</p>
+<pre><code class="java">使用 HttpUtil.createRequest(Method.POST, url).body(JSONUtil.toJsonStr(paramMap)).execute(); 而不是 HttpUtil.post(url, JSONUtil.toJsonStr(paramMap)); 有以下几点优点和好处：
+灵活性更高：
+createRequest 方法提供了更多的配置选项，例如设置请求头、超时时间、重试机制等。这对于复杂的请求场景非常有用。
+你可以更细粒度地控制请求的各个方面，而不仅仅是发送一个简单的 POST 请求。
+可读性和可维护性：
+使用链式调用的方式使得代码更加清晰易读，每一步操作都一目了然。
+如果未来需要添加更多的配置或处理逻辑，使用 createRequest 方式更容易扩展和维护。
+错误处理更灵活：
+createRequest 返回的是一个 HttpRequest 对象，你可以在这个对象上添加更多的错误处理逻辑，例如捕获异常、重试请求等。
+例如，你可以使用 .timeout(5000) 设置超时时间，或者使用 .header(&quot;Content-Type&quot;, &quot;application/json&quot;) 设置请求头。
+调试更方便：
+在请求执行之前，你可以插入断点或日志输出，检查请求的各个部分是否符合预期。
+例如，你可以在 .body(JSONUtil.toJsonStr(paramMap)) 之后插入日志输出，查看请求体的内容。
+</code></pre>
+<h3 id="查询天气预报案例"><a href="#查询天气预报案例" class="headerlink" title="查询天气预报案例"></a><strong>查询天气预报案例</strong></h3><p>接口文档说明：<a target="_blank" rel="noopener" href="https://market.aliyun.com/products/57096001/cmapi013828.html?spm=5176.730005.result.10.27823524RFEJhP&amp;innerSource=search_%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5#sku=yuncode782800000">https://market.aliyun.com/products/57096001/cmapi013828.html?spm=5176.730005.result.10.27823524RFEJhP&amp;innerSource=search_%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5#sku=yuncode782800000</a></p>
+<h3 id="查询快递物流信息-练习"><a href="#查询快递物流信息-练习" class="headerlink" title="查询快递物流信息-练习"></a>查询快递物流信息-练习</h3><p>通过我们学习的三方接口对接的方式，根据快递单号查询快递详情</p>
+<ul>
+<li>接口开通地址：<a target="_blank" rel="noopener" href="https://market.aliyun.com/products/57126001/cmapi00061252.html?spm=5176.21213303.J_qCOwPWspKEuWcmp8qiZNQ.21.db122f3dXfAGSX&scm=20140722.S_market@@API%E5%B8%82%E5%9C%BA@@cmapi00061252._.ID_market@@API%E5%B8%82%E5%9C%BA@@cmapi00061252-RL_%E8%BF%90%E5%8D%95%E5%8F%B7%E6%9F%A5%E8%AF%A2-LOC_llm-OR_ser-V_3-RK_rerank-P0_2#sku=yuncode55252000013">快递查询</a></li>
+<li>找一个自己的或同学的快递单号（不限快递公司）作为条件进行查询</li>
+<li>注意：顺丰快递查询要传递手机号请求参数</li>
+<li>运行样例：</li>
+</ul>
+<p>[‌‍﻿‍﻿‬‌﻿⁠‌‌﻿﻿⁠‍‍﻿﻿‬‬‍‌‌﻿Day06-讲义 - 飞书云文档] (<a target="_blank" rel="noopener" href="https://baxsu7o100e.feishu.cn/docx/FtjAdqHkVo0F8Pxkxd6cB0m5nYd">https://baxsu7o100e.feishu.cn/docx/FtjAdqHkVo0F8Pxkxd6cB0m5nYd</a>)</p>
 
     </div>
 

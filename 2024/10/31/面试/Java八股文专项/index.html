@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#879cff>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -2757,7 +2757,7 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <p>当我们往HashMap中put元素时，利用key的hashCode重新hash计算出当前对象的元素在数组中的下标</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/27826dde4b711105a212f30f6381f8097eca69ba/HashMap%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png"></p>
 <h4 id="HashMap的put方法的具体流程"><a href="#HashMap的put方法的具体流程" class="headerlink" title="HashMap的put方法的具体流程"></a><span style = "color:red"><strong>HashMap的put方法的具体流程</strong></span></h4><blockquote>
-<p>1.判断键值对数组table是否为空或为null，否则执行resize()进行扩容 [初始化]<br>2.根据键值key计算hash值得到数组索引<br>3.判断table[i] &#x3D;&#x3D; null，条件成立，直接新建节点添加<br>4.如果table[i] &#x3D;&#x3D; null，不成立<br>4.1 判断table[i]的首个元素是否和key一样，如果相同直接覆盖value<br>4.2 判断table[i]是否为treeNode，即table[i]是否是红黑树，如果是红黑树，则直接在树中插入键值对<br>4.3 遍历table[i]，链表的尾部插入数据，然后判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，遍历过程中若发现key已经存在直接覆盖value</p>
+<p>1.判断键值对数组table是否为空或为null，否则执行resize()进行扩容 [初始化]<br>2.根据键值key计算hash值得到数组索引<br>3.判断table[i] &#x3D;&#x3D; null，条件成立，直接新建节点添加<br>4.如果table[i] &#x3D;&#x3D; null，不成立<br>4.1 判断table[i]的首个元素是否和key一样，如果相同直接覆盖value<br>4.2 判断table[i]是否为<strong>treeNode</strong>，即table[i]是否是红黑树，如果是红黑树，则直接在树中插入键值对<br>4.3 遍历table[i]，链表的尾部插入数据，然后判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，遍历过程中若发现key已经存在直接覆盖value</p>
 </blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/d2fa5788e2f2f5c7e75e724c8bef242b6661c10c/HashMap%E7%9A%84put%E6%96%B9%E6%B3%95%E7%9A%84%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B.png"></p>
 <p><span style = "color:red"><strong>讲一下HashMap的扩容机制</strong></span></p>
@@ -3125,6 +3125,155 @@ t3.start();
 <li>Java6 中引入了偏向锁来做进一步优化：只有第一次使用 CAS 将线程 ID 设置到对象的 Mark Word 头，之后发现这个线程 ID 是自己的就表示没有竞争，不用重新 CAS。以后只要不发生竞争，这个对象就归该线程所有</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/d930bb7ad0d897e72b69faa5bb15fa1f387b728a/synchronized%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86%5B%E9%87%8D%E9%87%8F%E7%BA%A7%E9%94%81%5D%E2%80%94%E8%BF%9B%E9%98%B6%E7%AF%87.png"></p>
+<h4 id="你谈谈JMM-Java内存模型"><a href="#你谈谈JMM-Java内存模型" class="headerlink" title="你谈谈JMM (Java内存模型)"></a><span style = "color:red"><strong>你谈谈JMM (Java内存模型)</strong></span></h4><h6 id="Java内存模型"><a href="#Java内存模型" class="headerlink" title="Java内存模型"></a>Java内存模型</h6><ul>
+<li>JMM(Java Memory Model)Java内存模型，定义了<strong>共享内存</strong>中<strong>多线程程序读写操作</strong>的行为规范，通过这些规则来规范对内存的读写操作从而保证指令的正确性</li>
+<li>JMM把内存分为两块，一块是私有线程的工作区域(工作内存)，一块是所有线程的共享区域(主内存)</li>
+<li>线程跟线程之间是相互隔离，线程跟线程相互需要通过主内存</li>
+</ul>
+<p><span style = "color:red"><strong>CAS你知道吗？</strong></span></p>
+<blockquote>
+<ul>
+<li>CAS全称是：Compare And Swap(比较再交换)，它体现的一种乐观锁的思想，在无锁情况下保证线程操作共享数据的原子性。</li>
+<li>CAS使用到的地方很多：AQS框架、AtomicXXX类</li>
+<li>在操作共享变量的时候使用自旋锁，效率上更高一些</li>
+<li>CAS的底层是调用的Unsafe类中的方法，都是操作系统提供的，其他语言实现</li>
+</ul>
+</blockquote>
+<p>在JUC(java.util.concurrent)包下实现的很多类都用到了CAS操作</p>
+<ul>
+<li>AbstractQueuedSynchronizer (AQS框架)</li>
+<li>AtomicXXX类</li>
+</ul>
+<p><span style = "color:red"><strong>乐观锁和悲观锁的区别？</strong></span></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ed89cde4cab6a88d6f2a86f3430be2b28a5e3626/JMM%20(Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)+CAS.png"></p>
+<p><span style = "color:red"><strong>谈一谈你对volatile的理解？</strong></span></p>
+<p>一旦一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，那么就具备了两层语义：</p>
+<ul>
+<li><h5 id="保证线程间的可见性"><a href="#保证线程间的可见性" class="headerlink" title="保证线程间的可见性"></a>保证线程间的可见性</h5><p>用volatile修饰共享变量，能够防止编译器等优化发生，让一个线程对共享变量的修改对另一个线程可见</p>
+</li>
+<li><h5 id="禁止进行指令重排序"><a href="#禁止进行指令重排序" class="headerlink" title="禁止进行指令重排序"></a>禁止进行指令重排序</h5><p>用volatile修饰共享变量会在读、写共享变量时加入不同的屏障，阻止其他读写操作越过屏障，从而达到阻止重排序的效果</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2ce52eb544e19cacdc7c7d22cb6fa3135b27e6a3/volatile%E6%B7%B1%E5%B1%82%E6%AC%A1%E7%90%86%E8%A7%A3[%E7%BA%BF%E7%A8%8B%E9%97%B4%E5%8F%AF%E8%A7%81+%E7%A6%81%E6%AD%A2%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E5%BA%8F].png"></p>
+<p><span style = "color:red"><strong>什么是AQS？</strong></span></p>
+<blockquote>
+<ul>
+<li>是多线程中的队列同步器。是一种锁机制，它是做为一个<strong>基础框架</strong>使用的，像ReentrantLock、Semaphore都是基于AQS实现的</li>
+<li>AQS内部维护了一个**<u>先进先出的双向队列</u>**，队列中存储的排队的线程</li>
+<li>在AQS内部还有一个属性state，这个state就相当于是一个资源，默认是0(无所状态)，如果队列中有一个线程修改成功了state为1，则当前线程就相当于获取了资源。</li>
+<li>在对state修改的时候使用CAS(compare and swap)操作，保证多个线程修改的情况下原子性</li>
+</ul>
+</blockquote>
+<p>AQS(<strong>A</strong>bstract<strong>Q</strong>ueued<strong>S</strong>ynchronizer)，即抽象队列同步器。它是构建锁或者其他同步组件的<strong>基础框架</strong></p>
+<h6 id="AQS与Synchronized的区别"><a href="#AQS与Synchronized的区别" class="headerlink" title="AQS与Synchronized的区别"></a>AQS与Synchronized的区别</h6><table>
+<thead>
+<tr>
+<th align="center">synchronized</th>
+<th align="center">AQS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">关键字，C++语言实现</td>
+<td align="center">java语言实现</td>
+</tr>
+<tr>
+<td align="center">悲观锁，自动释放锁</td>
+<td align="center">悲观锁，手动开启和关闭</td>
+</tr>
+<tr>
+<td align="center">锁竞争激励都会升级为<strong>重量级锁</strong>，性能差</td>
+<td align="center">锁竞争激烈的情况下，提供了多种解决方案</td>
+</tr>
+</tbody></table>
+<h6 id="AQS常见的实现类"><a href="#AQS常见的实现类" class="headerlink" title="AQS常见的实现类"></a>AQS常见的实现类</h6><ul>
+<li><strong>ReentrantLock 阻塞式锁</strong></li>
+<li>Semaphore 信号量</li>
+<li>CountDownLatch 倒计时锁</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2dd56a7110e36eebc67c093ce454bd7052a1ad30/%E4%BB%80%E4%B9%88%E6%98%AFAQS.png"></p>
+<p><span style = "color:red"><strong>ReentrantLock [rɪ’entrənt]lock 的实现原理？</strong></span><del>[关联HashMap线程不安全需加锁(synchronized或ReentrantLock)]</del></p>
+<blockquote>
+<p>ReentrantLock主要利用<strong>CAS+AQS队列</strong><del>CompareAndSwap+AbstractQueuedSynchronized</del>来实现。**<u>它支持公平锁和非公平锁</u><strong>，两者的实现类似构造方法接受一个可选的公平参数(<strong>默认非公平锁</strong>)，</strong><u>当设置为true时，表示公平锁，否则为非公平锁</u>**。公平锁的效率往往没有非公平锁的效率高，在许多线程访问的情况下，公平锁表现出较低的吞吐量。</p>
+</blockquote>
+<p>ReentrantLock翻译过来是可重入锁，相对于synchronized它具备以下特点：</p>
+<ul>
+<li>可中断<del>synchronized不可中断</del></li>
+<li>可设置超时时间<del>没有获得锁时只能进入等待</del>[<u>没有获取锁可以放弃锁</u>]</li>
+<li>可以设置公平锁<del>synchronized只有非公平锁</del>[也支持非公平锁]</li>
+<li>支持多个条件变量</li>
+<li>与synchronized一样，都支持重入</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9279a890a6163298e551a9f594f3c0b921a438ad/ReentrantLock%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png"></p>
+<p><span style = "color:red"><strong>synchronized和Lock有什么区别？</strong></span></p>
+<ul>
+<li><strong>语法层面</strong></li>
+</ul>
+<p>synchronized是关键字，源码在jvm中，用c++语言实现<br>Lock是接口，源码由jdk提供，用java语言实现<br>使用synchronized时，退出同步代码块锁会自动释放，而使用Lock时，需要手动调用unlock方法释放锁</p>
+<ul>
+<li><strong>功能层面</strong></li>
+</ul>
+<p>二者均属于悲观锁、都具备基本的互斥、同步、锁重入功能<br>Lock提供了许多synchronized不具备的功能，例如<strong>公平锁、可打断、可超时、多条件变量</strong><br>Lock有适合不同场景的实现，如ReentrantLock、ReentrantReadWeiteLock(读写锁)</p>
+<hr>
+<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1.概述"></a>1.概述</h2><p>ThreadLocal是Java中的一个线程局部变量工具类，它提供了一种在多线程环境下，每个线程都可以独立访问自己的变量副本的机制。ThreadLocal中存储的数据对于每个线程来说都是独立的，互不干扰。</p>
+<h2 id="2-使用场景"><a href="#2-使用场景" class="headerlink" title="2. 使用场景"></a>2. 使用场景</h2><p>ThreadLocal适用于以下场景：</p>
+<ul>
+<li>在多线程环境下，需要保持线程安全性的数据访问。</li>
+<li>需要在多个方法之间共享数据，但又不希望使用传递参数的方式。<ul>
+<li>在传递登录用户id是非常方便且适用</li>
+</ul>
+</li>
+</ul>
+<p>以后获取用户id不用再解析token了，线程拿仅仅拿当前线程的数据 每个登录的用户都有自己的threadlocal数据</p>
+<p><strong>ThreadLocal</strong>并不是一个Thread，<strong>而是Thread的局部变量</strong>【可以存储数据】<br>ThreadLocal<strong>为每个线程提供单独一份存储空间</strong>，具有线程隔离的效果，只有在线程内才能获取到对应的值，线程外则不能访问。**<u>ThreadLocal实现一个线程内传递数据</u>**[就不用一个个参数往后传递了]<br>注意：客户端发送的每次请求，后端的tomcat服务器都会分配一个单独的线程来处理请求</p>
+<ul>
+<li><strong><u>一个请求是一个线程</u></strong>[意义：在第一个线程里面使用ThreadLocal存储用户Id 在后面controller或service中就可以取出来用户id]</li>
+<li>第二个请求就是另一个线程 线程池用完第一个放回线程池 也有可能把上一个线程接着给它用</li>
+</ul>
+<h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h2><h3 id="3-1-创建ThreadLocal对象"><a href="#3-1-创建ThreadLocal对象" class="headerlink" title="3.1 创建ThreadLocal对象"></a>3.1 创建ThreadLocal对象</h3><p>首先，我们需要创建一个ThreadLocal对象来存储线程局部变量。可以使用ThreadLocal的默认构造函数创建一个新的实例。【给每个线程拷贝一份 synchn + Lock锁】</p>
+<pre><code class="Java">ThreadLocal&lt;String&gt; threadLocal = new ThreadLocal&lt;&gt;();
+</code></pre>
+<h3 id="3-2-设置线程局部变量的值"><a href="#3-2-设置线程局部变量的值" class="headerlink" title="3.2 设置线程局部变量的值"></a>3.2 设置线程局部变量的值</h3><p>使用<code>set()</code>方法可以设置当前线程的局部变量的值。</p>
+<pre><code class="Java">threadLocal.set(&quot;value&quot;);
+</code></pre>
+<h3 id="3-3-获取线程局部变量的值"><a href="#3-3-获取线程局部变量的值" class="headerlink" title="3.3 获取线程局部变量的值"></a>3.3 获取线程局部变量的值</h3><p>使用<code>get()</code>方法可以获取当前线程的局部变量的值。</p>
+<pre><code class="Java">String value = threadLocal.get();
+</code></pre>
+<h3 id="3-4-清除线程局部变量的值"><a href="#3-4-清除线程局部变量的值" class="headerlink" title="3.4 清除线程局部变量的值"></a>3.4 清除线程局部变量的值</h3><p>使用<code>remove()</code>方法可以清除当前线程的局部变量的值，建议在整个请求使用完一定要执行remove清除数据，不然可能会发生内存泄漏问题。</p>
+<pre><code class="Java">threadLocal.remove();
+</code></pre>
+<h6 id="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"><a href="#下面是一个简单的示例代码，演示了如何使用ThreadLocal。" class="headerlink" title="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"></a>下面是一个简单的示例代码，演示了如何使用ThreadLocal。</h6><pre><code class="Java">public class ThreadLocalTest &#123;
+
+    private static final ThreadLocal THREAD_LOCAL = new ThreadLocal();
+
+    public static void main(String[] args) &#123;
+
+        Thread t1 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itheima&quot;);
+            getData(&quot;t1&quot;);
+        &#125;, &quot;t1&quot;);
+
+        Thread t2 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itcast&quot;);
+            getData(&quot;t2&quot;);
+        &#125;, &quot;t1&quot;);
+
+        t1.start();
+        t2.start();
+
+    &#125;
+
+    private static void getData(String threadName)&#123;
+        Object data = THREAD_LOCAL.get();
+        System.out.println(threadName+&quot;-&quot;+data);
+    &#125;
+&#125;
+</code></pre>
+<p>运行以上代码，输出结果为：</p>
+<pre><code class="Plain">t1-itheima
+t2-itcast
+</code></pre>
+<p>在任意位置都可以调用Threadlocal，线程隔离互不影响，解决了线程安全问题：[每个线程存一份 线程不共享]</p>
+<p>用mybatis+建造者模式 一定要在类里面加 一定要具有有参和无参构造缺一不可 否则mybatis数据封装无法映射<br>@AllArgsConstructor<br>@NoArgsConstructor<br>@Builder</p>
 
     </div>
 
