@@ -2439,6 +2439,251 @@ spring:
 <li>使用各种前端框架和库（如React, Angular, Vue.js）中提供的封装好的HTTP服务。</li>
 </ul>
 </blockquote>
+<h4 id="SpringBoot主要的一些注解？都有哪些，以及主要作用"><a href="#SpringBoot主要的一些注解？都有哪些，以及主要作用" class="headerlink" title="SpringBoot主要的一些注解？都有哪些，以及主要作用"></a><strong>SpringBoot主要的一些注解？都有哪些，以及主要作用</strong></h4><pre><code class="java">SpringBoot：
+@SpringBootApplication [见↓↓]
+@ConfigurationProperties：注解用于将外部配置（如来自properties文件、YAML文件或环境变量）绑定到JavaBean上。它的作用是将配置文件中的属性映射到JavaBean的属性上，这样就可以在应用程序中使用这些配置属性。
+@SpringBootTest：用于测试 Spring Boot 应用，提供测试环境的支持
+@EnableConfigurationProperties：启用对配置属性的支持，允许将配置文件中的属性注入到 bean 中。
+
+
+Spring：
+@Component 
+@ComponentScan 
+@Conditional 
+</code></pre>
+<pre><code class="java">@SpringBootApplication 是一个组合注解，它结合了以下三个注解的功能：
+1. @SpringBootConfiguration: 表示这是一个Spring Boot配置类，它本质上是一个@Configuration注解，用于定义配置类，可以包含多个@Bean注解的方法。
+2. @EnableAutoConfiguration: 告诉Spring Boot基于类路径设置、其他bean和各种属性设置来添加bean。例如，如果你添加了spring-webmvc和thymeleaf的依赖，这个注解就会自动配置你的应用程序为一个web应用程序。
+3. @ComponentScan: 告诉Spring在包及其子包下扫描注解定义的组件（如@Component, @Service, @Repository等）。
+</code></pre>
+<h4 id="aop在项目中有没有使用？aop使用的一些注解及其功能"><a href="#aop在项目中有没有使用？aop使用的一些注解及其功能" class="headerlink" title="aop在项目中有没有使用？aop使用的一些注解及其功能"></a><strong>aop在项目中有没有使用？aop使用的一些注解及其功能</strong></h4><p>一定要描述项目场景，web使用aop打印操作日志、使用aop做数据脱敏(150***8786)<br><u>过滤器</u>是Servlet技术的一部分，它是Java EE规范的一部分<br><u>拦截器</u>是Spring MVC框架的一部分，用于在处理HTTP请求时拦截控制器方法调用。<br>AOP底层是动态代理设计模式，在<u>理论上</u>效果在一定程度上相同<br>过滤器拦截器一般拦截某个web的前后，在controller执行前后<br>AOP是万物皆可拦截、甚至接口和类都可以切，可以增强controller、service、mapper……</p>
+<p>定义一个切面类 <code>@Aspect</code> 声明为切面类 + @Component<br>定义切点 <code>@Pointcut</code> 声明切点表达式</p>
+<blockquote>
+<p>eg：@AfterReturning(pointcut &#x3D; “execution(public String com.example.yourpackage.Controller.*(..))”, returning &#x3D; “result”)</p>
+</blockquote>
+<h6 id="通知"><a href="#通知" class="headerlink" title="通知"></a>通知</h6><ul>
+<li>前置  @Before</li>
+<li>后置  @After</li>
+<li>返回  @AfterReturning</li>
+<li>异常  @AfterThrowing</li>
+<li>环绕  @Around</li>
+</ul>
+<h4 id="你在公司里负责的内容"><a href="#你在公司里负责的内容" class="headerlink" title="你在公司里负责的内容"></a><strong>你在公司里负责的内容</strong></h4><h4 id="想在controller访问完之后，想在aop实现之后再进行操作"><a href="#想在controller访问完之后，想在aop实现之后再进行操作" class="headerlink" title="想在controller访问完之后，想在aop实现之后再进行操作"></a><strong>想在controller访问完之后，想在aop实现之后再进行操作</strong></h4><p>UserThreadLocal 在执行完之后要 remove 出去，抛异常也会执行<br>@After 不管有无异常都会执行<br>@Around 结合try…catch…finally 里也可以达到同样效果</p>
+<blockquote>
+<p><code>@After</code>：这个注解用于定义一个通知（Advice），它在目标方法执行之后执行，无论目标方法执行的结果如何（成功或异常）。</p>
+</blockquote>
+<pre><code class="java">@Aspect
+@Component
+public class AroundFinallyAspect &#123;
+
+    // 定义切点
+    @Pointcut(&quot;execution(* com.example.yourpackage.controller..*(..))&quot;)
+    public void controllerMethods() &#123;
+    &#125;
+
+    // 环绕通知
+    @Around(&quot;controllerMethods()&quot;)
+    public Object aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable &#123;
+        Object result = null;
+        try &#123;
+            // 在目标方法执行之前执行
+            result = joinPoint.proceed(); // 执行目标方法
+            // 在目标方法成功执行之后执行
+        &#125; catch (Throwable e) &#123;
+            // 在目标方法抛出异常时执行
+            throw e; // 可以选择处理异常或者重新抛出
+        &#125; finally &#123;
+            // 无论目标方法是否成功执行或者是否抛出异常，这里的代码都会执行
+            performFinallyAction();
+        &#125;
+        return result;
+    &#125;
+
+    private void performFinallyAction() &#123;
+        // 在这里放置最终要执行的代码
+    &#125;
+&#125;
+
+--------------------------------------------------------------------------------
+// 后置通知
+    @After(&quot;execution(* com.example.service.*.*(..))&quot;)
+    public void afterAdvice(JoinPoint joinPoint) &#123;
+        // 在目标方法执行之后执行的逻辑
+    &#125;
+
+    // 返回后通知
+    @AfterReturning(pointcut = &quot;execution(* com.example.service.*.*(..))&quot;, returning = &quot;result&quot;)
+    public void afterReturningAdvice(JoinPoint joinPoint, Object result) &#123;
+        // 在目标方法成功执行并返回结果后执行的逻辑
+    &#125;
+
+在第一个例子中，你直接在@After注解中指定了切点表达式，因此不需要额外的pointcut属性。
+
+对于@AfterReturning注解，它不仅需要在目标方法执行之后执行通知，还需要访问目标方法的返回值。因此，@AfterReturning注解有一个额外的pointcut属性，用于指定切点表达式。此外，@AfterReturning注解还有一个returning属性，用于指定一个参数名，该参数将接收目标方法的返回值
+</code></pre>
+<p>@AfterReturning：在方法执行后返回结果后执行通知。【如果有异常不会处理】</p>
+<h4 id="你们这个项目怎么技术选型的"><a href="#你们这个项目怎么技术选型的" class="headerlink" title="你们这个项目怎么技术选型的"></a>你们这个项目怎么技术选型的</h4><p>我进到项目中很多已经确认下来的 一般由组长确定了</p>
+<h6 id="那你自己怎么想的？-开放性问题"><a href="#那你自己怎么想的？-开放性问题" class="headerlink" title="那你自己怎么想的？[开放性问题]"></a>那你自己怎么想的？[开放性问题]</h6><p>选xxx技术 网上资料&#x2F;备书 比较多可以参考[用的人多]<br>学习成本[框架厉害但上手复杂不好用]<br>社区的活跃度[官网持续更新版本 框架会不断发展]</p>
+<h4 id="你处于后端的什么位置"><a href="#你处于后端的什么位置" class="headerlink" title="你处于后端的什么位置"></a>你处于后端的什么位置</h4><p>初级 中级 高级<br>中级 骨干开发位置[协助组长完成]<br>中高级 完成设计类</p>
+<h4 id="你对你的职业规划是什么"><a href="#你对你的职业规划是什么" class="headerlink" title="你对你的职业规划是什么"></a>你对你的职业规划是什么</h4><p>讲实际的话<br>想成为高级开发&#x2F;某个领域的专家<br>提前了解公司领域，有备而来</p>
+<h4 id="java基本类型"><a href="#java基本类型" class="headerlink" title="java基本类型"></a>java基本类型</h4><img src="C:\Users\Pluminary\AppData\Roaming\Typora\typora-user-images\image-20241222141950707.png" alt="image-20241222141950707" style="zoom:200%;" />
+
+<p>short   可以占两个字节   可以用16位<br>int        可以占四个字节    -21亿 ~ 21亿<br>long     可以占八个字节   天文数字<br>float      可以占四个字节 0.2F&#x2F;f<br>double  可以占八个字节 0.2D&#x2F;d</p>
+<p>float double尽量不要进行运算 ，在Java中进行金钱运算时，应当特别注意浮点数的精度问题，因为浮点数（如<code>float</code>和<code>double</code>）在表示某些数值时可能会丢失精度，这对于需要精确计算的金融计算来说是非常不合适的。</p>
+<p>1.金钱转成分 向下取整<br>2.BigDecimal</p>
+<p>ASCII码占1个字节 → Unicode字符占2个字节【有些汉字存不了】→ UTF-8占1-3个字节[灵活可变]<br>在我们性能中一般走Unicode编码性能更高一点 在网络中&#x2F;存入磁盘Unicode转成ASCII码</p>
+<p>jdk？之后 jdk开始存储大量英文和数字 String类也作了更新 不是基于基本数据类型 而是基于byte数组</p>
+<pre><code class="java">在Java的早期版本中（例如JDK 1.4及之前版本），String类内部确实使用char数组来存储字符串数据。每个char在Java中占用16位（2个字节），这意味着不管存储的是英文字符还是数字，每个字符都会占用2个字节的内存空间。
+
+从JDK 5开始，Java平台引入了一些变化，但String类的内部表示仍然基于char数组。直到JDK 6和JDK 7，String类的内部表示并没有改为基于byte数组。
+
+真正发生变化的是在JDK 9中，String类内部表示从char数组转变为byte数组加上一个编码标识（coder），这种改变是为了更有效地存储只有ASCII字符的字符串。ASCII字符只需要一个字节来表示，因此使用byte数组可以节省内存空间。当字符串包含Unicode字符时，String类可能会使用更多的编码方式，例如LATIN1或UTF-16。
+</code></pre>
+<h4 id="String是基础类型吗"><a href="#String是基础类型吗" class="headerlink" title="String是基础类型吗"></a>String是基础类型吗</h4><p>不是，是<code>java.lang</code>下的类</p>
+<blockquote>
+<p>String 在 Java 中并不是基础类型，而是一个引用类型。因为 String 是一个类，所以它是引用类型，意味着当我们声明一个 String 变量时，你实际上是指向一个 String 对象的引用</p>
+</blockquote>
+<pre><code class="java">String 的特性
+不可变性：String 对象一旦创建就不能被修改。任何改变 String 内容的操作都会创建一个新的 String 对象。
+线程安全：由于 String 的不可变性，它们是线程安全的，可以自由地在多个线程之间共享。
+字符串池：为了提高性能和减少内存使用，Java 为 String 提供了字符串常量池（String Pool）。当创建一个新字符串时，如果字符串池中已经存在相同内容的字符串，则会返回池中的实例，而不是创建新的对象。
+</code></pre>
+<h4 id="java集合中list和set的区别"><a href="#java集合中list和set的区别" class="headerlink" title="java集合中list和set的区别?"></a>java集合中list和set的区别?</h4><p>都是接口 某个实现类</p>
+<p>单链 有顺序 可重复 有索引[有下标]<br>单链 不可重复 无索引[无下标] 不能说是无序 因为TreeSet有序 HashSet就是无序的</p>
+<h4 id="做了几年开发呢-实际几个项目"><a href="#做了几年开发呢-实际几个项目" class="headerlink" title="做了几年开发呢? 实际几个项目?"></a>做了几年开发呢? 实际几个项目?</h4><p>三年[初中级] → 四~五个项目</p>
+<h4 id="你觉得敲代码最重要的是什么"><a href="#你觉得敲代码最重要的是什么" class="headerlink" title="你觉得敲代码最重要的是什么?"></a>你觉得敲代码最重要的是什么?</h4><p><strong>理解需求</strong>、<strong>前期设计工作</strong>[数据库、接口 → 流程图(思路清晰)]、<strong>编码阶段</strong>[考虑方法封装、注释、考虑代码后期和维护性(设计模式 → 可维护性+扩展性)]、<strong>编码风格</strong>[阿里巴巴规范]</p>
+<h4 id="你的项目有上线吗-多少人进行开发-你主要负责后端吗"><a href="#你的项目有上线吗-多少人进行开发-你主要负责后端吗" class="headerlink" title="你的项目有上线吗? 多少人进行开发? 你主要负责后端吗?"></a>你的项目有上线吗? 多少人进行开发? 你主要负责后端吗?</h4><p>有，介绍一下项目组成结构，是的[再问再回答]</p>
+<h4 id="SpringBoot的自动装配原理-启动过程中的一部分-SpringBoot启动原理-amp-amp-如何内嵌外部原件"><a href="#SpringBoot的自动装配原理-启动过程中的一部分-SpringBoot启动原理-amp-amp-如何内嵌外部原件" class="headerlink" title="SpringBoot的自动装配原理[启动过程中的一部分]SpringBoot启动原理&amp;&amp;如何内嵌外部原件"></a><span style = "color:red"><strong>SpringBoot的自动装配原理</strong></span>[启动过程中的一部分]<del>SpringBoot启动原理&amp;&amp;如何内嵌外部原件</del></h4><p>Spring Boot的自动装配原理是基于Spring框架的IoC（控制反转）和DI（依赖注入）的核心概念，并结合了一系列的约定和条件注解来实现配置类的自动加载和Bean的自动注册</p>
+<h6 id="自定义Starter"><a href="#自定义Starter" class="headerlink" title="自定义Starter"></a>自定义Starter</h6><pre><code class="xml">&lt;!-- Maven项目的依赖示例 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;com.xxx&lt;/groupId&gt;
+    &lt;artifactId&gt;xxx-spring-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p><strong>三大优点</strong>：依赖Maven特性[依赖传递]  自动配置  内嵌Tomcat<br>Spring Boot的自动装配原理是<br>在<code>src/main/resources/META-INF</code>目录下创建<code>spring.factories</code>文件，添加自动配置类的全限定名<br>我们可以在-info定义spring.factories位于<code>META-INF</code>目录下，Spring Boot使用它来发现和加载自动配置类。</p>
+<p><strong>配置类扫描</strong>: 通过<code>@SpringBootApplication</code>注解，Spring Boot会触发对<code>@EnableAutoConfiguration</code>注解的处理，该注解会查找<code>spring.factories</code>文件中定义的自动配置类。</p>
+<p>Maven里面写test类 用configuration声明 写很多的test类 但是我可以自己写test类然后调不同的方法 <strong>应该怎么办</strong>？@Conditional[Spring的注解] → 做成非常灵活的 如果没有就用自己写的 </p>
+<h4 id="Spring里面的事务传播行为"><a href="#Spring里面的事务传播行为" class="headerlink" title="Spring里面的事务传播行为"></a><strong>Spring里面的事务传播行为</strong></h4><p>在Spring框架中，事务传播行为定义了事务方法之间的调用关系，即一个事务方法被另一个事务方法调用时，事务应该如何传播。</p>
+<ol>
+<li><span style = "color:blue"><u><strong>REQUIRED</strong>（默认值）</u></span> required<ul>
+<li>如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。</li>
+</ul>
+</li>
+<li><strong>SUPPORTS</strong> supports<ul>
+<li>如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务方式执行。</li>
+</ul>
+</li>
+<li><strong>MANDATORY</strong> mandatory<ul>
+<li>如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。</li>
+</ul>
+</li>
+<li><strong>REQUIRES_NEW</strong> requires_new<ul>
+<li>创建一个新的事务，如果当前存在事务，则挂起当前事务。</li>
+</ul>
+</li>
+<li><strong>NOT_SUPPORTED</strong> not_supported<ul>
+<li>以非事务方式执行操作，如果当前存在事务，则挂起当前事务。</li>
+</ul>
+</li>
+<li><strong>NEVER</strong> never<ul>
+<li>以非事务方式执行，如果当前存在事务，则抛出异常。</li>
+</ul>
+</li>
+<li><strong>NESTED</strong> nested<ul>
+<li>如果当前存在事务，则在嵌套事务内执行；如果当前没有事务，则行为类似于<code>REQUIRED</code>。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>REQUIRED：通常用于方法需要在一个事务中运行，但如果已经有一个事务在运行，那么它应该加入这个事务。<br>SUPPORTS：用于方法不需要事务上下文，但如果已经在一个事务中，它也可以在这个事务中运行。<br>MANDATORY：用于方法必须在事务中运行，如果没有事务，则会抛出异常。<br><strong>REQUIRES_NEW</strong>：用于方法必须在自己的新事务中运行，即使当前已经有一个事务在运行。<br>[一般适用于不管有没有抛出异常 都要记录某些操作日志 不能在同一个类里底层是动态代理]<br>[如果a()和b()方法在同一个类中，并且a()直接调用b()，那么Spring的事务代理无法拦截这个内部调用，因此b()的REQUIRES_NEW事务传播行为不会生效。这是因为内部方法调用不会通过代理，而是直接在同一个对象实例上调用。]</p>
+<pre><code class="java">import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+
+@Service
+public class MyService &#123;
+
+    @Autowired
+    private MyService self; // 注入自身代理实例
+
+    public void methodA() &#123;
+        // ... 业务逻辑 ...
+
+        self.methodB(); // 通过代理实例调用，事务注解将生效
+    &#125;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void methodB() &#123;
+        // ... 业务逻辑 ...
+    &#125;
+&#125;
+</code></pre>
+<p>NOT_SUPPORTED：用于方法不应该在事务中运行，如果有一个事务在运行，它将被挂起。<br>NEVER：用于方法绝对不应该在事务中运行，如果有一个事务在运行，将抛出异常。<br>NESTED：用于方法应该在嵌套事务中运行，嵌套事务可以独立于外部事务进行提交或回滚</p>
+</blockquote>
+<h4 id="用过Spring的事务吗"><a href="#用过Spring的事务吗" class="headerlink" title="用过Spring的事务吗"></a><strong>用过Spring的事务吗</strong></h4><p>一组数据库的增删改操作<br><strong>声明式事务管理</strong>：这是Spring推荐的用法，它通过使用注解（如<code>@Transactional</code>）或基于XML的配置来声明事务边界。底层基于AOP实现动态代理增强方法<br><strong>编程式事务管理</strong>：允许你通过编程的方式直接管理事务，通常使用<code>TransactionTemplate</code>或者直接使用底层的<code>PlatformTransactionManager</code>。</p>
+<h4 id="你熟悉的技术栈有哪些，用了哪些"><a href="#你熟悉的技术栈有哪些，用了哪些" class="headerlink" title="你熟悉的技术栈有哪些，用了哪些?"></a>你熟悉的技术栈有哪些，用了哪些?</h4><p>SpringBoot Vue Git Maven MyBatis……</p>
+<h4 id="解决难点的决策有和用户沟通的吗？"><a href="#解决难点的决策有和用户沟通的吗？" class="headerlink" title="解决难点的决策有和用户沟通的吗？"></a>解决难点的决策有和用户沟通的吗？</h4><p>有过沟通 让他们了解一下我们的方案</p>
+<h6 id="万一用户听不懂怎么办？"><a href="#万一用户听不懂怎么办？" class="headerlink" title="万一用户听不懂怎么办？"></a>万一用户听不懂怎么办？</h6><p>我会用一些更加直白通俗的语言让用户理解我们的方案</p>
+<h6 id="用户不接受这个方案怎么办？"><a href="#用户不接受这个方案怎么办？" class="headerlink" title="用户不接受这个方案怎么办？"></a>用户不接受这个方案怎么办？</h6><p>我们可以提供不止一个方案 或者 提供他提的方案 综合一下各种方案告诉其优缺点(站在我们的专业角度意见)和风险 让客户明知 让其选择</p>
+<h4 id="通常一般怎么学习的？最近在研究什么技术？"><a href="#通常一般怎么学习的？最近在研究什么技术？" class="headerlink" title="通常一般怎么学习的？最近在研究什么技术？"></a>通常一般怎么学习的？<del>最近在研究什么技术？</del></h4><p>想面试的目的 要給公司带来一些好的<br>一般<strong>以公司的实际项目中为切入点</strong>去学习会更有效率</p>
+<h5 id="学习一个新的技术大概要多久？"><a href="#学习一个新的技术大概要多久？" class="headerlink" title="学习一个新的技术大概要多久？"></a>学习一个新的技术大概要多久？</h5><p>1-2天 首先看官网 这个技术是解决哪些 看我们的项目需要哪些技术切入点能引用 然后去专门针对这个技术功能点去学习快速上手的接口文档</p>
+<h4 id="redis为什么这么快？"><a href="#redis为什么这么快？" class="headerlink" title="redis为什么这么快？"></a>redis为什么这么快？</h4><ul>
+<li><strong>主数据基于内存操作</strong></li>
+<li><strong>Redis是单线程</strong>[操作数据的线程]，避免上下文的频繁切换<del>整个redis不是就一个线程</del></li>
+<li><strong>底层基于C语言实现</strong> <del>得益于底层良好的数据结构[]</del></li>
+<li><strong>基于<span style = "color:red">非阻塞</span>的IO</strong><del>提升IO读写性能，NIO,BIO,AIO…</del></li>
+</ul>
+<h6 id="Java四大杀手"><a href="#Java四大杀手" class="headerlink" title="Java四大杀手"></a>Java四大杀手</h6><p><u>集合数据结构     jvm    并发编程    网络IO</u></p>
+<h4 id="redis的数据类型以及使用场景分别是什么"><a href="#redis的数据类型以及使用场景分别是什么" class="headerlink" title="redis的数据类型以及使用场景分别是什么"></a>redis的数据类型以及使用场景分别是什么</h4><ul>
+<li><strong>String</strong>：存储对象信息(转JSON)、</li>
+<li><strong>List</strong>：链表，查询记录的缓存、列表，朋友圈，微博，队列数据结构</li>
+<li><strong>Hash</strong>：获取局部属性，小key不能设置过期时间</li>
+<li><strong>Set</strong>：无序不可重复的，收藏，点赞，社交场景，聚合计算(∩∪差集)</li>
+<li><strong>Zset</strong>：排序场景，排行榜，姓名排序</li>
+</ul>
+<p>分布式锁都可以用。Redisson是Redis的儿子，底层为Hash</p>
+<h4 id="redis数据过期策略"><a href="#redis数据过期策略" class="headerlink" title="redis数据过期策略"></a>redis数据过期策略</h4><ul>
+<li>惰性删除：键过期时不会立即删除，当访问该键时判断是否过期，如果过期就删除</li>
+<li>定时删除：设置键的过期时间，当键过期时，立即删除</li>
+</ul>
+<h6 id="高薪冲刺-→-定时删除详细策略"><a href="#高薪冲刺-→-定时删除详细策略" class="headerlink" title="高薪冲刺 → 定时删除详细策略"></a><span style = "color:red">高薪冲刺 → 定时删除详细策略</span></h6><blockquote>
+<p>要扫描所有的定期任务删除 有策略可以设置阈值</p>
+<p><strong>Redis支持8种不同策略来选择要删除的key:</strong></p>
+<ul>
+<li><p><strong>noeviction：</strong>不淘汰任何key，但是内存满时不允许写入新数据，<strong>默认就是这种策略</strong></p>
+<blockquote>
+<h6 id="maxmemory-policy-noeviction"><a href="#maxmemory-policy-noeviction" class="headerlink" title="maxmemory-policy noeviction"></a>maxmemory-policy noeviction</h6></blockquote>
+</li>
+<li><p><strong>volatile-ttl</strong>：对设置了TTL的key，比较key的剩余TTL值，TTL越小越先被淘汰 (<u>TTL:过期时间的key</u>)</p>
+</li>
+<li><p><strong>allkeys-random</strong>：对全体key，随机进行淘汰</p>
+</li>
+<li><p><strong>volatile-random</strong>：对设置了TTL的key，随机进行淘汰</p>
+</li>
+<li><p><strong>allkeys-lru</strong>：对全体key，基于LRU算法进行淘汰</p>
+<blockquote>
+<p><strong>LRU</strong>(Least <strong>Recently</strong> Used)：<strong>最近最少使用</strong>，用当前时间减去最后一次访问时间，这个值越大测淘汰优先级越高<br><strong>LFU</strong>(Least <strong>Frequently</strong> Used)：<strong>最少频率使用</strong>。会统计每个key的访问频率，值越小淘汰优先级越高。</p>
+</blockquote>
+</li>
+<li><p><strong>allkeys-lfu</strong>：对全体key，基于LFU算法进行淘汰</p>
+</li>
+<li><p><strong>volatile-lfu</strong>：对设置了TTL的key，基于LFU算法进行淘汰</p>
+</li>
+</ul>
+<p><strong>淘汰策略 - 使用建议</strong></p>
+<p>1.优先使用 <code>allkeys-lru</code> 策略。充分利用LRU算法的优势，把最近最常访问的数据留在缓存中，如果业务有明显的冷热数据区分，建议使用。<br>2.如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用<code>allkeys-random</code>，随机选择淘汰<br>3.如果业务中有置顶的需求，可以使用<code>volatile-lru</code>策略，同时<strong>置顶数据不设置过期时间</strong>，这些数据就一直不会被删除，会淘汰其他设置过期时间的数据<br>4.如果业务中有<strong>短时高频</strong>访问的数据，可以使用<code>allkeys-lfu</code>或<code>volatile-lfu</code>策略</p>
+<h6 id="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"><a href="#数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？" class="headerlink" title="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"></a>数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？</h6><ul>
+<li>使用<code>allkeys-lru</code>(挑选最近最少使用的数据淘汰) 淘汰策略，留下来的都是经常访问的热点数据</li>
+</ul>
+<h6 id="Redis的内存用完了会发生什么？"><a href="#Redis的内存用完了会发生什么？" class="headerlink" title="Redis的内存用完了会发生什么？"></a>Redis的内存用完了会发生什么？</h6><ul>
+<li>主要看数据淘汰策略是什么？如果是默认的配置(noeviction)，会直接报错</li>
+</ul>
+</blockquote>
+<h4 id="啥时候离职的？半个月太长了"><a href="#啥时候离职的？半个月太长了" class="headerlink" title="啥时候离职的？半个月太长了"></a>啥时候离职的？<del>半个月太长了</del></h4><p>刚刚离职 也是刚刚开始投</p>
+<h4 id="主要工作职责"><a href="#主要工作职责" class="headerlink" title="主要工作职责"></a>主要工作职责</h4><p>主要负责后端工作，协助测试，运维上线</p>
+<h4 id="你对前端有了解过吗？"><a href="#你对前端有了解过吗？" class="headerlink" title="你对前端有了解过吗？"></a>你对前端有了解过吗？</h4><p>有了解过，如HTML、CSS、JavaScript、框架[Vue、Element]等 可以很快的上手<br><u>我主要专长在于后端开发，可以学习和了解更多的前端知识</u>。</p>
 
     </div>
 
