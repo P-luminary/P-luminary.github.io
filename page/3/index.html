@@ -2234,7 +2234,7 @@ spring:
 <h6 id="最大线程数"><a href="#最大线程数" class="headerlink" title="最大线程数"></a>最大线程数</h6><p>需要一开始创建好线程等着访问来，如果 <u>核心&#x3D;最大</u>，此时没有临时线程</p>
 <h4 id="创建线程有几种方式（必会）"><a href="#创建线程有几种方式（必会）" class="headerlink" title="创建线程有几种方式（必会）"></a>创建线程有几种方式（必会）</h4><p>1.继承Thread类并重写 run 方法创建线程，实现简单但不可以继承其他类<br>2.实现Runnable接口并重写 run 方法。避免了单继承局限性，编程更加灵活，实现解耦。<br>3.实现 Callable接口并重写 call 方法，创建线程。可以获取线程执行结果的返回值，并且可以抛出异常。<br>4.使用线程池创建（使用java.util.concurrent.Executor接口）</p>
 <ul>
-<li>想获得线程池里的返回结果用什么？execute + submit</li>
+<li>想获得线程池里的返回结果用什么？<strong>execute + submit</strong></li>
 <li>线程有哪些状态？ java线程有哪些状态？</li>
 <li>线程池有哪些状态？</li>
 </ul>
@@ -2670,40 +2670,280 @@ public class MyService &#123;
 </ul>
 <h6 id="高薪冲刺-→-定时删除详细策略"><a href="#高薪冲刺-→-定时删除详细策略" class="headerlink" title="高薪冲刺 → 定时删除详细策略"></a><span style = "color:red">高薪冲刺 → 定时删除详细策略</span></h6><blockquote>
 <p>要扫描所有的定期任务删除 有策略可以设置阈值</p>
-<p><strong>Redis支持8种不同策略来选择要删除的key:</strong></p>
-<ul>
-<li><p><strong>noeviction：</strong>不淘汰任何key，但是内存满时不允许写入新数据，<strong>默认就是这种策略</strong></p>
-<blockquote>
-<h6 id="maxmemory-policy-noeviction"><a href="#maxmemory-policy-noeviction" class="headerlink" title="maxmemory-policy noeviction"></a>maxmemory-policy noeviction</h6></blockquote>
-</li>
-<li><p><strong>volatile-ttl</strong>：对设置了TTL的key，比较key的剩余TTL值，TTL越小越先被淘汰 (<u>TTL:过期时间的key</u>)</p>
-</li>
-<li><p><strong>allkeys-random</strong>：对全体key，随机进行淘汰</p>
-</li>
-<li><p><strong>volatile-random</strong>：对设置了TTL的key，随机进行淘汰</p>
-</li>
-<li><p><strong>allkeys-lru</strong>：对全体key，基于LRU算法进行淘汰</p>
-<blockquote>
-<p><strong>LRU</strong>(Least <strong>Recently</strong> Used)：<strong>最近最少使用</strong>，用当前时间减去最后一次访问时间，这个值越大测淘汰优先级越高<br><strong>LFU</strong>(Least <strong>Frequently</strong> Used)：<strong>最少频率使用</strong>。会统计每个key的访问频率，值越小淘汰优先级越高。</p>
-</blockquote>
-</li>
-<li><p><strong>allkeys-lfu</strong>：对全体key，基于LFU算法进行淘汰</p>
-</li>
-<li><p><strong>volatile-lfu</strong>：对设置了TTL的key，基于LFU算法进行淘汰</p>
-</li>
-</ul>
-<p><strong>淘汰策略 - 使用建议</strong></p>
-<p>1.优先使用 <code>allkeys-lru</code> 策略。充分利用LRU算法的优势，把最近最常访问的数据留在缓存中，如果业务有明显的冷热数据区分，建议使用。<br>2.如果业务中数据访问频率差别不大，没有明显冷热数据区分，建议使用<code>allkeys-random</code>，随机选择淘汰<br>3.如果业务中有置顶的需求，可以使用<code>volatile-lru</code>策略，同时<strong>置顶数据不设置过期时间</strong>，这些数据就一直不会被删除，会淘汰其他设置过期时间的数据<br>4.如果业务中有<strong>短时高频</strong>访问的数据，可以使用<code>allkeys-lfu</code>或<code>volatile-lfu</code>策略</p>
-<h6 id="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"><a href="#数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？" class="headerlink" title="数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？"></a>数据库有1000万数据，Redis只能缓存20w数据，如何保证Redis中的数据都是热点数据？</h6><ul>
-<li>使用<code>allkeys-lru</code>(挑选最近最少使用的数据淘汰) 淘汰策略，留下来的都是经常访问的热点数据</li>
-</ul>
-<h6 id="Redis的内存用完了会发生什么？"><a href="#Redis的内存用完了会发生什么？" class="headerlink" title="Redis的内存用完了会发生什么？"></a>Redis的内存用完了会发生什么？</h6><ul>
-<li>主要看数据淘汰策略是什么？如果是默认的配置(noeviction)，会直接报错</li>
-</ul>
 </blockquote>
 <h4 id="啥时候离职的？半个月太长了"><a href="#啥时候离职的？半个月太长了" class="headerlink" title="啥时候离职的？半个月太长了"></a>啥时候离职的？<del>半个月太长了</del></h4><p>刚刚离职 也是刚刚开始投</p>
 <h4 id="主要工作职责"><a href="#主要工作职责" class="headerlink" title="主要工作职责"></a>主要工作职责</h4><p>主要负责后端工作，协助测试，运维上线</p>
 <h4 id="你对前端有了解过吗？"><a href="#你对前端有了解过吗？" class="headerlink" title="你对前端有了解过吗？"></a>你对前端有了解过吗？</h4><p>有了解过，如HTML、CSS、JavaScript、框架[Vue、Element]等 可以很快的上手<br><u>我主要专长在于后端开发，可以学习和了解更多的前端知识</u>。</p>
+<h4 id="各种淘汰策略介绍"><a href="#各种淘汰策略介绍" class="headerlink" title="各种淘汰策略介绍"></a>各种淘汰策略介绍</h4><blockquote>
+<p>Redis提供了8种淘汰策略，可以分成两大类：</p>
+<p><strong>1、针对所有键的策略：</strong>对所有键进行选择和淘汰。</p>
+<p><strong>2、仅针对有过期时间的键的策略：</strong>只在设置了过期时间的键中选择淘汰对象。</p>
+</blockquote>
+<p><strong>以下具体策略：</strong><br><strong>可以区分为两类</strong>：[有设置过期时间的key  不管你有没有设置过期时间]</p>
+<h5 id="1-noeviction【默认】"><a href="#1-noeviction【默认】" class="headerlink" title="1. noeviction【默认】"></a>1. <strong>noeviction</strong>【默认】</h5><ul>
+<li><strong>描述</strong>：达到内存限制时，不再执行删除操作，直接拒绝所有写入请求（包括插入和更新）。[可以读 但是拒绝写请求]</li>
+<li><strong>适用场景</strong>：<u>希望数据永不丢失的场景</u>，但需要保证内存充足，否则会导致写入操作失败。</li>
+</ul>
+<h5 id="2-allkeys-lru（最近最少使用）"><a href="#2-allkeys-lru（最近最少使用）" class="headerlink" title="2. allkeys-lru（最近最少使用）"></a>2. <strong>allkeys-lru（最近最少使用）</strong></h5><ul>
+<li><strong>描述</strong>：在所有的键中使用 LRU算法，删除最近最少使用的键。</li>
+<li><strong>适用场景</strong>：适合缓存场景，保留<strong>频繁访问</strong>的键，逐出很少被访问的键。</li>
+</ul>
+<h5 id="3-allkeys-lfu（最少使用频率）【电商】"><a href="#3-allkeys-lfu（最少使用频率）【电商】" class="headerlink" title="3. allkeys-lfu（最少使用频率）【电商】"></a>3. <strong>allkeys-lfu（最少使用频率）</strong>【电商】</h5><ul>
+<li><strong>描述</strong>：在所有键中使用 LFU 算法，删除使用频率最低的键。</li>
+<li><strong>适用场景</strong>：适用于需根据<strong>使用频率</strong>进行淘汰的场景，更关注访问次数而非访问时间。</li>
+</ul>
+<h5 id="4-volatile-lru（最近最少使用）"><a href="#4-volatile-lru（最近最少使用）" class="headerlink" title="4. volatile-lru（最近最少使用）"></a>4. <strong>volatile-lru（最近最少使用）</strong></h5><ul>
+<li><strong>描述</strong>：仅对设置了过期时间的键使用 LRU 算法。</li>
+<li><strong>适用场景</strong>：适合缓存一些有过期时间的数据，希望根据<strong>访问频率</strong>来进行内存管理的场景。</li>
+</ul>
+<h5 id="5-volatile-lfu（最少使用频率）【电商】"><a href="#5-volatile-lfu（最少使用频率）【电商】" class="headerlink" title="5. volatile-lfu（最少使用频率）【电商】"></a>5. <strong>volatile-lfu（最少使用频率）【电商】</strong></h5><ul>
+<li><strong>描述</strong>：仅对设置了过期时间的键使用 LFU算法。</li>
+<li><strong>适用场景</strong>：同 volatile-lru，但更关注<strong>使用频率</strong>。</li>
+</ul>
+<h5 id="6-allkeys-random"><a href="#6-allkeys-random" class="headerlink" title="6. allkeys-random"></a>6. <strong>allkeys-random</strong></h5><ul>
+<li><strong>描述</strong>：在所有键中随机选择删除某个键。</li>
+<li><strong>适用场景</strong>：适用于缓存数据访问频率没有明显差异的情况。</li>
+</ul>
+<h5 id="7-volatile-random"><a href="#7-volatile-random" class="headerlink" title="7. volatile-random"></a>7. <strong>volatile-random</strong></h5><ul>
+<li><strong>描述</strong>：在所有设置了过期时间的键中随机选择删除某个键。</li>
+<li><strong>适用场景</strong>：适合缓存带有过期时间的数据，删除哪个数据不重要的场景。</li>
+</ul>
+<h5 id="8-volatile-ttl"><a href="#8-volatile-ttl" class="headerlink" title="8. volatile-ttl"></a>8. <strong>volatile-ttl</strong></h5><ul>
+<li><strong>描述</strong>：在设置了过期时间的键中，优先删除剩余生存时间（TTL）较短的键。</li>
+<li><strong>适用场景</strong>：适合希望优先清理<strong>即将过期</strong>的数据的场景。</li>
+</ul>
+<h4 id="缓存三兄弟-穿透、击穿、雪崩"><a href="#缓存三兄弟-穿透、击穿、雪崩" class="headerlink" title="缓存三兄弟(穿透、击穿、雪崩)"></a>缓存三兄弟(穿透、击穿、雪崩)</h4><p>一般在读缓存的时候出现的问题。<strong>思路</strong>：产生的原因 + 解决的方案</p>
+<p>&#x3D;&#x3D;<strong>缓存穿透</strong>&#x3D;&#x3D;：用户或前端查询到一个在数据库中不存在的数据，先查redis再走数据库。对数据库压力会很大。<u>关系型数据库是性能的瓶颈 希望把高数量都挡在数据库前面</u>。查询一个<strong>不存在</strong>的数据，mysql查询不到数据也不会直接写入缓存，就会导致每次请求都查询数据库(可能原因是数据库被攻击了 发送了假的&#x2F;大数据量的请求url)</p>
+<ul>
+<li><strong>解决方案一</strong>：<u>缓存空数据</u>，查询返回的数据为空，仍把这个空结果进行缓存 <strong>{key:1, value:null}</strong> 【空字符串】<del>没有Null的数据类型</del>下一次读取直接把空串返回<br>优点：简单<br>缺点：消耗内存，可能会发生不一致的问题</li>
+</ul>
+<p>如果一直模拟一个不同的不存在的key 这时候就要用到<strong>布隆过滤器</strong></p>
+<ul>
+<li><p><strong>解决方案二</strong>：<u>布隆过滤器</u> (拦截不存在的数据)<br> [商品读多写少上缓存，要把商品数据写到布隆过滤器中，以商品的id<del>独一无二</del>计算hashcode，用布隆过滤器。取模数组落到桶内 会把0置为1]<br>有很多个二进制数组每个二进制数组用不同的hash算法进行计算此时落到的桶就不一样<br>作用：读的时候 前端传id 之前怎么写进去就怎么拿出来。[位运算(与)速度很快 把多个数组的数据拿出来与运算如果都是1 则这个数据可能存在<del>再查一遍缓存</del> 若不存在直接return返回] 布隆过滤器说你不存在 一定不存在，说你存在 则可能存在[哈希冲突] </p>
+<h6 id="★-项目上线很久了-商品早就下架不卖了-这时候会发生什么问题？"><a href="#★-项目上线很久了-商品早就下架不卖了-这时候会发生什么问题？" class="headerlink" title="★ 项目上线很久了 商品早就下架不卖了 这时候会发生什么问题？"></a>★ 项目上线很久了 商品早就下架不卖了 <strong>这时候会发生什么问题</strong>？</h6><p>这时候布隆过滤器还有之前的痕迹，需要把那些1设置为0。<br>布隆过滤器 不支持对某个的1设置0 → 因为有哈希冲突<del>我不知道这个1曾经是誰设置的</del><br>支持将整个都置为0，之后可以搞个定时任务<br><strong>布隆过滤器具体实现</strong>：Redis、Redission<del>亲儿子</del>、1cache、咖啡因（Caffeine<del>提供了一种非常高效且易于使用的缓存解决方案，它支持多种缓存过期策略</del>）、Guava<del>谷歌</del></p>
+<h6 id="★-以前没设置过且上架过-后面加了布隆，后面要把之前所有数据重新搞进去-怎么解决？存量数据"><a href="#★-以前没设置过且上架过-后面加了布隆，后面要把之前所有数据重新搞进去-怎么解决？存量数据" class="headerlink" title="★ 以前没设置过且上架过 后面加了布隆，后面要把之前所有数据重新搞进去 怎么解决？存量数据"></a>★ 以前没设置过且上架过 后面加了布隆，后面要把之前所有数据重新搞进去 <strong>怎么解决</strong>？<del>存量数据</del></h6><p>写一个定时任务</p>
+<h6 id="★-场景：工商银行统计每天的用户日活量-上线就算-要查询某个人连续七天签到-怎么查-用位图-用户量太多了"><a href="#★-场景：工商银行统计每天的用户日活量-上线就算-要查询某个人连续七天签到-怎么查-用位图-用户量太多了" class="headerlink" title="★ 场景：工商银行统计每天的用户日活量[上线就算]  要查询某个人连续七天签到 怎么查(用位图)用户量太多了"></a>★ 场景：工商银行统计每天的用户日活量[上线就算]  要查询某个人连续七天签到 怎么查(用位图)<del>用户量太多了</del></h6><p>搞一个二进制数组，10亿长度的数组，每个数组是一个bit &#x3D; 10亿个位，一个字节<del>1&#x2F;bit</del>&#x3D;8个位，综合计算后大概消耗119MB的空间<del>每天</del>。用用户id去hash 如果用户登录将0置为1<del>有单独的位图结构</del>，统计时间就可以拿日期 往前面数 拿某个id去取模得到桶 找前七个，去进行与运算，连续为1就达到了重复连续七天前端。否则非连续七天。</p>
+<p>在缓存预热时，要预热布隆过滤器。根据id查询文章时查询布隆过滤器如果不存在直接返回</p>
+<p>**bitmap（位图）<del>巨大的二进制数组</del>**：相当于一个以bit位为单位的数组，数组中每个单元只能存储二进制数0或1</p>
+<p><strong>布隆过滤器作用</strong>：可以用于检索一个元素是否在集合中</p>
+<ul>
+<li><strong>存储数据</strong>：id为1的数据，通过多个hash函数获取hash值，根据hash计算数组对应位置<strong>改为1</strong></li>
+<li><strong>查询数据</strong>：使用相同hash函数获取hash值，判断对应位置是否都为1</li>
+</ul>
+<p>存在<strong>误判率</strong>：数组越小 误判率越大 【要数组足够大 误判率就小】</p>
+<pre><code class="java">bloomFilter.tryInit(size, 0.05) //误判率5%
+</code></pre>
+</li>
+</ul>
+<p>&#x3D;&#x3D;<strong>缓存击穿</strong>&#x3D;&#x3D;：给某<strong>一个</strong>热点key设置了过期时间，当key过期的时候，恰好这个时间点对这个key有大量的并发请求过来，这些并发请求可能一瞬间把DB击穿<del>微博[鹿晗+关晓彤]</del>【并发同一时间访问】</p>
+<ul>
+<li><p><strong>解决方案一</strong>：<strong>互斥锁</strong>【数据<strong>强一致性</strong> 性能差 (银行)】[控制一个个来访问的次数]</p>
+<p><del>AQS、ReentrantLock</del>是进程级别的互斥锁，因为有数据在节点1或节点2，<strong>分布式锁</strong>是在不同场景都可以锁也可以控制访问顺序。</p>
+<p>以商品id作为key  先redis开始查缓存 判断是否为空 不为空直接return后解锁，空就先<strong>加锁</strong> 去数据库查完备份一份redis后<strong>解锁</strong>。被锁的其他线程在外面等待。</p>
+<h6 id="★-100个人访问同一个商品，只有一个抢到锁，剩下的99个人也要查redis缓存和数据库。"><a href="#★-100个人访问同一个商品，只有一个抢到锁，剩下的99个人也要查redis缓存和数据库。" class="headerlink" title="★ 100个人访问同一个商品，只有一个抢到锁，剩下的99个人也要查redis缓存和数据库。"></a>★ 100个人访问同一个商品，只有一个抢到锁，剩下的99个人也要查redis缓存和数据库。</h6><p>方案：**<u>双重缓存校验</u>**  先查缓存 查不到加锁 再查缓存 查不到再去数据库 查完后看是否备份后解锁<del>冷代码</del></p>
+<p>1.查询缓存,未命中 → 2.<strong>获取互斥锁成功</strong> → 3.查询数据库重建缓存数据 → 4.写入缓存 → 5.释放锁</p>
+<p>1.查询缓存,未命中 → 2.<strong>获取互斥锁失败</strong> → 3.休眠一会再重试 → 4.写入缓存重试 → 5.缓存命中</p>
+</li>
+<li><p><strong>解决方案二</strong>：<strong>逻辑过期</strong>[  <u><em>不设置过期时间</em></u>  ] 【高可用 性能优 不能保证数据绝对一致 (用户体验)】</p>
+<blockquote>
+<p>在数据库一条数据里面添加一个          “expire”: 153213455</p>
+</blockquote>
+<p>1.查询缓存,发现逻辑时间已过期 → 2.获取互斥锁成功 → 3.开启线程 ↓→ 4.返回过期数据</p>
+<p>​                【在新的线程】→ 1.查询数据库重建缓存数据 → 2.写入缓存,重置逻辑过期时间 → 3.释放锁<br>1.查询数据缓存,发现逻辑时间已过期 → 2.获取互斥锁失败 → 3.返回过期数据</p>
+</li>
+</ul>
+<p>&#x3D;&#x3D;<strong>缓存雪崩</strong>&#x3D;&#x3D;：在同一个时段内<strong>大量</strong>的缓存key同时失效或者<u>Redis服务宕机</u>，导致大量请求到达数据库，带来压力</p>
+<ul>
+<li><strong>解决方案一：</strong>给不同的key的TTL(过期时间)添加随机值<del>不在同一时间过期</del></li>
+<li><strong>解决方案二：</strong>利用Redis集群提高服务的可用性 【哨兵模式、集群模式】</li>
+<li><strong>解决方案三：</strong><u>给缓存业务添加<strong>降级</strong>限流策略</u>【nginx、springcloud、gateway】</li>
+<li><strong>解决方案四：</strong>给业务添加多级缓存 【Guava(做一级缓存 然后Redis是二级缓存)或Caffeine】</li>
+</ul>
+<h6 id="★-redis宕机的时候-再RedisTemplate-set-后会报错-但是现在mysql还可以访问-应该怎么办？"><a href="#★-redis宕机的时候-再RedisTemplate-set-后会报错-但是现在mysql还可以访问-应该怎么办？" class="headerlink" title="★ redis宕机的时候 再RedisTemplate.set()后会报错 但是现在mysql还可以访问 应该怎么办？"></a>★ redis宕机的时候 再RedisTemplate.set()后会报错 但是现在mysql还可以访问 应该怎么办？</h6><p>try catch 在里面继续再去查mysql数据库</p>
+<h6 id="降级代码：对于读操作，如果Redis缓存失效，可以直接从MySQL数据库读取数据。"><a href="#降级代码：对于读操作，如果Redis缓存失效，可以直接从MySQL数据库读取数据。" class="headerlink" title="降级代码：对于读操作，如果Redis缓存失效，可以直接从MySQL数据库读取数据。"></a>降级代码：对于读操作，如果Redis缓存失效，可以直接从MySQL数据库读取数据。</h6><pre><code class="java">public boolean setData(String key, String value) &#123;
+    try &#123;
+        // 尝试将数据设置到Redis
+        redisTemplate.opsForValue().set(key, value);
+        return true;
+    &#125; catch (Exception e) &#123;
+        // 日志记录Redis错误
+        log.error(&quot;Redis is down, failing over to MySQL&quot;, e);
+        
+        // Redis设置失败，降级到MySQL
+        return setDataToMySQL(key, value);
+    &#125;
+&#125;
+
+private boolean setDataToMySQL(String key, String value) &#123;
+    // 这里实现将数据写入MySQL的逻辑
+    // 例如：
+    // mySqlTemplate.update(&quot;INSERT INTO cache (key, value) VALUES (?, ?)&quot;, key, value);
+    // 注意：这里的mySqlTemplate和SQL语句需要根据实际情况调整
+    return true; // 假设写入成功
+&#125;
+</code></pre>
+<h6 id="如果公司对要求更高，需要限流降级、熔断"><a href="#如果公司对要求更高，需要限流降级、熔断" class="headerlink" title="如果公司对要求更高，需要限流降级、熔断"></a>如果公司对要求更高，需要限流<del>降级、熔断</del></h6><p>同一时间设置QPS为100 超过的返回友好提示[商品太火爆啦，请稍后再试]</p>
+<h4 id="你有自己部署过环境吗"><a href="#你有自己部署过环境吗" class="headerlink" title="你有自己部署过环境吗"></a>你有自己部署过环境吗</h4><p>公司里面用 Jenkins + docker 测试环境我们部署 生产环境是组长部署</p>
+<h4 id="未来1-3年规划"><a href="#未来1-3年规划" class="headerlink" title="未来1-3年规划"></a>未来1-3年规划</h4><p>将具体一点，从业务技术上提升自己的深度和广度达到高级工程师</p>
+<h4 id="你平时做笔记吗"><a href="#你平时做笔记吗" class="headerlink" title="你平时做笔记吗"></a>你平时做笔记吗</h4><p>有做笔记 Xmind + Markdown<br>因为我觉得无论从网上的还是别人请教的不经历我的消化都不是我的东西<br>我还是会将这些知识点总结起来变成自己的知识</p>
+<h4 id="什么是动态代理？-amp-amp-动态代理有哪些，他们之间的区别？"><a href="#什么是动态代理？-amp-amp-动态代理有哪些，他们之间的区别？" class="headerlink" title="什么是动态代理？&amp;&amp; 动态代理有哪些，他们之间的区别？"></a>什么是动态代理？&amp;&amp; 动态代理有哪些，他们之间的区别？</h4><h6 id="代理是一种设计模式-用来增强目标的逻辑-与被增强的并没有太大关系装饰者模式"><a href="#代理是一种设计模式-用来增强目标的逻辑-与被增强的并没有太大关系装饰者模式" class="headerlink" title="代理是一种设计模式 用来增强目标的逻辑 与被增强的并没有太大关系装饰者模式"></a>代理是一种设计模式 用来增强目标的逻辑 与被增强的并没有太大关系<del>装饰者模式</del></h6><p>在程序运行期间才会产生代理类加载到我们jvm中</p>
+<ul>
+<li><h6 id="JDK动态代理是基于接口实现来实现增强"><a href="#JDK动态代理是基于接口实现来实现增强" class="headerlink" title="JDK动态代理是基于接口实现来实现增强"></a>JDK动态代理是基于接口实现来实现增强</h6><p>[txt文本 把目标增强类 作为接口<del>本身就是接口</del> 实现过来写成源码 源文件 再用jdk工具把源码编译成class字节码 再用类加载器把class加载到jvm中]</p>
+</li>
+<li><h6 id="CGLIB动态代理是基于继承目标类并覆写其方法来实现"><a href="#CGLIB动态代理是基于继承目标类并覆写其方法来实现" class="headerlink" title="CGLIB动态代理是基于继承目标类并覆写其方法来实现"></a>CGLIB动态代理是基于继承目标类并覆写其方法来实现</h6><p>[ASN字节码机制直接生成class 直接加载到内存中]<del>性能较高，速度更快。因为直接生成class</del></p>
+</li>
+</ul>
+<p>要调用某个方法 CGLIB性能高 是通过反射来实现的 老版本的jdk的反射性能较低。如今在调用方法的性能上差距不大</p>
+<p><strong>区别</strong>：</p>
+<ul>
+<li>JDK动态代理要求目标类必须实现一个或多个接口，而CGLIB没有这个要求。</li>
+<li>JDK动态代理生成的代理类是接口的实现，而CGLIB生成的代理类是目标类的子类。</li>
+<li>性能上，CGLIB通常比JDK动态代理更快，因为它直接操作字节码生成新的类。</li>
+</ul>
+<h4 id="什么样的代码是静态代理？"><a href="#什么样的代码是静态代理？" class="headerlink" title="什么样的代码是静态代理？"></a>什么样的代码是静态代理？</h4><p>发生在我们写代码的过程中 在编译阶段产生了代理类<br>静态代理是指代理类在编译时就已经确定，通常由程序员手动编写</p>
+<h4 id="你用过Linux吗？"><a href="#你用过Linux吗？" class="headerlink" title="你用过Linux吗？"></a>你用过Linux吗？</h4><p>是的，我在工作中经常使用Linux操作系统。我熟悉Linux的基本命令<br>基础的命令：xxx【查看之前笔记】</p>
+<h4 id="你工作的时候有需求文档吗？"><a href="#你工作的时候有需求文档吗？" class="headerlink" title="你工作的时候有需求文档吗？"></a>你工作的时候有需求文档吗？</h4><p>有的，有一些简单的需求是没有的[沟通成本太高了]<br>稍微复杂的需求会有需求文档，我会根据需求文档来理解项目需求，并进行系统设计和开发。</p>
+<h4 id="你有什么需要了解的？不要难为面试官-不问技术栈"><a href="#你有什么需要了解的？不要难为面试官-不问技术栈" class="headerlink" title="你有什么需要了解的？不要难为面试官,不问技术栈"></a><span style="color:red">你有什么需要了解的？</span><del>不要难为面试官,不问技术栈</del></h4><p>我想了解一下贵公司的业务是什么…好的那我这块已经没有什么想了解的了 <span style="color:red">感谢面试官</span><br>HR：想了解一下贵公司的上班时间…<br>我没有什么想了解的，来之前有了解过贵公司</p>
+<h4 id="平时用注解创建的bean是单例的还是多例的？"><a href="#平时用注解创建的bean是单例的还是多例的？" class="headerlink" title="平时用注解创建的bean是单例的还是多例的？"></a>平时用注解创建的bean是单例的还是多例的？</h4><p>默认情况下，通过注解（如@Component、@Service、@Repository、@Bean等）创建的Bean是单例的。如果需要创建多例Bean，可以在注解上添加@Scope(“prototype”)来指定。</p>
+<h4 id="SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？"><a href="#SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？" class="headerlink" title="SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？"></a>SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？</h4><p><code>FROM -&gt; Join -&gt; WHERE -&gt; GROUP BY -&gt; HAVING -&gt; SELECT -&gt; ORDER BY -&gt; limit</code><br>这样的顺序是为了优化查询性能。首先确定数据来源（FROM），然后筛选出满足条件的数据（WHERE），接着进行分组（GROUP BY），在分组的基础上进行进一步筛选（HAVING），然后选择需要的数据（SELECT），最后对结果进行排序（ORDER BY）。这样的顺序可以减少中间结果集的大小，提高查询效率。</p>
+<h6 id="书写顺序"><a href="#书写顺序" class="headerlink" title="书写顺序"></a>书写顺序</h6><p><code>select -&gt; from -&gt; join -&gt; on -&gt; where -&gt; group by -&gt; having -&gt; order by -&gt; limit</code></p>
+<h4 id="线上项目发生死锁如何去解决？-我暂时没遇到过→分布式事务上去答"><a href="#线上项目发生死锁如何去解决？-我暂时没遇到过→分布式事务上去答" class="headerlink" title="线上项目发生死锁如何去解决？ 我暂时没遇到过→分布式事务上去答"></a>线上项目发生死锁如何去解决？ <del>我暂时没遇到过→分布式事务上去答</del></h4><p><strong>死锁</strong>：两个线程争夺两个资源的时候  <code>1线程拿到a 想拿b   2线程拿到了b 想拿a</code><br><strong>四个原因</strong>：<u>互斥条件 请求保持 不可剥夺 循环等待</u><br>产生死锁的四个因素 同时满足才会死锁     想要解决死锁 需要打破其中一个原因就行</p>
+<blockquote>
+<ol>
+<li><strong>互斥条件（Mutual Exclusion）</strong>：资源不能被多个线程同时使用。即某个资源在一段时间内只能由一个线程占用，其他线程必须等待该资源被释放后才能使用。</li>
+<li><strong>持有和等待条件（Hold and Wait）</strong>：线程至少持有一个资源，并且正在等待获取额外的资源，而该资源又被其他线程持有。</li>
+<li><strong>非抢占条件（No Preemption）</strong>：已经分配给某个线程的资源在该线程完成任务前不能被抢占，即只能由线程自己释放。</li>
+<li><strong>循环等待条件（Circular Wait）</strong>：存在一种线程资源的循环等待链，每个线程都在等待下一个线程所持有的资源。</li>
+</ol>
+</blockquote>
+<blockquote>
+<h4 id="在实际操作中，以下是一些打破死锁的具体方法："><a href="#在实际操作中，以下是一些打破死锁的具体方法：" class="headerlink" title="在实际操作中，以下是一些打破死锁的具体方法："></a>在实际操作中，以下是一些打破死锁的具体方法：</h4><ul>
+<li><strong>资源分配图</strong>：使用资源分配图来检测循环等待条件，并在检测到循环时采取措施。</li>
+<li><strong>锁排序</strong>：确保所有线程以相同的顺序获取锁，从而避免循环等待。</li>
+<li><strong>超时机制</strong>：线程在请求资源时设置超时时间，如果超过时间未获得资源，则放弃当前任务并释放已持有的资源。</li>
+<li><strong>死锁检测算法</strong>：运行死锁检测算法，如银行家算法，来检测系统中的死锁，并在必要时采取措施。</li>
+<li><strong>线程中断</strong>：允许系统或其他线程中断正在等待资源的线程。</li>
+<li><strong>回滚操作</strong>：如果检测到死锁，可以让某些线程回滚它们的工作，并释放资源，从而打破死锁。</li>
+</ul>
+</blockquote>
+<p>MySQL是不会有死锁的 自身会检测 [让后面的超时释放回滚]<br>在分布式事务 线程1拿着资源a是数据库1 线程2拿着资源b是数据库2<br>JVM中也有死锁，jvm没有超时机制不会解决 可以查看命令打印堆栈信息可以查看哪里产生死锁</p>
+<blockquote>
+<p>你可以使用<code>jstack</code>命令来打印指定进程ID的Java堆栈跟踪信息。这个命令可以帮助你分析线程的状态</p>
+<ol>
+<li><p>首先，找到你的Java进程ID（PID）。你可以使用<code>jps</code>命令来列出所有正在运行的Java进程及其PID。</p>
+<pre><code>jps
+</code></pre>
+</li>
+<li><p>使用<code>jstack</code>命令打印出该Java进程的堆栈跟踪。</p>
+<pre><code>jstack &lt;PID&gt;
+</code></pre>
+<p>将<code>&lt;PID&gt;</code>替换为实际的进程ID。</p>
+</li>
+<li><p>查找堆栈跟踪中的”DEADLOCK”关键字。<code>jstack</code>会自动检测死锁并在输出中报告。</p>
+</li>
+</ol>
+</blockquote>
+<h4 id="如果你遇到-新的-技术栈，怎么去解决"><a href="#如果你遇到-新的-技术栈，怎么去解决" class="headerlink" title="如果你遇到(新的)技术栈，怎么去解决?"></a>如果你遇到(新的)技术栈，怎么去解决?</h4><p>【return Previous.notes(NowDay);】</p>
+<h4 id="如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通"><a href="#如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通" class="headerlink" title="如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通?"></a>如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通?</h4><p>首先尝试自己解决问题，通过搜索引擎、官方文档、Debug等。<br>尽可能不让这个问题不出现风险 实在解决不了就向上反馈 寻求帮助 请教上司领导或同事<br>平常和项目经理进行沟通 如果需求评审有些不理解还是会及时沟通 不清楚的一定要及时明确</p>
+<h4 id="对于加班情况怎么看"><a href="#对于加班情况怎么看" class="headerlink" title="对于加班情况怎么看?"></a>对于加班情况怎么看?</h4><p>为了确保项目进度和团队利益，加班是可以接受的。</p>
+<h4 id="多线程怎么保证线程之间的安全"><a href="#多线程怎么保证线程之间的安全" class="headerlink" title="多线程怎么保证线程之间的安全"></a>多线程怎么保证线程之间的安全</h4><h6 id="加锁-不让多线程抢夺资源"><a href="#加锁-不让多线程抢夺资源" class="headerlink" title="加锁  不让多线程抢夺资源"></a>加锁  不让多线程抢夺资源</h6><p>互斥锁、读写锁、线程局部存储(ThreadLocal每个线程独享自己变量)</p>
+<h6 id=""><a href="#" class="headerlink" title=""></a></h6><h4 id="mybatis中-和-的区别，哪个更好-为什么"><a href="#mybatis中-和-的区别，哪个更好-为什么" class="headerlink" title="mybatis中${}和#{}的区别，哪个更好? 为什么?"></a>mybatis中${}和#{}的区别，哪个更好? 为什么?</h4><ol>
+<li><h5 id="（字符串替换）："><a href="#（字符串替换）：" class="headerlink" title="${}（字符串替换）："></a><code>$&#123;&#125;</code>（字符串替换）：</h5><ul>
+<li><code>$&#123;&#125;</code>会将参数直接替换到SQL语句中，不进行任何转义处理。</li>
+<li>它适用于动态SQL中的表名或列名，或者在SQL语句中需要使用特定数据库函数的情况。</li>
+<li>使用<code>$&#123;&#125;</code>时，如果参数是用户输入的，那么可能会引发SQL注入攻击，因为它不会对参数进行转义。</li>
+</ul>
+</li>
+<li><h5 id="（预处理语句参数）："><a href="#（预处理语句参数）：" class="headerlink" title="#{}（预处理语句参数）："></a><code>#&#123;&#125;</code>（预处理语句参数）：</h5><ul>
+<li><code>#&#123;&#125;</code>会创建预处理语句（prepared statement）的参数占位符，并在设置参数时进行适当的转义处理。</li>
+<li>它适用于大部分情况，特别是当参数是用户输入时，可以有效防止SQL注入攻击。</li>
+<li>MyBatis会根据参数的类型自动选择<code>setString</code>、<code>setInt</code>、<code>setDate</code>等预处理语句方法。</li>
+</ul>
+</li>
+<li><h5 id="在大多数情况下，-是更好的选择，因为它提供了以下优势："><a href="#在大多数情况下，-是更好的选择，因为它提供了以下优势：" class="headerlink" title="在大多数情况下，#{}是更好的选择，因为它提供了以下优势："></a>在大多数情况下，<code>#&#123;&#125;</code>是更好的选择，因为它提供了以下优势：</h5><ul>
+<li><strong>安全性</strong>：<code>#&#123;&#125;</code>可以防止SQL注入攻击，因为它会自动转义参数。</li>
+<li><strong>类型处理</strong>：MyBatis会根据参数的实际类型来设置预处理语句的参数，这减少了类型错误的可能性。</li>
+<li><strong>可读性和维护性</strong>：使用<code>#&#123;&#125;</code>可以使SQL语句更加清晰，因为它清楚地标识了参数的位置。</li>
+</ul>
+<p>然而，在某些特定的场景下，如需要动态地指定表名或列名时，<code>$&#123;&#125;</code>是必要的，因为预处理语句</p>
+</li>
+</ol>
+<h4 id="说一下内连接和外连接的区别"><a href="#说一下内连接和外连接的区别" class="headerlink" title="说一下内连接和外连接的区别"></a>说一下内连接和外连接的区别</h4><p><strong>左外连接（Left Outer Join）</strong>：</p>
+<ul>
+<li><strong>定义</strong>：左外连接返回左表中的所有行，即使在右表中没有匹配的行。对于左表中没有匹配的行，结果集中的右表部分将包含NULL。</li>
+</ul>
+<p><strong>右外连接（Right Outer Join）</strong>：</p>
+<ul>
+<li><strong>定义</strong>：右外连接返回右表中的所有行，即使在左表中没有匹配的行。对于右表中没有匹配的行，结果集中的左表部分将包含NULL。</li>
+</ul>
+<p><strong>全外连接（Full Outer Join）</strong>：</p>
+<ul>
+<li><strong>定义</strong>：全外连接返回左表和右表中的所有行。当某行在另一个表中没有匹配时，结果集中的相应部分将包含NULL。</li>
+</ul>
+<h4 id="自我介绍-1"><a href="#自我介绍-1" class="headerlink" title="自我介绍"></a>自我介绍</h4><p>xxx</p>
+<h4 id="你觉得学习我们这些技术最重要的是什么"><a href="#你觉得学习我们这些技术最重要的是什么" class="headerlink" title="你觉得学习我们这些技术最重要的是什么?"></a>你觉得学习我们这些技术最重要的是什么?</h4><p>首先要清楚这个技术是解决什么领域的问题，学习技术很多方面都是用来服务业务的，结合实际业务来学习技术融合性会更强</p>
+<h4 id="技术栈有些不同，有没有想过换方向发展"><a href="#技术栈有些不同，有没有想过换方向发展" class="headerlink" title="技术栈有些不同，有没有想过换方向发展?"></a>技术栈有些不同，有没有想过换方向发展?</h4><p>没问题的 因为技术是相通的 可以去学新技术</p>
+<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1.概述"></a>1.概述</h2><p>ThreadLocal(定义全局静态变量 项目中共用)是Java中的一个线程局部变量工具类，它提供了一种在多线程环境下，每个线程都可以独立访问自己的变量副本的机制。ThreadLocal中存储的数据对于每个线程来说都是独立的，互不干扰。</p>
+<h2 id="2-使用场景"><a href="#2-使用场景" class="headerlink" title="2. 使用场景"></a>2. 使用场景</h2><p>ThreadLocal适用于以下场景：</p>
+<ul>
+<li>在多线程环境下，需要保持线程安全性的数据访问。</li>
+<li>需要在多个方法之间共享数据，但又不希望使用传递参数的方式。<ul>
+<li>在传递登录用户id是非常方便且适用</li>
+</ul>
+</li>
+</ul>
+<p>以后获取用户id不用再解析token了，线程拿仅仅拿当前线程的数据 每个登录的用户都有自己的threadlocal数据</p>
+<p><strong>ThreadLocal</strong>并不是一个Thread，<strong>而是Thread的局部变量</strong>【可以存储数据】<br>ThreadLocal<strong>为每个线程提供单独一份存储空间</strong>，具有线程隔离的效果，只有在线程内才能获取到对应的值，线程外则不能访问。**<u>ThreadLocal实现一个线程内传递数据</u>**[就不用一个个参数往后传递了]<br>注意：客户端发送的每次请求，后端的tomcat服务器都会分配一个单独的线程来处理请求</p>
+<ul>
+<li><strong><u>一个请求是一个线程</u></strong>[意义：在第一个线程里面使用ThreadLocal存储用户Id 在后面controller或service中就可以取出来用户id]</li>
+<li>第二个请求就是另一个线程 线程池用完第一个放回线程池 也有可能把上一个线程接着给它用</li>
+</ul>
+<p><code>postHandle </code>只有在正确调用返回才会引用 如果抛出异常则不会使用<br><code>afterCompletion </code>无论怎样最后都要运行</p>
+<h2 id="-1"><a href="#-1" class="headerlink" title=""></a></h2><h4 id="ThreadLocal"><a href="#ThreadLocal" class="headerlink" title="ThreadLocal"></a>ThreadLocal</h4><h6 id="3-1-创建ThreadLocal对象"><a href="#3-1-创建ThreadLocal对象" class="headerlink" title="3.1 创建ThreadLocal对象"></a>3.1 创建ThreadLocal对象</h6><p>首先，我们需要创建一个ThreadLocal对象来存储线程局部变量。可以使用ThreadLocal的默认构造函数创建一个新的实例。【给每个线程拷贝一份 synchn + Lock锁】</p>
+<pre><code class="Java">ThreadLocal&lt;String&gt; threadLocal = new ThreadLocal&lt;&gt;();
+</code></pre>
+<h6 id="3-2-设置线程局部变量的值"><a href="#3-2-设置线程局部变量的值" class="headerlink" title="3.2 设置线程局部变量的值"></a>3.2 设置线程局部变量的值</h6><p>使用<code>set()</code>方法可以设置当前线程的局部变量的值。</p>
+<pre><code class="Java">threadLocal.set(&quot;value&quot;);
+</code></pre>
+<h6 id="3-3-获取线程局部变量的值"><a href="#3-3-获取线程局部变量的值" class="headerlink" title="3.3 获取线程局部变量的值"></a>3.3 获取线程局部变量的值</h6><p>使用<code>get()</code>方法可以获取当前线程的局部变量的值。</p>
+<pre><code class="Java">String value = threadLocal.get();
+</code></pre>
+<h6 id="3-4-清除线程局部变量的值"><a href="#3-4-清除线程局部变量的值" class="headerlink" title="3.4 清除线程局部变量的值"></a>3.4 清除线程局部变量的值</h6><p>使用<code>remove()</code>方法可以清除当前线程的局部变量的值，建议在整个请求使用完一定要执行remove清除数据，不然可能会发生内存泄漏问题。</p>
+<pre><code class="Java">threadLocal.remove();
+</code></pre>
+<h6 id="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"><a href="#下面是一个简单的示例代码，演示了如何使用ThreadLocal。" class="headerlink" title="下面是一个简单的示例代码，演示了如何使用ThreadLocal。"></a>下面是一个简单的示例代码，演示了如何使用ThreadLocal。</h6><pre><code class="Java">public class ThreadLocalTest &#123;
+
+    private static final ThreadLocal THREAD_LOCAL = new ThreadLocal();
+
+    public static void main(String[] args) &#123;
+
+        Thread t1 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itheima&quot;);
+            getData(&quot;t1&quot;);
+        &#125;, &quot;t1&quot;);
+
+        Thread t2 = new Thread(() -&gt; &#123;
+            THREAD_LOCAL.set(&quot;itcast&quot;);
+            getData(&quot;t2&quot;);
+        &#125;, &quot;t1&quot;);
+
+        t1.start();
+        t2.start();
+
+    &#125;
+
+    private static void getData(String threadName)&#123;
+        Object data = THREAD_LOCAL.get();
+        System.out.println(threadName+&quot;-&quot;+data);
+    &#125;
+&#125;
+</code></pre>
+<p>运行以上代码，输出结果为：</p>
+<pre><code class="Plain">t1-itheima
+t2-itcast
+</code></pre>
+<p>在任意位置都可以调用Threadlocal，线程隔离互不影响，解决了线程安全问题：[每个线程存一份 线程不共享]</p>
+<p>用mybatis+建造者模式 一定要在类里面加 一定要具有有参和无参构造缺一不可 否则mybatis数据封装无法映射<br>@AllArgsConstructor<br>@NoArgsConstructor<br>@Builder</p>
 
             
         </div>
@@ -2718,7 +2958,7 @@ public class MyService &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -7745,7 +7985,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -11054,7 +11294,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -13817,7 +14057,7 @@ D:\logs\history.2024-01-18
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -19024,7 +19264,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -19232,7 +19472,7 @@ public class JdbcTemplateTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#879cff>
                 英语
             </a>
         </span>
@@ -21142,7 +21382,7 @@ public class CacheSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -24247,7 +24487,7 @@ public class NoticeServlet extends HttpServlet &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -26216,7 +26456,7 @@ public class MyBatisTestor &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -26391,7 +26631,7 @@ public class MyBatisTestor &#123;
 <footer id="footer">
     <div class="footer-wrap">
         <div>
-            © 2018 - 2024 P-luminary
+            © 2018 - 2025 P-luminary
             <span class="footer-icon">
                 <a-icon type="flag" theme="filled" /></span>
             @Asuna
