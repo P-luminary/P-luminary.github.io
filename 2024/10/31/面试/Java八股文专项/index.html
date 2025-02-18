@@ -1177,10 +1177,10 @@ select * from t_user where id &lt; 5
 <li><strong>数据页</strong>(page)：是InnoD8 存储引擎磁盘管理的最小单元，每个页的大小默认为 16KB。页中存储的是行数据</li>
 </ul>
 <p>&#x3D;&#x3D;<strong>redo log</strong>&#x3D;&#x3D;</p>
-<p>重做日志，记录的是事务提交时数据页的物理修改，是<strong>用来实现事务的持久性</strong><br>该日志文件由两部分组冲：<strong>重做日志缓冲(redo log buffer)</strong> 以及 **重做日志文件(redo log file)**，前者是在内存中，后者是在磁盘中。当事务提交之后会把所有修改信息都保存到该日志文件中，用于在刷新脏页到磁盘，发生错误时，进行数据恢复使用。</p>
+<p><strong>重做日志</strong>，记录的是事务提交时数据页的物理修改，是<strong>用来实现事务的持久性</strong><br>该日志文件由两部分组冲：<strong>重做日志缓冲(redo log buffer)</strong> 以及 **重做日志文件(redo log file)**，前者是在内存中，后者是在磁盘中。当事务提交之后会把所有修改信息都保存到该日志文件中，用于在刷新脏页到磁盘，发生错误时，进行数据恢复使用。</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/f3e54069fe783271a5892cf6d0bf49247f2b0f4a/undo%20log%20%E5%92%8C%20redo%20log%E5%8C%BA%E5%88%AB.jpg"></p>
 <p>&#x3D;&#x3D;<strong>undo log</strong>&#x3D;&#x3D;</p>
-<p>回滚日志，用于记录数据被修改前的信息，作用包含两个：<strong>提供回滚</strong>和 <strong>MVCC</strong>(多版本并发控制)。undolog 和 redolog记录物理日志不一样，它是<strong>逻辑日志</strong></p>
+<p><strong>回滚日志</strong>，用于记录数据被修改前的信息，作用包含两个：<strong>提供回滚</strong>和 <strong>MVCC</strong>(多版本并发控制)。undolog 和 redolog记录物理日志不一样，它是<strong>逻辑日志</strong></p>
 <ul>
 <li>**<u>可以认为当delete一条记录时，undo log中会记录一条对应的insert记录</u>**，反之亦然</li>
 <li>当update一条记录时，它记录一条对应相反的update记录。当执行rolback时，就可以从undolog中的逻辑记录读取到相应的内容并进行回滚。</li>
