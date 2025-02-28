@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -2845,6 +2845,396 @@ print(result)
 <td align="left">匹配任何非单词字符。等价于 ‘[^A-Za-z0-9_]’。</td>
 </tr>
 </tbody></table>
+<h6 id="request请求的用法"><a href="#request请求的用法" class="headerlink" title="request请求的用法"></a>request请求的用法</h6><p>以下是使用 Python 标准库中的 <code>urllib</code> 模块进行 HTTP <code>GET </code>和 <code>POST</code> 请求的简化用法。</p>
+<p><strong>Get请求</strong><del>request.get()</del></p>
+<pre><code class="python">import requests
+
+# 简化的 GET 请求
+def simple_get(url):
+    response = requests.get(url)
+    return response.text
+
+# 使用 GET 请求
+url = &#39;http://httpbin.org/get&#39;
+response_text = simple_get(url)
+print(response_text)
+</code></pre>
+<p><strong>Post请求</strong><del>request.post()</del></p>
+<pre><code class="python">import requests
+
+# 简化的 POST 请求
+def simple_post(url, data):
+    response = requests.post(url, data=data)
+    return response.text
+
+# 使用 POST 请求
+url = &#39;http://httpbin.org/post&#39;
+data = &#123;&#39;key1&#39;: &#39;value1&#39;, &#39;key2&#39;: &#39;value2&#39;&#125;
+response_text = simple_post(url, data)
+print(response_text)
+</code></pre>
+<h6 id="SMTP发送邮件"><a href="#SMTP发送邮件" class="headerlink" title="SMTP发送邮件"></a>SMTP发送邮件</h6><pre><code class="python">import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
+
+
+# 设置QQ邮箱的SMTP服务器地址和端口
+smtp_server = &#39;smtp.qq.com&#39;
+smtp_port = 465  # QQ邮箱SMTP服务器端口为465或587
+
+# 设置发件人和收件人邮箱
+sender_email = &#39;390415032@qq.com&#39;  # 发件人邮箱
+receiver_email = &#39;recipient@example.com&#39;  # 收件人邮箱
+password = &#39;your_qq_email_auth_code&#39;  # QQ邮箱授权码
+
+# 设置邮件主题和内容
+subject = &#39;Test Email from Python&#39;
+body = &#39;This is a test email sent by Python.&#39;
+
+# 创建MIMEText对象，设置邮件内容和编码
+msg = MIMEText(body, &#39;plain&#39;, &#39;utf-8&#39;)
+msg[&#39;From&#39;] = Header(sender_email, &#39;utf-8&#39;)
+msg[&#39;To&#39;] = Header(receiver_email, &#39;utf-8&#39;)
+msg[&#39;Subject&#39;] = Header(subject, &#39;utf-8&#39;)
+
+# 发送邮件
+try:
+    # 创建SMTP对象
+    server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+    # 登录SMTP服务器
+    server.login(sender_email, password)
+    # 发送邮件
+    server.sendmail(sender_email, [receiver_email], msg.as_string())
+    print(&#39;Email sent successfully!&#39;)
+except smtplib.SMTPException as e:
+    print(&#39;Error: unable to send email. &#39;, e)
+finally:
+    # 关闭服务器连接
+    server.quit()
+</code></pre>
+<h6 id="Python-多线程"><a href="#Python-多线程" class="headerlink" title="Python 多线程"></a>Python 多线程</h6><p>Python中使用线程有两种方式：函数或者用类来包装线程对象。</p>
+<p>函数式：调用thread模块中的start_new_thread()函数来产生新线程。语法如下:</p>
+<pre><code class="python">thread.start_new_thread ( function, args[, kwargs] )
+</code></pre>
+<p>参数说明:</p>
+<ul>
+<li><strong>function</strong> - 线程函数。</li>
+<li><strong>args</strong> - 传递给线程函数的参数,他必须是个tuple类型。</li>
+<li><strong>kwargs</strong> - 可选参数。</li>
+</ul>
+<pre><code class="python">#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+ 
+import thread
+import time
+ 
+# 为线程定义一个函数
+def print_time( threadName, delay):
+   count = 0
+   while count &lt; 5:
+      time.sleep(delay)
+      count += 1
+      print &quot;%s: %s&quot; % ( threadName, time.ctime(time.time()) )
+ 
+# 创建两个线程
+try:
+   thread.start_new_thread( print_time, (&quot;Thread-1&quot;, 2, ) )
+   thread.start_new_thread( print_time, (&quot;Thread-2&quot;, 4, ) )
+except:
+   print &quot;Error: unable to start thread&quot;
+ 
+while 1:
+   pass
+
+-------------------------------------------------------
+Thread-1: Thu Jan 22 15:42:17 2009
+Thread-1: Thu Jan 22 15:42:19 2009
+Thread-2: Thu Jan 22 15:42:19 2009
+Thread-1: Thu Jan 22 15:42:21 2009
+Thread-2: Thu Jan 22 15:42:23 2009
+Thread-1: Thu Jan 22 15:42:23 2009
+Thread-1: Thu Jan 22 15:42:25 2009
+Thread-2: Thu Jan 22 15:42:27 2009
+Thread-2: Thu Jan 22 15:42:31 2009
+Thread-2: Thu Jan 22 15:42:35 2009
+</code></pre>
+<p>线程的结束一般依靠线程函数的自然结束；也可以在线程函数中调用thread.exit()，他抛出SystemExit exception，达到退出线程的目的。</p>
+<h4 id="线程模块"><a href="#线程模块" class="headerlink" title="线程模块"></a>线程模块</h4><p>Python通过两个标准库thread和threading提供对线程的支持。thread提供了低级别的、原始的线程以及一个简单的锁。</p>
+<p><strong>threading</strong> 模块提供的其他方法：</p>
+<ul>
+<li><code>threading.currentThread():</code>  返回当前的线程变量。</li>
+<li><code>threading.enumerate():</code>  返回一个包含正在运行的线程的list。正在运行指线程启动后、结束前，不包括启动前和终止后的线程。</li>
+<li><code>threading.activeCount(): </code> 返回正在运行的线程数量，与len(threading.enumerate())有相同的结果。</li>
+</ul>
+<p>除了使用方法外，线程模块同样提供了Thread类来处理线程，Thread类提供了以下方法:</p>
+<ul>
+<li><strong>run():</strong> 用以表示线程活动的方法。</li>
+<li><strong>start():</strong> 启动线程活动。</li>
+<li><strong>join([time]):</strong> 等待至线程中止。这阻塞调用线程直至线程的join() 方法被调用中止-正常退出或者抛出未处理的异常-或者是可选的超时发生。</li>
+<li><strong>isAlive():</strong> 返回线程是否活动的。</li>
+<li><strong>getName():</strong> 返回线程名。</li>
+<li><strong>setName():</strong> 设置线程名。</li>
+</ul>
+<h6 id="使用Threading模块创建线程"><a href="#使用Threading模块创建线程" class="headerlink" title="使用Threading模块创建线程"></a>使用Threading模块创建线程</h6><p>使用Threading模块创建线程，直接从threading.Thread继承<br>然后重写__init__方法和run方法：</p>
+<pre><code class="python">#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+ 
+import threading
+import time
+ 
+exitFlag = 0
+ 
+class myThread (threading.Thread):   #继承父类threading.Thread
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):                   #把要执行的代码写到run函数里面 线程在创建后会直接运行run函数 
+        print &quot;Starting &quot; + self.name
+        print_time(self.name, self.counter, 5)
+        print &quot;Exiting &quot; + self.name
+ 
+def print_time(threadName, delay, counter):
+    while counter:
+        if exitFlag:
+            (threading.Thread).exit()
+        time.sleep(delay)
+        print &quot;%s: %s&quot; % (threadName, time.ctime(time.time()))
+        counter -= 1
+ 
+# 创建新线程
+thread1 = myThread(1, &quot;Thread-1&quot;, 1)
+thread2 = myThread(2, &quot;Thread-2&quot;, 2)
+ 
+# 开启线程
+thread1.start()
+thread2.start()
+ 
+print &quot;Exiting Main Thread&quot;
+
+------------------------------------------
+Starting Thread-1
+Starting Thread-2
+Exiting Main Thread
+Thread-1: Thu Mar 21 09:10:03 2013
+Thread-1: Thu Mar 21 09:10:04 2013
+Thread-2: Thu Mar 21 09:10:04 2013
+Thread-1: Thu Mar 21 09:10:05 2013
+Thread-1: Thu Mar 21 09:10:06 2013
+Thread-2: Thu Mar 21 09:10:06 2013
+Thread-1: Thu Mar 21 09:10:07 2013
+Exiting Thread-1
+Thread-2: Thu Mar 21 09:10:08 2013
+Thread-2: Thu Mar 21 09:10:10 2013
+Thread-2: Thu Mar 21 09:10:12 2013
+Exiting Thread-2
+</code></pre>
+<h6 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h6><p>如果多个线程共同对某个数据修改，则可能出现不可预料的结果，为了保证数据的正确性，需要对多个线程进行同步。</p>
+<p>使用Thread对象的Lock和Rlock可以实现简单的线程同步，这两个对象都有<code>acquire方法</code>和<code>release方法</code>，对于那些需要每次只允许一个线程操作的数据，可以将其操作放到acquire和release方法之间。如下：</p>
+<p>多线程的优势在于可以同时运行多个任务（至少感觉起来是这样）。但是当线程需要共享数据时，可能存在数据不同步的问题。</p>
+<p>考虑这样一种情况：一个列表里所有元素都是0，线程”set”从后向前把所有元素改成1，而线程”print”负责从前往后读取列表并打印。</p>
+<p>那么，可能线程”set”开始改的时候，线程”print”便来打印列表了，输出就成了一半0一半1，这就是数据的不同步。为了避免这种情况，引入了锁的概念。</p>
+<p>锁有两种状态——锁定和未锁定。每当一个线程比如”set”要访问共享数据时，必须先获得锁定；如果已经有别的线程比如”print”获得锁定了，那么就让线程”set”暂停，也就是同步阻塞；等到线程”print”访问完毕，释放锁以后，再让线程”set”继续。</p>
+<p>经过这样的处理，打印列表时要么全部输出0，要么全部输出1，不会再出现一半0一半1的尴尬场面。</p>
+<pre><code class="python">#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+ 
+import threading
+import time
+ 
+class myThread (threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print &quot;Starting &quot; + self.name
+       # 获得锁，成功获得锁定后返回True
+       # 可选的timeout参数不填时将一直阻塞直到获得锁定
+       # 否则超时后将返回False
+        threadLock.acquire()
+        print_time(self.name, self.counter, 3)
+        # 释放锁
+        threadLock.release()
+ 
+def print_time(threadName, delay, counter):
+    while counter:
+        time.sleep(delay)
+        print &quot;%s: %s&quot; % (threadName, time.ctime(time.time()))
+        counter -= 1
+ 
+threadLock = threading.Lock()
+threads = []
+ 
+# 创建新线程
+thread1 = myThread(1, &quot;Thread-1&quot;, 1)
+thread2 = myThread(2, &quot;Thread-2&quot;, 2)
+ 
+# 开启新线程
+thread1.start()
+thread2.start()
+ 
+# 添加线程到线程列表
+threads.append(thread1)
+threads.append(thread2)
+ 
+# 等待所有线程完成
+for t in threads:
+    t.join()
+print &quot;Exiting Main Thread&quot;
+</code></pre>
+<h6 id="线程优先级队列（-Queue）"><a href="#线程优先级队列（-Queue）" class="headerlink" title="线程优先级队列（ Queue）"></a>线程优先级队列（ Queue）</h6><p>Python的Queue模块中提供了同步的、线程安全的队列类，包括FIFO（先入先出)队列Queue，LIFO（后入先出）队列LifoQueue，和优先级队列PriorityQueue。这些队列都实现了锁原语，能够在多线程中直接使用。可以使用队列来实现线程间的同步。</p>
+<p>Queue模块中的常用方法:</p>
+<ul>
+<li>Queue.qsize() 返回队列的大小</li>
+<li>Queue.empty() 如果队列为空，返回True,反之False</li>
+<li>Queue.full() 如果队列满了，返回True,反之False</li>
+<li>Queue.full 与 maxsize 大小对应</li>
+<li>Queue.get([block[, timeout]])获取队列，timeout等待时间</li>
+<li>Queue.get_nowait() 相当Queue.get(False)</li>
+<li>Queue.put(item, block&#x3D;True, timeout&#x3D;None) 写入队列，timeout等待时间</li>
+<li>Queue.put_nowait(item) 相当 Queue.put(item, False)</li>
+<li>Queue.task_done() 在完成一项工作之后，Queue.task_done()函数向任务已经完成的队列发送一个信号</li>
+<li>Queue.join() 实际上意味着等到队列为空，再执行别的操作</li>
+</ul>
+<pre><code class="python">#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+ 
+import Queue
+import threading
+import time
+ 
+exitFlag = 0
+ 
+class myThread (threading.Thread):
+    def __init__(self, threadID, name, q):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.q = q
+    def run(self):
+        print &quot;Starting &quot; + self.name
+        process_data(self.name, self.q)
+        print &quot;Exiting &quot; + self.name
+ 
+def process_data(threadName, q):
+    while not exitFlag:
+        queueLock.acquire()
+        if not workQueue.empty():
+            data = q.get()
+            queueLock.release()
+            print &quot;%s processing %s&quot; % (threadName, data)
+        else:
+            queueLock.release()
+        time.sleep(1)
+ 
+threadList = [&quot;Thread-1&quot;, &quot;Thread-2&quot;, &quot;Thread-3&quot;]
+nameList = [&quot;One&quot;, &quot;Two&quot;, &quot;Three&quot;, &quot;Four&quot;, &quot;Five&quot;]
+queueLock = threading.Lock()
+workQueue = Queue.Queue(10)
+threads = []
+threadID = 1
+ 
+# 创建新线程
+for tName in threadList:
+    thread = myThread(threadID, tName, workQueue)
+    thread.start()
+    threads.append(thread)
+    threadID += 1
+ 
+# 填充队列
+queueLock.acquire()
+for word in nameList:
+    workQueue.put(word)
+queueLock.release()
+ 
+# 等待队列清空
+while not workQueue.empty():
+    pass
+ 
+# 通知线程是时候退出
+exitFlag = 1
+ 
+# 等待所有线程完成
+for t in threads:
+    t.join()
+print &quot;Exiting Main Thread&quot;
+---------------------------------------------------
+Starting Thread-1
+Starting Thread-2
+Starting Thread-3
+Thread-1 processing One
+Thread-2 processing Two
+Thread-3 processing Three
+Thread-1 processing Four
+Thread-2 processing Five
+Exiting Thread-3
+Exiting Thread-1
+Exiting Thread-2
+Exiting Main Thread
+</code></pre>
+<h4 id="Python-XML解析"><a href="#Python-XML解析" class="headerlink" title="Python XML解析"></a>Python XML解析</h4><p>XML 指可扩展标记语言（e<strong>X</strong>tensible <strong>M</strong>arkup <strong>L</strong>anguage）；XML 被设计用来传输和存储数据。XML 是一套定义语义标记的规则，这些标记将文档分成许多部件并对这些部件加以标识。它也是元标记语言，即定义了用于定义其他与特定领域有关的、语义的、结构化的标记语言的句法语言。常见的 XML 编程接口有 DOM 和 SAX，这两种接口处理 XML 文件的方式不同，当然使用场合也不同。<br>Python 有三种方法解析 XML，SAX，DOM，以及 ElementTree:</p>
+<h6 id="1-SAX-simple-API-for-XML"><a href="#1-SAX-simple-API-for-XML" class="headerlink" title="1.SAX (simple API for XML )"></a>1.SAX (simple API for XML )</h6><p>Python 标准库包含 SAX 解析器，SAX 用事件驱动模型，通过在解析XML的过程中触发一个个的事件并调用用户定义的回调函数来处理XML文件。</p>
+<h6 id="2-DOM-Document-Object-Model"><a href="#2-DOM-Document-Object-Model" class="headerlink" title="2.DOM(Document Object Model)"></a>2.DOM(Document Object Model)</h6><p>将 XML 数据在内存中解析成一个树，通过对树的操作来操作XML。</p>
+<h6 id="3-ElementTree-元素树"><a href="#3-ElementTree-元素树" class="headerlink" title="3.ElementTree(元素树)"></a>3.ElementTree(元素树)</h6><p>ElementTree就像一个轻量级的DOM，具有方便友好的API。代码可用性好，速度快，消耗内存少。</p>
+<p><strong>注：</strong>因DOM需要将XML数据映射到内存中的树，一是比较慢，二是比较耗内存，而SAX流式读取XML文件，比较快，占用内存少，但需要用户实现回调函数（handler）。</p>
+<p><strong>XML解析一下</strong></p>
+<pre><code class="python">import xml.sax
+from lxml import etree
+
+# 确保文件路径正确
+xml_file_path = &#39;movies.xml&#39;
+
+# 使用 lxml 创建一个 XML 解析器
+parser = etree.XMLParser()
+
+# 解析 XML 文件
+try:
+    tree = etree.parse(xml_file_path, parser)
+    # 遍历所有元素并打印
+    for element in tree.iter():
+        print(f&quot;Element tag: &#123;element.tag&#125;, text: &#123;element.text.strip() if element.text else &#39;&#39;&#125;&quot;)
+except etree.XMLSyntaxError as e:
+    print(f&quot;XML 解析错误: &#123;e&#125;&quot;)
+</code></pre>
+<pre><code class="xml">movies.xml
+&lt;collection shelf=&quot;New Arrivals&quot;&gt;
+&lt;movie title=&quot;Enemy Behind&quot;&gt;
+   &lt;type&gt;War, Thriller&lt;/type&gt;
+   &lt;format&gt;DVD&lt;/format&gt;
+   &lt;year&gt;2003&lt;/year&gt;
+   &lt;rating&gt;PG&lt;/rating&gt;
+   &lt;stars&gt;10&lt;/stars&gt;
+   &lt;description&gt;Talk about a US-Japan war&lt;/description&gt;
+&lt;/movie&gt;
+&lt;movie title=&quot;Transformers&quot;&gt;
+   &lt;type&gt;Anime, Science Fiction&lt;/type&gt;
+   &lt;format&gt;DVD&lt;/format&gt;
+   &lt;year&gt;1989&lt;/year&gt;
+   &lt;rating&gt;R&lt;/rating&gt;
+   &lt;stars&gt;8&lt;/stars&gt;
+   &lt;description&gt;A schientific fiction&lt;/description&gt;
+&lt;/movie&gt;
+   &lt;movie title=&quot;Trigun&quot;&gt;
+   &lt;type&gt;Anime, Action&lt;/type&gt;
+   &lt;format&gt;DVD&lt;/format&gt;
+   &lt;episodes&gt;4&lt;/episodes&gt;
+   &lt;rating&gt;PG&lt;/rating&gt;
+   &lt;stars&gt;10&lt;/stars&gt;
+   &lt;description&gt;Vash the Stampede!&lt;/description&gt;
+&lt;/movie&gt;
+&lt;movie title=&quot;Ishtar&quot;&gt;
+   &lt;type&gt;Comedy&lt;/type&gt;
+   &lt;format&gt;VHS&lt;/format&gt;
+   &lt;rating&gt;PG&lt;/rating&gt;
+   &lt;stars&gt;2&lt;/stars&gt;
+   &lt;description&gt;Viewable boredom&lt;/description&gt;
+&lt;/movie&gt;
+&lt;/collection&gt;
+</code></pre>
 
     </div>
 
