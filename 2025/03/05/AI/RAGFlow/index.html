@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/AI" style=color:#ffa2c4>
+                <a href="/tags/AI" style=color:#1bccbc>
                     AI
                 </a>
             </span>
@@ -199,6 +199,25 @@ docker-compose up -d
 <pre><code class="python">docker exec -it ragflow-server cat /ragflow/conf/service_conf.yaml
 </code></pre>
 </blockquote>
+<hr>
+<p>你需要在请求中提供正确的凭证。根据之前你提供的账号密码 <code>elastic:infini_rag_flow</code>，你可以尝试以下命令：</p>
+<pre><code class="python">docker exec -it 3a50f571ce26 curl -u elastic:infini_rag_flow http://localhost:9200
+</code></pre>
+<hr>
+<h3 id="关于RAGFlow的顶级逆天Bug解决办法-gt"><a href="#关于RAGFlow的顶级逆天Bug解决办法-gt" class="headerlink" title="关于RAGFlow的顶级逆天Bug解决办法&gt;"></a><span style="color:red">关于RAGFlow的顶级逆天Bug解决办法</span>&gt;</h3><blockquote>
+<p>这个不是BUG，是使用问题，如果你是如下和我一样的报错，可以参考我的解决步骤<br>是使用问题，我这边完美解决了这个问题，解决步骤如下：<br>问题: docker logs -f 917c48df8473(infiniflow&#x2F;ragflow:v0.16.0的容器日志)<br>peewee.OperationalError: (1045, “Access denied for user ‘root‘@’172.24.0.6’ (using password: YES)”)</p>
+<h1 id="问题原因，这个镜像的mysql密码一致是默认密码，只要配置没改全就会报错"><a href="#问题原因，这个镜像的mysql密码一致是默认密码，只要配置没改全就会报错" class="headerlink" title="问题原因，这个镜像的mysql密码一致是默认密码，只要配置没改全就会报错"></a>问题原因，这个镜像的mysql密码一致是默认密码，只要配置没改全就会报错</h1><h5 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法:"></a>解决办法:</h5><ol>
+<li>停止并移除现有容器<br>cd .&#x2F;docker<br>docker compose -f docker-compose.yml down</li>
+<li>删除或备份数据卷<br>备份命令：<br>cp -r &#x2F;home&#x2F;data&#x2F;docker&#x2F;volumes&#x2F;docker_esdata01 &#x2F;backup&#x2F;docker_esdata01_backup<br>cp -r &#x2F;home&#x2F;data&#x2F;docker&#x2F;volumes&#x2F;docker_minio_data &#x2F;backup&#x2F;docker_minio_data_backup<br>cp -r &#x2F;home&#x2F;data&#x2F;docker&#x2F;volumes&#x2F;docker_mysql_data &#x2F;backup&#x2F;docker_mysql_data_backup<br>cp -r &#x2F;home&#x2F;data&#x2F;docker&#x2F;volumes&#x2F;docker_redis_data &#x2F;backup&#x2F;docker_redis_data_backup<br>删除命令：<br>docker volume rm docker_esdata01<br>docker volume rm docker_minio_data<br>docker volume rm docker_mysql_data<br>docker volume rm docker_redis_data</li>
+<li>删除未使用的网络配置<br>docker network prune</li>
+<li>修改docker&#x2F;.env 、 docker&#x2F;service_conf.yaml.template和conf&#x2F;service_conf.yaml 这三个文件<br>中所有的密码，设置成自己的，务必这三处都保持一致（重要）</li>
+<li>重新启动服务<br>cd .&#x2F;docker<br>[root@localhost docker]# docker compose -f docker-compose.yml up -d<br>WARN[0000] The “HF_ENDPOINT” variable is not set. Defaulting to a blank string.<br>WARN[0000] The “MACOS” variable is not set. Defaulting to a blank string.<br>[+] Running 10&#x2F;10<br>✔ Network docker_ragflow Created 0.0s<br>✔ Volume “docker_esdata01” Created 0.0s<br>✔ Volume “docker_mysql_data” Created 0.0s<br>✔ Volume “docker_minio_data” Created 0.0s<br>✔ Volume “docker_redis_data” Created 0.0s<br>✔ Container ragflow-minio Started 0.4s<br>✔ Container ragflow-es-01 Started 0.4s<br>✔ Container ragflow-redis Started 0.4s<br>✔ Container ragflow-mysql Healthy 10.9s<br>✔ Container ragflow-server Started 11.1s</li>
+</ol>
+<h1 id="6-查看日志看看，没有如下报错了："><a href="#6-查看日志看看，没有如下报错了：" class="headerlink" title="6.查看日志看看，没有如下报错了："></a>6.查看日志看看，没有如下报错了：</h1><p>2025-02-26 10:51:53,554 INFO 20 TaskExecutor: RAGFlow version: v0.16.0 full<br>2025-02-26 10:51:53,554 INFO 20 Use Elasticsearch <a target="_blank" rel="noopener" href="http://es01:9200/">http://es01:9200</a> as the doc engine.<br>2025-02-26 10:51:53,563 INFO 20 GET <a target="_blank" rel="noopener" href="http://es01:9200/">http://es01:9200/</a> [status:200 duration:0.007s]<br>2025-02-26 10:51:53,566 INFO 20 HEAD <a target="_blank" rel="noopener" href="http://es01:9200/">http://es01:9200/</a> [status:200 duration:0.003s]<br>2025-02-26 10:51:53,566 INFO 20 Elasticsearch <a target="_blank" rel="noopener" href="http://es01:9200/">http://es01:9200</a> is healthy.<br>2025-02-26 10:51:53,572 WARNING 20 Load term.freq FAIL!<br>2025-02-26 10:51:53,577 WARNING 20 Realtime synonym is disabled, since no redis connection.<br>2025-02-26 10:51:53,583 WARNING 20 Load term.freq FAIL!<br>2025-02-26 10:51:53,588 WARNING 20 Realtime synonym is disabled, since no redis connection.<br>2025-02-26 10:51:53,588 INFO 20 MAX_CONTENT_LENGTH: 134217728<br>2025-02-26 10:51:53,588 INFO 20 SERVER_QUEUE_MAX_LEN: 1024<br>2025-02-26 10:51:53,588 INFO 20 SERVER_QUEUE_RETENTION: 3600<br>2025-02-26 10:51:53,588 INFO 20 MAX_FILE_COUNT_PER_USER: 0<br>2025-02-26 10:51:53,591 WARNING 20 RedisDB.queue_info rag_flow_svr_queue got exception: no such key<br>2025-02-26 10:51:53,592 INFO 20 task_consumer_0 reported heartbeat: {“name”: “task_consumer_0”, “now”: “2025-02-26T10:51:53.591+08:00”, “boot_at”: “2025-02-26T10:51:53.554+08:00”, “pending”: 0, “lag”: 0, “done”: 0, “failed”: 0, “current”: null}</p>
+<h1 id="7-注册登录注册测试：OK"><a href="#7-注册登录注册测试：OK" class="headerlink" title="7.注册登录注册测试：OK"></a>7.注册登录注册测试：OK</h1><p>👍2</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://ollama.com/shaw/dmeta-embedding-zh">shaw&#x2F;dmeta-embedding-zh</a><br><strong>Anaconda Prompt</strong>启动： <code>ollama pull shaw/dmeta-embedding-zh</code></p>
+<p>把每个段落做成<strong>向量化的编码</strong></p>
 
     </div>
 
