@@ -1,0 +1,787 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || RAGFlow代理组件技术</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>RAGFlow代理组件技术 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2025/3/19
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/AI" style=color:#00bcd4>
+                    AI
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h4 id="如果要自己创建一个组件并且使用"><a href="#如果要自己创建一个组件并且使用" class="headerlink" title="如果要自己创建一个组件并且使用"></a><span style = "color:red">如果要自己创建一个组件并且使用</span></h4><h6 id="要创建一个新的组件类-自定义新的组件参数"><a href="#要创建一个新的组件类-自定义新的组件参数" class="headerlink" title="要创建一个新的组件类 + 自定义新的组件参数"></a>要创建一个新的组件类 + 自定义新的组件参数</h6><p>① <code>agent/component/xxxx.py</code> 在里面<strong>继承</strong> <code>ComponentParamBase</code> +  <code>ComponentBase</code> 类 这样就可以重用其中的大部分方法和逻辑<br>② 新组件类需要实现 <code>_run</code> 方法，这个方法会定义组件的具体业务逻辑</p>
+<pre><code class="python">BaiduFanyiParam →→ ComponentBase → base.py
+★★★ base.py【里面的output是输出为元组(DataFrame) 
+再通过序列化转换为(字典)(def as_dict(self))JSON】 ★★★
+
+    扩展性：不同的子类可以根据具体需求实现自己的 _run 方法
+           不同的业务逻辑可能需要不同的数据处理方式和计算方法
+    灵活配置：kwargs 参数提供了方法调用时灵活传递参数的能力，可以根据需要在不同情况下调整行为。
+    调试和监控：通过 logging.debug 和 set_output 记录输入和输出，可以在调试和生产环境中跟踪程序的行为，并及时发现问题。
+    
+    def run(self, history, **kwargs):
+        logging.debug(&quot;&#123;&#125;, history: &#123;&#125;, kwargs: &#123;&#125;&quot;.format(self, json.dumps(history, ensure_ascii=False),
+                                                              json.dumps(kwargs, ensure_ascii=False)))
+        self._param.debug_inputs = []
+        try:
+            res = self._run(history, **kwargs)
+            self.set_output(res)
+        except Exception as e:
+            self.set_output(pd.DataFrame([&#123;&quot;content&quot;: str(e)&#125;]))
+            raise e
+
+        return res
+
+    def _run(self, history, **kwargs):
+        raise NotImplementedError()
+</code></pre>
+<pre><code class="python">【自定义组件】BaiduFanyi →→ ComponentBase → abc.py 【Python的抽象基类(类似于Java的接口)】
+确保某些类在继承抽象基类时遵循特定的协议 这在设计大型系统或者框架时非常有用
+★ 接口定义：定义了组件必须实现的方法 =&gt; `_run` =&gt; 组件执行其任务的地方
+★ 组件命名：通过 component_name 类属性，它提供了组件的名称，这有助于在系统中识别和管理组件
+★ 运行逻辑：`_run` 方法是组件的核心，它包含了组件的执行逻辑，例如如何使用参数、如何处理输入、如何调用外部API等
+★ 输入/输出处理：output → base.py 用于处理组件的输出，确保所有组件的输出格式一致
+------------------------------------------------------------------------------
+【自定义组件参数】BaiduFanyiParam →→ ComponentParamBase → base.py 【初始化+校验】
+定义了百度翻译组件所需的参数，例如 appid、secret_key、trans_type 等，它还实现了一个 check 方法，用于验证参数的有效性。
+★ 参数封装：它封装了组件运行所需的所有参数，使得参数管理更加集中方便
+★ 参数验证：通过 check 方法，可以确保在组件运行前所有必要的参数都被正确设置，并且是有效的
+★ 可扩展性：其他组件的参数类可以继承 ComponentParamBase 并根据需要添加或修改参数
+</code></pre>
+<pre><code class="python">import random
+# 抽象基类模块 用于定义组件的基类
+from abc import ABC
+# 用于发送 HTTP 请求，与 百度翻译 API 交互
+import requests
+# 基础组件类，于构建此组件的父类，定义组件的基本结构和参数。
+from agent.component.base import ComponentBase, ComponentParamBase
+# 用于生成百度翻译 API 请求签名（加密哈希）
+from hashlib import md5
+
+# 百度翻译组件的参数定义类 继承ComponentParamBase
+class BaiduFanyiParam(ComponentParamBase):
+    &quot;&quot;&quot;
+    Define the BaiduFanyi component parameters.
+    &quot;&quot;&quot;
+
+    def __init__(self):
+        super().__init__()
+   # appid 和 secret_key 是百度翻译 API 的 身份验证 信息（需要在百度翻译开放平台获取）
+        self.appid = &quot;xxx&quot;
+        self.secret_key = &quot;xxx&quot;
+   # translate：普通翻译   fieldtranslate：专业领域翻译
+        self.trans_type = &#39;translate&#39;
+        self.parameters = []
+   # source_lang 翻译的源语言   target_lang 翻译的目标语言
+        self.source_lang = &#39;auto&#39;
+        self.target_lang = &#39;auto&#39;
+   # domain 如果使用专业领域翻译，需指定领域（如 finance 表示 金融 领域）
+        self.domain = &#39;finance&#39;
+# 检查参数合法性
+    def check(self):
+    # check_empty()：确保 appid 和 secret_key 不能为空。
+        self.check_empty(self.appid, &quot;BaiduFanyi APPID&quot;)
+        self.check_empty(self.secret_key, &quot;BaiduFanyi Secret Key&quot;)
+# check_valid_value()：确保 trans_type、source_lang、target_lang、domain 的值在合法选项之内
+        self.check_valid_value(self.trans_type, &quot;Translate type&quot;, [&#39;translate&#39;, &#39;fieldtranslate&#39;])
+# 以下是列举各种语言
+        self.check_valid_value(self.source_lang, &quot;Source language&quot;,
+                               [&#39;auto&#39;, &#39;zh&#39;, &#39;en&#39;, &#39;yue&#39;, &#39;wyw&#39;, &#39;jp&#39;, &#39;kor&#39;, &#39;fra&#39;, &#39;spa&#39;, &#39;th&#39;, &#39;ara&#39;, &#39;ru&#39;, &#39;pt&#39;,
+                                &#39;de&#39;, &#39;it&#39;, &#39;el&#39;, &#39;nl&#39;, &#39;pl&#39;, &#39;bul&#39;, &#39;est&#39;, &#39;dan&#39;, &#39;fin&#39;, &#39;cs&#39;, &#39;rom&#39;, &#39;slo&#39;, &#39;swe&#39;,
+                                &#39;hu&#39;, &#39;cht&#39;, &#39;vie&#39;])
+        self.check_valid_value(self.target_lang, &quot;Target language&quot;,
+                               [&#39;auto&#39;, &#39;zh&#39;, &#39;en&#39;, &#39;yue&#39;, &#39;wyw&#39;, &#39;jp&#39;, &#39;kor&#39;, &#39;fra&#39;, &#39;spa&#39;, &#39;th&#39;, &#39;ara&#39;, &#39;ru&#39;, &#39;pt&#39;,
+                                &#39;de&#39;, &#39;it&#39;, &#39;el&#39;, &#39;nl&#39;, &#39;pl&#39;, &#39;bul&#39;, &#39;est&#39;, &#39;dan&#39;, &#39;fin&#39;, &#39;cs&#39;, &#39;rom&#39;, &#39;slo&#39;, &#39;swe&#39;,
+                                &#39;hu&#39;, &#39;cht&#39;, &#39;vie&#39;])
+# 以下是列举不同专业领域
+        self.check_valid_value(self.domain, &quot;Translate field&quot;,
+                               [&#39;it&#39;, &#39;finance&#39;, &#39;machinery&#39;, &#39;senimed&#39;, &#39;novel&#39;, &#39;academic&#39;, &#39;aerospace&#39;, &#39;wiki&#39;,
+                                &#39;news&#39;, &#39;law&#39;, &#39;contract&#39;])
+
+# 继承ComponentBase和ABC
+
+
+# -------------------------------------------------------------------------------- #
+
+
+class BaiduFanyi(ComponentBase, ABC):
+ # 定义组件名称在系统内唯一标识该组件
+    component_name = &quot;BaiduFanyi&quot;
+    # _run()是组件的 核心执行函数，用于处理翻译请求。
+# **kwargs：可以让函数更加灵活，因为它可以接受任意数量的命名参数
+# 在函数内部，kwargs 是一个字典，包含了所有传递给函数的额外命名参数。
+    def _run(self, history, **kwargs):
+&#39;&#39;&#39;
+self.get_input() 获取输入内容。
+如果 content 存在，则用 - 连接多个内容（拼接成单个字符串）。
+如果 ans 为空，直接返回 &quot;&quot;
+&#39;&#39;&#39;
+        ans = self.get_input()
+        ans = &quot; - &quot;.join(ans[&quot;content&quot;]) if &quot;content&quot; in ans else &quot;&quot;
+        if not ans:
+            return BaiduFanyi.be_output(&quot;&quot;)
+
+        try:
+&#39;&#39;&#39;
+source_lang 和 target_lang：来源和目标语言。
+appid：百度翻译 API 的 应用 ID。
+salt：随机数（百度 API 需要此参数）。
+secret_key：百度 API 的 密钥
+&#39;&#39;&#39;
+            source_lang = self._param.source_lang
+            target_lang = self._param.target_lang
+            appid = self._param.appid
+            salt = random.randint(32768, 65536)
+            secret_key = self._param.secret_key
+-------------------------- ☆ 普通翻译API请求 ☆ --------------------------
+            if self._param.trans_type == &#39;translate&#39;:
+            # md5签名，防止请求被篡改
+                sign = md5((appid + ans + salt + secret_key).encode(&#39;utf-8&#39;)).hexdigest()
+     # 发送 HTTP POST 请求 访问 百度翻译 API
+                url = &#39;http://api.fanyi.baidu.com/api/trans/vip/translate?&#39; + &#39;q=&#39; + ans + &#39;&amp;from=&#39; + source_lang + &#39;&amp;to=&#39; + target_lang + &#39;&amp;appid=&#39; + appid + &#39;&amp;salt=&#39; + salt + &#39;&amp;sign=&#39; + sign
+                headers = &#123;&quot;Content-Type&quot;: &quot;application/x-www-form-urlencoded&quot;&#125;
+            # 解析返回结果
+                response = requests.post(url=url, headers=headers).json()
+
+                if response.get(&#39;error_code&#39;):
+                    BaiduFanyi.be_output(&quot;**Error**:&quot; + response[&#39;error_msg&#39;])
+
+                return BaiduFanyi.be_output(response[&#39;trans_result&#39;][0][&#39;dst&#39;])
+-------------------------- ★ 专业翻译API请求 ★ --------------------------
+            elif self._param.trans_type == &#39;fieldtranslate&#39;:
+                domain = self._param.domain
+                sign = md5((appid + ans + salt + domain + secret_key).encode(&#39;utf-8&#39;)).hexdigest()
+                url = &#39;http://api.fanyi.baidu.com/api/trans/vip/fieldtranslate?&#39; + &#39;q=&#39; + ans + &#39;&amp;from=&#39; + source_lang + &#39;&amp;to=&#39; + target_lang + &#39;&amp;appid=&#39; + appid + &#39;&amp;salt=&#39; + salt + &#39;&amp;domain=&#39; + domain + &#39;&amp;sign=&#39; + sign
+                headers = &#123;&quot;Content-Type&quot;: &quot;application/x-www-form-urlencoded&quot;&#125;
+                response = requests.post(url=url, headers=headers).json()
+
+                if response.get(&#39;error_code&#39;):
+                    BaiduFanyi.be_output(&quot;**Error**:&quot; + response[&#39;error_msg&#39;])
+
+                return BaiduFanyi.be_output(response[&#39;trans_result&#39;][0][&#39;dst&#39;])
+        # 捕获 所有异常，防止程序崩溃
+        except Exception as e:
+            BaiduFanyi.be_output(&quot;**Error**:&quot; + str(e))
+</code></pre>
+<h6 id="针对于自定义组件参数-ComponentParamBase-为什么里面是用的Json格式？"><a href="#针对于自定义组件参数-ComponentParamBase-为什么里面是用的Json格式？" class="headerlink" title="针对于自定义组件参数[ComponentParamBase] 为什么里面是用的Json格式？"></a>针对于自定义组件参数[ComponentParamBase] 为什么里面是用的Json格式？</h6><ul>
+<li><p><strong>方便序列化</strong>：<code>json.dumps()</code>将对象转换为JSON字符串，可以轻松地保存或传输对象数据。</p>
+<pre><code class="python">base.py
+    def __str__(self):
+        &quot;&quot;&quot;
+        &#123;
+            &quot;component_name&quot;: &quot;Begin&quot;,
+            &quot;params&quot;: &#123;&#125;
+        &#125;
+        &quot;&quot;&quot;
+        # .format()将变量插入到字符串模板中的占位符位置  &#123;&#123;&#125;&#125;转义&#123;&#125;
+        return &quot;&quot;&quot;&#123;&#123;
+              "component_name": "&#123;&#125;",
+              "params": &#123;&#125;,
+              "output": &#123;&#125;,
+              "inputs": &#123;&#125;
+          &#125;&#125;&quot;&quot;&quot;.format(self.component_name,
+                     self._param,
+# json.dumps(...): 将获取的 &quot;output&quot; 和 &quot;inputs&quot; 值序列化为 JSON 格式的字符串
+# json.loads(str(self._param)): 将 self._param 转换为字符串，然后将其解析为 JSON 对象
+# self._param 转换为字符串，然后将其解析为 JSON 对象
+# 从 JSON 对象中获取 &quot;output&quot; 键对应的值，如果不存在则返回空字典 &#123;&#125;
+                     json.dumps(json.loads(str(self._param)).get(&quot;output&quot;, &#123;&#125;), ensure_ascii=False),
+                     json.dumps(json.loads(str(self._param)).get(&quot;inputs&quot;, []), ensure_ascii=False)
+        )
+</code></pre>
+</li>
+<li><p><strong>方便调试和展示</strong>：在 <code>__str__</code> 方法中返回 JSON 字符串，可以方便地查看对象的内容。尤其是在调试过程中，直接打印出对象的 JSON 格式可以帮助开发人员快速查看对象的状态及其内部数据结构</p>
+<pre><code class="python"># 将对象转换为 JSON 字符串
+    def __str__(self):
+        return json.dumps(self.as_dict(), ensure_ascii=False)
+# 递归地将对象的属性转换成字典 适用于将对象序列化为 JSON 或进行其他操作
+    def as_dict(self):
+        def _recursive_convert_obj_to_dict(obj):
+            ret_dict = &#123;&#125;
+            for attr_name in list(obj.__dict__):
+                if attr_name in [_FEEDED_DEPRECATED_PARAMS, _DEPRECATED_PARAMS, _USER_FEEDED_PARAMS, _IS_RAW_CONF]:
+                    continue
+                # get attr
+                attr = getattr(obj, attr_name)
+                if isinstance(attr, pd.DataFrame):
+                    ret_dict[attr_name] = attr.to_dict()
+                    continue
+                if attr and type(attr).__name__ not in dir(builtins):
+                    ret_dict[attr_name] = _recursive_convert_obj_to_dict(attr)
+                else:
+                    ret_dict[attr_name] = attr
+            return ret_dict
+        return _recursive_convert_obj_to_dict(self)
+</code></pre>
+</li>
+<li><p><strong>与大模型交互</strong>：当涉及到与大语言模型（如 GPT）或其他机器学习模型的交互时，JSON 格式的数据通常是标准的输入和输出格式。将对象转为 JSON 字符串，能够更容易地将数据传递给模型进行处理或分析，模型通常会接受 JSON 格式的数据进行训练或推理。</p>
+</li>
+</ul>
+<h5 id="如何去运用？"><a href="#如何去运用？" class="headerlink" title="如何去运用？"></a>如何去运用？</h5><ul>
+<li><strong>数据交换</strong>：可以将这个 JSON 字符串用作 API 请求或响应的数据格式。例如，你可以将这个对象作为 HTTP 请求的 body 发送，或者从网络中获取 JSON 格式的数据，然后解析回对象。</li>
+<li><strong>持久化存储</strong>：如果你需要将对象数据持久化到数据库或文件系统，JSON 是一个很好的存储格式。例如，将对象数据存储在文件中或数据库表的 JSON 类型字段中，便于未来读取和操作。</li>
+<li><strong>配置和参数更新</strong>：<code>update</code> 方法中接收到的 <code>conf</code> 参数实际上是一个字典对象，它通过递归的方式更新对象的属性。如果你将对象序列化为 JSON 格式后，可以将 JSON 作为配置文件传递给应用，应用根据该配置动态调整其行为。这使得系统更加灵活和可配置。</li>
+<li><strong>验证与校验</strong>：<code>validate</code> 方法利用存储在 JSON 文件中的规则对对象进行参数验证，这是一种常见的方式来确保输入的数据符合特定的格式或限制。可以通过动态加载配置文件来验证对象的数据，保证数据的合法性。</li>
+</ul>
+<h5 id="数据输出-元组-及转换-JSON"><a href="#数据输出-元组-及转换-JSON" class="headerlink" title="数据输出(元组)及转换(JSON)"></a>数据输出(元组)及转换(JSON)</h5><pre><code class="python">----------------------------------- 输出为元组 -----------------------------------    
+    def output(self, allow_partial=True) -&gt; Tuple[str, Union[pd.DataFrame, partial]]:
+        o = getattr(self._param, self._param.output_var_name)
+        if not isinstance(o, partial):
+            if not isinstance(o, pd.DataFrame):
+                if isinstance(o, list):
+                    return self._param.output_var_name, pd.DataFrame(o)
+                if o is None:
+                    return self._param.output_var_name, pd.DataFrame()
+                return self._param.output_var_name, pd.DataFrame([&#123;&quot;content&quot;: str(o)&#125;])
+            return self._param.output_var_name, o
+
+        if allow_partial or not isinstance(o, partial):
+            if not isinstance(o, partial) and not isinstance(o, pd.DataFrame):
+                return pd.DataFrame(o if isinstance(o, list) else [o])
+            return self._param.output_var_name, o
+
+        outs = None
+        for oo in o():
+            if not isinstance(oo, pd.DataFrame):
+                # 最终返回的是一个元组
+                outs = pd.DataFrame(oo if isinstance(oo, list) else [oo])
+            else:
+                outs = oo
+        return self._param.output_var_name, outs
+
+----------------------------------- 序列化为JSON -----------------------------------
+ # 将对象转换为 JSON 字符串
+    def __str__(self):
+        return json.dumps(self.as_dict(), ensure_ascii=False)
+
+    # 递归地将对象的属性转换成字典 适用于将对象序列化为 JSON 或进行其他操作
+    def as_dict(self):
+        def _recursive_convert_obj_to_dict(obj):
+            ret_dict = &#123;&#125;
+            for attr_name in list(obj.__dict__):
+                if attr_name in [_FEEDED_DEPRECATED_PARAMS, _DEPRECATED_PARAMS,
+                                 _USER_FEEDED_PARAMS, _IS_RAW_CONF]:
+                    continue
+                # get attr
+                attr = getattr(obj, attr_name)
+                if isinstance(attr, pd.DataFrame):
+                    ret_dict[attr_name] = attr.to_dict()
+                    continue
+                if attr and type(attr).__name__ not in dir(builtins):
+                    ret_dict[attr_name] = _recursive_convert_obj_to_dict(attr)
+                else:
+                    ret_dict[attr_name] = attr
+
+            return ret_dict
+
+        return _recursive_convert_obj_to_dict(self)
+    
+--------------------------------------------------------------------------------------
+def get_stream_input(self)：
+def get_input_elements(self):
+    
+def get_input(self)：
+# 上游组件的输出：它会检查当前组件的上游组件，并尝试从这些组件获取输出数据作为当前的输入
+# 如果 _param.query 存在，它会遍历查询参数，并根据参数的类型（如组件 ID）来决定如何获取相应的输入数据
+# input后再通过DataFrame转换为元组 再去转换为字典
+# 来回来转换是为了满足特定的接口要求或者为了确保数据在不同层之间传输时的兼容性
+
+
+
+&#39;&#39;&#39;
+                           使用Pandas库来处理数据
+★ get_input函数: 这个函数首先检查是否有调试输入，如果有，则返回一个包含调试输入内容的DataFrame。然后，它处理查询输入，根据查询中的不同条件（如component_id、value等），调用其他函数获取相应的输入内容，并将这些内容添加到self._param.inputs列表中。最后，它通过pd.concat函数将所有上游组件[结合history]的输出合并成一个DataFrame，并返回。
+
+★ get_input_elements函数: 这个函数根据self._param.query中的查询，构建一个输入元素列表，其中每个元素包含名称、键和值。
+
+★get_stream_input函数: 这个函数处理流式输入，根据组件路径，调用其他函数获取相应的输入内容，并返回。
+
+主要是处理输入参数，并根据不同的条件获取相应的输入内容。它并没有直接接受不同种类类型的入参，而是根据传入的查询参数来获取输入内容。
+&#39;&#39;&#39;
+</code></pre>
+<hr>
+<p>① <span style = "color:red">agent&#x2F;component&#x2F;baidufanyi.py</span> 【后端代码】<br>② <span style = "color:red">agent&#x2F;component&#x2F;_ _ init _ _.py</span>  【初始化】<br>③ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;flow-drawer&#x2F;index.tsx【表单抽屉组件 UI展示】<br>④ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;form&#x2F;baidu-fanyi-form&#x2F;index.tsx 【提供用户界面让用户能配置并提交参数】<br>⑤ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;constant.tsx 【定义一个应用程序中使用的各种图标、常量、枚举、接口、状态和函数】<br>⑥ web&#x2F;src&#x2F;locales&#x2F;zh.ts 【把所有要显示的搞到zh.ts中(前端组件描述)】<br>⑦ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;constant.tsx【引入组件所需的各种图标、以及操作项的样式、初始值、语言等】<br>⑧ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;form-sheet&#x2F;use-form-config-map.tsx 【表单配置映射、配置不同操作对应表单组件】<br>⑨ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;form&#x2F;baidu-fanyi-form&#x2F;index.tsx 【构建配置表单 】<br>⑩ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;hooks.tsx 【管理图形界面流程图 各种钩子 → 建数据处理流程】</p>
+<hr>
+<hr>
+<hr>
+<hr>
+<h1 id="创建动态代理组件-实战"><a href="#创建动态代理组件-实战" class="headerlink" title="创建动态代理组件 [实战]"></a><span style = "color:red">创建动态代理组件 [实战]</span></h1><h2 id="📌-实现步骤"><a href="#📌-实现步骤" class="headerlink" title="📌 实现步骤"></a><strong>📌 实现步骤</strong></h2><ol>
+<li><strong>后端（Python FastAPI）</strong><ul>
+<li>创建一个 API 服务器，提供组件注册、查询、运行接口。</li>
+<li>组件信息存储在内存（可扩展到数据库）。</li>
+<li>组件代码动态执行，支持 <code>exec()</code> 加载。</li>
+</ul>
+</li>
+<li><strong>前端（HTML + JavaScript）</strong><ul>
+<li>提供一个表单，允许用户输入<strong>组件名称</strong>、<strong>参数</strong>、<strong>Python 代码</strong>。</li>
+<li>提交表单后，通过 <code>fetch()</code> 发送 <code>POST</code> 请求给后端。</li>
+<li>组件创建成功后，前端可以调用 <code>run</code> 接口测试组件。</li>
+</ul>
+</li>
+<li><strong>Postman 测试</strong><ul>
+<li>先创建组件 <code>POST /api/components/create</code></li>
+<li>再运行组件 <code>POST /api/components/run</code></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="1️⃣-后端代码（FastAPI）"><a href="#1️⃣-后端代码（FastAPI）" class="headerlink" title="1️⃣ 后端代码（FastAPI）"></a><strong>1️⃣ 后端代码（FastAPI）</strong></h1><p>创建 <code>server.py</code>，这个文件用于启动 FastAPI 服务器，并提供 API 端点。</p>
+<blockquote>
+<p><strong>安装依赖（如果未安装 FastAPI 和 Uvicorn）：</strong></p>
+<pre><code class="python">pip install fastapi uvicorn pandas
+</code></pre>
+</blockquote>
+<p>📌 <strong>代码（server.py）：</strong></p>
+<pre><code class="python">from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import pandas as pd
+
+app = FastAPI()
+
+# 组件存储（模拟数据库）
+components = &#123;&#125;
+
+class ComponentData(BaseModel):
+    name: str
+    params: dict
+    code: str
+
+@app.post(&quot;/api/components/create&quot;)
+def create_component(component: ComponentData):
+    &quot;&quot;&quot;
+    创建新的动态组件，存储在内存中，并使用 exec() 加载组件代码
+    &quot;&quot;&quot;
+    if component.name in components:
+        raise HTTPException(status_code=400, detail=&quot;组件已存在&quot;)
+    
+    # 安全地执行代码，存储类定义
+    local_vars = &#123;&#125;
+    exec(component.code, globals(), local_vars)
+    
+    if component.name not in local_vars:
+        raise HTTPException(status_code=400, detail=&quot;代码中必须定义同名类&quot;)
+    
+    components[component.name] = &#123;
+        &quot;params&quot;: component.params,
+        &quot;class&quot;: local_vars[component.name]
+    &#125;
+    return &#123;&quot;message&quot;: f&quot;组件 &#123;component.name&#125; 创建成功&quot;&#125;
+
+@app.get(&quot;/api/components&quot;)
+def list_components():
+    &quot;&quot;&quot;
+    获取所有注册的组件
+    &quot;&quot;&quot;
+    return &#123;&quot;components&quot;: list(components.keys())&#125;
+
+class RunRequest(BaseModel):
+    component_name: str
+    history: list
+    params: dict
+
+@app.post(&quot;/api/components/run&quot;)
+def run_component(request: RunRequest):
+    &quot;&quot;&quot;
+    运行指定的组件，并返回其输出
+    &quot;&quot;&quot;
+    if request.component_name not in components:
+        raise HTTPException(status_code=404, detail=&quot;组件不存在&quot;)
+
+    component_class = components[request.component_name][&quot;class&quot;]
+    component_instance = component_class()
+    
+    # 调用 _run 方法，模拟运行
+    try:
+        result = component_instance._run(request.history, **request.params)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f&quot;组件执行错误: &#123;str(e)&#125;&quot;)
+    
+    return &#123;&quot;result&quot;: result.to_dict(orient=&quot;records&quot;)&#125;
+
+# 运行服务器（可选：手动执行 uvicorn server:app --reload）
+if __name__ == &quot;__main__&quot;:
+    import uvicorn
+    uvicorn.run(app, host=&quot;0.0.0.0&quot;, port=8000)
+</code></pre>
+<hr>
+<h1 id="2️⃣-前端代码"><a href="#2️⃣-前端代码" class="headerlink" title="2️⃣ 前端代码"></a><strong>2️⃣ 前端代码</strong></h1><h3 id="📌-HTML-页面"><a href="#📌-HTML-页面" class="headerlink" title="📌 HTML 页面"></a><strong>📌 HTML 页面</strong></h3><p>📌 <strong>代码（index.html）：</strong></p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;动态组件管理&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h2&gt;创建动态组件&lt;/h2&gt;
+    &lt;form id=&quot;componentForm&quot;&gt;
+        &lt;label&gt;组件名称：&lt;/label&gt;
+        &lt;input type=&quot;text&quot; id=&quot;componentName&quot; required&gt;&lt;br&gt;&lt;br&gt;
+
+        &lt;label&gt;参数 (JSON 格式)：&lt;/label&gt;
+        &lt;textarea id=&quot;componentParams&quot; required&gt;&#123;&quot;param1&quot;: &quot;value1&quot;&#125;&lt;/textarea&gt;&lt;br&gt;&lt;br&gt;
+
+        &lt;label&gt;Python 代码：&lt;/label&gt;
+        &lt;textarea id=&quot;componentCode&quot; required&gt;
+class TestComponent:
+    def _run(self, history, **kwargs):
+        return pd.DataFrame([&#123;&#39;content&#39;: &#39;Hello, this is a test!&#39;&#125;])
+        &lt;/textarea&gt;&lt;br&gt;&lt;br&gt;
+
+        &lt;button type=&quot;button&quot; onclick=&quot;submitNewComponent()&quot;&gt;提交组件&lt;/button&gt;
+    &lt;/form&gt;
+
+    &lt;h2&gt;运行组件&lt;/h2&gt;
+    &lt;label&gt;组件名称：&lt;/label&gt;
+    &lt;input type=&quot;text&quot; id=&quot;runComponentName&quot; required&gt;&lt;br&gt;&lt;br&gt;
+    &lt;button type=&quot;button&quot; onclick=&quot;runComponent()&quot;&gt;运行组件&lt;/button&gt;
+
+    &lt;h3&gt;运行结果：&lt;/h3&gt;
+    &lt;pre id=&quot;result&quot;&gt;&lt;/pre&gt;
+
+    &lt;script src=&quot;test.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<hr>
+<h3 id="📌-JavaScript-代码"><a href="#📌-JavaScript-代码" class="headerlink" title="📌 JavaScript 代码"></a><strong>📌 JavaScript 代码</strong></h3><p>📌 <strong>代码（test.js）：</strong></p>
+<pre><code class="js">const apiBaseUrl = &quot;http://localhost:8000/api&quot;;  // 替换为你的服务器地址
+
+function submitNewComponent() &#123;
+    const name = document.getElementById(&quot;componentName&quot;).value;
+    const params = document.getElementById(&quot;componentParams&quot;).value;
+    const code = document.getElementById(&quot;componentCode&quot;).value;
+
+    fetch(`$&#123;apiBaseUrl&#125;/components/create`, &#123;
+        method: &quot;POST&quot;,
+        headers: &#123; &quot;Content-Type&quot;: &quot;application/json&quot; &#125;,
+        body: JSON.stringify(&#123;
+            name: name,
+            params: JSON.parse(params),
+            code: code
+        &#125;)
+    &#125;)
+    .then(response =&gt; response.json())
+    .then(data =&gt; alert(data.message || JSON.stringify(data)))
+    .catch(error =&gt; console.error(&quot;Error:&quot;, error));
+&#125;
+
+function runComponent() &#123;
+    const componentName = document.getElementById(&quot;runComponentName&quot;).value;
+
+    fetch(`$&#123;apiBaseUrl&#125;/components/run`, &#123;
+        method: &quot;POST&quot;,
+        headers: &#123; &quot;Content-Type&quot;: &quot;application/json&quot; &#125;,
+        body: JSON.stringify(&#123;
+            component_name: componentName,
+            history: [],
+            params: &#123;&#125;
+        &#125;)
+    &#125;)
+    .then(response =&gt; response.json())
+    .then(data =&gt; &#123;
+        document.getElementById(&quot;result&quot;).innerText = JSON.stringify(data, null, 2);
+    &#125;)
+    .catch(error =&gt; console.error(&quot;Error:&quot;, error));
+&#125;
+</code></pre>
+<hr>
+<h1 id="3️⃣-使用-Postman-测试"><a href="#3️⃣-使用-Postman-测试" class="headerlink" title="3️⃣ 使用 Postman 测试"></a><strong>3️⃣ 使用 Postman 测试</strong></h1><p>启动服务器后，可以使用 Postman 测试 API。</p>
+<h3 id="（1）创建动态组件"><a href="#（1）创建动态组件" class="headerlink" title="（1）创建动态组件"></a><strong>（1）创建动态组件</strong></h3><ul>
+<li><p><strong>方法</strong>：<code>POST</code></p>
+</li>
+<li><p><strong>URL</strong>：<code>http://localhost:8000/api/components/create</code></p>
+</li>
+<li><p>Body（JSON）</p>
+<pre><code class="python">&#123;
+  &quot;name&quot;: &quot;TestComponent&quot;,
+  &quot;params&quot;: &#123;
+    &quot;param1&quot;: &quot;value1&quot;
+  &#125;,
+  &quot;code&quot;: &quot;class TestComponent:\n    def _run(self, history, **kwargs):\n        return pd.DataFrame([&#123;&#39;content&#39;: &#39;Hello, world!&#39;&#125;])&quot;
+&#125;
+</code></pre>
+</li>
+<li><p>期望结果</p>
+<pre><code class="python">&#123;
+  &quot;message&quot;: &quot;组件 TestComponent 创建成功&quot;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h3 id="（2）运行组件"><a href="#（2）运行组件" class="headerlink" title="（2）运行组件"></a><strong>（2）运行组件</strong></h3><ul>
+<li><p><strong>方法</strong>：<code>POST</code></p>
+</li>
+<li><p><strong>URL</strong>：<code>http://localhost:8000/api/components/run</code></p>
+</li>
+<li><p>Body（JSON）</p>
+<p>：</p>
+<pre><code class="python">&#123;
+  &quot;component_name&quot;: &quot;TestComponent&quot;,
+  &quot;history&quot;: [],
+  &quot;params&quot;: &#123;&#125;
+&#125;
+</code></pre>
+</li>
+<li><p>期望结果</p>
+<p>：</p>
+<pre><code class="python">&#123;
+  &quot;result&quot;: [&#123;&quot;content&quot;: &quot;Hello, world!&quot;&#125;]
+&#125;
+</code></pre>
+</li>
+</ul>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><ul>
+<li><strong>后端</strong>：FastAPI 实现了组件创建、查询、运行的 API。</li>
+<li><strong>前端</strong>：HTML + JS 提供交互界面，用户可输入参数和代码。</li>
+<li><strong>测试</strong>：可用 Postman 调试，确保组件能被动态创建和运行。</li>
+</ul>
+<p>🚀 <strong>现在，你可以在 Postman 或前端界面中测试你的动态组件功能了！</strong></p>
+<hr>
+<p><span style = "color:red"><strong>纯后端情况如何添加自定义组件呢</strong></span></p>
+<p>这里以我琢磨的<strong>JSONPath</strong>自定义组件为例</p>
+<p>首先要清楚RAGFlow的执行流程 要了解画布的流程 推荐先看一遍RAGFlow执行流程的文档 然后了解一下canvas.py和canvas_app.py的源码 掌握整体流程。</p>
+<p>这里最重要的一个思想要明白 现在你只有后端 你没有前端 你在RAGFlow图形化界面拖拽进去的形式已经无法针对于纯后端添加自定义组件了 那怎么办？我们来梳理一下思路 我们想要什么？我们想要图形化界面拖拽过后的整体数据 也就是数据库里的dsl，我们要拿到它 然后用我们自己开发的自定义组件去解析这个大大的JSON。那么这里就涉及到没有前端 你如何去后端去添加自己做的自定义组件！当然常规方法 去图形化界面拖拽已经无法完成这种操作 你只能把希望寄托在数据库 </p>
+<p>我们来打开数据库 此时你需要一个组件的数据表 component</p>
+<p>– rag_flow.component definition</p>
+<p>CREATE TABLE <code>component</code> (</p>
+<p>  <code>id</code> varchar(32) NOT NULL,</p>
+<p>  <code>create_time</code> bigint DEFAULT NULL,</p>
+<p>  <code>create_date</code> datetime DEFAULT NULL,</p>
+<p>  <code>update_time</code> bigint DEFAULT NULL,</p>
+<p>  <code>update_date</code> datetime DEFAULT NULL,</p>
+<p>  <code>tenant_id</code> varchar(32) NOT NULL,</p>
+<p>  <code>module</code> varchar(255) NOT NULL,</p>
+<p>  <code>created_by</code> varchar(32) NOT NULL,</p>
+<p>  <code>is_deleted</code> tinyint DEFAULT ‘0’,</p>
+<p>  PRIMARY KEY (<code>id</code>)</p>
+<p>) ENGINE&#x3D;InnoDB DEFAULT CHARSET&#x3D;utf8mb4 COLLATE&#x3D;utf8mb4_0900_ai_ci;</p>
+<p>这是创建表的信息 目前我们只需要关注module里面的 我们要把我们自己开发的组件按照那些形式添加进去 我的组件叫:”jsonpath” 那么我的module里面就应该是agent.component.jsonpath 当然你要按照它的风格把组件放在这个包里面。</p>
+<p>其次还要注意在这个包里面的__init__.py </p>
+<p>把你的组件加进去 “jsonpath”:”JSONPath”</p>
+<p>此时并非万事大吉 因为我们目前只有纯后端 没有前端那些 所以回到开头所说 你要自己把你的组件以json的格式手动加入到数据库的dsl中 因为很长所以你需要<a target="_blank" rel="noopener" href="https://www.json.cn/">JSON在线解析格式化验证 - JSON.cn</a>去让它展示的更直观</p>
+<p>这是我组件需要的json 你要手动的去添加到dsl 步骤就是先复制数据库的dsl 然后放在解析器里面 <strong>手动的去添加自己的组件</strong></p>
+<p>“JSONPath:PathProcessor”: {“obj”: {“component_name”: “JSONPath”,”params”: {“output_var_name”: “output”,”jsonpath_expr”: “$.components[*].obj.component_name”,”debug_mode”: true,”query”: [],”inputs”: [],”debug_inputs”: [],”output”: {“content”: {“0”: “”}}}},”downstream”: [“Generate:TwelveClocksSpeak”],”upstream”: []}</p>
+<p>这只是我的组件json 你需要在完整的dsl把它插入进去 按照它们形成的格式 这里说明一下 dsl就是你在图形化界面创建agent的时候里面各各组件的相关信息 当然你还要注意自己写的组件类型 是用来干什么的 你才能去做到对应相应的处理 比如说我这个是解析json的 那我就不能去拿上下文组件的输入或输出 正常的流程是连线后你要拿到上游的输出结果 作为你组件的输入结果。我这个则是拿到全局画布canvas_data数据再去进行解析</p>
+<p>所以要明白需求才能去更好的融入代码中 经过这几天的学习真的感觉 只有自己一点点的摸索过后才能真正的印象深刻 才能慢慢变得强大！</p>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>
