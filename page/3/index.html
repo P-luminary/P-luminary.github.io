@@ -133,6 +133,927 @@
 
 <div class="post">
 
+    <a href="/2024/07/03/前端/Vue/">
+        <h2>
+            Vue
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/7/3
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h1 id="Vue快速入门"><a href="#Vue快速入门" class="headerlink" title="Vue快速入门"></a>Vue快速入门</h1><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><strong>MVVM</strong>响应式编程模型，避免直接操作<strong>DOM</strong>，降低<strong>DOM</strong>操作的复杂性</p>
+<p>安装Vscode 安装nodejs<br>检测是否安装成功 <code>cmd →  node -v  →  npm -v</code></p>
+<h6 id="npm设置镜像-cmd"><a href="#npm设置镜像-cmd" class="headerlink" title="npm设置镜像[cmd]"></a>npm设置镜像[cmd]</h6><pre><code class="java">C:\Users\Pluminary&gt;npm config set registry https://registry.npmmirror.com
+C:\Users\Pluminary&gt;npm config ls
+C:\Users\Pluminary&gt;npm config get registry
+</code></pre>
+<pre><code class="java">在Vscode里的终端输入 
+PS C:\Users\Pluminary\Desktop\vue2&gt; npm init -y
+PS C:\Users\Pluminary\Desktop\vue2&gt; npm install vue
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/c327127960/article/details/108853046">Vue Chrome调试工具 Vue.js devtools 5.3.3 安装包及教程_vuedevtool.crx百度网盘-CSDN博客</a></p>
+<h4 id="简单案例"><a href="#简单案例" class="headerlink" title="简单案例"></a>简单案例</h4><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;!--&lt;div&gt;&#123;&#123;name&#125;&#125;&lt;/div&gt; 这个就没有被挂载--&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;input type=&quot;text&quot; v-model=&quot;num&quot;&gt; &lt;!--在对话框里输入的时候改变下面的次数--&gt;
+        &lt;button v-on:click=&quot;num++&quot;&gt;登录&lt;/button&gt; &lt;!--实现当点击按钮的时候num数值++--&gt;
+        &lt;button v-on:click=&quot;loginout()&quot;&gt;登出&lt;/button&gt;
+        &lt;h1&gt;&#123;&#123;name&#125;&#125;, 欢迎您,当前登录第&#123;&#123;num&#125;&#125;次,当前登录时间：&#123;&#123;nowDate()&#125;&#125;&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;script src=&quot;./node_modules/vue/dist/vue.js&quot;&gt;&lt;/script&gt;
+
+    &lt;script&gt;
+        // 1. new vue实例 每个Vue应用都是通过Vue函数创建一个新的Vue实例开始的
+        new Vue(&#123;
+            el:&quot;#app&quot;, // 挂载的模板
+            data()&#123; // 绑定的数据 把data对象中的所有属性 加到相应视图里
+                return&#123;
+                    name : &quot;图灵学院&quot;,
+                    num:1
+                &#125;
+            &#125;,
+            methods: &#123;
+                nowDate()&#123;
+                    return new Date().toLocaleDateString()
+                &#125;,
+                loginout()&#123;
+                    this.num--; //当调用实例时要加this
+                &#125;
+            &#125;,
+        &#125;);
+        // 双向绑定：数据发生改变 视图也要随之改变；在谷歌浏览器的Vue调试中
+        // 指令：简化对Dom的频繁操作
+        // 方法：声明方法可以实现更复杂的操作，声明methods属性中
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-text、v-html"><a href="#指令-v-text、v-html" class="headerlink" title="指令 v-text、v-html"></a>指令 v-text、v-html</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;div v-text=&quot;message&quot;&gt;&lt;/div&gt;&#123;&#123;message&#125;&#125;
+        &lt;!-- &#123;&#123;&#125;&#125;在网络延迟情况下会出现暂时显示的情况 --&gt;
+        &lt;div v-html=&quot;message&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script&gt;
+    // 1.实例Vue
+    var vm = new Vue(&#123;
+        el:&#39;#app&#39;,
+        data:&#123;
+            message: &quot;&lt;a href = &#39;#&#39;&gt;Hello&lt;/a&gt;&quot;
+        &#125;,
+    &#125;)
+// v-text 用于绑定数据，语法v-text=&quot;属性&quot;，会直接将值作为文本显示
+// v-html 会将值进行编译再显示
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-bind"><a href="#指令-v-bind" class="headerlink" title="指令 v-bind"></a>指令 v-bind</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;style&gt;
+        .red&#123;
+            background-color: red;
+        &#125; 
+        .yellow&#123;
+            background-color: yellow;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;    &lt;!--:style=&quot;font-size: &#123;&#123;bigFont&#125;&#125;; 错误写法--&gt;
+        &lt;div v-bind:title=&quot;title&quot; :class=&quot;red&quot; :style=&quot;&#123;fontSize:bigFont&#125;&quot;&gt;
+            鼠标悬停查看信息！
+        &lt;/div&gt;
+        &lt;div :class=&quot;&#123;yellow:isyellow&#125;&quot;&gt;
+            &lt;a :href=&quot;href&quot; :style=&quot;&#123;fontSize:bigFont&#125;&quot;&gt;图灵学院&lt;/a&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;img :src=&quot;src&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;button v-bind:disabled=&quot;disabled&quot;&gt;禁用按钮&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    var vm = new Vue(&#123;
+        el: &quot;#app&quot;,
+        data:&#123;
+            red:&quot;red&quot;,
+            isyellow:true,
+            bigFont:&quot;50px&quot;,
+            title: &quot;您好，本网站可以学到更多的知识&quot;,
+            href: &quot;https://www.pronhub.com/&quot;,
+            scr: &#39;../Imooc_Cat.jpg&#39;,
+            disabled: true
+        &#125;
+    &#125;)
+
+    // 绑定元素属性 -- v-bind
+    // 语法：v-bind:元素属性=&quot;vue的属性&quot;
+    // 简写：v-bind:title 简写成 :title
+    /*
+       针对样式的特殊用法：
+         动态控制class是否添加 :class=&quot;&#123;red:isred&#125;&quot;
+           语法 &#123;red:isred&#125; : &#123;需要动态控制的class样式:vue的属性(需要是boolean类型)&#125;
+
+         动态设置style的样式   :style=&quot;&#123;fontSize:bigFont&#125;&quot;
+           语法 &#123;fontSize: bigFont&#125; : &#123;css样式的驼峰命名方法:&#125; font-size=fontSize
+    */
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-model"><a href="#指令-v-model" class="headerlink" title="指令 v-model"></a>指令 v-model</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;div&gt;
+            &lt;label&gt;年龄：&lt;/label&gt;
+            &lt;input v-model=&quot;age&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div&gt;当前输入的年龄是：&#123;&#123;age&#125;&#125;&lt;/div&gt;
+        &lt;button @click=&quot;add&quot;&gt;加一岁&lt;/button&gt; &lt;!--  @click = v-on:click  --&gt;
+        &lt;button @click=&quot;alertYear&quot;&gt;弹出年龄&lt;/button&gt;
+
+    &lt;hr&gt;
+        &lt;label&gt;课程：&lt;/label&gt;
+        &lt;select v-model=&quot;course&quot;&gt;
+            &lt;option value=&quot;javascript&quot;&gt;javascript&lt;/option&gt;
+            &lt;option value=&quot;java&quot;&gt;java&lt;/option&gt;
+            &lt;option value=&quot;c++&quot;&gt;c++&lt;/option&gt;
+        &lt;/select&gt;
+
+        &lt;div&gt;
+            &lt;input v-model=&quot;course&quot; type=&quot;radio&quot; name=&quot;course&quot; value=&quot;javascript&quot;&gt;javascript
+            &lt;input v-model=&quot;course&quot; type=&quot;radio&quot; name=&quot;course&quot; value=&quot;java&quot;&gt;java
+            &lt;input v-model=&quot;course&quot; type=&quot;radio&quot; name=&quot;course&quot; value=&quot;c++&quot;&gt;c++
+        &lt;/div&gt;
+
+        &lt;div&gt;当前课程是：&#123;&#123;course&#125;&#125;&lt;/div&gt;
+    &lt;/div&gt;
+    
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+var vm = new Vue(&#123;
+    el:&quot;#app&quot;,
+    data:&#123;
+        age:10,
+        course:&#39;java&#39;
+    &#125;,
+    methods: &#123;
+        add()&#123;
+            this.age++;
+        &#125;,
+        alertYear()&#123;
+            alert(this.age)
+        &#125;
+    &#125;
+&#125;)
+
+//v-model 用于实现双向绑定 一般用在表单元素
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-on"><a href="#指令-v-on" class="headerlink" title="指令 v-on"></a>指令 v-on</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;button v-on:click=&quot;hello(&#39;hello&#39;)&quot;&gt;hello&lt;/button&gt;
+        &lt;button @click=&quot;hello(&#39;world&#39;)&quot;&gt;world&lt;/button&gt;
+        &lt;button @click=&quot;num++&quot;&gt;数据：&lt;/button&gt;&#123;&#123;num&#125;&#125;
+&lt;!-- 不让事件传播 禁止默认a标签事件 
+ @click.stop 不让事件传播
+ @click.self 需要自己点击[不会参与传播]
+ @click.prevent 组织默认事件
+ @click.once 事件只会触发一次
+ --&gt;
+        &lt;div @click=&quot;hello(1)&quot; style=&quot;background-color: red; width: 800px; height: 500px;padding: 50px;&quot;&gt;
+            1
+            &lt;div @click.stop=&quot;hello(2)&quot; style=&quot;background-color: blue; width: 400px; height: 200px;padding: 50px;&quot;&gt;
+                2
+                &lt;a @click.stop.prevent=&quot;hello(3)&quot; style=&quot;background-color: yellow; width: 200px; height: 100px; display: block;padding: 50px;&quot; href=&quot;www.baidu.com&quot;&gt;3&lt;/a&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;input v-on:keyup.enter=&quot;hello(&#39;enter&#39;)&quot;&gt; &lt;!--键盘按回车触发--&gt;&lt;br&gt;
+        &lt;input v-on:keyup.space=&quot;hello(&#39;enter&#39;)&quot;&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    var vm = new Vue(&#123;
+        el: &quot;#app&quot;,
+        data:&#123;
+            num: 0
+        &#125;,
+        methods: &#123;
+            hello(str)&#123;
+                alert(str)
+            &#125;
+        &#125;
+    &#125;)
+
+/*
+ v-on用于绑定事件
+ 语法  v-on:事件名
+ 简写方式 v-on:click =&gt; @click
+ 只能调用vue中的函数和数据
+*/
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-for"><a href="#指令-v-for" class="headerlink" title="指令 v-for"></a>指令 v-for</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        循环数组
+        &lt;ul&gt;
+            &lt;li v-for=&quot;(item, index) in music&quot;&gt;&#123;&#123;item.name&#125;&#125;---&#123;&#123;index+1&#125;&#125;&lt;/li&gt;
+        &lt;/ul&gt;
+        循环对象
+        &lt;ul&gt;
+            &lt;li v-for=&quot;(item, index) in obj&quot;&gt;&#123;&#123;item&#125;&#125;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+var vm = new Vue(&#123;
+    el: &#39;#app&#39;,
+    data:&#123;
+        // 要循环的数组
+        music:[
+            &#123;name: &#39;青花瓷&#39;&#125;,
+            &#123;name: &#39;阳光总在风雨后&#39;&#125;,
+            &#123;name: &#39;十年&#39;&#125;
+        ],
+        // 要循环的对象
+        obj:&#123;
+            name: &#39;句号&#39;,
+            age: 18,
+            sex: &#39;男&#39;
+        &#125;
+    &#125;
+&#125;)
+/*
+v-for循环，可以循环数组和对象
+v-for=&quot;(item, index) in intems
+语法：v-for=&quot;(每次循环接收的变量, 当前循环的索引) in 需要循环的变量&quot;
+*/
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-if-与-v-show"><a href="#指令-v-if-与-v-show" class="headerlink" title="指令 v-if 与 v-show"></a>指令 v-if 与 v-show</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;button @click=&quot;vif=!vif&quot;&gt;切换显示隐藏&lt;/button&gt;
+        &lt;div v-if=&quot;vif&quot; style=&quot;background-color: red; width: 200px; height: 200px;&quot;&gt;
+            v-if
+        &lt;/div&gt;
+        &lt;hr&gt;
+        &lt;button @click=&quot;vshow=!vshow&quot;&gt;切换显示隐藏&lt;/button&gt;
+        &lt;div v-show=&quot;vshow&quot; style=&quot;background-color: yellow; width: 200px; height: 200px;&quot;&gt;
+            v-show
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+var vm = new Vue(&#123;
+    el: &quot;#app&quot;,
+    data:&#123;
+        vif: true,
+        vshow: true
+    &#125;
+&#125;)
+/*
+    v-if 和 v-show 用于控制元素显示隐藏
+    语法 v-if = &quot;指定Boolean值&quot; v-show一样
+    
+    v-if 控制元素是否生成
+    v-show 控制元素是否显示隐藏
+*/
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="指令-v-else-与-v-else-if"><a href="#指令-v-else-与-v-else-if" class="headerlink" title="指令 v-else 与 v-else-if"></a>指令 v-else 与 v-else-if</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;div v-if=&quot;number == 1&quot;&gt;
+            A
+        &lt;/div&gt;
+        &lt;div v-else-if=&quot;number == 2&quot;&gt;
+            B
+        &lt;/div&gt;
+        &lt;div v-else&gt;
+            C
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+var vm = new Vue(&#123;
+    el: &#39;#app&#39;,
+    data() &#123;
+        return &#123;
+            number: 1
+        &#125;
+    &#125;,
+&#125;)
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="计算属性和侦听器"><a href="#计算属性和侦听器" class="headerlink" title="计算属性和侦听器"></a>计算属性和侦听器</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;计算属性和侦听器&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;!-- 实现一个购物车功能 
+            1. 数据初始化处理
+            2. 选择商品数量：当商品数量超过库存做提示
+            3. 计算商品总价
+        --&gt;
+        &lt;ul&gt;
+            &lt;li v-for=&quot;(item, index) in car&quot;&gt;
+                &#123;&#123;item.pname&#125;&#125; --- 商品价格：&#123;&#123;item.price&#125;&#125; --- 库存：&#123;&#123;item.stock&#125;&#125;
+                数量：&lt;input type=&quot;number&quot; v-model=&quot;item.num&quot; style=&quot;width: 30px;&quot;/&gt;
+            &lt;/li&gt;
+            &lt;li&gt;&lt;strong&gt;总价：&lt;/strong&gt;&#123;&#123;calcSum&#125;&#125;&lt;/li&gt;
+            &lt;!-- &lt;li v-html=&quot;warn()&quot;&gt;&lt;/li&gt; --&gt;
+            &lt;li v-html=&quot;message&quot;&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+ new Vue(&#123;
+    el:&quot;#app&quot;,
+    data:&#123;
+        car:[
+            &#123;pname:&#39;IPhone 12&#39;,price:10000,stock:10,num:1&#125;,
+            &#123;pname:&#39;Mate40 pro&#39;,price:7000,stock:3,num:1&#125;,
+        ],
+        message:&quot;&quot;,
+    &#125;,
+    // methods：当方法中的数据发生改变，方法会自动调用 所以当数量增加时会自动计算总价
+    methods: &#123;
+        // calcSum()&#123;
+        //     let sum=0;
+        //     this.car.forEach(item =&gt; &#123;
+        //         sum+=item.price*item.num;
+        //     &#125;);
+        //     return sum;
+        // &#125;
+
+        // warn()&#123;
+        //     let message=&quot;&quot;;
+        //     this.car.forEach(item =&gt; &#123;
+        //         if(item.num&gt;item.stock)&#123;
+        //             message+=`$&#123;item.pname&#125;的库存超出限制&lt;br/&gt;`
+        //         &#125;
+        //     &#125;);
+        //     return message;
+        // &#125;
+    &#125;,
+    // 计算属性 上面就不加大括号  &lt;li&gt;&lt;strong&gt;总价：&lt;/strong&gt;&#123;&#123;calcSum&#125;&#125;&lt;/li&gt;
+    computed:&#123;
+        calcSum()&#123;
+            let sum=0;
+            this.car.forEach(item =&gt; &#123;
+                sum+=item.price*item.num;
+            &#125;);
+            return sum;
+        &#125;
+    &#125;,
+    // 侦听器 专门用于侦听某些数据的变化，当数据发生变化会自动调节方法 不能像方法那样调用
+    watch:&#123;
+        // 要侦听的数据 
+        car:&#123;
+            handler(newvalue,oldvalue)&#123;
+                this.message=&quot;&quot;;
+                this.car.forEach(item =&gt; &#123;
+                    if(item.num&gt;item.stock)&#123;
+                        this.message+=`$&#123;item.pname&#125;的库存超出限制&lt;br/&gt;`
+                    &#125;
+                &#125;);
+            &#125;,
+            deep:true
+        &#125;,
+        //侦听message 基础类型的侦听 将侦听数据作为函数就可以了
+        message(newvalue,oldvalue)&#123;
+            console.info(newvalue,oldvalue)
+        &#125;
+    &#125;
+ &#125;);
+ /*
+    方法和计算属性的区别：
+    声明方式不一样，调用不一样方法要用&quot;()&quot;, 计算属性调用不要加&quot;()&quot;
+ */
+/*
+    方法和侦听器的区别：
+        方法：方法中任意数据发生改变了就会自动调用方法 
+            可以调用，进行返回值
+
+        侦听器：需要指定具体的侦听数据，只有被具体指定的侦听数据发生了改变才会触发
+            不能像方法那样去调用，而是靠vue自动触发 如果初始情况就数量就大于库存是不改变的
+*/
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="过滤器"><a href="#过滤器" class="headerlink" title="过滤器"></a>过滤器</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;过滤器&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    
+
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;ul&gt;
+            &lt;li v-for=&quot;user in userList&quot;&gt;
+                姓名：&#123;&#123;user.name&#125;&#125;; 性别：&#123;&#123;user.gender==1?"男":"女"&#125;&#125;
+                &#123;&#123;user.gender | filterGender&#125;&#125;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    let vm = new Vue(&#123;
+        el: &quot;#app&quot;,
+        data:&#123;
+            userList:[
+                &#123;id:1, name:&#39;xushu&#39;, gender:1&#125;,
+                &#123;id:2, name:&#39;zhuge&#39;, gender:0&#125;
+            ]
+        &#125;,
+        //针对数据过滤的
+        methods:&#123;
+            formateGender(gender)&#123;
+                if(gender==1)&#123;
+                    return &quot;~男&quot;
+                &#125;else&#123;
+                    return &quot;~女&quot;
+                &#125;
+            &#125;
+        &#125;,
+        filters:&#123;
+            filterGender(gender)&#123;
+                if(gender==1)&#123;
+                    return &quot;!男&quot;
+                &#125;else&#123;
+                    return &quot;!女&quot;
+                &#125;
+            &#125;
+        &#125;
+    &#125;)
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="Vue-组件化"><a href="#Vue-组件化" class="headerlink" title="Vue-组件化"></a>Vue-组件化</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;组件化&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;!-- &lt;div @click=&#39;num++&#39;&gt;&#123;&#123;num&#125;&#125;&lt;/div&gt; --&gt;
+        &lt;!-- &lt;xushu&gt;&lt;/xushu&gt; --&gt;
+        &lt;xushu :num=&quot;numxx&quot;&gt;&lt;/xushu&gt; &lt;!--传递属性--&gt;  &lt;!--输出50--&gt;
+        &lt;app-xushu&gt;&lt;/app-xushu&gt; &lt;!--输出66--&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&quot;app2&quot;&gt;
+        &lt;!-- &lt;div @click=&#39;num++&#39;&gt;&#123;&#123;num&#125;&#125;&lt;/div&gt; --&gt;
+        &lt;!-- &lt;xushu&gt;&lt;/xushu&gt; --&gt;
+        &lt;xushu :num=&quot;numxx&quot;&gt;&lt;/xushu&gt; &lt;!--传递属性--&gt; &lt;!--输出100--&gt;
+    &lt;/div&gt;
+
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+    &lt;script&gt;
+        // 1.全局组件 在所有的Vue实例中使用
+        /*
+            1.1 命名：不要使用驼峰命名法 可以用中划线命名
+            1.2 模板：必须的
+            1.3 数据：一定要函数的方式声明
+        */
+        Vue.component(&quot;xushu&quot;, &#123;
+            template: `&lt;div @click=&#39;num++&#39;&gt;&#123;&#123;num&#125;&#125;&lt;/div&gt;`,
+            //1.在自己的字方法中声明  
+            // data() &#123;
+            //     return &#123;
+            //         num:10
+            //     &#125;
+            // &#125;,
+
+            //2.在下方父方法中声明并传递过来
+            props: [&quot;num&quot;]
+        &#125;);
+
+        // 2.局部组件 //自己定义下面引用
+        const appXushu = &#123;
+            template: `&lt;div @click=&#39;num++&#39;&gt;&#123;&#123;num&#125;&#125;&lt;/div&gt;`,
+            data() &#123;
+                return &#123;
+                    num: 66
+                &#125;
+            &#125;
+        &#125;;
+
+        new Vue(&#123;
+            el: &quot;#app&quot;,
+            data: &#123;
+                numxx: 50
+            &#125;,
+            components: &#123;
+                &quot;app-xushu&quot;: appXushu
+            &#125;
+        &#125;);
+
+        new Vue(&#123;
+            el: &quot;#app2&quot;,
+            data: &#123;
+                numxx: 100
+            &#125;
+        &#125;);
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="生命周期和钩子函数"><a href="#生命周期和钩子函数" class="headerlink" title="生命周期和钩子函数"></a>生命周期和钩子函数</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;span id=&quot;name&quot;&gt;&#123;&#123;name&#125;&#125;&lt;/span&gt;
+        &lt;button @click=&quot;updateName&quot;&gt;更新&lt;/button&gt;
+        &lt;button @click=&quot;destroyInstance&quot;&gt;销毁&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    var vm = new Vue(&#123;
+        el: &#39;#app&#39;,
+        data:&#123;
+            name: &#39;hello !&#39;
+        &#125;,
+        methods: &#123;
+            updateName()&#123;
+                console.log(&#39;准备改名字啦！&#39;)
+                this.name = &#39;hello 图灵！&#39;
+            &#125;,
+            destroyInstance()&#123;
+                console.log(&#39;销毁实例&#39;)
+                vm.$destroy()
+            &#125;
+        &#125;
+    &#125;)
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="vue-router"><a href="#vue-router" class="headerlink" title="vue-router"></a>vue-router</h3><pre><code class="vue">npm install vue-router@3
+npm install vue-router@3 --legacy-peer-deps
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;!-- 1.安装vue-router路由
+     2.引入vue-router文件
+     3.根据不同url连接到不同的页面，需要使用模板实现，将模板绑定对应的路由地址
+--&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;nav&gt;
+            &lt;router-link to=&quot;/&quot;&gt;Home&lt;/router-link&gt;
+            &lt;router-link to=&quot;/about&quot;&gt;About&lt;/router-link&gt;
+        &lt;/nav&gt;
+        &lt;router-view&gt;&lt;/router-view&gt;
+    &lt;/div&gt;
+
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue-router@3.5.1/dist/vue-router.js&quot;&gt;&lt;/script&gt;
+    &lt;script&gt;
+                // 定义组件：原本应该是在外面定义HomeComponent.vue [创建一些组件]
+        const HomeComponent = &#123;
+            template: `&lt;div&gt;&lt;h1&gt;Home&lt;/h1&gt;&lt;p&gt;Welcome to the Home page!&lt;/p&gt;&lt;/div&gt;`
+        &#125;;
+              // 定义组件：原本应该是在外面定义AboutComponent.vue [创建一些组件]
+        const AboutComponent = &#123;
+            template: `&lt;div&gt;&lt;h1&gt;About&lt;/h1&gt;&lt;p&gt;Learn more about us on this page.&lt;/p&gt;&lt;/div&gt;`
+        &#125;;
+
+        // 定义路由：原本应该是外面定义router.js文件来定义路由。
+        const routes = [
+            &#123; path: &#39;/&#39;, component: HomeComponent &#125;,
+            &#123; path: &#39;/about&#39;, component: AboutComponent &#125;
+        ];
+
+        // 创建路由实例
+        const router = new VueRouter(&#123;
+            routes
+        &#125;);
+
+        // 创建并挂载根实例
+        const app = new Vue(&#123;
+            router// 挂载路由
+        &#125;).$mount(&#39;#app&#39;);
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="axios"><a href="#axios" class="headerlink" title="axios"></a>axios</h3><pre><code class="vue">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Vue with Axios Example&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        &lt;h1&gt;Data from API&lt;/h1&gt;
+        &lt;ul&gt;
+            &lt;li v-for=&quot;post in posts&quot; :key=&quot;post.id&quot;&gt;&#123;&#123; post.title &#125;&#125;&lt;/li&gt;
+        &lt;!-- 使用 Vue 的 v-for 指令遍历 posts 数组，并生成列表项，每个列表项显示 post.title。 --&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 引入 Vue.js --&gt;
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js&quot;&gt;&lt;/script&gt;
+    &lt;!-- 引入 Axios --&gt;
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script&gt;
+        // 创建 Vue 实例
+        let vm = new Vue(&#123;
+            el: &quot;#app&quot;, // Vue 实例绑定到 HTML 中的 id=&quot;app&quot; 的元素
+            data: &#123;
+                posts: [] // 初始化一个空数组用于存储从 API 获取的数据
+            &#125;,
+            created() &#123;
+                // Vue 实例创建时调用的生命周期钩子
+                axios.get(&#39;https://jsonplaceholder.typicode.com/posts&#39;) // 使用 Axios 发送 GET 请求
+                    .then(response =&gt; &#123; // 请求成功后的处理
+                        this.posts = response.data; // 将响应数据赋值给 posts 数组
+                    &#125;)
+                    .catch(error =&gt; &#123; // 请求失败后的处理
+                        console.error(&#39;Error fetching data:&#39;, error); // 输出错误信息到控制台
+                    &#125;);
+            &#125;
+        &#125;);
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="安装脚手架"><a href="#安装脚手架" class="headerlink" title="安装脚手架"></a>安装脚手架</h3><h5 id="CLI文档，开箱即用！"><a href="#CLI文档，开箱即用！" class="headerlink" title="CLI文档，开箱即用！"></a>CLI文档，开箱即用！</h5><pre><code class="vue">cmd全局安装：
+npm install -g @vue/cli         或者
+npm install -g @vue/cli-init
+
+去想要的文件夹里面：C:\Users\Pluminary\Desktop\vue_cli&gt;vue init webpack tuling
+vue init webpack 项目名
+
+? Project name tuling
+? Project description A Vue.js project
+? Author pcy
+? Vue build standalone
+? Install vue-router? Yes
+? Use ESLint to lint your code? No //严格检验Javascript语法的
+? Set up unit tests No
+? Setup e2e tests with Nightwatch? No
+? Should we run `npm install` for you after the project has been created? (recommended) npm
+
+完成后需要开启：
+cd tuling
+npm run dev
+
+DONE  Compiled successfully in 1780ms 18:41:21
+I  Your application is running here: http://localhost:8080
+</code></pre>
+<h3 id="运用element-ui创建一个简易的登录界面"><a href="#运用element-ui创建一个简易的登录界面" class="headerlink" title="运用element-ui创建一个简易的登录界面"></a>运用element-ui创建一个简易的登录界面</h3><pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;hello-world&quot;&gt;
+    &lt;h1&gt;&#123;&#123; message &#125;&#125;&lt;/h1&gt;
+    &lt;el-button type=&quot;primary&quot; @click=&quot;showAlert&quot;&gt;Click Me&lt;/el-button&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;app&quot;&gt;
+    &lt;h3&gt;&#123;&#123;passage&#125;&#125;&lt;/h3&gt;
+    &lt;h4&gt;&#123;&#123;getVal()&#125;&#125;&lt;/h4&gt;
+  &lt;/div&gt;
+
+   &lt;!-- 使用Element UI的Table组件展示empList --&gt;
+  &lt;el-table :data=&quot;empList&quot; style=&quot;width: 100%&quot;&gt;
+    &lt;el-table-column prop=&quot;name&quot; label=&quot;Name&quot; width=&quot;180&quot;&gt;&lt;/el-table-column&gt;
+    &lt;el-table-column prop=&quot;salary&quot; label=&quot;Salary&quot; width=&quot;180&quot;&gt;&lt;/el-table-column&gt;
+  &lt;/el-table&gt;
+
+   &lt;!-- 登录表单 --&gt;
+  &lt;el-form ref=&quot;loginForm&quot; :model=&quot;loginForm&quot; class=&quot;loginForm&quot; label-width=&quot;80px&quot;&gt;
+    &lt;h2 class=&quot;loginTitle&quot;&gt;人事后台管理系统&lt;/h2&gt;
+    &lt;el-form-item label=&quot;用户名&quot; prop=&quot;username&quot;&gt;
+      &lt;el-input v-model=&quot;loginForm.username&quot; placeholder=&quot;请输入用户名&quot;&gt;&lt;/el-input&gt;
+    &lt;/el-form-item&gt;
+    &lt;el-form-item label=&quot;密码&quot; prop=&quot;password&quot;&gt;
+      &lt;el-input v-model=&quot;loginForm.password&quot; type=&quot;password&quot; placeholder=&quot;请输入密码&quot;&gt;&lt;/el-input&gt;
+    &lt;/el-form-item&gt;
+    &lt;el-form-item label=&quot;验证码&quot; prop=&quot;code&quot;&gt;
+      &lt;el-input v-model=&quot;loginForm.code&quot; placeholder=&quot;请输入验证码&quot;&gt;&lt;/el-input&gt;
+    &lt;/el-form-item&gt;
+    &lt;el-form-item style=&quot;width:100%;&quot;&gt;
+      &lt;el-button type=&quot;primary&quot; @click=&quot;handleLogin&quot;&gt;登录&lt;/el-button&gt;
+    &lt;/el-form-item&gt;
+  &lt;/el-form&gt;
+   
+
+&lt;/template&gt;
+
+&lt;script&gt;
+  export default &#123;
+    name: &#39;app&#39;,
+    data()&#123;
+      return&#123;
+        passage: &#39;Oh?&#39;,
+        message: &#39;Hello World!&#39;,
+        empList:[
+          &#123; name: &#39;Peter&#39;, salary: &#39;20000&#39; &#125;,
+          &#123; name: &#39;Mike&#39;, salary: &#39;16000&#39; &#125;,
+          &#123; name: &#39;Tom&#39;, salary: &#39;17000&#39; &#125;
+        ],
+        loginForm:&#123;
+          username:&#39;&#39;,
+          password:&#39;&#39;,
+          code:&#39;&#39;
+        &#125;
+      &#125;
+    &#125;,
+    methods: &#123;
+      showAlert() &#123;
+        this.$message(&#123;
+          message: &#39;Hello from Element UI!&#39;,
+          type: &#39;success&#39;
+        &#125;);
+      &#125;,
+      getVal:function()&#123;
+        return &quot;getVal的方法&quot;;
+      &#125;,
+      handleLogin() &#123;
+      this.$message(&#123;
+        message: `登录成功，用户名: $&#123;this.loginForm.username&#125;`,
+        type: &#39;success&#39;
+      &#125;);
+     &#125;
+    &#125;
+  &#125;
+
+&lt;/script&gt;
+
+&lt;style scoped&gt;
+    .hello-world &#123;
+      text-align: center;
+      margin-top: 20px;
+    &#125;
+
+    h1 &#123;
+      font-size: 24px;
+      margin-bottom: 20px;
+    &#125;
+    .app &#123;
+      margin-top: 30px;
+    &#125;
+&lt;/style&gt;
+</code></pre>
+<pre><code class="java">在Vue项目中，Element UI需要正确引入CSS样式和JavaScript文件才能正常工作。如果你没有一个HTML模板文件（例如index.html），而是在Vue组件中直接编写代码，你需要通过一些方式来确保Element UI的样式和脚本被正确加载。
+
+// 1. 创建index.html文件：
+这个index.html文件通常放在public文件夹下，是你Vue应用的入口文件。Vue CLI自动生成的项目通常会有这个文件。
+
+// 2. 为什么需要这个HTML文件？
+这个index.html文件是Vue CLI或手动设置的Vue项目的入口页面。当你运行npm run serve时，Vue CLI会将所有内容注入到&lt;div id=&quot;app&quot;&gt;&lt;/div&gt;中，这个HTML文件是项目的基本框架。
+
+Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element UI的样式文件（CSS）和在&lt;body&gt;中引入JS库，这样才能确保Element UI组件在你的Vue组件中正确渲染和运行。
+    
+// 3. 直接在Vue组件中引入：
+如果你不想使用外部HTML文件，Vue项目中可以直接在main.js中引入Element UI的样式和组件：
+/*
+    // main.js
+    import Vue from &#39;vue&#39;;
+    import App from &#39;./App.vue&#39;;
+    import ElementUI from &#39;element-ui&#39;;
+    import &#39;element-ui/lib/theme-chalk/index.css&#39;;
+
+    Vue.config.productionTip = false;
+
+    Vue.use(ElementUI);
+
+    new Vue(&#123;
+      render: h =&gt; h(App),
+    &#125;).$mount(&#39;#app&#39;);
+*/
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/前端" style=color:#879cff>
+                前端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2024/07/03/前端/Vue/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2024/05/12/后端/Cloud分布式微服务打造大型自媒体3大业务平台/">
         <h2>
             Cloud分布式微服务打造大型自媒体3大业务平台
@@ -19781,7 +20702,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -22831,7 +23752,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -22985,7 +23906,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -25260,7 +26181,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -28190,7 +29111,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -31967,7 +32888,7 @@ MyISAM：通常占用更少的存储空间，因为它不需要存储这些额�
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -36994,7 +37915,7 @@ service firewalld restart
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -40303,7 +41224,7 @@ public class ManagementController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -40358,13 +41279,25 @@ public class ManagementController &#123;
 <p>@@ 高速缓存地址是为了高速缓存的读取和写入而使用的地址，在CPU和高速缓存之间进行数据传输时使用的；当CPU需要读取数据时，DMA控制器和中断CPU发出的数据地址是<strong>主存的物理地址</strong>[<u>中断向量</u>提供的是<strong>中断服务程序的入口地址</strong>]；硬盘的扇区地址是用于访问硬盘上指定扇区的地址，并不直接与CPU进行数据交互；虚拟地址，是指在操作系统中使用的地址，它需要通过地址映射和页表等机制转换为物理地址才能被CPU使用</p>
 <p>@@ <strong>相联存储器</strong>是指<u>按内容访问</u>的存储器<br>按<strong>构成存储器</strong>的材料：磁存储器、半导体存储器、光存储器<br>按存储器的<strong>工作方式</strong>：读写存储器、只读存储器<br>按<strong>访问</strong>方式：按地址访问的存储器、按内容访问的存储器<br>按**[寻]地址**访问的存储器：随机存储器、顺序存储器、直接存储器</p>
 <p>@@ ±0编码相同的是<strong>补码和移码</strong></p>
-<p>@@ 计算机感染特洛伊木马后的典型现象是<strong>有未知程序试图建立网络连接</strong></p>
+<p>@@ 计算机感染特洛伊木马后的典型现象是<strong>有未知程序试图建立网络连接</strong>。特洛伊木马是一种通过网络传播的病毒，分为客户端和服务器端两部分，服务器端位于被感染的计算机，特洛伊木马服务器端运行后会<strong>试图建立网络连接</strong>，所以计算机感染特洛伊木马后的典型现象是有未知程序试图建立网络连接</p>
 <p>@@ 再微型计算机中，管理键盘最适合采用的1&#x2F;0控制方式是<strong>中断方式</strong></p>
-<p>@@ 在移臂调度算法中，<strong>先来先服务</strong>和<strong>最短寻找时间优先</strong>(<u>根据当前磁臂到要请求访问磁道的距离，誰短满足誰的请求</u>)算法可能会随时改变移动臂的运动方向</p>
+<p>@@    在移臂调度算法中，<strong>先来先服务</strong>和<strong>最短寻找时间优先</strong>(<u>根据当前磁臂到要请求访问磁道的距离，誰短满足誰的请求</u>)算法可能会随时改变移动臂的运动方向</p>
 <p>@@ 计算机中，系统总线用于<strong>CPU、主存及外设部件</strong>连接</p>
 <p>@@ 双核是指<strong>在一个CPU中集成两个运算核心以提高运算能力</strong></p>
 <p>@@ 已知某高级语言源程序A经编译后得到机器C上的目标程序B，则<strong>对B进行反编译，不能还原出源程序A</strong></p>
 <p>@@ 在程序执行过程中，Cache与主存的地址映射是由<strong>硬件自动</strong>完成的</p>
+<p>@@ 关于软件著作权产生的时间是<strong>自作品完成创作之日</strong></p>
+<p>@@ 人耳：20Hz ~ 20kHz。 说话：300 ~ 3400Hz。音乐：20 ~ 20kHz。白噪音：20 ~ 20kHz</p>
+<p>@@ <strong>存储动画</strong>的文件格式有<strong>FLC、GIF、SWF</strong></p>
+<p>@@ <strong>网络视频格式</strong>包括<strong>MOV、RM、ASF、WMV</strong>&#x3D;&#x3D;</p>
+<p>@@ <strong>多媒体视频图像文件</strong>格式有<strong>AVI、MPG、ASF、MP4</strong></p>
+<p>@@ <strong>声音、音频文件</strong>格式有<strong>WAV、WMA、MP3、MIDI、RA、APE</strong></p>
+<p>@@ 属于<strong>图像文件</strong>格式有<strong>GIF、BMP、JPG、PNG、TIF</strong></p>
+<blockquote>
+<p><strong>.wma</strong>微软公司的有损压缩，压缩比高于MP3，Win7录音机默认格式</p>
+</blockquote>
+<p>@@ 位图（Bitmap）&#x3D;&gt; <strong>BMP</strong></p>
+<p>@@ <strong>语音识别技术</strong>体现了<u><strong>多媒体技术</strong>与<strong>人工智能技术</strong></u>相结合</p>
 <p>@@ 计算机系统的主存主要是由<strong>DRAM</strong>构成的。<br>随机访问存储器(<strong>RAM</strong>)有两类：静态的(SRAM) 和 动态的(DRAM)</p>
 <p>@@ 存储系统采用Cache技术的主要目的是提高存储器的访问速度，因此是由<strong>硬件自动完成</strong>Cache与主存之间的操作</p>
 <p>@@ 主存与Cache的地址映射方式中，<strong>全相联</strong>方式可以实现主存任意一块装入Cache中任意位置，只有装满才需要替换<br><strong>全相联地址映射：</strong>主存的任意一块可以映射到Cache中的<strong>任意</strong>一块<br><strong>直接相联映射：</strong>主存中一块只能映射到到Cache的一个<strong>特定</strong>的块中<br><strong>组相联的映射：</strong>各区中的某一块只能存入缓存的同组号的空间内，但组内各块地址之间则可以任意存放。即从<strong>主存</strong>的组到Cache的组之间采用直接映像方式，在两个对应的<strong>组内部</strong>采用全相联映像方式</p>
@@ -40374,6 +41307,7 @@ public class ManagementController &#123;
 <p>@@ 计算机采用分级存储体系的主要目的是为了解决<strong>存储容量、成本和速度之间的矛盾</strong>问题<br>高速缓存一般用SRAM[速度快,成本高]<br>内存一般用DRAM[集成度高,动态刷新]<br>外存一般用磁存储器[速度慢,容量大,价格便宜]</p>
 <p>@@ Cache的设计思想是在合理成本下提高命中率</p>
 <p>@@ <strong>并行总线</strong>适合<strong>近距离高速数据传输</strong>、<strong>串行总线</strong>适合<strong>长距离数据传输</strong><br>在单总线结构中，CPU与主存之间、CPU与I&#x2F;O设备之间、I&#x2F;O设备与主存之间、各种设备之间都通过系统总线交换信息。单总线结构的优点是控制简单方便，扩充方便</p>
+<p>@@ 处理机主要由处理器、存储器和总线组成</p>
 <p>@@ 总线：数(数据总线) 控(控制总线) 地(地址总线) ISA EISA PCI MCA<br>SCSI是一种用于计算机和智能设备之间系统级接口的独立处理器标准</p>
 <p>@@ 总线复用方式可以<strong>减少总线中信号线的数量</strong><br>总线式一组能为多个部件分时共享的信息传送线，用来连接多个部件并为之提供信息交换通路，通过<strong>总线复用方式</strong><u>可以减少总线中信号线的数量，以较少的信号线传输更多的消息</u></p>
 <p>@@ 在计算机系统中采用总线结构，便于实现系统的积木化结构，同时可以<strong>减少总线中信号线的数量</strong> </p>
@@ -40405,7 +41339,7 @@ public class ManagementController &#123;
 <p>@@ 软件产品的可靠性并不取决于<strong>软件产品的开发方式</strong> 而取决于<strong>潜在的错误数量和位置，软件产品的使用方式</strong>；软件可靠性指的是一个系统对于给定的时间间隔内，在给定条件下**<u>无失效运作的概率</u>**。</p>
 <p>@@ <u>软件<strong>可靠性</strong></u>是指一个系统在给定时间间隔内和给定条件下<strong>无失败运行的概率</strong>，一个软件系统能够按照规格说明正确运行的概率。<u>软件<strong>可维护性</strong></u>是在给定的使用条件下，在规定的时间间隔内，使用规定的过程和资源<strong>完成维护活动的概率</strong></p>
 <p>@@ <strong>应用级网关</strong>防火墙是内部网和外部网的隔离点，它可对应用层的通信数据流进行监控和过滤。应用级网关可以工作在OSI七层模型上的任意一层，能够检查进出的数据包，通过网关复制传递数据，防止在受信任服务器和客户机与不受信任的主机之间直接建立联系。</p>
-<p>@@ 用户A和B要进行安全通信，通信过程需确认双方身份和消息不可否认，A和B通信时使用<strong>数字证书</strong>来对用户的身份进行认证；使用<strong>数字签名</strong>确保消息不可否认</p>
+<p>@@ 用户A和B要进行安全通信，通信过程需确认双方身份和消息不可否认，A和B通信时使用<strong>数字证书</strong>来对用户的身份进行认证；使用<strong>数字签名</strong>确保消息不可否认。数字签名是对<strong>真实性</strong>的保护</p>
 <p>@@ <strong>震网</strong>病毒是一种破坏工业基础设施的恶意代码，利用系统漏洞攻击工业控制系统，是一种危害性极大的<strong>蠕虫病毒</strong>。<strong>蠕虫(Worm)<strong>是一个程序或程序序列。它利用网络进行复制和传播，传染途径是通过网络、移动存储设备和电子邮件。最初的蠕虫病毒定义是在DOS环境下，病毒发作时会在频幕上出现一条类似虫子的东西，胡乱吞吃屏幕上的字母并将其改正。常见的蠕虫病毒有：</strong>快乐时光、红色代码、爱虫病毒、熊猫烧香、Nimda病毒、爱丽兹病毒</strong>。<strong>CIH</strong>：系统病毒      <strong>X卧底</strong>：以木马形式传播目标为智能手机的病毒<br><strong>引导区病毒</strong>：破坏的是引导盘、文件目录<br><strong>宏病毒</strong>[<strong>Macro</strong>]：破坏的是OFFICE文件相关(病毒宏将自身复制至Word的通用Normal模板中)<br><strong>木马</strong>：一般强调控制操控 [<strong>冰河</strong>是木马软件，主要用于远程监控。冰河木马后经其他人多次改写形成多种变种，并被用于入侵其他用户的计算机木马程序]</p>
 <p>@@ Sniffer(<strong>嗅探器</strong>)是一种基于被动侦听原理的网络分析方式。使用这种技术方式可以监视网络的状态、数据流动情况以及网上传输的信息。它不是木马程序</p>
 <p>@@ 属于DoS攻击的是<strong>SYN Flooding攻击</strong> [<u>DoS是Denial of Service的简称，即拒绝服务，造成DoS的攻击行为被称为DoS攻击，其目的是使计算机或网络无法提供正常的服务。最常见的DoS攻击有计算机网络宽带攻击和连通性攻击。</u>]<br>① <strong>特洛伊木马</strong>[Trojan]是附着在应用程序中或者单独存在的一些恶意程序，它可以利用网络远程控制网络的另一端的安装有服务端服务的主机，实现对被植入了木马程序的计算机的控制，或者窃取被植入了木马程序的计算机上的机密资料。<br>② <strong>拒绝服务攻击</strong>通过网络的内外部用户来发动攻击。内部用户可以通过长时间占用系统的内存、CPU处理时间使其他用户不能及时得到这些资源，而引起拒绝服务器攻击；外部黑客也可以通过占用网络连接使其他用户得不到网络服务   <strong>SYN Flooding攻击</strong>以多个随机的源主机地址向目的路由器发送SYN包，在收到目的路由器的SYN ACK后并不回应，于是目的路由器就为这些源主机建立大量的连接队列，由于没有收到ACK一直维护着这些队列，造成了资源的大量消耗而不能向正常请求提供服务，甚至导致服务器崩溃。服务器要等待超时才能断开已分配的资源，所以SYN Flooding攻击是一种DOS攻击<br>③ <strong>端口欺骗攻击</strong>是采用端口扫描到系统漏洞从而实施攻击<br>④ <strong>IP欺骗攻击</strong>是产生的IP数据包为伪造的源IP地址，以便冒充其他系统或发件人的身份</p>
@@ -40791,6 +41725,12 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
 <p>@@ 程序的三种基本控制结构式<strong>顺序、选择和重复</strong></p>
 <p>@@ 软件工程每一个阶段结束前，应该着重对可维护性进行复审。在系统设计阶段的复审期间，应该从<strong>容易修改、模块化和功能独立的目的</strong>出发，评价软件的结构和过程。可维护性式所有软件都具有的基本特点，必须在开发阶段保证软件具有可维护性的特点。</p>
 <p>@@ I&#x2F;O软件隐藏了I&#x2F;O操作实现的细节。I&#x2F;O软件向用户提供的式逻辑接口。I&#x2F;O软件将硬件与较高层次的软件隔离开来，而最高层软件向硬件提供一个友好的、清晰的、统一的接口，方便用户使用。</p>
+<p>@@ 在面向对象技术构建软件系统时，很多敏捷方法都建议的一种重要的设计活动是<strong>重构</strong>，它是一种重新组织的技术，可以简化构件的设计而无需改变其功能或行为</p>
+<p>@@ 软件风险一般包含<strong>不确定性</strong>和<strong>损失</strong>。<strong>救火</strong>和<strong>危机管理</strong>是对不适合但经常采用的软件风险管理策略，<strong>已知风险</strong>和<strong>未知风险</strong>是对软件风险进行分类的一种方式。<strong>员工</strong>和<strong>预算</strong>是在识别项目风险时需要识别的因素</p>
+<p>@@ 在传值方式下是将<strong>实参</strong>的值传递给形参，因此实参可以是表达式、常量、变量、数组元素，这种信息传递是单方向的，形参不能再将值传回给实参。在传地址方式下，需要将实参的地址传递给形参，因此实参必须是变量、数组名或数组元素。不能是表达式或常量。在这种方式下，被调用函数中对形式参数的修改实际上就是对实际参数的修改，客观上可以实现数据的双向传递。</p>
+<p>@@ 编译是将高级语言源程序翻译成机器语言程序，反编译是编译的逆过程。反编译通常不能把可执行文件还原成高级语言源代码，只能转换成功能上等价的汇编程序。</p>
+<p>@@ <strong>动态语言</strong>是指程序在运行时可以改变其结构，例如新的函数可以被引进、已有的函数可以被删除等在结构上的变化等。动态语言的类型检查是在<strong>运行时进行的</strong>，其有点是方便阅读，不需要非常多的与类型相关的代码；缺点是不方便调试。<strong>脚本语言</strong>代表一套与系统程序设计语言不同的协定。更适合在联系复杂的应用程序中进行胶着(粘合)，一般都是面向字符的。脚本语言都是动态语言，而动态语言都是解释型语言</p>
+<p>@@ WinXP支持<strong>FAT、FAT32、NTFS</strong>的文件系统格式化卷，而Win11默认仅提供<strong>NTFS</strong>格式 (ReFS主要面向企业级存储)</p>
 
             
         </div>
@@ -40805,7 +41745,7 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#ff7d73>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -40813,2267 +41753,6 @@ R1出去两个资源，R1资源数为0，此时P2申请R1资源，P2阻塞。R2�
     </div>
 
     <a href="/2024/01/16/软考/软件设计师刷题考点/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2024/01/15/后端/SpringMVC[Mapping,中文乱码,Restful及跨域,JSON序列化,非简单请求,拦截器]/">
-        <h2>
-            SpringMVC[Mapping,中文乱码,Restful及跨域,JSON序列化,非简单请求,拦截器]
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2024/1/15
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h1 id="Spring-MVC"><a href="#Spring-MVC" class="headerlink" title="Spring MVC"></a>Spring MVC</h1><table>
-<thead>
-<tr>
-<th>内容</th>
-<th>说明</th>
-<th>重要程度</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Spring MVC入门</td>
-<td>Spring MVC开发流程与环境配置</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>接收Web数据</td>
-<td>Spring MVC参数接收与数据绑定</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>URL Mapping</td>
-<td>讲解URL绑定过程</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>中文乱码问题</td>
-<td>解决请求与相应中文乱码</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>拦截器</td>
-<td>Spring MVC拦截器的使用</td>
-<td>★★★</td>
-</tr>
-</tbody></table>
-<h1 id="Restful开发风格-主流"><a href="#Restful开发风格-主流" class="headerlink" title="Restful开发风格 [主流]"></a>Restful开发风格 [主流]</h1><table>
-<thead>
-<tr>
-<th>内容</th>
-<th>说明</th>
-<th>重要程度</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Restful风格介绍</td>
-<td>介绍Restful开发规范</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>Restful开发实战</td>
-<td>实例讲解Restful在Spring MVC中的实现</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>JSON序列化</td>
-<td>通过相应输出数据</td>
-<td>★★★★★★</td>
-</tr>
-<tr>
-<td>Restful的跨域问题</td>
-<td>分析跨域问题的来源与解决办法</td>
-<td>★★★★★★</td>
-</tr>
-</tbody></table>
-<h3 id="Spring-MVC-Model-View-Controller-中介"><a href="#Spring-MVC-Model-View-Controller-中介" class="headerlink" title="Spring MVC[Model+View+Controller(中介)]"></a>Spring MVC[<u>Model+View+Controller(中介)</u>]</h3><p>比servlet方便许多 简化web程序的开发</p>
-<ul>
-<li>Spring MVC是Spring体系的轻量级Web MVC框架</li>
-<li>Spring MVC的核心<strong>Controller</strong>控制器，用于处理请求，产生相应</li>
-<li>Spring MVC基于Spring IOC容器运行，所有对象被IoC管理</li>
-</ul>
-<h6 id="学习向导"><a href="#学习向导" class="headerlink" title="学习向导"></a>学习向导</h6><ul>
-<li>Spring MVC入门</li>
-<li>Spring MVC数据绑定</li>
-<li>Restful 开发风格</li>
-<li>Spring MVC拦截器</li>
-</ul>
-<h3 id="Spring-MVC环境配置"><a href="#Spring-MVC环境配置" class="headerlink" title="Spring MVC环境配置"></a>Spring MVC环境配置</h3><h5 id="IDEA环境下创建Maven-WebApp"><a href="#IDEA环境下创建Maven-WebApp" class="headerlink" title="IDEA环境下创建Maven WebApp"></a>IDEA环境下创建Maven WebApp</h5><p>Project Structure 点加号 添加Web 右侧Path是Web描述符所存储的路径<br><code>C:\Users\Pluminary\Desktop\SpringMVC\src\main\webapp\WEB-INF\web.xml</code><br>Deployment descriptor version &#x3D;&gt; 3.1<br>下面的 Web Resource Directory【用于目录存储页面】<br><code>C:\Users\Pluminary\Desktop\SpringMVC\src\main\webapp</code><br>再次点下方的Create Artifact<br>右上角Type：<br><strong>Web Application: Exploded 目录方式运行</strong><br>Web Application: Archive 打包成war包运行<br>配置Tomcat Server &#x3D;&gt; Deployment 添加当前工程 SpringMVC:Web exploded<br>下面的Application context: 设置为 <strong>&#x2F;</strong>    只访问localhost即可<br>Server选项框里的 On ‘Update’ action: 把Restart server 改成 Update classes and resources【热部署】<br>当页面源代码发生变化时 不需要重启 </p>
-<ul>
-<li>Maven依赖Spring-WebMVC</li>
-<li>web.xml配置DispatcherServlet</li>
-<li>配置applicationContext的mvc标记</li>
-<li>开发Controller控制器</li>
-</ul>
-<pre><code class="xml">pom.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;first-springmvc&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-
-    &lt;repositories&gt;
-        &lt;repository&gt;
-            &lt;id&gt;aliyun&lt;/id&gt;
-            &lt;name&gt;aliyun&lt;/name&gt;
-            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-        &lt;/repository&gt;
-    &lt;/repositories&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-context-support&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
-            &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
-            &lt;version&gt;2.3.28&lt;/version&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="xml">src/main/webapp/WEB-INF/web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd&quot;
-         version=&quot;3.1&quot;&gt;
-&lt;!--    DispatchServlet 对所有请求进行拦截  --&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-&lt;!--        DispatcherServlet是Spring MVC是最核心的对象
-            DispatcherServlet用于拦截http请求
-            并根据请求的URL调用与之对应的Controller方法,来完成Http请求的处理
---&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-&lt;!--        在Web应用启动时自动创建Spring IoC容器,并初始化DispatcherServlet --&gt;
-&lt;!--        applicationContext.xml 初始化参数 启动时候加载--&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
-    &lt;/servlet&gt;
-    
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-&lt;!--        &quot;/&quot; 所有请求都要拦截--&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-&lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
-   及子包中拥有以下注解的对象：
-       @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
-       @Service     ...Service类上 业务逻辑类
-       @Controller 描述SpringMVC的控制器类
-       @Component  无法确定的类型种类
-   --&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
-&lt;!--    启用Spring MVC的注解开发模式--&gt;
-    &lt;mvc:annotation-driven/&gt;
-&lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/controller/TestController.java
-package com.imooc.springmvc.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@Controller
-public class TestController &#123;
-//  将当前的方法绑定某个get方式请求的url  //localhost/t
-    @GetMapping(&quot;/t&quot;)
-//  直接向响应输出字符串数据,不跳转页面
-    @ResponseBody
-    public String test()&#123;
-        return &quot;SUCCESS&quot;;
-    &#125;
-&#125;
-</code></pre>
-<p>添加依赖jar包进入项目工程 配置tomcat服务<code>Run/Debug Configurations</code> 中的 <code>Deployment</code> 点一下小铅笔修改 将右侧的Avaliable Elements中的依赖包全部put进入<br><code>404bug 配置都正常无误 寻找一下项目工程里的out/artifacts/WEB-INF/web.xml</code></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/4e2dcf96e18f478fddb9049b2544a008edd8f706/data/SpringMVC%E5%A4%84%E7%90%86%E7%A4%BA%E6%84%8F%E5%9B%BE.jpg"></p>
-<h3 id="Spring-MVC数据绑定"><a href="#Spring-MVC数据绑定" class="headerlink" title="Spring MVC数据绑定"></a>Spring MVC数据绑定</h3><h5 id="URL-Mapping-URL映射"><a href="#URL-Mapping-URL映射" class="headerlink" title="URL Mapping(URL映射)"></a>URL Mapping(URL映射)</h5><ul>
-<li>URL Mapping指将URL与Controller方法绑定</li>
-<li>通过将URL与方法绑定，SpringMVC便可通过Tomcat对外暴露服务</li>
-</ul>
-<h5 id="URL-Mapping注解"><a href="#URL-Mapping注解" class="headerlink" title="URL Mapping注解"></a>URL Mapping注解</h5><ul>
-<li>@RequestMapping - 通用绑定  &#x2F;&#x2F;<u>在全局用则是通用请求映射访问前缀 若在方法上则不区分get&#x2F;post请求</u></li>
-<li>@GetMapping - 绑定Get请求</li>
-<li>@PostMapping - 绑定Post请求</li>
-</ul>
-<p><code>@GetMapping(&quot;/g&quot;)   ======   @RequestMapping(value=&quot;/g&quot;,method=RequestMethod.GET)</code></p>
-<pre><code class="java">pom.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;first-springmvc&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-
-    &lt;repositories&gt;
-        &lt;repository&gt;
-            &lt;id&gt;aliyun&lt;/id&gt;
-            &lt;name&gt;aliyun&lt;/name&gt;
-            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-        &lt;/repository&gt;
-    &lt;/repositories&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
-            &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
-            &lt;version&gt;2.3.28&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-context-support&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="xml">src/main/webapp/WEB-INF/web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd&quot;
-         version=&quot;3.1&quot;&gt;
-    &lt;!--    DispatchServlet 对所有请求进行拦截  --&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;!--        DispatcherServlet是Spring MVC是最核心的对象
-                    DispatcherServlet用于拦截http请求
-                    并根据请求的URL调用与之对应的Controller方法,来完成Http请求的处理
-        --&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-        &lt;!--        在Web应用启动时自动创建Spring IoC容器,并初始化DispatcherServlet --&gt;
-        &lt;!--        applicationContext.xml 初始化参数 启动时候加载--&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
-    &lt;/servlet&gt;
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;!--        &quot;/&quot; 所有请求都要拦截--&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
-       及子包中拥有以下注解的对象：
-           @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
-           @Service     ...Service类上 业务逻辑类
-           @Controller 描述SpringMVC的控制器类
-           @Component  无法确定的类型种类
-       --&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
-    &lt;!--    启用Spring MVC的注解开发模式--&gt;
-    &lt;mvc:annotation-driven/&gt;
-    &lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/controller/TestController.java
-package com.imooc.springmvc.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@Controller
-public class TestController &#123;
-    @GetMapping(&quot;/t&quot;) //localhost/t
-    @ResponseBody //直接向响应输出字符串数据,不跳转页面
-    public String test()&#123;
-        return &quot;Hello Spring MVC&quot;;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-package com.imooc.springmvc.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@Controller
-@RequestMapping (&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
-public class URLMappingController &#123;
-    @GetMapping(&quot;/g&quot;)
-    @ResponseBody
-    public String getMapping()&#123;
-        return &quot;This is get method&quot;;
-    &#125;
-//  直接访问会出错 post请求如何访问 用进行html表单提交
-    @PostMapping(&quot;/p&quot;)
-    @ResponseBody
-    public String postMapping()&#123;
-        return &quot;This is post method&quot;;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="html">index.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;form action=&quot;/um/p&quot; method=&quot;post&quot;&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
-    &lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<h3 id="Controller方法参数接收请求参数"><a href="#Controller方法参数接收请求参数" class="headerlink" title="Controller方法参数接收请求参数"></a>Controller方法参数接收请求参数</h3><h5 id="接收请求参数的常用做法"><a href="#接收请求参数的常用做法" class="headerlink" title="接收请求参数的常用做法"></a>接收请求参数的常用做法</h5><ul>
-<li><h6 id="使用Controller方法参数接收"><a href="#使用Controller方法参数接收" class="headerlink" title="使用Controller方法参数接收"></a>使用Controller方法参数接收</h6></li>
-</ul>
-<pre><code class="java">&lt;form action=&quot;/m1&quot; method=&quot;post&quot;&gt;
-    &lt;input name=&quot;username&quot;/&gt;
-    &lt;input name=&quot;password&quot;/&gt;
-&lt;/form&gt;
-----------------------------------------------------
-@PostMapping(&quot;/m1&quot;)
-@ResponseBody
-public String post(String username, Long password)&#123;
-    return username + &quot;:&quot; + password;
-&#125;
-</code></pre>
-<p>特殊的注解<code>@RequestParam(&quot;&quot;)</code> 接收特殊自定义的参数</p>
-<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-package com.imooc.springmvc.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-@Controller
-@RequestMapping(&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
-public class URLMappingController &#123;
-    @GetMapping(&quot;/g&quot;)
-    @ResponseBody
-    public String getMapping(@RequestParam(&quot;manager_name&quot;) String managerName) &#123;
-        System.out.println(&quot;managerName:&quot;+managerName);
-        return &quot;This is get method&quot;;
-    &#125;
-
-    //    直接访问会出错 post请求如何访问 用进行html表单提交
-    @PostMapping(&quot;/p&quot;)
-    @ResponseBody
-    public String postMapping(String username, String password) &#123;
-        System.out.println(username + &quot;:&quot; + password);
-        return &quot;This is post method&quot;;
-    &#125;
-&#125;
-
-=========================
-网页中输入 http://localhost/um/g?manager_name=lily
-控制台返回 managerName:lily
-</code></pre>
-<pre><code class="html">index.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;form action=&quot;/um/p&quot; method=&quot;post&quot;&gt;
-        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
-    &lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<ul>
-<li><h6 id="使用Java-Bean接收数据"><a href="#使用Java-Bean接收数据" class="headerlink" title="使用Java Bean接收数据"></a>使用Java Bean接收数据</h6></li>
-</ul>
-<pre><code class="html">index.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;form action=&quot;/um/p1&quot; method=&quot;post&quot;&gt;
-        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
-    &lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<p>​         用<strong>实体对象</strong><code>User</code>进行接收多个对象的创建和注入以及类型转换 [一次性完成]</p>
-<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-@PostMapping(&quot;/p1&quot;)
-    @ResponseBody //只要拥有User属性和参数 就可以一起赋值
-    public String postMapping1(User user, String username)&#123;
-        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
-        return &quot;This is post method&quot;;
-    &#125;
-</code></pre>
-<pre><code class="java">User.java
-//标准的java bean
-public class User &#123;
-    private String username;
-    private Long password;
-&#125; Setter + Getter
-</code></pre>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_30254749/article/details/123139736">踩坑记录：IDEA web项目out artifacts文件夹只包含WEB-INF_out artifacts无法生成test.html-CSDN博客</a></p>
-<h3 id="综合训练：学员调查问卷"><a href="#综合训练：学员调查问卷" class="headerlink" title="综合训练：学员调查问卷"></a>综合训练：学员调查问卷</h3><h5 id="知识点"><a href="#知识点" class="headerlink" title="知识点"></a>知识点</h5><ul>
-<li>利用数组或者List接收请求中的复合数据</li>
-<li>利用@RequestParam为参数设置默认值</li>
-<li>使用Map对象接收请求参数及注意事项</li>
-</ul>
-<h5 id="URI绝对路径与相对路径"><a href="#URI绝对路径与相对路径" class="headerlink" title="URI绝对路径与相对路径"></a>URI绝对路径与相对路径</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/7faa031203ba69b146426bd6c3fa7431902da258/data/%E7%9B%B8%E5%AF%B9%E8%B7%AF%E5%BE%84%E4%B8%8E%E7%BB%9D%E5%AF%B9%E8%B7%AF%E5%BE%841.jpg"></p>
-<h5 id="相对地址的应用案例"><a href="#相对地址的应用案例" class="headerlink" title="相对地址的应用案例"></a>相对地址的应用案例</h5><ul>
-<li><code>&lt;form action=&quot;./apply&quot; method=&quot;post&quot;</code></li>
-<li>页面地址：<a target="_blank" rel="noopener" href="http://localhost:8080/[%E4%B8%8A%E4%B8%8B%E6%96%87%E8%B7%AF%E5%BE%84]/form.html">http://localhost:8080/[上下文路径]/form.html</a></li>
-<li>提交地址：<a target="_blank" rel="noopener" href="http://localhost:8080/[%E4%B8%8A%E4%B8%8B%E6%96%87%E8%B7%AF%E5%BE%84]/apply">http://localhost:8080/[上下文路径]/apply</a></li>
-</ul>
-<pre><code class="html">src/main/webapp/form.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;学员调查问卷&lt;/title&gt;
-    &lt;style&gt;
-        .container &#123;
-            position: absolute;
-            border: 1px solid #cccccc;
-            left: 50%;
-            top: 50%;
-            width: 400px;
-            height: 300px;
-            margin-left: -200px;
-            margin-top: -150px;
-            box-sizing: border-box;
-            padding: 10px;
-        &#125;
-        h2&#123;
-            margin: 10px 0px;
-            text-align: center;
-        &#125;
-        h3&#123;
-            margin: 10px  0px;
-        &#125;
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;div class=&quot;container&quot;&gt;
-        &lt;h2&gt;学员调查问卷&lt;/h2&gt;
-        &lt;form action=&quot;./apply&quot; method=&quot;post&quot;&gt;
-        &lt;h3&gt;您的姓名&lt;/h3&gt;
-        &lt;input name=&quot;name&quot; class=&quot;text&quot;  style=&quot;width: 150px&quot;&gt;
-        &lt;h3&gt;您正在学习的技术方向&lt;/h3&gt;
-        &lt;select name=&quot;course&quot; style=&quot;width: 150px&quot;&gt;
-            &lt;option value=&quot;java&quot;&gt;Java&lt;/option&gt;
-            &lt;option value=&quot;h5&quot;&gt;HTML5&lt;/option&gt;
-            &lt;option value=&quot;python&quot;&gt;Python&lt;/option&gt;
-            &lt;option value=&quot;php&quot;&gt;PHP&lt;/option&gt;
-        &lt;/select&gt;
-        &lt;div&gt;
-&lt;!--复选框用数组 或 ArrayList接收--&gt;
-            &lt;h3&gt;您的学习目的：&lt;/h3&gt;
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;1&quot;&gt;就业找工作
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;2&quot;&gt;工作要求
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;3&quot;&gt;兴趣爱好
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;4&quot;&gt;其他
-        &lt;/div&gt;
-        &lt;div style=&quot;text-align: center;padding-top:10px&quot; &gt;
-            &lt;input type=&quot;submit&quot; value=&quot;提交&quot; style=&quot;width:100px&quot;&gt;
-        &lt;/div&gt;
-        &lt;/form&gt;
-
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<p>如果要接收复合数据 直接用数组接收是最简单的 但使用起来并不轻松<br>可以使用List来接收 但是前方记得要有<code>@RequestParam</code><br>更加高级的可以封装成一个对象 用List接收复合数据<br>Map只能接收单个数据 接收复合数据的时候会造成数据丢失</p>
-<pre><code class="java">com/imooc/springmvc/controller/FormController.java
-package com.imooc.springmvc.controller;
-
-import com.imooc.springmvc.entity.Form;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import java.util.List;
-import java.util.Map;
-
-@Controller
-public class FormController &#123;
-//    @PostMapping(&quot;/apply&quot;)  ★★★第一次尝试★★★
-    @ResponseBody
-//    如果在请求中不包含默认值 =&gt; 取别名  默认值机制：ANON匿名
-    public String apply(@RequestParam(value = &quot;n&quot;, defaultValue = &quot;ANON&quot;) String name, String course, Integer[] purpose)&#123;
-        System.out.println(name);
-        System.out.println(course);
-        for (Integer p:purpose)&#123;
-            System.out.println(p);
-        &#125;
-        return &quot;SUCCESS&quot;;
-    &#125;
-
-//    @PostMapping(&quot;/apply&quot;)  ★★★第二次尝试★★★
-    // 请求中的复合数据要被转换为List进行存储
-    @ResponseBody
-    public String apply(String name, String course, @RequestParam List&lt;Integer&gt; purpose)&#123;
-        System.out.println(name);
-        System.out.println(course);
-        for (Integer p:purpose)&#123;
-            System.out.println(p);
-        &#125;
-        return &quot;SUCCESS&quot;;
-    &#125;
-
-    @PostMapping(&quot;/apply&quot;)  
-    //★★★★★ 推荐使用 ★★★★★
-    // 实体类+List 极大简化表单工作量  
-    // 请求中的复合数据要被转换为List进行存储
-    @ResponseBody
-    public String apply(Form form)&#123;
-        return &quot;SUCCESS&quot;;
-    &#125;
-    //不推荐直接使用Map导入数据 因为复合数据[数组数据]会丢失
-&#125;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/entity/Form.java
-public class Form &#123;
-    private String name;
-    private String course;
-    private List&lt;Integer&gt; purpose;
-&#125;Setter + Getter
-</code></pre>
-<h3 id="关联对象赋值"><a href="#关联对象赋值" class="headerlink" title="关联对象赋值"></a>关联对象赋值</h3><h5 id="复杂内容表单"><a href="#复杂内容表单" class="headerlink" title="复杂内容表单"></a>复杂内容表单</h5><pre><code class="html">用户名: &lt;input name=&quot;username&quot;&gt;
-密码：&lt;input name=&quot;password&quot;&gt;
---------------------------------
-姓名：&lt;input name=&quot;name&quot;&gt;
-身份证号：&lt;input name=&quot;idno&quot;&gt;
-过期时间：&lt;input name=&quot;expire&quot;&gt;
-</code></pre>
-<h6 id="面向对象设计-【关联对象赋值】"><a href="#面向对象设计-【关联对象赋值】" class="headerlink" title="面向对象设计 【关联对象赋值】"></a>面向对象设计 【关联对象赋值】</h6><pre><code class="java">public class User&#123;
-    private String username;
-    private String password;
-    private IDcard idcard = new IDCard();
-    //Getter + Setter
-&#125;
-★★ 关联上IDcard ★★
-public class IDcard&#123;
-    private String name;
-    private String idno;
-    private Date expire;
-    //Getter + Setter
-&#125;
-</code></pre>
-<pre><code class="html">用户名: &lt;input name=&quot;username&quot;&gt;
-密码：&lt;input name=&quot;password&quot;&gt;
---------------------------------
-姓名：&lt;input name=&quot;idcard.name&quot;&gt;
-身份证号：&lt;input name=&quot;idcard.idno&quot;&gt;
-过期时间：&lt;input name=&quot;idcard.expire&quot;&gt;
-</code></pre>
-<pre><code class="html">src/main/webapp/form.html
- &lt;div&gt;
-            &lt;h3&gt;您的学习目的：&lt;/h3&gt;
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;1&quot;&gt;就业找工作
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;2&quot;&gt;工作要求
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;3&quot;&gt;兴趣爱好
-            &lt;input type=&quot;checkbox&quot; name=&quot;purpose&quot; value=&quot;4&quot;&gt;其他
-        &lt;/div&gt;
-            &lt;h3&gt;收货人&lt;/h3&gt;
-&lt;!--  private Delivery delivery = new Delivery() --&gt;
-            &lt;input name=&quot;delivery.name&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
-            &lt;h3&gt;联系电话&lt;/h3&gt;
-            &lt;input name=&quot;delivery.mobile&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
-            &lt;h3&gt;收货地址&lt;/h3&gt;
-            &lt;input name=&quot;delivery.address&quot; class=&quot;text&quot; style=&quot;width: 150px&quot;&gt;
-
-        &lt;div style=&quot;text-align: center;padding-top:10px&quot; &gt;
-            &lt;input type=&quot;submit&quot; value=&quot;提交&quot; style=&quot;width:100px&quot;&gt;
-        &lt;/div&gt;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/entity/Form.java
-public class Form &#123;
-    private String name;
-    private String course;
-    private List&lt;Integer&gt; purpose;
-    private Delivery delivery = new Delivery();
-&#125; Getter + Setter
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/entity/Delivery.java
-public class Delivery &#123;
-    private String name;
-    private String address;
-    private String mobile;
-&#125; Getter + Setter
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/controller/FormController.java
-package com.imooc.springmvc.controller;
-
-import com.imooc.springmvc.entity.Form;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import java.util.List;
-import java.util.Map;
-
-@Controller
-public class FormController &#123;
-//    @PostMapping(&quot;/apply&quot;)  第一次尝试
-    @ResponseBody
-//    如果在请求中不包含默认值 =&gt; 取别名  默认值机制：ANON匿名
-    public String apply(@RequestParam(value = &quot;n&quot;, defaultValue = &quot;ANON&quot;) String name, String course, Integer[] purpose)&#123;
-        System.out.println(name);
-        System.out.println(course);
-        for (Integer p:purpose)&#123;
-            System.out.println(p);
-        &#125;
-        return &quot;SUCCESS&quot;;
-    &#125;
-
-//    @PostMapping(&quot;/apply&quot;)  第二次尝试
-    // 请求中的复合数据要被转换为List进行存储
-    @ResponseBody
-    public String apply(String name, String course, @RequestParam List&lt;Integer&gt; purpose)&#123;
-        System.out.println(name);
-        System.out.println(course);
-        for (Integer p:purpose)&#123;
-            System.out.println(p);
-        &#125;
-        return &quot;SUCCESS&quot;;
-    &#125;
-
-//    @PostMapping(&quot;/apply&quot;) 第三次尝试[这个可以 但有更好]
-    // 实体类+List 极大简化表单工作量
-    // 请求中的复合数据要被转换为List进行存储
-    @ResponseBody
-    public String apply(Form form)&#123;
-        return &quot;SUCCESS&quot;;
-    &#125;
-
-    @PostMapping(&quot;/apply&quot;)
-    @ResponseBody
-    public String applyDelivery(Form form)&#123;
-        System.out.println(form.getDelivery().getName());
-        return &quot;SUCCESS&quot;;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="日期类型转换"><a href="#日期类型转换" class="headerlink" title="日期类型转换"></a>日期类型转换</h3><p>①注解方法</p>
-<pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-@Controller
-@RequestMapping(&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
-public class URLMappingController &#123;
-@PostMapping(&quot;/p1&quot;)
-    @ResponseBody
-    public String postMapping1(User user, String username, @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) Date createTime)&#123;
-        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
-        return &quot;This is post method&quot;;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="html">index.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;form action=&quot;/um/p1&quot; method=&quot;post&quot;&gt;
-        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;createTime&quot;&gt;&lt;br/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
-    &lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<hr>
-<hr>
-<p>②实体对象接收数据</p>
-<pre><code class="java">com/imooc/springmvc/entity/User.java
-//标准的java bean
-public class User &#123;
-    private String username;
-    private Long password;
-// SpringMVC会自动按照这个类型进行转换
-    @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)
-    private Date createTime;
-&#125; Getter + Setter
-</code></pre>
-<hr>
-<p>③自定义转换器：全局的默认时间转换器</p>
-<pre><code class="java">com/imooc/springmvc/converter/MyDateConverter.java
-package com.imooc.springmvc.converter;
-
-import org.springframework.core.convert.converter.Converter;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-public class MyDateConverter implements Converter&lt;String, Date&gt; &#123;
-    public Date convert(String s) &#123; //转换工作
-        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
-        try &#123;
-            Date d = sdf.parse(s);
-            return d;
-        &#125; catch (ParseException e) &#123;
-            return null;
-        &#125;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
-       及子包中拥有以下注解的对象：
-           @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
-           @Service     ...Service类上 业务逻辑类
-           @Controller 描述SpringMVC的控制器类
-           @Component  无法确定的类型种类
-       --&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
-    &lt;!--    启用Spring MVC的注解开发模式 让底下的转换类生效--&gt;
-    &lt;mvc:annotation-driven conversion-service=&quot;conversionService&quot;/&gt;
-    &lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-    &lt;!--    通知SpringMVC有哪些转换类--&gt;
-    &lt;bean id=&quot;conversionService&quot; class=&quot;org.springframework.format.support.FormattingConversionServiceFactoryBean&quot;&gt;
-    &lt;!--    这是转换类定义的地方--&gt;
-        &lt;property name=&quot;converters&quot;&gt;
-            &lt;set&gt;
-                &lt;bean class=&quot;com.imooc.springmvc.converter.MyDateConverter&quot;/&gt;
-            &lt;/set&gt;
-        &lt;/property&gt;
-    &lt;/bean&gt;
-&lt;/beans&gt;
-</code></pre>
-<h3 id="解决中文乱码问题"><a href="#解决中文乱码问题" class="headerlink" title="解决中文乱码问题"></a>解决中文乱码问题</h3><h5 id="Web应用的中文乱码由来"><a href="#Web应用的中文乱码由来" class="headerlink" title="Web应用的中文乱码由来"></a>Web应用的中文乱码由来</h5><ul>
-<li>Tomcat默认使用字符集ISO-8859-1，属于西欧字符集</li>
-<li>解决乱码的核心思路是将ISO-8859-1转换为UTF-8</li>
-<li>Controller中请求与响应都需要设置UTF-8字符集</li>
-</ul>
-<h5 id="中文乱码的配置"><a href="#中文乱码的配置" class="headerlink" title="中文乱码的配置"></a>中文乱码的配置</h5><ul>
-<li>Get请求乱码 - server.xml增加URIEncoding属性</li>
-</ul>
-<p>去Tomcat-conf文件中寻找server.xml进行增加</p>
-<pre><code class="java"> &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;
-               connectionTimeout=&quot;20000&quot;
-               redirectPort=&quot;8443&quot;
-               URIEncoding=&quot;UTF-8&quot;
-               maxParameterCount=&quot;1000&quot;
-               /&gt;
-
-===============================================
-http://localhost/um/g?manager_name=丽丽
-控制台：managerName:丽丽
-</code></pre>
-<ul>
-<li>Post请求乱码 - web.xml配置CharacterEncodingFilter</li>
-</ul>
-<pre><code class="java">http://localhost/
-输入:
-张三  123456 2001-03-02
-随后点击提交
-控制台：??????:123456
-</code></pre>
-<pre><code class="xml">src/main/webapp/WEB-INF/web.xml
-&lt;filter&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;encoding&lt;/param-name&gt;
-            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
-        &lt;/init-param&gt;
-    &lt;/filter&gt;
-    &lt;filter-mapping&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
-    &lt;/filter-mapping&gt;
-</code></pre>
-<pre><code class="java">http://localhost/
-输入:
-张三  123456 2001-03-02
-随后点击提交
-控制台：张三:123456
-</code></pre>
-<ul>
-<li>Response相应乱码 - Spring配置StringHttpMessageConverter</li>
-</ul>
-<h3 id="解决响应中的中文乱码"><a href="#解决响应中的中文乱码" class="headerlink" title="解决响应中的中文乱码"></a>解决响应中的中文乱码</h3><pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-package com.imooc.springmvc.controller;
-
-import com.imooc.springmvc.entity.User;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-
-@Controller
-@RequestMapping(&quot;/um&quot;) //类上直接使用默认访问前缀 全局通用请求映射
-public class URLMappingController &#123;
-    @GetMapping(&quot;/g&quot;)
-    @ResponseBody
-    public String getMapping(@RequestParam(&quot;manager_name&quot;) String managerName) &#123;
-        System.out.println(&quot;managerName:&quot;+managerName);
-        return &quot;This is get method&quot;;
-    &#125;
-
-    //    直接访问会出错 post请求如何访问 用进行html表单提交
-    @PostMapping(&quot;/p&quot;)
-    @ResponseBody
-    public String postMapping(String username, Long password) &#123;
-        System.out.println(username + &quot;:&quot; + password);
-        return &quot;This is post method&quot;;
-    &#125;
-
-//    @PostMapping(&quot;/p1&quot;)
-    @ResponseBody
-    public String postMapping1(User user)&#123;
-        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
-        return &quot;This is post method&quot;;
-    &#125;
-
-    @PostMapping(&quot;/p1&quot;)
-    @ResponseBody
-    public String postMapping1(User user, String username, @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;) Date createTime)&#123;
-        System.out.println(user.getUsername() + &quot;:&quot; + user.getPassword());
-        return &quot;这是Post响应&quot;;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">User.java
-//标准的java bean
-public class User &#123;
-    private String username;
-    private Long password;
-    @DateTimeFormat(pattern = &quot;yyyy-MM-dd&quot;)
-    private Date createTime;
-&#125;Getter + Setter
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/converter/MyDateConverter.java
-package com.imooc.springmvc.converter;
-
-import org.springframework.core.convert.converter.Converter;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-public class MyDateConverter implements Converter&lt;String, Date&gt; &#123;
-    public Date convert(String s) &#123; //转换工作
-        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
-        try &#123;
-            Date d = sdf.parse(s);
-            return d;
-        &#125; catch (ParseException e) &#123;
-            return null;
-        &#125;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="html">index.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;form action=&quot;/um/p1&quot; method=&quot;post&quot;&gt;
-        &lt;input name=&quot;username&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;password&quot;&gt;&lt;br/&gt;
-        &lt;input name=&quot;createTime&quot;&gt;&lt;br/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
-    &lt;/form&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;!-- context:component-scan标签作用 在Spring IoC初始化过程中, 自动创建并管理com.imooc.springmvc
-       及子包中拥有以下注解的对象：
-           @Repository 通常存放在Dao类上 通常都是与数据发生直接交互的类
-           @Service    ...Service类上 业务逻辑类
-           @Controller 描述SpringMVC的控制器类
-           @Component  无法确定的类型种类
-       --&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.springmvc&quot;&gt;&lt;/context:component-scan&gt;
-    &lt;!--    启用Spring MVC的注解开发模式 让底下的转换类生效--&gt;
-    &lt;mvc:annotation-driven conversion-service=&quot;conversionService&quot;&gt;
-&lt;!--        设置消息转换器--&gt;
-
-        &lt;mvc:message-converters&gt;
-            &lt;bean class=&quot;org.springframework.http.converter.StringHttpMessageConverter&quot;&gt;
-&lt;!--                转换什么呢？--&gt;
-                &lt;property name=&quot;supportedMediaTypes&quot;&gt;
-                    &lt;list&gt;
-&lt;!--  在servlet中是直接  response.setContentType(&quot;text/html;charset=utf-8&quot;)  --&gt;
-                        &lt;value&gt;text/html;charset=utf-8&lt;/value&gt;
-                    &lt;/list&gt;
-                &lt;/property&gt;
-            &lt;/bean&gt;
-        &lt;/mvc:message-converters&gt;
-
-    &lt;/mvc:annotation-driven&gt;
-    &lt;!--    将图片/JS/CSS等静态资源排除在外, 可提高执行效率--&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-    &lt;!--    通知SpringMVC有哪些转换类--&gt;
-    &lt;bean id=&quot;conversionService&quot; class=&quot;org.springframework.format.support.FormattingConversionServiceFactoryBean&quot;&gt;
-    &lt;!--    这是转换类定义的地方--&gt;
-        &lt;property name=&quot;converters&quot;&gt;
-            &lt;set&gt;
-                &lt;bean class=&quot;com.imooc.springmvc.converter.MyDateConverter&quot;/&gt;
-            &lt;/set&gt;
-        &lt;/property&gt;
-    &lt;/bean&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="xml">web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd&quot;
-         version=&quot;3.1&quot;&gt;
-    &lt;!--    DispatchServlet 对所有请求进行拦截  --&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;!--        DispatcherServlet是Spring MVC是最核心的对象
-                    DispatcherServlet用于拦截http请求
-                    并根据请求的URL调用与之对应的Controller方法,来完成Http请求的处理
-        --&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-        &lt;!--        在Web应用启动时自动创建Spring IoC容器,并初始化DispatcherServlet --&gt;
-        &lt;!--        applicationContext.xml 初始化参数 启动时候加载--&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
-    &lt;/servlet&gt;
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;!--        &quot;/&quot; 所有请求都要拦截--&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-    
-    &lt;filter&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;encoding&lt;/param-name&gt;
-            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
-        &lt;/init-param&gt;
-    &lt;/filter&gt;
-    &lt;filter-mapping&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
-    &lt;/filter-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<h3 id="响应中产生结果-ModelAndView-x3D-gt-MVC高效解耦理念"><a href="#响应中产生结果-ModelAndView-x3D-gt-MVC高效解耦理念" class="headerlink" title="响应中产生结果 [ModelAndView &#x3D;&gt; MVC高效解耦理念]"></a>响应中产生结果 [<span style = "color:red">ModelAndView</span> &#x3D;&gt; MVC高效解耦理念]</h3><ul>
-<li><p>@ResponseBody - 产生响应文本</p>
-<ul>
-<li>@ResponseBody直接产生响应体数据, 过程不涉及任何视图</li>
-<li>@ResponseBody可产生标准字符串&#x2F;JSON&#x2F;XML等格式数据</li>
-<li>@ResponseBody被StringHttpMessageConverter所影响</li>
-</ul>
-</li>
-<li><p>ModelAndView - 利用模板引擎渲染输出</p>
-<ul>
-<li>ModelAndView对象是指”模型(数据)与视图(界面)”对象</li>
-<li>通过ModelAndView可将包含数据对象与模板引擎进行绑定</li>
-<li>SpringMVC中默认的View是JSP, 也可以配置其他模板引擎</li>
-</ul>
-</li>
-</ul>
-<blockquote>
-<p>提问：为什么不直接访问view.jsp 而是绕了一个圈子还是同样的效果<br>回答：因为jsp页面是写死的如何将页面和数据绑定在一起呢？先通过访问&#x2F;um&#x2F;view这个controller让其方法中产生数据, 之后再将这个数据通过modelandview对象绑定到页面中才可以做到</p>
-<p>从请求传来一个用户编号把数据查询出来得到一个user用户对象 然后再view.jsp中把刚刚查询的对象进行显示[动态的]</p>
-</blockquote>
-<h6 id="高效解耦"><a href="#高效解耦" class="headerlink" title="高效解耦"></a>高效解耦</h6><pre><code class="java">后端：com/imooc/springmvc/controller/URLMappingController.java
-// http://localhost/um/view?userId=1 数据动态查询产生
-    @GetMapping(&quot;/view&quot;)
-    public ModelAndView showView(Integer userId)&#123;
-        ModelAndView mav = new ModelAndView(&quot;/view.jsp&quot;);
-        User user = new User();
-        if (userId == 1)&#123;
-            user.setUsername(&quot;lily&quot;);
-        &#125;else if (userId == 2)&#123;
-            user.setUsername(&quot;smith&quot;);
-        &#125;
-    //  在当前请求中增加一个对象 数据绑定view.jsp
-        mav.addObject(&quot;u&quot;, user);
-        return mav;
-    &#125;
-</code></pre>
-<pre><code class="jsp">前端：src/main/webapp/view.jsp
-&lt;%@ page contentType=&quot;text/html;charset=UTF-8&quot; language=&quot;java&quot; %&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;h1&gt;I&#39;m view page&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2&gt;Username:$&#123;u.username&#125;&lt;/h2&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<h2 id="ModelAndView-重定向"><a href="#ModelAndView-重定向" class="headerlink" title="ModelAndView [重定向]"></a><span style = "color:red">ModelAndView</span> [重定向]</h2><h6 id="SpringMVC若跳转页面需要使用此对象进行数据绑定"><a href="#SpringMVC若跳转页面需要使用此对象进行数据绑定" class="headerlink" title="[SpringMVC若跳转页面需要使用此对象进行数据绑定]"></a>[SpringMVC若跳转页面需要使用此对象进行数据绑定]</h6><ul>
-<li>mav.addObject()方法设置的属性默认存放在当前请求中</li>
-<li>默认ModelAndView使用请求转发(forward)至页面</li>
-<li><strong>重定向</strong>使用 new ModelAndView(“<strong>redirect:</strong>&#x2F;index.jsp”) 新请求</li>
-</ul>
-<p>页面重定向使用时机：内部的controller处理逻辑和跳转页面之间没有直接关系时可以用”redirect:&#x2F;view.jsp”</p>
-<pre><code class="java">ModelAndView mav = new ModelAndView(&quot;redirect:/view.jsp&quot;);
-直接访问到了jsp  http://localhost/view.jsp
-
-访问：http://localhost/um/view?userId=1
-建立一个 没有斜杠的相对路径 src/main/webapp/um/view.jsp
-com/imooc/springmvc/controller/URLMappingController.java
- // http://localhost/um/view?userId=1 数据动态查询产生
-    @GetMapping(&quot;/view&quot;)
-    public ModelAndView showView(Integer userId)&#123;
-//        ModelAndView mav = new ModelAndView(&quot;redirect:/view.jsp&quot;);
-        ModelAndView mav = new ModelAndView();
-        mav.setViewName(&quot;view.jsp&quot;);
-//        没有斜杠是代表相对路径 相对于@RequestMapping(&quot;/um&quot;)地址
-//        mav.setViewName(&quot;view.jsp&quot;);
-
-        User user = new User();
-        if (userId == 1)&#123;
-            user.setUsername(&quot;lily&quot;);
-        &#125;else if (userId == 2)&#123;
-            user.setUsername(&quot;smith&quot;);
-        &#125;
-//      在当前请求中增加一个对象 数据绑定view.jsp
-        mav.addObject(&quot;u&quot;, user);
-        return mav;
-    &#125;
-</code></pre>
-<h5 id="String与ModelMap实现ModelAndView类似功能-工作中的小技巧"><a href="#String与ModelMap实现ModelAndView类似功能-工作中的小技巧" class="headerlink" title="String与ModelMap实现ModelAndView类似功能  [工作中的小技巧]"></a>String与ModelMap实现ModelAndView类似功能  [工作中的小技巧]</h5><pre><code class="java">com/imooc/springmvc/controller/URLMappingController.java
-//   String 与 ModelMap[为模型数据] 返回字符串
-//    Controller方法返回String的情况
-//    1.方法被@ResponseBody描述, 则SpringMVC直接响应Spring字符串本身
-//    2.方法不存在@ResponseBody, 则SpringMVC处理String指代的视图(页面)
-// 这里的String是直接代替了@ResponseBody - 产生响应文本
-    public String showView1(Integer userId, ModelMap modelMap)&#123;
-        String view = &quot;/um/view.jsp&quot;;
-        User user = new User();
-        if (userId == 1)&#123;
-            user.setUsername(&quot;lily&quot;);
-        &#125;else if (userId == 2)&#123;
-            user.setUsername(&quot;smith&quot;);
-        &#125;
-        modelMap.addAttribute(&quot;u&quot;, user);
-        return view;
-    &#125;
-</code></pre>
-<h3 id="SpringMVC整合Freemarker-项目：first-springmvc"><a href="#SpringMVC整合Freemarker-项目：first-springmvc" class="headerlink" title="SpringMVC整合Freemarker [项目：first-springmvc]"></a>SpringMVC整合Freemarker [项目：first-springmvc]</h3><h5 id="①-pom-xml引入依赖"><a href="#①-pom-xml引入依赖" class="headerlink" title="① pom.xml引入依赖"></a>① pom.xml引入依赖</h5><pre><code class="xml">要随时导入包 tomcat → Edit configuration → Deployment → Artifacts 将右侧包put in
-&lt;dependency&gt;
-  &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
-  &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
-  &lt;version&gt;2.3.28&lt;/version&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-  &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-  &lt;artifactId&gt;spring-context-support&lt;/artifactId&gt;
-  &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-&lt;/dependency&gt;
-</code></pre>
-<h5 id="②-启用Freemarker模板引擎"><a href="#②-启用Freemarker模板引擎" class="headerlink" title="② 启用Freemarker模板引擎"></a>② 启用Freemarker模板引擎</h5><pre><code class="xml">applicationContext.xml
-&lt;bean id=&quot;ViewResolver&quot; class=&quot;org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver&quot;&gt;
-   &lt;!-- 设置响应输出，并解决中文乱码 --&gt; 
-&lt;!-- 渲染完成后向客户端浏览器响应式 响应体中使用的字符集编码 --&gt;
-   &lt;property name=&quot;contentType&quot; value=&quot;text/html;charset=utf-8&quot;&gt;&lt;/property&gt;
-   &lt;!-- 指定Freemarker模板文件扩展名 --&gt;
-   &lt;property name=&quot;suffix&quot; value=&quot;.ftl&quot;/&gt;
-&lt;/bean&gt;
-</code></pre>
-<h5 id="③-本身配置Freemarker参数"><a href="#③-本身配置Freemarker参数" class="headerlink" title="③ 本身配置Freemarker参数"></a>③ 本身配置Freemarker参数</h5><pre><code class="xml">&lt;bean id=&quot;freemarkerConfig&quot; class=&quot;org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer&quot;&gt;
-&lt;!-- 设置模板保存的目录 tomcat无法直接解析freemarker模板引擎 所以新增/WEB-INF/ftl --&gt;
-   &lt;property name=&quot;templateLoaderPath&quot; value=&quot;/WEB-INF/ftl&quot;/&gt;
-   &lt;!-- 其他模板引擎设置 --&gt;
-   &lt;property name=&quot;freemarkerSettings&quot;&gt;
-     &lt;props&gt;
-         &lt;!-- 设置Freemarker脚本与数据渲染时使用的字符集 --&gt;
-         &lt;!-- 模板与数据绑定渲染的过程中使用的字符集编码 --&gt;
-         &lt;prop key=&quot;defaultEncoding&quot;&gt;UTF-8&lt;/prop&gt;
-     &lt;/props&gt; 
-   &lt;/property&gt;
-&lt;/bean&gt;
-</code></pre>
-<pre><code class="xml">src/main/webapp/WEB-INF/ftl/test.ftl
-&lt;h1&gt;$&#123;u.username&#125;&lt;/h1&gt;
-</code></pre>
-<pre><code class="java">com/imooc/springmvc/controller/FreemarkerController.java
-package com.imooc.springmvc.controller;
-
-import com.imooc.springmvc.entity.User;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
-// http://localhost/fm/test  显示 andy
-@Controller
-@RequestMapping(&quot;/fm&quot;)
-public class FreemarkerController &#123;
-    @GetMapping(&quot;/test&quot;)
-    public ModelAndView showTest()&#123;
-//        因为之前配置所有配置扩展名是.ftl 所以下面不用写
-        ModelAndView mav = new ModelAndView(&quot;/test&quot;);
-        User user = new User();
-        user.setUsername(&quot;andy&quot;);
-        mav.addObject(&quot;u&quot;,user);
-        return mav;
-    &#125;
-&#125;
-=====================================================
-// http://localhost/fm/test  显示 andy
-</code></pre>
-<h1 id="RESTful开发风格"><a href="#RESTful开发风格" class="headerlink" title="RESTful开发风格"></a>RESTful开发风格</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/zzvar/article/details/118164133">RESTful 风格（详细介绍 + 案例实现）_c# restful风格接口-CSDN博客</a></p>
-<h3 id="REST与RESTful"><a href="#REST与RESTful" class="headerlink" title="REST与RESTful"></a>REST与RESTful</h3><ul>
-<li>REST- 表现层状态转换, 资源在网络中以某种表现形式进行状态转移</li>
-<li>RESTful是基于REST理念的一套开发风格, 是具体的开发规则</li>
-</ul>
-<h3 id="RESTful开发规范"><a href="#RESTful开发规范" class="headerlink" title="RESTful开发规范"></a>RESTful开发规范</h3><p>URL中所有的都是名词 请求都有不同的含义  返回的数据是JSON或者XML格式 </p>
-<ul>
-<li>使用URL作为用户交互入口</li>
-<li>明确的语义规范(GET, POST, PUT, DELETE)</li>
-<li>只返回数据(JSON, XML)不包含任何展现</li>
-</ul>
-<img src="https://raw.githubusercontent.com/P-luminary/images/13679a67b4eec21f54b5f30a53b45aafaf3fbebc/data/RESTful%E5%BC%80%E5%8F%91%E9%A3%8E%E6%A0%BC.jpg" style="zoom: 67%;" />
-
-<table>
-<thead>
-<tr>
-<th>注解</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>@RestController</td>
-<td>由 @Controller + @ResponseBody组成（返回 JSON 数据格式）</td>
-</tr>
-<tr>
-<td>@PathVariable</td>
-<td>URL 中的 {xxx} 占位符可以通过@PathVariable(“xxx“) 绑定到控制器处理方法的形参中</td>
-</tr>
-<tr>
-<td>@RequestMapping</td>
-<td>注解用于请求地址的解析，是最常用的一种注解</td>
-</tr>
-<tr>
-<td>@GetMapping</td>
-<td>查询请求</td>
-</tr>
-<tr>
-<td>@PostMapping</td>
-<td>添加请求</td>
-</tr>
-<tr>
-<td>@PutMapping</td>
-<td>更新请求</td>
-</tr>
-<tr>
-<td>@DeleteMapping</td>
-<td>删除请求</td>
-</tr>
-<tr>
-<td>@RequestParam</td>
-<td>将请求参数绑定到你控制器的方法参数上（是springmvc中接收普通参数的注解）</td>
-</tr>
-</tbody></table>
-<h3 id="RESTful命名要求"><a href="#RESTful命名要求" class="headerlink" title="RESTful命名要求"></a>RESTful命名要求</h3><table>
-<thead>
-<tr>
-<th>URI</th>
-<th>说明</th>
-<th>修改建议</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET &#x2F;articles?au&#x3D;lily</td>
-<td><span style = "color:green">正确用法</span></td>
-<td></td>
-</tr>
-<tr>
-<td>GET &#x2F;a&#x2F;1</td>
-<td><span style = "color:red">URI必须具有语义</span></td>
-<td>GET &#x2F;student&#x2F;1</td>
-</tr>
-<tr>
-<td>POST &#x2F;createArticle&#x2F;1</td>
-<td><span style = "color:red">URI必须使用名词</span></td>
-<td>POST &#x2F;article&#x2F;1</td>
-</tr>
-<tr>
-<td>GET &#x2F;articles&#x2F;author&#x2F;1</td>
-<td><span style = "color:red">URI扁平化, 不超两级</span></td>
-<td>GET &#x2F;articles&#x2F;author?id&#x3D;1</td>
-</tr>
-<tr>
-<td>DELETE&#x2F;articles&#x2F;1</td>
-<td><span style = "color:red">URI名词区分单复数</span></td>
-<td>GET &#x2F;articles?au&#x3D;lily<br />DELETE &#x2F;article&#x2F;1</td>
-</tr>
-</tbody></table>
-<img src="https://raw.githubusercontent.com/P-luminary/images/1cd2b6c624167b8007e3b67c15b03d631b2d1e92/data/%E4%BC%A0%E7%BB%9F%E6%A8%A1%E5%BC%8F%20URI%20%E5%92%8C%20RESTful%20%E9%A3%8E%E6%A0%BC%E5%AF%B9%E6%AF%94.jpg"  />
-
-<h3 id="开发第一个RESTful应用"><a href="#开发第一个RESTful应用" class="headerlink" title="开发第一个RESTful应用"></a>开发第一个RESTful应用</h3><p><strong>404究极报错</strong><br>项目生成文件out&#x2F;artifacts&#x2F;XXX&#x2F;WEB-INF中没有导入lib包<br>没有将下面的web文件里的web.xml手动复制进去</p>
-<pre><code class="xml">pom.xml 
-写完pom.xml后记得在tomcat配置中的Deployment中加入依赖包
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;restful&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-
-    &lt;repositories&gt;
-        &lt;repository&gt;
-            &lt;id&gt;aliyun&lt;/id&gt;
-            &lt;name&gt;aliyun&lt;/name&gt;
-            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-        &lt;/repository&gt;
-    &lt;/repositories&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.restful&quot;/&gt;
-    &lt;mvc:annotation-driven&gt;
-        &lt;mvc:message-converters&gt;
-            &lt;bean class=&quot;org.springframework.http.converter.StringHttpMessageConverter&quot;&gt;
-                &lt;property name=&quot;supportedMediaTypes&quot;&gt;
-                    &lt;list&gt;
-                        &lt;!-- response.setContentType(&quot;text/html;charset=utf-8&quot;) --&gt;
-                        &lt;value&gt;text/html;charset=utf-8&lt;/value&gt;
-                        &lt;value&gt;application/json;charset=utf-8&lt;/value&gt;
-                    &lt;/list&gt;
-                &lt;/property&gt;
-            &lt;/bean&gt;
-        &lt;/mvc:message-converters&gt;
-    &lt;/mvc:annotation-driven&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="xml">web/WEB-INF/web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
-         version=&quot;4.0&quot;&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
-    &lt;/servlet&gt;
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-
-    &lt;filter&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;encoding&lt;/param-name&gt;
-            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
-        &lt;/init-param&gt;
-    &lt;/filter&gt;
-    &lt;filter-mapping&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
-    &lt;/filter-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<pre><code class="java">com/imooc/restful/controller/RestfulController.java
-package com.imooc.restful.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@Controller
-@RequestMapping(&quot;/restful&quot;)
-public class RestfulController &#123;
-    @GetMapping(&quot;/request&quot;)
-    @ResponseBody
-    public String doGetRequest()&#123;
-//  双引号中如果包括双引号 要用转义字符 \&quot;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;返回查询结果\&quot;&#125;&quot;;
-    &#125;
-&#125;
-
-=======================================================
-http://localhost/restful/request
-&#123;&quot;message&quot;:&quot;返回查询结果&quot;&#125;
-</code></pre>
-<h3 id="实现RESTful实验室"><a href="#实现RESTful实验室" class="headerlink" title="实现RESTful实验室"></a>实现RESTful实验室</h3><pre><code class="java">com/imooc/restful/controller/RestfulController.java
-package com.imooc.restful.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-@Controller
-@RequestMapping(&quot;/restful&quot;)
-public class RestfulController &#123;
-    @GetMapping(&quot;/request&quot;)
-    @ResponseBody
-    public String doGetRequest()&#123;
-//  双引号中如果包括双引号 要用转义字符 \&quot;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;返回查询结果\&quot;&#125;&quot;;
-    &#125;
-    @PostMapping(&quot;/request&quot;)
-    @ResponseBody
-    public String doPostRequest()&#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据新建成功\&quot;&#125;&quot;;
-    &#125;
-    @PutMapping (&quot;/request&quot;)
-    @ResponseBody
-    public String doPutRequest()&#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据更新成功\&quot;&#125;&quot;;
-    &#125;
-    @DeleteMapping(&quot;/request&quot;)
-    @ResponseBody
-    public String doDeleteRequest()&#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据删除成功\&quot;&#125;&quot;;
-    &#125;
-&#125;
-===========================
-http://localhost/client.html
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
-       xmlns:mvc=&quot;http://www.springframework.org/schema/mvc&quot;
-       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
-       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:mv=&quot;http://www.springframework.org/schema/mvc&quot;
-       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans.xsd
-            http://www.springframework.org/schema/context
-            http://www.springframework.org/schema/context/spring-context.xsd
-            http://www.springframework.org/schema/mvc
-            http://www.springframework.org/schema/mvc/spring-mvc.xsd&quot;&gt;
-    &lt;context:component-scan base-package=&quot;com.imooc.restful&quot;/&gt;
-    &lt;mvc:annotation-driven&gt;
-        &lt;mvc:message-converters&gt;
-            &lt;bean class=&quot;org.springframework.http.converter.StringHttpMessageConverter&quot;&gt;
-                &lt;property name=&quot;supportedMediaTypes&quot;&gt;
-                    &lt;list&gt;
-                        &lt;!-- response.setContentType(&quot;text/html;charset=utf-8&quot;) --&gt;
-                        &lt;value&gt;text/html;charset=utf-8&lt;/value&gt;
-                        &lt;!--只要响应产生就会使用utf-8字符集--&gt;
-                        &lt;value&gt;application/json;charset=utf-8&lt;/value&gt;
-                    &lt;/list&gt;
-                &lt;/property&gt;
-            &lt;/bean&gt;
-        &lt;/mvc:message-converters&gt;
-    &lt;/mvc:annotation-driven&gt;
-    &lt;mvc:default-servlet-handler/&gt;
-&lt;/beans&gt;
-</code></pre>
-<pre><code class="xml">web.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
-         version=&quot;4.0&quot;&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;
-            &lt;param-value&gt;classpath:applicationContext.xml&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
-    &lt;/servlet&gt;
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;springmvc&lt;/servlet-name&gt;
-        &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-
-    &lt;filter&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;filter-class&gt;org.springframework.web.filter.CharacterEncodingFilter&lt;/filter-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;encoding&lt;/param-name&gt;
-            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
-        &lt;/init-param&gt;
-    &lt;/filter&gt;
-    &lt;filter-mapping&gt;
-        &lt;filter-name&gt;characterFilter&lt;/filter-name&gt;
-        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
-    &lt;/filter-mapping&gt;
-&lt;/web-app&gt;
-</code></pre>
-<pre><code class="xml">pom.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
-         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-
-    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
-    &lt;artifactId&gt;restful&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-
-    &lt;repositories&gt;
-        &lt;repository&gt;
-            &lt;id&gt;aliyun&lt;/id&gt;
-            &lt;name&gt;aliyun&lt;/name&gt;
-            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-        &lt;/repository&gt;
-    &lt;/repositories&gt;
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
-            &lt;version&gt;5.1.9.RELEASE&lt;/version&gt;
-        &lt;/dependency&gt;
-
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-core&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-databind&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-annotations&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-&lt;/project&gt;
-</code></pre>
-<pre><code class="html">web/client.html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Title&lt;/title&gt;
-    &lt;script src=&quot;jquery-3.3.1.min.js&quot;&gt;&lt;/script&gt;
-    &lt;script&gt;
-        $(function () &#123;
-            $(&quot;#btnGet&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url: &quot;/restful/request&quot;,
-                    type: &quot;get&quot;,
-                    dataType: &quot;json&quot;,
-                    success: function (json) &#123;
-                        $(&quot;#message&quot;).text(json.message);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-        $(function () &#123;
-            $(&quot;#btnPost&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url: &quot;/restful/request&quot;,
-                    type: &quot;post&quot;,
-                    dataType: &quot;json&quot;,
-                    success: function (json) &#123;
-                        $(&quot;#message&quot;).text(json.message);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-        $(function () &#123;
-            $(&quot;#btnPut&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url: &quot;/restful/request&quot;,
-                    type: &quot;put&quot;,
-                    dataType: &quot;json&quot;,
-                    success: function (json) &#123;
-                        $(&quot;#message&quot;).text(json.message);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-        $(function () &#123;
-            $(&quot;#btnDelete&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url: &quot;/restful/request&quot;,
-                    type: &quot;delete&quot;,
-                    dataType: &quot;json&quot;,
-                    success: function (json) &#123;
-                        $(&quot;#message&quot;).text(json.message);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-    &lt;/script&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnGet&quot; value=&quot;发送Get请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnPost&quot; value=&quot;发送Post请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnPut&quot; value=&quot;发送Put请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnDelete&quot; value=&quot;发送Delete请求&quot;&gt;
-    &lt;h1 id=&quot;message&quot;&gt;&lt;/h1&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<h3 id="RestController注解与路径变量"><a href="#RestController注解与路径变量" class="headerlink" title="RestController注解与路径变量"></a>RestController注解与路径变量</h3><p>在post请求中通过client.html利用Ajax动态注入了一个rid到RestfulController.java<br>代替了所有的@ResponseBody 默认向请求台进行输出</p>
-<pre><code class="java">@Controller： 用于标识一个类是Spring MVC中的控制器，类似于标准的@Controller 注解。它告诉Spring框架该类是一个控制器，可以处理HTTP请求。
-
-@ResponseBody： 用于将方法的返回值直接作为HTTP响应的主体（Body）内容。这意味着不会进行视图解析，而是直接将返回的对象（通常是JSON或XML）写入HTTP响应
-
-因此，@RestController 的作用是将一个控制器类标记为RESTful风格的控制器，其中的每个方法都被视为返回数据，而不是视图。这样就不需要在每个方法上都添加 @ResponseBody 注解，因为该注解已经包含在 @RestController 中。
-</code></pre>
-<pre><code class="java">client.html
- $(function()&#123;
-            $(&quot;#btnPost&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url : &quot;/restful/request/100&quot;,
-                    type : &quot;post&quot; ,
-                    dataType : &quot;json&quot; ,
-                    success : function(json)&#123;
-                   $(&quot;#message&quot;).text(json.message+&quot;:&quot;+json.id);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-</code></pre>
-<pre><code class="java">com/imooc/restful/controller/RestfulController.java
-    
-package com.imooc.restful.controller;
-import org.springframework.web.bind.annotation.*;
-@RestController
-@RequestMapping(&quot;/restful&quot;)
-//@CrossOrigin(origins = &#123;&quot;http://localhost:8080&quot;,&quot;http://www.imooc.com&quot;&#125;)
-//@CrossOrigin(origins = &quot;*&quot;,maxAge = 3600)
-public class RestfulController &#123;
-    @GetMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doGetRequest() &#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;返回查询结果\&quot;&#125;&quot;;
-    &#125;
-
-    // POST /article/1
-    // POST /restful/request/100
-    @PostMapping(&quot;/request/&#123;rid&#125;&quot;)
-    //@ResponseBody
-    public String doPostRequest(@PathVariable(&quot;rid&quot;) Integer requestId) &#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据新建成功\&quot;,\&quot;id\&quot;:&quot; + requestId + &quot;&#125;&quot;;
-    &#125;
-
-    @PutMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doPutRequest() &#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据更新成功\&quot;&#125;&quot;;
-    &#125;
-
-    @DeleteMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doDeleteRequest() &#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据删除成功\&quot;&#125;&quot;;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="简单请求与非简单请求"><a href="#简单请求与非简单请求" class="headerlink" title="简单请求与非简单请求"></a>简单请求与非简单请求</h3><ul>
-<li>简单请求是指标准结构的HTTP请求, 对应GET&#x2F;POST请求</li>
-<li>非简单请求是复杂要求的HTTP请求, 指PUT&#x2F;DELETE、扩展标准请求</li>
-<li>两者最大区别是非简单请求发送前需要发送<strong>预检请求</strong> [看看能不能进行处理 可以才实际处理 预先处理不符合的数据挡在外面]</li>
-</ul>
-<pre><code class="xml">web.xml
-&lt;!--    对put和delete请求进行支持--&gt;
-    &lt;filter&gt;
-        &lt;filter-name&gt;formContentFilter&lt;/filter-name&gt;
-        &lt;filter-class&gt;org.springframework.web.filter.FormContentFilter&lt;/filter-class&gt;
-    &lt;/filter&gt;
-    &lt;filter-mapping&gt;
-        &lt;filter-name&gt;formContentFilter&lt;/filter-name&gt;
-        &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
-    &lt;/filter-mapping&gt;
-</code></pre>
-<pre><code class="java">web/client.html
-$(function()&#123;
-            $(&quot;#btnPost&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url : &quot;/restful/request/100&quot;,
-                    type : &quot;post&quot; ,
-                    data : &quot;name=lily&amp;age=23&quot;,
-                    dataType : &quot;json&quot; ,
-                    success : function(json)&#123;
-                        $(&quot;#message&quot;).text(json.message+&quot;:&quot;+json.id);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-
-        $(function()&#123;
-            $(&quot;#btnPut&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url : &quot;/restful/request&quot;,
-                    type : &quot;put&quot; ,
-                    data : &quot;name=lily&amp;age=23&quot;,
-                    dataType : &quot;json&quot; ,
-                    success : function(json)&#123;
-                        $(&quot;#message&quot;).text(json.message);
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-</code></pre>
-<pre><code class="java">com/imooc/restful/controller/RestfulController.java
- // POST /article/1
-    // POST /restful/request/100
-    @PostMapping(&quot;/request/&#123;rid&#125;&quot;)
-    //@ResponseBody
-    public String doPostRequest(@PathVariable(&quot;rid&quot;) Integer requestId, Person person)&#123;
-        System.out.println(person.getName() + &quot;:&quot; + person.getAge());
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据新建成功\&quot;,\&quot;id\&quot;:&quot; + requestId + &quot;&#125;&quot;;
-    &#125;
-
-    @PutMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doPutRequest(Person person)&#123;
-        System.out.println(person.getName() + &quot;:&quot; + person.getAge());
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据更新成功\&quot;&#125;&quot;;
-    &#125;
-====================
-lily:23
-</code></pre>
-<p>创建一个Person用来插入数据 并打印在控制台</p>
-<pre><code class="java">com/imooc/restful/entity/Person.java
-public class Person &#123;
-    private String name;
-    private Integer age;
-&#125;Getter + Setter
-</code></pre>
-<h3 id="JSON序列化"><a href="#JSON序列化" class="headerlink" title="JSON序列化"></a>JSON序列化</h3><pre><code class="xml">pom.xml
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-core&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-databind&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
-            &lt;artifactId&gt;jackson-annotations&lt;/artifactId&gt;
-            &lt;version&gt;2.9.9&lt;/version&gt;
-        &lt;/dependency&gt;
-一定要使用2.9以后的版本 之前的版本有严重的安全风险
-</code></pre>
-<pre><code class="java">http://localhost/restful/person?id=1
-@GetMapping(&quot;/person&quot;)
-//不返回String 返回JSON序列化的对象
-    public Person findByPersonId(Integer id)&#123;
-        Person p = new Person();
-        if (id==1)&#123;
-            p.setName(&quot;lily&quot;);
-            p.setAge(23);
-        &#125; else if (id==2) &#123;
-            p.setName(&quot;smith&quot;);
-            p.setAge(22);
-        &#125;
-        return p;
-    &#125;
-============================================
-&#123;
-    &quot;name&quot;: &quot;lily&quot;,
-    &quot;age&quot;: 23
-&#125;
-
-
-
-http://localhost/restful/persons
-@GetMapping(&quot;/persons&quot;)
-    public List&lt;Person&gt; findPersons()&#123;
-        List list = new ArrayList();
-        Person p1 = new Person();
-        p1.setName(&quot;lily&quot;);
-        p1.setAge(23);
-        list.add(p1);
-
-        Person p2 = new Person();
-        p2.setName(&quot;smith&quot;);
-        p2.setAge(22);
-        list.add(p2);
-        
-        return list;
-    &#125;
-=============================================
-[
-    &#123;
-        &quot;name&quot;: &quot;lily&quot;,
-        &quot;age&quot;: 23
-    &#125;,
-    &#123;
-        &quot;name&quot;: &quot;smith&quot;,
-        &quot;age&quot;: 22
-    &#125;
-]
-</code></pre>
-<p>服务器返回json数组</p>
-<pre><code class="html">client.html
-$(function()&#123;
-            $(&quot;#btnPersons&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url : &quot;/restful/persons&quot;,
-                    type : &quot;get&quot; ,
-                    dataType : &quot;json&quot; ,
-                    success : function(json)&#123;
-                        console.info(json);
-                        for (var i=0; i&lt;json.length; i++)&#123;
-                            var p = json[i];
-                            $(&quot;#divPersons&quot;).append(&quot;&lt;h2&gt;&quot; + p.name + &quot;-&quot; + p.age + &quot;&lt;/h2&gt;&quot;)
-                        &#125;
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-
-    &lt;/script&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnGet&quot; value=&quot;发送Get请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnPost&quot; value=&quot;发送Post请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnPut&quot; value=&quot;发送Put请求&quot;&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnDelete&quot; value=&quot;发送Delete请求&quot;&gt;
-    &lt;h1 id=&quot;message&quot;&gt;&lt;/h1&gt;
-    &lt;hr/&gt;
-    &lt;!-- 点击btnPersons按钮时发送Ajax请求[上面有操作代码] 将所有人员信息追加到div中--&gt;
-    &lt;input type=&quot;button&quot; id=&quot;btnPersons&quot; value=&quot;查询所有人员&quot;&gt;
-    &lt;div id=&quot;divPersons&quot;&gt;&lt;/div&gt;
-&lt;/body&gt;
-</code></pre>
-<pre><code class="java">com/imooc/restful/controller/RestfulController.java
-@GetMapping(&quot;/persons&quot;)
-    public List&lt;Person&gt; findPersons()&#123;
-        List list = new ArrayList();
-        Person p1 = new Person();
-        p1.setName(&quot;lily&quot;);
-        p1.setAge(23);
-        list.add(p1);
-
-        Person p2 = new Person();
-        p2.setName(&quot;smith&quot;);
-        p2.setAge(22);
-        list.add(p2);
-
-        return list;
-    &#125;
-
-===============================================
-http://localhost/client.html
-点击查询所有人员
-=&gt; 
-lily-23
-smith-22
-</code></pre>
-<p>增加时间！</p>
-<pre><code class="java">Person.java
-public class Person &#123;
-    private String name;
-    private Integer age;
-// 记得用日期的格式化输出
-    @JsonFormat(pattern = &quot;yyyy-MM-dd HH:mm:ss&quot;, timezone = &quot;GMT+8&quot;)
-    private Date birthday;
-&#125;Getter + Setter
-</code></pre>
-<pre><code class="html">client.html
-$(function()&#123;
-            $(&quot;#btnPersons&quot;).click(function () &#123;
-                $.ajax(&#123;
-                    url : &quot;/restful/persons&quot;,
-                    type : &quot;get&quot; ,
-                    dataType : &quot;json&quot; ,
-                    success : function(json)&#123;
-                        console.info(json);
-                        for (var i=0; i&lt;json.length; i++)&#123;
-                            var p = json[i];
-                            $(&quot;#divPersons&quot;).append(&quot;&lt;h2&gt;&quot; + p.name + &quot;-&quot; + p.age + &quot;-&quot; + p.birthday+ &quot;&lt;/h2&gt;&quot;)
-                        &#125;
-                    &#125;
-                &#125;)
-            &#125;);
-        &#125;)
-
-===================================
-lily-23-2024-01-17 09:09:28
-smith-22-2024-01-17 09:09:28
-</code></pre>
-<h3 id="浏览器的同源策略"><a href="#浏览器的同源策略" class="headerlink" title="浏览器的同源策略"></a>浏览器的同源策略</h3><ul>
-<li>同源策略阻止从一个域加载的脚本去获取另一个域上的资源</li>
-<li>只要<strong>协议</strong>、<strong>域名</strong>、<strong>端口</strong>有任何一个不同，都被当做是不同的域</li>
-<li>浏览器Console看到<strong>Access-Control-Allow-Origin</strong>就代表了跨域了</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/161c64c96177be1c274357912c48055b196806cd/data/%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5%E7%A4%BA%E4%BE%8B.jpg"></p>
-<h3 id="HTML中允许跨域的标签"><a href="#HTML中允许跨域的标签" class="headerlink" title="HTML中允许跨域的标签"></a>HTML中允许跨域的标签</h3><ul>
-<li>&lt; img &gt; - 显示远程图片</li>
-<li>&lt; script &gt; - 加载远程JS</li>
-<li>&lt; link &gt; - 加载远程CSS</li>
-</ul>
-<h3 id="CORS跨域资源访问"><a href="#CORS跨域资源访问" class="headerlink" title="CORS跨域资源访问"></a>CORS跨域资源访问</h3><ul>
-<li>CORS是一种机制, 使用额外的HTTP头通知浏览器可以访问其他域</li>
-<li>URL响应头包含 <strong>Access-Control-</strong>* 指明请求允许跨域</li>
-</ul>
-<h3 id="Spring-MVC解决跨域访问"><a href="#Spring-MVC解决跨域访问" class="headerlink" title="Spring MVC解决跨域访问"></a>Spring MVC解决跨域访问</h3><ul>
-<li><strong>@CrossOrigin - Controller</strong>跨域注解</li>
-<li>&lt; mvc:cors &gt; - Spring MVC全局跨域配置</li>
-</ul>
-<pre><code class="java">RestfulController.java [代码第四行]
-@RestController
-@RequestMapping(&quot;/restful&quot;)
-//@CrossOrigin(origins = &#123;&quot;http://localhost:8080&quot;,&quot;http://www.imooc.com&quot;&#125;)
-//@CrossOrigin(origins = &quot;*&quot;,maxAge = 3600) 所有端口都会访问发送请求
-//maxAge = 3600 一小时时间后发送预检请求  之内的就发送实际请求 【非简单请求】
-public class RestfulController &#123;
-    @GetMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doGetRequest()&#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;返回查询结果\&quot;&#125;&quot;;
-    &#125;
-
-    // POST /article/1
-    // POST /restful/request/100
-    @PostMapping(&quot;/request/&#123;rid&#125;&quot;)
-    //@ResponseBody
-    public String doPostRequest(@PathVariable(&quot;rid&quot;) Integer requestId, Person person)&#123;
-        System.out.println(person.getName() + &quot;:&quot; + person.getAge());
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据新建成功\&quot;,\&quot;id\&quot;:&quot; + requestId + &quot;&#125;&quot;;
-    &#125;
-
-    @PutMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doPutRequest(Person person)&#123;
-        System.out.println(person.getName() + &quot;:&quot; + person.getAge());
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据更新成功\&quot;&#125;&quot;;
-    &#125;
-
-    @DeleteMapping(&quot;/request&quot;)
-    //@ResponseBody
-    public String doDeleteRequest()&#123;
-        return &quot;&#123;\&quot;message\&quot;:\&quot;数据删除成功\&quot;&#125;&quot;;
-    &#125;
-
-    @GetMapping(&quot;/person&quot;)
-    public Person findByPersonId(Integer id)&#123;
-        Person p = new Person();
-        if (id==1)&#123;
-            p.setName(&quot;lily&quot;);
-            p.setAge(23);
-        &#125; else if (id==2) &#123;
-            p.setName(&quot;smith&quot;);
-            p.setAge(22);
-        &#125;
-        return p;
-    &#125;
-
-    @GetMapping(&quot;/persons&quot;)
-    public List&lt;Person&gt; findPersons()&#123;
-        List list = new ArrayList();
-        Person p1 = new Person();
-        p1.setName(&quot;lily&quot;);
-        p1.setAge(23);
-        p1.setBirthday(new Date());
-        list.add(p1);
-
-        Person p2 = new Person();
-        p2.setName(&quot;smith&quot;);
-        p2.setAge(22);
-        p2.setBirthday(new Date());
-        list.add(p2);
-        return list;
-    &#125;
-&#125;
-</code></pre>
-<h3 id="CORS全局配置"><a href="#CORS全局配置" class="headerlink" title="CORS全局配置"></a>CORS全局配置</h3><pre><code class="xml">&lt;mvc:cors&gt;
-    &lt;mvc:mapping path=&quot;/restful/**&quot;
-        allowed-origins=&quot;http://localhost:8080,http://www.imooc.com&quot;
-        max-age=&quot;3600&quot;/&gt;
-&lt;/mvc:cors&gt;
-</code></pre>
-<h3 id="SpringMVC拦截器-高级组件"><a href="#SpringMVC拦截器-高级组件" class="headerlink" title="SpringMVC拦截器 [高级组件]"></a>SpringMVC拦截器 [高级组件]</h3><h5 id="拦截器-Interceptor"><a href="#拦截器-Interceptor" class="headerlink" title="拦截器-Interceptor"></a>拦截器-Interceptor</h5><ul>
-<li>拦截器(Interceptor)用于对URL请求进行前置&#x2F;后置过滤</li>
-<li>Interceptor与Filter用途相似, 但实现方式不同</li>
-<li>Interceptor底层基于Spring AOP面向切面编程实现[类似于<strong>环绕通知</strong>]</li>
-</ul>
-<h5 id="拦截器开发流程"><a href="#拦截器开发流程" class="headerlink" title="拦截器开发流程"></a>拦截器开发流程</h5><ul>
-<li>Maven依赖servlet-api</li>
-<li>实现HandlerInterceptor接口</li>
-<li>applicationContext配置过滤地址</li>
-</ul>
-<h5 id="HandlerInterceptor接口"><a href="#HandlerInterceptor接口" class="headerlink" title="HandlerInterceptor接口"></a>HandlerInterceptor接口</h5><ul>
-<li><strong>preHandle</strong> - 前置执行处理</li>
-<li><strong>postHandle</strong> - 目标资源已被Spring MVC框架处理 没产生响应文本</li>
-<li><strong>afterCompletion</strong> - 相应文本已经产生</li>
-</ul>
-<pre><code class="xml">pom.xml
-     &lt;dependency&gt;
-            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
-            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
-            &lt;version&gt;3.1.0&lt;/version&gt;
-&lt;!-- 只有在开发编译才会引用 打包最终使用的时候会排除在外 因为 servlet-api与tomcat-api冲突  --&gt;
-            &lt;scope&gt;provided&lt;/scope&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-</code></pre>
-<pre><code class="java">com/imooc/restful/interceptor/MyInterceptor.java
-package com.imooc.restful.interceptor;
-
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-public class MyInterceptor implements HandlerInterceptor &#123;
-//    Code -&gt; Implement Methods
-
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
-        System.out.println(request.getRequestURI()+&quot;准备执行&quot;);
-        return true;
-    &#125;
-
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
-        System.out.println(request.getRequestURI()+&quot;目标处理成功&quot;);
-    &#125;
-
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
-        System.out.println(request.getRequestURI()+&quot;响应内容已产生&quot;);
-    &#125;
-//  随后去applicationContext.xml配置
-&#125;
-
-=============================================================
-/准备执行
-/目标处理成功
-/响应内容已产生
-/准备执行
-/目标处理成功
-/响应内容已产生
-/准备执行
-/目标处理成功
-/响应内容已产生
-    
-http://localhost/restful/persons
-/restful/persons准备执行
-/restful/persons目标处理成功
-/restful/persons响应内容已产生
-    
-http://localhost/client.html
-/client.html准备执行
-/client.html目标处理成功
-/client.html响应内容已产生
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;mvc:interceptors&gt;
-        &lt;mvc:interceptor&gt;
-&lt;!--  哪些[所有]地址进行拦截 下面加个bean是哪个类进行处理[送到这个类中处理]--&gt;
-            &lt;mvc:mapping path=&quot;/**&quot;/&gt;
-            &lt;bean class=&quot;com.imooc.restful.interceptor.MyInterceptor&quot;/&gt;
-        &lt;/mvc:interceptor&gt;
-    &lt;/mvc:interceptors&gt;
-</code></pre>
-<h3 id="拦截器使用细则"><a href="#拦截器使用细则" class="headerlink" title="拦截器使用细则"></a>拦截器使用细则</h3><pre><code class="xml">applicationContext.xml
-&lt;mvc:interceptors&gt;
-        &lt;mvc:interceptor&gt;
-&lt;!--            哪些[所有]地址进行拦截 下面加个bean是哪个类进行处理[送到这个java中处理]--&gt;
-       &lt;!-- &lt;mvc:mapping path=&quot;/**&quot;/&gt; --&gt;
-            &lt;mvc:mapping path=&quot;/restful/**&quot;/&gt;
-            &lt;mvc:mapping path=&quot;/webapi/**&quot;/&gt;
-&lt;!--            以下是不需要拦截 排除在外的--&gt;
-            &lt;mvc:exclude-mapping path=&quot;/**.ico&quot;/&gt;
-            &lt;mvc:exclude-mapping path=&quot;/**.jpg&quot;/&gt;
-            &lt;mvc:exclude-mapping path=&quot;/**.gif&quot;/&gt;
-            &lt;mvc:exclude-mapping path=&quot;/**.js&quot;/&gt;
-            &lt;mvc:exclude-mapping path=&quot;/**.css&quot;/&gt;
-&lt;!--   创建一个resources  规范静态文件目录 一次性都排除在外--&gt;
-            &lt;mvc:exclude-mapping path=&quot;/rescources/**&quot;/&gt;
-
-            &lt;bean class=&quot;com.imooc.restful.interceptor.MyInterceptor&quot;/&gt;
-        &lt;/mvc:interceptor&gt;
-    &lt;/mvc:interceptors&gt;
-</code></pre>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/e1dbff67f8b3f8c785e7ca12d62741c295469782/data/%E5%A4%9AInterceptor%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F.jpg"></p>
-<pre><code class="java">  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
-        System.out.println(request.getRequestURI()+&quot;准备执行&quot;);
-        return true;
-    &#125;
-通过preHandle的返回值可以做很多事情
-对某一个url进行前置检查 对请求放行 如果不符合要求 直接在拦截器中返回相应
-return true; 请求依次向后发送
-return false; 请求被阻挡
-</code></pre>
-<h3 id="开发”用户流量”拦截器"><a href="#开发”用户流量”拦截器" class="headerlink" title="开发”用户流量”拦截器"></a>开发”用户流量”拦截器</h3><pre><code class="xml">pom.xml [引入新的依赖后一定要去Tomcat导入新的依赖包]
-        &lt;dependency&gt;
-            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
-            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
-            &lt;version&gt;1.2.3&lt;/version&gt;
-        &lt;/dependency&gt;
-</code></pre>
-<pre><code class="xml">logback.xml
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;configuration&gt;
-    &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
-        &lt;encoder&gt;
-            &lt;pattern&gt;[%thread] %d %level %logger&#123;10&#125; - %msg%n&lt;/pattern&gt;
-        &lt;/encoder&gt;
-    &lt;/appender&gt;
-    &lt;appender name=&quot;accessHistoryLog&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
-        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
-            &lt;fileNamePattern&gt;d:/logs/history.%d.log&lt;/fileNamePattern&gt;
-        &lt;/rollingPolicy&gt;
-        &lt;encoder&gt;
-            &lt;pattern&gt;[%thread] %d %level %logger&#123;10&#125; - %msg%n&lt;/pattern&gt;
-        &lt;/encoder&gt;
-    &lt;/appender&gt;
-    &lt;root level=&quot;debug&quot;&gt;
-        &lt;appender-ref ref=&quot;console&quot;/&gt;
-    &lt;/root&gt;
-    &lt;logger name=&quot;com.imooc.restful.interceptor.AccessHistoryInterceptor&quot;
-            level=&quot;INFO&quot; additivity=&quot;false&quot;&gt;
-        &lt;appender-ref ref=&quot;accessHistoryLog&quot;/&gt;
-    &lt;/logger&gt;
-&lt;/configuration&gt;
-</code></pre>
-<pre><code class="java">com/imooc/restful/interceptor/AccessHistoryInterceptor.java
-package com.imooc.restful.interceptor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.HandlerInterceptor;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-public class AccessHistoryInterceptor implements HandlerInterceptor &#123;
-    private Logger logger = LoggerFactory.getLogger(AccessHistoryInterceptor.class);
-//    前置处理
-
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
-        StringBuilder log = new StringBuilder();
-        log.append(request.getRemoteAddr());
-        log.append(&quot;|&quot;);
-        log.append(request.getRequestURL());
-        log.append(&quot;|&quot;);
-        log.append(request.getHeader(&quot;user-agent&quot;));
-        logger.info(log.toString());
-        return true;
-    &#125;
-&#125;
-</code></pre>
-<pre><code class="java">com/imooc/restful/interceptor/MyInterceptor.java
-package com.imooc.restful.interceptor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-public class MyInterceptor implements HandlerInterceptor &#123;
-//    Code -&gt; Implement Methods
-
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception &#123;
-        System.out.println(request.getRequestURL() + &quot;-准备执行&quot;);
-//        response.getWriter().print(&quot;[]&quot;);
-        return true;
-    &#125;
-
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception &#123;
-        System.out.println(request.getRequestURL() + &quot;-目标处理成功&quot;);
-    &#125;
-
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception &#123;
-        System.out.println(request.getRequestURL() + &quot;-响应内容已产生&quot;);
-    &#125;
-&#125;
-
-==============================================================
-http://localhost/client.html
-[http-nio-80-exec-1] 2024-01-18 10:43:54,739 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/login.html&quot;, parameters=&#123;&#125;
-[http-nio-80-exec-1] 2024-01-18 10:43:54,750 DEBUG o.s.w.s.h.SimpleUrlHandlerMapping - Mapped to org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler@5c0e8bb9
-[http-nio-80-exec-1] 2024-01-18 10:43:54,758 DEBUG o.s.w.s.DispatcherServlet - Completed 404 NOT_FOUND
-[http-nio-80-exec-2] 2024-01-18 10:44:00,495 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/restful/request&quot;, parameters=&#123;&#125;
-[http-nio-80-exec-2] 2024-01-18 10:44:00,502 DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to public java.lang.String com.imooc.restful.controller.RestfulController.doGetRequest()
-http://localhost/restful/request-准备执行
-[http-nio-80-exec-2] 2024-01-18 10:44:00,539 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using &#39;application/json;charset=utf-8&#39;, given [application/json, text/javascript, */*;q=0.01] and supported [text/html;charset=utf-8, application/json;charset=utf-8, text/plain, */*, application/json, application/*+json]
-[http-nio-80-exec-2] 2024-01-18 10:44:00,539 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [&quot;&#123;&quot;message&quot;:&quot;返回查询结果&quot;&#125;&quot;]
-http://localhost/restful/request-目标处理成功
-http://localhost/restful/request-响应内容已产生
-[http-nio-80-exec-2] 2024-01-18 10:44:00,580 DEBUG o.s.w.s.DispatcherServlet - Completed 200 OK
-[http-nio-80-exec-5] 2024-01-18 10:44:08,194 DEBUG o.s.w.s.DispatcherServlet - GET &quot;/restful/persons&quot;, parameters=&#123;&#125;
-[http-nio-80-exec-5] 2024-01-18 10:44:08,195 DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to public java.util.List&lt;com.imooc.restful.entity.Person&gt; com.imooc.restful.controller.RestfulController.findPersons()
-http://localhost/restful/persons-准备执行
-RestfulController.findPersons() - return list
-[http-nio-80-exec-5] 2024-01-18 10:44:08,211 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Using &#39;application/json&#39;, given [application/json, text/javascript, */*;q=0.01] and supported [application/json, application/*+json]
-[http-nio-80-exec-5] 2024-01-18 10:44:08,211 DEBUG o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Writing [[com.imooc.restful.entity.Person@619c4d80, com.imooc.restful.entity.Person@71459fb]]
-http://localhost/restful/persons-目标处理成功
-http://localhost/restful/persons-响应内容已产生
-===================================================================
-D:\logs\history.2024-01-18
-[http-nio-80-exec-1] 2024-01-18 10:43:54,755 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/login.html|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-[http-nio-80-exec-2] 2024-01-18 10:44:00,502 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-[http-nio-80-exec-5] 2024-01-18 10:44:08,195 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/persons|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-[http-nio-80-exec-3] 2024-01-18 10:44:10,137 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request/100|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-[http-nio-80-exec-4] 2024-01-18 10:44:10,935 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-[http-nio-80-exec-6] 2024-01-18 10:44:11,481 INFO c.i.r.i.AccessHistoryInterceptor - 0:0:0:0:0:0:0:1|http://localhost/restful/request|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0
-</code></pre>
-<pre><code class="xml">applicationContext.xml
-&lt;mvc:interceptors&gt;
-        &lt;mvc:interceptor&gt;
-            &lt;mvc:mapping path=&quot;/**&quot;/&gt;
-            &lt;mvc:exclude-mapping path=&quot;/resources/**&quot;/&gt;
-            &lt;bean class=&quot;com.imooc.restful.interceptor.AccessHistoryInterceptor&quot;/&gt;
-        &lt;/mvc:interceptor&gt;
-    &lt;/mvc:interceptors&gt;
-</code></pre>
-<h3 id="Spring-MVC处理流程"><a href="#Spring-MVC处理流程" class="headerlink" title="Spring MVC处理流程"></a>Spring MVC处理流程</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/42e2897ef9dc2075cb7c71f43c2a2e54e11ffea7/data/SpringMVC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.jpg"></p>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/后端" style=color:#ffa2c4>
-                后端
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2024/01/15/后端/SpringMVC[Mapping,中文乱码,Restful及跨域,JSON序列化,非简单请求,拦截器]/ " class="go-post">
         阅读全文
     </a>
 </div>
