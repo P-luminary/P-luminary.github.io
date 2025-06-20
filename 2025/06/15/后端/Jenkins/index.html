@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -247,7 +247,7 @@
 <blockquote>
 <p>vi &#x2F;etc&#x2F;gitlab&#x2F;gitlab.rb </p>
 </blockquote>
-<p>修改gitlab访问地址和端口，默认为80，我们改为82<br>external_url ‘ <a href="http://192.168.200.128:82&#39;">http://192.168.200.128:82&#39;</a><br>nginx[‘listen_port’] &#x3D; 82 </p>
+<p>修改gitlab访问地址和端口，默认为80，我们改为82<br>external_url ‘ <a href="http://192.168.200.132:82&#39;">http://192.168.200.132:82&#39;</a><br>nginx[‘listen_port’] &#x3D; 82 </p>
 </li>
 <li><p>重载配置及<span style = "color:red"><strong>启动gitlab</strong></span> </p>
 <blockquote>
@@ -423,6 +423,202 @@ wget https://updates.jenkins.io/download/plugins/caffeine-api/3.1.8-133.v17b_1ff
 <li>Secret text ：需要保存的一个加密的文本串，如钉钉机器人或Github的api token【k8s也会用】</li>
 <li>Certificate ：通过上传证书文件的方式</li>
 </ul>
+<p>常用的凭证类型有：<strong>Username with password（用户密码）</strong>和<strong>SSH Username with private key（SSH 密钥）</strong><br>接下来以使用Git工具到Gitlab拉取项目源码为例，演示Jenkins的如何管理Gitlab的凭证<br>★ <u><strong>在Jenkins里面安装git插件</strong></u><br>★ <u>要先在<strong>Jenkins的服务</strong>里面安装git插件</u></p>
+<p><strong>CentOS7上安装Git工具</strong>：</p>
+<pre><code class="js">yum install git -y            安装
+git --version                 安装后查看版本
+</code></pre>
+<h4 id="用户密码类型"><a href="#用户密码类型" class="headerlink" title="用户密码类型"></a>用户密码类型</h4><p>**<u>全局添加凭证</u>**：Dashboard → Manage Jenkins → Credentials → System → Global credentials (unrestricted) → New credentials</p>
+<p>-<br>  Jenkins-&gt;凭证-&gt;系统-&gt;全局凭证-&gt;添加凭证</p>
+<h5 id="测试凭证是否可用"><a href="#测试凭证是否可用" class="headerlink" title="测试凭证是否可用"></a>测试凭证是否可用</h5><p>创建一个FreeStyle项目：新建Item-&gt;FreeStyle Project-&gt;确定<br>找到 “源码管理”-&gt;”Git”，在Repository URL复制Gitlab中的项目URL</p>
+<p><strong>新搞个item然后点击进去 左侧的配置→General→源码管理→选择Git →↓</strong> </p>
+<pre><code class="java">Repository URL：http://192.168.200.128:82/lanyun_group/web_demo.git
+Credentials：【选择刚刚给张三创建的凭证】
+</code></pre>
+<p>保存配置后，点击构建 ”Build Now“ 开始构建项目<br>可以在左下方的Builds里找到刚刚构建的项目 可以查看控制台输出</p>
+<pre><code class="java">Started by user root
+Running as SYSTEM
+Building in workspace /var/lib/jenkins/workspace/test02
+The recommended git tool is: NONE
+using credential ca22e56f-0ecc-4fdc-965d-01e329a0b68a
+Cloning the remote Git repository
+Cloning repository http://192.168.200.128:82/lanyun_group/web_demo.git
+ &gt; git init /var/lib/jenkins/workspace/test02 # timeout=10
+Fetching upstream changes from http://192.168.200.128:82/lanyun_group/web_demo.git
+ &gt; git --version # timeout=10
+ &gt; git --version # &#39;git version 1.8.3.1&#39;
+using GIT_ASKPASS to set credentials gitlab-auth-password
+ &gt; git fetch --tags --progress http://192.168.200.128:82/lanyun_group/web_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ &gt; git config remote.origin.url http://192.168.200.128:82/lanyun_group/web_demo.git # timeout=10
+ &gt; git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ &gt; git rev-parse refs/remotes/origin/master^&#123;commit&#125; # timeout=10
+Checking out Revision 2f41cd33af519a5c55df8d78ba59032d9069f0b8 (refs/remotes/origin/master)
+ &gt; git config core.sparsecheckout # timeout=10
+ &gt; git checkout -f 2f41cd33af519a5c55df8d78ba59032d9069f0b8 # timeout=10
+Commit message: &quot;初始化项目提交&quot;
+First time build. Skipping changelog.
+Finished: SUCCESS
+</code></pre>
+<p>查看**&#x2F;var&#x2F;lib&#x2F;jenkins&#x2F;workspace&#x2F;**目录，发现已经从Gitlab成功拉取了代码到Jenkins中</p>
+<h4 id="SSH密钥类型"><a href="#SSH密钥类型" class="headerlink" title="SSH密钥类型"></a>SSH密钥类型</h4><h6 id="SSH免密登录示意图："><a href="#SSH免密登录示意图：" class="headerlink" title="SSH免密登录示意图："></a>SSH免密登录示意图：</h6><p>[<u>GitLab服务器(存放公钥：id_rsa.pub)</u>] ←←←<strong>ssh免密登录</strong>←←← [<u>Jenkins服务器(存放私钥：id_rsa)</u>]</p>
+<ul>
+<li><h5 id="使用root用户生成公钥和私钥"><a href="#使用root用户生成公钥和私钥" class="headerlink" title="使用root用户生成公钥和私钥"></a>使用root用户生成公钥和私钥</h5></li>
+</ul>
+<blockquote>
+<p>ssh-keygen -t rsa</p>
+</blockquote>
+<pre><code class="java">在 192.168.200.129_Jenkins 服务器里
+
+[root@localhost ~]# ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+Created directory &#39;/root/.ssh&#39;.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:88fFvAS2e6i9c4+KXfmENWeu6NJNmOb1+CCsYLarYLc root@localhost.localdomain
+The key&#39;s randomart image is:
++---[RSA 2048]----+
+|                 |
+|                 |
+|            o    |
+|           . =   |
+|        S   .o=.+|
+|         o o+=oBo|
+|    o . + .+B+Boo|
+|   . o + o.B+=+*.|
+|      E.o.+oB=oo+|
++----[SHA256]-----+
+
+[root@localhost ~]# cd /root/.ssh
+[root@localhost .ssh]# ll
+总用量 8
+-rw-------. 1 root root 1679 6月  18 20:05 id_rsa       【私钥】
+-rw-r--r--. 1 root root  408 6月  18 20:05 id_rsa.pub   【公钥】
+</code></pre>
+<ul>
+<li><h5 id="要在gitlab服务里存放一个公钥"><a href="#要在gitlab服务里存放一个公钥" class="headerlink" title="要在gitlab服务里存放一个公钥"></a>要在gitlab服务里存放一个公钥</h5></li>
+</ul>
+<p>以root账户登录-&gt;点击头像-&gt;Settings-&gt;SSH Keys→在Jenkins服务里面用<br> <code>[root@localhost .ssh]# cat id_rsa.pub</code><br>打开公钥的文件得到信息。复制刚才id_rsa.pub文件的内容到这里，点击”Add Key”</p>
+<ul>
+<li><h5 id="在Jenkins中添加凭证，配置私钥"><a href="#在Jenkins中添加凭证，配置私钥" class="headerlink" title="在Jenkins中添加凭证，配置私钥"></a>在Jenkins中添加凭证，配置私钥</h5></li>
+</ul>
+<p>在Jenkins添加一个全局新的凭证，类型为”<strong>SSH Username with private key</strong>“，在jenkins服务器里输入指令查看<strong>私钥</strong><br><code>[root@localhost .ssh]# cat id_rsa</code><br>把刚才生成<strong>私钥</strong>文件内容复制过来塞进去<br>此时去gitlab项目中把ssh的复制过来<code>git@192.168.200.128:lanyun_group/web_demo.git</code><br>同样尝试构建项目，如果代码可以正常拉取，代表凭证配置成功！</p>
+<p><span style = "color:red"><strong>如果报错</strong></span>：</p>
+<pre><code class="java">Command &quot;git ls-remote -h git@192.168.200.128:lanyun_group/web_demo.git HEAD&quot; returned status code 128
+stderr: No ECDSA host key is known for 192.168.200.128 and you have requested strict checking.
+Host key verification failed.
+fatal: Could not read from remote repository.
+</code></pre>
+<p><span style = "color:red"><strong>报错原因</strong></span>：</p>
+<pre><code class="java">SSH 主机指纹未验证（Host key verification failed）
+
+Git 使用的是 SSH 协议访问远程仓库（git@192.168.200.128），但本地机器之前没有连接过该主机，或者 .ssh/known_hosts 文件中没有该 IP 的公钥信息。
+
+而且启用了“严格检查”（Strict Host Key Checking），所以 Git 拒绝连接该服务器。
+
+
+
+★★ 方法：手动信任主机（推荐）★★
+ssh git@192.168.200.128
+系统会提示你是否信任该主机，比如：
+
+The authenticity of host &#39;192.168.200.128 (192.168.200.128)&#39; can&#39;t be established.
+ECDSA key fingerprint is SHA256:xxx...
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+✅ 输入 yes 之后，主机公钥会加入 ~/.ssh/known_hosts 文件，后续连接将不再失败。
+</code></pre>
+<h6 id="到这里已经完成了这份图的部分内容，要开始融入Maven"><a href="#到这里已经完成了这份图的部分内容，要开始融入Maven" class="headerlink" title="到这里已经完成了这份图的部分内容，要开始融入Maven"></a><strong><u>到这里已经完成了这份图的部分内容，要开始融入Maven</u></strong></h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/5a664e75de77e3633f64215df2e5990365c3606a/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E6%B5%81%E7%A8%8B%E8%AF%B4%E6%98%8E.png" alt="持续集成流程说明"></p>
+<h2 id="持续集成环境—Maven安装和配置"><a href="#持续集成环境—Maven安装和配置" class="headerlink" title="持续集成环境—Maven安装和配置"></a>持续集成环境—Maven安装和配置</h2><p>在Jenkins集成服务器上，我们需要安装Maven来编译和打包项目</p>
+<p>把<code>apache-maven-3.6.2-bin.tar.gz</code>传到 &#x2F;root 根目录中【Jenkins服务器】</p>
+<pre><code class="java">tar -xzf apache-maven-3.6.2-bin.tar.gz       解压
+mkdir -p /opt/maven                          创建目录
+mv apache-maven-3.6.2/* /opt/maven           移动文件
+</code></pre>
+<blockquote>
+<p>[root@localhost ~]# mkdir -p &#x2F;opt&#x2F;maven<br>[root@localhost ~]# mv apache-maven-3.6.2&#x2F;* &#x2F;opt&#x2F;maven<br>[root@localhost ~]# cd &#x2F;opt&#x2F;maven&#x2F;<br>[root@localhost maven]# ll<br>总用量 28<br>drwxr-xr-x. 2 root root     97 6月  18 21:37 bin<br>drwxr-xr-x. 2 root root     42 6月  18 21:37 boot<br>drwxrwxr-x. 3 1000 mysql    63 8月  27 2019 conf<br>drwxrwxr-x. 4 1000 mysql  4096 6月  18 21:37 lib<br>-rw-rw-r–. 1 1000 mysql 12846 8月  27 2019 LICENSE<br>-rw-rw-r–. 1 1000 mysql   182 8月  27 2019 NOTICE<br>-rw-rw-r–. 1 1000 mysql  2533 8月  27 2019 README.txt<br>[root@localhost maven]#</p>
+</blockquote>
+<h4 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h4><blockquote>
+<p>vi &#x2F;etc&#x2F;profile</p>
+</blockquote>
+<pre><code class="java">export JAVA_HOME=/usr/local/java/jdk-17.0.8+7
+export MAVEN_HOME=/opt/maven
+export PATH=$PATH:$JAVA_HOME/bin:$MAVEN_HOME/bin
+</code></pre>
+<blockquote>
+<p>source &#x2F;etc&#x2F;profile                 配置生效<br>mvn -v                                      查找Maven版本</p>
+</blockquote>
+<h4 id="全局工具配置关联JDK和Maven"><a href="#全局工具配置关联JDK和Maven" class="headerlink" title="全局工具配置关联JDK和Maven"></a>全局工具配置关联JDK和Maven</h4><p>Jenkins-&gt;Manage Jenkins-&gt;Tools→ JDK安装 → 新增JDK → </p>
+<blockquote>
+<p>【JDK】<br><strong>别名</strong>：jdk-17.0.8+7<br><strong>JAVA_HOME</strong>：&#x2F;usr&#x2F;local&#x2F;java&#x2F;jdk-17.0.8+7</p>
+</blockquote>
+<p>下面的Maven安装→ 新增Maven →</p>
+<blockquote>
+<p>【Maven】<br><strong>Name</strong>：maven3.6.2<br><strong>MAVEN_HOME</strong>：&#x2F;opt&#x2F;maven</p>
+</blockquote>
+<p>点击应用 → 保存</p>
+<h4 id="添加Jenkins全局变量"><a href="#添加Jenkins全局变量" class="headerlink" title="添加Jenkins全局变量"></a>添加Jenkins全局变量</h4><p>Jenkins → Manage Jenkins → System → 下面找到<strong>全局属性</strong> → <strong>Environment variables</strong> </p>
+<pre><code class="java">以下是用键值对的形式显示：
+JAVA_HOME   /usr/local/java/jdk-17.0.8+7
+M2_HOME     /opt/maven
+PATH+EXTRA  $M2_HOME/bin
+</code></pre>
+<h4 id="修改Maven的settings-xml"><a href="#修改Maven的settings-xml" class="headerlink" title="修改Maven的settings.xml"></a>修改Maven的settings.xml</h4><pre><code class="java">mkdir /root/repo                  创建本地仓库目录
+vi /opt/maven/conf/settings.xml
+</code></pre>
+<p>本地仓库改为：&#x2F;root&#x2F;repo</p>
+<pre><code class="java">  &lt;!-- localRepository
+   | The path to the local repository maven will use to store artifacts.
+   |
+   | Default: $&#123;user.home&#125;/.m2/repository
+  --&gt;
+  &lt;localRepository&gt;/root/repo&lt;/localRepository&gt;
+</code></pre>
+<p>添加阿里云私服地址：</p>
+<pre><code class="java">    &lt;mirror&gt;
+      &lt;id&gt;alimaven&lt;/id&gt;
+      &lt;name&gt;aliyun maven&lt;/name&gt;
+      &lt;url&gt;http://maven.aliyun.com/nexus/content/groups/public/&lt;/url&gt;
+      &lt;mirrorOf&gt;central&lt;/mirrorOf&gt;
+    &lt;/mirror&gt;
+</code></pre>
+<h4 id="测试Maven是否配置成功"><a href="#测试Maven是否配置成功" class="headerlink" title="测试Maven是否配置成功"></a>测试Maven是否配置成功</h4><p>使用之前的gitlab密码测试项目，修改配置;<br>在某个项目中→Triggers中→Build Steps选择 <strong>Execute shell</strong>(执行shell脚本命令)<br>输入</p>
+<blockquote>
+<p>mvn clean package</p>
+</blockquote>
+<p>然后再去构建！！</p>
+<blockquote>
+<h3 id="🔧-步骤一：删除损坏的插件文件"><a href="#🔧-步骤一：删除损坏的插件文件" class="headerlink" title="🔧 步骤一：删除损坏的插件文件"></a>🔧 步骤一：删除损坏的插件文件</h3><p>执行以下命令彻底删除这个错误的插件缓存：</p>
+<pre><code class="java">rm -rf /root/repo/org/apache/maven/plugins/maven-clean-plugin
+</code></pre>
+<hr>
+<h3 id="🔧-步骤二：将-Maven-镜像源改为稳定的中央仓库"><a href="#🔧-步骤二：将-Maven-镜像源改为稳定的中央仓库" class="headerlink" title="🔧 步骤二：将 Maven 镜像源改为稳定的中央仓库"></a>🔧 步骤二：将 Maven 镜像源改为稳定的中央仓库</h3><p>编辑 <code>/root/.m2/settings.xml</code> 或 <code>/etc/maven/settings.xml</code>（按你的系统配置）为以下内容：</p>
+<pre><code class="xml">&lt;settings xmlns=&quot;http://maven.apache.org/SETTINGS/1.0.0&quot;
+          xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+          xsi:schemaLocation=&quot;http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd&quot;&gt;
+  
+  &lt;localRepository&gt;/root/repo&lt;/localRepository&gt;
+
+  &lt;mirrors&gt;
+    &lt;mirror&gt;
+      &lt;id&gt;central&lt;/id&gt;
+      &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+      &lt;name&gt;Maven Central&lt;/name&gt;
+      &lt;url&gt;https://repo.maven.apache.org/maven2&lt;/url&gt;
+    &lt;/mirror&gt;
+  &lt;/mirrors&gt;
+
+&lt;/settings&gt;
+</code></pre>
+</blockquote>
+<h4 id="持续集成环境—Tomcat安装和配置"><a href="#持续集成环境—Tomcat安装和配置" class="headerlink" title="持续集成环境—Tomcat安装和配置"></a>持续集成环境—Tomcat安装和配置</h4><p>安装Tomcat8.5  把Tomcat压缩包上传到192.168.200.131服务器 </p>
+<blockquote>
+<p>yum install java-1.8.0-openjdk* -y                           安装JDK（已完成）<br>tar -xzf apache-tomcat-8.5.47.tar.gz                       解压<br>mkdir -p &#x2F;opt&#x2F;tomcat                                                 创建目录<br>mv &#x2F;root&#x2F;apache-tomcat-8.5.47&#x2F;* &#x2F;opt&#x2F;tomcat     移动文件<br>&#x2F;opt&#x2F;tomcat&#x2F;bin&#x2F;startup.sh                                       启动tomcat</p>
+</blockquote>
 
     </div>
 
