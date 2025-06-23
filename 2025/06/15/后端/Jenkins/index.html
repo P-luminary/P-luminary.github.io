@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ffa2c4>
+                <a href="/tags/后端" style=color:#00bcd4>
                     后端
                 </a>
             </span>
@@ -617,8 +617,103 @@ vi /opt/maven/conf/settings.xml
 </blockquote>
 <h4 id="持续集成环境—Tomcat安装和配置"><a href="#持续集成环境—Tomcat安装和配置" class="headerlink" title="持续集成环境—Tomcat安装和配置"></a>持续集成环境—Tomcat安装和配置</h4><p>安装Tomcat8.5  把Tomcat压缩包上传到192.168.200.131服务器 </p>
 <blockquote>
-<p>yum install java-1.8.0-openjdk* -y                           安装JDK（已完成）<br>tar -xzf apache-tomcat-8.5.47.tar.gz                       解压<br>mkdir -p &#x2F;opt&#x2F;tomcat                                                 创建目录<br>mv &#x2F;root&#x2F;apache-tomcat-8.5.47&#x2F;* &#x2F;opt&#x2F;tomcat     移动文件<br>&#x2F;opt&#x2F;tomcat&#x2F;bin&#x2F;startup.sh                                       启动tomcat</p>
+<p>yum install java-1.8.0-openjdk* -y                           安装JDK（已完成）<br>tar -xzf apache-tomcat-8.5.47.tar.gz                       解压<br>mkdir -p &#x2F;opt&#x2F;tomcat                                                 创建目录<br>mv &#x2F;root&#x2F;apache-tomcat-8.5.47&#x2F;* &#x2F;opt&#x2F;tomcat     移动文件<br><span style ="color:red"><strong>启动tomcat</strong></span><br>&#x2F;opt&#x2F;tomcat&#x2F;bin&#x2F;startup.sh ★★        </p>
+<p><span style ="color:blue">[Apache Tomcat&#x2F;8.5.47]</span> (<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/">http://192.168.200.131:8090/</a>) 【已改端口8090】</p>
+<p><strong>关闭已有 Tomcat</strong>（建议先关闭，避免冲突）：</p>
+<pre><code>/opt/tomcat/bin/shutdown.sh
+</code></pre>
+<p><strong>再启动</strong>：</p>
+<pre><code>/opt/tomcat/bin/startup.sh
+</code></pre>
 </blockquote>
+<p>不过现在访问这个地址是没有权限的[403 Access Denied] (<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/manager/">http://192.168.200.131:8090/manager/</a>) 现在要增加权限</p>
+<h4 id="配置-Tomcat用户角色权限"><a href="#配置-Tomcat用户角色权限" class="headerlink" title="配置 Tomcat用户角色权限"></a>配置 Tomcat用户角色权限</h4><p>默认情况下Tomcat是没有配置用户角色权限的</p>
+<blockquote>
+<h1 id="403-Access-Denied"><a href="#403-Access-Denied" class="headerlink" title="403 Access Denied"></a>403 Access Denied</h1><p>You are not authorized to view this page.</p>
+<p>By default the Manager is only accessible from a browser running on the same machine as Tomcat. If you wish to modify this restriction, you’ll need to edit the Manager’s <code>context.xml</code> file.</p>
+<p>If you have already configured the Manager application to allow access and you have used your browsers back button, used a saved book-mark or similar then you may have triggered the cross-site request forgery (CSRF) protection that has been enabled for the HTML interface of the Manager application. You will need to reset this protection by returning to the <a target="_blank" rel="noopener" href="http://192.168.200.131:8090/manager/html">main Manager page</a>. Once you return to this page, you will be able to continue using the Manager application’s HTML interface normally. If you continue to see this access denied message, check that you have the necessary permissions to access this application.</p>
+<p>If you have not changed any configuration files, please examine the file <code>conf/tomcat-users.xml</code> in your installation. That file must contain the credentials to let you use this webapp.</p>
+<p>For example, to add the <code>manager-gui</code> role to a user named <code>tomcat</code> with a password of <code>s3cret</code>, add the following to the config file listed above.</p>
+<pre><code>&lt;role rolename=&quot;manager-gui&quot;/&gt;
+&lt;user username=&quot;tomcat&quot; password=&quot;s3cret&quot; roles=&quot;manager-gui&quot;/&gt;
+</code></pre>
+<p>Note that for Tomcat 7 onwards, the roles required to use the manager application were changed from the single <code>manager</code> role to the following four roles. You will need to assign the role(s) required for the functionality you wish to access.</p>
+<ul>
+<li><code>manager-gui</code> - allows access to the HTML GUI and the status pages</li>
+<li><code>manager-script</code> - allows access to the text interface and the status pages</li>
+<li><code>manager-jmx</code> - allows access to the JMX proxy and the status pages</li>
+<li><code>manager-status</code> - allows access to the status pages only</li>
+</ul>
+<p>The HTML interface is protected against CSRF but the text and JMX interfaces are not. To maintain the CSRF protection:</p>
+<ul>
+<li>Users with the <code>manager-gui</code> role should not be granted either the <code>manager-script</code> or <code>manager-jmx</code> roles.</li>
+<li>If the text or jmx interfaces are accessed through a browser (e.g. for testing since these interfaces are intended for tools not humans) then the browser must be closed afterwards to terminate the session.</li>
+</ul>
+<p>For more information - please see the <a target="_blank" rel="noopener" href="http://192.168.200.131:8090/docs/manager-howto.html">Manager App How-To</a>.</p>
+</blockquote>
+<p>但是，后续Jenkins部署项目到Tomcat服务器，需要用到Tomcat的用户，所以修改tomcat以下配置， 添加用户及权限</p>
+<blockquote>
+<p>vi &#x2F;opt&#x2F;tomcat&#x2F;conf&#x2F;tomcat-users.xml</p>
+</blockquote>
+<p>内容如下：</p>
+<pre><code class="xml">&lt;tomcat-users&gt;
+ &lt;role rolename=&quot;tomcat&quot;/&gt;
+ &lt;role rolename=&quot;role1&quot;/&gt;
+ &lt;role rolename=&quot;manager-script&quot;/&gt;
+ &lt;role rolename=&quot;manager-gui&quot;/&gt;
+ &lt;role rolename=&quot;manager-status&quot;/&gt; 
+&lt;role rolename=&quot;admin-gui&quot;/&gt;
+ &lt;role rolename=&quot;admin-script&quot;/&gt; 
+&lt;user username=&quot;tomcat&quot; password=&quot;tomcat&quot; roles=&quot;manager-gui,manager
+script,tomcat,admin-gui,admin-script&quot;/&gt;
+ &lt;/tomcat-users&gt;
+</code></pre>
+<p>用户和密码都是： tomcat<br>注意：为了能够刚才配置的用户登录到Tomcat，还需要修改以下配置</p>
+<blockquote>
+<p>vi &#x2F;opt&#x2F;tomcat&#x2F;webapps&#x2F;manager&#x2F;META-INF&#x2F;context.xml</p>
+</blockquote>
+<pre><code class="yaml">&lt;!--
+ &lt;Valve className=&quot;org.apache.catalina.valves.RemoteAddrValve&quot;
+ allow=&quot;127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1&quot; /&gt;
+--&gt;
+</code></pre>
+<p>注释掉这行就行！！</p>
+<blockquote>
+<p><strong>关闭已有 Tomcat</strong>（建议先关闭，避免冲突）：</p>
+<pre><code>/opt/tomcat/bin/shutdown.sh
+</code></pre>
+<p><strong>再启动</strong>：</p>
+<pre><code>/opt/tomcat/bin/startup.sh
+</code></pre>
+</blockquote>
+<p>[&#x2F;manager] (<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/manager/html">http://192.168.200.131:8090/manager/html</a>)   <strong>此时就可以访问了！！！</strong></p>
+<h2 id="3、Jenkins构建Maven项目"><a href="#3、Jenkins构建Maven项目" class="headerlink" title="3、Jenkins构建Maven项目"></a>3、Jenkins构建Maven项目</h2><h4 id="Jenkins项目构建类型-1-Jenkins构建的项目类型介绍"><a href="#Jenkins项目构建类型-1-Jenkins构建的项目类型介绍" class="headerlink" title="Jenkins项目构建类型(1)-Jenkins构建的项目类型介绍"></a>Jenkins项目构建类型(1)-Jenkins构建的项目类型介绍</h4><p>Jenkins中自动构建项目的类型有很多，常用的有以下三种： </p>
+<ul>
+<li>自由风格软件项目（ FreeStyle Project） </li>
+<li>Maven 项目（Maven Project） </li>
+<li><span style ="color:red"><strong>流水线项目（ Pipeline Project）</strong></span></li>
+</ul>
+<p>每种类型的构建其实都可以完成一样的构建过程与结果，只是在操作方式、灵活度等方面有所区别，在 实际开发中可以根据自己的需求和习惯来选择。（PS：个人推荐使用流水线类型，因为灵活度非常高）</p>
+<h4 id="Jenkins项目构建类型-2-自由风格项目构建"><a href="#Jenkins项目构建类型-2-自由风格项目构建" class="headerlink" title="Jenkins项目构建类型(2)-自由风格项目构建"></a>Jenkins项目构建类型(2)-自由风格项目构建</h4><p>下面演示创建一个自由风格项目来完成项目的集成过程：</p>
+<blockquote>
+<p>拉取代码→编译→打包→部署</p>
+</blockquote>
+<p>……</p>
+<h4 id="部署-1"><a href="#部署-1" class="headerlink" title="部署"></a>部署</h4><p>把项目部署到远程的Tomcat里面 </p>
+<h6 id="1）安装-Deploy-to-container插件"><a href="#1）安装-Deploy-to-container插件" class="headerlink" title="1）安装 Deploy to container插件"></a>1）安装 Deploy to container插件</h6><p>Jenkins本身无法实现远程部署到Tomcat的功能，需要在Jenkins里面安装<strong>Deploy to container</strong>插件实现</p>
+<p><a href="file:///C:/Users/Pluminary/Desktop/Jenkins持续集成从入门到精通.pdf">Jenkins持续集成从入门到精通.pdf</a> 【39页】</p>
+<p>①：<strong>Build Steps</strong> → Execute shell →↓</p>
+<pre><code class="java">echo &quot;开始进行编译构建&quot;
+mvn clean package
+echo &quot;编译构建结束&quot;
+</code></pre>
+<p>②：在Jenkins的项目配置里 下面<br>构建后操作：【Deploy war&#x2F;ear to a container】→ 选择 <strong><u>Tomcat 8.x Remote</u></strong><br><strong>WAR&#x2F;EAR files</strong>：<u>target&#x2F;*.war</u><br><strong>Containers</strong>：<br>新增一个凭证 用户名tomcat 密码tomcat</p>
+<p>部署成功后，访问项目：[<u>演示项目主页</u>] (<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/web_demo-1.0-SNAPSHOT/">http://192.168.200.131:8090/web_demo-1.0-SNAPSHOT/</a>)</p>
+<pre><code class="xml">如果看到此页面，代表项目部署成功啦！--这是master分支 添加用户
+修改用户
+删除用户 查询用户
+</code></pre>
+<p>演示改动代码后的持续集成<br>1）IDEA中源码修改并提交到gitlab<br>2）在Jenkins中项目重新构建<br>3）访问Tomcat</p>
 
     </div>
 
