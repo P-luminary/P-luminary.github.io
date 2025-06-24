@@ -734,6 +734,374 @@ echo &quot;编译构建结束&quot;
 删除用户 查询用户
 </code></pre>
 <p>演示改动代码后的持续集成<br>1）IDEA中源码修改并提交到gitlab<br>2）在Jenkins中项目重新构建<br>3）访问Tomcat</p>
+<h5 id="演示改动代码后的持续集成"><a href="#演示改动代码后的持续集成" class="headerlink" title="演示改动代码后的持续集成"></a>演示改动代码后的持续集成</h5><p>1）IDEA中源码修改并提交到gitlab<br>2）<strong>在Jenkins中项目重新构建</strong><br>3）访问Tomcat</p>
+<h4 id="Jenkins项目构建类型-3-Maven项目构建"><a href="#Jenkins项目构建类型-3-Maven项目构建" class="headerlink" title="Jenkins项目构建类型(3)-Maven项目构建"></a>Jenkins项目构建类型(3)-Maven项目构建</h4><p>1）安装 <strong>Maven Integration</strong> 插件<br>2）创建 <strong>Maven</strong> 项目<br>3）配置项目<br>拉取代码和远程部署的过程和自由风格项目一样，只是”构建”部分不同</p>
+<p>新建<strong>Item</strong> → <strong>构建一个maven项目</strong><br>其中Build的<strong>Root POM</strong>是要找到pom.xml的路径才行【默认执行maven命令】<br>所以只需要在<strong>Goals and options</strong>里面敲上<code>clean package</code></p>
+<h4 id="Jenkins项目构建类型-4-Pipeline流水线项目构建"><a href="#Jenkins项目构建类型-4-Pipeline流水线项目构建" class="headerlink" title="Jenkins项目构建类型(4)-Pipeline流水线项目构建(*)"></a>Jenkins项目构建类型(4)-Pipeline流水线项目构建(*)</h4><h5 id="Pipeline简介"><a href="#Pipeline简介" class="headerlink" title="Pipeline简介"></a>Pipeline简介</h5><h6 id="1）概念"><a href="#1）概念" class="headerlink" title="1）概念"></a>1）概念</h6><p>Pipeline，简单来说，就是一套运行在 Jenkins 上的工作流框架，将原来独立运行于单个或者多个节点 的任务连接起来，实现单个任务难以完成的复杂流程编排和可视化的工作。</p>
+<h6 id="2）使用Pipeline有以下好处（来自翻译自官方文档）："><a href="#2）使用Pipeline有以下好处（来自翻译自官方文档）：" class="headerlink" title="2）使用Pipeline有以下好处（来自翻译自官方文档）："></a>2）使用Pipeline有以下好处（来自翻译自官方文档）：</h6><p>代码：Pipeline以代码的形式实现，通常被检入源代码控制，使团队能够编辑，审查和迭代其传送流 程。 持久：无论是计划内的还是计划外的服务器重启，Pipeline都是可恢复的。 可停止：Pipeline可接 收交互式输入，以确定是否继续执行Pipeline。 多功能：Pipeline支持现实世界中复杂的持续交付要 求。它支持fork&#x2F;join、循环执行，并行执行任务的功能。 可扩展：Pipeline插件支持其DSL的自定义扩 展 ，以及与其他插件集成的多个选项。</p>
+<h6 id="3）如何创建-Jenkins-Pipeline呢？"><a href="#3）如何创建-Jenkins-Pipeline呢？" class="headerlink" title="3）如何创建 Jenkins Pipeline呢？"></a>3）如何创建 Jenkins Pipeline呢？</h6><ul>
+<li>Pipeline 脚本是由 Groovy 语言实现的，但是我们没必要单独去学习 Groovy </li>
+<li>Pipeline 支持两种语法：<span style="color:red"><strong>Declarative</strong>(声明式)</span> 和 <span style="color:red"><strong>Scripted Pipeline</strong>(脚本式)</span>语法 </li>
+<li>Pipeline  也有两种创建方法：可以直接在 Jenkins 的 Web UI 界面中输入脚本；也可以通过创建一 个 Jenkinsfile 脚本文件放入项目源码库中（<u>一般我们都推荐在 Jenkins 中直接从源代码控制(SCM) 中直接载入 Jenkinsfile Pipeline 这种方法</u>）</li>
+</ul>
+<h5 id="安装Pipeline插件如果一次安装失败，重启一次再安装-没视图就安装pipeline-Stage-View"><a href="#安装Pipeline插件如果一次安装失败，重启一次再安装-没视图就安装pipeline-Stage-View" class="headerlink" title="安装Pipeline插件如果一次安装失败，重启一次再安装[没视图就安装pipeline Stage View]"></a>安装Pipeline插件<del>如果一次安装失败，重启一次再安装</del>[没视图就安装pipeline Stage View]</h5><p>Manage Jenkins-&gt;Manage Plugins-&gt;可选插件</p>
+<h3 id="Pipeline语法快速入门"><a href="#Pipeline语法快速入门" class="headerlink" title="Pipeline语法快速入门"></a>Pipeline语法快速入门</h3><h5 id="1）Declarative声明式-Pipeline"><a href="#1）Declarative声明式-Pipeline" class="headerlink" title="1）Declarative声明式-Pipeline"></a>1）Declarative声明式-Pipeline</h5><p><strong><u>创建项目</u></strong> [<strong>agent是代理、stage是阶段、steps是步骤</strong>]</p>
+<ul>
+<li><strong>Node</strong> ：节点，一个 Node 就是一个 Jenkins 节点，Master 或者 Agent，是执行 Step 的具体运行 环境，后续讲到Jenkins的Master-Slave架构的时候用到。 </li>
+<li><strong>Stage</strong> ：阶段，一个 Pipeline 可以划分为若干个 Stage，每个 Stage 代表一组操作，比如： Build、Test、Deploy，Stage 是一个逻辑分组的概念。 </li>
+<li><strong>Step</strong> ：步骤，Step 是最基本的操作单元，可以是打印一句话，也可以是构建一个 Docker 镜像， 由各类 Jenkins 插件提供，比如命令：sh ‘make’，就相当于我们平时 shell 终端中执行 make 命令 一样。</li>
+</ul>
+<pre><code class="java">pipeline &#123;
+    agent any
+    stages &#123;
+        stage(&#39;pull code&#39;) &#123;
+            steps &#123;
+                echo &#39;pull code&#39;
+            &#125;
+        &#125;
+        stage(&#39;build project&#39;) &#123;
+            steps &#123;
+                echo &#39;build project&#39;
+            &#125;
+        &#125;
+        stage(&#39;publish project&#39;) &#123;
+            steps &#123;
+                echo &#39;publish project&#39;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="2）Scripted-Pipeline脚本式-Pipeline"><a href="#2）Scripted-Pipeline脚本式-Pipeline" class="headerlink" title="2）Scripted Pipeline脚本式-Pipeline"></a>2）Scripted Pipeline脚本式-Pipeline</h5><p><strong><u>创建项目</u></strong><br>流水线那里选择 “<strong>Scripted Pipeline</strong>“</p>
+<pre><code class="java">node &#123;
+    def mvnHome
+    stage(&#39;pull code&#39;)&#123;
+        echo &#39;pull code&#39;
+    &#125;
+    stage(&#39;build project&#39;)&#123;
+        echo &#39;build project&#39;
+    &#125;
+    stage(&#39;publish project&#39;)&#123;
+        echo &#39;publish project&#39;
+    &#125;
+&#125;
+</code></pre>
+<p><span style = "color:blue"><u>流水线脚本</u></span>：点击可以使用官方的脚本生成器</p>
+<ul>
+<li><strong>片段生成器</strong>：<br>示例步骤：checkout：Check out from version control [从版本控制里拉取代码]<br>选择git拉取代码 填写URL和凭证 → 生成流水线脚本</li>
+</ul>
+<h3 id="拉取代码"><a href="#拉取代码" class="headerlink" title="拉取代码"></a><span style = "color:red">拉取代码</span></h3><h6 id="Pipeline-script"><a href="#Pipeline-script" class="headerlink" title="Pipeline script"></a>Pipeline script</h6><pre><code class="java">pipeline&#123;
+    agent any
+    stages&#123;
+        stage(&#39;拉取代码&#39;)&#123;
+            steps&#123;
+                checkout scmGit(branches: [[name: &#39;*/master&#39;]], extensions: [], userRemoteConfigs: [[credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;, url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;]])
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Console-Output"><a href="#Console-Output" class="headerlink" title="Console Output"></a>Console Output</h5><pre><code class="java">Started by user root
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/web_demo_pipeline
+[Pipeline] &#123;
+[Pipeline] stage
+[Pipeline] &#123; (拉取代码)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential ca22e56f-0ecc-4fdc-965d-01e329a0b68a
+Cloning the remote Git repository
+Cloning repository http://192.168.200.132:82/lanyun_group/web_demo.git
+ &gt; git init /var/lib/jenkins/workspace/web_demo_pipeline # timeout=10
+Fetching upstream changes from http://192.168.200.132:82/lanyun_group/web_demo.git
+ &gt; git --version # timeout=10
+ &gt; git --version # &#39;git version 1.8.3.1&#39;
+using GIT_ASKPASS to set credentials gitlab-auth-password
+ &gt; git fetch --tags --progress http://192.168.200.132:82/lanyun_group/web_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ &gt; git config remote.origin.url http://192.168.200.132:82/lanyun_group/web_demo.git # timeout=10
+ &gt; git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ &gt; git rev-parse refs/remotes/origin/master^&#123;commit&#125; # timeout=10
+Checking out Revision 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 (refs/remotes/origin/master)
+ &gt; git config core.sparsecheckout # timeout=10
+ &gt; git checkout -f 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 # timeout=10
+Commit message: &quot;修改index.jsp加入细节(!)&quot;
+First time build. Skipping changelog.
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] &#125;
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+</code></pre>
+<p>去Jenkins的服务器里寻找<code>/var/lib/jenkins/workspace/web_demo_pipeline</code></p>
+<h3 id="编译打包"><a href="#编译打包" class="headerlink" title="编译打包"></a><span style = "color:red">编译打包</span></h3><p><span style = "color:blue"><u>流水线脚本</u></span>：点击可以使用官方的脚本生成器</p>
+<ul>
+<li><strong>片段生成器</strong>：<br>示例步骤：<code>sh：Shell Script</code><br>Shell Script：里面需要打所需要的命令 <code>mvn clean package</code></li>
+</ul>
+<h6 id="Pipeline-script-1"><a href="#Pipeline-script-1" class="headerlink" title="Pipeline script"></a>Pipeline script</h6><pre><code class="java">pipeline&#123;
+    agent any
+    stages&#123;
+        stage(&#39;build project&#39;)&#123;
+            steps&#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+
+--------------------------------------------
+【总流水线代码】
+pipeline &#123;
+    agent any
+    stages &#123;
+        stage(&#39;pull code&#39;) &#123;
+            steps &#123;
+                checkout scmGit(
+                    branches: [[name: &#39;*/master&#39;]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                    ]]
+                )
+            &#125;
+        &#125;
+        stage(&#39;build project&#39;) &#123;
+            steps &#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Console-Output-1"><a href="#Console-Output-1" class="headerlink" title="Console Output"></a>Console Output</h5><pre><code class="java">Started by user root
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/web_demo_pipeline
+[Pipeline] &#123;
+[Pipeline] stage
+[Pipeline] &#123; (pull code)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential ca22e56f-0ecc-4fdc-965d-01e329a0b68a
+ &gt; git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/web_demo_pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ &gt; git config remote.origin.url http://192.168.200.132:82/lanyun_group/web_demo.git # timeout=10
+Fetching upstream changes from http://192.168.200.132:82/lanyun_group/web_demo.git
+ &gt; git --version # timeout=10
+ &gt; git --version # &#39;git version 1.8.3.1&#39;
+using GIT_ASKPASS to set credentials gitlab-auth-password
+ &gt; git fetch --tags --progress http://192.168.200.132:82/lanyun_group/web_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ &gt; git rev-parse refs/remotes/origin/master^&#123;commit&#125; # timeout=10
+Checking out Revision 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 (refs/remotes/origin/master)
+ &gt; git config core.sparsecheckout # timeout=10
+ &gt; git checkout -f 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 # timeout=10
+Commit message: &quot;修改index.jsp加入细节(!)&quot;
+ &gt; git rev-list --no-walk 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 # timeout=10
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] &#123; (build project)
+[Pipeline] sh
++ mvn clean package
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------&lt; com.itheima:web_demo &gt;------------------------
+[INFO] Building web_demo 1.0-SNAPSHOT
+[INFO] --------------------------------[ war ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ web_demo ---
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ web_demo ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /var/lib/jenkins/workspace/web_demo_pipeline/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ web_demo ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1 source file to /var/lib/jenkins/workspace/web_demo_pipeline/target/classes
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ web_demo ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /var/lib/jenkins/workspace/web_demo_pipeline/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:testCompile (default-testCompile) @ web_demo ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ web_demo ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- maven-war-plugin:3.3.2:war (default-war) @ web_demo ---
+[INFO] Packaging webapp
+[INFO] Assembling webapp [web_demo] in [/var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT]
+[INFO] Processing war project
+[INFO] Copying webapp resources [/var/lib/jenkins/workspace/web_demo_pipeline/src/main/webapp]
+[INFO] Building war: /var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10.242 s
+[INFO] Finished at: 2025-06-24T20:32:45+08:00
+[INFO] ------------------------------------------------------------------------
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] &#125;
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+</code></pre>
+<h3 id="部署-2"><a href="#部署-2" class="headerlink" title="部署"></a><span style = "color:red">部署</span></h3><p><span style = "color:blue"><u>流水线脚本</u></span>：点击可以使用官方的脚本生成器</p>
+<ul>
+<li><strong>片段生成器</strong>：<br>示例步骤：<code>deploy：Deploy war/ear to a container</code><br>WAR&#x2F;EAR files：<code>target/*.war</code><br>containers：<strong>Tomcat 8.x Remote</strong> 【容器可以增加多台】<br>credentials：添加tomcat凭证<br>Tomcat URL：<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/">http://192.168.200.131:8090/</a></li>
+</ul>
+<h6 id="Pipeline-script-2"><a href="#Pipeline-script-2" class="headerlink" title="Pipeline script"></a>Pipeline script</h6><pre><code class="java">【总流水线代码】
+pipeline &#123;
+    agent any
+    stages &#123;
+        stage(&#39;pull code&#39;) &#123;
+            steps &#123;
+                checkout scmGit(
+                    branches: [[name: &#39;*/master&#39;]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                    ]]
+                )
+            &#125;
+        &#125;
+        stage(&#39;build project&#39;) &#123;
+            steps &#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+        stage(&#39;publish&#39;) &#123;
+            steps &#123;
+                deploy adapters: [tomcat8(alternativeDeploymentContext: &#39;&#39;, credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;, path: &#39;&#39;, url: &#39;http://192.168.200.131:8090/&#39;)], contextPath: null, war: &#39;target/*.war&#39;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="Console-Output-2"><a href="#Console-Output-2" class="headerlink" title="Console Output"></a>Console Output</h5><pre><code class="java">Started by user root
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/web_demo_pipeline
+[Pipeline] &#123;
+[Pipeline] stage
+[Pipeline] &#123; (pull code)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential ca22e56f-0ecc-4fdc-965d-01e329a0b68a
+ &gt; git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/web_demo_pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ &gt; git config remote.origin.url http://192.168.200.132:82/lanyun_group/web_demo.git # timeout=10
+Fetching upstream changes from http://192.168.200.132:82/lanyun_group/web_demo.git
+ &gt; git --version # timeout=10
+ &gt; git --version # &#39;git version 1.8.3.1&#39;
+using GIT_ASKPASS to set credentials gitlab-auth-password
+ &gt; git fetch --tags --progress http://192.168.200.132:82/lanyun_group/web_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ &gt; git rev-parse refs/remotes/origin/master^&#123;commit&#125; # timeout=10
+Checking out Revision 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 (refs/remotes/origin/master)
+ &gt; git config core.sparsecheckout # timeout=10
+ &gt; git checkout -f 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 # timeout=10
+Commit message: &quot;修改index.jsp加入细节(!)&quot;
+ &gt; git rev-list --no-walk 7ae1ec4086586fb471b0e9dee0a0d00d0b6d6f54 # timeout=10
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] &#123; (build project)
+[Pipeline] sh
++ mvn clean package
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------&lt; com.itheima:web_demo &gt;------------------------
+[INFO] Building web_demo 1.0-SNAPSHOT
+[INFO] --------------------------------[ war ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ web_demo ---
+[INFO] Deleting /var/lib/jenkins/workspace/web_demo_pipeline/target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ web_demo ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /var/lib/jenkins/workspace/web_demo_pipeline/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ web_demo ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1 source file to /var/lib/jenkins/workspace/web_demo_pipeline/target/classes
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ web_demo ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /var/lib/jenkins/workspace/web_demo_pipeline/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:testCompile (default-testCompile) @ web_demo ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ web_demo ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- maven-war-plugin:3.3.2:war (default-war) @ web_demo ---
+[INFO] Packaging webapp
+[INFO] Assembling webapp [web_demo] in [/var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT]
+[INFO] Processing war project
+[INFO] Copying webapp resources [/var/lib/jenkins/workspace/web_demo_pipeline/src/main/webapp]
+[INFO] Building war: /var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.472 s
+[INFO] Finished at: 2025-06-24T20:39:46+08:00
+[INFO] ------------------------------------------------------------------------
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] &#123; (publish)
+[Pipeline] deploy
+[DeployPublisher][INFO] Attempting to deploy 1 war file(s)
+[DeployPublisher][INFO] Deploying /var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war to container Tomcat 8.x Remote with context null
+  Redeploying [/var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war]
+  Undeploying [/var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war]
+  Deploying [/var/lib/jenkins/workspace/web_demo_pipeline/target/web_demo-1.0-SNAPSHOT.war]
+[Pipeline] &#125;
+[Pipeline] // stage
+[Pipeline] &#125;
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+</code></pre>
+<h4 id="Pipeline-Script-from-SCM"><a href="#Pipeline-Script-from-SCM" class="headerlink" title="Pipeline Script from SCM "></a><span style = "color:red">Pipeline Script from SCM </span></h4><p>刚才我们都是直接在Jenkins的UI界面编写Pipeline代码，这样不方便脚本维护，建议把Pipeline脚本放 在项目中（一起进行版本控制）<br>1）在项目<strong>根目录</strong>建立<strong>Jenkinsfile</strong>文件，把内容复制到该文件中。把Jenkinsfile上传到Gitlab</p>
+<pre><code class="java">Jenkinsfile【在根目录下】
+
+pipeline &#123;
+    agent any
+    stages &#123;
+        stage(&#39;pull code&#39;) &#123;
+            steps &#123;
+                checkout scmGit(
+                    branches: [[name: &#39;*/master&#39;]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                    ]]
+                )
+            &#125;
+        &#125;
+        stage(&#39;build project&#39;) &#123;
+            steps &#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+        stage(&#39;publish&#39;) &#123;
+            steps &#123;
+                deploy adapters: [tomcat8(alternativeDeploymentContext: &#39;&#39;, credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;, path: &#39;&#39;, url: &#39;http://192.168.200.131:8090/&#39;)], contextPath: null, war: &#39;target/*.war&#39;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p> 2）在项目中引用该<strong>文件</strong><br>在流水线上<br>定义<code>Pipeline script from SCM</code> → 选择git → 填写gitlab的url和凭证 → 脚本路径<code>Jenkinsfile</code>(这是我们上传的jenkinsfile里面包含着流水线代码的文件)</p>
 
             
         </div>
@@ -748,7 +1116,7 @@ echo &quot;编译构建结束&quot;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -1594,7 +1962,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -1719,7 +2087,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -2218,7 +2586,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -2825,7 +3193,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -3790,7 +4158,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -3923,7 +4291,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -4332,7 +4700,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
