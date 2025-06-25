@@ -1266,6 +1266,81 @@ pipeline &#123;
 <p>PS：邮件相关全局参数参考列表：<br>系统设置-&gt;Extended E-mail Notification-&gt;Content Token Reference，点击旁边的?号</p>
 <h4 id="Jenkins-SonarQube代码审查-1-安装SonarQube"><a href="#Jenkins-SonarQube代码审查-1-安装SonarQube" class="headerlink" title="Jenkins+SonarQube代码审查(1) - 安装SonarQube"></a>Jenkins+SonarQube代码审查(1) - 安装SonarQube</h4><h5 id="SonaQube简介"><a href="#SonaQube简介" class="headerlink" title="SonaQube简介"></a>SonaQube简介</h5><p>SonarQube 是一个用于管理代码质量的开放平台，可以快速的定位代码中潜在的或者明显的错误。目前 支持java,C#,C&#x2F;C++,Python,PL&#x2F;SQL,Cobol,JavaScrip,Groovy等二十几种编程语言的代码质量管理与检 测。</p>
 <p>官网： <a target="_blank" rel="noopener" href="https://www.sonarqube.org/">https://www.sonarqube.org/</a></p>
+<h5 id="环境要求"><a href="#环境要求" class="headerlink" title="环境要求"></a>环境要求</h5><table>
+<thead>
+<tr>
+<th align="center">软件</th>
+<th align="center">服务器</th>
+<th align="center">版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">JDK</td>
+<td align="center">192.168.200.129</td>
+<td align="center">1.8</td>
+</tr>
+<tr>
+<td align="center">MySQL</td>
+<td align="center">192.168.200.129</td>
+<td align="center">5.7</td>
+</tr>
+<tr>
+<td align="center">SonarQube</td>
+<td align="center">192.168.200.129</td>
+<td align="center">6.7.4</td>
+</tr>
+</tbody></table>
+<h5 id="安装SonarQube"><a href="#安装SonarQube" class="headerlink" title="安装SonarQube"></a>安装SonarQube</h5><p>1）安装MySQL（已完成）<br>2）安装SonarQube</p>
+<p>在mysql创建sonar数据库</p>
+<blockquote>
+<h3 id="启动-MySQL-服务（如果没启动）"><a href="#启动-MySQL-服务（如果没启动）" class="headerlink" title="启动 MySQL 服务（如果没启动）"></a>启动 MySQL 服务（如果没启动）</h3><pre><code>systemctl start mysqld
+</code></pre>
+<p>启动后再次检查状态：</p>
+<pre><code>systemctl status mysqld
+</code></pre>
+<p><code>mysql -uroot -p</code><br>账号密码是：root</p>
+</blockquote>
+<pre><code class="mysql">mysql&gt; create database sonar;
+
+mysql&gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sonar              |
+| sys                |
++--------------------+
+5 rows in set (0.07 sec)
+</code></pre>
+<h5 id="解压sonar，并设置权限"><a href="#解压sonar，并设置权限" class="headerlink" title="解压sonar，并设置权限"></a>解压sonar，并设置权限</h5><blockquote>
+<p>yum install unzip<br>unzip sonarqube-6.7.4.zip                       解压<br>mkdir &#x2F;opt&#x2F;sonar                                       创建目录<br>mv sonarqube-6.7.4&#x2F;* &#x2F;opt&#x2F;sonar          移动文件<br>useradd sonar                                           <strong>创建sonar用户</strong>，必须sonar用于启动，否则报错 </p>
+<p>chown -R sonar. &#x2F;opt&#x2F;sonar                    更改sonar目录及文件权限</p>
+<p>[root@localhost ~]# cd &#x2F;opt&#x2F;sonar<br>[root@localhost sonar]# ll<br>总用量 12<br>drwxr-xr-x. 8 sonar sonar  136 5月  30 2018 bin<br>drwxr-xr-x. 2 sonar sonar   50 5月  30 2018 conf<br>-rw-r–r–. 1 sonar sonar 7651 5月  30 2018 COPYING<br>drwxr-xr-x. 2 sonar sonar   24 5月  30 2018 data<br>drwxr-xr-x. 7 sonar sonar  150 5月  30 2018 elasticsearch<br>drwxr-xr-x. 4 sonar sonar   40 5月  30 2018 extensions<br>drwxr-xr-x. 9 sonar sonar  140 5月  30 2018 lib<br>drwxr-xr-x. 2 sonar sonar    6 5月  30 2018 logs<br>drwxr-xr-x. 2 sonar sonar   24 5月  30 2018 temp<br>drwxr-xr-x. 9 sonar sonar 4096 5月  30 2018 web</p>
+</blockquote>
+<h5 id="修改sonar配置文件数据库连接信息"><a href="#修改sonar配置文件数据库连接信息" class="headerlink" title="修改sonar配置文件数据库连接信息"></a>修改sonar配置文件<del>数据库连接信息</del></h5><blockquote>
+<p>[root@localhost opt]# cd sonar<br>[root@localhost sonar]# cd conf<br>[root@localhost conf]# vi sonar.properties</p>
+<p>||          ||                   ||                  ||         </p>
+<pre><code class="java">......
+sonar.jdbc.username=root
+sonar.jdbc.password=root
+......
+sonar.jdbc.url=jdbc:mysql://127.0.0.1:3306/sonar?useUnicode=true&amp;characterEncoding=utf8&amp;rewriteBatchedStatements=true&amp;useConfigs=maxPerformance&amp;useSSL=false 【这里打开注释】
+
+注意：sonar默认监听9000端口，如果9000端口被占用，需要更改 
+如果要改端口 在这里：
+sonar.web.port=9999
+
+</code></pre>
+</blockquote>
+<h6 id="启动sonar"><a href="#启动sonar" class="headerlink" title="启动sonar"></a>启动sonar</h6><blockquote>
+<p>[root@localhost bin]# pwd<br>&#x2F;opt&#x2F;sonar&#x2F;bin<br>cd &#x2F;opt&#x2F;sonar&#x2F;bin</p>
+</blockquote>
+<p>修改配置文件：<code>vi /opt/sonar/conf/sonar.properties</code><br>重启sonar：<code>sudo -u sonarqube /opt/sonar/bin/linux-x86-64/sonar.sh restart</code></p>
+<p>访问<strong>SonarQube</strong></p>
+<p>[192.168.200.129] (<a target="_blank" rel="noopener" href="http://192.168.200.129:9999/">http://192.168.200.129:9999/</a>)</p>
+<p><code>账号密码：root root</code><br>生成了一个token：<code>sonar: 220b1d4f9ab0b5a7912ccd147bbeeab77119dd0b</code></p>
 
             
         </div>
@@ -1280,7 +1355,7 @@ pipeline &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -2126,7 +2201,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -2251,7 +2326,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -3357,7 +3432,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -4322,7 +4397,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -4455,7 +4530,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -4864,7 +4939,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -8014,7 +8089,7 @@ except etree.XMLSyntaxError as e:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
