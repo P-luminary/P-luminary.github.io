@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1082,6 +1082,46 @@ pipeline &#123;
 &#125;
 </code></pre>
 <p> 2）在项目中引用该<strong>文件</strong><br>在流水线上<br>定义<code>Pipeline script from SCM</code> → 选择git → 填写gitlab的url和凭证 → 脚本路径<code>Jenkinsfile</code>(这是我们上传的jenkinsfile里面包含着流水线代码的文件)</p>
+<h4 id="Jenkins项目构建细节-1-常用的构建触发器"><a href="#Jenkins项目构建细节-1-常用的构建触发器" class="headerlink" title="Jenkins项目构建细节(1)-常用的构建触发器"></a>Jenkins项目构建细节(1)-常用的构建触发器</h4><p>Jenkins内置4种构建触发器： </p>
+<ul>
+<li>触发远程构建 </li>
+<li>其他工程构建后触发（ Build after other projects are build） </li>
+<li>定时构建（ Build periodically） </li>
+<li>轮询 SCM（Poll SCM）</li>
+</ul>
+<h5 id="触发远程构建"><a href="#触发远程构建" class="headerlink" title="触发远程构建"></a>触发远程构建</h5><p>打开<code>web_demo_pipeline</code>的配置 里面的<code>Triggers</code> 选择<code>触发远程构建</code> 身份验证令牌(这个token最好是加密的) 下面有个触发地址：</p>
+<blockquote>
+<p>Use the following URL to trigger build remotely: <code>JENKINS_URL</code>&#x2F;job&#x2F;web_demo_pipeline&#x2F;build?token&#x3D;TOKEN_NAME 或者 &#x2F;buildWithParameters?token&#x3D;TOKEN_NAME<br>Optionally append <code>&amp;cause=Cause+Text</code> to provide text that will be included in the recorded build cause.</p>
+</blockquote>
+<p>上面地址里面的：<code>job/web_demo_pipeline/build?token=TOKEN_NAME</code><br>→ <code>http://192.168.200.129:8888/job/web_demo_pipeline/build?token=6666</code><br>在浏览器输入上述地址 回车打开 你会发现已经远程触发了Jenkins的构建行为！！</p>
+<h5 id="其他工程构建后触发"><a href="#其他工程构建后触发" class="headerlink" title="其他工程构建后触发"></a>其他工程构建后触发</h5><p>1）创建pre_job流水线工程<br>2）配置需要触发的工程</p>
+<p>打开<code>web_demo_pipeline</code>的配置 里面的<code>Triggers</code> 选择<code>Build after other projects are built</code><br>新建item → 创建一个<code>pre_job</code>的自由风格的工程 → 构建Execute shell 执行一个简单的脚本<br>回到<code>web_demo_pipeline</code>工程 在<code>Triggers</code>里面选择前置工程<code>pre_job</code><br>此时去构建<code>pre_job</code>你会发现 在构建完后 <code>web_demo_pipeline</code>也会进行自动构建</p>
+<h5 id="定时构建"><a href="#定时构建" class="headerlink" title="定时构建"></a>定时构建</h5><p>定时字符串从左往右分别为： 分 时 日 月 周<br>一些定时表达式的例子：(H为0 就为整点)</p>
+<pre><code class="java">每30分钟构建一次：H代表形参 H/30 * * * * 10:02 10:32
+每2个小时构建一次: H H/2 * * *
+每天的8点，12点，22点，一天构建3次： (多个时间点中间用逗号隔开) 0 8,12,22 * * *
+每天中午12点定时构建一次 H 12 * * *
+每天下午18点定时构建一次 H 18 * * *
+在每个小时的前半个小时内的每10分钟 H(0-29)/10 * * * *
+每两小时一次，每个工作日上午9点到下午5点(也许是上午10:38，下午12:38，下午2:38，下午
+4:38) H H(9-16)/2 * * 1-5
+</code></pre>
+<p>打开<code>web_demo_pipeline</code>的配置 里面的<code>Triggers</code> 选择 <code>Build periodically</code> 然后可以写时间cron表达式即可</p>
+<h5 id="轮询SCM-版本控制-企业级不推荐使用"><a href="#轮询SCM-版本控制-企业级不推荐使用" class="headerlink" title="轮询SCM  [版本控制] [企业级不推荐使用]"></a><span style ="color:blue">轮询SCM  [版本控制] [企业级不推荐使用]</span></h5><p>轮询SCM，是指定时扫描本地代码仓库的代码是否有变更，如果代码有变更就触发项目构建。<br>打开<code>web_demo_pipeline</code>的配置 里面的<code>Triggers</code> 选择<code>Poll SCM</code></p>
+<blockquote>
+<h4 id="jenkins的轮询SCM的构建到底是远程仓库变动触发-还是-本地仓库变动触发？"><a href="#jenkins的轮询SCM的构建到底是远程仓库变动触发-还是-本地仓库变动触发？" class="headerlink" title="jenkins的轮询SCM的构建到底是远程仓库变动触发 还是 本地仓库变动触发？"></a>jenkins的轮询SCM的构建到底是远程仓库变动触发 还是 本地仓库变动触发？</h4><p><strong>Jenkins 的“轮询 SCM”是通过轮询</strong>远程 Git 仓库（如 GitLab、GitHub）<strong>判断是否有变更</strong>，从而决定是否触发构建。</p>
+</blockquote>
+<p>注意：这次构建触发器， Jenkins会定时扫描整个项目的代码，增大系统的开销，不建议使用。</p>
+<h4 id="Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件"><a href="#Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件" class="headerlink" title="Jenkins项目构建细节(2)-Git hook自动触发构建(*)gitlab就用gitlab插件，github则是github插件"></a>Jenkins项目构建细节(2)-Git hook自动触发构建(*)<del>gitlab就用gitlab插件，github则是github插件</del></h4><p>刚才我们看到在Jenkins的内置构建触发器中，轮询SCM可以实现Gitlab代码更新，项目自动构建，但是 该方案的性能不佳。那有没有更好的方案呢？ 有的。就是<strong>利用Gitlab的webhook实现代码push到仓 库，立即触发项目自动构建</strong>。</p>
+<blockquote>
+<p><strong>轮询SCM原理</strong>：Jenkins                    →(发送定时请求)→                Gitlab代码变更<br><strong>webhook原理</strong>：Gitlab代码变更      →(发送构建请求)→                Jenkins</p>
+</blockquote>
+<p>打开<code>web_demo_pipeline</code>的配置 里面的<code>Triggers</code> 选择<code>Build when a change is pushed to GitLab. GitLab webhook URL: http://192.168.200.129:8888/project/web_demo_pipeline</code></p>
+<p>★ 要用root账号去GitLab开通一个webhook规则 → 点击上方的小齿轮 → 右侧<code>Settings</code>  → Network → 展开Outbound requests → 勾选<code>Allow requests to the local network from web hooks and services</code>和<code>Allow requests to the local network from system hooks</code>保存 → 在<code>web_demo</code>项目中 → Settings → Integrations → 可以粘贴URL(这里就是在Jenkins里面的<code>http://192.168.200.129:8888/project/web_demo_pipeline</code>) [把代码push到项目里来就会触发这个url自动构建] → Add webhook → 下方可以进行测试test → <code>push event</code> →↓</p>
+<p>若出现 则证明gitlab是成功 只是Jenkins需要认证请求 去Jenkins开放接收请求的功能</p>
+<pre><code class="xml">Hook executed successfully but returned HTTP 403 &lt;html&gt; &lt;head&gt; &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=ISO-8859-1&quot;/&gt; &lt;title&gt;Error 403 anonymous is missing the Job/Build permission&lt;/title&gt; &lt;/head&gt; &lt;body&gt;&lt;h2&gt;HTTP ERROR 403 anonymous is missing the Job/Build permission&lt;/h2&gt; &lt;table&gt; &lt;tr&gt;&lt;th&gt;URI:&lt;/th&gt;&lt;td&gt;/project/web_demo_pipeline&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;STATUS:&lt;/th&gt;&lt;td&gt;403&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;MESSAGE:&lt;/th&gt;&lt;td&gt;anonymous is missing the Job/Build permission&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;SERVLET:&lt;/th&gt;&lt;td&gt;Stapler&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt; &lt;hr/&gt;&lt;a href=&quot;https://jetty.org/&quot;&gt;Powered by Jetty:// 12.0.19&lt;/a&gt;&lt;hr/&gt; &lt;/body&gt; &lt;/html&gt;
+</code></pre>
+<p>Jenkins开放接收请求 → 打开主页并跟随路径<code>Dashboard → Manage Jenkins → System</code> 找到 GitLab Enable authentication for ‘&#x2F;project’ end-point【这个要反选 就是不能选钩 且里面的东西删除】 → 再去进行测试test → <code>push event</code> 即可成功<code>Hook executed successfully: HTTP 200</code></p>
 
     </div>
 
