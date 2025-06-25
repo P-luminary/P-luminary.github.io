@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#879cff>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -1112,7 +1112,8 @@ pipeline &#123;
 <h4 id="jenkins的轮询SCM的构建到底是远程仓库变动触发-还是-本地仓库变动触发？"><a href="#jenkins的轮询SCM的构建到底是远程仓库变动触发-还是-本地仓库变动触发？" class="headerlink" title="jenkins的轮询SCM的构建到底是远程仓库变动触发 还是 本地仓库变动触发？"></a>jenkins的轮询SCM的构建到底是远程仓库变动触发 还是 本地仓库变动触发？</h4><p><strong>Jenkins 的“轮询 SCM”是通过轮询</strong>远程 Git 仓库（如 GitLab、GitHub）<strong>判断是否有变更</strong>，从而决定是否触发构建。</p>
 </blockquote>
 <p>注意：这次构建触发器， Jenkins会定时扫描整个项目的代码，增大系统的开销，不建议使用。</p>
-<h4 id="Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件"><a href="#Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件" class="headerlink" title="Jenkins项目构建细节(2)-Git hook自动触发构建(*)gitlab就用gitlab插件，github则是github插件"></a>Jenkins项目构建细节(2)-Git hook自动触发构建(*)<del>gitlab就用gitlab插件，github则是github插件</del></h4><p>刚才我们看到在Jenkins的内置构建触发器中，轮询SCM可以实现Gitlab代码更新，项目自动构建，但是 该方案的性能不佳。那有没有更好的方案呢？ 有的。就是<strong>利用Gitlab的webhook实现代码push到仓 库，立即触发项目自动构建</strong>。</p>
+<h4 id="Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件"><a href="#Jenkins项目构建细节-2-Git-hook自动触发构建-gitlab就用gitlab插件，github则是github插件" class="headerlink" title="Jenkins项目构建细节(2)-Git hook自动触发构建(*)gitlab就用gitlab插件，github则是github插件"></a>Jenkins项目构建细节(2)-Git hook自动触发构建(*)<del>gitlab就用gitlab插件，github则是github插件</del></h4><p>先在Jenkins市场安装<code>gitlab</code>插件</p>
+<p>刚才我们看到在Jenkins的内置构建触发器中，轮询SCM可以实现Gitlab代码更新，项目自动构建，但是 该方案的性能不佳。那有没有更好的方案呢？ 有的。就是<strong>利用Gitlab的webhook实现代码push到仓 库，立即触发项目自动构建</strong>。</p>
 <blockquote>
 <p><strong>轮询SCM原理</strong>：Jenkins                    →(发送定时请求)→                Gitlab代码变更<br><strong>webhook原理</strong>：Gitlab代码变更      →(发送构建请求)→                Jenkins</p>
 </blockquote>
@@ -1122,6 +1123,129 @@ pipeline &#123;
 <pre><code class="xml">Hook executed successfully but returned HTTP 403 &lt;html&gt; &lt;head&gt; &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=ISO-8859-1&quot;/&gt; &lt;title&gt;Error 403 anonymous is missing the Job/Build permission&lt;/title&gt; &lt;/head&gt; &lt;body&gt;&lt;h2&gt;HTTP ERROR 403 anonymous is missing the Job/Build permission&lt;/h2&gt; &lt;table&gt; &lt;tr&gt;&lt;th&gt;URI:&lt;/th&gt;&lt;td&gt;/project/web_demo_pipeline&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;STATUS:&lt;/th&gt;&lt;td&gt;403&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;MESSAGE:&lt;/th&gt;&lt;td&gt;anonymous is missing the Job/Build permission&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;th&gt;SERVLET:&lt;/th&gt;&lt;td&gt;Stapler&lt;/td&gt;&lt;/tr&gt; &lt;/table&gt; &lt;hr/&gt;&lt;a href=&quot;https://jetty.org/&quot;&gt;Powered by Jetty:// 12.0.19&lt;/a&gt;&lt;hr/&gt; &lt;/body&gt; &lt;/html&gt;
 </code></pre>
 <p>Jenkins开放接收请求 → 打开主页并跟随路径<code>Dashboard → Manage Jenkins → System</code> 找到 GitLab Enable authentication for ‘&#x2F;project’ end-point【这个要反选 就是不能选钩 且里面的东西删除】 → 再去进行测试test → <code>push event</code> 即可成功<code>Hook executed successfully: HTTP 200</code></p>
+<h4 id="Jenkins项目构建细节-3-Jenkins的参数化构建"><a href="#Jenkins项目构建细节-3-Jenkins的参数化构建" class="headerlink" title="Jenkins项目构建细节(3)-Jenkins的参数化构建"></a>Jenkins项目构建细节(3)-Jenkins的参数化构建</h4><p>有时在项目构建的过程中，我们需要**<u>根据用户的输入动态传入一些参数</u>**，从而影响整个构建结果，这时 我们可以使用参数化构建。<br>Jenkins支持非常丰富的参数类型</p>
+<blockquote>
+<p>大概意思就是 我在项目的jenkinsfile文件里面<br>steps {<br>    checkout scmGit(<br>        <em>branches</em>: [[<em>name</em>: ‘*&#x2F;master’]],<br>        <em>extensions</em>: [],<br>        <em>userRemoteConfigs</em>: [[<br>            <em>credentialsId</em>: ‘ca22e56f-0ecc-4fdc-965d-01e329a0b68a’,<br>            <em>url</em>: ‘<a target="_blank" rel="noopener" href="http://192.168.200.132:82/lanyun_group/web_demo.git&#39;">http://192.168.200.132:82/lanyun_group/web_demo.git&#39;</a><br>        ]]<br>    )<br>这个branches里面的 *&#x2F;master我要求是让用户动态输入值 而不是写死</p>
+</blockquote>
+<p>首先要在项目里面增加一些参数 <code>web_demo_pipeline</code> 项目中 可以先把触发器的值取消掉 → 进入上面的General的配置 选择<code>This project is parameterized</code> → 可以添加参数 → 加入<code>String Parameter</code>参数 →<br>输入 <u>名称：branch，默认值：master，描述：请输入一个分支的名称</u> → 此时在左侧就会出现一个 <code>Build with Parameters</code> →↓</p>
+<blockquote>
+<p>pipeline {<br>    agent any<br>    stages {<br>        stage(‘pull code’) {<br>            steps {<br>                checkout scmGit(<br>                    branches: [[<span style = "color:red"><em>name</em>: ‘<em>&#x2F;${branch}}’</span>]],<br>                    <em>extensions</em>: [],<br>                    <em>userRemoteConfigs</em>: [[<br>                        <em>credentialsId</em>: ‘ca22e56f-0ecc-4fdc-965d-01e329a0b68a’,<br>                        <em>url</em>: ‘<a target="_blank" rel="noopener" href="http://192.168.200.132:82/lanyun_group/web_demo.git&#39;">http://192.168.200.132:82/lanyun_group/web_demo.git&#39;</a><br>                    ]]<br>                )<br>            }<br>        }<br>        stage(‘build project’) {<br>            steps {<br>                sh ‘mvn clean package’<br>            }<br>        }<br>        stage(‘publish’) {<br>            steps {<br>                deploy <em>adapters</em>: [tomcat8(<em>alternativeDeploymentContext</em>: ‘’, <em>credentialsId</em>: ‘e847a130-29c3-4d0b-bf35-db8d00de7950’, <em>path</em>: ‘’, <em>url</em>: ‘<a target="_blank" rel="noopener" href="http://192.168.200.131:8090/&#39;)]">http://192.168.200.131:8090/&#39;)]</a>, <em>contextPath</em>: <em>null</em>, <em>war</em>: ‘target&#x2F;</em>.war’<br>            }<br>        }<br>    }<br>}<br>【这时你在Jenkins构建时输入的参数就可以对应着Jenkinsfile文件的动态参数进行构建 (动态值红色已标注)】→ 需要把jenkinsfile的代码push到仓库里去</p>
+</blockquote>
+<h4 id="Jenkins项目构建细节-4-配置邮箱服务器发送构建结果"><a href="#Jenkins项目构建细节-4-配置邮箱服务器发送构建结果" class="headerlink" title="Jenkins项目构建细节(4)-配置邮箱服务器发送构建结果"></a>Jenkins项目构建细节(4)-配置邮箱服务器发送构建结果</h4><p>安装<code>Email Extension Template</code>插件</p>
+<h5 id="Jenkins设置邮箱相关参数"><a href="#Jenkins设置邮箱相关参数" class="headerlink" title="Jenkins设置邮箱相关参数"></a>Jenkins设置邮箱相关参数</h5><p>Dashboard → Manage Jenkins → System → <code>Extended E-mail Notification</code> → QQ邮箱【官网 账号安全设置】打开SMTP服务 找到 <strong>POP3&#x2F;SMTP服务</strong>，点击「开启」→ 勾选“开启服务”旁边的复选框 → 生成<strong>SMTP&#x2F;IMAP 授权码已生成</strong> → <code>jitgujalhqtecadc</code> → 回到Jenkins → SMTP server填写：<code>smtp.qq.com</code>；端口是<code>465</code> → Default user e-mail suffix：<code>@qq.com</code>  下面的用户名是发件人 密码是授权码 使用SSL协议的话SMTP端口就是465 → Jenkins Location 系统管理员邮件地址是发件人地址 </p>
+<h5 id="准备邮件内容"><a href="#准备邮件内容" class="headerlink" title="准备邮件内容"></a>准备邮件内容</h5><p>在项目根目录编写email.html，并把文件推送到Gitlab，内容如下：【根目录下】<br>BUILD_NUMBER、BUILD_STATUS等 来自于Jenkins的全局变量 </p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;$&#123;ENV, var=&quot;JOB_NAME&quot;&#125;-第$&#123;BUILD_NUMBER&#125;次构建日志&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body leftmargin=&quot;8&quot; marginwidth=&quot;0&quot; topmargin=&quot;8&quot; marginheight=&quot;4&quot;
+      offset=&quot;0&quot;&gt;
+&lt;table width=&quot;95%&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot;
+       style=&quot;font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif&quot;&gt;
+    &lt;tr&gt;
+        &lt;td&gt;(本邮件是程序自动下发的，请勿回复！)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;h2&gt;
+            &lt;font color=&quot;#0000FF&quot;&gt;构建结果 - $&#123;BUILD_STATUS&#125;&lt;/font&gt;
+        &lt;/h2&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;br /&gt;
+            &lt;b&gt;&lt;font color=&quot;#0B610B&quot;&gt;构建信息&lt;/font&gt;&lt;/b&gt;
+            &lt;hr size=&quot;2&quot; width=&quot;100%&quot; align=&quot;center&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;
+            &lt;ul&gt;
+                &lt;li&gt;项目名称&amp;nbsp;：&amp;nbsp;$&#123;PROJECT_NAME&#125;&lt;/li&gt;
+                &lt;li&gt;构建编号&amp;nbsp;：&amp;nbsp;第$&#123;BUILD_NUMBER&#125;次构建&lt;/li&gt;
+                &lt;li&gt;触发原因：&amp;nbsp;$&#123;CAUSE&#125;&lt;/li&gt;
+                &lt;li&gt;构建日志：&amp;nbsp;&lt;a href=&quot;$&#123;BUILD_URL&#125;console&quot;&gt;$&#123;BUILD_URL&#125;console&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;构建&amp;nbsp;&amp;nbsp;Url&amp;nbsp;：&amp;nbsp;&lt;a href=&quot;$&#123;BUILD_URL&#125;&quot;&gt;$&#123;BUILD_URL&#125;&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;工作目录&amp;nbsp;：&amp;nbsp;&lt;a href=&quot;$&#123;PROJECT_URL&#125;ws&quot;&gt;$&#123;PROJECT_URL&#125;ws&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;项目&amp;nbsp;&amp;nbsp;Url&amp;nbsp;：&amp;nbsp;&lt;a href=&quot;$&#123;PROJECT_URL&#125;&quot;&gt;$&#123;PROJECT_URL&#125;&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;b&gt;&lt;font color=&quot;#0B610B&quot;&gt;Changes Since Last
+            Successful Build:&lt;/font&gt;&lt;/b&gt;
+            &lt;hr size=&quot;2&quot; width=&quot;100%&quot; align=&quot;center&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;
+            &lt;ul&gt;
+                &lt;li&gt;历史变更记录 : &lt;a href=&quot;$&#123;PROJECT_URL&#125;changes&quot;&gt;$&#123;PROJECT_URL&#125;changes&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt; $&#123;CHANGES_SINCE_LAST_SUCCESS,reverse=true, format=&quot;Changes for Build #%n:&lt;br /&gt;%c&lt;br /&gt;&quot;,showPaths=true,changesFormat=&quot;&lt;pre&gt;[%a]&lt;br /&gt;%m&lt;/pre&gt;&quot;,pathFormat=&quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;%p&quot;&#125;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;b&gt;Failed Test Results&lt;/b&gt;
+            &lt;hr size=&quot;2&quot; width=&quot;100%&quot; align=&quot;center&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;pre
+                style=&quot;font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif&quot;&gt;$FAILED_TESTS&lt;/pre&gt;
+            &lt;br /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;b&gt;&lt;font color=&quot;#0B610B&quot;&gt;构建日志 (最后 100行):&lt;/font&gt;&lt;/b&gt;
+            &lt;hr size=&quot;2&quot; width=&quot;100%&quot; align=&quot;center&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;textarea cols=&quot;80&quot; rows=&quot;30&quot; readonly=&quot;readonly&quot;
+                      style=&quot;font-family: Courier New&quot;&gt;$&#123;BUILD_LOG, maxLines=100&#125;&lt;/textarea&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>post的内容可以用流水线语法生成 → 完成之后点击片段生成器 生成一个 <code>emailext: Extended Email</code> 的代码片段</p>
+<pre><code class="java">pipeline &#123;
+    agent any
+    stages &#123;
+        stage(&#39;pull code&#39;) &#123;
+            steps &#123;
+                checkout scmGit(
+                    branches: [[name: &#39;*/$&#123;branch&#125;&#39;]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                    ]]
+                )
+            &#125;
+        &#125;
+        stage(&#39;build project&#39;) &#123;
+            steps &#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+        stage(&#39;publish&#39;) &#123;
+            steps &#123;
+                deploy adapters: [tomcat8(alternativeDeploymentContext: &#39;&#39;, credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;, path: &#39;&#39;, url: &#39;http://192.168.200.131:8090/&#39;)], contextPath: null, war: &#39;target/*.war&#39;
+            &#125;
+        &#125;
+    &#125;
+    post&#123;
+        always&#123;
+             emailext(
+                 subject: &#39;构建通知：$&#123;PROJECT_NAME&#125; - Build # $&#123;BUILD_NUMBER&#125; - $&#123;BUILD_STATUS&#125;!&#39;,
+                 body: &#39;$&#123;FILE,path=&quot;email.html&quot;&#125;&#39;,
+                 to: &#39;2523419709@qq.com&#39;
+             )
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>PS：邮件相关全局参数参考列表：<br>系统设置-&gt;Extended E-mail Notification-&gt;Content Token Reference，点击旁边的?号</p>
+<h4 id="Jenkins-SonarQube代码审查-1-安装SonarQube"><a href="#Jenkins-SonarQube代码审查-1-安装SonarQube" class="headerlink" title="Jenkins+SonarQube代码审查(1) - 安装SonarQube"></a>Jenkins+SonarQube代码审查(1) - 安装SonarQube</h4><h5 id="SonaQube简介"><a href="#SonaQube简介" class="headerlink" title="SonaQube简介"></a>SonaQube简介</h5><p>SonarQube 是一个用于管理代码质量的开放平台，可以快速的定位代码中潜在的或者明显的错误。目前 支持java,C#,C&#x2F;C++,Python,PL&#x2F;SQL,Cobol,JavaScrip,Groovy等二十几种编程语言的代码质量管理与检 测。</p>
+<p>官网： <a target="_blank" rel="noopener" href="https://www.sonarqube.org/">https://www.sonarqube.org/</a></p>
 
     </div>
 
