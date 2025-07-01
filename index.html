@@ -1685,7 +1685,409 @@ sonar.sourceEncoding=UTF-8
 </code></pre>
 <hr>
 <hr>
-<h4 id="Jenkins-Docker-SpringCloud微服务持续集成-上"><a href="#Jenkins-Docker-SpringCloud微服务持续集成-上" class="headerlink" title="Jenkins+Docker+SpringCloud微服务持续集成(上)"></a>Jenkins+Docker+SpringCloud微服务持续集成(上)</h4><h5 id="Jenkins-Docker-SpringCloud持续集成流程说明"><a href="#Jenkins-Docker-SpringCloud持续集成流程说明" class="headerlink" title="Jenkins+Docker+SpringCloud持续集成流程说明"></a>Jenkins+Docker+SpringCloud持续集成流程说明</h5>
+<h4 id="Jenkins-Docker-SpringCloud微服务持续集成-上"><a href="#Jenkins-Docker-SpringCloud微服务持续集成-上" class="headerlink" title="Jenkins+Docker+SpringCloud微服务持续集成(上)"></a>Jenkins+Docker+SpringCloud微服务持续集成(上)</h4><h5 id="Jenkins-Docker-SpringCloud持续集成流程说明"><a href="#Jenkins-Docker-SpringCloud持续集成流程说明" class="headerlink" title="Jenkins+Docker+SpringCloud持续集成流程说明"></a>Jenkins+Docker+SpringCloud持续集成流程说明</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/db193c56fc4ab5def5c327247037af53ce451fb5/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E8%AF%B4%E6%98%8E2.png"></p>
+<p>大致流程说明：<br>1）开发人员每天把代码提交到Gitlab代码仓库<br>2）Jenkins从Gitlab中拉取项目源码，编译并打成jar包，然后构建成Docker镜像，将镜像上传到 Harbor私有仓库。<br>3）Jenkins发送SSH远程命令，让生产部署服务器到Harbor私有仓库拉取镜像到本地，然后创建容器。<br>4）最后，用户可以访问到容器</p>
+<h6 id="服务列表-红色的软件为需要安装的软件，黑色代表已经安装"><a href="#服务列表-红色的软件为需要安装的软件，黑色代表已经安装" class="headerlink" title="服务列表(红色的软件为需要安装的软件，黑色代表已经安装)"></a>服务列表(红色的软件为需要安装的软件，黑色代表已经安装)</h6><table>
+<thead>
+<tr>
+<th>服务器名称</th>
+<th>IP地址</th>
+<th>安装的软件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>代码托管服务器</td>
+<td>192.168.200.132</td>
+<td>Gitlab</td>
+</tr>
+<tr>
+<td>持续集成服务器</td>
+<td>192.168.200.129</td>
+<td>Jenkins，Maven，Docker18.06.1-ce</td>
+</tr>
+<tr>
+<td>Docker仓库服务器</td>
+<td></td>
+<td>Docker18.06.1-ce，Harbor1.9.2</td>
+</tr>
+<tr>
+<td>生产部署服务器</td>
+<td></td>
+<td>Docker18.06.1-ce</td>
+</tr>
+</tbody></table>
+<h4 id="SpringCloud微服务源码概述"><a href="#SpringCloud微服务源码概述" class="headerlink" title="SpringCloud微服务源码概述"></a>SpringCloud微服务源码概述</h4><p>项目架构：前后端分离<br>后端技术栈：SpringBoot+SpringCloud+SpringDataJpa（Spring全家桶）<br>位置：<code>C:\Users\Pluminary\Desktop\HouDuan\tensquare_parent</code></p>
+<h6 id="微服务项目结构："><a href="#微服务项目结构：" class="headerlink" title="微服务项目结构："></a>微服务项目结构：</h6><ul>
+<li>tensquare_parent ：父工程，存放基础配置 </li>
+<li>tensquare_common ：通用工程，存放工具类 </li>
+<li>tensquare_eureka_server：SpringCloud的Eureka注册中心 </li>
+<li>tensquare_zuul ：SpringCloud的网关服务 </li>
+<li>tensquare_admin_service ：基础权限认证中心，负责用户认证（使用JWT认证）</li>
+<li>tensquare_gathering ： 一个简单的业务模块，活动微服务相关逻辑</li>
+</ul>
+<h6 id="数据库结构："><a href="#数据库结构：" class="headerlink" title="数据库结构："></a>数据库结构：</h6><ul>
+<li>tensquare_user ：用户认证数据库，存放用户账户数据。对应tensquare_admin_service微服务 </li>
+<li>tensquare_gathering ：活动微服务数据库。对应tensquare_gathering微服务</li>
+</ul>
+<h6 id="微服务配置分析："><a href="#微服务配置分析：" class="headerlink" title="微服务配置分析："></a>微服务配置分析：</h6><ul>
+<li><p>tensquare_eureka</p>
+</li>
+<li><p>tensquare_zuul</p>
+</li>
+<li><p>tensquare_admin_service</p>
+</li>
+<li><p>tensquare_gathering</p>
+</li>
+<li><p>查看效果</p>
+</li>
+</ul>
+<pre><code class="yaml">application.yaml
+
+spring:
+  application:
+    name: EUREKA-HA
+
+---
+
+spring:
+  profiles: eureka-server1
+server:
+  port: 10086
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:10086/eureka/,http://localhost:10087/eureka/
+
+---
+
+spring:
+  profiles: eureka-server2
+server:
+  port: 10087
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:10086/eureka/,http://localhost:10087/eureka/
+</code></pre>
+<p>依次开启这些服务：<code>tensquare_eureka_server → tensquare_zuul → tensquare_admin_service → tensquare_gathering </code></p>
+<blockquote>
+<p>tensquare_eureka_server 要在配置的地方配置两个【复制出多一个】配置信息添加<code>Program arguments</code></p>
+<p>EurekaServerApplication-Server1：-spring.profiles.active&#x3D;eureka-server1<br>EurekaServerApplication-Server2：–spring.profiles.active&#x3D;eureka-server2</p>
+</blockquote>
+<h5 id="调用postman"><a href="#调用postman" class="headerlink" title="调用postman"></a>调用postman</h5><h6 id="测试gathering接口的时候一定要在请求头带token"><a href="#测试gathering接口的时候一定要在请求头带token" class="headerlink" title="测试gathering接口的时候一定要在请求头带token"></a>测试gathering接口的时候一定要在请求头带token</h6><h6 id="测试获得token接口的时候一定是post请求-请求体是json形式"><a href="#测试获得token接口的时候一定是post请求-请求体是json形式" class="headerlink" title="测试获得token接口的时候一定是post请求 请求体是json形式"></a>测试获得token接口的时候一定是post请求 请求体是json形式</h6><pre><code class="yaml">GET：http://localhost:10020/gathering/gathering
+
+Headers：这里的token是去post请求获得
+</code></pre>
+<pre><code class="yaml">POST：http://localhost:10020/admin/admin/login
+
+json：&#123;
+  &quot;loginname&quot;: &quot;admin&quot;,
+  &quot;password&quot;: &quot;123456&quot;
+&#125;
+</code></pre>
+<h4 id="本地部署-1-SpringCloud微服务部署"><a href="#本地部署-1-SpringCloud微服务部署" class="headerlink" title="本地部署(1)-SpringCloud微服务部署"></a>本地部署(1)-SpringCloud微服务部署</h4><h5 id="本地运行微服务"><a href="#本地运行微服务" class="headerlink" title="本地运行微服务"></a>本地运行微服务</h5><ul>
+<li>逐一启动微服务</li>
+<li>使用postman测试功能是否可用</li>
+</ul>
+<h5 id="本地部署微服务"><a href="#本地部署微服务" class="headerlink" title="本地部署微服务"></a>本地部署微服务</h5><ul>
+<li>SpringBoot微服务项目打包</li>
+</ul>
+<blockquote>
+<p>打开idea终端<br>PS C:\Users\Pluminary\Desktop\HouDuan\tensquare_parent&gt;<br>托选想要打包的项目到终端<br>PS C:\Users\Pluminary\Desktop\HouDuan\tensquare_parent\tensquare_eureka_server&gt; <strong>mvn clean package</strong><br>此时就打好了jar包<br>C:\Users\Pluminary\Desktop\HouDuan\tensquare_parent\tensquare_eureka_server\target的<code>tensquare_eureka_server-1.0-SNAPSHOT.jar</code></p>
+</blockquote>
+<p>必须导入该插件</p>
+<pre><code class="xml">在根pom.xml中
+   &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+★ 这个就可以对springcloud进行打包 微服务的jar可以独立部署 扔到任何一个服务就可以单独运行 而不需要借助单独的tomcat ★
+</code></pre>
+<p>打包后在 target下产生jar包</p>
+<ul>
+<li><span style="color:red"><strong>本地运行微服务的jar包</strong></span></li>
+</ul>
+<p><code>java -jar xxx.jar</code></p>
+<pre><code class="yaml">C:\Users\Pluminary\Desktop&gt;java -jar tensquare_eureka_server-1.0-SNAPSHOT.jar
+
+
+2025-07-01 15:33:09.363  INFO 27172 --- [           main] o.s.core.annotation.AnnotationUtils      : Failed to introspect annotations on class org.springframework.cloud.netflix.eureka.config.EurekaDiscoveryClientConfigServiceBootstrapConfiguration: java.lang.IllegalStateException: Could not obtain annotation attribute value for public abstract java.lang.Class[] org.springframework.boot.autoconfigure.condition.ConditionalOnClass.value()
+2025-07-01 15:33:09.373  INFO 27172 --- [           main] s.c.a.AnnotationConfigApplicationContext : Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@8f4ea7c: startup date [Tue Jul 01 15:33:09 CST 2025]; root of context hierarchy
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.springframework.cglib.core.ReflectUtils$1 (jar:file:/C:/Users/Pluminary/Desktop/tensquare_eureka_server-1.0-SNAPSHOT.jar!/BOOT-INF/lib/spring-core-5.0.5.RELEASE.jar!/) to method java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+WARNING: Please consider reporting this to the maintainers of org.springframework.cglib.core.ReflectUtils$1
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+2025-07-01 15:33:09.531  INFO 27172 --- [           main] f.a.AutowiredAnnotationBeanPostProcessor : JSR-330 &#39;javax.inject.Inject&#39; annotation found and supported for autowiring
+2025-07-01 15:33:09.554  INFO 27172 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean &#39;configurationPropertiesRebinderAutoConfiguration&#39; of type [org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration$$EnhancerBySpringCGLIB$$83532275] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+
+  .   ____          _            __ _ _
+ /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.0.1.RELEASE)
+</code></pre>
+<h4 id="本地部署-2-前端静态web网站"><a href="#本地部署-2-前端静态web网站" class="headerlink" title="本地部署(2)-前端静态web网站"></a>本地部署(2)-前端静态web网站</h4><p>前端技术栈：NodeJS+VueJS+ElementUI<br>使用Visual Studio Code打开源码<br>位置：<code>C:\Users\Pluminary\Desktop\QianDuan\tensquareAdmin</code></p>
+<p>因为老版本无法继续用最新的nodejs<br>需要用nvm进行统一的nodejs管理 如果无法直接nvm下载的话<br>我们可以去官网下载安装包zip后解压进去 改名就行</p>
+<blockquote>
+<h4 id="✅-1-下载-Node-js-v10-24-1-64位-zip-版本"><a href="#✅-1-下载-Node-js-v10-24-1-64位-zip-版本" class="headerlink" title="✅ 1. 下载 Node.js v10.24.1 64位 zip 版本"></a>✅ 1. 下载 Node.js v10.24.1 64位 zip 版本</h4><p>你可以从官方链接下载：</p>
+<p>📦 下载地址（Windows 64位）：</p>
+<pre><code>bash
+
+
+复制编辑
+https://nodejs.org/dist/v10.24.1/node-v10.24.1-win-x64.zip
+</code></pre>
+<p>下载后，解压得到一个文件夹（比如叫 <code>node-v10.24.1-win-x64</code>）</p>
+<hr>
+<h4 id="✅-2-放入-NVM-的版本目录"><a href="#✅-2-放入-NVM-的版本目录" class="headerlink" title="✅ 2. 放入 NVM 的版本目录"></a>✅ 2. 放入 NVM 的版本目录</h4><p>将你解压得到的 <code>node-v10.24.1-win-x64</code> 文件夹重命名为：</p>
+<pre><code>10.24.1
+</code></pre>
+<p>然后放入这个目录下：</p>
+<pre><code>C:\Program Files\nvm\versions\10.24.1\
+</code></pre>
+<p>C:\Users\Pluminary\Desktop\QianDuan\tensquareAdmin&gt;<strong>nvm list</strong></p>
+<ul>
+<li>20.12.0 (Currently using 64-bit executable)<br>10.24.1</li>
+</ul>
+<p>C:\Users\Pluminary\Desktop\QianDuan\tensquareAdmin&gt;<strong>nvm use 10.24.1</strong><br>Now using node v10.24.1 (64-bit)</p>
+<hr>
+<hr>
+<h4 id="🚀-步骤-1：重新下载对应-binding-node"><a href="#🚀-步骤-1：重新下载对应-binding-node" class="headerlink" title="🚀 步骤 1：重新下载对应 binding.node"></a>🚀 步骤 1：重新下载对应 <code>binding.node</code></h4><p>在项目目录下运行：</p>
+<pre><code>bash
+
+
+复制编辑
+npm rebuild node-sass
+</code></pre>
+</blockquote>
+<p> I  Your application is running here: <a target="_blank" rel="noopener" href="http://localhost:9528/">http://localhost:9528</a> 前端即可启动！<br><code>name: admin    password: 123456</code><br>[十次方社交平台-管理员后台] (<a target="_blank" rel="noopener" href="http://localhost:9528/#/gathering/index">http://localhost:9528/#/gathering/index</a>)</p>
+<h3 id="环境准备-1-Docker快速入门"><a href="#环境准备-1-Docker快速入门" class="headerlink" title="环境准备(1)-Docker快速入门"></a>环境准备(1)-Docker快速入门</h3><p>Docker 是一个开源的应用容器引擎，基于 Go 语言 并遵从 Apache2.0 协议开源。 Docker 可以让开发者打包他们的应用以及依赖包到一个轻量级、可移植的容器中，然后发布到任何流 行的 Linux 机器上，也可以实现虚拟化。 容器是完全使用沙箱机制，相互之间不会有任何接口（类似 iPhone 的 app）,更重要的是容器性能开销 极低。 Docker容器技术 vs 传统虚拟机技术</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>虚拟机</th>
+<th>容器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>占用磁盘空间</strong></td>
+<td>非常大，GB级</td>
+<td>小，MB甚至KB级</td>
+</tr>
+<tr>
+<td><strong>启动速度</strong></td>
+<td>慢。分钟级</td>
+<td>快，秒级</td>
+</tr>
+<tr>
+<td><strong>运行状态</strong></td>
+<td>运行于Hypervisor上</td>
+<td>直接运行在宿主机内核上</td>
+</tr>
+<tr>
+<td><strong>并发性</strong></td>
+<td>一台宿主机上十几个，最多几十个</td>
+<td>上百个，甚至数百上千个</td>
+</tr>
+<tr>
+<td><strong>性能</strong></td>
+<td>逊于宿主机</td>
+<td>接近宿主机本地进程</td>
+</tr>
+<tr>
+<td><strong>资源利用率</strong></td>
+<td>低</td>
+<td>高</td>
+</tr>
+</tbody></table>
+<p>简单一句话总结：<strong>Docker技术就是让我们更加高效轻松地将任何应用在Linux服务器部署和使用</strong>。</p>
+<h4 id="Docker安装"><a href="#Docker安装" class="headerlink" title="Docker安装"></a>Docker安装</h4><p>1）卸载旧版本</p>
+<pre><code class="java">yum list installed | grep docker 列出当前所有docker的包
+yum -y remove docker的包名称 卸载docker包
+rm -rf /var/lib/docker 删除docker的所有镜像和容器
+</code></pre>
+<p>2）安装必要的软件包</p>
+<pre><code class="yaml">sudo yum install -y yum-utils \ device-mapper-persistent-data \ lvm2
+</code></pre>
+<p> 3）设置下载的镜像仓库</p>
+<pre><code class="yaml">sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+</code></pre>
+<p> 4）列出需要安装的版本列表</p>
+<pre><code class="yaml">yum list docker-ce --showduplicates | sort -r
+</code></pre>
+<blockquote>
+<p>docker-ce.x86_64  3:18.09.1-3.el7<br>docker-ce.x86_64  3:18.09.0-3.el7<br>docker-ce.x86_64  18.06.1.ce-3.el7<br>docker-ce.x86_64  18.06.0.ce-3.el7<br>…… </p>
+</blockquote>
+<p> 5 ）安装指定版本（这里使用18.0.1版本）</p>
+<pre><code class="yaml">sudo yum install docker-ce-18.06.1.ce
+</code></pre>
+<p> 6）查看版本</p>
+<pre><code class="yaml">docker -v
+</code></pre>
+<p> 7）启动Docker</p>
+<pre><code class="yaml">sudo systemctl start docker   启动
+sudo systemctl enable docker  设置开机启动
+</code></pre>
+<p>8）添加阿里云镜像下载地址</p>
+<pre><code class="yaml">sudvi /etc/docker/daemon.json
+</code></pre>
+<blockquote>
+<p>{<br>  “registry-mirrors”: [“<a href="https://zydiol88.mirror.aliyuncs.com&quot;]">https://zydiol88.mirror.aliyuncs.com&quot;]</a><br>}</p>
+</blockquote>
+<p>9 ）重启Docker</p>
+<pre><code class="yaml">sudo systemctl restart docker
+</code></pre>
+<blockquote>
+<p>第四步看这里：你现在的问题还是和之前一样：</p>
+<blockquote>
+<p>❌ <strong>无法访问 Docker 官方源（<code>https://download.docker.com/...</code>），报错 curl#35 - TCP connection reset by peer。</strong></p>
+</blockquote>
+<hr>
+<h3 id="✅-解决方法：使用国内镜像（如清华、阿里）"><a href="#✅-解决方法：使用国内镜像（如清华、阿里）" class="headerlink" title="✅ 解决方法：使用国内镜像（如清华、阿里）"></a>✅ 解决方法：使用国内镜像（如清华、阿里）</h3><p>你需要 <strong>手动切换 Docker yum 源为国内镜像</strong>，否则无法继续安装。下面是最直接可行的解决方法。</p>
+<hr>
+<h2 id="🚀-一键换成清华源（CentOS-7-示例）"><a href="#🚀-一键换成清华源（CentOS-7-示例）" class="headerlink" title="🚀 一键换成清华源（CentOS 7 示例）"></a>🚀 一键换成清华源（CentOS 7 示例）</h2><p>请复制以下命令到你的服务器执行：</p>
+<pre><code>bash复制编辑sudo tee /etc/yum.repos.d/docker-ce.repo &lt;&lt;-&#39;EOF&#39;
+[docker-ce-stable]
+name=Docker CE Stable - Tsinghua Mirror
+baseurl=https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/centos/7/x86_64/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/centos/gpg
+EOF
+</code></pre>
+<hr>
+<h3 id="🔁-然后执行："><a href="#🔁-然后执行：" class="headerlink" title="🔁 然后执行："></a>🔁 然后执行：</h3><pre><code>sudo yum clean all
+sudo yum makecache fast
+</code></pre>
+<hr>
+<h3 id="✅-安装-Docker-指定版本（比如-18-06）"><a href="#✅-安装-Docker-指定版本（比如-18-06）" class="headerlink" title="✅ 安装 Docker 指定版本（比如 18.06）"></a>✅ 安装 Docker 指定版本（比如 18.06）</h3><pre><code>sudo yum install docker-ce-18.06.1.ce docker-ce-cli-18.06.1.ce containerd.io
+</code></pre>
+<p>或者查看所有可用版本：</p>
+<pre><code>yum list docker-ce --showduplicates
+</code></pre>
+<hr>
+<h3 id="🟢-启动并设置开机启动："><a href="#🟢-启动并设置开机启动：" class="headerlink" title="🟢 启动并设置开机启动："></a>🟢 启动并设置开机启动：</h3><pre><code>sudo systemctl start docker
+sudo systemctl enable docker
+</code></pre>
+</blockquote>
+<hr>
+<hr>
+<h3 id="Docker基本命令快速入门"><a href="#Docker基本命令快速入门" class="headerlink" title="Docker基本命令快速入门"></a>Docker基本命令快速入门</h3><h6 id="1）镜像命令"><a href="#1）镜像命令" class="headerlink" title="1）镜像命令"></a>1）镜像命令</h6><p>[docker配置镜像Docker pull时报错：<a target="_blank" rel="noopener" href="https://registry-1.docker.io/v2/">https://registry-1.docker.io/v2/</a> - 知乎] (<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/24228872523">https://zhuanlan.zhihu.com/p/24228872523</a>)</p>
+<blockquote>
+<p>这个错误表明Docker客户端尝试访问<a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=253867805&content_type=Article&match_order=1&q=Docker+Hub&zhida_source=entity">Docker Hub</a>或其他<a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=253867805&content_type=Article&match_order=1&q=Docker%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83&zhida_source=entity">Docker注册中心</a>时出现了问题。具体来说，是在尝试获取注册中心API的响应时遇到了错误。可能的原因包括网络问题、认证问题、注册中心URL不正确或者注册中心服务本身不可用。</p>
+<p>2、解决方法</p>
+<pre><code class="text">systemctl status docker
+sudo mkdir -p /etc/docker
+vim /etc/docker/daemon.json  
+</code></pre>
+<p>添加：</p>
+<pre><code class="text">&#123;
+  &quot;registry-mirrors&quot; : [&quot;https://docker.registry.cyou&quot;,
+&quot;https://docker-cf.registry.cyou&quot;,
+&quot;https://dockercf.jsdelivr.fyi&quot;,
+&quot;https://docker.jsdelivr.fyi&quot;,
+&quot;https://dockertest.jsdelivr.fyi&quot;,
+&quot;https://mirror.aliyuncs.com&quot;,
+&quot;https://dockerproxy.com&quot;,
+&quot;https://mirror.baidubce.com&quot;,
+&quot;https://docker.m.daocloud.io&quot;,
+&quot;https://docker.nju.edu.cn&quot;,
+&quot;https://docker.mirrors.sjtug.sjtu.edu.cn&quot;,
+&quot;https://docker.mirrors.ustc.edu.cn&quot;,
+&quot;https://mirror.iscas.ac.cn&quot;,
+&quot;https://docker.rainbond.cc&quot;,
+&quot;https://do.nark.eu.org&quot;,
+&quot;https://dc.j8.work&quot;,
+&quot;https://dockerproxy.com&quot;,
+&quot;https://gst6rzl9.mirror.aliyuncs.com&quot;,
+&quot;https://registry.docker-cn.com&quot;,
+&quot;http://hub-mirror.c.163.com&quot;,
+&quot;http://mirrors.ustc.edu.cn/&quot;,
+&quot;https://mirrors.tuna.tsinghua.edu.cn/&quot;,
+&quot;http://mirrors.sohu.com/&quot; 
+],
+ &quot;insecure-registries&quot; : [
+    &quot;registry.docker-cn.com&quot;,
+    &quot;docker.mirrors.ustc.edu.cn&quot;
+    ],
+&quot;debug&quot;: true,
+&quot;experimental&quot;: false
+&#125;
+</code></pre>
+<p>重载和重启dockers服务</p>
+<pre><code class="text">sudo systemctl daemon-reload
+sudo systemctl restart docker
+docker info
+</code></pre>
+<p>重新执行</p>
+<pre><code class="text">docker run hello-world
+</code></pre>
+</blockquote>
+<p>镜像：相当于应用的安装包，在Docker部署的任何应用都需要先构建成为镜像</p>
+<pre><code class="yaml">docker search 镜像名称 搜索镜像
+docker pull 镜像名称 拉取镜像
+docker images 查看本地所有镜像
+docker rmi -f 镜像名称 删除镜像
+</code></pre>
+<p><code>docker pull openjdk:8-jdk-alpine</code></p>
+<pre><code class="yaml">[root@localhost ~]# docker pull openjdk:8-jdk-alpine
+8-jdk-alpine: Pulling from library/openjdk
+e7c96db7181b: Pull complete
+f910a506b6cb: Pull complete
+c2274a1a0e27: Pull complete
+Digest: sha256:94792824df2df33402f201713f932b58cb9de94a0cd524164a0f2283343547b3
+Status: Downloaded newer image for openjdk:8-jdk-alpine
+[root@localhost ~]#
+</code></pre>
+<h4 id="2）容器命令"><a href="#2）容器命令" class="headerlink" title="2）容器命令"></a>2）容器命令</h4><p>容器：容器是由镜像创建而来。容器是Docker运行应用的载体，每个应用都分别运行在Docker的每个 容器中。</p>
+<pre><code class="yaml">docker run -i 镜像名称:标签 运行容器（默认是前台运行）
+docker ps         查看运行的容器
+docker ps -a      查询所有容器
+</code></pre>
+<h6 id="常用的参数："><a href="#常用的参数：" class="headerlink" title="常用的参数："></a>常用的参数：</h6><pre><code class="yaml">-i：运行容器
+-d：后台守方式运行（守护式）
+--name：给容器添加名称
+-p：公开容器端口给当前宿主机
+-v：挂载目录
+
+docker exec -it 容器ID/容器名称 /bin/bash 进入容器内部
+docker start/stop/restart 容器名称/ID 启动/停止/重启容器
+docker rm -f 容器名称/ID 删除容器
+</code></pre>
+<blockquote>
+<p>docker run -i nginx      运行容器<br>docker run -di nginx    后台运行容器</p>
+</blockquote>
+<h5 id="运行的时候创建端口-把端口暴露给宿主机-这样宿主机就可以进行ip地址-端口的访问虚拟机的容器了"><a href="#运行的时候创建端口-把端口暴露给宿主机-这样宿主机就可以进行ip地址-端口的访问虚拟机的容器了" class="headerlink" title="运行的时候创建端口 把端口暴露给宿主机 这样宿主机就可以进行ip地址+端口的访问虚拟机的容器了"></a>运行的时候创建端口 把端口暴露给宿主机 这样宿主机就可以进行ip地址+端口的访问虚拟机的容器了</h5><p><code>-p</code>是<span style = "color:red"><strong>公开端口</strong></span>   外部用90端口访问80端口<br><code>docker run -di -p 90:80 nginx</code></p>
+<blockquote>
+<p>[root@localhost ~]# docker run -di -p 90:80 nginx<br>04726503f6ee2d053b54b6361d128827d5fb26b867c8fbd5439a370a4ac137d9<br>[root@localhost ~]# docker ps<br>CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES<br>04726503f6ee        nginx               “&#x2F;docker-entrypoint.…”   29 seconds ago      Up 27 seconds       0.0.0.0:90-&gt;80&#x2F;tcp   relaxed_goldberg</p>
+</blockquote>
+<p>此时用宿主机去访问：[Welcome to nginx!] (<a target="_blank" rel="noopener" href="http://192.168.200.129:90/">http://192.168.200.129:90/</a>)</p>
+<blockquote>
+<h1 id="Welcome-to-nginx"><a href="#Welcome-to-nginx" class="headerlink" title="Welcome to nginx!"></a>Welcome to nginx!</h1><p>If you see this page, the nginx web server is successfully installed and working. Further configuration is required.</p>
+<p>For online documentation and support please refer to <a target="_blank" rel="noopener" href="http://nginx.org/">nginx.org</a>.<br>Commercial support is available at <a target="_blank" rel="noopener" href="http://nginx.com/">nginx.com</a>.</p>
+<p><em>Thank you for using nginx.</em></p>
+</blockquote>
+<hr>
+<h4 id="进入某个容器内部查看其内容："><a href="#进入某个容器内部查看其内容：" class="headerlink" title="进入某个容器内部查看其内容："></a>进入某个容器内部查看其内容：</h4><blockquote>
+<p>[root@localhost ~]# <code>docker exec -it 04726503f6ee /bin/bash</code><br>root@04726503f6ee:&#x2F;# ls<br>bin  boot  dev  docker-entrypoint.d  docker-entrypoint.sh  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var<br>root@04726503f6ee:&#x2F;#</p>
+</blockquote>
+<h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h4><blockquote>
+<p>[root@localhost ~]# docker ps -a<br>CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                NAMES<br>04726503f6ee        nginx               “&#x2F;docker-entrypoint.…”   4 minutes ago       Up 4 minutes                0.0.0.0:90-&gt;80&#x2F;tcp   relaxed_goldberg<br>9b9b1ec3e7a1        nginx               “&#x2F;docker-entrypoint.…”   10 minutes ago      Up 8 minutes                80&#x2F;tcp               gracious_knuth<br>4fb9d9e6858a        hello-world         “&#x2F;hello”                 29 minutes ago      Exited (0) 29 minutes ago                        elated_bhaskara<br>[root@localhost ~]# docker rm -f 4fb9d9e6858a<br>4fb9d9e6858a</p>
+</blockquote>
+<h3 id="环境准备-2-Dockerfile镜像脚本快速入门"><a href="#环境准备-2-Dockerfile镜像脚本快速入门" class="headerlink" title="环境准备(2)-Dockerfile镜像脚本快速入门"></a>环境准备(2)-Dockerfile镜像脚本快速入门</h3>
             
         </div>
     </div>
@@ -1699,7 +2101,7 @@ sonar.sourceEncoding=UTF-8
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -2670,7 +3072,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -3169,7 +3571,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -3776,7 +4178,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -4741,7 +5143,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -4874,7 +5276,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -5283,7 +5685,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -8660,7 +9062,7 @@ query_engine = index.as_query_engine(streaming=True)
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
