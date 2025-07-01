@@ -1415,7 +1415,7 @@ sonar.web.port=9999
 <p><code>账号密码：admin admin</code><br>生成了一个token：<code>sonar: d30033c63973bd4183b6015995dbb513627c6f59</code></p>
 <blockquote>
 <p><span style = "color:red"><strong>启动命令总结：</strong></span><br>[192.168.200.132] GitLab：gitlab-ctl restart<br><a target="_blank" rel="noopener" href="http://192.168.200.132:82/lanyun_group/web_demo">lanyun_group &#x2F; web_demo · GitLab</a><br>[192.168.200.131] Tomcat：&#x2F;opt&#x2F;tomcat&#x2F;bin&#x2F;startup.sh<br><a target="_blank" rel="noopener" href="http://192.168.200.131:8090/web_demo-1.0-SNAPSHOT/">演示项目主页</a></p>
-<p>[192.168.200.129] Jenkins：systemctl start jenkins<br><a target="_blank" rel="noopener" href="http://192.168.200.129:8888/login?from=/job/web_demo_pipeline/">登录 - Jenkins</a><br>[192.168.200.129] SonarQube：sudo -u sonar&#x2F;opt&#x2F;sonar&#x2F;bin&#x2F;linux-x86-64&#x2F;sonar.sh restart<br><a target="_blank" rel="noopener" href="http://192.168.200.129:9999/about">192.168.200.129</a></p>
+<p>[192.168.200.129] Jenkins：systemctl start jenkins<br><a target="_blank" rel="noopener" href="http://192.168.200.129:8888/login?from=/job/web_demo_pipeline/">登录 - Jenkins</a><br>[192.168.200.129] SonarQube：sudo -u sonar &#x2F;opt&#x2F;sonar&#x2F;bin&#x2F;linux-x86-64&#x2F;sonar.sh restart<br><a target="_blank" rel="noopener" href="http://192.168.200.129:9999/about">192.168.200.129</a></p>
 </blockquote>
 <h3 id="Jenkins-SonarQube代码审查-2-实现代码审查"><a href="#Jenkins-SonarQube代码审查-2-实现代码审查" class="headerlink" title="Jenkins+SonarQube代码审查(2) - 实现代码审查"></a>Jenkins+SonarQube代码审查(2) - 实现代码审查</h3><p>审查流程：</p>
 <blockquote>
@@ -1551,7 +1551,141 @@ sonar.scanner.jvmArgs=--add-opens java.base/java.lang=ALL-UNNAMED
 <p>键：<br><code>JAVA_HOME</code><br>值：<br><code>/usr/local/java/jdk-17.0.8+7</code></p>
 <p>键：<br><code>JAVA_HOME</code><br>值：<br><code>/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-1.el7.x86_64</code><br>在构建项目配置的时候<code>Build Steps</code> → <code>Execute SonarQube Scanner</code> → jdk一定要选择1.8的！！！</p>
 </blockquote>
+<hr>
+<h5 id="模拟SonaQube代码审查机制"><a href="#模拟SonaQube代码审查机制" class="headerlink" title="模拟SonaQube代码审查机制"></a>模拟SonaQube代码审查机制</h5><p><code>C:\Users\Pluminary\Desktop\web_demo\src\main\java\com\itheima\HelloServlet.java</code></p>
+<pre><code class="java">package com.itheima;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ *
+ */
+public class HelloServlet extends HttpServlet &#123;
+
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        super.doPost(req,resp);
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        //模拟代码错误
+        int i = 100/0;
+
+        //模拟冗余代码
+        int a = 100;
+        a = 200;
+
+
+        resp.getWriter().write(&quot;hello Servlet!&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="在项目添加SonaQube代码审查（流水线项目）不在Jenkins里面写配置，在项目的文件里面写！"><a href="#在项目添加SonaQube代码审查（流水线项目）不在Jenkins里面写配置，在项目的文件里面写！" class="headerlink" title="在项目添加SonaQube代码审查（流水线项目）不在Jenkins里面写配置，在项目的文件里面写！"></a>在项目添加SonaQube代码审查（流水线项目）<del>不在Jenkins里面写配置，在项目的文件里面写！</del></h4><pre><code class="java">sonar-project.properties
+    
+# must be unique in a given SonarQube instance
+sonar.projectKey=web_demo_pipline
+# this is the name and version displayed in the SonarQube UI. Was mandatory prior to SonarQube 6.1.
+sonar.projectName=web_demo_pipline
+sonar.projectVersion=1.0
+
+# Path is relative to the sonar-project.properties file. Replace &quot;\&quot; by &quot;/&quot; on Windows.
+# This property is optional if sonar.modules is set.
+sonar.sources=.
+sonar.exclusions=**/test/**,**/target/**
+
+sonar.java.source=1.8
+sonar.java.target=1.8
+
+# Encoding of the source code. Default is default system encoding
+sonar.sourceEncoding=UTF-8
+</code></pre>
+<pre><code class="java">pipeline &#123;
+    agent any
+
+    tools &#123;
+        // 使用 Jenkins 配置好的 JDK 1.8（别名需和你Jenkins中配置一致）
+        jdk &#39;jdk-1.8.0&#39;
+    &#125;
+
+    environment &#123;
+        // Sonar Scanner JVM 启动参数，开启必要的module访问权限
+        SONAR_SCANNER_OPTS = &#39;--add-opens=java.base/java.lang=ALL-UNNAMED &#39; +
+                             &#39;--add-opens=java.base/java.lang.reflect=ALL-UNNAMED &#39; +
+                             &#39;--add-opens=java.base/java.io=ALL-UNNAMED&#39;
+    &#125;
+
+    stages &#123;
+        stage(&#39;Pull Code&#39;) &#123;
+            steps &#123;
+                checkout scmGit(
+                    branches: [[name: &quot;*/$&#123;branch&#125;&quot;]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                    ]]
+                )
+            &#125;
+        &#125;
+
+        stage(&#39;Build Project&#39;) &#123;
+            steps &#123;
+                sh &#39;mvn clean package&#39;
+            &#125;
+        &#125;
+
+        stage(&#39;SonarQube Scan&#39;) &#123;
+            steps &#123;
+                // 强制切换到 JDK8 环境，避免默认JDK17导致权限异常
+                withEnv([
+                    &#39;JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-1.el7.x86_64&#39;,
+                    &#39;PATH=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-1.el7.x86_64/bin:&#39; + env.PATH
+                ]) &#123;
+                    sh &#39;&#39;&#39;
+                    /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
+                      -Dsonar.projectKey=web_demo_freestyle \
+                      -Dsonar.host.url=http://192.168.200.129:9999 \
+                      -Dsonar.sources=. \
+                      -Dsonar.exclusions=**/test/**,**/target/** \
+                      -Dsonar.java.source=1.8 \
+                      -Dsonar.java.target=1.8
+                    &#39;&#39;&#39;
+                &#125;
+            &#125;
+        &#125;
+
+        stage(&#39;Publish&#39;) &#123;
+            steps &#123;
+                deploy adapters: [tomcat8(
+                    alternativeDeploymentContext: &#39;&#39;,
+                    credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;,
+                    path: &#39;&#39;,
+                    url: &#39;http://192.168.200.131:8090/&#39;
+                )], contextPath: null, war: &#39;target/*.war&#39;
+            &#125;
+        &#125;
+    &#125;
+
+    post &#123;
+        always &#123;
+            emailext(
+                subject: &#39;构建通知：$&#123;PROJECT_NAME&#125; - Build # $&#123;BUILD_NUMBER&#125; - $&#123;BUILD_STATUS&#125;!&#39;,
+                body: &#39;$&#123;FILE,path=&quot;email.html&quot;&#125;&#39;,
+                to: &#39;2523419709@qq.com&#39;
+            )
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<hr>
+<h4 id="Jenkins-Docker-SpringCloud微服务持续集成-上"><a href="#Jenkins-Docker-SpringCloud微服务持续集成-上" class="headerlink" title="Jenkins+Docker+SpringCloud微服务持续集成(上)"></a>Jenkins+Docker+SpringCloud微服务持续集成(上)</h4><h5 id="Jenkins-Docker-SpringCloud持续集成流程说明"><a href="#Jenkins-Docker-SpringCloud持续集成流程说明" class="headerlink" title="Jenkins+Docker+SpringCloud持续集成流程说明"></a>Jenkins+Docker+SpringCloud持续集成流程说明</h5>
             
         </div>
     </div>
@@ -1565,7 +1699,7 @@ sonar.scanner.jvmArgs=--add-opens java.base/java.lang=ALL-UNNAMED
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -2411,7 +2545,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -2536,7 +2670,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -3035,7 +3169,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -3642,7 +3776,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -4740,7 +4874,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -5149,7 +5283,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -8299,7 +8433,7 @@ except etree.XMLSyntaxError as e:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -8526,7 +8660,7 @@ query_engine = index.as_query_engine(streaming=True)
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
