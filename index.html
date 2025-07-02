@@ -2087,7 +2087,1653 @@ docker rm -f 容器名称/ID 删除容器
 <h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h4><blockquote>
 <p>[root@localhost ~]# docker ps -a<br>CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                NAMES<br>04726503f6ee        nginx               “&#x2F;docker-entrypoint.…”   4 minutes ago       Up 4 minutes                0.0.0.0:90-&gt;80&#x2F;tcp   relaxed_goldberg<br>9b9b1ec3e7a1        nginx               “&#x2F;docker-entrypoint.…”   10 minutes ago      Up 8 minutes                80&#x2F;tcp               gracious_knuth<br>4fb9d9e6858a        hello-world         “&#x2F;hello”                 29 minutes ago      Exited (0) 29 minutes ago                        elated_bhaskara<br>[root@localhost ~]# docker rm -f 4fb9d9e6858a<br>4fb9d9e6858a</p>
 </blockquote>
-<h3 id="环境准备-2-Dockerfile镜像脚本快速入门"><a href="#环境准备-2-Dockerfile镜像脚本快速入门" class="headerlink" title="环境准备(2)-Dockerfile镜像脚本快速入门"></a>环境准备(2)-Dockerfile镜像脚本快速入门</h3>
+<h3 id="虚拟机变化ip-导致无法ping通-解决办法"><a href="#虚拟机变化ip-导致无法ping通-解决办法" class="headerlink" title="虚拟机变化ip 导致无法ping通 解决办法"></a>虚拟机变化ip 导致无法ping通 解决办法</h3><p><code>cd /etc/sysconfig/network-scripts/</code></p>
+<p><code>vi ifcfg-ens33</code></p>
+<blockquote>
+<h2 id="❗核心问题总结："><a href="#❗核心问题总结：" class="headerlink" title="❗核心问题总结："></a>❗核心问题总结：</h2><h3 id="你的宿主机（Windows）的真实联网网卡是："><a href="#你的宿主机（Windows）的真实联网网卡是：" class="headerlink" title="你的宿主机（Windows）的真实联网网卡是："></a>你的宿主机（Windows）的真实联网网卡是：</h3><ul>
+<li><strong>无线网卡 WLAN</strong><ul>
+<li>IP：<code>192.168.31.103</code></li>
+<li>网关：<code>192.168.31.1</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="而你的-VMware-虚拟机设置的是："><a href="#而你的-VMware-虚拟机设置的是：" class="headerlink" title="而你的 VMware 虚拟机设置的是："></a>而你的 VMware 虚拟机设置的是：</h3><ul>
+<li><strong>静态 IP：192.168.200.132</strong></li>
+<li>网关：<code>192.168.200.1</code></li>
+<li>网络模式：你设为<strong>桥接模式</strong></li>
+</ul>
+<hr>
+<h2 id="❗问题本质："><a href="#❗问题本质：" class="headerlink" title="❗问题本质："></a>❗问题本质：</h2><blockquote>
+<p>你的虚拟机静态 IP 设置在 <strong>192.168.200.x 网段</strong>，但 <strong>宿主机是在 192.168.31.x 网段</strong>，说明你的<strong>桥接实际上根本没有生效</strong>，或者<strong>桥接到了错误的物理网卡</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="✅-最快修复方案（推荐，100-可行）："><a href="#✅-最快修复方案（推荐，100-可行）：" class="headerlink" title="✅ 最快修复方案（推荐，100% 可行）："></a>✅ 最快修复方案（推荐，100% 可行）：</h2><h3 id="🛠️-步骤一：修改-VMware-桥接设置"><a href="#🛠️-步骤一：修改-VMware-桥接设置" class="headerlink" title="🛠️ 步骤一：修改 VMware 桥接设置"></a>🛠️ 步骤一：修改 VMware 桥接设置</h3><ol>
+<li>关闭虚拟机</li>
+<li>打开 VMware 主界面 → 选择你的虚拟机 → 设置（Settings）→ 网络适配器</li>
+<li>选择：<ul>
+<li>✔️ 网络连接 → <strong>桥接模式（Bridged）</strong></li>
+<li>点开旁边的 “<strong>桥接设置（Bridge Settings）</strong>”</li>
+</ul>
+</li>
+<li>手动选择你的 <strong>Wi-Fi 无线网卡（例如 Intel Wireless-AC 或 Realtek Wireless）</strong><ul>
+<li>不要选“自动”</li>
+</ul>
+</li>
+<li><strong>取消勾选</strong>“复制物理网络连接状态”这一项</li>
+<li>保存设置</li>
+</ol>
+<hr>
+<h3 id="🛠️-步骤二：修改虚拟机内-IP-设置"><a href="#🛠️-步骤二：修改虚拟机内-IP-设置" class="headerlink" title="🛠️ 步骤二：修改虚拟机内 IP 设置"></a>🛠️ 步骤二：修改虚拟机内 IP 设置</h3><p>由于你真实网络是 <code>192.168.31.x</code>，所以虚拟机也应该设置为这个网段，例如：</p>
+<p>编辑 <code>vi /etc/sysconfig/network-scripts/ifcfg-ens33</code>：</p>
+<pre><code>BOOTPROTO=static
+NAME=ens33
+DEVICE=ens33
+ONBOOT=yes
+
+IPADDR=192.168.31.150       # ← 随便取一个没被占用的
+NETMASK=255.255.255.0
+GATEWAY=192.168.31.1       # 这个是在宿主机网络下的环境网关 ipconfig
+DNS1=8.8.8.8
+</code></pre>
+<p>然后执行：</p>
+<pre><code>sudo systemctl restart network
+</code></pre>
+<p>或者：</p>
+<pre><code>sudo ifdown ens33 &amp;&amp; sudo ifup ens33
+</code></pre>
+<hr>
+<h3 id="✅-步骤三：在-Windows-上-ping-新的虚拟机-IP"><a href="#✅-步骤三：在-Windows-上-ping-新的虚拟机-IP" class="headerlink" title="✅ 步骤三：在 Windows 上 ping 新的虚拟机 IP"></a>✅ 步骤三：在 Windows 上 ping 新的虚拟机 IP</h3><pre><code>ping 192.168.31.150
+</code></pre>
+<hr>
+<h2 id="🧠-如果你担心-IP-冲突怎么办？"><a href="#🧠-如果你担心-IP-冲突怎么办？" class="headerlink" title="🧠 如果你担心 IP 冲突怎么办？"></a>🧠 如果你担心 IP 冲突怎么办？</h2><p>在 Windows 上运行：</p>
+<pre><code>ping 192.168.31.150
+</code></pre>
+<p>如果 ping 不通，就说明这个 IP 是空闲的，可以用。</p>
+<hr>
+<h2 id="✅-替代方案（保留-NAT-模式）"><a href="#✅-替代方案（保留-NAT-模式）" class="headerlink" title="✅ 替代方案（保留 NAT 模式）"></a>✅ 替代方案（保留 NAT 模式）</h2><p>如果你不想改桥接模式，可以继续用 <strong>VMware NAT 模式</strong>，那就让虚拟机保留原来的：</p>
+<ul>
+<li>IP：192.168.200.132</li>
+<li>网关：192.168.200.1</li>
+<li>然后通过端口转发（NAT 端口映射）来从主机访问虚拟机（需要手动配置）</li>
+</ul>
+<p>但 <strong>桥接 + 静态 IP 更简单、稳定、兼容性好</strong>。</p>
+<hr>
+<h2 id="✅-最终目标"><a href="#✅-最终目标" class="headerlink" title="✅ 最终目标"></a>✅ 最终目标</h2><p>你的宿主机和虚拟机 <strong>在同一个网段（如都在 <code>192.168.31.x</code>）</strong>，并且虚拟机网卡状态为 <code>UP</code>，那 ping 肯定通！</p>
+<hr>
+<h3 id="🔚-结论"><a href="#🔚-结论" class="headerlink" title="🔚 结论"></a>🔚 结论</h3><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解决方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>虚拟机 IP 设置错网段了</td>
+<td>改为 <code>192.168.31.x</code>（和主机一样的网段）</td>
+</tr>
+<tr>
+<td>桥接失败</td>
+<td>手动指定桥接物理网卡为你的 <strong>无线网卡</strong>，不能选自动</td>
+</tr>
+<tr>
+<td>不能 ping 通</td>
+<td>网卡 DOWN → 启动；IP 不通 → 改网段；防火墙 → 暂停</td>
+</tr>
+</tbody></table>
+</blockquote>
+<hr>
+<h5 id=""><a href="#" class="headerlink" title=""></a></h5><h4 id="我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊"><a href="#我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊" class="headerlink" title="我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊"></a>我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊</h4><table>
+<thead>
+<tr>
+<th>模式名称</th>
+<th>虚拟机是否能访问外网</th>
+<th>能否与主机通信</th>
+<th>能否被局域网其它设备访问</th>
+<th>场景用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NAT（网络地址转换）</strong></td>
+<td>✅ 可以</td>
+<td>✅ 可以</td>
+<td>❌ 不能</td>
+<td>默认模式，适合访问互联网但不被访问</td>
+</tr>
+<tr>
+<td><strong>桥接模式（Bridged）</strong></td>
+<td>✅ 可以</td>
+<td>✅ 可以</td>
+<td>✅ 可以</td>
+<td>适合开发、调试服务端程序</td>
+</tr>
+<tr>
+<td><strong>仅主机模式（Host-Only）</strong></td>
+<td>❌ 不可以</td>
+<td>✅ 可以</td>
+<td>❌ 不能</td>
+<td>适合测试虚拟机与主机通信，隔离网络</td>
+</tr>
+<tr>
+<td><strong>自定义虚拟网络</strong>（VMnetX）</td>
+<td>看配置情况</td>
+<td>看配置情况</td>
+<td>看配置情况</td>
+<td>高级用途，如多机组网、模拟拓扑</td>
+</tr>
+</tbody></table>
+<h2 id="✅-判断网络模式"><a href="#✅-判断网络模式" class="headerlink" title="✅ 判断网络模式"></a>✅ 判断网络模式</h2><p>你需要检查虚拟机使用的<strong>网络连接方式</strong>，有几种常见模式：</p>
+<table>
+<thead>
+<tr>
+<th>网络模式</th>
+<th>是否能上网</th>
+<th>是否能被主机访问</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NAT</td>
+<td>✅</td>
+<td>❌</td>
+<td>默认可以上网，不能被主机访问</td>
+</tr>
+<tr>
+<td>桥接模式</td>
+<td>✅</td>
+<td>✅</td>
+<td>与主机同网段，能上网、能互通</td>
+</tr>
+<tr>
+<td>Host-only</td>
+<td>❌</td>
+<td>✅</td>
+<td>不能上网，只能主机访问</td>
+</tr>
+<tr>
+<td>内部网络（仅限虚拟机）</td>
+<td>❌</td>
+<td>❌</td>
+<td>用于多虚拟机内部通信</td>
+</tr>
+</tbody></table>
+<blockquote>
+<h2 id="1️⃣-NAT-模式（默认）"><a href="#1️⃣-NAT-模式（默认）" class="headerlink" title="1️⃣ NAT 模式（默认）"></a>1️⃣ <strong>NAT 模式</strong>（默认）</h2><blockquote>
+<p>虚拟机通过 VMware NAT 服务共享主机网络访问外网</p>
+</blockquote>
+<h3 id="特点："><a href="#特点：" class="headerlink" title="特点："></a>特点：</h3><ul>
+<li>虚拟机 IP 是 <code>192.168.200.x</code> 之类的 VMware 虚拟网段</li>
+<li>宿主机充当“路由器”角色</li>
+<li>适合需要上网，但不想暴露虚拟机到外部网络</li>
+</ul>
+<h3 id="优点："><a href="#优点：" class="headerlink" title="优点："></a>优点：</h3><ul>
+<li>无需特殊配置即可访问外网</li>
+<li>安全，外部无法直接访问虚拟机</li>
+</ul>
+<h3 id="缺点："><a href="#缺点：" class="headerlink" title="缺点："></a>缺点：</h3><ul>
+<li>外部机器（包括宿主机）<strong>无法直接 ping 通虚拟机</strong></li>
+<li>虚拟机 IP 不稳定</li>
+</ul>
+<h2 id="2️⃣-桥接模式（Bridged）"><a href="#2️⃣-桥接模式（Bridged）" class="headerlink" title="2️⃣ 桥接模式（Bridged）"></a>2️⃣ <strong>桥接模式（Bridged）</strong></h2><blockquote>
+<p>虚拟机像真实电脑一样连接到局域网（通过宿主机的物理网卡桥接出去）</p>
+</blockquote>
+<h3 id="特点：-1"><a href="#特点：-1" class="headerlink" title="特点："></a>特点：</h3><ul>
+<li>虚拟机 IP 和宿主机一样，都由路由器分配（比如 <code>192.168.31.x</code>）</li>
+<li>可以直接与宿主机、局域网其他设备通信</li>
+</ul>
+<h3 id="优点：-1"><a href="#优点：-1" class="headerlink" title="优点："></a>优点：</h3><ul>
+<li>和真实电脑一样，可以被 ping 通、远程访问、部署服务等</li>
+<li>最贴近真实网络环境，适合服务器开发</li>
+</ul>
+<h3 id="缺点：-1"><a href="#缺点：-1" class="headerlink" title="缺点："></a>缺点：</h3><ul>
+<li>依赖物理网络（尤其 Wi-Fi 桥接时可能失败）</li>
+<li>公司&#x2F;学校网络可能屏蔽桥接</li>
+</ul>
+<h2 id="3️⃣-仅主机模式（Host-Only）"><a href="#3️⃣-仅主机模式（Host-Only）" class="headerlink" title="3️⃣ 仅主机模式（Host-Only）"></a>3️⃣ <strong>仅主机模式（Host-Only）</strong></h2><blockquote>
+<p>虚拟机只能和宿主机通信，完全与外网隔离</p>
+</blockquote>
+<h3 id="特点：-2"><a href="#特点：-2" class="headerlink" title="特点："></a>特点：</h3><ul>
+<li>虚拟机 IP 通常是 <code>192.168.56.x</code> 或 <code>192.168.152.x</code></li>
+<li>不能访问互联网</li>
+</ul>
+<h3 id="优点：-2"><a href="#优点：-2" class="headerlink" title="优点："></a>优点：</h3><ul>
+<li>安全，完全离线隔离</li>
+<li>虚拟机和主机之间能稳定通信（做测试非常好）</li>
+</ul>
+<h3 id="缺点：-2"><a href="#缺点：-2" class="headerlink" title="缺点："></a>缺点：</h3><ul>
+<li>无法访问外网</li>
+<li>无法被外部设备访问</li>
+</ul>
+<h2 id="4️⃣-自定义虚拟网络（VMnet0-19）"><a href="#4️⃣-自定义虚拟网络（VMnet0-19）" class="headerlink" title="4️⃣ 自定义虚拟网络（VMnet0~19）"></a>4️⃣ <strong>自定义虚拟网络（VMnet0~19）</strong></h2><blockquote>
+<p>高级用户使用，可自由配置网络结构</p>
+</blockquote>
+<h3 id="典型用途："><a href="#典型用途：" class="headerlink" title="典型用途："></a>典型用途：</h3><ul>
+<li>多台虚拟机组成专属局域网</li>
+<li>配置 DHCP、NAT、Host-Only 混合网络</li>
+<li>构建模拟数据中心、私有云、堡垒机环境等</li>
+</ul>
+<h2 id="🎯-总结建议（适合不同场景）："><a href="#🎯-总结建议（适合不同场景）：" class="headerlink" title="🎯 总结建议（适合不同场景）："></a>🎯 总结建议（适合不同场景）：</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议使用模式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>日常使用、能上网即可</td>
+<td>NAT 模式（默认）</td>
+</tr>
+<tr>
+<td>开发服务端、需要固定 IP + 被访问</td>
+<td>桥接模式 ✅</td>
+</tr>
+<tr>
+<td>只在主机和虚拟机之间通信</td>
+<td>Host-Only 模式</td>
+</tr>
+<tr>
+<td>多虚拟机模拟复杂网络</td>
+<td>自定义（VMnet）</td>
+</tr>
+</tbody></table>
+<h2 id="📌-一句话总结："><a href="#📌-一句话总结：" class="headerlink" title="📌 一句话总结："></a>📌 一句话总结：</h2><p><strong>NAT 是“内网访问外网”，桥接是“虚拟机等于真电脑”，Host-Only 是“我只和主机说话”，自定义是“你说了算”。</strong></p>
+</blockquote>
+<h2 id="环境准备-2-—Dockerfile镜像脚本快速入门"><a href="#环境准备-2-—Dockerfile镜像脚本快速入门" class="headerlink" title="环境准备(2)—Dockerfile镜像脚本快速入门"></a>环境准备(2)—Dockerfile镜像脚本快速入门</h2><p>Dockerfile其实就是我们用来构建Docker镜像的源码，当然这不是所谓的编程源码，而是一些命令的组 合，只要理解它的逻辑和语法格式，就可以编写Dockerfile了。 简单点说，Dockerfile的作用：它可以让用户个性化定制Docker镜像。因为工作环境中的需求各式各 样，网络上的镜像很难满足实际的需求。</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FROM image_name:tag</td>
+<td></td>
+</tr>
+<tr>
+<td>MAINTAINER user_name</td>
+<td>声明镜像的作者</td>
+</tr>
+<tr>
+<td>ENV key value</td>
+<td>设置环境变量(可以写多条)</td>
+</tr>
+<tr>
+<td>RUN command</td>
+<td>编译镜像时运行的脚本(可以写多条)</td>
+</tr>
+<tr>
+<td>CMD</td>
+<td>设置容器的启动命令</td>
+</tr>
+<tr>
+<td>ENTRYPOINT</td>
+<td>设置容器的入口程序</td>
+</tr>
+<tr>
+<td>ADD source_dir&#x2F;file dest_dir&#x2F;file</td>
+<td>将宿主机的文件复制到容器内，如果是一个压缩文件。将会在复制后自动解压</td>
+</tr>
+<tr>
+<td>COPY source_dir&#x2F;file dest_dir&#x2F;file</td>
+<td>和ADD相似，但是如果又压缩文件并不能解压</td>
+</tr>
+<tr>
+<td>WORKDIR path_dir</td>
+<td>设置工作目录</td>
+</tr>
+<tr>
+<td>ARG</td>
+<td>设置编译镜像时加入的参数</td>
+</tr>
+<tr>
+<td>VOLUMN</td>
+<td>设置容器的挂载卷</td>
+</tr>
+</tbody></table>
+<p>新镜像是从基础镜像一层一层叠加生成的。每安装一个软件，就在现有镜像的基础上增加一 层</p>
+<h5 id="使用Dockerfile制作微服务镜像"><a href="#使用Dockerfile制作微服务镜像" class="headerlink" title="使用Dockerfile制作微服务镜像"></a>使用Dockerfile制作微服务镜像</h5><p>我们利用Dockerfile制作一个Eureka注册中心的镜像 </p>
+<p>1）上传Eureka的微服务jar包到linux<del>这里的jar包要和Dockerfile文件在同一目录下</del><br>2）编写Dockerfile <code>vi Dockerfile</code></p>
+<h6 id="作用-📦-构建一个用于运行-Java-应用（Spring-Boot-或其他-jar-应用）的-Docker-镜像。"><a href="#作用-📦-构建一个用于运行-Java-应用（Spring-Boot-或其他-jar-应用）的-Docker-镜像。" class="headerlink" title="作用:📦 构建一个用于运行 Java 应用（Spring Boot 或其他 jar 应用）的 Docker 镜像。"></a>作用:📦 <strong>构建一个用于运行 Java 应用（Spring Boot 或其他 jar 应用）的 Docker 镜像</strong>。</h6><p>这个 Dockerfile 是在用 Java 8 的轻量镜像里，运行你打包好的 jar 应用，并对外开放 10086 端口，非常适合部署 Spring Boot 项目。</p>
+<pre><code class="yaml">FROM openjdk:8-jdk-alpine
+ARG JAR_FILE
+COPY $&#123;JAR_FILE&#125; app.jar
+EXPOSE 10086
+ENTRYPOINT [&quot;java&quot;,&quot;-Djava.net.preferIPv4Stack=true&quot;,&quot;-jar&quot;,&quot;/app.jar&quot;]
+</code></pre>
+<p>3 ）构建镜像 </p>
+<p><code>docker build --build-arg JAR_FILE=tensquare_eureka_server-1.0-SNAPSHOT.jar -t eureka:v1 .</code><br><u>-t是定义名字</u>  <u>.是在当前目录</u><br>4）查看镜像是否创建成功 </p>
+<p><code>docker images </code></p>
+<blockquote>
+<p>[root@localhost ~]# docker images<br>REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE<br>eureka              v1                  36af14603456        15 seconds ago      150MB<br>nginx               latest              9592f5595f2b        7 days ago          192MB<br>hello-world         latest              74cc54e27dc4        5 months ago        10.1kB<br>openjdk             8-jdk-alpine        a3562aa0b991        6 years ago         105MB</p>
+</blockquote>
+<p>5）创建容器 </p>
+<p><code>docker run -i --name=eureka -p 10086:10086 eureka:v1 </code><br><u>后台运行</u>：<code>docker run -d --name=eureka -p 10086:10086 eureka:v1</code></p>
+<p>删除容器：<code>docker rm -f eureka</code><br>查看容器是否启动<code>docker ps</code><br>查看日志<code>docker logs -f eureka</code><br>后面可以直接启动这个容器 <code>docker start eureka</code></p>
+<p>6）访问容器 <a target="_blank" rel="noopener" href="http://192.168.200.129:10086/">http://192.168.200.129:10086</a></p>
+<blockquote>
+<h3 id="修改后重新构建镜像："><a href="#修改后重新构建镜像：" class="headerlink" title="修改后重新构建镜像："></a>修改后重新构建镜像：</h3><pre><code>docker stop eureka
+docker rm eureka
+
+# 重新构建镜像（确保 Dockerfile 和配置文件都在当前目录）
+docker build --build-arg JAR_FILE=tensquare_eureka_server-1.0-SNAPSHOT.jar -t eureka:v1 .
+
+# 启动容器并映射端口
+docker run -d --name=eureka -p 10086:10086 eureka:v1
+</code></pre>
+<hr>
+<p><strong>进入容器</strong>（你已经会了）：</p>
+<pre><code>docker exec -it eureka /bin/sh
+</code></pre>
+<ol>
+<li>**容器内查找 <code>application.yaml</code>**：</li>
+</ol>
+<pre><code>find / -name application.yaml 2&gt;/dev/null
+</code></pre>
+<ul>
+<li><code>2&gt;/dev/null</code> 是把权限不够或找不到文件时的报错信息过滤掉，方便看结果。</li>
+</ul>
+<ol>
+<li><strong>找到路径后，用 <code>cat</code> 查看内容</strong>：</li>
+</ol>
+<p>假设查到文件在 <code>/config/application.yaml</code>，那么：</p>
+<pre><code>cat /config/application.yaml
+</code></pre>
+<hr>
+<p>你要删除 <code>&lt;none&gt;</code> 的镜像，也就是“悬空镜像（dangling image）”，可以使用以下命令：</p>
+<h3 id="🔍-查看所有悬空镜像"><a href="#🔍-查看所有悬空镜像" class="headerlink" title="🔍 查看所有悬空镜像"></a>🔍 查看所有悬空镜像</h3><pre><code>docker images -f &quot;dangling=true&quot;
+</code></pre>
+<h3 id="🗑-删除所有悬空镜像"><a href="#🗑-删除所有悬空镜像" class="headerlink" title="🗑 删除所有悬空镜像"></a>🗑 删除所有悬空镜像</h3><pre><code>docker rmi $(docker images -f &quot;dangling=true&quot; -q)
+</code></pre>
+<hr>
+<p>root@localhost ~]# docker run -d –name&#x3D;eureka -p 10086:10086 eureka:v1 docker: Error response from daemon: Conflict. The container name “&#x2F;eureka” is already in use by container “9ea494448aeb1d99faecfe11e652f438938b87e1caaca890f9001199e1166dbc”. You have to remove (or rename) that container to be able to reuse that name. See ‘docker run –help’. 这个错误说明：<strong>虽然你已经 <code>docker stop eureka</code> 停止了容器，但它还没有被删除</strong>，所以容器名 <code>/eureka</code> 依然占用中，不能再用这个名字启动新的容器。</p>
+<h3 id="✅-解决方案：删除旧容器"><a href="#✅-解决方案：删除旧容器" class="headerlink" title="✅ 解决方案：删除旧容器"></a>✅ 解决方案：删除旧容器</h3><p>你需要先 <strong>删除已停止的 <code>eureka</code> 容器</strong>，再重新启动：</p>
+<pre><code>docker rm eureka
+</code></pre>
+<p>然后再重新运行新的容器：</p>
+<pre><code>docker run -d --name=eureka -p 10086:10086 eureka:v1
+</code></pre>
+<hr>
+<p>是桥接 能ping通 防火墙永久关闭了 本机打开了clash系统代理+全局</p>
+<h6 id="ChatGPT-说："><a href="#ChatGPT-说：" class="headerlink" title="ChatGPT 说："></a>ChatGPT 说：</h6><p>非常关键的点来了！</p>
+<p>你说：</p>
+<p>✅ 虚拟机是桥接模式<br> ✅ 能 ping 通虚拟机 <code>192.168.200.129</code><br> ✅ 防火墙是永久关闭状态<br> ❌ <strong>本机打开了 Clash 并启用了系统代理 + 全局模式</strong></p>
+<hr>
+<h3 id="✅-你的-Eureka-服务配置和容器启动都是正确的，问题现在就出在：你本机开启了-Clash-的全局代理。"><a href="#✅-你的-Eureka-服务配置和容器启动都是正确的，问题现在就出在：你本机开启了-Clash-的全局代理。" class="headerlink" title="✅ 你的 Eureka 服务配置和容器启动都是正确的，问题现在就出在：你本机开启了 Clash 的全局代理。"></a>✅ 你的 Eureka 服务配置和容器启动都是正确的，问题现在就出在：<strong>你本机开启了 Clash 的全局代理。</strong></h3><h3 id="❗这会导致浏览器请求走代理，无法访问内网地址（例如-192-168-200-129-10086）。"><a href="#❗这会导致浏览器请求走代理，无法访问内网地址（例如-192-168-200-129-10086）。" class="headerlink" title="❗这会导致浏览器请求走代理，无法访问内网地址（例如 192.168.200.129:10086）。"></a>❗这会导致浏览器请求走代理，<strong>无法访问内网地址</strong>（例如 <code>192.168.200.129:10086</code>）。</h3><hr>
+<h5 id="删除镜像：docker-rmi-eureka-v1"><a href="#删除镜像：docker-rmi-eureka-v1" class="headerlink" title="删除镜像：docker rmi eureka:v1"></a>删除镜像：<code>docker rmi eureka:v1</code></h5><hr>
+<hr>
+<p><code>ss -tlnp | grep 10086</code>✅ 你看到的是：</p>
+<pre><code>LISTEN     0      1024        :::10086                   :::*                   users:((&quot;docker-proxy&quot;,pid=31831,fd=4))
+</code></pre>
+<h3 id="📌-说明："><a href="#📌-说明：" class="headerlink" title="📌 说明："></a>📌 说明：</h3><p>这是 <strong>宿主机上的 docker-proxy</strong> 在监听 <code>10086</code> 端口，<strong>它只是端口映射的外壳进程</strong>。</p>
+<p>但我们<strong>没有看到你容器内部的 Spring Boot 应用是否在监听端口</strong>，也就是说：</p>
+<blockquote>
+<p>✅ <strong>docker-proxy 映射是 OK 的</strong><br> ❗️<strong>容器里的 Spring Boot 可能绑定了 <code>127.0.0.1:10086</code>，不是 <code>0.0.0.0:10086</code>，导致 proxy 转发过去失败</strong></p>
+</blockquote>
+<hr>
+<h2 id="✅-解决方案-——-修改配置，显式绑定-0-0-0-0"><a href="#✅-解决方案-——-修改配置，显式绑定-0-0-0-0" class="headerlink" title="✅ 解决方案 —— 修改配置，显式绑定 0.0.0.0"></a>✅ 解决方案 —— 修改配置，显式绑定 <code>0.0.0.0</code></h2><p>请 **修改你的 <code>application.yml</code>**，在 <code>server</code> 配置中添加这一行：</p>
+<pre><code>yaml复制编辑server:
+  port: 10086
+  address: 0.0.0.0  # &lt;-- 显式监听所有网卡地址
+</code></pre>
+<hr>
+<hr>
+<p>[root@localhost ~]# netstat -tln<br>Active Internet connections (only servers)<br>Proto Recv-Q Send-Q Local Address           Foreign Address         State<br>tcp        0      0 127.0.0.1:9100          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9229          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9168          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:8082          0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:82              0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9236          0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN<br>tcp        0      0 0.0.0.0:8060            0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9121          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9090          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9187          0.0.0.0:*               LISTEN<br>tcp        0      0 127.0.0.1:9093          0.0.0.0:*               LISTEN<br>tcp6       0      0 :::3306                 :::*                    LISTEN<br>tcp6       0      0 ::1:9168                :::*                    LISTEN<br>tcp6       0      0 :::22                   :::*                    LISTEN<br>tcp6       0      0 :::10086                :::*                    LISTEN<br>tcp6       0      0 :::9094                 :::*                    LISTEN</p>
+<p>你贴的 <code>netstat -tln</code> 结果说明：</p>
+<ul>
+<li>你的服务监听在 <strong><code>:::10086</code>（IPv6的所有地址）</strong>，没有监听任何IPv4地址（比如<code>0.0.0.0:10086</code>）</li>
+<li>这意味着你的Spring Boot应用只监听了IPv6地址，IPv4访问就无法连接（所以你用 <code>http://192.168.200.129:10086</code> 访问会失败）</li>
+</ul>
+<h3 id="具体做法："><a href="#具体做法：" class="headerlink" title="具体做法："></a>具体做法：</h3><ol>
+<li>修改你的 <code>Dockerfile</code> 中 <code>ENTRYPOINT</code>：</li>
+</ol>
+<pre><code class="java">FROM openjdk:8-jdk-alpine
+ARG JAR_FILE
+COPY $&#123;JAR_FILE&#125; app.jar
+EXPOSE 10086
+ENTRYPOINT [&quot;java&quot;,&quot;-Djava.net.preferIPv4Stack=true&quot;,&quot;-jar&quot;,&quot;/app.jar&quot;]
+</code></pre>
+<h2 id="2-构建新镜像（建议打新标签）"><a href="#2-构建新镜像（建议打新标签）" class="headerlink" title="2. 构建新镜像（建议打新标签）"></a>2. 构建新镜像（建议打新标签）</h2><pre><code>docker build --build-arg JAR_FILE=tensquare_eureka_server-1.0-SNAPSHOT.jar -t eureka:v2 .
+</code></pre>
+<hr>
+<h2 id="3-停止并删除旧容器（如果还在运行）"><a href="#3-停止并删除旧容器（如果还在运行）" class="headerlink" title="3. 停止并删除旧容器（如果还在运行）"></a>3. 停止并删除旧容器（如果还在运行）</h2><pre><code>docker stop eureka
+docker rm eureka
+</code></pre>
+<hr>
+<h2 id="4-运行新镜像容器"><a href="#4-运行新镜像容器" class="headerlink" title="4. 运行新镜像容器"></a>4. 运行新镜像容器</h2><pre><code>docker run -d -p 10086:10086 --name eureka eureka:v2
+</code></pre>
+<h2 id="6-测试访问"><a href="#6-测试访问" class="headerlink" title="6. 测试访问"></a>6. 测试访问</h2><p>浏览器打开：</p>
+<pre><code>http://192.168.200.129:10086
+</code></pre>
+<hr>
+<hr>
+<hr>
+<p>现在可以访问成功了  为什么加上这句话就好了 ENTRYPOINT [“java”,”-Djava.net.preferIPv4Stack&#x3D;true”,”-jar”,”&#x2F;app.jar”] 为什么监听的时候还是ipv6 [root@localhost ~]# ss -tlnp | grep 10086 LISTEN     0      1024        :::10086                   :::*                   users:((“docker-proxy”,pid&#x3D;35209,fd&#x3D;4)) 但是成功在主机访问地址了</p>
+<h6 id="为什么加上-Djava-net-preferIPv4Stack-true-就好了？"><a href="#为什么加上-Djava-net-preferIPv4Stack-true-就好了？" class="headerlink" title="为什么加上 -Djava.net.preferIPv4Stack=true 就好了？"></a>为什么加上 <code>-Djava.net.preferIPv4Stack=true</code> 就好了？</h6><ul>
+<li>这个参数告诉 JVM <strong>优先使用 IPv4 网络栈</strong>，避免只监听 IPv6 导致外部 IPv4 地址访问不到的问题。</li>
+<li>Spring Boot 的内嵌 Tomcat 在默认情况下，Linux 可能优先监听 IPv6 地址（<code>:::port</code>）。</li>
+<li>加了这个参数后，Tomcat 会优先绑定 IPv4 地址，从而确保 Docker 的端口映射能正常被外部 IPv4 网络访问。</li>
+</ul>
+<hr>
+<h3 id="为什么监听时还是显示-IPv6-10086-？"><a href="#为什么监听时还是显示-IPv6-10086-？" class="headerlink" title="为什么监听时还是显示 IPv6 (:::10086)？"></a>为什么监听时还是显示 IPv6 (<code>:::10086</code>)？</h3><ul>
+<li>Linux 上 IPv6 的监听套接字 <code>:::</code> 默认是包含 IPv4 地址 <code>0.0.0.0</code> 的（叫做 IPv4-mapped IPv6 地址）。</li>
+<li>也就是说，监听 <code>:::10086</code> 实际上同时监听了所有 IPv6 和 IPv4 地址。</li>
+<li>这是一种操作系统层面的机制，不是 Java 层面的问题。</li>
+</ul>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><strong><code>-Djava.net.preferIPv4Stack=true</code></strong> 让 JVM 侧优先用 IPv4，避免了纯 IPv6 监听带来的访问问题。</li>
+<li><strong><code>ss</code> 看到的 <code>:::10086</code> 其实也包括了 IPv4 地址</strong>，所以你才能用 IPv4 地址成功访问。</li>
+<li>访问成功说明网络和端口映射都正常工作了。</li>
+</ul>
+<hr>
+<hr>
+<p>太好了，你现在已经非常接近成功了，我们来梳理一下现状和如何解决你“<strong>既能联网又能用 Mobaxterm 连上虚拟机</strong>”的问题。</p>
+<hr>
+<h2 id="✅-当前状态分析"><a href="#✅-当前状态分析" class="headerlink" title="✅ 当前状态分析"></a>✅ 当前状态分析</h2><p>你目前有两张网卡：</p>
+<table>
+<thead>
+<tr>
+<th>网卡名</th>
+<th>IP 地址</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ens33</code></td>
+<td><code>192.168.200.131</code></td>
+<td>✅ UP，有 IP</td>
+<td>是你原来的桥接或 Host-Only 网卡，用于主机连虚拟机</td>
+</tr>
+<tr>
+<td><code>ens36</code></td>
+<td>无 IP</td>
+<td>❌ DOWN</td>
+<td>是你新加的 NAT 网卡，但 <strong>没有启动 &#x2F; 没有获取 IP</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="🧩-为什么还无法联网？"><a href="#🧩-为什么还无法联网？" class="headerlink" title="🧩 为什么还无法联网？"></a>🧩 为什么还无法联网？</h2><p>你 curl 下载失败，是因为 NAT 网卡 <code>ens36</code> 没启动，虚拟机依然没联网。</p>
+<hr>
+<h2 id="✅-解决方案：启动-NAT-网卡并设置为默认出网口"><a href="#✅-解决方案：启动-NAT-网卡并设置为默认出网口" class="headerlink" title="✅ 解决方案：启动 NAT 网卡并设置为默认出网口"></a>✅ 解决方案：<strong>启动 NAT 网卡并设置为默认出网口</strong></h2><h3 id="第一步：激活-ens36（NAT-网卡）"><a href="#第一步：激活-ens36（NAT-网卡）" class="headerlink" title="第一步：激活 ens36（NAT 网卡）"></a>第一步：激活 ens36（NAT 网卡）</h3><p>执行：</p>
+<pre><code>dhclient ens36
+</code></pre>
+<blockquote>
+<p>⏳ 如果你没装 <code>dhclient</code>，可以试试：</p>
+</blockquote>
+<pre><code>nmcli device connect ens36
+</code></pre>
+<p>然后再次查看 IP：</p>
+<pre><code>ip addr
+</code></pre>
+<p>你应该能看到 <code>ens36</code> 分配到类似 <code>192.168.226.x</code> 的地址（NAT 网段）</p>
+</blockquote>
+<h6 id="总结一下视频里的服务器ip所对应的服务"><a href="#总结一下视频里的服务器ip所对应的服务" class="headerlink" title="总结一下视频里的服务器ip所对应的服务"></a>总结一下视频里的服务器ip所对应的服务</h6><blockquote>
+<p>192.168.66.100 GitLab<br>192.168.66.101 Jenkins<br>192.168.66.102 Harbor &amp;&amp; Tomcat<br>192.168.66.103 生产部署服务器</p>
+</blockquote>
+<h3 id="环境准备-3-Harbor镜像仓库安装及使用"><a href="#环境准备-3-Harbor镜像仓库安装及使用" class="headerlink" title="环境准备(3)-Harbor镜像仓库安装及使用"></a>环境准备(3)-Harbor镜像仓库安装及使用</h3><h5 id="Harbor简介"><a href="#Harbor简介" class="headerlink" title="Harbor简介"></a>Harbor简介</h5><p>Harbor（港口，港湾）是一个用于存储和分发Docker镜像的企业级Registry服务器。 除了Harbor这个私有镜像仓库之外，还有Docker官方提供的Registry。相对Registry，Harbor具有很多优势：</p>
+<ol>
+<li>提供分层传输机制，优化网络传输 Docker镜像是是分层的，而如果每次传输都使用全量文件(所以 用FTP的方式并不适合)，显然不经济。必须提供识别分层传输的机制，以层的UUID为标识，确定 传输的对象。 </li>
+<li>提供WEB界面，优化用户体验 只用镜像的名字来进行上传下载显然很不方便，需要有一个用户界 面可以支持登陆、搜索功能，包括区分公有、私有镜像。</li>
+<li>支持水平扩展集群 当有用户对镜像的上传下载操作集中在某服务器，需要对相应的访问压力作分解。 </li>
+<li>良好的安全机制 企业中的开发团队有很多不同的职位，对于不同的职位人员，分配不同的权限，具有更好的安全性。</li>
+</ol>
+<h5 id="Harbor安装"><a href="#Harbor安装" class="headerlink" title="Harbor安装"></a>Harbor安装</h5><p>Harbor需要安装在<code>192.168.200.131 Harbor &amp;&amp; Tomcat</code>上</p>
+<ul>
+<li><p>先安装Docker并启动Docker</p>
+<blockquote>
+<p>sudo systemctl start docker        启动Docker<br>sudo systemctl enable docker    开机自启动<br>sudo systemctl status docker     查看Docker服务状态</p>
+</blockquote>
+</li>
+<li><p>安装docker-compose</p>
+<pre><code class="java">sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose 
+sudo chmod +x /usr/local/bin/docker-compose
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>你可以使用 <strong>离线安装 docker-compose</strong> 的方式，<strong>在主机上下载好二进制文件</strong>，再拷贝到虚拟机中使用，非常简单。</p>
+<hr>
+<h2 id="✅-方法一：主机下载-→-拷贝到虚拟机"><a href="#✅-方法一：主机下载-→-拷贝到虚拟机" class="headerlink" title="✅ 方法一：主机下载 → 拷贝到虚拟机"></a>✅ 方法一：<strong>主机下载 → 拷贝到虚拟机</strong></h2><h3 id="步骤-1️⃣：在主机（Windows）上用浏览器下载这个文件"><a href="#步骤-1️⃣：在主机（Windows）上用浏览器下载这个文件" class="headerlink" title="步骤 1️⃣：在主机（Windows）上用浏览器下载这个文件"></a>步骤 1️⃣：在主机（Windows）上用浏览器下载这个文件</h3><p>访问地址如下（你这个版本是 1.21.2）：</p>
+<p>👉 <a target="_blank" rel="noopener" href="https://github.com/docker/compose/releases/download/1.21.2/docker-compose-Linux-x86_64">https://github.com/docker/compose/releases/download/1.21.2/docker-compose-Linux-x86_64</a></p>
+<p>下载后，重命名为：<code>docker-compose</code></p>
+<hr>
+<h3 id="步骤-2️⃣：用-MobaXterm-拷贝到虚拟机"><a href="#步骤-2️⃣：用-MobaXterm-拷贝到虚拟机" class="headerlink" title="步骤 2️⃣：用 MobaXterm 拷贝到虚拟机"></a>步骤 2️⃣：用 MobaXterm 拷贝到虚拟机</h3><p>你在 Mobaxterm 中连接好虚拟机后：</p>
+<ol>
+<li>左侧文件管理器中找到 <code>/usr/local/bin</code>（或 <code>/root</code>）</li>
+<li>把你刚下载的 <code>docker-compose</code> 拖进去上传</li>
+</ol>
+<p>或者用 <code>scp</code> 命令上传：</p>
+<pre><code>scp docker-compose root@192.168.200.131:/usr/local/bin/docker-compose
+</code></pre>
+<blockquote>
+<p>把 <code>192.168.200.131</code> 换成你虚拟机 IP，输入密码即可</p>
+</blockquote>
+<hr>
+<h3 id="步骤-3️⃣：在虚拟机中赋予执行权限"><a href="#步骤-3️⃣：在虚拟机中赋予执行权限" class="headerlink" title="步骤 3️⃣：在虚拟机中赋予执行权限"></a>步骤 3️⃣：在虚拟机中赋予执行权限</h3><pre><code>chmod +x /usr/local/bin/docker-compose
+</code></pre>
+<hr>
+<h3 id="步骤-4️⃣：验证安装成功"><a href="#步骤-4️⃣：验证安装成功" class="headerlink" title="步骤 4️⃣：验证安装成功"></a>步骤 4️⃣：验证安装成功</h3><pre><code>docker-compose -v
+</code></pre>
+<p>输出类似：</p>
+<pre><code>docker-compose version 1.21.2, build ...
+</code></pre>
+<p>✅ 完成！</p>
+</blockquote>
+<ul>
+<li><p>下载Harbor的压缩包<code>harbor-offline-installer-v1.9.2.tgz</code></p>
+</li>
+<li><p>上传压缩包到linux并解压</p>
+<blockquote>
+<p>tar -xzf harbor-offline-installer-v1.9.2.tgz<br>mkdir &#x2F;opt&#x2F;harbor<br>mv harbor&#x2F;* &#x2F;opt&#x2F;harbor<br>cd &#x2F;opt&#x2F;harbor</p>
+</blockquote>
+</li>
+<li><p>修改Harbor的配置</p>
+<blockquote>
+<p>vi harbor.yml</p>
+</blockquote>
+<p>修改hostname和port</p>
+<blockquote>
+<p>hostname：192.168.200.131<br>port：85</p>
+</blockquote>
+</li>
+<li><p>安装Harbor</p>
+<blockquote>
+<p>.&#x2F;prepare<br>.&#x2F;install.sh</p>
+</blockquote>
+</li>
+</ul>
+<h5 id="这里有个经典的超级牛逼的大bug"><a href="#这里有个经典的超级牛逼的大bug" class="headerlink" title="这里有个经典的超级牛逼的大bug"></a><span style = "color:red">这里有个经典的超级牛逼的大bug</span></h5><h6 id="抛出问题："><a href="#抛出问题：" class="headerlink" title="抛出问题："></a>抛出问题：</h6><blockquote>
+<p>这是我vi &#x2F;etc&#x2F;sysconfig&#x2F;network-scripts&#x2F;ifcfg-ens33<br>DEFROUTE&#x3D;yes<br>NAME&#x3D;ens33<br>UUID&#x3D;a8ca17a4-0388-4b06-81b3-895e1a8180fe<br>DEVICE&#x3D;ens33<br>ONBOOT&#x3D;yes</p>
+<p>IPADDR&#x3D;192.168.200.131<br>NETMASK&#x3D;255.255.255.0<br>GATEWAY&#x3D;192.168.31.1<br>DNS1&#x3D;8.8.8.8</p>
+<p>这是我虚拟机的ip add</p>
+<p>[root@localhost ~]# ip addr<br>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<br>    link&#x2F;loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<br>    inet 127.0.0.1&#x2F;8 scope host lo<br>       valid_lft forever preferred_lft forever<br>    inet6 ::1&#x2F;128 scope host<br>       valid_lft forever preferred_lft forever<br>2: ens33: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<br>    link&#x2F;ether 00:0c:29:7b:04:23 brd ff:ff:ff:ff:ff:ff<br>    inet 192.168.200.131&#x2F;24 brd 192.168.200.255 scope global noprefixroute ens33<br>       valid_lft forever preferred_lft forever<br>    inet6 fe80::20c:29ff:fe7b:423&#x2F;64 scope link<br>       valid_lft forever preferred_lft forever<br>3: docker0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state DOWN group default<br>    link&#x2F;ether 02:42:94:7c:ad:4a brd ff:ff:ff:ff:ff:ff<br>    inet 172.17.0.1&#x2F;16 brd 172.17.255.255 scope global docker0<br>       valid_lft forever preferred_lft forever</p>
+<p>该虚拟机选择了桥接模式 且 勾选了复制到物理网络连接状态<br>其虚拟网络编辑器里面<br>VMnet0 桥接模式 自动桥接   主机连接无 DHCP无  子网地址无<br>VMnet1 仅主机    外部连接无  主机连接已连接  DHCP已启用 子网地址192.168.22.0<br>VMnet8 NAT模式 NAT模式  主机连接已连接 DHCP无 子网地址192.168.200.0</p>
+<p>这是我主机ipconfig<br>C:\Users\Pluminary&gt;ipconfig</p>
+<p>Windows IP 配置</p>
+<p>以太网适配器 以太网 4:</p>
+<p>   媒体状态  . . . . . . . . . . . . : 媒体已断开连接<br>   连接特定的 DNS 后缀 . . . . . . . :</p>
+<p>无线局域网适配器 本地连接* 1:</p>
+<p>   媒体状态  . . . . . . . . . . . . : 媒体已断开连接<br>   连接特定的 DNS 后缀 . . . . . . . :</p>
+<p>无线局域网适配器 本地连接* 2:</p>
+<p>   媒体状态  . . . . . . . . . . . . : 媒体已断开连接<br>   连接特定的 DNS 后缀 . . . . . . . :</p>
+<p>以太网适配器 VMware Network Adapter VMnet1:</p>
+<p>   连接特定的 DNS 后缀 . . . . . . . :<br>   本地链接 IPv6 地址. . . . . . . . : fe80::1ea6:88fa:c0e1:f1ca%22<br>   IPv4 地址 . . . . . . . . . . . . : 192.168.22.1<br>   子网掩码  . . . . . . . . . . . . : 255.255.255.0<br>   默认网关. . . . . . . . . . . . . :</p>
+<p>以太网适配器 VMware Network Adapter VMnet8:</p>
+<p>   连接特定的 DNS 后缀 . . . . . . . :<br>   本地链接 IPv6 地址. . . . . . . . : fe80::9e33:f9ac:4f64:9d71%3<br>   IPv4 地址 . . . . . . . . . . . . : 192.168.200.2<br>   子网掩码  . . . . . . . . . . . . : 255.255.255.0<br>   默认网关. . . . . . . . . . . . . : 192.168.200.1</p>
+<p>无线局域网适配器 WLAN:</p>
+<p>   连接特定的 DNS 后缀 . . . . . . . :<br>   本地链接 IPv6 地址. . . . . . . . : fe80::7df7:efe4:1d3b:e2d2%12<br>   IPv4 地址 . . . . . . . . . . . . : 192.168.31.103<br>   子网掩码  . . . . . . . . . . . . : 255.255.255.0<br>   默认网关. . . . . . . . . . . . . : 192.168.31.1 </p>
+<p>我现在的问题是 如果我改了GATEWAY&#x3D;192.168.31.1 为别的 那么我MobaXterm就连不上该虚拟机 现在的问题是 虚拟机没有网 我镜像都下载不了[root@localhost harbor]# .&#x2F;prepare<br>prepare base dir is set to &#x2F;opt&#x2F;harbor<br>Unable to find image ‘goharbor&#x2F;prepare:v1.9.2’ locally<br>^C<br>[root@localhost harbor]# ^C<br>[root@localhost harbor]#</p>
+</blockquote>
+<h6 id="GitHub解决方案："><a href="#GitHub解决方案：" class="headerlink" title="GitHub解决方案："></a>GitHub解决方案：</h6><blockquote>
+<p>你目前的状态是：</p>
+<hr>
+<p>✅ <strong>虚拟机 IP</strong> 是 <code>192.168.200.131</code>（<strong>静态 IP，桥接模式下设置的</strong>）<br> ✅ <strong>宿主机 WLAN IP</strong> 是 <code>192.168.31.103</code><br> ❌ <strong>虚拟机无法联网</strong>（不能拉取镜像）<br> ✅ <strong>MobaXterm 可以连接虚拟机（192.168.200.131）</strong><br> ⚠️ <strong>虚拟机网关设置为 <code>192.168.31.1</code>，其实这是 WLAN 的网关，不属于 <code>192.168.200.x</code> 子网</strong></p>
+<hr>
+<h2 id="🔥-你现在的问题本质："><a href="#🔥-你现在的问题本质：" class="headerlink" title="🔥 你现在的问题本质："></a>🔥 <span style = "color:red">你现在的问题本质：</span></h2><ul>
+<li>虽然 MobaXterm 能访问虚拟机 <code>192.168.200.131</code>，但虚拟机设置了一个<strong>不在本网段的网关：<code>192.168.31.1</code></strong></li>
+<li>所以虚拟机根本无法出网（不能 ping 外网，也不能拉 harbor 镜像）</li>
+</ul>
+<hr>
+<h2 id="✅-正确配置方式："><a href="#✅-正确配置方式：" class="headerlink" title="✅ 正确配置方式："></a>✅ 正确配置方式：</h2><p>让虚拟机在桥接模式下能 <strong>联网 + 被访问</strong></p>
+<hr>
+<h3 id="✅-第一步：设置正确网关（匹配虚拟机-IP-网段）"><a href="#✅-第一步：设置正确网关（匹配虚拟机-IP-网段）" class="headerlink" title="✅ 第一步：设置正确网关（匹配虚拟机 IP 网段）"></a>✅ 第一步：设置正确网关（匹配虚拟机 IP 网段）</h3><p>你虚拟机静态 IP 是 <code>192.168.200.131</code>，所以网关必须也在 <code>192.168.200.1~254</code> 范围。</p>
+<p>观察宿主机 VMnet8（NAT）是 <code>192.168.200.2</code>，它的网关是：</p>
+<pre><code>默认网关: 192.168.200.1
+</code></pre>
+<p>所以你应设置：</p>
+<pre><code>IPADDR=192.168.200.131
+NETMASK=255.255.255.0
+GATEWAY=192.168.200.1
+DNS1=8.8.8.8
+</code></pre>
+<p>✅ 这个配置能让虚拟机出网（使用 VMware NAT 出口），也能让宿主机通过 <code>192.168.200.131</code> 访问虚拟机。</p>
+<hr>
+<h3 id="✅-第二步：如果你用的是-NAT-模式，则使用上面的-GATEWAY-是对的"><a href="#✅-第二步：如果你用的是-NAT-模式，则使用上面的-GATEWAY-是对的" class="headerlink" title="✅ 第二步：如果你用的是 NAT 模式，则使用上面的 GATEWAY 是对的"></a>✅ 第二步：如果你用的是 <strong>NAT 模式</strong>，则使用上面的 GATEWAY 是对的</h3><p>但你说你用了 <strong>桥接模式</strong>，那就要看桥接的是哪块网卡。</p>
+<h4 id="桥接模式下，正确做法是："><a href="#桥接模式下，正确做法是：" class="headerlink" title="桥接模式下，正确做法是："></a>桥接模式下，正确做法是：</h4><ol>
+<li>虚拟机 IP 要跟宿主机所连网络同一个网段</li>
+<li>网关要设置为 <strong>宿主机 WLAN 的网关：<code>192.168.31.1</code></strong></li>
+</ol>
+<p>这样你才会在 MobaXterm 能访问、也能联网。</p>
+<hr>
+<h3 id="❗但你现在问题是："><a href="#❗但你现在问题是：" class="headerlink" title="❗但你现在问题是："></a>❗但你现在问题是：</h3><p>你桥接了，但 IP 却在 <code>192.168.200.x</code>，这说明虚拟机并没有成功桥接到宿主机 WLAN 网卡，而是连到了 VMware 的 NAT 网络（即使你设置桥接，也可能没生效）</p>
+<hr>
+<h2 id="✅-最建议方案"><a href="#✅-最建议方案" class="headerlink" title="✅ 最建议方案"></a>✅ 最建议方案</h2><h3 id="A-用-NAT-模式-正确网关（推荐稳定，适合大多数人）"><a href="#A-用-NAT-模式-正确网关（推荐稳定，适合大多数人）" class="headerlink" title="A. 用 NAT 模式 + 正确网关（推荐稳定，适合大多数人）"></a><strong>A. 用 NAT 模式 + 正确网关（推荐稳定，适合大多数人）</strong></h3><ol>
+<li>把虚拟机改为 <strong>NAT 模式</strong></li>
+<li><code>ifcfg-ens33</code> 设置如下：</li>
+</ol>
+<pre><code>DEVICE=ens33
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR=192.168.200.131
+NETMASK=255.255.255.0
+GATEWAY=192.168.200.1   # NAT 的默认网关
+DNS1=8.8.8.8
+</code></pre>
+<ol>
+<li>重启网络：</li>
+</ol>
+<pre><code>systemctl restart network
+</code></pre>
+<ol>
+<li>测试网络：</li>
+</ol>
+<pre><code>ping -c 3 8.8.8.8
+curl www.baidu.com
+</code></pre>
+<ol>
+<li>然后使用 <code>MobaXterm</code> 访问你设置的 <code>192.168.200.131</code>，或设置端口转发（如 <code>127.0.0.1:2222</code> → <code>192.168.200.131:22</code>）</li>
+</ol>
+<hr>
+<h3 id="B-或者继续桥接，但设置静态-IP-为-192-168-31-x-网段"><a href="#B-或者继续桥接，但设置静态-IP-为-192-168-31-x-网段" class="headerlink" title="B. 或者继续桥接，但设置静态 IP 为 192.168.31.x 网段"></a><strong>B. 或者继续桥接，但设置静态 IP 为 <code>192.168.31.x</code> 网段</strong></h3><p>如果你要桥接到宿主机 WLAN：</p>
+<ol>
+<li>修改 <code>/etc/sysconfig/network-scripts/ifcfg-ens33</code>：</li>
+</ol>
+<pre><code>DEVICE=ens33
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR=192.168.31.130     # 自己定个没冲突的 IP
+NETMASK=255.255.255.0
+GATEWAY=192.168.31.1       # 你的无线网关
+DNS1=8.8.8.8
+</code></pre>
+<ol>
+<li>重启网络：</li>
+</ol>
+<pre><code>systemctl restart network
+</code></pre>
+<ol>
+<li>检查 IP 和连通性：</li>
+</ol>
+<pre><code>ip addr
+ping 8.8.8.8
+</code></pre>
+<hr>
+<h2 id="✅-结论"><a href="#✅-结论" class="headerlink" title="✅ 结论"></a>✅ 结论</h2><p>你现在 MobaXterm 能连接，是因为用了静态 IP <code>192.168.200.131</code>，但由于网关不在同一网段，导致不能联网。</p>
+<p>你只要根据你实际使用的网络模式（NAT 或桥接），<strong>把网关改成同网段的地址</strong>，问题就能解决。</p>
+<hr>
+<p>如果你告诉我你<strong>最终想使用 NAT 还是桥接</strong>（是否希望虚拟机能被其它设备访问），我可以直接帮你生成完整配置文件。</p>
+<h6 id="继续延申问题："><a href="#继续延申问题：" class="headerlink" title="继续延申问题："></a>继续延申问题：</h6><p>我按照你说的改了 改成了nat模式 然后也改了配置  但是还是不行 [rooteloca1host ~]# ping -c 3 8.8.8.8PING 8.8.8.8(8.8.8.8) 56(84) bytes of data.From 192.168.200.131 icmp_seq&#x3D;1 Destination Host UnreachableFrom 192.168.200.131 icmp_seq&#x3D;2 Destination Host UnreachableFrom 192.168.200.131 icmp_seq&#x3D;3 Destination Host Unreachable8.8.8.8 ping statistics3 packets transmitted,0 received, +3 errors, 100% packet loss,time 1999mspipe3 现在连MobaXterm都连不上了 Network error: Connection timed out ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Session stopped    - Press <return> to exit tab    - Press R to restart session    - Press S to save terminal output to file</p>
+<p>✅ 你现在的问题是：</p>
+<blockquote>
+<p><strong>你切换到 NAT 模式了，配置也改了，但：</strong></p>
+<ul>
+<li>❌ 仍然无法联网（<code>ping 8.8.8.8</code> 不通）</li>
+<li>❌ MobaXterm 也连不上虚拟机（连接超时）</li>
+<li>✅ 虚拟机 IP 是 <code>192.168.200.131</code>，网关你应该已改为 <code>192.168.200.1</code>（对吧？）</li>
+</ul>
+</blockquote>
+<hr>
+<p>我们来一步步快速排查：</p>
+<hr>
+<h2 id="✅-第一步：确认虚拟机网卡配置是否正确"><a href="#✅-第一步：确认虚拟机网卡配置是否正确" class="headerlink" title="✅ 第一步：确认虚拟机网卡配置是否正确"></a>✅ 第一步：确认虚拟机网卡配置是否正确</h2><p>在虚拟机里执行：</p>
+<pre><code>cat /etc/sysconfig/network-scripts/ifcfg-ens33
+</code></pre>
+<p>确认配置如下（<strong>静态 IP 模式 + NAT 网段的正确网关</strong>）：</p>
+<pre><code>DEVICE=ens33
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR=192.168.200.131
+NETMASK=255.255.255.0
+GATEWAY=192.168.200.1
+DNS1=8.8.8.8
+</code></pre>
+<p>如果不是这样，请立刻修改。</p>
+<p>然后执行：</p>
+<pre><code>systemctl restart network
+</code></pre>
+<hr>
+<h2 id="✅-第二步：确认-NAT-模式是否正确工作"><a href="#✅-第二步：确认-NAT-模式是否正确工作" class="headerlink" title="✅ 第二步：确认 NAT 模式是否正确工作"></a>✅ 第二步：确认 NAT 模式是否正确工作</h2><p>打开 VMware 虚拟网络编辑器，确认：</p>
+<ul>
+<li>VMnet8 网络的 <strong>子网 IP</strong> 是 <code>192.168.200.0</code></li>
+<li><strong>默认网关（Gateway）是 <code>192.168.200.1</code></strong></li>
+<li>启用了 NAT 功能（有 <code>NAT 设置</code> 按钮，不是空的）</li>
+<li>勾选了 “使用本地 DHCP 服务将 IP 地址分配给虚拟机”（建议开启）</li>
+</ul>
+<h2 id="✅-第三步：确认虚拟机路由是否存在"><a href="#✅-第三步：确认虚拟机路由是否存在" class="headerlink" title="✅ 第三步：确认虚拟机路由是否存在"></a>✅ 第三步：确认虚拟机路由是否存在</h2><p>在虚拟机中执行：</p>
+<pre><code>ip route
+</code></pre>
+<p>你应该看到类似：</p>
+<pre><code>default via 192.168.200.1 dev ens33
+192.168.200.0/24 dev ens33 proto kernel scope link src 192.168.200.131
+</code></pre>
+<p>如果没有 <code>default via 192.168.200.1</code>，说明网关没生效，路由不通。</p>
+<hr>
+<h2 id="✅-第四步：确认宿主机启用了-NAT-网络服务"><a href="#✅-第四步：确认宿主机启用了-NAT-网络服务" class="headerlink" title="✅ 第四步：确认宿主机启用了 NAT 网络服务"></a>✅ 第四步：确认宿主机启用了 NAT 网络服务</h2><ol>
+<li>打开 VMware 网络编辑器（以管理员身份运行）</li>
+<li>点击 <code>VMnet8</code>，点右侧的 “NAT 设置”</li>
+<li>看到：</li>
+</ol>
+<pre><code>网关 IP: 192.168.200.1
+</code></pre>
+<p>下面是端口转发之类设置，不用动。</p>
+<ol>
+<li>确保 VMware NAT Service 是运行状态：<ul>
+<li>在宿主机按 Win+R → 输入 <code>services.msc</code></li>
+<li>找到 <code>VMware NAT Service</code> 和 <code>VMware DHCP Service</code></li>
+<li>状态必须是“正在运行”</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="✅-第五步：测试连接"><a href="#✅-第五步：测试连接" class="headerlink" title="✅ 第五步：测试连接"></a>✅ 第五步：测试连接</h2><ol>
+<li>在虚拟机里执行：</li>
+</ol>
+<pre><code>ping 192.168.200.1
+</code></pre>
+<p>能 ping 通说明 NAT 网关 OK。</p>
+<ol>
+<li>在虚拟机里执行：</li>
+</ol>
+<pre><code>ping 8.8.8.8
+</code></pre>
+<p>仍然不通，说明出网失败，可能是：</p>
+<ul>
+<li>路由表错（<code>ip route</code> 查看）</li>
+<li>NAT 服务没开（第 4 步）</li>
+<li>没走正确网关（第 1 步）</li>
+</ul>
+<hr>
+<hr>
+<p>按照你说的做了 [root@localhost harbor]# docker ps | grep nginx 1773679bace8        goharbor&#x2F;nginx-photon:v1.9.2                             “nginx -g ‘daemon of…”   9 seconds ago       Up 7 seconds (health: starting)    0.0.0.0:85-&gt;8080&#x2F;tcp        nginx 7e41a5e0662b        goharbor&#x2F;harbor-portal:v1.9.2                            “nginx -g ‘daemon of…”   14 seconds ago      Up 10 seconds (health: starting)   8080&#x2F;tcp                    harbor-portal [root@localhost harbor]#</p>
+<h6 id="ChatGPT-说：-1"><a href="#ChatGPT-说：-1" class="headerlink" title="ChatGPT 说："></a>ChatGPT 说：</h6><p>非常好，你现在的操作都没错，但从这条日志来看：</p>
+<pre><code>
+0.0.0.0:85-&gt;8080/tcp        nginx
+</code></pre>
+<p>说明 <strong><code>docker-compose.yml</code> 里仍然是 <code>85:8080</code> 映射</strong>，而不是我们期望的：</p>
+<pre><code>
+85:80
+</code></pre>
+<hr>
+<h2 id="✅-解决方案：手动改一下-docker-compose-yml，然后重新启动-Harbor"><a href="#✅-解决方案：手动改一下-docker-compose-yml，然后重新启动-Harbor" class="headerlink" title="✅ 解决方案：手动改一下 docker-compose.yml，然后重新启动 Harbor"></a>✅ 解决方案：手动改一下 <code>docker-compose.yml</code>，然后重新启动 Harbor</h2><h3 id="✏️-步骤-1：手动修改端口映射"><a href="#✏️-步骤-1：手动修改端口映射" class="headerlink" title="✏️ 步骤 1：手动修改端口映射"></a>✏️ 步骤 1：手动修改端口映射</h3><p>打开 <code>docker-compose.yml</code>，找到 <code>proxy:</code> 下面这段：</p>
+<pre><code>ports:
+  - 85:8080
+</code></pre>
+<p>改成：</p>
+<pre><code>ports:
+  - 85:80
+</code></pre>
+<blockquote>
+<p>🔁 如果你在 Vim 里编辑，改完后按：</p>
+<pre><code>Esc → :wq
+</code></pre>
+</blockquote>
+<hr>
+<h3 id="🔄-步骤-2：重启-Harbor-服务"><a href="#🔄-步骤-2：重启-Harbor-服务" class="headerlink" title="🔄 步骤 2：重启 Harbor 服务"></a>🔄 步骤 2：重启 Harbor 服务</h3><pre><code>docker-compose down
+docker-compose up -d
+</code></pre>
+<hr>
+<h3 id="🔍-步骤-3：确认端口映射是否正确"><a href="#🔍-步骤-3：确认端口映射是否正确" class="headerlink" title="🔍 步骤 3：确认端口映射是否正确"></a>🔍 步骤 3：确认端口映射是否正确</h3><pre><code>docker ps | grep nginx
+</code></pre>
+<p>应该看到：</p>
+<pre><code>0.0.0.0:85-&gt;80/tcp        nginx
+</code></pre>
+<hr>
+<h3 id="✅-最后：浏览器访问-Harbor"><a href="#✅-最后：浏览器访问-Harbor" class="headerlink" title="✅ 最后：浏览器访问 Harbor"></a>✅ 最后：浏览器访问 Harbor</h3><p>打开浏览器访问：</p>
+<pre><code>http://192.168.200.131:85/
+</code></pre>
+<p>你应该能看到 Harbor 登录页面。</p>
+<hr>
+<hr>
+<h2 id="🔍-目前情况总结："><a href="#🔍-目前情况总结：" class="headerlink" title="🔍 目前情况总结："></a>🔍 目前情况总结：</h2><table>
+<thead>
+<tr>
+<th>项</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>nginx</code> 容器健康</td>
+<td>✅ <code>healthy</code></td>
+</tr>
+<tr>
+<td><code>curl localhost:85</code></td>
+<td>❌ 失败（提示：Connection reset by peer）</td>
+</tr>
+<tr>
+<td><code>ss -tnlp</code> 显示监听</td>
+<td>✅ <code>docker-proxy</code> 在监听 <code>:::85</code></td>
+</tr>
+<tr>
+<td><code>ping 192.168.200.131</code></td>
+<td>✅ 通</td>
+</tr>
+<tr>
+<td>浏览器访问 <code>http://192.168.200.131:85</code></td>
+<td>❌ 超时</td>
+</tr>
+</tbody></table>
+<h3 id="✅-正确的配置应为："><a href="#✅-正确的配置应为：" class="headerlink" title="✅ 正确的配置应为："></a>✅ 正确的配置应为：</h3><p>在 <code>docker-compose.yml</code> 里，把 <code>proxy</code> 服务的 <code>ports</code> 改为：</p>
+<pre><code>ports:
+  - 85:80
+</code></pre>
+<p>然后执行如下命令使配置生效：</p>
+<pre><code># 停止并清理容器
+docker-compose down
+
+# 再启动
+docker-compose up -d
+</code></pre>
+<p>再执行：</p>
+<pre><code>curl -I http://localhost:85
+</code></pre>
+<p>你应该能看到：</p>
+<pre><code>HTTP/1.1 200 OK
+</code></pre>
+<p>然后用浏览器访问：</p>
+<pre><code>http://192.168.200.131:85
+</code></pre>
+<p>✅ 成功进入 Harbor 页面！</p>
+<hr>
+<hr>
+<p>我已经用了NAT模式 + 静态ip [root@localhost harbor]# curl -I <a target="_blank" rel="noopener" href="http://localhost:85/">http://localhost:85</a> curl: (56) Recv failure: Connection reset by peer [root@localhost harbor]# 嗯… 无法访问此页面 192.168.200.131 响应时间太长 请尝试： 在 Web 上搜索 192 168 200 131 检查连接 检查代理和防火墙 ERR_CONNECTION_TIMED_OUT</p>
+<h6 id="ChatGPT-说：-2"><a href="#ChatGPT-说：-2" class="headerlink" title="ChatGPT 说："></a>ChatGPT 说：</h6><p>你现在的情况是：</p>
+<ul>
+<li>✅ 已经使用了 <strong>NAT 模式</strong>；</li>
+<li>✅ <code>docker ps</code> 显示 Harbor 的 <code>nginx</code> 容器 <strong>端口映射是正确的</strong>：<code>0.0.0.0:85-&gt;80</code>；</li>
+<li>❌ 但 <code>curl localhost:85</code> 报错：<code>Connection reset by peer</code>，说明容器里的 nginx 拒绝了连接；</li>
+<li>❌ 主机访问 <code>http://192.168.200.131:85</code> 报超时，<strong>NAT 本身不支持直接访问虚拟机的 IP</strong>；</li>
+<li>✅ 你已给虚拟机设置静态 IP 为 <code>192.168.200.131</code>；</li>
+<li>❗ <strong>你没有配置端口转发！</strong></li>
+</ul>
+<hr>
+<h2 id="🎯-结论：你现在这种做法是错误的"><a href="#🎯-结论：你现在这种做法是错误的" class="headerlink" title="🎯 结论：你现在这种做法是错误的"></a>🎯 结论：你现在这种做法是错误的</h2><blockquote>
+<p><strong>NAT 模式下，主机不能通过虚拟机的 IP（192.168.200.131）访问 Harbor 的端口。</strong><br> <strong>应该通过端口转发实现！</strong></p>
+</blockquote>
+<hr>
+<h2 id="✅-正确做法：配置端口转发（NAT-➜-主机映射）"><a href="#✅-正确做法：配置端口转发（NAT-➜-主机映射）" class="headerlink" title="✅ 正确做法：配置端口转发（NAT ➜ 主机映射）"></a>✅ 正确做法：配置端口转发（NAT ➜ 主机映射）</h2><h3 id="🛠-步骤如下："><a href="#🛠-步骤如下：" class="headerlink" title="🛠 步骤如下："></a>🛠 步骤如下：</h3><h4 id="①-打开-VMware-虚拟网络编辑器"><a href="#①-打开-VMware-虚拟网络编辑器" class="headerlink" title="① 打开 VMware 虚拟网络编辑器"></a>① 打开 VMware 虚拟网络编辑器</h4><ul>
+<li>打开 VMware Workstation（非虚拟机内部）</li>
+<li>菜单栏 ➜ <code>编辑</code> ➜ <code>虚拟网络编辑器</code></li>
+<li>找到 <code>VMnet8</code>（即 NAT 模式）</li>
+</ul>
+<h4 id="②-点击右下角的“NAT-设置”"><a href="#②-点击右下角的“NAT-设置”" class="headerlink" title="② 点击右下角的“NAT 设置”"></a>② 点击右下角的“<strong>NAT 设置</strong>”</h4><ul>
+<li>在弹出的 NAT 设置窗口中 ➜ 点击“<strong>端口转发（Port Forwarding）</strong>”</li>
+</ul>
+<h4 id="③-添加一条端口转发规则："><a href="#③-添加一条端口转发规则：" class="headerlink" title="③ 添加一条端口转发规则："></a>③ 添加一条端口转发规则：</h4><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>协议</th>
+<th>主机端口</th>
+<th>虚拟机 IP</th>
+<th>虚拟机端口</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>harbor</td>
+<td>TCP</td>
+<td>1085</td>
+<td>192.168.200.131</td>
+<td>85</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>主机端口你可以写 1085，避免冲突；虚拟机端口是 Harbor 的端口 85。</p>
+</blockquote>
+<h2 id="📌-说明：为什么-NAT-模式不能直接访问虚拟机-IP？"><a href="#📌-说明：为什么-NAT-模式不能直接访问虚拟机-IP？" class="headerlink" title="📌 说明：为什么 NAT 模式不能直接访问虚拟机 IP？"></a>📌 说明：为什么 NAT 模式不能直接访问虚拟机 IP？</h2><blockquote>
+<p>NAT 模式是虚拟机通过主机“共享网络”出去访问外部，但主机<strong>无法通过虚拟机的 NAT IP（如 192.168.200.131）访问回来</strong>，因为这个网段对主机来说是隔离的。<br> 除非做端口转发，否则无法通信。</p>
+</blockquote>
+<hr>
+<hr>
+<h3 id="🧭-接下来的最后一步："><a href="#🧭-接下来的最后一步：" class="headerlink" title="🧭 接下来的最后一步："></a>🧭 接下来的最后一步：</h3><p>你当前的网络结构是：</p>
+<pre><code class="yaml">Windows 浏览器访问 localhost:10085
+ ↓
+VMware NAT 端口转发：10085 → 192.168.200.131:85
+ ↓
+Harbor Docker：85 → nginx容器的 82
+ ↓
+nginx 正常监听 82
+</code></pre>
+<p><code>cd /opt/harbor/</code></p>
+<h5 id="搞了好久-估计是网络-配置的问题"><a href="#搞了好久-估计是网络-配置的问题" class="headerlink" title="搞了好久 估计是网络+配置的问题"></a><span style = "color:red">搞了好久 估计是网络+配置的问题</span></h5><p>这是<code>docker-compose.yml</code>的配置信息</p>
+<pre><code class="yaml">version: &#39;2.3&#39;
+services:
+  log:
+    image: goharbor/harbor-log:v1.9.2
+    container_name: harbor-log
+    restart: always
+    dns_search: .
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - /var/log/harbor/:/var/log/docker/:z
+      - ./common/config/log/logrotate.conf:/etc/logrotate.d/logrotate.conf:z
+      - ./common/config/log/rsyslog_docker.conf:/etc/rsyslog.d/rsyslog_docker.conf:z
+    ports:
+      - 127.0.0.1:1514:10514
+    networks:
+      - harbor
+  registry:
+    image: goharbor/registry-photon:v2.7.1-patch-2819-2553-v1.9.2
+    container_name: registry
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/registry:/storage:z
+      - ./common/config/registry/:/etc/registry/:z
+      - type: bind
+        source: /data/secret/registry/root.crt
+        target: /etc/registry/root.crt
+    networks:
+      - harbor
+    dns_search: .
+    depends_on:
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:  
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;registry&quot;
+  registryctl:
+    image: goharbor/harbor-registryctl:v1.9.2
+    container_name: registryctl
+    env_file:
+      - ./common/config/registryctl/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/registry:/storage:z
+      - ./common/config/registry/:/etc/registry/:z
+      - type: bind
+        source: ./common/config/registryctl/config.yml
+        target: /etc/registryctl/config.yml
+    networks:
+      - harbor
+    dns_search: .
+    depends_on:
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:  
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;registryctl&quot;
+  postgresql:
+    image: goharbor/harbor-db:v1.9.2
+    container_name: harbor-db
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/database:/var/lib/postgresql/data:z
+    networks:
+      harbor:
+    dns_search: .
+    env_file:
+      - ./common/config/db/env
+    depends_on:
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:  
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;postgresql&quot;
+  core:
+    image: goharbor/harbor-core:v1.9.2
+    container_name: harbor-core
+    env_file:
+      - ./common/config/core/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/ca_download/:/etc/core/ca/:z
+      - /data/psc/:/etc/core/token/:z
+      - /data/:/data/:z
+      - ./common/config/core/certificates/:/etc/core/certificates/:z
+      - type: bind
+        source: ./common/config/core/app.conf
+        target: /etc/core/app.conf
+      - type: bind
+        source: /data/secret/core/private_key.pem
+        target: /etc/core/private_key.pem
+      - type: bind
+        source: /data/secret/keys/secretkey
+        target: /etc/core/key
+    networks:
+      harbor:
+    dns_search: .
+    depends_on:
+      - log
+      - registry
+      - redis
+      - postgresql
+    logging:
+      driver: &quot;syslog&quot;
+      options:  
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;core&quot;
+  portal:
+    image: goharbor/harbor-portal:v1.9.2
+    container_name: harbor-portal
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    networks:
+      - harbor
+    dns_search: .
+    depends_on:
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;portal&quot;
+
+  jobservice:
+    image: goharbor/harbor-jobservice:v1.9.2
+    container_name: harbor-jobservice
+    env_file:
+      - ./common/config/jobservice/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/job_logs:/var/log/jobs:z
+      - type: bind
+        source: ./common/config/jobservice/config.yml
+        target: /etc/jobservice/config.yml
+    networks:
+      - harbor
+    dns_search: .
+    depends_on:
+      - core
+    logging:
+      driver: &quot;syslog&quot;
+      options:
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;jobservice&quot;
+  redis:
+    image: goharbor/redis-photon:v1.9.2
+    container_name: redis
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/redis:/var/lib/redis
+    networks:
+      harbor:
+    dns_search: .
+    depends_on:
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;redis&quot;
+  proxy:
+    image: goharbor/nginx-photon:v1.9.2
+    container_name: nginx
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    volumes:
+      - ./common/config/nginx:/etc/nginx:z
+    networks:
+      - harbor
+    dns_search: .
+    ports:
+      - 85:8080
+    depends_on:
+      - registry
+      - core
+      - portal
+      - log
+    logging:
+      driver: &quot;syslog&quot;
+      options:  
+        syslog-address: &quot;tcp://127.0.0.1:1514&quot;
+        tag: &quot;proxy&quot;
+networks:
+  harbor:
+    external: false
+</code></pre>
+<h6 id="这是harbor里的nginx的配置"><a href="#这是harbor里的nginx的配置" class="headerlink" title="这是harbor里的nginx的配置"></a>这是harbor里的nginx的配置</h6><pre><code class="yaml">[root@localhost nginx]# cat nginx.conf
+
+worker_processes auto;
+pid /tmp/nginx.pid;
+
+events &#123;
+  worker_connections 1024;
+  use epoll;
+  multi_accept on;
+&#125;
+
+http &#123;
+  client_body_temp_path /tmp/client_body_temp;
+  proxy_temp_path /tmp/proxy_temp;
+  fastcgi_temp_path /tmp/fastcgi_temp;
+  uwsgi_temp_path /tmp/uwsgi_temp;
+  scgi_temp_path /tmp/scgi_temp;
+  tcp_nodelay on;
+
+  # this is necessary for us to be able to disable request buffering in all cases
+  proxy_http_version 1.1;
+
+  upstream core &#123;
+    server core:8080;
+  &#125;
+
+  upstream portal &#123;
+    server portal:8080;
+  &#125;
+
+  log_format timed_combined &#39;$remote_addr - &#39;
+    &#39;&quot;$request&quot; $status $body_bytes_sent &#39;
+    &#39;&quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;
+    &#39;$request_time $upstream_response_time $pipe&#39;;
+
+  access_log /dev/stdout timed_combined;
+
+  server &#123;
+    listen 8080;
+    server_tokens off;
+    # disable any limits to avoid HTTP 413 for large image uploads
+    client_max_body_size 0;
+
+    # Add extra headers
+    add_header X-Frame-Options DENY;
+    add_header Content-Security-Policy &quot;frame-ancestors &#39;none&#39;&quot;;
+
+    # costumized location config file can place to /etc/nginx/etc with prefix harbor.http. and suffix .conf
+    include /etc/nginx/conf.d/harbor.http.*.conf;
+
+    location / &#123;
+      proxy_pass http://portal/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /c/ &#123;
+      proxy_pass http://core/c/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /api/ &#123;
+      proxy_pass http://core/api/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /chartrepo/ &#123;
+      proxy_pass http://core/chartrepo/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /v1/ &#123;
+      return 404;
+    &#125;
+
+    location /v2/ &#123;
+      proxy_pass http://core/v2/;
+      proxy_set_header Host $http_host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /service/ &#123;
+      proxy_pass http://core/service/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      # When setting up Harbor behind other proxy, such as an Nginx instance, remove the below line if the proxy already has similar settings.
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_buffering off;
+      proxy_request_buffering off;
+    &#125;
+
+    location /service/notifications &#123;
+      return 404;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p><span style = "color:red"><strong>这里附带重大BUG排查思路</strong></span></p>
+<p>当然可以！我帮你把这整个过程的错误、涉及的宿主机、虚拟机、nginx（宿主机与容器里Harbor的nginx），以及排查思路，综合讲清楚，方便你理解整体流程。</p>
+<hr>
+<h1 id="1-相关环境和组件说明"><a href="#1-相关环境和组件说明" class="headerlink" title="1. 相关环境和组件说明"></a>1. 相关环境和组件说明</h1><ul>
+<li><strong>宿主机</strong>：你的真实物理机或主机系统（Windows），负责运行虚拟机软件（比如VMware）。</li>
+<li><strong>虚拟机</strong>：运行 Harbor 的 Linux 虚拟机（192.168.200.131），是 Harbor 的部署环境。</li>
+<li><strong>Docker 容器内的 nginx</strong>：Harbor 里内置的 nginx 作为反向代理服务器，监听容器内部的端口（如 82 或 8080），将请求转发给 Harbor 应用组件。</li>
+<li><strong>宿主机与虚拟机的网络</strong>：<ul>
+<li>虚拟机配置桥接或NAT网络，宿主机通过 IP 和端口转发访问虚拟机。</li>
+<li>端口转发需确保宿主机防火墙、虚拟机防火墙和 Docker 端口映射正确。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="2-你遇到的主要错误和症状总结"><a href="#2-你遇到的主要错误和症状总结" class="headerlink" title="2. 你遇到的主要错误和症状总结"></a>2. 你遇到的主要错误和症状总结</h1><table>
+<thead>
+<tr>
+<th>错误&#x2F;症状</th>
+<th>可能原因</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Test-NetConnection</code> 提示 TCP 连接失败（比如端口1085失败，10085成功但浏览器连接拒绝）</td>
+<td>端口未开放或服务未监听，防火墙或网络配置问题</td>
+<td>端口映射或容器服务没启动好</td>
+</tr>
+<tr>
+<td>Docker 启动 nginx 容器时报错：<code>unknown log opt &#39;syslog-address&#39; for json-file log driver</code></td>
+<td><code>logging</code> 配置不兼容，<code>json-file</code> 驱动不支持 <code>syslog-address</code> 参数</td>
+<td>需要调整日志驱动配置</td>
+</tr>
+<tr>
+<td><code>curl http://localhost:85</code> 返回 302 或 200，但浏览器访问虚拟机IP时超时或重置连接</td>
+<td>虚拟机防火墙、宿主机端口转发配置错误，或者nginx监听端口配置不一致</td>
+<td>宿主机访问虚拟机端口不通</td>
+</tr>
+<tr>
+<td>虚拟机上 <code>ss -tnlp</code> 看到 nginx 监听的是 82 端口，而 Docker 映射是 85:82</td>
+<td>端口映射正确，但宿主机访问端口和内部监听端口不一致需要确认</td>
+<td>访问时端口错位会导致访问失败</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="3-排查思路和步骤详解"><a href="#3-排查思路和步骤详解" class="headerlink" title="3. 排查思路和步骤详解"></a>3. 排查思路和步骤详解</h1><h3 id="Step-1：确认容器服务启动及端口监听情况"><a href="#Step-1：确认容器服务启动及端口监听情况" class="headerlink" title="Step 1：确认容器服务启动及端口监听情况"></a>Step 1：确认容器服务启动及端口监听情况</h3><ul>
+<li><code>docker-compose up -d</code> 启动 Harbor 相关服务，包括 nginx 代理容器。</li>
+<li><code>docker ps</code> 看 nginx 容器是否在运行。</li>
+<li><code>docker logs nginx</code> 查看 nginx 容器日志，看是否报错。</li>
+<li><code>ss -tnlp</code>（或 <code>netstat -tnlp</code>）确认 nginx 容器内部监听端口，例如82或8080。</li>
+</ul>
+<hr>
+<h3 id="Step-2：确认端口映射和宿主机网络"><a href="#Step-2：确认端口映射和宿主机网络" class="headerlink" title="Step 2：确认端口映射和宿主机网络"></a>Step 2：确认端口映射和宿主机网络</h3><ul>
+<li>确认 docker-compose 端口映射，比如 <code>- 85:82</code> 说明宿主机85端口映射到容器82端口。</li>
+<li>确认虚拟机的网络IP（192.168.200.131）可访问，虚拟机是否允许访问85端口。</li>
+<li>通过宿主机（Windows）<code>Test-NetConnection 192.168.200.131 85</code> 测试连通性。</li>
+<li>如果端口连接失败，检查：<ul>
+<li>虚拟机防火墙状态（如 <code>firewall-cmd</code>），确认85端口开放。</li>
+<li>虚拟机网络配置是否正确。</li>
+<li>宿主机是否正确做了端口转发（NAT配置等）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="Step-3：确认宿主机与虚拟机间端口转发与防火墙设置"><a href="#Step-3：确认宿主机与虚拟机间端口转发与防火墙设置" class="headerlink" title="Step 3：确认宿主机与虚拟机间端口转发与防火墙设置"></a>Step 3：确认宿主机与虚拟机间端口转发与防火墙设置</h3><ul>
+<li>你之前做的 VMware NAT 端口转发配置，确认宿主机的10085端口转发到虚拟机的85端口。</li>
+<li>虚拟机防火墙是否禁用或开放该端口（你确认了 <code>firewalld</code> 未运行）。</li>
+<li>SELinux 状态（你确认是 <code>Permissive</code>，不阻止）。</li>
+</ul>
+<hr>
+<h3 id="Step-4：确认容器内部-nginx-与-Harbor-应用运行状态"><a href="#Step-4：确认容器内部-nginx-与-Harbor-应用运行状态" class="headerlink" title="Step 4：确认容器内部 nginx 与 Harbor 应用运行状态"></a>Step 4：确认容器内部 nginx 与 Harbor 应用运行状态</h3><ul>
+<li>容器内 nginx 配置监听82端口，但外部映射成85端口，确认两者一致。</li>
+<li>容器内 curl localhost:82 返回200，说明 nginx 服务正常。</li>
+<li>nginx 返回的网页中包含 Harbor 前端静态资源，但前端一直转圈，可能是后端 API 没响应。</li>
+<li>可能是 Harbor 核心服务(core)未正常工作或访问不到数据库&#x2F;redis，导致页面没加载完成。</li>
+</ul>
+<hr>
+<h3 id="Step-5：重启虚拟机后问题消失"><a href="#Step-5：重启虚拟机后问题消失" class="headerlink" title="Step 5：重启虚拟机后问题消失"></a>Step 5：重启虚拟机后问题消失</h3><ul>
+<li>重启虚拟机后，网络重新初始化，Docker网络也重建，端口转发生效，nginx和Harbor服务正常，浏览器访问成功。</li>
+<li>说明之前网络环境（端口转发、Docker网络或nginx监听）存在缓存或未正常启动的问题。</li>
+</ul>
+<hr>
+<h1 id="4-你看到的“宿主机与虚拟机”和“nginx内部-x2F-外部”的关系"><a href="#4-你看到的“宿主机与虚拟机”和“nginx内部-x2F-外部”的关系" class="headerlink" title="4. 你看到的“宿主机与虚拟机”和“nginx内部&#x2F;外部”的关系"></a>4. 你看到的“宿主机与虚拟机”和“nginx内部&#x2F;外部”的关系</h1><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>作用</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>宿主机 (Windows)</strong></td>
+<td>你直接操作的机器，运行 VMware，提供 NAT&#x2F;桥接网络，做端口转发</td>
+<td>访问虚拟机IP和端口</td>
+</tr>
+<tr>
+<td><strong>虚拟机 (Linux Harbor 环境)</strong></td>
+<td>Harbor 部署环境，运行 Docker 和 Harbor 服务容器</td>
+<td>虚拟机防火墙和网络设置必须正确</td>
+</tr>
+<tr>
+<td><strong>Docker 容器内 nginx</strong></td>
+<td>Harbor 的反向代理，监听容器内部端口（如82），转发给 Harbor 应用服务</td>
+<td>Docker端口映射：宿主机85端口映射到容器82端口</td>
+</tr>
+<tr>
+<td><strong>Harbor 应用组件</strong></td>
+<td>Core、Portal、Registry 等，负责业务逻辑和数据</td>
+<td>需要数据库和redis支持，服务正常才能正常访问</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="5-综合总结"><a href="#5-综合总结" class="headerlink" title="5. 综合总结"></a>5. 综合总结</h1><ul>
+<li>你先遇到的端口连接失败，是虚拟机内服务监听、端口映射、虚拟机防火墙或宿主机端口转发配置的问题。</li>
+<li>Docker 容器日志中的 <code>unknown log opt &#39;syslog-address&#39;</code> 是日志驱动配置错误，需要统一用 <code>json-file</code> 或兼容的驱动。</li>
+<li>宿主机访问端口和容器监听端口要对应，nginx监听82端口，宿主机映射85端口，访问时要用宿主机的85端口。</li>
+<li>访问 Harbor 首页看到 nginx 返回 200，说明 nginx 正常，前端页面开始加载，但若页面卡住，可能是后端服务未完全启动或网络访问不到其他 Harbor 服务。</li>
+<li>重启虚拟机会刷新网络环境和容器服务，解决了之前隐藏的网络端口转发、Docker网络或者服务启动顺序的问题。</li>
+<li>最后确认服务正常，可以访问页面。</li>
+</ul>
+<hr>
+<p>如果总结起来，整个排查流程是：</p>
+<ol>
+<li><strong>确认服务启动和端口监听</strong>（<code>docker-compose up</code>、<code>ss -tnlp</code>、<code>docker logs</code>）。</li>
+<li><strong>检查端口映射和虚拟机网络配置</strong>（NAT端口转发、虚拟机IP、防火墙）。</li>
+<li><strong>宿主机访问测试</strong>（PowerShell的Test-NetConnection）。</li>
+<li><strong>确认容器内服务状态</strong>（容器内curl）。</li>
+<li><strong>调整配置并重启验证</strong>。</li>
+<li><strong>最终确认页面访问正常</strong>。</li>
+</ol>
+<hr>
+<h1 id="Harbor-访问故障排查文档"><a href="#Harbor-访问故障排查文档" class="headerlink" title="Harbor 访问故障排查文档"></a>Harbor 访问故障排查文档</h1><h2 id="一、背景说明"><a href="#一、背景说明" class="headerlink" title="一、背景说明"></a>一、背景说明</h2><p>你在虚拟机上用 Docker Compose 部署 Harbor，遇到宿主机访问 Harbor Web UI 端口无法连接的问题。本文档总结了排查和解决过程，覆盖容器服务状态、端口映射、虚拟机网络、防火墙配置等关键点。</p>
+<hr>
+<h2 id="二、排查准备"><a href="#二、排查准备" class="headerlink" title="二、排查准备"></a>二、排查准备</h2><ul>
+<li><strong>宿主机环境</strong>：Windows（通过 VMware 运行虚拟机）</li>
+<li><strong>虚拟机环境</strong>：Linux，Harbor 服务部署环境，IP 如 <code>192.168.200.131</code></li>
+<li><strong>Docker Harbor 版本</strong>：v1.9.2</li>
+<li><strong>访问端口映射</strong>：宿主机端口 85 映射到容器内 nginx 监听端口 82</li>
+</ul>
+<hr>
+<h2 id="三、排查步骤"><a href="#三、排查步骤" class="headerlink" title="三、排查步骤"></a>三、排查步骤</h2><h3 id="Step-1-容器服务启动状态检查"><a href="#Step-1-容器服务启动状态检查" class="headerlink" title="Step 1. 容器服务启动状态检查"></a>Step 1. 容器服务启动状态检查</h3><ul>
+<li><p>使用命令：</p>
+<pre><code>bash复制编辑docker-compose up -d
+docker ps
+docker logs nginx --tail 50
+</code></pre>
+</li>
+<li><p>确认 nginx 容器及其他 Harbor 服务容器是否运行正常，没有报错。</p>
+</li>
+<li><p>使用命令查看容器内部端口监听：</p>
+<pre><code>bash
+
+
+复制编辑
+ss -tnlp | grep nginx
+</code></pre>
+<p>确认 nginx 是否监听正确的端口（一般是 82 或 8080）。</p>
+</li>
+</ul>
+<hr>
+<h3 id="Step-2-Docker-端口映射与虚拟机端口监听确认"><a href="#Step-2-Docker-端口映射与虚拟机端口监听确认" class="headerlink" title="Step 2. Docker 端口映射与虚拟机端口监听确认"></a>Step 2. Docker 端口映射与虚拟机端口监听确认</h3><ul>
+<li><p>检查 <code>docker-compose.yml</code> 端口映射配置，如：</p>
+<pre><code>yaml复制编辑ports:
+  - 85:82
+</code></pre>
+<p>表示宿主机（虚拟机）85端口映射到容器82端口。</p>
+</li>
+<li><p>在虚拟机上确认端口监听：</p>
+<pre><code>bash
+
+
+复制编辑
+ss -tnlp | grep :85
+</code></pre>
+<p>通常 docker-proxy 会监听对应端口。</p>
+</li>
+</ul>
+<hr>
+<h3 id="Step-3-虚拟机网络配置和防火墙检查"><a href="#Step-3-虚拟机网络配置和防火墙检查" class="headerlink" title="Step 3. 虚拟机网络配置和防火墙检查"></a>Step 3. 虚拟机网络配置和防火墙检查</h3><ul>
+<li><p>检查虚拟机的防火墙状态：</p>
+<pre><code>bash
+
+
+复制编辑
+firewall-cmd --state
+</code></pre>
+<p>确保防火墙关闭或已开放对应端口。</p>
+</li>
+<li><p>查看 SELinux 状态（有时会阻止网络服务）：</p>
+<pre><code>bash
+
+
+复制编辑
+getenforce
+</code></pre>
+<p>建议设置为 <code>Permissive</code> 或 <code>Disabled</code>。</p>
+</li>
+<li><p>检查虚拟机的 IP 配置，确认使用的是正确的 IP。</p>
+</li>
+<li><p>在宿主机（Windows）上使用 PowerShell 测试端口连通：</p>
+<pre><code>powershell
+
+
+复制编辑
+Test-NetConnection -ComputerName 192.168.200.131 -Port 85
+</code></pre>
+</li>
+</ul>
+<hr>
+<h3 id="Step-4-宿主机与虚拟机端口转发设置（NAT模式）"><a href="#Step-4-宿主机与虚拟机端口转发设置（NAT模式）" class="headerlink" title="Step 4. 宿主机与虚拟机端口转发设置（NAT模式）"></a>Step 4. 宿主机与虚拟机端口转发设置（NAT模式）</h3><ul>
+<li>如果使用 VMware NAT，需要在 VMware NAT 设置中配置端口转发：<ul>
+<li>主机端口（宿主机）设为 <code>10085</code>（或你需要的端口）</li>
+<li>转发到虚拟机 IP（如 <code>192.168.200.131</code>）的 85 端口</li>
+</ul>
+</li>
+<li>通过宿主机访问 <code>localhost:10085</code>，实际访问虚拟机的 Harbor 服务。</li>
+</ul>
+<hr>
+<h3 id="Step-5-使用-curl-命令测试服务"><a href="#Step-5-使用-curl-命令测试服务" class="headerlink" title="Step 5. 使用 curl 命令测试服务"></a>Step 5. 使用 curl 命令测试服务</h3><ul>
+<li><p>在虚拟机内部测试：</p>
+<pre><code>bash
+
+
+复制编辑
+curl -I http://localhost:82
+</code></pre>
+</li>
+<li><p>在虚拟机外部测试（宿主机）：</p>
+<pre><code>bash
+
+
+复制编辑
+curl -I http://192.168.200.131:85
+</code></pre>
+</li>
+<li><p>观察返回结果，确认 HTTP 状态码是否正常（200&#x2F;302 等）。</p>
+</li>
+</ul>
+<hr>
+<h3 id="Step-6-遇到问题的典型症状及对应处理"><a href="#Step-6-遇到问题的典型症状及对应处理" class="headerlink" title="Step 6. 遇到问题的典型症状及对应处理"></a>Step 6. 遇到问题的典型症状及对应处理</h3><table>
+<thead>
+<tr>
+<th>症状</th>
+<th>可能原因</th>
+<th>解决办法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>宿主机无法连接端口，连接超时</td>
+<td>防火墙阻止、端口未开放</td>
+<td>关闭防火墙或放行端口</td>
+</tr>
+<tr>
+<td>curl 返回连接重置或拒绝</td>
+<td>服务未启动或监听端口错误</td>
+<td>检查 nginx 配置和容器启动</td>
+</tr>
+<tr>
+<td>curl 返回200但页面加载不出</td>
+<td>后端服务未就绪或网络不通</td>
+<td>检查 Harbor core 服务状态</td>
+</tr>
+<tr>
+<td>日志中报错日志驱动不支持</td>
+<td>docker-compose 日志配置错误</td>
+<td>统一使用 <code>json-file</code> 驱动</td>
+</tr>
+<tr>
+<td>端口映射配置错误</td>
+<td>端口映射写错</td>
+<td>纠正 <code>docker-compose.yml</code> 中端口映射</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="Step-7-重启生效验证"><a href="#Step-7-重启生效验证" class="headerlink" title="Step 7. 重启生效验证"></a>Step 7. 重启生效验证</h3><ul>
+<li>重启虚拟机，有时可以修复网络绑定、端口冲突等隐患问题。</li>
+<li>重启后再次测试端口连通性和页面访问。</li>
+</ul>
+<hr>
+<h2 id="四、示例核心配置（端口映射部分）"><a href="#四、示例核心配置（端口映射部分）" class="headerlink" title="四、示例核心配置（端口映射部分）"></a>四、示例核心配置（端口映射部分）</h2><pre><code>yaml复制编辑services:
+  proxy:
+    image: goharbor/nginx-photon:v1.9.2
+    container_name: nginx
+    ports:
+      - 85:82  # 宿主机端口 85 映射到容器内 nginx 监听的 82 端口
+    volumes:
+      - ./common/config/nginx:/etc/nginx:z
+    depends_on:
+      - core
+      - portal
+      - registry
+</code></pre>
+<hr>
+<h2 id="五、常用命令汇总"><a href="#五、常用命令汇总" class="headerlink" title="五、常用命令汇总"></a>五、常用命令汇总</h2><table>
+<thead>
+<tr>
+<th>作用</th>
+<th>命令示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>查看容器状态</td>
+<td><code>docker ps</code></td>
+</tr>
+<tr>
+<td>查看容器日志</td>
+<td><code>docker logs nginx --tail 50</code></td>
+</tr>
+<tr>
+<td>查看端口监听</td>
+<td>&#96;ss -tnlp</td>
+</tr>
+<tr>
+<td>测试端口连通（宿主机）</td>
+<td><code>Test-NetConnection -ComputerName 192.168.200.131 -Port 85</code> (PowerShell)</td>
+</tr>
+<tr>
+<td>虚拟机防火墙状态</td>
+<td><code>firewall-cmd --state</code></td>
+</tr>
+<tr>
+<td>SELinux 状态</td>
+<td><code>getenforce</code></td>
+</tr>
+<tr>
+<td>虚拟机内访问本地端口</td>
+<td><code>curl -I http://localhost:82</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="访问故障排查简易步骤清单"><a href="#访问故障排查简易步骤清单" class="headerlink" title="访问故障排查简易步骤清单"></a>访问故障排查简易步骤清单</h1><ol>
+<li><strong>确认 Docker 容器和服务状态</strong><ul>
+<li><code>docker-compose up -d</code></li>
+<li><code>docker ps</code></li>
+<li><code>docker logs nginx</code></li>
+</ul>
+</li>
+<li><strong>确认端口监听和映射</strong><ul>
+<li>容器内部 <code>ss -tnlp | grep nginx</code></li>
+<li>虚拟机 <code>ss -tnlp | grep :85</code></li>
+<li><code>docker-compose.yml</code> 中端口映射是否正确</li>
+</ul>
+</li>
+<li><strong>检查虚拟机网络和防火墙</strong><ul>
+<li><code>firewall-cmd --state</code></li>
+<li><code>getenforce</code></li>
+<li>关闭防火墙或放行端口</li>
+</ul>
+</li>
+<li><strong>宿主机端口转发（NAT 模式）配置正确</strong><ul>
+<li>确认 VMware NAT 端口转发设置无误</li>
+</ul>
+</li>
+<li><strong>测试端口连通性</strong><ul>
+<li>宿主机 PowerShell 测试端口连通</li>
+<li>虚拟机内 curl 测试端口访问</li>
+</ul>
+</li>
+<li><strong>浏览器访问测试</strong><ul>
+<li>用正确端口访问 Harbor 页面</li>
+<li>观察是否能正常加载</li>
+</ul>
+</li>
+<li><strong>重启虚拟机和服务</strong><ul>
+<li>解决网络缓存、绑定等异常</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+
             
         </div>
     </div>
@@ -2101,7 +3747,7 @@ docker rm -f 容器名称/ID 删除容器
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -2947,7 +4593,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -3571,7 +5217,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -4178,7 +5824,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -5143,7 +6789,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -5276,7 +6922,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -8835,7 +10481,7 @@ except etree.XMLSyntaxError as e:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -9062,7 +10708,7 @@ query_engine = index.as_query_engine(streaming=True)
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
