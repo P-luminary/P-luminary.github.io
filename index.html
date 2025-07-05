@@ -1302,26 +1302,18 @@ sudo mv /etc/yum.repos.d/mysql57.repo /root/
 <ol>
 <li><strong>只保留 <code>mysql-community.repo</code> 这个 repo 文件，确保它内容正确（你可以用<code>cat</code>看下内容）</strong></li>
 </ol>
-<pre><code>bash
-
-
-复制编辑
-cat /etc/yum.repos.d/mysql-community.repo
+<pre><code>cat /etc/yum.repos.d/mysql-community.repo
 </code></pre>
 <ol>
 <li><strong>清理缓存，重新生成</strong></li>
 </ol>
-<pre><code>bash复制编辑sudo yum clean all
+<pre><code>sudo yum clean all
 sudo yum makecache
 </code></pre>
 <ol>
 <li><strong>尝试安装mysql 5.7</strong></li>
 </ol>
-<pre><code>bash
-
-
-复制编辑
-sudo yum install mysql-community-server
+<pre><code>sudo yum install mysql-community-server
 </code></pre>
 <hr>
 <h3 id="解决方案：用符合策略的密码先改，再降低策略"><a href="#解决方案：用符合策略的密码先改，再降低策略" class="headerlink" title="解决方案：用符合策略的密码先改，再降低策略"></a>解决方案：用符合策略的密码先改，再降低策略</h3><ol>
@@ -1351,11 +1343,7 @@ ALTER USER &#39;root&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;root&#39;;
 <ol>
 <li><strong>刷新权限</strong></li>
 </ol>
-<pre><code>sql
-
-
-复制编辑
-FLUSH PRIVILEGES;
+<pre><code>FLUSH PRIVILEGES;
 </code></pre>
 </blockquote>
 <p>在mysql创建sonar数据库</p>
@@ -1444,7 +1432,6 @@ Windows.
 <p>现在有个问题就是我Jenkins是2.504.2 然后jdk是17 我不想换jdk的情况下就要去 </p>
 <pre><code class="yaml">Build Steps里面的执行脚本
 
-
 echo &quot;开始进行编译构建&quot;
 mvn clean package
 echo &quot;编译构建结束&quot;
@@ -1468,64 +1455,64 @@ echo &quot;SonarQube扫描结束&quot;
 <blockquote>
 <p>打开idea jenkinsfile文件</p>
 <pre><code class="yaml">pipeline &#123;
-    agent any
-    stages &#123;
-        stage(&#39;pull code&#39;) &#123;
-            steps &#123;
-                checkout scmGit(
-                    branches: [[name: &quot;*/$&#123;branch&#125;&quot;]],
-                    extensions: [],
-                    userRemoteConfigs: [[
-                        credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
-                        url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
-                    ]]
-                )
-            &#125;
-        &#125;
-        stage(&#39;build project&#39;) &#123;
-            steps &#123;
-                sh &#39;mvn clean package&#39;
-            &#125;
-        &#125;
-        stage(&#39;sonarqube scan&#39;) &#123;
-            environment &#123;
-                // 传递给sonar-scanner JVM的启动参数，解决模块访问限制
-                SONAR_SCANNER_OPTS = &#39;--add-opens=java.base/java.lang=ALL-UNNAMED &#39; +
-                                     &#39;--add-opens=java.base/java.lang.reflect=ALL-UNNAMED &#39; +
-                                     &#39;--add-opens=java.base/java.io=ALL-UNNAMED&#39;
-            &#125;
-            steps &#123;
-                sh &#39;&#39;&#39;
-                /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
-                  -Dsonar.projectKey=web_demo_freestyle \
-                  -Dsonar.host.url=http://192.168.200.129:9999 \
-                  -Dsonar.sources=. \
-                  -Dsonar.exclusions=**/test/**,**/target/** \
-                  -Dsonar.java.source=1.8 \
-                  -Dsonar.java.target=1.8
-                &#39;&#39;&#39;
-            &#125;
-        &#125;
-        stage(&#39;publish&#39;) &#123;
-            steps &#123;
-                deploy adapters: [tomcat8(
-                    alternativeDeploymentContext: &#39;&#39;, 
-                    credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;, 
-                    path: &#39;&#39;, 
-                    url: &#39;http://192.168.200.131:8090/&#39;
-                )], contextPath: null, war: &#39;target/*.war&#39;
-            &#125;
-        &#125;
-    &#125;
-    post &#123;
-        always &#123;
-            emailext(
-                subject: &#39;构建通知：$&#123;PROJECT_NAME&#125; - Build # $&#123;BUILD_NUMBER&#125; - $&#123;BUILD_STATUS&#125;!&#39;,
-                body: &#39;$&#123;FILE,path=&quot;email.html&quot;&#125;&#39;,
-                to: &#39;2523419709@qq.com&#39;
-            )
-        &#125;
-    &#125;
+ agent any
+ stages &#123;
+     stage(&#39;pull code&#39;) &#123;
+         steps &#123;
+             checkout scmGit(
+                 branches: [[name: &quot;*/$&#123;branch&#125;&quot;]],
+                 extensions: [],
+                 userRemoteConfigs: [[
+                     credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;,
+                     url: &#39;http://192.168.200.132:82/lanyun_group/web_demo.git&#39;
+                 ]]
+             )
+         &#125;
+     &#125;
+     stage(&#39;build project&#39;) &#123;
+         steps &#123;
+             sh &#39;mvn clean package&#39;
+         &#125;
+     &#125;
+     stage(&#39;sonarqube scan&#39;) &#123;
+         environment &#123;
+             // 传递给sonar-scanner JVM的启动参数，解决模块访问限制
+             SONAR_SCANNER_OPTS = &#39;--add-opens=java.base/java.lang=ALL-UNNAMED &#39; +
+                                  &#39;--add-opens=java.base/java.lang.reflect=ALL-UNNAMED &#39; +
+                                  &#39;--add-opens=java.base/java.io=ALL-UNNAMED&#39;
+         &#125;
+         steps &#123;
+             sh &#39;&#39;&#39;
+             /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
+               -Dsonar.projectKey=web_demo_freestyle \
+               -Dsonar.host.url=http://192.168.200.129:9999 \
+               -Dsonar.sources=. \
+               -Dsonar.exclusions=**/test/**,**/target/** \
+               -Dsonar.java.source=1.8 \
+               -Dsonar.java.target=1.8
+             &#39;&#39;&#39;
+         &#125;
+     &#125;
+     stage(&#39;publish&#39;) &#123;
+         steps &#123;
+             deploy adapters: [tomcat8(
+                 alternativeDeploymentContext: &#39;&#39;, 
+                 credentialsId: &#39;e847a130-29c3-4d0b-bf35-db8d00de7950&#39;, 
+                 path: &#39;&#39;, 
+                 url: &#39;http://192.168.200.131:8090/&#39;
+             )], contextPath: null, war: &#39;target/*.war&#39;
+         &#125;
+     &#125;
+ &#125;
+ post &#123;
+     always &#123;
+         emailext(
+             subject: &#39;构建通知：$&#123;PROJECT_NAME&#125; - Build # $&#123;BUILD_NUMBER&#125; - $&#123;BUILD_STATUS&#125;!&#39;,
+             body: &#39;$&#123;FILE,path=&quot;email.html&quot;&#125;&#39;,
+             to: &#39;2523419709@qq.com&#39;
+         )
+     &#125;
+ &#125;
 &#125;
 </code></pre>
 <h3 id="✅-方法一：编辑-SonarScanner-的配置文件（最可靠）"><a href="#✅-方法一：编辑-SonarScanner-的配置文件（最可靠）" class="headerlink" title="✅ 方法一：编辑 SonarScanner 的配置文件（最可靠）"></a>✅ 方法一：编辑 SonarScanner 的配置文件（最可靠）</h3><p>编辑 Jenkins 中自动下载的 <code>sonar-scanner</code> 的 JVM 启动参数配置文件：</p>
@@ -1550,6 +1537,28 @@ sonar.scanner.jvmArgs=--add-opens java.base/java.lang=ALL-UNNAMED
 <h4 id="★如果要使用sonarqube-一定要jdk是1-8★"><a href="#★如果要使用sonarqube-一定要jdk是1-8★" class="headerlink" title="★如果要使用sonarqube 一定要jdk是1.8★"></a>★如果要使用sonarqube 一定要jdk是1.8★</h4><p>首先需要去全局那里设置jdk（Manage jenkins → System）</p>
 <p>键：<br><code>JAVA_HOME</code><br>值：<br><code>/usr/local/java/jdk-17.0.8+7</code></p>
 <p>键：<br><code>JAVA_HOME</code><br>值：<br><code>/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-1.el7.x86_64</code><br>在构建项目配置的时候<code>Build Steps</code> → <code>Execute SonarQube Scanner</code> → jdk一定要选择1.8的！！！</p>
+<hr>
+<hr>
+<h4 id="流水线构建版本用的jdk17解决办法"><a href="#流水线构建版本用的jdk17解决办法" class="headerlink" title="流水线构建版本用的jdk17解决办法"></a><span style = "color:red"><strong>流水线构建版本用的jdk17解决办法</strong></span></h4><p>要默认的1.8才支持 所以直接从根源上解决这个问题</p>
+<p>你当前的系统默认 Java 是 <strong>JDK 1.8</strong>，路径在：</p>
+<pre><code>/usr/bin/java
+</code></pre>
+<p>你执行的：</p>
+<pre><code>java -version
+</code></pre>
+<p>输出是：</p>
+<pre><code>openjdk version &quot;1.8.0_262&quot;
+</code></pre>
+<p>说明现在 Jenkins 主机上默认使用的是 Java 8，这是符合 <strong>SonarQube 6.7.4 的推荐版本</strong>，很好！</p>
+<hr>
+<h2 id="✅-接下来你要做的"><a href="#✅-接下来你要做的" class="headerlink" title="✅ 接下来你要做的"></a>✅ 接下来你要做的</h2><p>为了确保 Jenkins 中的 <code>SonarScanner</code> 也用 Java 8 运行，你还需要修改如下：</p>
+<hr>
+<h3 id="✅-方法一：修改-sonar-scanner-启动脚本（推荐）"><a href="#✅-方法一：修改-sonar-scanner-启动脚本（推荐）" class="headerlink" title="✅ 方法一：修改 sonar-scanner 启动脚本（推荐）"></a>✅ 方法一：修改 <code>sonar-scanner</code> 启动脚本（推荐）</h3><pre><code class="java">vi /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner
+</code></pre>
+<p>在顶部添加下面两行 👇：</p>
+<pre><code class="java">export JAVA_HOME=/usr
+export PATH=$JAVA_HOME/bin:$PATH
+</code></pre>
 </blockquote>
 <hr>
 <h5 id="模拟SonaQube代码审查机制"><a href="#模拟SonaQube代码审查机制" class="headerlink" title="模拟SonaQube代码审查机制"></a>模拟SonaQube代码审查机制</h5><p><code>C:\Users\Pluminary\Desktop\web_demo\src\main\java\com\itheima\HelloServlet.java</code></p>
@@ -2182,7 +2191,10 @@ DNS1=8.8.8.8
 </tbody></table>
 </blockquote>
 <hr>
-<h5 id=""><a href="#" class="headerlink" title=""></a></h5><h4 id="我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊"><a href="#我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊" class="headerlink" title="我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊"></a>我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊</h4><table>
+<blockquote>
+<p>如果<code>ip a show ens33</code>没有ip地址怎么办 这样会导致moba连不上<br>应该是网卡状态为<code>down</code>说明网卡没启用<br>直接用ip命令把网卡打开<code>sudo ip link set ens33 up</code><br>然后找一下有没有 ip a show ens33<br>重启网络服务：<code>sudo systemctl restart network</code> 再次查看<br><span style = "color:red"><strong>如果还是没有 就手动设置IP</strong></span><br><code>sudo ip addr add 192.168.200.131/24 dev ens33 </code><br>然后再次查看 <code>ip a show ens33</code></p>
+</blockquote>
+<h4 id="我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊"><a href="#我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊" class="headerlink" title="我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊"></a>我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊</h4><table>
 <thead>
 <tr>
 <th>模式名称</th>
@@ -2639,8 +2651,11 @@ sudo chmod +x /usr/local/bin/docker-compose
 </li>
 <li><p>安装Harbor</p>
 <blockquote>
-<p>.&#x2F;prepare<br>.&#x2F;install.sh</p>
+<p>.&#x2F;prepare<br>.&#x2F;install.sh </p>
 </blockquote>
+<h5 id="启动Harbor-★★-tomcat-131服务器"><a href="#启动Harbor-★★-tomcat-131服务器" class="headerlink" title="启动Harbor ★★ [tomcat 131服务器]"></a>启动Harbor ★★ [tomcat 131服务器]</h5><pre><code class="JAVA">cd /opt/harbor
+./install.sh
+</code></pre>
 </li>
 </ul>
 <h5 id="这里有个经典的超级牛逼的大bug"><a href="#这里有个经典的超级牛逼的大bug" class="headerlink" title="这里有个经典的超级牛逼的大bug"></a><span style = "color:red">这里有个经典的超级牛逼的大bug</span></h5><h6 id="抛出问题："><a href="#抛出问题：" class="headerlink" title="抛出问题："></a>抛出问题：</h6><blockquote>
@@ -3517,90 +3532,75 @@ docker logs nginx --tail 50
 <pre><code>bash
 
 
-复制编辑
 ss -tnlp | grep nginx
 </code></pre>
-<p>确认 nginx 是否监听正确的端口（一般是 82 或 8080）。</p>
 </li>
 </ul>
+<p> 确认 nginx 是否监听正确的端口（一般是 82 或 8080）。</p>
 <hr>
 <h3 id="Step-2-Docker-端口映射与虚拟机端口监听确认"><a href="#Step-2-Docker-端口映射与虚拟机端口监听确认" class="headerlink" title="Step 2. Docker 端口映射与虚拟机端口监听确认"></a>Step 2. Docker 端口映射与虚拟机端口监听确认</h3><ul>
 <li><p>检查 <code>docker-compose.yml</code> 端口映射配置，如：</p>
-<pre><code>yaml复制编辑ports:
-  - 85:82
-</code></pre>
-<p>表示宿主机（虚拟机）85端口映射到容器82端口。</p>
-</li>
-<li><p>在虚拟机上确认端口监听：</p>
-<pre><code>bash
-
-
-复制编辑
-ss -tnlp | grep :85
-</code></pre>
-<p>通常 docker-proxy 会监听对应端口。</p>
+<p>&#96;&#96;&#96;</p>
 </li>
 </ul>
+<p>ports:<br>    - 85:82</p>
+<pre><code>
+表示宿主机（虚拟机）85端口映射到容器82端口。
+
+- 在虚拟机上确认端口监听：
+</code></pre>
+<pre><code>ss -tnlp | grep :85
+```
+</code></pre>
+<p>  通常 docker-proxy 会监听对应端口。</p>
 <hr>
 <h3 id="Step-3-虚拟机网络配置和防火墙检查"><a href="#Step-3-虚拟机网络配置和防火墙检查" class="headerlink" title="Step 3. 虚拟机网络配置和防火墙检查"></a>Step 3. 虚拟机网络配置和防火墙检查</h3><ul>
-<li><p>检查虚拟机的防火墙状态：</p>
-<pre><code>bash
-
-
-复制编辑
+<li>检查虚拟机的防火墙状态：</li>
+</ul>
+<pre><code>
 firewall-cmd --state
 </code></pre>
-<p>确保防火墙关闭或已开放对应端口。</p>
-</li>
+<pre><code>确保防火墙关闭或已开放对应端口。
+</code></pre>
+<ul>
 <li><p>查看 SELinux 状态（有时会阻止网络服务）：</p>
-<pre><code>bash
-
-
-复制编辑
-getenforce
-</code></pre>
-<p>建议设置为 <code>Permissive</code> 或 <code>Disabled</code>。</p>
-</li>
-<li><p>检查虚拟机的 IP 配置，确认使用的是正确的 IP。</p>
-</li>
-<li><p>在宿主机（Windows）上使用 PowerShell 测试端口连通：</p>
-<pre><code>powershell
-
-
-复制编辑
-Test-NetConnection -ComputerName 192.168.200.131 -Port 85
-</code></pre>
+<p>&#96;&#96;&#96;<br> getenforce</p>
 </li>
 </ul>
-<hr>
-<h3 id="Step-4-宿主机与虚拟机端口转发设置（NAT模式）"><a href="#Step-4-宿主机与虚拟机端口转发设置（NAT模式）" class="headerlink" title="Step 4. 宿主机与虚拟机端口转发设置（NAT模式）"></a>Step 4. 宿主机与虚拟机端口转发设置（NAT模式）</h3><ul>
-<li>如果使用 VMware NAT，需要在 VMware NAT 设置中配置端口转发：<ul>
-<li>主机端口（宿主机）设为 <code>10085</code>（或你需要的端口）</li>
-<li>转发到虚拟机 IP（如 <code>192.168.200.131</code>）的 85 端口</li>
-</ul>
-</li>
-<li>通过宿主机访问 <code>localhost:10085</code>，实际访问虚拟机的 Harbor 服务。</li>
-</ul>
-<hr>
-<h3 id="Step-5-使用-curl-命令测试服务"><a href="#Step-5-使用-curl-命令测试服务" class="headerlink" title="Step 5. 使用 curl 命令测试服务"></a>Step 5. 使用 curl 命令测试服务</h3><ul>
-<li><p>在虚拟机内部测试：</p>
-<pre><code>bash
+<pre><code>
+建议设置为 `Permissive` 或 `Disabled`。
 
-
-复制编辑
-curl -I http://localhost:82
+- 检查虚拟机的 IP 配置，确认使用的是正确的 IP。
+ 
+ - 在宿主机（Windows）上使用 PowerShell 测试端口连通：
 </code></pre>
-</li>
-<li><p>在虚拟机外部测试（宿主机）：</p>
-<pre><code>bash
+<p>  powershell</p>
+<p> 复制编辑<br>  Test-NetConnection -ComputerName 192.168.200.131 -Port 85</p>
+<pre><code>
+------
 
+### Step 4. 宿主机与虚拟机端口转发设置（NAT模式）
+ 
+ - 如果使用 VMware NAT，需要在 VMware NAT 设置中配置端口转发：
+ - 主机端口（宿主机）设为 `10085`（或你需要的端口）
+ - 转发到虚拟机 IP（如 `192.168.200.131`）的 85 端口
+- 通过宿主机访问 `localhost:10085`，实际访问虚拟机的 Harbor 服务。
 
-复制编辑
-curl -I http://192.168.200.131:85
+------
+
+### Step 5. 使用 curl 命令测试服务
+
+- 在虚拟机内部测试：
 </code></pre>
-</li>
-<li><p>观察返回结果，确认 HTTP 状态码是否正常（200&#x2F;302 等）。</p>
-</li>
+<p> curl -I <a target="_blank" rel="noopener" href="http://localhost:82/">http://localhost:82</a></p>
+<pre><code>
+- 在虚拟机外部测试（宿主机）：
+</code></pre>
+<p>  curl -I <a target="_blank" rel="noopener" href="http://192.168.200.131:85/">http://192.168.200.131:85</a></p>
+<pre><code>```
+</code></pre>
+<ul>
+<li>观察返回结果，确认 HTTP 状态码是否正常（200&#x2F;302 等）。</li>
 </ul>
 <hr>
 <h3 id="Step-6-遇到问题的典型症状及对应处理"><a href="#Step-6-遇到问题的典型症状及对应处理" class="headerlink" title="Step 6. 遇到问题的典型症状及对应处理"></a>Step 6. 遇到问题的典型症状及对应处理</h3><table>
@@ -3643,18 +3643,18 @@ curl -I http://192.168.200.131:85
 <li>重启后再次测试端口连通性和页面访问。</li>
 </ul>
 <hr>
-<h2 id="四、示例核心配置（端口映射部分）"><a href="#四、示例核心配置（端口映射部分）" class="headerlink" title="四、示例核心配置（端口映射部分）"></a>四、示例核心配置（端口映射部分）</h2><pre><code>yaml复制编辑services:
-  proxy:
-    image: goharbor/nginx-photon:v1.9.2
-    container_name: nginx
-    ports:
-      - 85:82  # 宿主机端口 85 映射到容器内 nginx 监听的 82 端口
-    volumes:
-      - ./common/config/nginx:/etc/nginx:z
-    depends_on:
-      - core
-      - portal
-      - registry
+<h2 id="四、示例核心配置（端口映射部分）"><a href="#四、示例核心配置（端口映射部分）" class="headerlink" title="四、示例核心配置（端口映射部分）"></a>四、示例核心配置（端口映射部分）</h2><pre><code>services:
+proxy:
+   image: goharbor/nginx-photon:v1.9.2
+  container_name: nginx
+   ports:
+    - 85:82  # 宿主机端口 85 映射到容器内 nginx 监听的 82 端口
+       volumes:
+           - ./common/config/nginx:/etc/nginx:z
+          depends_on:
+                 - core
+                      - portal
+                       - registry
 </code></pre>
 <hr>
 <h2 id="五、常用命令汇总"><a href="#五、常用命令汇总" class="headerlink" title="五、常用命令汇总"></a>五、常用命令汇总</h2><table>
@@ -3703,16 +3703,24 @@ curl -I http://192.168.200.131:85
 </li>
 <li><strong>确认端口监听和映射</strong><ul>
 <li>容器内部 <code>ss -tnlp | grep nginx</code></li>
+</ul>
+</li>
+</ol>
+<ul>
 <li>虚拟机 <code>ss -tnlp | grep :85</code></li>
 <li><code>docker-compose.yml</code> 中端口映射是否正确</li>
 </ul>
-</li>
+<ol start="3">
 <li><strong>检查虚拟机网络和防火墙</strong><ul>
 <li><code>firewall-cmd --state</code></li>
+</ul>
+</li>
+</ol>
+<ul>
 <li><code>getenforce</code></li>
 <li>关闭防火墙或放行端口</li>
 </ul>
-</li>
+<ol start="4">
 <li><strong>宿主机端口转发（NAT 模式）配置正确</strong><ul>
 <li>确认 VMware NAT 端口转发设置无误</li>
 </ul>
@@ -3733,7 +3741,965 @@ curl -I http://192.168.200.131:85
 </li>
 </ol>
 </blockquote>
+<h5 id="在Harbor创建用户和项目"><a href="#在Harbor创建用户和项目" class="headerlink" title="在Harbor创建用户和项目"></a>在Harbor创建用户和项目</h5><ul>
+<li>创建项目</li>
+</ul>
+<p>Harbor的项目分为公开和私有的：<br>公开项目：所有用户都可以访问，通常存放公共的镜像，默认有一个library公开项目。 私有项目：只有授权用户才可以访问，通常存放项目本身的镜像。<br>我们可以为微服务项目创建一个新的项目</p>
+<ul>
+<li><p>创建用户 创建的用户为：eric   Eric123456</p>
+</li>
+<li><p>给私有项目分配用户</p>
+<p>进入tensquare项目→成员→新建用户→eric为维护人员</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>权限说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>访客</td>
+<td>对于指定项目拥有只读权限</td>
+</tr>
+<tr>
+<td>开发人员</td>
+<td>对于指定项目拥有读写权限</td>
+</tr>
+<tr>
+<td>维护人员</td>
+<td>对于指定项目拥有读写权限，创建Webhooks</td>
+</tr>
+<tr>
+<td>项目管理员</td>
+<td>除了读写权限，同时拥有用户管理&#x2F;镜像扫描等管理权限</td>
+</tr>
+</tbody></table>
+<ul>
+<li>以新用户登录Harbor</li>
+</ul>
+<h5 id="把镜像上传到Harbor"><a href="#把镜像上传到Harbor" class="headerlink" title="把镜像上传到Harbor"></a>把镜像上传到Harbor</h5><ul>
+<li><p>给镜像打上标签</p>
+<blockquote>
+<p>docker tag eureka:v1 192.168.200.131:85&#x2F;tensquare&#x2F;eureka:v1</p>
+</blockquote>
+</li>
+<li><p>推送镜像</p>
+<blockquote>
+<p>docker push 192.168.200.131:85&#x2F;tensquare&#x2F;eureka:v1</p>
+<hr>
+<p>The push refers to repository [192.168.66.102:85&#x2F;tensquare&#x2F;eureka] Get <a target="_blank" rel="noopener" href="https://192.168.200.131:85/v2/">https://192.168.200.131:85/v2/</a>: http: server gave HTTP response to HTTPS  client</p>
+</blockquote>
+<p>这时会出现以上报错，是因为 Docker没有把Harbor加入信任列表中</p>
+</li>
+<li><p>把Harbor地址加入到Docker信任列表<br><code>cd /etc/docker</code></p>
+<p><code>vi daemon.json</code></p>
+<blockquote>
+<p>{<br>“registry-mirrors”: [“<a href="https://zydiol88.mirror.aliyuncs.com&quot;]">https://zydiol88.mirror.aliyuncs.com&quot;]</a>,<br>“insecure-registries”: [“192.168.200.131:85”]<br>}</p>
+</blockquote>
+</li>
+</ul>
+<p>​       需要重启Docker<br>​      <code>systemctl restart docker</code></p>
+<ul>
+<li><p>再次执行推送命令，会显示权限不足</p>
+<p><code>docker push 192.168.200.131:85/tensquare/eureka:v1</code></p>
+<blockquote>
+<p>denied: requested access to the resource is denied</p>
+</blockquote>
+<p>需要先登录 Harbor，再推送镜像</p>
+</li>
+<li><p>登录Harbor</p>
+<p><code> docker login -u eric -p Eric123456 192.168.200.131:85</code> </p>
+</li>
+<li><p>再次push</p>
+<p><code>docker push 192.168.200.131:85/tensquare/eureka:v1</code></p>
+</li>
+</ul>
+<h5 id="从Harbor下载镜像"><a href="#从Harbor下载镜像" class="headerlink" title="从Harbor下载镜像"></a>从Harbor下载镜像</h5><p>需求：在192.168.200.130服务器完成从Harbor下载镜像</p>
+<ul>
+<li><p>安装并启动Docker</p>
+</li>
+<li><p>修改Docker配置</p>
+<p><code>vi /etc/docker/daemon.json</code></p>
+<pre><code class="yaml">&#123;
+ &quot;registry-mirrors&quot;: [&quot;https://zydiol88.mirror.aliyuncs.com&quot;],
+ &quot;insecure-registries&quot;: [&quot;192.168.66.102:85&quot;]
+&#125;
+</code></pre>
+<p>重启docker：<code>systemctl restart docker</code></p>
+</li>
+<li><p>先登录，再从Harbor下载镜像</p>
+<p><code> docker login -u eric -p Eric123456 192.168.200.131:85</code><br><code>docker pull 192.168.200.131:85/tensquare/eureka:v1</code></p>
+</li>
+</ul>
+<h4 id="微服务持续集成-1-项目代码上传到Gitlab"><a href="#微服务持续集成-1-项目代码上传到Gitlab" class="headerlink" title="微服务持续集成(1)-项目代码上传到Gitlab"></a>微服务持续集成(1)-项目代码上传到Gitlab</h4><p>在IDEA操作即可，参考之前的步骤。包括后台微服务(tensquare_back)和前端web网站(tensquare_front)代码<br>[<u>lanyun_group · GitLab</u>] (<a target="_blank" rel="noopener" href="http://192.168.200.132:82/lanyun_group">http://192.168.200.132:82/lanyun_group</a>)</p>
+<h4 id="微服务持续集成-2-从Gitlab拉取项目源码后台微服务的持续集成"><a href="#微服务持续集成-2-从Gitlab拉取项目源码后台微服务的持续集成" class="headerlink" title="微服务持续集成(2)-从Gitlab拉取项目源码后台微服务的持续集成"></a>微服务持续集成(2)-从Gitlab拉取项目源码<del>后台微服务的持续集成</del></h4><p>先去Jenkins里面创建一个<code>tensquare_back</code>的流水线 → 流水线定义选择<code>Pipeline script form SCM</code><del>脚本文件放在项目根目录下</del> → SCM选择<code>Git</code>拉取脚本文件 → 在根目录下创建一个Jenkinsfile → 用流水线语法写’拉取代码’的语法 → ↓</p>
+<pre><code class="yaml">stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &#39;*/master&#39;]], extensions: [], userRemoteConfigs: [[credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;, url: &#39;http://192.168.200.132:82/lanyun_group/tensquare_back.git&#39;]])
+   &#125;
+</code></pre>
+<p>→ 修改语法代码里的 name: ‘*&#x2F;master’ 为可变参数 → 去流水线的配置里 勾选<code>This project is parameterized</code> → 添加参数选择<code>String Parameter</code>  → 名称:branch   默认值:master  描述:请输入一个分支名称 →  修改里面的参数为动态的 →↓</p>
+<pre><code class="yaml">   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &#39;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&#39;, url: &#39;http://192.168.200.132:82/lanyun_group/tensquare_back.git&#39;]])
+   &#125;
+</code></pre>
+<p>→ 将后面的<code>credentialsId</code>和<code>url</code>可以定义为脚本参数全局引用 → ↓</p>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
 
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+&#125;
+</code></pre>
+<p>构建即可成功！！ 可以去Moba的<code>/var/lib/jenkins/workspace/</code>查看是否有<code>tensquare_back</code></p>
+<h4 id="微服务持续集成-3-提交到SonarQube代码审查"><a href="#微服务持续集成-3-提交到SonarQube代码审查" class="headerlink" title="微服务持续集成(3)-提交到SonarQube代码审查"></a>微服务持续集成(3)-提交到SonarQube代码审查</h4><ul>
+<li><h5 id="创建项目，并设置参数"><a href="#创建项目，并设置参数" class="headerlink" title="创建项目，并设置参数"></a>创建项目，并设置参数</h5></li>
+</ul>
+<p>创建tensquare_back项目，添加两个参数 → 在流水线上设置里选择<code>choice Parameter</code> → 名称:project_name；选项:tensquare_eureka_server、tensquare_zuul、tensquare_admin_service、tensquare_gathering；描述:请选择一个构建的项目</p>
+<ul>
+<li><h5 id="每个项目的根目录下添加sonar-project-properties"><a href="#每个项目的根目录下添加sonar-project-properties" class="headerlink" title="每个项目的根目录下添加sonar-project.properties"></a>每个项目的根目录下添加<code>sonar-project.properties</code></h5></li>
+</ul>
+<pre><code class="yaml">eureka_server   gathering   admin_service   zuul
+只需要改里面的projectName和projectKey即可
+
+# must be unique in a given SonarQube instance
+sonar.projectKey=tensquare_eureka_server
+# this is the name and version displayed in the SonarQube UI. Was mandatory prior to SonarQube 6.1.
+sonar.projectName=tensquare_eureka_server
+sonar.projectVersion=1.0
+
+# Path is relative to the sonar-project.properties file. Replace &quot;\&quot; by &quot;/&quot; on Windows.
+# This property is optional if sonar.modules is set.
+sonar.sources=.
+sonar.exclusions=**/test/**,**/target/**
+sonar.java.binaries=.
+
+sonar.java.source=1.8
+sonar.java.target=1.8
+#sonar.java.libraries=**/target/classes/**
+
+# Encoding of the source code. Default is default system encoding
+sonar.sourceEncoding=UTF-8
+</code></pre>
+<ul>
+<li><h5 id="修改jenkinsfile构建脚本"><a href="#修改jenkinsfile构建脚本" class="headerlink" title="修改jenkinsfile构建脚本"></a>修改jenkinsfile构建脚本</h5></li>
+</ul>
+<p>要在Jenkins的全局Tools管理里面 有SonarQube Scanner安装<br>Jenkins全局的system里面有定义sonarqube的url</p>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+      def scannerHome = tool &#39;sonar-scanner&#39;
+      //引用当前JenkinsSonarQube环境 Jenkins的System里
+      withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+      // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+                sh &quot;&quot;&quot;
+                    cd $&#123;project_name&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+      &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="微服务持续集成-4-使用Dockerfile编译、生成镜像"><a href="#微服务持续集成-4-使用Dockerfile编译、生成镜像" class="headerlink" title="微服务持续集成(4)-使用Dockerfile编译、生成镜像"></a>微服务持续集成(4)-使用Dockerfile编译、生成镜像</h3><h6 id="利用dockerfile-maven-plugin插件构建Docker镜像"><a href="#利用dockerfile-maven-plugin插件构建Docker镜像" class="headerlink" title="利用dockerfile-maven-plugin插件构建Docker镜像"></a>利用dockerfile-maven-plugin插件构建Docker镜像</h6><ul>
+<li>在每个微服务项目的pom.xml加入dockerfile-maven-plugin插件</li>
+</ul>
+<pre><code class="yaml">&lt;plugin&gt;
+                &lt;groupId&gt;com.spotify&lt;/groupId&gt;
+                &lt;artifactId&gt;dockerfile-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;1.3.6&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;repository&gt;$&#123;project.artifactId&#125;&lt;/repository&gt;
+                    &lt;buildArgs&gt;
+                        &lt;JAR_FILE&gt;target/$&#123;project.build.finalName&#125;.jar&lt;/JAR_FILE&gt;
+                    &lt;/buildArgs&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+</code></pre>
+<ul>
+<li>修改Jenkinsfile让他根据参数打包微服务工程</li>
+</ul>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+      def scannerHome = tool &#39;sonar-scanner&#39;
+      //引用当前JenkinsSonarQube环境 Jenkins的System里
+      withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+      // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+                sh &quot;&quot;&quot;
+                    cd $&#123;project_name&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package&quot;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>父工程的pom.xml要改一个过时的代码</li>
+</ul>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.tensquare&lt;/groupId&gt;
+    &lt;artifactId&gt;tensquare_parent&lt;/artifactId&gt;
+    &lt;packaging&gt;pom&lt;/packaging&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;modules&gt;
+        &lt;module&gt;tensquare_common&lt;/module&gt;
+        &lt;module&gt;tensquare_eureka_server&lt;/module&gt;
+        &lt;module&gt;tensquare_zuul&lt;/module&gt;
+        &lt;module&gt;tensquare_admin_service&lt;/module&gt;
+        &lt;module&gt;tensquare_gathering&lt;/module&gt;
+    &lt;/modules&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.0.1.RELEASE&lt;/version&gt;
+        &lt;relativePath /&gt;
+    &lt;/parent&gt;
+
+    &lt;properties&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+        &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+        &lt;!-- ✅ 推荐使用正式版本 Finchley.SR4 --&gt;
+        &lt;spring-cloud.version&gt;Finchley.SR4&lt;/spring-cloud.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;spring-cloud.version&#125;&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
+
+    &lt;!-- 可选：保留 spring-milestones --&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;spring-milestones&lt;/id&gt;
+            &lt;name&gt;Spring Milestones&lt;/name&gt;
+            &lt;url&gt;https://repo.spring.io/milestone&lt;/url&gt;
+            &lt;snapshots&gt;
+                &lt;enabled&gt;false&lt;/enabled&gt;
+            &lt;/snapshots&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+
+&lt;/project&gt;
+</code></pre>
+<ul>
+<li>通过MoBa把<code>E:\Java实例项目1-20套\资料-Jenkins教程\Jenkins资料\资料\资料\03.资料\tensquare_parent</code>的<code>tensquare_parent</code>项目保存到<code>/root/repo/com/tensquare/</code>里</li>
+<li>随后通过步骤二，构建所有的工程 → <strong>打包所有微服务的工程</strong> → 在Jenkins虚拟机的<code>/var/lib/jenkins/workspace/tensquare_back/</code>这里面的各个项目的<code>target</code>里面打包了刚刚微服务的所有构建东西</li>
+</ul>
+<h4 id="微服务持续集成-4-使用Dockerfile编译、生成镜像-1"><a href="#微服务持续集成-4-使用Dockerfile编译、生成镜像-1" class="headerlink" title="微服务持续集成(4)-使用Dockerfile编译、生成镜像"></a>微服务持续集成(4)-使用Dockerfile编译、生成镜像</h4><p>利用dockerfile-maven-plugin插件构建Docker镜像</p>
+<ul>
+<li>在每个微服务项目的pom.xml加入dockerfile-maven-plugin插件</li>
+</ul>
+<pre><code class="xml"> &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;com.spotify&lt;/groupId&gt;
+                &lt;artifactId&gt;dockerfile-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;1.3.6&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;repository&gt;$&#123;project.artifactId&#125;&lt;/repository&gt;
+                    &lt;buildArgs&gt;
+                        &lt;JAR_FILE&gt;target/$&#123;project.build.finalName&#125;.jar&lt;/JAR_FILE&gt;
+                    &lt;/buildArgs&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+</code></pre>
+<ul>
+<li>在dockerfile父目录文件中增加一个<code>...dockerfile:build</code>去触发每个微服务项目的dockerfile执行【用流水线进行镜像构建】</li>
+</ul>
+<pre><code class="xml">    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package dockerfile:build&quot;
+    &#125;
+</code></pre>
+<p>全部构建完成后就大功告成！！！</p>
+<pre><code class="yaml">[root@localhost docker]# docker images
+REPOSITORY                            TAG                 IMAGE ID            CREATED             SIZE
+tensquare_gathering                   latest              a62362e8dc2f        8 minutes ago       155MB
+tensquare_admin_service               latest              ee2a85292e98        9 minutes ago       156MB
+tensquare_eureka_server               latest              2a78c4a12fc4        11 minutes ago      148MB
+tensquare_zuul                        latest              33bf136ee3cb        12 minutes ago      146MB
+eureka                                v2                  2c9a3610123d        24 hours ago        150MB
+192.168.200.131:85/tensquare/eureka   v1                  e85b5d3d9090        25 hours ago        150MB
+eureka                                v1                  e85b5d3d9090        25 hours ago        150MB
+nginx                                 latest              9592f5595f2b        8 days ago          192MB
+hello-world                           latest              74cc54e27dc4        5 months ago        10.1kB
+openjdk                               8-jdk-alpine        a3562aa0b991        6 years ago         105MB
+</code></pre>
+<hr>
+<h4 id="微服务持续集成-5-上传到Harbor镜像仓库"><a href="#微服务持续集成-5-上传到Harbor镜像仓库" class="headerlink" title="微服务持续集成(5)-上传到Harbor镜像仓库"></a>微服务持续集成(5)-上传到Harbor镜像仓库</h4><ul>
+<li>修改<code>Jenkinsfile.groovy</code>构建脚本</li>
+</ul>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+      def scannerHome = tool &#39;sonar-scanner&#39;
+      //引用当前JenkinsSonarQube环境 Jenkins的System里
+      withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+      // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+                sh &quot;&quot;&quot;
+                    cd $&#123;project_name&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package dockerfile:build&quot;
+        // 定义镜像名称
+        def imageName = &quot;$&#123;project_name&#125;:$&#123;tag&#125;&quot;
+
+        // 对镜像打上标签
+        sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+    &#125;
+&#125;
+</code></pre>
+<p>此时再去构建一个项目在Jenkins虚拟机服务的镜像里就会出现按照规则打好tag的镜像</p>
+<blockquote>
+<p>[root@localhost ~]# docker images<br>REPOSITORY                                             TAG                 IMAGE ID            CREATED              SIZE<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_eureka_server   latest              e19b4ba07d54        About a minute ago   148MB</p>
+</blockquote>
+<ul>
+<li><h5 id="把镜像推送到Harbor-要登录-输入账号密码-不要写在脚本文件-把harbor账号密码用jenkins全局凭证"><a href="#把镜像推送到Harbor-要登录-输入账号密码-不要写在脚本文件-把harbor账号密码用jenkins全局凭证" class="headerlink" title="把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)"></a>把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)</h5></li>
+</ul>
+<p>去Jenkins申请一个全局的凭证，ID：<code>f83725d3-d5fc-4faf-8ac1-1a56487dfc7b</code><br>怎么在jenkinsfile里面使用呢？要用流水线语法的片段生成器 <code>withCredentials：Bind credentials to variables</code>[<u>借助凭证进行脚本处理</u>] (如果没有显示绑定 就刷新一下界面)；选择<code>绑定</code>→<u><code>用户名变量：username</code> <code>密码变量：password</code></u> 这个是引用的刚刚创立的<code>eric_harbor-auth</code>凭证</p>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+//harbor的登录凭证ID
+def harbor_auth = &quot;f83725d3-d5fc-4faf-8ac1-1a56487dfc7b&quot;
+
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+      def scannerHome = tool &#39;sonar-scanner&#39;
+      //引用当前JenkinsSonarQube环境 Jenkins的System里
+      withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+      // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+                sh &quot;&quot;&quot;
+                    cd $&#123;project_name&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package dockerfile:build&quot;
+        // 定义镜像名称
+        def imageName = &quot;$&#123;project_name&#125;:$&#123;tag&#125;&quot;
+
+        // 对镜像打上标签
+        sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+        // 把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)
+        withCredentials([usernamePassword(credentialsId: &quot;$&#123;harbor_auth&#125;&quot;, passwordVariable: &#39;password&#39;, usernameVariable: &#39;username&#39;)]) &#123;
+            // 登录到Harbor
+            sh &quot;docker login -u $&#123;username&#125; -p  $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+
+            //镜像上传
+            sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+            sh &quot;echo &#39;🔥🔥镜像上传成功✅✅&#39;&quot;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>此时harbor的tensquare中镜像仓库就有了<code>tensquare/tensquare_eureka_server</code></p>
+<h4 id="微服务持续集成-6-拉取镜像和发布应用"><a href="#微服务持续集成-6-拉取镜像和发布应用" class="headerlink" title="微服务持续集成(6)-拉取镜像和发布应用"></a>微服务持续集成(6)-拉取镜像和发布应用</h4><h6 id="安装-Publish-Over-SSH-插件目的是想把129Jenkins和130product进行连通"><a href="#安装-Publish-Over-SSH-插件目的是想把129Jenkins和130product进行连通" class="headerlink" title="安装  Publish Over SSH 插件目的是想把129Jenkins和130product进行连通"></a>安装  <code>Publish Over SSH 插件</code><del>目的是想把129Jenkins和130product进行连通</del></h6><p>安装此插件可以实现远程发送Shell命令</p>
+<p>随后去全局system寻找<code>Publish over SSH</code></p>
+<p>在product虚拟机：<code>id_rsa是私钥</code>，<code>id_rsa.pub是公钥</code></p>
+<pre><code class="yaml">[root@localhost ~]# cd /root/.ssh
+[root@localhost .ssh]# ll
+总用量 12
+-rw-------. 1 root root 1679 6月  18 20:05 id_rsa
+-rw-r--r--. 1 root root  408 6月  18 20:05 id_rsa.pub
+-rw-r--r--. 1 root root  177 6月  18 21:00 known_hosts
+[root@localhost .ssh]#
+</code></pre>
+<p>输入<code>[root@localhost .ssh]# ssh-keygen -y -f /root/.ssh/id_rsa</code>会显示私钥<br>如果直接输出 <code>ssh-rsa AAAA...</code> 这样的公钥内容 → 说明<strong>没有加密</strong>，Jenkins 中可以把 <code>Passphrase</code> 留空<br>下面添加一台远程服务器<code>SSH Servers</code></p>
+<blockquote>
+<p>Name：master_server<br>Hostname：192.168.200.130<br>Username：root<br>Remote Directory：&#x2F;</p>
+</blockquote>
+<h6 id="配置远程部署服务器"><a href="#配置远程部署服务器" class="headerlink" title="配置远程部署服务器"></a>配置远程部署服务器</h6><ul>
+<li>拷贝公钥到远程服务器</li>
+</ul>
+<blockquote>
+<p>是的，你遇到的错误：</p>
+<pre><code>Failed to connect session for config [master_server]. Message [Auth fail for methods &#39;publickey,gssapi-keyex,gssapi-with-mic,password&#39;]
+</code></pre>
+<p><strong>说明 Jenkins 使用你提供的私钥连接远程服务器失败</strong>。这个问题一般由以下几种原因导致：</p>
+<hr>
+<h2 id="✅【推荐方案】重新生成兼容格式的私钥（PEM）"><a href="#✅【推荐方案】重新生成兼容格式的私钥（PEM）" class="headerlink" title="✅【推荐方案】重新生成兼容格式的私钥（PEM）"></a>✅【推荐方案】重新生成兼容格式的私钥（PEM）</h2><p>你看到的建议：</p>
+<blockquote>
+<pre><code>ssh-keygen -m PEM -t rsa -b 4096
+</code></pre>
+</blockquote>
+<p>是完全正确的，因为：</p>
+<ul>
+<li>Jenkins 使用的 <strong>Java SSH 实现</strong>（JSch 或 Trilead）<strong>不支持 OpenSSH 的新私钥格式（RFC4716）</strong>；</li>
+<li><code>-m PEM</code> 表示使用旧版兼容格式（Jenkins 能识别）；</li>
+<li><code>-t rsa -b 4096</code> 表示生成 RSA 4096 位密钥。</li>
+</ul>
+<hr>
+<h3 id="✅-重新生成-SSH-密钥步骤如下"><a href="#✅-重新生成-SSH-密钥步骤如下" class="headerlink" title="✅ 重新生成 SSH 密钥步骤如下"></a>✅ 重新生成 SSH 密钥步骤如下</h3><ol>
+<li>在 Jenkins 所在机器上执行（推荐使用 <code>jenkins</code> 用户身份，不要用 root）：</li>
+</ol>
+<pre><code>ssh-keygen -m PEM -t rsa -b 4096 -C &quot;jenkins@tensquare&quot; -f ~/.ssh/id_rsa_jenkins
+</code></pre>
+<p>过程中会问你是否设置密码（passphrase），你可以 <strong>直接回车留空</strong>。</p>
+<p>生成后会有两个文件：</p>
+<pre><code>~/.ssh/id_rsa_jenkins       ← 私钥（复制给 Jenkins）
+~/.ssh/id_rsa_jenkins.pub   ← 公钥（配置到目标服务器）
+</code></pre>
+<hr>
+<ol>
+<li><strong>把公钥内容添加到远程主机的 authorized_keys 中</strong></li>
+</ol>
+<pre><code>cat ~/.ssh/id_rsa_jenkins.pub | ssh root@192.168.200.130 &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys &amp;&amp; chmod 600 ~/.ssh/authorized_keys&quot;
+</code></pre>
+<p>或者你手动将 <code>id_rsa_jenkins.pub</code> 内容添加到 <code>/root/.ssh/authorized_keys</code> 中。</p>
+<hr>
+<ol>
+<li><strong>Jenkins 中配置 SSH 连接</strong></li>
+</ol>
+<p>在 Jenkins → <code>Manage Jenkins</code> → <code>Configure System</code> → <code>Publish over SSH</code>：</p>
+<ul>
+<li><strong>Path to Key</strong>：填入 <code>/root/.ssh/id_rsa_jenkins</code>（或你放的实际路径）</li>
+<li><strong>Key</strong>：可留空（有 Path 即可）</li>
+<li><strong>Passphrase</strong>：如果你上面生成时留空，这里也留空</li>
+<li><strong>Name</strong>：master_server</li>
+<li><strong>Hostname</strong>：192.168.200.130</li>
+<li><strong>Username</strong>：root（或其他你授权了公钥的用户）</li>
+<li><strong>Remote Directory</strong>：比如 <code>/home/jenkins-deploy</code> 或 <code>/root/</code>或<code>/</code></li>
+</ul>
+<p>✔ 点击 <code>Test Configuration</code> 测试成功为止</p>
+</blockquote>
+<ul>
+<li><p>查看流水线语法</p>
+<p>因为新下载那个插件后需要重启Jenkins。然后<br>步骤<code>sshPublisher:Send build artifacts overSSH</code> 直接生成流水线脚本后融入Jenkinsfile文件中</p>
+<blockquote>
+<p>SSH Server<br>Name：master_server</p>
+</blockquote>
+</li>
+</ul>
+<p>里面的<code>$port</code>需要搞成可变参数 去Jenkins里面添加一个参数</p>
+<blockquote>
+<p>名称：port<br>默认值：10086<br>描述：请输入一个对应服务的端口</p>
+</blockquote>
+<p>在生产虚拟机先<code>[root@localhost ~]# mkdir /opt/jenkins_shell</code>然后把<code>E:\Java实例项目1-20套\资料-Jenkins教程\Jenkins资料\资料\资料\03.资料\部署脚本</code>的<code>deploy.sh</code>传入 之后添加执行权限<code>[root@localhost jenkins_shell]# chmod +x deploy.sh</code></p>
+<h5 id="成功！！！"><a href="#成功！！！" class="headerlink" title="成功！！！"></a>成功！！！</h5><blockquote>
+<p>[root@localhost jenkins_shell]# docker images<br>REPOSITORY                            TAG                 IMAGE ID            CREATED             SIZE<br>192.168.200.131:85&#x2F;tensquare&#x2F;eureka   v1                  e85b5d3d9090        44 hours ago        150MB<br>[root@localhost jenkins_shell]# docker ps<br>CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES</p>
+<hr>
+<p>[root@localhost jenkins_shell]# docker images</p>
+<p>REPOSITORY                                             TAG                 IMAGE ID            CREATED             SIZE<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_eureka_server   latest              60d020191110        35 seconds ago      148MB<br>192.168.200.131:85&#x2F;tensquare&#x2F;eureka                    v1                  e85b5d3d9090        44 hours ago        150MB<br>[root@localhost jenkins_shell]# docker ps<br>CONTAINER ID        IMAGE                                                         COMMAND                CREATED             STATUS              PORTS                      NAMES<br>b934523c60da        192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_eureka_server:latest   “java -jar &#x2F;app.jar”   33 seconds ago      Up 30 seconds       0.0.0.0:10086-&gt;10086&#x2F;tcp   focused_boyd</p>
+</blockquote>
+<p>成功访问：[Eureka] (<a target="_blank" rel="noopener" href="http://192.168.200.130:10086/">http://192.168.200.130:10086/</a>)</p>
+<p>如果要下载其他镜像 需要把每个服务的<code>application.yml</code>更改连接地址</p>
+<blockquote>
+<p>更改所有服务的application.yml地址<br>sonarqube的是129里面有mysql<br>eureka的是130用的生产虚拟服务器</p>
+</blockquote>
+<blockquote>
+<p>那我微服务里的application.yml server:   port: 9001 spring:   application:      name: tensquare-admin-service #指定服务名  datasource:      driverClassName: com.mysql.jdbc.Driver    url: jdbc:mysql:&#x2F;&#x2F;192.168.200.129&#x2F;tensquare_user?characterEncoding&#x3D;UTF8    username: root    password: root  jpa:     database: mysql    show-sql: true 这样写可以吗</p>
+<p><code>那个192.168.200.129:3306/</code>回答：</p>
+<ul>
+<li><strong>如果你的微服务运行环境和 MySQL 在同一局域网内，且 192.168.200.129 是 MySQL 服务所在虚拟机的有效IP，且网络是通的，端口 3306 没被防火墙拦截，NAT或者桥接配置无误，使用这个 IP 和端口是完全没问题的。</strong></li>
+<li>也就是说，如果你从微服务所在的机器能 ping 通 <code>192.168.200.129</code> 并且 <code>telnet 192.168.200.129 3306</code> 可以连通，就可以这么写。</li>
+</ul>
+<hr>
+<h3 id="你需要确认的："><a href="#你需要确认的：" class="headerlink" title="你需要确认的："></a>你需要确认的：</h3><ol>
+<li><strong>你的微服务运行在哪台机器？</strong><ul>
+<li>如果微服务也在虚拟机里（同一台虚拟机或同一内网），用虚拟机的IP写就对。</li>
+<li>如果微服务在宿主机，且虚拟机用的是 NAT 模式，你必须确认端口映射存在，否则宿主机连这个 IP 3306 不通（原因是 NAT 隔离）。这时用虚拟机私有 IP 直接连接是不行的。</li>
+</ul>
+</li>
+<li><strong>网络连通性</strong><ul>
+<li>微服务所在机器能 <code>ping</code> 通该 IP。</li>
+<li>能 <code>telnet IP 3306</code> 连通。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><strong>只要网络通，端口放通，<code>jdbc:mysql://192.168.200.129:3306/数据库名</code> 写法就是标准且正确的。</strong></li>
+<li>如果网络不通，就要调整网络配置（比如桥接、端口映射），或者改用 <code>localhost</code>、<code>127.0.0.1</code> 访问本机MySQL。</li>
+</ul>
+</blockquote>
+<h6 id="分别构建其余的几个微服务项目-记住port端口是要跟application-yml里面一致的"><a href="#分别构建其余的几个微服务项目-记住port端口是要跟application-yml里面一致的" class="headerlink" title="分别构建其余的几个微服务项目 记住port端口是要跟application.yml里面一致的"></a>分别构建其余的几个微服务项目 记住port端口是要跟application.yml里面一致的</h6><blockquote>
+<p>[root@localhost ~]# docker images<br>REPOSITORY                                             TAG                 IMAGE ID            CREATED             SIZE<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_gathering       latest              c700a6359fce        33 seconds ago      155MB<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_admin_service   latest              92453ab6e765        2 minutes ago       156MB<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_zuul            latest              122afd78d6ef        3 minutes ago       146MB<br>192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_eureka_server   latest              60d020191110        4 hours ago         148MB<br>192.168.200.131:85&#x2F;tensquare&#x2F;eureka                    v1                  e85b5d3d9090        2 days ago          150MB</p>
+<hr>
+<p>[root@localhost ~]# docker ps<br>CONTAINER ID        IMAGE                                                         COMMAND                  CREATED              STATUS              PORTS                      NAMES<br>aa2178c7dd0d        192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_gathering:latest       “java -Djava.net.pre…”   About a minute ago   Up 59 seconds       0.0.0.0:9002-&gt;9002&#x2F;tcp     nostalgic_lichterman<br>14e040066165        192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_admin_service:latest   “java -Djava.net.pre…”   2 minutes ago        Up 2 minutes        0.0.0.0:9001-&gt;9001&#x2F;tcp     dreamy_montalcini<br>8143d8ccbeee        192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_zuul:latest            “java -Djava.net.pre…”   3 minutes ago        Up 3 minutes        0.0.0.0:10020-&gt;10020&#x2F;tcp   gracious_kalam<br>b934523c60da        192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_eureka_server:latest   “java -jar &#x2F;app.jar”     4 hours ago          Up 4 hours          0.0.0.0:10086-&gt;10086&#x2F;tcp   focused_boyd</p>
+<p>你这个情况是镜像有了，但是没有运行的容器，所以要启动镜像，创建并运行容器。</p>
+<h3 id="启动镜像★★的基本命令是：-Jenkins-129服务器"><a href="#启动镜像★★的基本命令是：-Jenkins-129服务器" class="headerlink" title="启动镜像★★的基本命令是：[Jenkins 129服务器]"></a>启动镜像★★的基本命令是：[Jenkins 129服务器]</h3><pre><code>docker run -d -p &lt;宿主机端口&gt;:&lt;容器端口&gt; --name &lt;容器名字&gt; &lt;镜像名&gt;
+</code></pre>
+<p>直接启动无需重新创建容器：<br>先查看所有容器(包括已停止的)：<code>docker ps -a</code></p>
+<blockquote>
+<p>docker start tensquare_admin_service<br>docker start tensquare_gathering<br>docker start tensquare_zuul<br>docker start tensquare_eureka_server</p>
+</blockquote>
+<p>若需要删除再重新启动</p>
+<p>举个例子：</p>
+<blockquote>
+<p>先删除之前的容器：<br>docker rm tensquare_admin_service<br>docker rm tensquare_gathering<br>docker rm tensquare_zuul<br>docker rm tensquare_eureka_server</p>
+</blockquote>
+<pre><code>docker run -d -p 9001:9101 --name tensquare_admin_service 192.168.200.131:85/tensquare/tensquare_admin_service:latest
+docker run -d -p 9002:9002 --name tensquare_gathering 192.168.200.131:85/tensquare/tensquare_gathering:latest
+docker run -d -p 10020:10020 --name tensquare_zuul 192.168.200.131:85/tensquare/tensquare_zuul:latest
+docker run -d -p 10086:10086 --name tensquare_eureka_server 192.168.200.131:85/tensquare/tensquare_eureka_server:latest
+</code></pre>
+<blockquote>
+<p>[root@localhost ~]# docker rm -f tensquare_admin_service<br>tensquare_admin_service<br>[root@localhost ~]# docker run -d -p 9101:9001 –name tensquare_admin_service 192.168.200.131:85&#x2F;tensquare&#x2F;tensquare_admin_service:latest<br>634a31582dc81acf34b101d468d84b1c3f92b75477b6ad469abe00dc09821d4b<br>[root@localhost ~]#</p>
+</blockquote>
+<blockquote>
+<p>端口映射要根据你的程序监听端口设定，否则外部访问不到容器服务。</p>
+</blockquote>
+<h3 id="此时也要在生产130服务器上去重新启动那些容器"><a href="#此时也要在生产130服务器上去重新启动那些容器" class="headerlink" title="此时也要在生产130服务器上去重新启动那些容器"></a>此时也要在生产130服务器上去重新启动那些容器</h3><blockquote>
+<h3 id="✅-1-重启-130-上的容器"><a href="#✅-1-重启-130-上的容器" class="headerlink" title="✅ 1. 重启 130 上的容器"></a>✅ <strong>1. 重启 130 上的容器</strong></h3><p>可以用 <code>docker start 容器ID或容器名</code> 重启：</p>
+<pre><code>bash复制编辑docker start e55957d0a79e  # gathering
+docker start 3c8592621ab7  # admin_service
+docker start 43a7ca513e37  # zuul
+docker start 831aeb331519  # eureka
+</code></pre>
+<p>或者统一启动：</p>
+<pre><code>bash
+
+
+复制编辑
+docker start $(docker ps -a -q)
+</code></pre>
+</blockquote>
+<hr>
+<hr>
+<hr>
+<h3 id="删除镜像"><a href="#删除镜像" class="headerlink" title="删除镜像"></a>删除镜像</h3><p>停止容器：</p>
+<pre><code>docker stop 容器ID或容器名
+</code></pre>
+<p>删除容器：</p>
+<pre><code>docker rm 容器ID或容器名
+</code></pre>
+<h3 id="3-删除镜像"><a href="#3-删除镜像" class="headerlink" title="3. 删除镜像"></a>3. 删除镜像</h3><p>删除有标签的镜像：</p>
+<pre><code>docker rmi 192.168.200.131:85/tensquare/tensquare_gathering
+docker rmi tensquare_gathering
+</code></pre>
+<p>删除无标签的悬空镜像：</p>
+<pre><code>docker rmi 08b0a9196df2
+</code></pre>
+<h3 id="4-如果有多个无标签镜像，删除所有悬空镜像"><a href="#4-如果有多个无标签镜像，删除所有悬空镜像" class="headerlink" title="4. 如果有多个无标签镜像，删除所有悬空镜像"></a>4. 如果有多个无标签镜像，删除所有悬空镜像</h3><pre><code>docker image prune
+</code></pre>
+</blockquote>
+<p>[生产]：[Eureka] (<a target="_blank" rel="noopener" href="http://192.168.200.130:10086/">http://192.168.200.130:10086/</a>)</p>
+<blockquote>
+<h5 id="Instances-currently-registered-with-Eureka"><a href="#Instances-currently-registered-with-Eureka" class="headerlink" title="Instances currently registered with Eureka"></a>Instances currently registered with Eureka</h5><table>
+<thead>
+<tr>
+<th align="left">Application</th>
+<th align="left">AMIs</th>
+<th align="left">Availability Zones</th>
+<th align="left">Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>TENSQUARE-ADMIN-SERVICE</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://172.17.0.4:9001/actuator/info">14e040066165:tensquare-admin-service:9001</a></td>
+</tr>
+<tr>
+<td align="left"><strong>TENSQUARE-GATHERING</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://172.17.0.5:9002/actuator/info">aa2178c7dd0d:tensquare-gathering:9002</a></td>
+</tr>
+<tr>
+<td align="left"><strong>TENSQUARE-ZUUL</strong></td>
+<td align="left"><strong>n&#x2F;a</strong> (1)</td>
+<td align="left">(1)</td>
+<td align="left"><strong>UP</strong> (1) - <a target="_blank" rel="noopener" href="http://172.17.0.3:10020/actuator/info">8143d8ccbeee:tensquare-zuul:10020</a></td>
+</tr>
+</tbody></table>
+</blockquote>
+<h6 id="Jenkinsfile"><a href="#Jenkinsfile" class="headerlink" title="Jenkinsfile"></a>Jenkinsfile</h6><pre><code class="java">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+//harbor的登录凭证ID
+def harbor_auth = &quot;f83725d3-d5fc-4faf-8ac1-1a56487dfc7b&quot;
+
+
+node &#123;
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+      def scannerHome = tool &#39;sonar-scanner&#39;
+      //引用当前JenkinsSonarQube环境 Jenkins的System里
+      withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+      // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+                sh &quot;&quot;&quot;
+                    cd $&#123;project_name&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package dockerfile:build&quot;
+        // 定义镜像名称
+        def imageName = &quot;$&#123;project_name&#125;:$&#123;tag&#125;&quot;
+
+        // 对镜像打上标签
+        sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+        // 把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)
+        withCredentials([usernamePassword(credentialsId: &quot;$&#123;harbor_auth&#125;&quot;, passwordVariable: &#39;password&#39;, usernameVariable: &#39;username&#39;)]) &#123;
+            // 登录到Harbor
+            sh &quot;docker login -u $&#123;username&#125; -p  $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+
+            //镜像上传
+            sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+            sh &quot;echo &#39;🔥🔥镜像上传成功✅✅&#39;&quot;
+        &#125;
+        // 部署应用 发送命令调用生产服务器的shell脚本文件 完成所有的微服务项目部署行为
+        // deploy.sh 是触发远程脚本文件(镜像拉取和容器创建的行为)
+        sshPublisher(publishers: [sshPublisherDesc(configName: &#39;master_server&#39;, transfers: [sshTransfer(cleanRemote: false, excludes: &#39;&#39;, execCommand: &quot;/opt/jenkins_shell/deploy.sh $harbor_url $harbor_project $project_name $tag $port&quot;, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: &#39;[, ]+&#39;, remoteDirectory: &#39;&#39;, remoteDirectorySDF: false, removePrefix: &#39;&#39;, sourceFiles: &#39;&#39;)], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+    &#125;
+&#125;
+</code></pre>
+<h6 id="deploy-sh"><a href="#deploy-sh" class="headerlink" title="deploy.sh"></a>deploy.sh</h6><pre><code class="java">#! /bin/sh
+#接收外部参数
+harbor_url=$1
+harbor_project_name=$2
+project_name=$3
+tag=$4
+port=$5
+
+imageName=$harbor_url/$harbor_project_name/$project_name:$tag
+
+echo &quot;$imageName&quot;
+
+#查询容器是否存在，存在则删除
+containerId=`docker ps -a | grep -w $&#123;project_name&#125;:$&#123;tag&#125;  | awk &#39;&#123;print $1&#125;&#39;`
+if [ &quot;$containerId&quot; !=  &quot;&quot; ] ; then
+    #停掉容器
+    docker stop $containerId
+
+    #删除容器
+    docker rm $containerId
+    
+    echo &quot;成功删除容器&quot;
+fi
+
+#查询镜像是否存在，存在则删除
+imageId=`docker images | grep -w $project_name  | awk &#39;&#123;print $3&#125;&#39;`
+
+if [ &quot;$imageId&quot; !=  &quot;&quot; ] ; then
+      
+    #删除镜像
+    docker rmi -f $imageId
+    
+    echo &quot;成功删除镜像&quot;
+fi
+
+# 登录Harbor
+docker login -u eric -p Eric123456 $harbor_url
+
+# 下载镜像
+docker pull $imageName
+
+# 启动容器
+docker run -di -p $port:$port $imageName
+
+echo &quot;容器启动成功&quot;
+</code></pre>
+<h5 id="连接数据库的时候有问题"><a href="#连接数据库的时候有问题" class="headerlink" title="连接数据库的时候有问题"></a>连接数据库的时候有问题</h5><blockquote>
+<p>[root@localhost ~]# &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld –initialize –user&#x3D;mysql –datadir&#x3D;&#x2F;var&#x2F;lib&#x2F;mysql 2025-07-04T10:46:28.109697Z 0 [Warning] [MY-011070] [Server] ‘Disabling symbolic links using –skip-symbolic-links (or equivalent) is the default. Consider not using this option as it’ is deprecated and will be removed in a future release. 2025-07-04T10:46:28.110588Z 0 [System] [MY-013169] [Server] &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld (mysqld 8.0.30) initializing of server in progress as process 31821 2025-07-04T10:46:28.115123Z 0 [ERROR] [MY-010457] [Server] –initialize specified but the data directory has files in it. Aborting. 2025-07-04T10:46:28.115149Z 0 [ERROR] [MY-013236] [Server] The designated data directory &#x2F;var&#x2F;lib&#x2F;mysql&#x2F; is unusable. You can remove all files that the server added to it. 2025-07-04T10:46:28.115231Z 0 [ERROR] [MY-010119] [Server] Aborting 2025-07-04T10:46:28.115717Z 0 [System] [MY-010910] [Server] &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld: Shutdown complete (mysqld 8.0.30)  MySQL Community Server - GPL. [root@localhost ~]#</p>
+<h6 id="ChatGPT-说：-3"><a href="#ChatGPT-说：-3" class="headerlink" title="ChatGPT 说："></a>ChatGPT 说：</h6><p>报错很明确：</p>
+<pre><code>--initialize specified but the data directory has files in it. Aborting.
+</code></pre>
+<p>意思是：你指定的 <code>/var/lib/mysql</code> 目录 <strong>里面已经有文件了</strong>，所以初始化被拒绝了。</p>
+<hr>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><h3 id="1-备份或清空-var-lib-mysql-目录"><a href="#1-备份或清空-var-lib-mysql-目录" class="headerlink" title="1. 备份或清空 /var/lib/mysql 目录"></a>1. 备份或清空 <code>/var/lib/mysql</code> 目录</h3><p>如果你确认目录里面的数据可以删除（或者你已经备份了重要数据），执行：</p>
+<pre><code>rm -rf /var/lib/mysql/*
+</code></pre>
+<p>确保目录下文件都删干净。</p>
+<hr>
+<h3 id="2-再次执行初始化"><a href="#2-再次执行初始化" class="headerlink" title="2. 再次执行初始化"></a>2. 再次执行初始化</h3><pre><code>/usr/local/mysql/bin/mysqld --initialize --user=mysql --datadir=/var/lib/mysql
+</code></pre>
+<p>这次应该会成功。</p>
+<hr>
+<h3 id="3-启动-MySQL-服务"><a href="#3-启动-MySQL-服务" class="headerlink" title="3. 启动 MySQL 服务"></a>3. 启动 MySQL 服务</h3><pre><code>systemctl start mysql
+</code></pre>
+<hr>
+<h3 id="4-查看状态和日志，确保启动成功"><a href="#4-查看状态和日志，确保启动成功" class="headerlink" title="4. 查看状态和日志，确保启动成功"></a>4. 查看状态和日志，确保启动成功</h3><pre><code>systemctl status mysql
+tail -n 50 /var/log/mariadb/mariadb.log
+</code></pre>
+<hr>
+<p>如果你担心误删数据，可以先备份目录：</p>
+<pre><code>mv /var/lib/mysql /var/lib/mysql_backup_$(date +%F_%T)
+mkdir /var/lib/mysql
+chown mysql:mysql /var/lib/mysql
+</code></pre>
+<p>然后再初始化。</p>
+<p>这样启动<code>mysql -uroot -p --socket=/var/lib/mysql/mysql.sock</code></p>
+<hr>
+<hr>
+<hr>
+<p><strong>宿主机（Windows）通过 NAT 模式连接虚拟机的正确姿势不是直接用虚拟机IP，而是用映射到宿主机的端口。</strong></p>
+<hr>
+<h4 id="你当前用的："><a href="#你当前用的：" class="headerlink" title="你当前用的："></a>你当前用的：</h4><pre><code>mysql -uroot -proot -h192.168.200.129 -P3306
+</code></pre>
+<p>这是虚拟机的私有IP，NAT模式下外部访问是被隔离的，直接连这个IP不通。</p>
+<hr>
+<h3 id="正确做法："><a href="#正确做法：" class="headerlink" title="正确做法："></a>正确做法：</h3><ol>
+<li>在 VMware 的 NAT 设置里添加端口转发规则，把宿主机的某个端口（比如3306）转发到虚拟机的3306端口。</li>
+<li>宿主机连接时，用 <code>127.0.0.1</code>（或者 <code>localhost</code>）加端口访问。</li>
+</ol>
+<p>例如：</p>
+<pre><code>mysql -uroot -proot -h127.0.0.1 -P3306
+</code></pre>
+<hr>
+<h3 id="如果你想用虚拟机的私有IP直接连接，建议改成桥接网卡。"><a href="#如果你想用虚拟机的私有IP直接连接，建议改成桥接网卡。" class="headerlink" title="如果你想用虚拟机的私有IP直接连接，建议改成桥接网卡。"></a>如果你想用虚拟机的私有IP直接连接，建议改成桥接网卡。</h3><hr>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ul>
+<li>你的 MySQL 配置没问题了</li>
+<li>NAT模式下宿主机访问虚拟机MySQL必须用端口转发+127.0.0.1</li>
+<li>或切换桥接，直接用虚拟机IP访问</li>
+</ul>
+<hr>
+<h2 id="✅-查看容器日志命令："><a href="#✅-查看容器日志命令：" class="headerlink" title="✅ 查看容器日志命令："></a>✅ 查看容器日志命令：</h2></blockquote>
+<blockquote>
+<pre><code>docker logs -f dreamy_montalcini
+</code></pre>
+<ul>
+<li><code>-f</code> 表示 <strong>实时追踪日志</strong>，相当于 <code>tail -f</code> 的效果</li>
+<li>如果你只想看最近的日志行数，比如 100 行：</li>
+</ul>
+<pre><code>docker logs --tail 100 dreamy_montalcini
+</code></pre>
+<hr>
+<h3 id="✅-还可以用容器-ID："><a href="#✅-还可以用容器-ID：" class="headerlink" title="✅ 还可以用容器 ID："></a>✅ 还可以用容器 ID：</h3><pre><code>docker logs -f 14e040066165
+</code></pre>
+</blockquote>
+<h4 id="如果mysql忘记密码了怎么办"><a href="#如果mysql忘记密码了怎么办" class="headerlink" title="如果mysql忘记密码了怎么办"></a>如果mysql忘记密码了怎么办</h4><blockquote>
+<h3 id="✅-第一步：找出-mysqld-safe-路径"><a href="#✅-第一步：找出-mysqld-safe-路径" class="headerlink" title="✅ 第一步：找出 mysqld_safe 路径"></a>✅ 第一步：找出 <code>mysqld_safe</code> 路径</h3><p>所以系统找不到 <code>mysqld_safe</code> 命令。请执行下面命令找出它在哪：</p>
+<pre><code>sudo find / -name mysqld_safe
+</code></pre>
+<p>它一般可能在 <code>/usr/bin/mysqld_safe</code> 或 <code>/usr/local/mysql/bin/mysqld_safe</code></p>
+<p>找到后，比如它在 <code>/usr/local/mysql/bin/mysqld_safe</code>，那你这样启动 MySQL 跳过权限：</p>
+<pre><code>sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables --skip-networking &amp;
+</code></pre>
+<p>然后 <strong>等待几秒钟（5-10s）</strong> 再执行：</p>
+<pre><code>mysql -uroot
+</code></pre>
+</blockquote>
+<blockquote>
+<p>[root@localhost ~]# sudo &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld_safe –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid &amp;<br>[1] 56721<br>[root@localhost ~]# 2025-07-04T13:53:36.378946Z mysqld_safe Logging to ‘&#x2F;var&#x2F;log&#x2F;mariadb&#x2F;mariadb.log’.<br>2025-07-04T13:53:36.468224Z mysqld_safe Starting mysqld daemon with databases from &#x2F;var&#x2F;lib&#x2F;mysql</p>
+<p>[root@localhost ~]# sudo &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld_safe –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid &amp;<br>[2] 56935<br>[root@localhost ~]# 2025-07-04T13:53:48.624877Z mysqld_safe Logging to ‘&#x2F;var&#x2F;log&#x2F;mariadb&#x2F;mariadb.log’.<br>2025-07-04T13:53:48.718002Z mysqld_safe A mysqld process already exists</p>
+<p>[2]+  退出 1                sudo &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld_safe –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid<br>[root@localhost ~]# ps aux | grep mysqld<br>root      56721  0.0  0.0 241292   632 pts&#x2F;1    S    21:53   0:00 sudo &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld_safe –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid<br>root      56723  0.1  0.0 113412   452 pts&#x2F;1    S    21:53   0:00 &#x2F;bin&#x2F;sh &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld_safe –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid<br>mysql     56861 22.2 18.1 1774388 339036 pts&#x2F;1  Sl   21:53   0:03 &#x2F;usr&#x2F;local&#x2F;mysql&#x2F;bin&#x2F;mysqld –basedir&#x3D;&#x2F;usr&#x2F;local&#x2F;mysql –datadir&#x3D;&#x2F;var&#x2F;lib&#x2F;mysql –plugin-dir&#x3D;&#x2F;usr&#x2F;local&#x2F;mysql&#x2F;lib&#x2F;plugin –user&#x3D;mysql –log-error&#x3D;&#x2F;var&#x2F;log&#x2F;mariadb&#x2F;mariadb.log –pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid –socket&#x3D;&#x2F;var&#x2F;lib&#x2F;mysql&#x2F;mysql.sock<br>root      57071  0.0  0.0 112828   988 pts&#x2F;1    S+   21:53   0:00 grep –color&#x3D;auto mysqld<br>[root@localhost ~]#</p>
+</blockquote>
+<h4 id="数据库修改策略权限以及让远程宿主机连接"><a href="#数据库修改策略权限以及让远程宿主机连接" class="headerlink" title="数据库修改策略权限以及让远程宿主机连接"></a>数据库修改策略权限以及让远程宿主机连接</h4><blockquote>
+<p>mysql -uroot -p</p>
+<p>SET GLOBAL validate_password_policy &#x3D; LOW;<br>SET GLOBAL validate_password_length &#x3D; 4;</p>
+<p>mysql&gt; GRANT ALL PRIVILEGES ON <em>.</em> TO ‘root‘@’%’ IDENTIFIED BY ‘root’ WITH GRANT OPTION;<br>Query OK, 0 rows affected, 1 warning (0.01 sec)</p>
+<p>mysql&gt; FLUSH PRIVILEGES;<br>Query OK, 0 rows affected (0.01 sec)</p>
+<p>mysql&gt; select user, host from mysql.user where user&#x3D;’root’;<br>+——+————+<br>| user | host       |<br>+——+————+<br>| root | %          |<br>| root | 172.17.0.5 |<br>| root | localhost  |<br>+——+————+<br>3 rows in set (0.00 sec)</p>
+</blockquote>
+<blockquote>
+<p>你给的 Spring Boot 配置文件（application.yml）大致结构是对的，不过结合你之前报错信息（MySQL 连接时出现 <span style = "color:red"><code>CommunicationsException</code>，SSL握手失败）和你的配置，有几点需要确认和调整：</span></p>
+<hr>
+<h3 id="1-MySQL-连接-URL-推荐加上参数，关闭-SSL"><a href="#1-MySQL-连接-URL-推荐加上参数，关闭-SSL" class="headerlink" title="1. MySQL 连接 URL 推荐加上参数，关闭 SSL"></a>1. MySQL 连接 URL 推荐加上参数，关闭 SSL</h3><p>默认情况下 MySQL Connector 可能会尝试用 SSL 连接，而你的报错就是 SSL 握手失败：</p>
+<pre><code>Caused by: javax.net.ssl.SSLException: Received fatal alert: internal_error
+</code></pre>
+<p>解决办法是在 URL 中明确关闭 SSL，改成：</p>
+<pre><code>spring:
+  datasource:
+    url: jdbc:mysql://192.168.200.129:3306/tensquare_user?characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai
+</code></pre>
+<ul>
+<li><code>useSSL=false</code> 关闭 SSL 连接</li>
+<li><code>serverTimezone=Asia/Shanghai</code> 解决时区警告（可选）</li>
+<li><code>characterEncoding=UTF-8</code> 保持编码一致（注意大小写）</li>
+</ul>
+</blockquote>
+<h4 id="微服务持续集成-7-部署前端静态web网站"><a href="#微服务持续集成-7-部署前端静态web网站" class="headerlink" title="微服务持续集成(7)-部署前端静态web网站"></a>微服务持续集成(7)-部署前端静态web网站</h4><p>129机器进行npm命令打包 → 远程传输文件 →(SSH远程调用)→ 130生产服务器Nginx</p>
+<blockquote>
+<h4 id="为什么用-Nginx-而不是直接用-Docker？"><a href="#为什么用-Nginx-而不是直接用-Docker？" class="headerlink" title="为什么用 Nginx 而不是直接用 Docker？"></a>为什么用 Nginx 而不是直接用 Docker？</h4><h5 id="①-Nginx-是专业的高性能静态文件服务器"><a href="#①-Nginx-是专业的高性能静态文件服务器" class="headerlink" title="① Nginx 是专业的高性能静态文件服务器"></a>① <strong>Nginx 是专业的高性能静态文件服务器</strong></h5><ul>
+<li>速度快、资源占用低，响应迅速</li>
+<li>支持缓存、压缩、访问控制、日志、反向代理等丰富功能</li>
+<li>易于配置访问路径、rewrite规则等</li>
+</ul>
+<h5 id="②-Docker-是“容器化”技术，适合运行应用程序"><a href="#②-Docker-是“容器化”技术，适合运行应用程序" class="headerlink" title="② Docker 是“容器化”技术，适合运行应用程序"></a>② <strong>Docker 是“容器化”技术，适合运行应用程序</strong></h5><ul>
+<li>Docker 让你把应用和运行环境打包，适合部署动态应用（比如后端服务）</li>
+<li>纯静态文件没运行时依赖，没必要额外用容器包裹</li>
+<li>如果直接用 Docker 部署静态网站，往往是把 Nginx 或 Apache 装在容器里，再由容器提供静态服务 — 这就和单纯用 Nginx 差不多，只是多了容器层</li>
+</ul>
+</blockquote>
+<h5 id="安装Nginx服务器"><a href="#安装Nginx服务器" class="headerlink" title="安装Nginx服务器"></a>安装Nginx服务器</h5><blockquote>
+<p>yum install epel-release<br>yum -y install nginx 安装</p>
+</blockquote>
+<p>修改nginx的端口，默认80，改为9090：</p>
+<blockquote>
+<p>vi &#x2F;etc&#x2F;nginx&#x2F;nginx.conf</p>
+</blockquote>
+<pre><code class="yaml"> server &#123;
+        listen    9099 default_server;   
+        listen    [::]:9099 default_server;     
+        server_name  _;
+        root       /usr/share/nginx/html;  
+</code></pre>
+<p>还需要关闭 selinux，将SELINUX&#x3D;disabled</p>
+<blockquote>
+<p>setenforce 0                            先临时关闭<br><strong>vi &#x2F;etc&#x2F;selinux&#x2F;config</strong>             编辑文件，永久关闭 SELINUX&#x3D;disabled</p>
+</blockquote>
+<p>启动Nginx ★★</p>
+<blockquote>
+<p>systemctl enable nginx 设置开机启动<br>systemctl start nginx 启动<br>systemctl stop nginx 停止<br>systemctl restart nginx 重启<br>systemctl status nginx.service 查看运行状态</p>
+</blockquote>
+<p>[Welcome to CentOS] (<a target="_blank" rel="noopener" href="http://192.168.200.130:9099/">http://192.168.200.130:9099/</a>)</p>
+<h4 id="在Jenkins的服务器里-安装NodeJS插件"><a href="#在Jenkins的服务器里-安装NodeJS插件" class="headerlink" title="在Jenkins的服务器里 安装NodeJS插件"></a>在Jenkins的服务器里 安装NodeJS插件</h4><p>前端在本机的位置：<code>C:\Users\Pluminary\Desktop\QianDuan\tensquareAdmin</code></p>
+<p>Jenkins配置Nginx服务器<br><code>Dashboard → Manage Jenkins → Tools → NodeJS新增</code></p>
+<blockquote>
+<p>别名：nodejs12<br>版本：NodeJS 12.3.1</p>
+</blockquote>
+<h6 id="创建前端流水线项目-tensquare-front"><a href="#创建前端流水线项目-tensquare-front" class="headerlink" title="创建前端流水线项目 tensquare_front"></a>创建前端流水线项目 <code>tensquare_front</code></h6><p>添加一个参数<code>This project is parameterized</code> → 名称branch 默认值master<br>在Jenkins里找一个凭证<code>点击右侧zhangsan → 更新 → 就会显示有ID </code> 复制后变成git_auth</p>
+<h6 id="流水线Pipeline-script"><a href="#流水线Pipeline-script" class="headerlink" title="流水线Pipeline script"></a>流水线<code>Pipeline script</code></h6><pre><code class="yaml">//gitlab凭证
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+node&#123;
+    stage(&#39;拉取代码&#39;)&#123;
+        checkout scmGit(branches: [[name: &#39;*/$&#123;branch&#125;&#39;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &#39;http://192.168.200.132:82/lanyun_group/tensquare_front.git&#39;]])
+    &#125;
+     stage(&#39;打包，部署网站&#39;) &#123;
+        //使用NodeJS的npm进行打包
+        nodejs(&#39;nodejs12&#39;)&#123;
+         sh &#39;&#39;&#39;
+             npm install
+             npm run build   
+        &#39;&#39;&#39;         
+        &#125;
+     &#125;
+     //=====以下为远程调用进行项目部署========
+     sshPublisher(publishers: [sshPublisherDesc(configName: &#39;master_server&#39;, transfers: [sshTransfer(cleanRemote: false, excludes: &#39;&#39;, execCommand: &#39;&#39;, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: &#39;[, ]+&#39;, remoteDirectory: &#39;/usr/share/nginx/html&#39;, remoteDirectorySDF: false, removePrefix: &#39;dist&#39;, sourceFiles: &#39;dist/**&#39;)], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+&#125;
+</code></pre>
+<p>去gitlab里面修改<code>tensquare_front</code>里面的config→<code>prod.env.js</code></p>
+<pre><code class="java">&#39;use strict&#39;
+module.exports = &#123;
+  NODE_ENV: &#39;&quot;production&quot;&#39;,
+  // BASE_API: &#39;&quot;http://192.168.207.131:7300/mock/5c0b42c85b4c7508d4dc568c/1024&quot;&#39;
+  BASE_API: &#39;&quot;http://192.168.200.130:10020&quot;&#39; // 管理员网关[生产]
+&#125;
+</code></pre>
+<p>去构建一下！</p>
+<p>然后去生产服务器寻找</p>
+<blockquote>
+<p>[root@localhost html]# <code>cd /usr/share/nginx/html</code><br>[root@localhost html]# ll<br>总用量 80<br>-rw-r–r–. 1 root root  3650 11月 11 2022 404.html<br>-rw-r–r–. 1 root root  3693 11月 11 2022 50x.html<br>lrwxrwxrwx. 1 root root    20 7月   5 19:30 en-US -&gt; ..&#x2F;..&#x2F;doc&#x2F;HTML&#x2F;en-US<br>-rw-r–r–. 1 root root 67646 7月   5 20:12 favicon.ico<br>drwxr-xr-x. 2 root root    27 7月   5 19:30 icons<br>lrwxrwxrwx. 1 root root    18 7月   5 19:30 img -&gt; ..&#x2F;..&#x2F;doc&#x2F;HTML&#x2F;img<br>lrwxrwxrwx. 1 root root    25 7月   5 19:30 index.html -&gt; ..&#x2F;..&#x2F;doc&#x2F;HTML&#x2F;index.html<br>-rw-r–r–. 1 root root   368 11月 11 2022 nginx-logo.png<br>lrwxrwxrwx. 1 root root    14 7月   5 19:30 poweredby.png -&gt; nginx-logo.png<br>drwxr-xr-x. 6 root root    51 7月   5 20:12 static<br>[root@localhost html]#</p>
+</blockquote>
+<p>回头再去访问：<a target="_blank" rel="noopener" href="http://192.168.200.130:9099/">http://192.168.200.130:9099/</a> 已经成功</p>
+<blockquote>
+<p>admin  123456</p>
+</blockquote>
+<p>登录进去查看是否能连通之前在镜像部署的微服务后端！！！[一次成功 完美！！]</p>
+<h4 id="Jenkins-Docker-SpringCloud微服务持续集成-下-之前是单机版"><a href="#Jenkins-Docker-SpringCloud微服务持续集成-下-之前是单机版" class="headerlink" title="Jenkins+Docker+SpringCloud微服务持续集成(下)之前是单机版"></a>Jenkins+Docker+SpringCloud微服务持续集成(下)<del>之前是单机版</del></h4><h6 id="上面部署方案存在的问题："><a href="#上面部署方案存在的问题：" class="headerlink" title="上面部署方案存在的问题："></a>上面部署方案存在的问题：</h6><p>1）一次只能选择一个微服务部署<br>2）只有一台生产者部署服务器<br>3）每个微服务只有一个实例，容错率低</p>
+<h5 id="初级版已完成接下来是中级版本！！"><a href="#初级版已完成接下来是中级版本！！" class="headerlink" title="初级版已完成接下来是中级版本！！"></a>初级版已完成接下来是中级版本！！</h5>
             
         </div>
     </div>
@@ -3747,7 +4713,7 @@ curl -I http://192.168.200.131:85
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -4593,7 +5559,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -4718,7 +5684,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -5217,7 +6183,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -5824,7 +6790,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -6789,7 +7755,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -6922,7 +7888,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -7331,7 +8297,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -10481,7 +11447,7 @@ except etree.XMLSyntaxError as e:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -10708,7 +11674,7 @@ query_engine = index.as_query_engine(streaming=True)
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
