@@ -1389,7 +1389,7 @@ sonar.web.port=9999
 
 </code></pre>
 </blockquote>
-<h6 id="启动sonar"><a href="#启动sonar" class="headerlink" title="启动sonar"></a>启动sonar</h6><blockquote>
+<h6 id="启动sonar-129"><a href="#启动sonar-129" class="headerlink" title="启动sonar 129"></a>启动sonar 129</h6><blockquote>
 <p>[root@localhost bin]# pwd<br>&#x2F;opt&#x2F;sonar&#x2F;bin<br>cd &#x2F;opt&#x2F;sonar&#x2F;bin</p>
 </blockquote>
 <p>修改配置文件：<code>vi /opt/sonar/conf/sonar.properties</code><br><span style ="color:red"><strong>重启sonar</strong></span>：<code>sudo -u sonar /opt/sonar/bin/linux-x86-64/sonar.sh restart</code> ★★  [Jenkins服务]</p>
@@ -4699,7 +4699,519 @@ module.exports = &#123;
 </blockquote>
 <p>登录进去查看是否能连通之前在镜像部署的微服务后端！！！[一次成功 完美！！]</p>
 <h4 id="Jenkins-Docker-SpringCloud微服务持续集成-下-之前是单机版"><a href="#Jenkins-Docker-SpringCloud微服务持续集成-下-之前是单机版" class="headerlink" title="Jenkins+Docker+SpringCloud微服务持续集成(下)之前是单机版"></a>Jenkins+Docker+SpringCloud微服务持续集成(下)<del>之前是单机版</del></h4><h6 id="上面部署方案存在的问题："><a href="#上面部署方案存在的问题：" class="headerlink" title="上面部署方案存在的问题："></a>上面部署方案存在的问题：</h6><p>1）一次只能选择一个微服务部署<br>2）只有一台生产者部署服务器<br>3）每个微服务只有一个实例，容错率低</p>
-<h5 id="初级版已完成接下来是中级版本！！"><a href="#初级版已完成接下来是中级版本！！" class="headerlink" title="初级版已完成接下来是中级版本！！"></a>初级版已完成接下来是中级版本！！</h5>
+<h5 id="初级版已完成接下来是中级版本！！"><a href="#初级版已完成接下来是中级版本！！" class="headerlink" title="初级版已完成接下来是中级版本！！"></a>初级版已完成接下来是中级版本！！</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/b15e17b4e1423812026358347a2f45e5a23e8bc3/%E6%96%B0%E9%B2%9C%E9%9B%86%E6%88%90%E5%9B%BE2.png"></p>
+<p>在idea项目中增加一台新的机器作为eureka注册的地方</p>
+<pre><code class="yml">tensquare_gathering/src/main/resources/application.yml
+server: 
+  port: 9002
+spring: 
+  application:  
+    name: tensquare-gathering #指定服务名
+  datasource:  
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.200.129:3306/tensquare_gathering?characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  jpa: 
+    database: mysql
+    show-sql: true
+#Eureka客户端配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.200.130:10086/eureka,http://192.168.200.133:10086/eureka
+  instance:
+    lease-renewal-interval-in-seconds: 5 # 每隔5秒发送一次心跳
+    lease-expiration-duration-in-seconds: 10 # 10秒不发送就过期
+    prefer-ip-address: true
+</code></pre>
+<pre><code class="yaml">tensquare_admin_service/src/main/resources/application.yml
+server: 
+  port: 9001
+spring: 
+  application:  
+    name: tensquare-admin-service #指定服务名
+  datasource:  
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.200.129:3306/tensquare_user?characterEncoding=UTF-8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  jpa: 
+    database: mysql
+    show-sql: true
+
+#Eureka配置
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.200.130:10086/eureka,http://192.168.200.133:10086/eureka
+  instance:
+    lease-renewal-interval-in-seconds: 5 # 每隔5秒发送一次心跳
+    lease-expiration-duration-in-seconds: 10 # 10秒不发送就过期
+    prefer-ip-address: true
+
+
+ # jwt参数
+jwt:
+  config:
+    key: itcast
+    ttl: 1800000
+</code></pre>
+<pre><code class="yaml">tensquare_zuul/src/main/resources/application.yml
+server:
+  port: 10020 # 端口
+  
+# 基本服务信息
+spring:
+  application:
+    name: tensquare-zuul # 服务ID
+    
+# Eureka配置
+eureka:
+  client:
+    service-url:  
+      defaultZone: http://192.168.200.130:10086/eureka,http://192.168.200.133:10086/eureka
+  instance:
+    prefer-ip-address: true
+  
+# 修改ribbon的超时时间
+ribbon:
+  ConnectTimeout: 1500 # 连接超时时间，默认500ms
+  ReadTimeout: 3000  # 请求超时时间，默认1000ms
+  
+  
+# 修改hystrix的熔断超时时间
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMillisecond: 2000 # 熔断超时时长，默认1000ms
+            
+
+# 网关路由配置
+zuul:
+  routes:
+    admin:
+      path: /admin/**
+      serviceId: tensquare-admin-service
+    gathering:
+          path: /gathering/**
+          serviceId: tensquare-gathering
+
+ # jwt参数
+jwt:
+  config:
+    key: itcast
+    ttl: 1800000
+</code></pre>
+<pre><code class="yaml">C:\Users\Pluminary\Desktop\HouDuan\tensquare_parent\tensquare_eureka_server\src\main\resources\application.yml
+# 集群版
+spring:
+  application:
+    name: EUREKA-HA
+
+---
+server:
+  port: 10086
+spring:
+  # 指定profile=eureka-server1
+  profiles: eureka-server1
+eureka:
+  instance:
+    # 指定当profile=eureka-server1时，主机名是eureka-server1
+    hostname: 192.168.66.130
+  client:
+    service-url:
+      # 将自己注册到eureka-server1、eureka-server2这个Eureka上面去
+      defaultZone: http://192.168.66.130:10086/eureka/,http://192.168.66.133:10086/eureka/
+
+---
+server:
+  port: 10086
+spring:
+  profiles: eureka-server2
+eureka:
+  instance:
+    hostname: 192.168.66.132
+  client:
+    service-url:
+      defaultZone: http://192.168.66.130:10086/eureka/,http://192.168.66.133:10086/eureka/
+</code></pre>
+<p>然后更改提交push到gitlab</p>
+<h4 id="设计Jenkins集群项目的构建参数"><a href="#设计Jenkins集群项目的构建参数" class="headerlink" title="设计Jenkins集群项目的构建参数"></a>设计Jenkins集群项目的构建参数</h4><ul>
+<li><p>安装Extended Choice Parameter插件<del>支持多选框</del></p>
+</li>
+<li><p>新建一个<code>tensquare_back_cluster</code>的item<br>流水线选择piplin…SCM；git的url填gitlab里的后端地址</p>
+</li>
+<li><p>第一步安装好插件后 就可以在<code>This project...</code> 中看到<code>Choice Parameter</code><br>先添加一个<code>String Parameter</code>：名称branch 默认值master 描述请输入分支名称</p>
+</li>
+<li><p>再添加参数选择多选<code>Extended Choice Parameter</code>：名称project_name 描述:请选择需要部署的微服务；勾选<code>Basic Parameter Types</code> → Check Boxes → Number of Visble Items：4 → Delimiter<code>,</code>(用逗号去隔开) → 点击下面的<code>Choose Source for Value</code> → Value为<code>tensquare_eureka_server@10086,tensquare_zuul@10020,tensquare_admin_service@9001,tensquare_gathering@9002</code> → 点击<code>Choose Source for Default Value</code>(选择默认值)：<code>tensquare_eureka_server@10086</code> → 点击<code>ChooseSourceforValueDescription</code>(描述备注) Description：<code>注册中心,服务网关,认证中心,活动微服务</code> 👉 应用保存 → 构建就可以看到</p>
+<p>★★ 请注意 配置多选的时候 Jenkins那里一定不要多加空格什么的！</p>
+</li>
+<li><p>更新Jenkinsfile代码</p>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+//harbor的登录凭证ID
+def harbor_auth = &quot;f83725d3-d5fc-4faf-8ac1-1a56487dfc7b&quot;
+
+
+node &#123;
+    // 获取当前选择的项目名称 要用逗号去切割
+    def selectedProjectNames = &quot;$&#123;project_name&#125;&quot;.split(&quot;,&quot;)
+
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      for(int i = 0; i &lt; selectedProjectNames.length; i++)&#123;
+          // tensquare_eureka_server@10086
+           def projectInfo = selectedProjectNames[i];
+          // 当前遍历的项目名称
+           def currentProjectName = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[0]
+          // 当前遍历的项目端口
+           def currentProjectPort = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[1]
+
+          //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+          def scannerHome = tool &#39;sonar-scanner&#39;
+          //引用当前JenkinsSonarQube环境 Jenkins的System里
+          withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+              // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+              sh &quot;&quot;&quot;
+                    cd $&#123;currentProjectName&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+          &#125;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程&#39;)&#123;
+        sh &quot;mvn -f $&#123;project_name&#125; clean package dockerfile:build&quot;
+        // 定义镜像名称
+        def imageName = &quot;$&#123;project_name&#125;:$&#123;tag&#125;&quot;
+
+        // 对镜像打上标签
+        sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+        // 把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)
+        withCredentials([usernamePassword(credentialsId: &quot;$&#123;harbor_auth&#125;&quot;, passwordVariable: &#39;password&#39;, usernameVariable: &#39;username&#39;)]) &#123;
+            // 登录到Harbor
+            sh &quot;docker login -u $&#123;username&#125; -p  $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+
+            //镜像上传
+            sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+            sh &quot;echo &#39;🔥🔥镜像上传成功✅✅&#39;&quot;
+        &#125;
+        // 部署应用 发送命令调用生产服务器的shell脚本文件 完成所有的微服务项目部署行为
+        // deploy.sh 是触发远程脚本文件(镜像拉取和容器创建的行为)
+        sshPublisher(publishers: [sshPublisherDesc(configName: &#39;master_server&#39;, transfers: [sshTransfer(cleanRemote: false, excludes: &#39;&#39;, execCommand: &quot;/opt/jenkins_shell/deploy.sh $harbor_url $harbor_project $project_name $tag $port&quot;, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: &#39;[, ]+&#39;, remoteDirectory: &#39;&#39;, remoteDirectorySDF: false, removePrefix: &#39;&#39;, sourceFiles: &#39;&#39;)], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h4 id="多个项目打包及构建上传镜像"><a href="#多个项目打包及构建上传镜像" class="headerlink" title="多个项目打包及构建上传镜像"></a>多个项目打包及构建上传镜像</h4><ul>
+<li>更新Jenkinsfile文件</li>
+</ul>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+//harbor的登录凭证ID
+def harbor_auth = &quot;f83725d3-d5fc-4faf-8ac1-1a56487dfc7b&quot;
+
+
+node &#123;
+    // 获取当前选择的项目名称 要用逗号去切割
+    def selectedProjectNames = &quot;$&#123;project_name&#125;&quot;.split(&quot;,&quot;)
+
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      for(int i=0;i&lt;selectedProjectNames.length;i++)&#123;
+          // tensquare_eureka_server@10086
+           def projectInfo = selectedProjectNames[i];
+          // 当前遍历的项目名称
+           def currentProjectName = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[0]
+          // 当前遍历的项目端口
+           def currentProjectPort = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[1]
+
+          //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+          def scannerHome = tool &#39;sonar-scanner&#39;
+          //引用当前JenkinsSonarQube环境 Jenkins的System里
+          withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+              // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+              sh &quot;&quot;&quot;
+                    cd $&#123;currentProjectName&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+          &#125;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程，上传镜像&#39;) &#123;
+        for (int i = 0; i &lt; selectedProjectNames.length; i++) &#123;
+            //tensquare_eureka_server@10086
+            def projectInfo = selectedProjectNames[i];
+            //当前遍历的项目名称
+            def currentProjectName = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[0]
+            //当前遍历的项目端口
+            def currentProjectPort = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[1]
+
+            sh &quot;mvn -f $&#123;currentProjectName&#125; clean package dockerfile:build&quot;
+
+            //定义镜像名称
+            def imageName = &quot;$&#123;currentProjectName&#125;:$&#123;tag&#125;&quot;
+
+            // 对镜像打上标签
+            sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+            // 把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)
+            withCredentials([usernamePassword(credentialsId: &quot;$&#123;harbor_auth&#125;&quot;, passwordVariable: &#39;password&#39;, usernameVariable: &#39;username&#39;)]) &#123;
+                // 登录到Harbor
+                sh &quot;docker login -u $&#123;username&#125; -p  $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+
+                //镜像上传
+                sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+                sh &quot;echo &#39;🔥🔥镜像上传成功✅✅&#39;&quot;
+            &#125;
+            // 部署应用 发送命令调用生产服务器的shell脚本文件 完成所有的微服务项目部署行为
+            // deploy.sh 是触发远程脚本文件(镜像拉取和容器创建的行为)
+            sshPublisher(publishers: [sshPublisherDesc(configName: &#39;master_server&#39;, transfers: [sshTransfer(cleanRemote: false, excludes: &#39;&#39;, execCommand: &quot;/opt/jenkins_shell/deploy.sh $harbor_url $harbor_project $project_name $tag $port&quot;, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: &#39;[, ]+&#39;, remoteDirectory: &#39;&#39;, remoteDirectorySDF: false, removePrefix: &#39;&#39;, sourceFiles: &#39;&#39;)], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="把Eureka注册中心集群部署到多台服务器"><a href="#把Eureka注册中心集群部署到多台服务器" class="headerlink" title="把Eureka注册中心集群部署到多台服务器"></a>把Eureka注册中心集群部署到多台服务器</h4><p><code>Dashboard → Manage Jenkins → 下面的SSH Server → 增加一台133的机器</code><br>测试之前需要把Jenkins服务的公钥拷贝到133上面</p>
+<blockquote>
+<p>在Jenkins的129机器<br>[root@localhost ~]# ssh-copy-id 192.168.200.133    [Product_slave]</p>
+</blockquote>
+<blockquote>
+<p>SSH Server→【应用+Save】<br>Name：slave_server<br>Hostname：192.168.200.133<br>Username：root<br>Remote Directory：&#x2F;</p>
+</blockquote>
+<p>继续在Jenkins的<code>tensquare_back_cluster</code>中的<code>Configure</code>的<code>Extended Choice Parameter</code>的下面<code>添加参数</code> → 继续添加<code>Extended Choice Parameter</code> → 在里面继续添加<code>Name：publish_server;Description：请选择需要部署的服务器</code> → 勾选<code>Basic Parameter Types</code>, <code>Parameter Type：Check Boxes</code> → <code>Number of Visible Items：2</code>, <code>Delimiter：,</code> 下面的<code>Choose Source for Value</code> → <code>Value：master_server,slave_server</code> → 下面的<code>Default Value：master_server</code> → 下面的<code>Description：主节点,从节点</code> → 应用+Save</p>
+<ul>
+<li>更新了<code>Jenkinsfile</code>文件</li>
+</ul>
+<pre><code class="yaml">//git凭证ID
+def git_auth = &quot;ca22e56f-0ecc-4fdc-965d-01e329a0b68a&quot;
+//git的url地址
+def git_url = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+//镜像的版本号
+def tag = &quot;latest&quot;
+//Harbor的url地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+//镜像库项目名称
+def harbor_project = &quot;tensquare&quot;
+//harbor的登录凭证ID
+def harbor_auth = &quot;f83725d3-d5fc-4faf-8ac1-1a56487dfc7b&quot;
+
+
+node &#123;
+    // 获取当前选择的项目名称 要用逗号去切割
+    def selectedProjectNames = &quot;$&#123;project_name&#125;&quot;.split(&quot;,&quot;)
+    // 获取当前选择的服务器名称
+    def selectedServers = &quot;$&#123;publish_server&#125;&quot;.split(&quot;,&quot;)
+
+   stage(&#39;拉取代码&#39;) &#123;
+      checkout scmGit(branches: [[name: &quot;*/$&#123;branch&#125;&quot;]], extensions: [], userRemoteConfigs: [[credentialsId: &quot;$&#123;git_auth&#125;&quot;, url: &quot;$&#123;git_url&#125;&quot;]])
+   &#125;
+   stage(&#39;代码审查&#39;) &#123;
+      for(int i=0;i&lt;selectedProjectNames.length;i++)&#123;
+          // tensquare_eureka_server@10086
+           def projectInfo = selectedProjectNames[i];
+          // 当前遍历的项目名称
+           def currentProjectName = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[0]
+          // 当前遍历的项目端口
+           def currentProjectPort = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[1]
+
+          //定义当前的Jenkins的sonarqubeScanner工具 Jenkins的全局Tools里
+          def scannerHome = tool &#39;sonar-scanner&#39;
+          //引用当前JenkinsSonarQube环境 Jenkins的System里
+          withSonarQubeEnv(&#39;sonarqube&#39;)&#123;
+              // 需要进入某个项目 在Jenkins选择什么项目就cd什么项目
+              sh &quot;&quot;&quot;
+                    cd $&#123;currentProjectName&#125;
+                    $&#123;scannerHome&#125;/bin/sonar-scanner
+                &quot;&quot;&quot;
+          &#125;
+      &#125;
+    &#125;
+    stage(&#39;编译，安装公共子工程&#39;)&#123;
+        sh &quot;mvn -f tensquare_common clean install&quot;
+    &#125;
+    stage(&#39;编译，打包微服务工程，上传镜像&#39;) &#123;
+        for (int i = 0; i &lt; selectedProjectNames.length; i++) &#123;
+            //tensquare_eureka_server@10086
+            def projectInfo = selectedProjectNames[i];
+            //当前遍历的项目名称
+            def currentProjectName = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[0]
+            //当前遍历的项目端口
+            def currentProjectPort = &quot;$&#123;projectInfo&#125;&quot;.split(&quot;@&quot;)[1]
+
+            sh &quot;mvn -f $&#123;currentProjectName&#125; clean package dockerfile:build&quot;
+
+            //定义镜像名称
+            def imageName = &quot;$&#123;currentProjectName&#125;:$&#123;tag&#125;&quot;
+
+            // 对镜像打上标签
+            sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+            // 把镜像推送到Harbor(要登录 输入账号密码 不要写在脚本文件 把harbor账号密码用jenkins全局凭证)
+            withCredentials([usernamePassword(credentialsId: &quot;$&#123;harbor_auth&#125;&quot;, passwordVariable: &#39;password&#39;, usernameVariable: &#39;username&#39;)]) &#123;
+                // 登录到Harbor
+                sh &quot;docker login -u $&#123;username&#125; -p  $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+
+                //镜像上传
+                sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project&#125;/$&#123;imageName&#125;&quot;
+
+                sh &quot;echo &#39;🔥🔥镜像上传成功✅✅&#39;&quot;
+            &#125;
+            //遍历所有服务器，分别部署
+            for (int j = 0; j &lt; selectedServers.length; j++) &#123;
+                //获取当前遍历的服务器名称
+                def currentServerName = selectedServers[j]
+
+                //加上的参数格式：--spring.profiles.active=eureka-server1/eureka-server2
+                def activeProfile = &quot;--spring.profiles.active=&quot;
+
+                //根据不同的服务名称来读取不同的Eureka配置信息
+                if (currentServerName == &quot;master_server&quot;) &#123;
+                    activeProfile = activeProfile + &quot;eureka-server1&quot;
+                &#125; else if (currentServerName == &quot;slave_server&quot;) &#123;
+                    activeProfile = activeProfile + &quot;eureka-server2&quot;
+                &#125;
+
+                // 部署应用 发送命令调用生产服务器的shell脚本文件 完成所有的微服务项目部署行为
+                // deploy.sh 是触发远程脚本文件(镜像拉取和容器创建的行为)
+                sshPublisher(publishers: [sshPublisherDesc(configName: &quot;$&#123;currentServerName&#125;&quot;, transfers: [sshTransfer(cleanRemote: false, excludes: &#39;&#39;, execCommand: &quot;/opt/jenkins_shell/deployCluster.sh $harbor_url $harbor_project $currentProjectName $tag $currentProjectPort $activeProfile&quot;, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: &#39;[, ]+&#39;, remoteDirectory: &#39;&#39;, remoteDirectorySDF: false, removePrefix: &#39;&#39;, sourceFiles: &#39;&#39;)], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>将之前的<code>deploy.sh</code>换成了<code>deployCluster.sh</code></li>
+</ul>
+<pre><code class="yaml">#! /bin/sh
+#接收外部参数
+harbor_url=$1
+harbor_project_name=$2
+project_name=$3
+tag=$4
+port=$5
+profile=$6
+
+imageName=$harbor_url/$harbor_project_name/$project_name:$tag
+
+echo &quot;$imageName&quot;
+
+#查询容器是否存在，存在则删除
+containerId=`docker ps -a | grep -w $&#123;project_name&#125;:$&#123;tag&#125;  | awk &#39;&#123;print $1&#125;&#39;`
+
+if [ &quot;$containerId&quot; !=  &quot;&quot; ] ; then
+    #停掉容器
+    docker stop $containerId
+
+    #删除容器
+    docker rm $containerId
+    
+    echo &quot;成功删除容器&quot;
+fi
+
+#查询镜像是否存在，存在则删除
+imageId=`docker images | grep -w $project_name  | awk &#39;&#123;print $3&#125;&#39;`
+
+if [ &quot;$imageId&quot; !=  &quot;&quot; ] ; then
+      
+    #删除镜像
+    docker rmi -f $imageId
+    
+    echo &quot;成功删除镜像&quot;
+fi
+
+# 登录Harbor
+docker login -u eric -p Eric123456 $harbor_url
+
+# 下载镜像
+docker pull $imageName
+
+# 启动容器
+docker run -di -p $port:$port $imageName $profile
+
+echo &quot;容器启动成功&quot;
+</code></pre>
+<ul>
+<li><p>master_server,slave_server将130生产的机器<code>master机器</code>里 放入<code>deployCluster.sh</code> 是在这个目录<code>/opt/jenkins_shell/</code>里面<br>然后加上权限</p>
+<blockquote>
+<p>[root@localhost ~]# <code>cd /opt/jenkins_shell/</code><br>[root@localhost jenkins_shell]# <code>chmod +x deployCluster.sh</code></p>
+</blockquote>
+</li>
+<li><p>然后在133机器上<code>slave机器</code> 按照上一步的操作拖进去 然后加入权限</p>
+<blockquote>
+<p>[root@localhost ~]# <code>cd /opt/jenkins_shell/</code><br>[root@localhost jenkins_shell]# <code>chmod +x deployCluster.sh</code></p>
+</blockquote>
+</li>
+</ul>
+<p>[Eureka] (<a target="_blank" rel="noopener" href="http://192.168.200.130:10086/">http://192.168.200.130:10086/</a>) + [Eureka] (<a target="_blank" rel="noopener" href="http://192.168.200.133:10086/">http://192.168.200.133:10086/</a>)</p>
+<ul>
+<li><p>然后再去把剩下的都构建了</p>
+<blockquote>
+<h4 id="project-name"><a href="#project-name" class="headerlink" title="project_name"></a>project_name</h4><p>请选择需要部署的微服务</p>
+<table>
+<thead>
+<tr>
+<th>注册中心</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>服务网关</td>
+</tr>
+<tr>
+<td>认证中心</td>
+</tr>
+<tr>
+<td>活动微服务</td>
+</tr>
+</tbody></table>
+<h4 id="publish-server"><a href="#publish-server" class="headerlink" title="publish_server"></a>publish_server</h4><p>请选择需要部署的服务器</p>
+<table>
+<thead>
+<tr>
+<th>主节点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>从节点</td>
+</tr>
+</tbody></table>
+</blockquote>
+</li>
+</ul>
+<h4 id="Nginx-Zuul集群实现高可用网关"><a href="#Nginx-Zuul集群实现高可用网关" class="headerlink" title="Nginx + Zuul集群实现高可用网关"></a>Nginx + Zuul集群实现高可用网关</h4><p><img src="/"></p>
+
             
         </div>
     </div>
@@ -4713,7 +5225,7 @@ module.exports = &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -5559,7 +6071,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -5684,7 +6196,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -7755,7 +8267,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -7888,7 +8400,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -8297,7 +8809,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -11674,7 +12186,7 @@ query_engine = index.as_query_engine(streaming=True)
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
