@@ -2192,7 +2192,7 @@ DNS1=8.8.8.8
 </blockquote>
 <hr>
 <blockquote>
-<p>如果<code>ip a show ens33</code>没有ip地址怎么办 这样会导致moba连不上<br>应该是网卡状态为<code>down</code>说明网卡没启用<br>直接用ip命令把网卡打开<code>sudo ip link set ens33 up</code><br>然后找一下有没有 ip a show ens33<br>重启网络服务：<code>sudo systemctl restart network</code> 再次查看<br><span style = "color:red"><strong>如果还是没有 就手动设置IP</strong></span><br><code>sudo ip addr add 192.168.200.131/24 dev ens33 </code><br>然后再次查看 <code>ip a show ens33</code></p>
+<p>如果<code>ip a show ens33</code>没有ip地址怎么办 这样会导致moba连不上<br>应该是网卡状态为<code>down</code>说明网卡没启用<br>直接用ip命令把网卡打开<code>sudo ip link set ens33 up</code><br>然后找一下有没有 ip a show ens33<br>重启网络服务：<code>sudo systemctl restart network</code> 再次查看<br><span style = "color:red"><strong>如果还是没有 就手动设置IP</strong></span><br><code>sudo ip addr add 192.168.200.131/24 dev ens33 </code><br>再次重启网络服务：<code>sudo systemctl restart network</code><br>然后再次查看 <code>ip a show ens33</code></p>
 </blockquote>
 <h4 id="我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊"><a href="#我想了解一下-虚拟机的-net直连-桥接-仅主机模式-自定义虚拟网络-这些有什么区别啊" class="headerlink" title="我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊"></a>我想了解一下 虚拟机的 net直连 桥接 仅主机模式 自定义虚拟网络  这些有什么区别啊</h4><table>
 <thead>
@@ -2471,7 +2471,8 @@ docker run -d --name=eureka -p 10086:10086 eureka:v1
 <p>✅ 虚拟机是桥接模式<br> ✅ 能 ping 通虚拟机 <code>192.168.200.129</code><br> ✅ 防火墙是永久关闭状态<br> ❌ <strong>本机打开了 Clash 并启用了系统代理 + 全局模式</strong></p>
 <hr>
 <h3 id="✅-你的-Eureka-服务配置和容器启动都是正确的，问题现在就出在：你本机开启了-Clash-的全局代理。"><a href="#✅-你的-Eureka-服务配置和容器启动都是正确的，问题现在就出在：你本机开启了-Clash-的全局代理。" class="headerlink" title="✅ 你的 Eureka 服务配置和容器启动都是正确的，问题现在就出在：你本机开启了 Clash 的全局代理。"></a>✅ 你的 Eureka 服务配置和容器启动都是正确的，问题现在就出在：<strong>你本机开启了 Clash 的全局代理。</strong></h3><h3 id="❗这会导致浏览器请求走代理，无法访问内网地址（例如-192-168-200-129-10086）。"><a href="#❗这会导致浏览器请求走代理，无法访问内网地址（例如-192-168-200-129-10086）。" class="headerlink" title="❗这会导致浏览器请求走代理，无法访问内网地址（例如 192.168.200.129:10086）。"></a>❗这会导致浏览器请求走代理，<strong>无法访问内网地址</strong>（例如 <code>192.168.200.129:10086</code>）。</h3><hr>
-<h5 id="删除镜像：docker-rmi-eureka-v1"><a href="#删除镜像：docker-rmi-eureka-v1" class="headerlink" title="删除镜像：docker rmi eureka:v1"></a>删除镜像：<code>docker rmi eureka:v1</code></h5><hr>
+<h5 id="删除镜像：docker-rmi-eureka-v1"><a href="#删除镜像：docker-rmi-eureka-v1" class="headerlink" title="删除镜像：docker rmi eureka:v1"></a>删除镜像：<code>docker rmi eureka:v1</code></h5><p>删除所有悬挂镜像：&lt; none &gt;的 <code>docker images | grep &quot;&lt;none&gt;&quot; | awk &#39;&#123;print $3&#125;&#39; | xargs -r docker rmi -f</code></p>
+<hr>
 <hr>
 <p><code>ss -tlnp | grep 10086</code>✅ 你看到的是：</p>
 <pre><code>LISTEN     0      1024        :::10086                   :::*                   users:((&quot;docker-proxy&quot;,pid=31831,fd=4))
@@ -5210,8 +5211,1637 @@ echo &quot;容器启动成功&quot;
 </blockquote>
 </li>
 </ul>
-<h4 id="Nginx-Zuul集群实现高可用网关"><a href="#Nginx-Zuul集群实现高可用网关" class="headerlink" title="Nginx + Zuul集群实现高可用网关"></a>Nginx + Zuul集群实现高可用网关</h4><p><img src="/"></p>
+<h4 id="Nginx-Zuul集群实现高可用网关"><a href="#Nginx-Zuul集群实现高可用网关" class="headerlink" title="Nginx + Zuul集群实现高可用网关"></a>Nginx + Zuul集群实现高可用网关</h4><p><img src="https://raw.githubusercontent.com/P-luminary/images/d0f70a9927ff44bf814b318e0c7211a8e0bdbce6/Nginx%20+%20Zuul%E9%9B%86%E7%BE%A4%E5%AE%9E%E7%8E%B0%E9%AB%98%E5%8F%AF%E7%94%A8%E7%BD%91%E5%85%B3.png"></p>
+<h5 id="更改133的nginx配置"><a href="#更改133的nginx配置" class="headerlink" title="更改133的nginx配置"></a>更改133的nginx配置</h5><p><code>vi /etc/nginx/nginx.conf</code></p>
+<pre><code class="yaml">user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
 
+include /usr/share/nginx/modules/*.conf;
+
+events &#123;
+    worker_connections 1024;
+&#125;
+
+http &#123;
+    log_format  main  &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;
+                      &#39;$status $body_bytes_sent &quot;$http_referer&quot; &#39;
+                      &#39;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&#39;;
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+
+    ### 新增负载均衡配置
+    upstream zuulServer &#123;
+        server 192.168.200.130:10020 weight=1;
+        server 192.168.200.133:10020 weight=1;
+    &#125;
+
+    server &#123;
+        listen       85 default_server;
+        listen       [::]:85 default_server;
+        server_name  _;·
+        root         /usr/share/nginx/html;
+
+        include /etc/nginx/default.d/*.conf;
+
+        location / &#123;
+            proxy_pass http://zuulServer/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        &#125;
+
+        error_page 404 /404.html;
+        location = /404.html &#123;
+        &#125;
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html &#123;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>重启Nginx：<code>systemctl restart nginx</code><br>修改前端Nginx的访问地址tensquare_front → config → <code>prod.env.js</code></p>
+<pre><code class="yaml">&#39;use strict&#39;
+module.exports = &#123;
+  NODE_ENV: &#39;&quot;production&quot;&#39;,
+  // BASE_API: &#39;&quot;http://192.168.207.131:7300/mock/5c0b42c85b4c7508d4dc568c/1024&quot;&#39;
+  BASE_API: &#39;&quot;http://192.168.200.133:85&quot;&#39; // 管理员网关
+&#125;
+</code></pre>
+<h3 id="基于Kubernetes-x2F-K8S构建Jenkins持续集成平台-上"><a href="#基于Kubernetes-x2F-K8S构建Jenkins持续集成平台-上" class="headerlink" title="基于Kubernetes&#x2F;K8S构建Jenkins持续集成平台(上)"></a>基于Kubernetes&#x2F;K8S构建Jenkins持续集成平台(上)</h3><h5 id="Jenkins的Master-Slave分布式构建"><a href="#Jenkins的Master-Slave分布式构建" class="headerlink" title="Jenkins的Master-Slave分布式构建"></a>Jenkins的Master-Slave分布式构建</h5><h6 id="什么是Master-Slave分布式构建"><a href="#什么是Master-Slave分布式构建" class="headerlink" title="什么是Master-Slave分布式构建"></a>什么是Master-Slave分布式构建</h6><p>Jenkins的Master-Slave分布式构建，就是通过将构建过程分配到从属Slave节点上，从而减轻Master节 点的压力，而且可以同时构建多个，有点类似负载均衡的概念。</p>
+<h6 id="如何实现Master-Slave分布式构建"><a href="#如何实现Master-Slave分布式构建" class="headerlink" title="如何实现Master-Slave分布式构建"></a>如何实现Master-Slave分布式构建</h6><ul>
+<li><p>开启代理程序的TCP端口<code>Dashboard → Manage Jenkins → Security → 代理：随机选取</code></p>
+</li>
+<li><p>新建节点 <code>Dashboard → Manage Jenkins → Nodes → New node → 节点名称: slave1  勾选Permanent Agent → create </code> → 我的Jenkins主节点在101机器，从节点就放在102机器吧 → 去102机器<code>cd /root； mkdir jenkins</code>  → 远程工作目录：<code>/root/jenkins</code> → 用法；启动方式；可用性都是默认第一个 → 点进去刚刚创建的slave →↓</p>
+<pre><code class="yaml">Run from agent command line: (Unix) 
+# 下载agent.jar
+curl -sO http://192.168.200.133:8888/jnlpJars/agent.jar
+
+java -jar agent.jar -url http://192.168.200.129:8888/ -secret 85f68f679a60139d7867571d577299c3c7d10f913acfca589bb0b9018b86e14d -name slave1 -webSocket -workDir &quot;/root/jenkins&quot;
+</code></pre>
+<p>想要这个 需要下载个agent.jar包传到102的&#x2F;root机器中</p>
+</li>
+</ul>
+<blockquote>
+<h2 id="✅-最简单解决方案（推荐）"><a href="#✅-最简单解决方案（推荐）" class="headerlink" title="✅ 最简单解决方案（推荐）"></a>✅ 最简单解决方案（推荐）</h2><h3 id="✅-方案一：从-Jenkins-主机上下载，再用-SCP-复制到-agent-机器"><a href="#✅-方案一：从-Jenkins-主机上下载，再用-SCP-复制到-agent-机器" class="headerlink" title="✅ 方案一：从 Jenkins 主机上下载，再用 SCP 复制到 agent 机器"></a>✅ <strong>方案一：从 Jenkins 主机上下载，再用 SCP 复制到 agent 机器</strong></h3><p>在 Jenkins 主机（192.168.200.129）上执行：</p>
+<pre><code>curl -sO http://localhost:8888/jnlpJars/agent.jar
+</code></pre>
+<p>然后从主机 <strong>scp 到 192.168.200.133</strong>：</p>
+<pre><code>scp agent.jar root@192.168.200.133:/root/
+</code></pre>
+<p>登录密码或配置了免密都行。</p>
+</blockquote>
+<h3 id="Kubernetes实现Master-Slave分布式构建方案"><a href="#Kubernetes实现Master-Slave分布式构建方案" class="headerlink" title="Kubernetes实现Master-Slave分布式构建方案"></a><span style = "color:red">Kubernetes实现Master-Slave分布式构建方案</span></h3><h5 id="传统Jenkins的Master-Slave方案的缺陷"><a href="#传统Jenkins的Master-Slave方案的缺陷" class="headerlink" title="传统Jenkins的Master-Slave方案的缺陷"></a>传统Jenkins的Master-Slave方案的缺陷</h5><ul>
+<li>Master 每个 节点发生单点故障时，整个流程都不可用了 </li>
+<li>Slave节点的配置环境不一样，来完成不同语言的编译打包等操作，但是这些差异化的配置致管理起来非常不方便，维护起来也是比较费劲 </li>
+<li>资源分配不均衡，有的 Slave节点要运行的job出现排队等待，而有的Slave节点处于空闲状态 </li>
+<li>资源浪费，每台 掉资源 Slave节点可能是实体机或者VM，当Slave节点处于空闲状态时，也不会完全释放</li>
+</ul>
+<p>以上种种问题，我们可以引入Kubernates来解决！</p>
+<p>K8S是对主从分布式架构的优化！！！</p>
+<h5 id="Kubernates简介"><a href="#Kubernates简介" class="headerlink" title="Kubernates简介"></a>Kubernates简介</h5><p>Kubernetes（简称，K8S）是Google开源的容器集群管理系统，在Docker技术的基础上，为容器化的 应用提供部署运行、资源调度、服务发现和动态伸缩等一系列完整功能，提高了大规模容器集群管理的 便捷性。 其主要功能如下：</p>
+<ul>
+<li>使用 Docker对应用程序包装(package)、实例化(instantiate)、运行(run)。 </li>
+<li>以集群的方式运行、管理跨机器的容器。以集群的方式运行、管理跨机器的容器。</li>
+<li>解决 Docker跨机器容器之间的通讯问题。解决Docker跨机器容器之间的通讯问题。 </li>
+<li>Kubernetes 的自我修复机制使得容器集群总是运行在用户期望的状态。</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/e7ba868ee01a6860f90f158257d10a2f1d6d1a83/Kubernates+Docker+Jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E6%9E%B6%E6%9E%84%E5%9B%BE.png" style="zoom: 80%;" />
+
+<h4 id="Kubernates-Docker-Jenkins持续集成方案好处"><a href="#Kubernates-Docker-Jenkins持续集成方案好处" class="headerlink" title="Kubernates+Docker+Jenkins持续集成方案好处"></a>Kubernates+Docker+Jenkins持续集成方案好处</h4><ul>
+<li><span style = "color:red">服务高可用</span>：当 Jenkins Master 出现故障时，Kubernetes 会自动创建一个新的 Jenkins Master 容器，并且将 Volume 分配给新创建的容器，保证数据不丢失，从而达到集群服务高可用。 </li>
+<li><span style = "color:red">动态伸缩，合理使用资源</span>：每次运行 Job 时，会自动创建一个 Jenkins Slave，Job 完成后，Slave 自动注销并删除容器，资源自动释放，而且 Kubernetes 会根据每个资源的使用情况，动态分配 Slave 到空闲的节点上创建，降低出现因某节点资源利用率高，还排队等待在该节点的情况。 </li>
+<li><span style = "color:red">扩展性好</span> ：当 Kubernetes 集群的资源严重不足而导致 Job 排队等待时，可以很容易的添加一个 Kubernetes Node 到集群中，从而实现扩展。</li>
+</ul>
+<h4 id="Kubeadm安装Kubernetes"><a href="#Kubeadm安装Kubernetes" class="headerlink" title="Kubeadm安装Kubernetes"></a>Kubeadm安装Kubernetes</h4><h5 id="Kubernetes的架构"><a href="#Kubernetes的架构" class="headerlink" title="Kubernetes的架构"></a>Kubernetes的架构</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/062acb4452ba025e956c0bea31d53ad08618cbc1/kubernetes.png"></p>
+<ul>
+<li><strong>API Serve</strong>r ：用于暴露Kubernetes API，任何资源的请求的调用操作都是通过kube-apiserver提供的接 口进行的。 </li>
+<li><strong>Etcd</strong>：是Kubernetes提供默认的存储系统，保存所有集群数据，使用时需要为etcd数据提供备份计 划。 </li>
+<li><strong>Controller-Manager</strong>：作为集群内部的管理控制中心，负责集群内的Node、Pod副本、服务端点 （Endpoint）、命名空间（Namespace）、服务账号（ServiceAccount）、资源定额 （ResourceQuota）的管理，当某个Node意外宕机时，Controller Manager会及时发现并执行自动化 修复流程，确保集群始终处于预期的工作状态。 </li>
+<li><strong>Scheduler</strong>：监视新创建没有分配到Node的Pod，为Pod选择一个Node。 </li>
+<li><strong>Kubelet</strong>：负责维护容器的生命周期，同时负责Volume和网络的管理 </li>
+<li><strong>Kube proxy</strong>：是Kubernetes的核心组件，部署在每个Node节点上，它是实现Kubernetes Service的通 信与负载均衡机制的重要组件。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>主机名称</th>
+<th>IP地址</th>
+<th>安装的软件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>代码托管服务器</td>
+<td>192.168.200.132</td>
+<td>Gitlab-12.4.2</td>
+</tr>
+<tr>
+<td>Docker仓库服务器</td>
+<td>192.168.200.131</td>
+<td>Harbor1.9.2</td>
+</tr>
+<tr>
+<td>k8s-master</td>
+<td>192.168.200.129</td>
+<td>kube-apiserver、kube-controller-manager、kube scheduler、docker、etcd、calico，NFS</td>
+</tr>
+<tr>
+<td>k8s-node1</td>
+<td>192.168.200.130</td>
+<td>kubelet、kubeproxy、Docker18.06.1-ce</td>
+</tr>
+<tr>
+<td>k8s-node2</td>
+<td>192.168.200.133</td>
+<td>kubelet、kubeproxy、Docker18.06.1-ce</td>
+</tr>
+</tbody></table>
+<h4 id="三台机器都需要完成-结束我会提示"><a href="#三台机器都需要完成-结束我会提示" class="headerlink" title="三台机器都需要完成(结束我会提示)"></a><span style ="color:green">三台机器都需要完成<del>(结束我会提示)</del></span></h4><p>修改三台机器的hostname及hosts文件</p>
+<blockquote>
+<p>【输入hostname即可查看是否改成功】<br>hostnamectl set-hostname k8s-master   【129】<br>hostnamectl set-hostname k8s-node1    【130】<br>hostnamectl set-hostname k8s-node2    【133】</p>
+</blockquote>
+<blockquote>
+<p>【将id映射的hostname进行关联】<br>[输入 <code>cat /etc/hosts</code> 查看是否成功]<br>cat &gt;&gt;&#x2F;etc&#x2F;hosts&lt;&lt;EOF<br>192.168.200.129 k8s-master<br>192.168.200.130 k8s-node1<br>192.168.200.133 k8s-node2<br>EOF</p>
+</blockquote>
+<p>效果图</p>
+<blockquote>
+<p>[root@localhost ~]# cat &#x2F;etc&#x2F;hosts<br>127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4<br>::1         localhost localhost.localdomain localhost6 localhost6.localdomain6<br>192.168.200.129 k8s-master<br>192.168.200.130 k8s-node1<br>192.168.200.133 k8s-node2</p>
+</blockquote>
+<p>关闭防火墙和关闭SELinux</p>
+<blockquote>
+<p>systemctl stop firewalld<br>systemctl disable firewalld </p>
+<p><code>setenforce 0</code> 临时关闭<br><code>vi /etc/sysconfig/selinux </code>永久关闭<br>改为<code>SELINUX=disabled</code></p>
+</blockquote>
+<p><strong>关闭 SELinux</strong> 可以避免一些服务（如 Jenkins、SonarQube、Docker）因为权限问题无法访问网络或文件，但<strong>不是永久推荐</strong>的安全实践。</p>
+<h6 id="设置系统参数"><a href="#设置系统参数" class="headerlink" title="设置系统参数"></a>设置系统参数</h6><p>设置允许路由转发，不对bridge的数据进行处理<br>创建文件</p>
+<blockquote>
+<p>vi &#x2F;etc&#x2F;sysctl.d&#x2F;k8s.conf</p>
+<p>内容如下：</p>
+<p>net.bridge.bridge-nf-call-ip6tables &#x3D; 1<br>net.bridge.bridge-nf-call-iptables &#x3D; 1<br>net.ipv4.ip_forward &#x3D; 1<br>vm.swappiness &#x3D; 0</p>
+</blockquote>
+<p>执行文件</p>
+<blockquote>
+<p>sysctl -p &#x2F;etc&#x2F;sysctl.d&#x2F;k8s.conf</p>
+</blockquote>
+<h5 id="kube-proxy开启ipvs的前置条件"><a href="#kube-proxy开启ipvs的前置条件" class="headerlink" title="kube-proxy开启ipvs的前置条件"></a>kube-proxy开启ipvs的前置条件</h5><pre><code class="yaml">cat &gt; /etc/sysconfig/modules/ipvs.modules &lt;&lt;EOF
+#!/bin/bash
+modprobe -- ip_vs
+modprobe -- ip_vs_rr
+modprobe -- ip_vs_wrr
+modprobe -- ip_vs_sh
+modprobe -- nf_conntrack_ipv4
+EOF
+
+chmod 755 /etc/sysconfig/modules/ipvs.modules &amp;&amp; bash   ☆☆
+/etc/sysconfig/modules/ipvs.modules &amp;&amp; lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+</code></pre>
+<h5 id="所有节点关闭swap"><a href="#所有节点关闭swap" class="headerlink" title="所有节点关闭swap"></a>所有节点关闭swap</h5><blockquote>
+<p>swapoff -a 临时关闭<br>vi &#x2F;etc&#x2F;fstab 永久关闭 </p>
+<p>注释掉以下字段<br>&#x2F;dev&#x2F;mapper&#x2F;cl-swap swap swap defaults 0 0</p>
+</blockquote>
+<h5 id="安装kubelet、kubeadm、kubectl"><a href="#安装kubelet、kubeadm、kubectl" class="headerlink" title="安装kubelet、kubeadm、kubectl"></a>安装kubelet、kubeadm、kubectl</h5><ul>
+<li>kubeadm：用来初始化集群的指令。 </li>
+<li>kubelet：在集群中的每个节点上用来启动 pod 和 container 等。 </li>
+<li>kubectl:  清空yum缓存 用来与集群通信的命令行工具。</li>
+</ul>
+<h5 id="清空yum缓存"><a href="#清空yum缓存" class="headerlink" title="清空yum缓存"></a>清空yum缓存</h5><blockquote>
+<p>yum clean all</p>
+</blockquote>
+<h5 id="设置yum安装源"><a href="#设置yum安装源" class="headerlink" title="设置yum安装源"></a>设置yum安装源</h5><pre><code class="yaml">cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg 
+https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+</code></pre>
+<p>安装：<code>yum install -y kubelet kubeadm kubectl</code></p>
+<h5 id="kubelt-设置开机启动（注意：先不启动，现在启动的话会报错）"><a href="#kubelt-设置开机启动（注意：先不启动，现在启动的话会报错）" class="headerlink" title="kubelt 设置开机启动（注意：先不启动，现在启动的话会报错）"></a>kubelt 设置开机启动（注意：先不启动，现在启动的话会报错）</h5><p><code>systemctl start kubelet</code> 启动 ★★</p>
+<p><code>systemctl enable kubelet</code> 开机启动</p>
+<h5 id="查看版本"><a href="#查看版本" class="headerlink" title="查看版本"></a>查看版本</h5><p><code>kubelet --version</code>  → Kubernetes v1.28.2</p>
+<p><span style="color:green">结束！</span></p>
+<h4 id="Master节点需要完成-129主节点"><a href="#Master节点需要完成-129主节点" class="headerlink" title="Master节点需要完成 [129主节点]"></a>Master节点需要完成 [129主节点]</h4><ul>
+<li>运行初始化命令</li>
+</ul>
+<pre><code class="yaml">kubeadm init --kubernetes-version=1.28.2 \
+--apiserver-advertise-address=192.168.200.129 \
+--image-repository registry.aliyuncs.com/google_containers \
+--service-cidr=10.1.0.0/16 \
+--pod-network-cidr=10.244.0.0/16
+</code></pre>
+<blockquote>
+<h4 id="如何重新初始化？"><a href="#如何重新初始化？" class="headerlink" title="如何重新初始化？"></a>如何重新初始化？</h4><h2 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h2><h3 id="1-清理旧集群残留"><a href="#1-清理旧集群残留" class="headerlink" title="1. 清理旧集群残留"></a>1. <strong>清理旧集群残留</strong></h3><p>先执行 <code>kubeadm reset</code> 清理当前节点的 Kubernetes 配置和状态：</p>
+<pre><code>kubeadm reset -f
+kubeadm reset
+</code></pre>
+<p>这个命令会清理 kubelet 配置文件、证书、容器网络和所有 Kubernetes 相关状态。</p>
+<hr>
+<h3 id="2-清理网络相关残留"><a href="#2-清理网络相关残留" class="headerlink" title="2. 清理网络相关残留"></a>2. <strong>清理网络相关残留</strong></h3><p>清理 CNI 网络配置和容器残留：</p>
+<pre><code>rm -rf /etc/cni/net.d
+rm -rf /var/lib/cni/
+rm -rf /var/lib/kubelet/*
+</code></pre>
+<hr>
+<h3 id="3-确认-containerd-服务启动"><a href="#3-确认-containerd-服务启动" class="headerlink" title="3. 确认 containerd 服务启动"></a>3. <strong>确认 containerd 服务启动</strong></h3><p>确保 containerd 运行：</p>
+<pre><code>systemctl restart containerd
+systemctl status containerd
+</code></pre>
+<hr>
+<h3 id="4-重新初始化-Kubernetes"><a href="#4-重新初始化-Kubernetes" class="headerlink" title="4. 重新初始化 Kubernetes"></a>4. <strong>重新初始化 Kubernetes</strong></h3><p>执行你之前的初始化命令：</p>
+<pre><code>kubeadm init --kubernetes-version=1.28.2 \
+  --apiserver-advertise-address=192.168.200.129 \
+  --image-repository registry.aliyuncs.com/google_containers \
+  --service-cidr=10.1.0.0/16 \
+  --pod-network-cidr=10.244.0.0/16
+</code></pre>
+<hr>
+<h3 id="5-配置-kubeconfig"><a href="#5-配置-kubeconfig" class="headerlink" title="5. 配置 kubeconfig"></a>5. <strong>配置 kubeconfig</strong></h3><p>初始化完成后，按照提示将配置文件复制到用户目录：</p>
+<pre><code>mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+</code></pre>
+<hr>
+<h3 id="6-部署网络插件"><a href="#6-部署网络插件" class="headerlink" title="6. 部署网络插件"></a>6. <strong>部署网络插件</strong></h3><p>根据你使用的网络插件（比如 Flannel、Calico），按照官方文档部署。以 Flannel 为例：</p>
+<pre><code>kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+</code></pre>
+<hr>
+<h3 id="7-验证"><a href="#7-验证" class="headerlink" title="7. 验证"></a>7. <strong>验证</strong></h3><p>查看节点和 Pod 状态：</p>
+<pre><code>kubectl get nodes
+kubectl get pods -n kube-system
+</code></pre>
+<pre><code class="yaml">kubeadm join 192.168.200.129:6443 --token q54yl3.xgho0e6o5080hnnf \
+        --discovery-token-ca-cert-hash sha256:b8f6a58b65ad6bcfec65e5ed6ab5efac95f3a4ee82b2c388a87b20c3e813079b
+</code></pre>
+<hr>
+<hr>
+<hr>
+<h2 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h2><p>你之前的配置文件和状态未清理，导致不能重新初始化。先用 <code>kubeadm reset</code> 清理，再重新初始化。这样会自动生成 <code>kubelet</code> 配置文件和 <code>kubelet.conf</code>，解决你遇到的启动失败问题。</p>
+</blockquote>
+<blockquote>
+<p>问题：     [ERROR CRI]: container runtime is not running: output: E0706 21:24:43.293740   26106 remote_runtime.go:616] “Status from runtime service failed” err&#x3D;”rpc error: code &#x3D; Unavailable desc &#x3D; connection error: desc &#x3D; &quot;transport: Error while dialing dial unix &#x2F;var&#x2F;run&#x2F;containerd&#x2F;containerd.sock: connect: no such file or directory&quot;“ time&#x3D;”2025-07-06T21:24:43+08:00” level&#x3D;fatal msg&#x3D;”getting status of runtime: rpc error: code &#x3D; Unavailable desc &#x3D; connection error: desc &#x3D; &quot;transport: Error while dialing dial unix &#x2F;var&#x2F;run&#x2F;containerd&#x2F;containerd.sock: connect: no such file or directory&quot;“ , error: exit status 1 [preflight] If you know what you are doing, you can make a check non-fatal with <code>--ignore-preflight-errors=...</code> To see the stack trace of this error execute with –v&#x3D;5 or higher [root@k8s-master ~]#</p>
+<h3 id="✅-立即解决步骤（推荐直接复制粘贴执行）"><a href="#✅-立即解决步骤（推荐直接复制粘贴执行）" class="headerlink" title="✅ 立即解决步骤（推荐直接复制粘贴执行）"></a>✅ 立即解决步骤（推荐直接复制粘贴执行）</h3><h4 id="1️⃣-安装-containerd"><a href="#1️⃣-安装-containerd" class="headerlink" title="1️⃣ 安装 containerd"></a>1️⃣ 安装 containerd</h4><pre><code>yum install -y containerd
+</code></pre>
+<p>你这里显示的是一个<strong>非标准的 containerd 配置模板</strong>（很可能来自旧版本或 docker 提供的 containerd），<strong>缺失了完整配置结构和 <code>SystemdCgroup</code> 字段</strong>，所以这不是我们需要的配置。</p>
+<hr>
+<h3 id="✅-正确做法是：用标准-containerd-命令生成完整配置"><a href="#✅-正确做法是：用标准-containerd-命令生成完整配置" class="headerlink" title="✅ 正确做法是：用标准 containerd 命令生成完整配置"></a>✅ 正确做法是：用标准 containerd 命令生成完整配置</h3><p>请执行以下命令替换掉旧配置：</p>
+<hr>
+<h3 id="🔁-步骤-1：重新生成-containerd-的标准配置文件"><a href="#🔁-步骤-1：重新生成-containerd-的标准配置文件" class="headerlink" title="🔁 步骤 1：重新生成 containerd 的标准配置文件"></a>🔁 步骤 1：重新生成 containerd 的标准配置文件</h3><pre><code>rm -f /etc/containerd/config.toml  # 删除旧文件
+containerd config default &gt; /etc/containerd/config.toml
+</code></pre>
+<hr>
+<h3 id="🔧-步骤-2：编辑配置文件，修改-SystemdCgroup-true"><a href="#🔧-步骤-2：编辑配置文件，修改-SystemdCgroup-true" class="headerlink" title="🔧 步骤 2：编辑配置文件，修改 SystemdCgroup = true"></a>🔧 步骤 2：编辑配置文件，修改 <code>SystemdCgroup = true</code></h3><pre><code>vi /etc/containerd/config.toml
+</code></pre>
+<p>在文件中搜索这一行（用 <code>/SystemdCgroup</code>）：</p>
+<pre><code>SystemdCgroup = false
+</code></pre>
+<p>将它修改为：</p>
+<pre><code>SystemdCgroup = true
+</code></pre>
+<hr>
+<h3 id="🔁-步骤-3：重启-containerd"><a href="#🔁-步骤-3：重启-containerd" class="headerlink" title="🔁 步骤 3：重启 containerd"></a>🔁 步骤 3：重启 containerd</h3><pre><code>systemctl daemon-reexec
+systemctl restart containerd
+systemctl enable containerd
+</code></pre>
+<hr>
+<h3 id="✅-步骤-4：验证是否运行中"><a href="#✅-步骤-4：验证是否运行中" class="headerlink" title="✅ 步骤 4：验证是否运行中"></a>✅ 步骤 4：验证是否运行中</h3><pre><code>systemctl status containerd
+</code></pre>
+<p>确保输出中看到：<code>Active: active (running)</code></p>
+<hr>
+<h5 id="然后你就可以继续-kubeadm-init-了。如果你愿意，我可以一步步带你确认配置生效。现在请先执行"><a href="#然后你就可以继续-kubeadm-init-了。如果你愿意，我可以一步步带你确认配置生效。现在请先执行" class="headerlink" title="然后你就可以继续 kubeadm init 了。如果你愿意，我可以一步步带你确认配置生效。现在请先执行"></a>然后你就可以继续 <code>kubeadm init</code> 了。如果你愿意，我可以一步步带你确认配置生效。现在请先执行</h5><h4 id="一、清理旧的集群数据"><a href="#一、清理旧的集群数据" class="headerlink" title="一、清理旧的集群数据"></a>一、清理旧的集群数据</h4><p>你可以执行下面命令，清理之前的 kubeadm 初始化信息：</p>
+<pre><code>kubeadm reset
+</code></pre>
+<hr>
+<hr>
+<hr>
+<hr>
+<h3 id="你这边的核心问题是："><a href="#你这边的核心问题是：" class="headerlink" title="你这边的核心问题是："></a><span style = "color:red">你这边的核心问题是：</span></h3><blockquote>
+<p>❌ containerd 没有启动，导致 kubeadm 报错<br> <code>&quot;connect: no such file or directory&quot; → /var/run/containerd/containerd.sock</code></p>
+</blockquote>
+<p>这说明 <strong>containerd 根本没跑起来</strong>，Kubernetes 无法连接它。</p>
+<hr>
+<h3 id="✅-解决思路：修复-containerd-的配置-启动-containerd"><a href="#✅-解决思路：修复-containerd-的配置-启动-containerd" class="headerlink" title="✅ 解决思路：修复 containerd 的配置 + 启动 containerd"></a>✅ 解决思路：修复 containerd 的配置 + 启动 containerd</h3><p>我们手把手来操作👇</p>
+<hr>
+<h2 id="🧹-第一步：清空-containerd-的配置文件并重新生成"><a href="#🧹-第一步：清空-containerd-的配置文件并重新生成" class="headerlink" title="🧹 第一步：清空 containerd 的配置文件并重新生成"></a>🧹 第一步：清空 containerd 的配置文件并重新生成</h2><pre><code>rm -f /etc/containerd/config.toml
+containerd config default &gt; /etc/containerd/config.toml
+</code></pre>
+<p>✅ 这一步会恢复官方默认配置。</p>
+<h3 id="✏️-第二步：使用-vi（所有-Linux-通用）"><a href="#✏️-第二步：使用-vi（所有-Linux-通用）" class="headerlink" title="✏️ 第二步：使用 vi（所有 Linux 通用）"></a>✏️ 第二步：使用 <code>vi</code>（所有 Linux 通用）</h3><pre><code>vi /etc/containerd/config.toml
+</code></pre>
+<p>查找这一段：</p>
+<pre><code>[plugins.&quot;io.containerd.grpc.v1.cri&quot;]
+  sandbox_image = &quot;registry.k8s.io/pause:3.6&quot;
+</code></pre>
+<p>把它改成：</p>
+<pre><code>[plugins.&quot;io.containerd.grpc.v1.cri&quot;]
+  sandbox_image = &quot;registry.aliyuncs.com/google_containers/pause:3.9&quot;
+</code></pre>
+<p>✅ 保存并退出🔄 第三步：重启 containerd</p>
+<pre><code>systemctl daemon-reexec
+systemctl restart containerd
+</code></pre>
+<h2 id="✅-第四步：确认-containerd-已成功启动"><a href="#✅-第四步：确认-containerd-已成功启动" class="headerlink" title="✅ 第四步：确认 containerd 已成功启动"></a>✅ 第四步：确认 containerd 已成功启动</h2><pre><code>systemctl status containerd
+</code></pre>
+<p>看输出里有 <code>Active: active (running)</code>，说明启动成功。🧪 第五步：验证 socket 文件是否存在</p>
+<pre><code>ls -l /var/run/containerd/containerd.sock
+</code></pre>
+<p>应该能看到类似：</p>
+<pre><code>srw-rw---- 1 root root 0 Jul 6 22:06 /var/run/containerd/containerd.sock
+</code></pre>
+<p>如果没看到，说明 containerd 没真正运行成功。</p>
+<h2 id="🧱-第六步：重新执行-kubeadm-init"><a href="#🧱-第六步：重新执行-kubeadm-init" class="headerlink" title="🧱 第六步：重新执行 kubeadm init"></a>🧱 第六步：重新执行 <code>kubeadm init</code></h2><pre><code>kubeadm init --kubernetes-version=1.28.2 \
+  --apiserver-advertise-address=192.168.200.129 \
+  --image-repository registry.aliyuncs.com/google_containers \
+  --service-cidr=10.1.0.0/16 \
+  --pod-network-cidr=10.244.0.0/16
+</code></pre>
+<p>若是token忘记了 可以执行直接生成一个新的<br><code>kubeadm token create --print-join-command</code></p>
+<pre><code class="yam">[root@k8s-master calico]# kubeadm token create --print-join-command
+kubeadm join 192.168.200.129:6443 --token jn3083.g1lz52mo680wiic9 --discovery-token-ca-cert-hash sha256:d03d798679d90f348b1cf7a1c12d5d1bfcbe2bd18e4a1aec97055b60c0f042ca
+</code></pre>
+<p>此时去从节点生成可能会有报错你这个错误说明当前节点（<code>k8s-node1</code>）<br><strong>之前已经执行过 <code>kubeadm join</code> 或者其他 kubeadm 相关操作，留下了配置文件或端口被占用</strong>，不能直接再次执行 <code>kubeadm join</code>。</p>
+<hr>
+<h3 id="❗报错详情分析："><a href="#❗报错详情分析：" class="headerlink" title="❗报错详情分析："></a>❗报错详情分析：</h3><pre><code>[ERROR FileAvailable--etc-kubernetes-kubelet.conf]: /etc/kubernetes/kubelet.conf already exists
+[ERROR Port-10250]: Port 10250 is in use
+[ERROR FileAvailable--etc-kubernetes-pki-ca.crt]: /etc/kubernetes/pki/ca.crt already exists
+</code></pre>
+<p>这些错误说明：</p>
+<ul>
+<li><code>/etc/kubernetes/kubelet.conf</code> 文件存在 —— 说明 kubelet 被配置过。</li>
+<li><code>10250</code> 端口已被占用 —— kubelet 服务正在运行。</li>
+<li><code>/etc/kubernetes/pki/ca.crt</code> 文件存在 —— 集群证书存在，可能是之前加入过失败或残留文件。</li>
+</ul>
+<hr>
+<h3 id="✅-解决方法（清理残留再重新-join）："><a href="#✅-解决方法（清理残留再重新-join）：" class="headerlink" title="✅ 解决方法（清理残留再重新 join）："></a>✅ 解决方法（<strong>清理残留再重新 join</strong>）：</h3><p>你可以先在 node 节点执行 <strong>重置操作</strong>：</p>
+<pre><code>kubeadm reset -f
+</code></pre>
+<p>然后再清理一下配置和 iptables 规则（可选但推荐）：</p>
+<pre><code>rm -rf /etc/kubernetes/pki
+rm -rf /etc/kubernetes/kubelet.conf
+rm -rf /var/lib/kubelet/*
+iptables -F
+systemctl restart kubelet
+</code></pre>
+<p>然后重新执行你之前的 <code>kubeadm join</code> 命令：</p>
+<pre><code>kubeadm join 192.168.200.129:6443 --token eoxdev.8tkpz5csc7x1mqgc \
+        --discovery-token-ca-cert-hash sha256:6acf9c7e6c11bb973bd57404f9ec28b93ab5b48f8a50f0213bc389bbfb4bf68f
+</code></pre>
+<hr>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><hr>
+<p>一切顺利的话，k8s 就能初始化成功了！</p>
+<blockquote>
+<p>Your Kubernetes control-plane has initialized successfully!</p>
+<p>To start using your cluster, you need to run the following as a regular user:</p>
+<p>  mkdir -p $HOME&#x2F;.kube<br>  sudo cp -i &#x2F;etc&#x2F;kubernetes&#x2F;admin.conf $HOME&#x2F;.kube&#x2F;config<br>  sudo chown $(id -u):$(id -g) $HOME&#x2F;.kube&#x2F;config</p>
+<p>Alternatively, if you are the root user, you can run:</p>
+<p>  export KUBECONFIG&#x3D;&#x2F;etc&#x2F;kubernetes&#x2F;admin.conf</p>
+<p>You should now deploy a pod network to the cluster.<br>Run “kubectl apply -f [podnetwork].yaml” with one of the options listed at:<br>  <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/cluster-administration/addons/">https://kubernetes.io/docs/concepts/cluster-administration/addons/</a></p>
+<p>Then you can join any number of worker nodes by running the following on each as root:</p>
+<p>kubeadm join 192.168.200.129:6443 –token zjoxjc.f58nh7lixocvjpgj <br>        –discovery-token-ca-cert-hash sha256:3cbdd81868c4470767b5c82af37fb63c2240c98e5f00eb0458df99350cabb7b3<br>[root@k8s-master ~]#</p>
+<pre><code class="yaml">kubeadm join 192.168.200.129:6443 --token zjoxjc.f58nh7lixocvjpgj \
+        --discovery-token-ca-cert-hash sha256:3cbdd81868c4470767b5c82af37fb63c2240c98e5f00eb0458df99350cabb7b3
+</code></pre>
+</blockquote>
+</blockquote>
+<ul>
+<li>按照它的提示逐步修改k8s配置文件     配置 <code>kubectl</code> 工具</li>
+</ul>
+<pre><code class="yaml">mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+</code></pre>
+<ul>
+<li>安装Calico</li>
+</ul>
+<pre><code class="java">mkdir k8s
+cd k8s
+wget https://docs.projectcalico.org/v3.10/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+// 上面的别用了 用这个新的
+wget https://jiangstudy.online:8081/sources/calico.yaml
+sed -i &#39;s/192.168.0.0/10.244.0.0/g&#39; calico.yaml  【改地址 分给prod的虚拟地址】
+
+kubectl apply -f calico.yaml
+</code></pre>
+<p>或者ai说的</p>
+<pre><code class="yaml"># 1. 创建工作目录
+mkdir -p ~/k8s &amp;&amp; cd ~/k8s
+
+# 2. 下载 Calico 清单文件（推荐使用最新版本，而非 v3.10）
+wget https://docs.projectcalico.org/manifests/calico.yaml -O calico.yaml
+
+# 3. 修改 POD CIDR（根据您的集群规划）
+# 注意：必须与 kubeadm init 时指定的 --pod-network-cidr 一致
+sed -i &#39;s|192.168.0.0/16|10.244.0.0/16|g&#39; calico.yaml
+
+# 4. 部署 Calico
+kubectl apply -f calico.yaml
+
+# 5. 验证安装
+kubectl get pods -n kube-system -w
+</code></pre>
+<ul>
+<li>等待几分钟，查看所有Pod的状态，确保所有Pod都是Running状态</li>
+</ul>
+<p><code>kubectl get pod --all-namespaces -o wide</code></p>
+<blockquote>
+<p>你这个 <code>calico.yaml</code> 是 <strong>很老的版本 v3.10</strong>，其中用的是 <code>apiextensions.k8s.io/v1beta1</code>，<strong>早在 Kubernetes v1.22 中就被移除了</strong>，你现在用的是 <strong>Kubernetes 1.28</strong>，自然就出错了。</p>
+<hr>
+<h3 id="✅-正确做法：使用-Calico-官方支持-Kubernetes-v1-28-的最新-YAML"><a href="#✅-正确做法：使用-Calico-官方支持-Kubernetes-v1-28-的最新-YAML" class="headerlink" title="✅ 正确做法：使用 Calico 官方支持 Kubernetes v1.28 的最新 YAML"></a>✅ 正确做法：使用 Calico 官方支持 Kubernetes v1.28 的最新 YAML</h3><hr>
+<p><code>https://docs.projectcalico.org/manifests/calico.yaml</code>浏览器访问然后去<code>/root/k8s</code>里面进行全部替换成新版本</p>
+<h3 id="一键下载安装推荐版本："><a href="#一键下载安装推荐版本：" class="headerlink" title="一键下载安装推荐版本："></a>一键下载安装推荐版本：</h3><pre><code>curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml -O
+</code></pre>
+<blockquote>
+<p>Calico v3.26 支持 Kubernetes v1.28，放心使用</p>
+</blockquote>
+<p>然后再修改 <code>Pod CIDR</code>：</p>
+<pre><code>sed -i &#39;s/192.168.0.0/10.244.0.0/g&#39; calico.yaml
+</code></pre>
+<ol>
+<li><strong>建议修改镜像源为阿里云（国内可拉取）</strong>：<br> 例如将以下几行（在 calico.yaml 中）：</li>
+</ol>
+<pre><code>image: calico/cni:v3.26.1
+</code></pre>
+<p>替换为：</p>
+<pre><code>image: registry.cn-hangzhou.aliyuncs.com/chenby/calico_cni:v3.26.1
+</code></pre>
+<p>最后重新部署：</p>
+<pre><code>kubectl apply -f calico.yaml
+</code></pre>
+<hr>
+<h3 id="✅-检查-Calico-状态"><a href="#✅-检查-Calico-状态" class="headerlink" title="✅ 检查 Calico 状态"></a>✅ 检查 Calico 状态</h3><p>部署完大约 10~30 秒后执行：</p>
+<pre><code>kubectl get pods -n kube-system
+</code></pre>
+<p>正常会看到 <code>calico-node</code> 和 <code>calico-kube-controllers</code> 都处于 <code>Running</code> 状态。</p>
+<hr>
+<hr>
+<hr>
+<h3 id="傻卵ai和scdn-查半天都没用-还不如B站up的方法-一遍通"><a href="#傻卵ai和scdn-查半天都没用-还不如B站up的方法-一遍通" class="headerlink" title="傻卵ai和scdn 查半天都没用 还不如B站up的方法[一遍通]"></a><span style="color:red"><strong>傻卵ai和scdn 查半天都没用 还不如B站up的方法<del>[一遍通]</del></strong></span></h3><p><a target="_blank" rel="noopener" href="https://jiangstudy.online/archives/kubernetes-calicozu-jian-de-an-zhuang">【kubernetes】Calico组件的安装-云途运维</a></p>
+<p>以下步骤只在master01执行：相关的yaml已上传文件资源服务器，需要下载下来使用：</p>
+<pre><code class="yaml">mkdir /root/calico &amp;&amp; cd /root/calico/
+wget https://jiangstudy.online:8081/sources/calico.yaml
+</code></pre>
+<p>修改POD网段    说明：pod网段即为主机规划时的网段。</p>
+<pre><code class="yaml">POD_SUBNET=`cat /etc/kubernetes/manifests/kube-controller-manager.yaml | grep cluster-cidr= | awk -F= &#39;&#123;print $NF&#125;&#39;`
+
+sed -i &quot;s#POD_CIDR#$&#123;POD_SUBNET&#125;#g&quot; calico.yaml
+</code></pre>
+<p>部署calico<br><code>kubectl apply -f calico.yaml</code></p>
+<p>查看状态<br><code> kubectl get node</code><br><code>kubectl get pods -n kube-system -w</code></p>
+</blockquote>
+<h3 id="Slave节点需要完成"><a href="#Slave节点需要完成" class="headerlink" title="Slave节点需要完成"></a>Slave节点需要完成</h3><ul>
+<li><p>让所有节点让集群环境</p>
+<p>使用之前Master节点产生的命令加入集群</p>
+<pre><code class="yaml">kubeadm join 192.168.200.129:6443 --token eoxdev.8tkpz5csc7x1mqgc \
+        --discovery-token-ca-cert-hash sha256:6acf9c7e6c11bb973bd57404f9ec28b93ab5b48f8a50f0213bc389bbfb4bf68f
+</code></pre>
+</li>
+<li><p>启动<code>kubelet</code></p>
+<p><code>systemctl start kubelet</code> 启动<br><code>systemctl status kubelet</code> 查看状态</p>
+</li>
+<li><p>回到Master节点查看，如果Status全部为Ready，代表集群环境搭建成功！！！</p>
+<p><code>kubectl get nodes</code></p>
+</li>
+</ul>
+<blockquote>
+<p>你的这个报错：</p>
+<pre><code>validate service connection: CRI v1 runtime API is not implemented for endpoint &quot;unix:///var/run/containerd/containerd.sock&quot;
+</code></pre>
+<p>说明 <strong>containerd 的 CRI 接口没启用</strong>，这是因为你的 <code>/etc/containerd/config.toml</code> 配置不完整或者缺少必要字段。</p>
+<hr>
+<h2 id="✅-立即修复步骤如下："><a href="#✅-立即修复步骤如下：" class="headerlink" title="✅ 立即修复步骤如下："></a>✅ 立即修复步骤如下：</h2><h3 id="🔧-第一步：重新生成-config-toml-配置文件"><a href="#🔧-第一步：重新生成-config-toml-配置文件" class="headerlink" title="🔧 第一步：重新生成 config.toml 配置文件"></a>🔧 第一步：<strong>重新生成 config.toml 配置文件</strong></h3><pre><code>rm -f /etc/containerd/config.toml
+containerd config default &gt; /etc/containerd/config.toml
+</code></pre>
+<hr>
+<h3 id="🛠️-第二步：修改配置启用-CRI-systemd-驱动"><a href="#🛠️-第二步：修改配置启用-CRI-systemd-驱动" class="headerlink" title="🛠️ 第二步：修改配置启用 CRI + systemd 驱动"></a>🛠️ 第二步：<strong>修改配置启用 CRI + systemd 驱动</strong></h3><pre><code>vim /etc/containerd/config.toml
+</code></pre>
+<p>找到这段：</p>
+<pre><code>[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.runc.options]
+  SystemdCgroup = false
+</code></pre>
+<p>把 <code>false</code> 改成 <code>true</code>：</p>
+<pre><code>SystemdCgroup = true
+</code></pre>
+<p>或者直接用命令修改：</p>
+<pre><code>sed -i &#39;s/SystemdCgroup = false/SystemdCgroup = true/&#39; /etc/containerd/config.toml
+</code></pre>
+<hr>
+<h3 id="🚀-第三步：重启-containerd"><a href="#🚀-第三步：重启-containerd" class="headerlink" title="🚀 第三步：重启 containerd"></a>🚀 第三步：<strong>重启 containerd</strong></h3><pre><code>systemctl daemon-reexec
+systemctl restart containerd
+systemctl status containerd
+</code></pre>
+<p>确认运行正常后：</p>
+<pre><code>ls /var/run/containerd/containerd.sock
+</code></pre>
+<p>如果有输出说明 socket 正常，containerd 工作 OK。</p>
+<hr>
+<h3 id="🔁-第四步：再次执行-kubeadm-join"><a href="#🔁-第四步：再次执行-kubeadm-join" class="headerlink" title="🔁 第四步：再次执行 kubeadm join"></a>🔁 第四步：再次执行 kubeadm join</h3><pre><code>kubeadm join 192.168.200.129:6443 --token zjoxjc.f58nh7lixocvjpgj \
+  --discovery-token-ca-cert-hash sha256:3cbdd81868c4470767b5c82af37fb63c2240c98e5f00eb0458df99350cabb7b3
+</code></pre>
+<h4 id="如果重复导入节点报error"><a href="#如果重复导入节点报error" class="headerlink" title="如果重复导入节点报error"></a>如果重复导入节点报error</h4><p>你这个问题是由于 <strong><code>kubeadm join</code> 重复执行导致节点上已有残留的配置文件和端口占用</strong>，所以报错。</p>
+<hr>
+<hr>
+<h2 id="✅-正确处理方式：重置-node-节点后重新-join"><a href="#✅-正确处理方式：重置-node-节点后重新-join" class="headerlink" title="✅ 正确处理方式：重置 node 节点后重新 join"></a>✅ 正确处理方式：<strong>重置 node 节点后重新 join</strong></h2><p>执行以下命令即可：</p>
+<h3 id="1-重置-node-节点配置"><a href="#1-重置-node-节点配置" class="headerlink" title="1. 重置 node 节点配置"></a>1. <strong>重置 node 节点配置</strong></h3><pre><code>kubeadm reset -f
+</code></pre>
+<h3 id="2-清理-CNI-网络配置"><a href="#2-清理-CNI-网络配置" class="headerlink" title="2. 清理 CNI 网络配置"></a>2. <strong>清理 CNI 网络配置</strong></h3><pre><code>rm -rf /etc/cni/net.d
+</code></pre>
+<h3 id="3-重启相关服务"><a href="#3-重启相关服务" class="headerlink" title="3. 重启相关服务"></a>3. <strong>重启相关服务</strong></h3><pre><code>systemctl restart kubelet
+systemctl restart containerd
+</code></pre>
+<h3 id="4-重新-join"><a href="#4-重新-join" class="headerlink" title="4. 重新 join"></a>4. <strong>重新 join</strong></h3><p>然后再执行你原来的 join 生成的命令即可：</p>
+<pre><code>kubeadm join 192.168.200.129:6443 --token zjoxjc.f58nh7lixocvjpgj \
+  --discovery-token-ca-cert-hash sha256:3cbdd81868c4470767b5c82af37fb63c2240c98e5f00eb0458df99350cabb7b3
+</code></pre>
+<hr>
+<h2 id="-1"><a href="#-1" class="headerlink" title=""></a></h2></blockquote>
+<blockquote>
+<p>[root@k8s-master k8s]# docker pull docker.io&#x2F;calico&#x2F;node:v3.26.1<br>v3.26.1: Pulling from calico&#x2F;node<br>c998069b4a7c: Downloading [&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&gt;   ]   81.5MB&#x2F;86.58MB<br>6cf92fa5251d: Download complete</p>
+<p>[root@k8s-master k8s]# docker save docker.io&#x2F;calico&#x2F;node:v3.26.1 -o calico-node-v3.26.1.tar<br>[root@k8s-master k8s]# ctr images import –all-platforms calico-node-v3.26.1.tar<br>unpacking docker.io&#x2F;calico&#x2F;node:v3.26.1 (sha256:568fb25384d6460176b5528381a2d6fef36d110cfaddda5ae286afbf8fe15d5b)…done<br>[root@k8s-master k8s]# ctr images ls | grep calico&#x2F;node<br>docker.io&#x2F;calico&#x2F;node:v3.26.1 application&#x2F;vnd.docker.distribution.manifest.v2+json sha256:568fb25384d6460176b5528381a2d6fef36d110cfaddda5ae286afbf8fe15d5b 247.7 MiB linux&#x2F;arm64 -<br>[root@k8s-master k8s]# kubectl -n kube-system delete pod -l k8s-app&#x3D;calico-node</p>
+<p>（你刚才就是 <code>calico_cni</code> 拉失败）</p>
+<p>你可以用如下命令一口气替换：</p>
+<pre><code>sed -i &#39;s@docker.io/calico/cni@registry.cn-hangzhou.aliyuncs.com/chenby/calico_cni@g&#39; calico.yaml
+sed -i &#39;s@docker.io/calico/pod2daemon-flexvol@registry.cn-hangzhou.aliyuncs.com/chenby/calico_pod2daemon-flexvol@g&#39; calico.yaml
+sed -i &#39;s@docker.io/calico/node@registry.cn-hangzhou.aliyuncs.com/chenby/calico_node@g&#39; calico.yaml
+sed -i &#39;s@docker.io/calico/kube-controllers@registry.cn-hangzhou.aliyuncs.com/chenby/calico_kube-controllers@g&#39; calico.yaml
+</code></pre>
+<hr>
+<h3 id="🔧-步骤四：重新部署"><a href="#🔧-步骤四：重新部署" class="headerlink" title="🔧 步骤四：重新部署"></a>🔧 步骤四：重新部署</h3><pre><code>kubectl apply -f calico.yaml
+</code></pre>
+</blockquote>
+<blockquote>
+<p>sudo tee &#x2F;etc&#x2F;docker&#x2F;daemon.json &lt;&lt;-‘EOF’<br>{<br>  “registry-mirrors”: [“<a target="_blank" rel="noopener" href="https://docker.m.daocloud.io&quot;,&quot;https//p5lmkba8.mirror.aliyuncs.com&quot;,&quot;https://registry.docker-cn.com&quot;]">https://docker.m.daocloud.io&quot;,&quot;https://p5lmkba8.mirror.aliyuncs.com&quot;,&quot;https://registry.docker-cn.com&quot;]</a><br>}<br>EOF<br>————————————————</p>
+<hr>
+<hr>
+<hr>
+<h3 id="大坑：子节点的calico一直处于初始化无法启动解决方案"><a href="#大坑：子节点的calico一直处于初始化无法启动解决方案" class="headerlink" title="大坑：子节点的calico一直处于初始化无法启动解决方案"></a><span style="color:red"><strong>大坑：子节点的calico一直处于初始化无法启动解决方案</strong></span></h3><p>虽然都在，但关键是containerd配置是否默认用的是 <code>registry.k8s.io/pause:3.6</code> ，导致kubelet拉这个镜像时出错。</p>
+<hr>
+<p>请你检查并修改 <strong>containerd配置</strong>，明确指定 <code>sandbox_image</code> 用阿里云镜像：</p>
+<pre><code>cat /etc/containerd/config.toml | grep sandbox_image
+</code></pre>
+<p>如果没设置，执行：</p>
+<pre><code>containerd config default &gt; /etc/containerd/config.toml.backup
+containerd config default &gt; /etc/containerd/config.toml
+</code></pre>
+<p>然后编辑 <code>/etc/containerd/config.toml</code>，找到 <code>[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd]</code> 部分，加入或修改为：</p>
+<pre><code>sandbox_image = &quot;registry.aliyuncs.com/google_containers/pause:3.6&quot;
+</code></pre>
+<p>保存后，重启containerd：</p>
+<pre><code>systemctl restart containerd
+</code></pre>
+<p>然后重启 kubelet：</p>
+<pre><code>systemctl restart kubelet
+</code></pre>
+<hr>
+<p>确认 <code>containerRuntimeEndpoint</code> 在 kubelet 配置文件或启动参数中有正确指向：</p>
+<pre><code>containerRuntimeEndpoint: unix:///run/containerd/containerd.sock
+</code></pre>
+<hr>
+<p>最后删除calico-node和kube-proxy pod，触发重新调度：</p>
+<pre><code>kubectl -n kube-system delete pod -l k8s-app=calico-node
+kubectl -n kube-system delete pod -l k8s-app=kube-proxy
+</code></pre>
+<p>然后观察节点状态和Pod状态。</p>
+<p><code>kubectl get nodes</code> 查看节点状态<br><code>kubectl get pods -n kube-system -o wide</code> 查看pod状态</p>
+<hr>
+<p>总结：<br> <strong>确保 containerd 配置里的 sandbox_image 指向阿里云镜像，避免kubelet拉不到官方registry.k8s.io的镜像导致网络插件初始化失败，从而使节点一直NotReady。</strong></p>
+<hr>
+<hr>
+<hr>
+<h2 id="报错："><a href="#报错：" class="headerlink" title="报错："></a>报错：</h2><blockquote>
+<p>calico-node-xb2js                          0&#x2F;1     CrashLoopBackOff   9 (4m12s ago)   25m   192.168.200.130   k8s-node1 </p>
+</blockquote>
+<h3 id="❗你的-k8s-node1-上-端口-9099-被-Nginx-占用了，而这个端口正是-Calico-默认用于健康检查的端口。"><a href="#❗你的-k8s-node1-上-端口-9099-被-Nginx-占用了，而这个端口正是-Calico-默认用于健康检查的端口。" class="headerlink" title="❗你的 k8s-node1 上 端口 9099 被 Nginx 占用了，而这个端口正是 Calico 默认用于健康检查的端口。"></a>❗你的 <code>k8s-node1</code> 上 <strong>端口 <code>9099</code> 被 Nginx 占用了</strong>，而这个端口正是 <code>Calico</code> 默认用于健康检查的端口。</h3><p>导致结果就是：</p>
+<blockquote>
+<p><code>calico-node</code> 启动失败并反复报错 <code>listen tcp 127.0.0.1:9099: bind: address already in use</code>，Pod 状态进入 <code>CrashLoopBackOff</code>。</p>
+</blockquote>
+<hr>
+<h2 id="✅-解决方案"><a href="#✅-解决方案" class="headerlink" title="✅ 解决方案"></a>✅ 解决方案</h2><p>你可以选 <strong>其中一个方法</strong>：</p>
+<hr>
+<h3 id="✅-方案一：改-Nginx-的端口（推荐）"><a href="#✅-方案一：改-Nginx-的端口（推荐）" class="headerlink" title="✅ 方案一：改 Nginx 的端口（推荐）"></a>✅ <strong>方案一：改 Nginx 的端口（推荐）</strong></h3><ol>
+<li><p>找到你的 <code>nginx</code> 配置文件（通常在 <code>vi /etc/nginx/nginx.conf</code> 或 <code>/etc/nginx/conf.d/xxx.conf</code>）</p>
+</li>
+<li><p>修改 <code>listen 9877;</code> 为其他端口，比如 <code>listen 8081;</code></p>
+</li>
+<li><p>重启 nginx：</p>
+<pre><code>systemctl restart nginx
+</code></pre>
+</li>
+<li><p>删除重启 <code>calico-node</code> Pod：</p>
+<pre><code>kubectl delete pod -n kube-system -l k8s-app=calico-node --field-selector spec.nodeName=k8s-node1
+</code></pre>
+</li>
+<li><p>等待 Pod 变成 <code>Running</code> 状态。</p>
+</li>
+</ol>
+</blockquote>
+<h3 id="基于Kubernetes-x2F-K8S构建Jenkins持续集成平台-下"><a href="#基于Kubernetes-x2F-K8S构建Jenkins持续集成平台-下" class="headerlink" title="基于Kubernetes&#x2F;K8S构建Jenkins持续集成平台(下)"></a>基于Kubernetes&#x2F;K8S构建Jenkins持续集成平台(下)</h3><h4 id="安装和配置NFS文件共享服务器"><a href="#安装和配置NFS文件共享服务器" class="headerlink" title="安装和配置NFS文件共享服务器"></a>安装和配置NFS文件共享服务器</h4><h6 id="安装和配置-NFS"><a href="#安装和配置-NFS" class="headerlink" title="安装和配置 NFS"></a>安装和配置 NFS</h6><p>NFS（Network File System），它最大的功能就是可以通过网络，让不同的机器、不同的操作系统可以共享彼此的文件。我们可以利用NFS共享Jenkins运行的配置文件、Maven的仓库依赖文件等</p>
+<p>我们把NFS服务器安装在192.168.200.129机器上</p>
+<ul>
+<li><p>安装NFS服务（在所有K8S的节点都需要安装）</p>
+<p><code>yum install -y nfs-utils</code> 【仅此这个都要运行】 </p>
+</li>
+<li><p>创建共享目录</p>
+<pre><code class="yaml">mkdir -p /opt/nfs/jenkins
+编写NFS的共享配置：
+vi /etc/exports      
+内容如下:  代表对所有IP都开放此目录，rw是读写
+【no_root_suqash root用户生成的数据不做身份转换，也就原来是root，归root用户管理。权限太大实际需要评估】
+/opt/nfs/jenkins    *(rw,no_root_squash)           
+</code></pre>
+</li>
+<li><p>启动服务</p>
+<pre><code class="yaml">systemctl enable nfs   开机启动
+systemctl start nfs    启动
+</code></pre>
+</li>
+<li><p>查看NFS共享目录</p>
+<pre><code class="yaml">showmount -e 192.168.200.129
+在这之前也要安装nfs服务：yum install -y nfs-utils
+</code></pre>
+<blockquote>
+<p>[root@k8s-node1 ~]# showmount -e 192.168.200.129<br>Export list for 192.168.200.129:<br>&#x2F;opt&#x2F;nfs&#x2F;jenkins *</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="在Kubernetes安装Jenkins-Master"><a href="#在Kubernetes安装Jenkins-Master" class="headerlink" title="在Kubernetes安装Jenkins-Master"></a>在Kubernetes安装Jenkins-Master</h3><h5 id="创建NFS-client-provisioner"><a href="#创建NFS-client-provisioner" class="headerlink" title="创建NFS client provisioner"></a>创建NFS client provisioner</h5><p>nfs-client-provisioner 是一个Kubernetes的简易NFS的外部provisioner，本身不提供NFS，需要现有 的NFS服务器提供存储。</p>
+<ul>
+<li><p>上传nfs-client-provisioner构建文件</p>
+<p>把<code>E:\Java实例项目1-20套\资料-Jenkins教程\Jenkins资料\资料\资料\03.资料\k8s-jenkins</code>的<code>jenkins-master</code>和<code>nfs-client</code>上传到129Jenkins虚拟机上面</p>
+<blockquote>
+<p>[root@k8s-master ~]# cd jenkins-master&#x2F;<br>[root@k8s-master jenkins-master]# ll<br>总用量 16<br>-rw-r–r– 1 root root 1874 7月   7 15:59 rbac.yaml<br>-rw-r–r– 1 root root   87 7月   7 15:59 ServiceaAcount.yaml<br>-rw-r–r– 1 root root  284 7月   7 15:59 Service.yaml      【对外暴露信息】<br>-rw-r–r– 1 root root 2116 7月   7 15:59 StatefulSet.yaml 【有状态应用】</p>
+<p>[root@k8s-master ~]# cd nfs-client&#x2F;<br>[root@k8s-master nfs-client]# ll<br>总用量 12<br>-rw-r–r– 1 root root  225 7月   7 16:03 class.yaml<br>-rw-r–r– 1 root root  985 7月   7 16:03 deployment.yaml<br>-rw-r–r– 1 root root 1526 7月   7 16:03 rbac.yaml<br>[root@k8s-master nfs-client]# <code>vi deployment.yaml</code><br>修改里面的地址为主节点Jenkins的</p>
+</blockquote>
+</li>
+<li><p>构建nfs-client-provisioner的pod资源</p>
+<pre><code class="yaml">cd nfs-client
+kubectl create -f .
+</code></pre>
+</li>
+<li><p>查看pod是否创建成功<br><code>kubectl get pods</code></p>
+<blockquote>
+<p>[root@k8s-master nfs-client]# kubectl get pods<br>NAME                                      READY   STATUS              RESTARTS   AGE<br>nfs-client-provisioner-68cd5845b6-dqqm2   0&#x2F;1     ContainerCreating   0          15s</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p><span style="color:red"><strong>这里也有个拉镜像的问题 deployment.yaml的lizhenliang&#x2F;nfs-client-provisioner:latest</strong></span></p>
+<p>接下来操作步骤：</p>
+<h3 id="1-修改你的-deployment-yaml-中的镜像字段，改成刚拉取的镜像："><a href="#1-修改你的-deployment-yaml-中的镜像字段，改成刚拉取的镜像：" class="headerlink" title="1. 修改你的 deployment.yaml 中的镜像字段，改成刚拉取的镜像："></a>1. 修改你的 <code>deployment.yaml</code> 中的镜像字段，改成刚拉取的镜像：</h3><pre><code>containers:
+  - name: nfs-client-provisioner
+    image: quay.io/external_storage/nfs-client-provisioner:v3.1.0-k8s1.11
+    # 其他配置保持不变
+</code></pre>
+<p>确保 <code>env</code> 和 <code>volumes</code> 中 NFS 服务器地址及路径正确，和你之前确认的一致。</p>
+<hr>
+<h3 id="2-应用更新后的-Deployment-配置："><a href="#2-应用更新后的-Deployment-配置：" class="headerlink" title="2. 应用更新后的 Deployment 配置："></a>2. 应用更新后的 Deployment 配置：</h3><pre><code>kubectl apply -f deployment.yaml
+</code></pre>
+<hr>
+<h3 id="3-查看-Pod-状态："><a href="#3-查看-Pod-状态：" class="headerlink" title="3. 查看 Pod 状态："></a>3. 查看 Pod 状态：</h3><pre><code>kubectl get pods -w
+</code></pre>
+<p>等待 Pod 状态变成 <code>Running</code> 和 <code>READY 1/1</code>。</p>
+<blockquote>
+<p>[root@k8s-master nfs-client]# kubectl get pods -w<br>NAME                                      READY   STATUS    RESTARTS   AGE<br>nfs-client-provisioner-7d79bcf5d4-tddhl   1&#x2F;1     Running   0          3m33s</p>
+</blockquote>
+<pre><code class="yaml">可用的deployment.yaml 位置在129机器的/root/nfs-client
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: quay.io/external_storage/nfs-client-provisioner:v3.1.0-k8s1.11
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: fuseim.pri/ifs
+            - name: NFS_SERVER
+              value: 192.168.200.129 
+            - name: NFS_PATH
+              value: /opt/nfs/jenkins/
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.200.129
+            path: /opt/nfs/jenkins/
+</code></pre>
+</blockquote>
+<ul>
+<li><p>返回<code>jenkins-master</code>目录</p>
+<blockquote>
+<p>[root@k8s-master ~]# cd jenkins-master&#x2F;<br>[root@k8s-master jenkins-master]#<br>[root@k8s-master jenkins-master]# <code>kubectl create namespace kube-ops</code><br>namespace&#x2F;kube-ops created<br>[root@k8s-master jenkins-master]# <code>kubectl create -f .</code><br>✅ 如果你只是想重新部署，可以改用 <code>kubectl apply -f .</code> （<strong>推荐</strong>，用于更新已有资源）</p>
+<p>❌ 如果你要重新初始化，先删除旧资源：</p>
+<pre><code>kubectl delete -f . &amp;&amp; kubectl create -f .
+</code></pre>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p><span style="color:red">这里报错因为有一些过时了的 需要更改 注意是在<code>/root/jenkins-master</code>中的rbac.yaml</span><br>你这个问题根源就是 apiVersion 使用了 <code>rbac.authorization.k8s.io/v1beta1</code>，新版 Kubernetes 不再支持这个版本了，必须改成 <code>rbac.authorization.k8s.io/v1</code>。</p>
+<p>另外，你 <code>ClusterRole</code> 不应该带 <code>namespace</code> 字段，因为 ClusterRole 是集群级别的资源，不属于某个命名空间。</p>
+<hr>
+<p>我帮你改成符合最新标准的版本，注意几点：</p>
+<ul>
+<li>所有 <code>rbac.authorization.k8s.io/v1beta1</code> 改为 <code>rbac.authorization.k8s.io/v1</code></li>
+<li>删除 <code>ClusterRole</code> 中的 <code>namespace</code></li>
+<li>Role 和 RoleBinding 保留 <code>namespace: kube-ops</code></li>
+<li>RoleBinding 和 ClusterRoleBinding 中的 <code>subjects</code> namespace 保持和 ServiceAccount 一致</li>
+</ul>
+<pre><code class="yaml">kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins
+  namespace: kube-ops
+rules:
+  - apiGroups: [&quot;extensions&quot;, &quot;apps&quot;]
+    resources: [&quot;deployments&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;patch&quot;, &quot;update&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;services&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;patch&quot;, &quot;update&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods&quot;]
+    verbs: [&quot;create&quot;,&quot;delete&quot;,&quot;get&quot;,&quot;list&quot;,&quot;patch&quot;,&quot;update&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods/exec&quot;]
+    verbs: [&quot;create&quot;,&quot;delete&quot;,&quot;get&quot;,&quot;list&quot;,&quot;patch&quot;,&quot;update&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods/log&quot;]
+    verbs: [&quot;get&quot;,&quot;list&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;secrets&quot;]
+    verbs: [&quot;get&quot;]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins
+  namespace: kube-ops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jenkins
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: kube-ops
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkinsClusterRole
+rules:
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods&quot;]
+    verbs: [&quot;create&quot;,&quot;delete&quot;,&quot;get&quot;,&quot;list&quot;,&quot;patch&quot;,&quot;update&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods/exec&quot;]
+    verbs: [&quot;create&quot;,&quot;delete&quot;,&quot;get&quot;,&quot;list&quot;,&quot;patch&quot;,&quot;update&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods/log&quot;]
+    verbs: [&quot;get&quot;,&quot;list&quot;,&quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;secrets&quot;]
+    verbs: [&quot;get&quot;]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkinsClusterRoleBinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jenkinsClusterRole
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: kube-ops
+</code></pre>
+<p>保存后，用：</p>
+<pre><code>kubectl apply -f rbac.yaml
+</code></pre>
+<p>应该就不会再报找不到资源类型的错误了。</p>
+<blockquote>
+<p>成功！！<br>service&#x2F;jenkins created<br>serviceaccount&#x2F;jenkins created<br>statefulset.apps&#x2F;jenkins created<br>role.rbac.authorization.k8s.io&#x2F;jenkins created<br>rolebinding.rbac.authorization.k8s.io&#x2F;jenkins created<br>clusterrole.rbac.authorization.k8s.io&#x2F;jenkinsClusterRole created<br>clusterrolebinding.rbac.authorization.k8s.io&#x2F;jenkinsClusterRoleBinding created</p>
+</blockquote>
+<hr>
+<hr>
+<p>输入<code>kubectl get pod --namespace kube-ops</code></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>[root@k8s-master jenkins-master]# <code>kubectl get pod --namespace kube-ops</code><br>NAME        READY   STATUS    RESTARTS   AGE</p>
+<p>[root@k8s-master jenkins-master]# <code>kubectl get service --namespace kube-ops</code><br>更详细的查看：<code>kubectl get service --namespace kube-ops -o wide</code><br>NAME      TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)                          AGE<br>jenkins   NodePort   10.1.85.222   <none>        8080:30742&#x2F;TCP,50000:31261&#x2F;TCP   8m1s</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<h3 id="如果不能running看这里！"><a href="#如果不能running看这里！" class="headerlink" title="如果不能running看这里！"></a><span style = "color:red">如果不能running看这里！</span></h3><p>你应该把 Deployment 里的镜像改成 <code>quay.io/external_storage/nfs-client-provisioner:v3.1.0-k8s1.11</code>，这样 Pod 就能正常拉镜像启动了。</p>
+<hr>
+<h3 id="正确示例片段改成："><a href="#正确示例片段改成：" class="headerlink" title="正确示例片段改成："></a>正确示例片段改成：</h3><pre><code>containers:
+  - name: nfs-client-provisioner
+    image: quay.io/external_storage/nfs-client-provisioner:v3.1.0-k8s1.11
+    volumeMounts:
+      - name: nfs-client-root
+        mountPath: /persistentvolumes
+    env:
+      - name: PROVISIONER_NAME
+        value: fuseim.pri/ifs
+      - name: NFS_SERVER
+        value: 192.168.200.129
+      - name: NFS_PATH
+        value: /opt/nfs/jenkins/
+volumes:
+  - name: nfs-client-root
+    nfs:
+      server: 192.168.200.129
+      path: /opt/nfs/jenkins/
+</code></pre>
+<hr>
+<p>改完后执行：</p>
+<pre><code>、kubectl apply -f deployment.yaml
+kubectl delete pod -n default -l app=nfs-client-provisioner
+kubectl get pods -n default -w
+</code></pre>
+<p>确认 Pod 快速启动且状态为 Running。</p>
+<hr>
+<p>这样 PVC 才能被正确绑定，<code>jenkins</code> 的 PVC Pending 状态才会解决。</p>
+<hr>
+<hr>
+<hr>
+<p>你这边已经非常接近解决了，目前的 <strong>唯一问题是 Provisioner 报了 <code>selfLink was empty, can&#39;t make reference</code> 的错误</strong>，这在 Kubernetes v1.20+ 中是<strong>常见兼容性问题</strong>，因为 <code>selfLink</code> 字段已经被弃用并默认禁用了。</p>
+<hr>
+<h2 id="✅-当前现状确认："><a href="#✅-当前现状确认：" class="headerlink" title="✅ 当前现状确认："></a>✅ 当前现状确认：</h2><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFS 服务</td>
+<td>正常可挂载 ✅</td>
+</tr>
+<tr>
+<td>Jenkins PVC</td>
+<td>一直 Pending ❌</td>
+</tr>
+<tr>
+<td>Provisioner Pod 状态</td>
+<td>Running ✅</td>
+</tr>
+<tr>
+<td>Provisioner 日志报错</td>
+<td><code>selfLink</code> ❌</td>
+</tr>
+<tr>
+<td>StorageClass&#x2F;Provisioner 名</td>
+<td>一致 ✅</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="🚨-问题根因"><a href="#🚨-问题根因" class="headerlink" title="🚨 问题根因"></a>🚨 问题根因</h2><p><code>nfs-client-provisioner</code> 的<strong>老版本</strong>依赖了 <code>selfLink</code> 字段，但你用的是 <strong>Kubernetes v1.28</strong>，从 v1.20 起 <code>selfLink</code> 默认禁用，导致：</p>
+<pre><code>unexpected error getting claim reference: selfLink was empty, can&#39;t make reference
+</code></pre>
+<h3 id="✅-解决方案：用国内镜像源代替"><a href="#✅-解决方案：用国内镜像源代替" class="headerlink" title="✅ 解决方案：用国内镜像源代替"></a>✅ 解决方案：用国内镜像源代替</h3><p>我推荐你使用 阿里云加速镜像 或 [DockerHub 镜像代理]。下面我给你一份修改好的 <code>deployment.yaml</code>，使用了国内可访问的镜像仓库地址。</p>
+<hr>
+<h3 id="✅-修改后的-deployment-yaml（适配国内镜像源）"><a href="#✅-修改后的-deployment-yaml（适配国内镜像源）" class="headerlink" title="✅ 修改后的 deployment.yaml（适配国内镜像源）"></a>✅ 修改后的 <code>deployment.yaml</code>（适配国内镜像源）</h3><pre><code>yaml复制编辑apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.cn-hangzhou.aliyuncs.com/zhangshijie/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: fuseim.pri/ifs
+            - name: NFS_SERVER
+              value: 192.168.200.129
+            - name: NFS_PATH
+              value: /opt/nfs/jenkins/
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.200.129
+            path: /opt/nfs/jenkins/
+</code></pre>
+<hr>
+<h3 id="📌-操作步骤"><a href="#📌-操作步骤" class="headerlink" title="📌 操作步骤"></a>📌 操作步骤</h3><ol>
+<li>把上面内容保存为 <code>deployment.yaml</code></li>
+<li>应用并重建：</li>
+</ol>
+<pre><code>kubectl apply -f deployment.yaml
+kubectl delete pod -n default -l app=nfs-client-provisioner
+</code></pre>
+<ol>
+<li>然后检查 PVC 状态是否变成 <code>Bound</code>：</li>
+</ol>
+<pre><code>kubectl get pvc -n kube-ops
+</code></pre>
+<h3 id="这里是第二种方法-已尝试可行-！"><a href="#这里是第二种方法-已尝试可行-！" class="headerlink" title="这里是第二种方法[已尝试可行]！"></a><span style = "color:red">这里是第二种方法[已尝试可行]！</span></h3><p><code>/root/jenkins-master/</code></p>
+<p>你贴出来的 <code>StatefulSet.yaml</code> 文件已经包含了镜像配置的位置！</p>
+<hr>
+<h3 id="🎯-问题就在这一段："><a href="#🎯-问题就在这一段：" class="headerlink" title="🎯 问题就在这一段："></a>🎯 问题就在这一段：</h3><pre><code>yaml复制编辑containers:
+  - name: jenkins
+    image: jenkins/jenkins:lts-alpine  👈 就是这行！！！
+</code></pre>
+<p>这个 <code>image:</code> 指定的镜像目前拉不下来（你刚才试图用的是阿里云镜像，结果不存在），所以你现在只需要 <strong>改成可用的镜像地址</strong>。</p>
+<hr>
+<h3 id="✅-推荐改法如下："><a href="#✅-推荐改法如下：" class="headerlink" title="✅ 推荐改法如下："></a>✅ 推荐改法如下：</h3><pre><code>yaml复制编辑containers:
+  - name: jenkins
+    image: jenkins/jenkins:lts-jdk17   # ✅ 推荐：可拉取的官方 Jenkins 镜像
+    imagePullPolicy: IfNotPresent
+</code></pre>
+<blockquote>
+<p>💡这是 Jenkins 官方最新稳定版本（带 JDK 17）的镜像，在 Docker Hub 可用，国内访问可能慢一点，但比你原来的阿里云镜像靠谱。</p>
+</blockquote>
+<hr>
+<h3 id="🛠-修改步骤："><a href="#🛠-修改步骤：" class="headerlink" title="🛠 修改步骤："></a>🛠 修改步骤：</h3><ol>
+<li><p>打开 <code>StatefulSet.yaml</code>：</p>
+<pre><code>vim StatefulSet.yaml
+</code></pre>
+</li>
+<li><p>找到：</p>
+<pre><code>image: jenkins/jenkins:lts-alpine
+</code></pre>
+</li>
+<li><p>改成：</p>
+<pre><code>image: jenkins/jenkins:lts-jdk17
+</code></pre>
+</li>
+<li><p>保存退出（按 <code>Esc</code> 然后输入 <code>:wq</code>）</p>
+</li>
+</ol>
+<hr>
+<h3 id="🔁-然后重新部署："><a href="#🔁-然后重新部署：" class="headerlink" title="🔁 然后重新部署："></a>🔁 然后重新部署：</h3><pre><code>kubectl apply -f StatefulSet.yaml
+kubectl delete pod jenkins-0 -n kube-ops
+</code></pre>
+<blockquote>
+<p>第二条命令是为了立刻让 Pod 使用新镜像重建。</p>
+</blockquote>
+<blockquote>
+<p>[root@k8s-master jenkins-master]# kubectl apply -f StatefulSet.yaml statefulset.apps&#x2F;jenkins configured [root@k8s-master jenkins-master]# kubectl delete pod jenkins-0 -n kube-ops pod “jenkins-0” deleted [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          4s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          8s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          9s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          10s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          11s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          11s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          19s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          24s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          27s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          27s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          31s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          32s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS             RESTARTS   AGE jenkins-0   0&#x2F;1     ImagePullBackOff   0          47s [root@k8s-master jenkins-master]#</p>
+</blockquote>
+<p>很好，你的 Jenkins Pod 现在变成了：</p>
+<pre><code>STATUS: ImagePullBackOff
+</code></pre>
+<hr>
+<h2 id="✅-这说明你已经修改成功了，但节点还是拉不到镜像。"><a href="#✅-这说明你已经修改成功了，但节点还是拉不到镜像。" class="headerlink" title="✅ 这说明你已经修改成功了，但节点还是拉不到镜像。"></a>✅ <strong>这说明你已经修改成功了，但节点还是拉不到镜像。</strong></h2><p>我们确认下你用了哪个镜像，执行：</p>
+<pre><code>kubectl get pod jenkins-0 -n kube-ops -o=jsonpath=&#39;&#123;.spec.containers[0].image&#125;&#39;
+</code></pre>
+<p>你应该看到输出类似于：</p>
+<pre><code>jenkins/jenkins:lts-jdk17
+</code></pre>
+<p>然后我们来排查下一步。</p>
+<hr>
+<h2 id="🧭-下一步：去节点上测试能否手动拉取镜像"><a href="#🧭-下一步：去节点上测试能否手动拉取镜像" class="headerlink" title="🧭 下一步：去节点上测试能否手动拉取镜像"></a>🧭 下一步：去节点上测试能否手动拉取镜像</h2><p><strong>进入 <code>k8s-node1</code> 节点（Pod 分配在哪个节点，看 <code>kubectl describe pod</code> 可以看到）</strong>：</p>
+<pre><code>ssh root@k8s-node1
+</code></pre>
+<p>在节点上运行：</p>
+<pre><code>docker pull jenkins/jenkins:lts-jdk17
+</code></pre>
+<p>或者如果你用的是 <code>containerd</code> 作为容器运行时：</p>
+<pre><code>ctr images pull docker.io/jenkins/jenkins:lts-jdk17
+</code></pre>
+<blockquote>
+<p>[root@k8s-master jenkins-master]# kubectl apply -f StatefulSet.yaml statefulset.apps&#x2F;jenkins configured [root@k8s-master jenkins-master]# kubectl delete pod jenkins-0 -n kube-ops pod “jenkins-0” deleted [root@k8s-master jenkins-master]# clear [root@k8s-master jenkins-master]# ll 总用量 16 -rw-r–r– 1 root root 1863 7月   7 16:39 rbac.yaml -rw-r–r– 1 root root   87 7月   7 15:59 ServiceaAcount.yaml -rw-r–r– 1 root root  284 7月   7 15:59 Service.yaml -rw-r–r– 1 root root 2117 7月   7 18:37 StatefulSet.yaml [root@k8s-master jenkins-master]# kubectl apply -f StatefulSet.yaml statefulset.apps&#x2F;jenkins configured [root@k8s-master jenkins-master]# kubectl delete pod jenkins-0 -n kube-ops pod “jenkins-0” deleted [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          4s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          8s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          9s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          10s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          11s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          11s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS              RESTARTS   AGE jenkins-0   0&#x2F;1     ContainerCreating   0          19s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          24s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          27s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          27s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          31s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS         RESTARTS   AGE jenkins-0   0&#x2F;1     ErrImagePull   0          32s [root@k8s-master jenkins-master]# kubectl get pod -n kube-ops NAME        READY   STATUS             RESTARTS   AGE jenkins-0   0&#x2F;1     ImagePullBackOff   0          47s [root@k8s-master jenkins-master]# ^C [root@k8s-master jenkins-master]# kubectl get pod jenkins-0 -n kube-ops -o&#x3D;jsonpath&#x3D;’{.spec.containers[0].image}’ jenkins&#x2F;jenkins:lts-jdk17[root@k8s-master jenkins-master]# ssh root@k8s-node1 The authenticity of host ‘k8s-node1 (192.168.200.130)’ can’t be established. ECDSA key fingerprint is SHA256:LMkCxwuWrKBih+Iy+lnayVkAyKdVG7JpVVR3TctpMuk. ECDSA key fingerprint is MD5:c1:76:72:fb:65:64:f8:d5:71:5b:38:a8:9b:07:a6:e6. Are you sure you want to continue connecting (yes&#x2F;no)? docker pull jenkins&#x2F;jenkins:lts-jdk17 Please type ‘yes’ or ‘no’: yes Warning: Permanently added ‘k8s-node1’ (ECDSA) to the list of known hosts. root@k8s-node1’s password: Permission denied, please try again. root@k8s-node1’s password: Last failed login: Mon Jul  7 18:39:33 CST 2025 from k8s-master on ssh:notty There was 1 failed login attempt since the last successful login. Last login: Mon Jul  7 17:36:26 2025 from 192.168.200.2 [root@k8s-node1 ~]# docker pull jenkins&#x2F;jenkins:lts-jdk17 lts-jdk17: Pulling from jenkins&#x2F;jenkins 0c01110621e0: Pull complete 2315362e4443: Pull complete 4185f63a4bf1: Pull complete 51c9d25ed578: Pull complete 10709260192c: Pull complete 474c0ab7c65d: Pull complete 62d5bb186774: Pull complete f1c4b8ee4b6f: Pull complete 065b78ceb30c: Pull complete b99138e4f420: Pull complete e05a8359c72d: Pull complete 981fa0afce25: Pull complete Digest: sha256:dd570585c3adadefcfbeba915e27bf7feca1815a0ea8a659d46b51f54fc7ea06 Status: Downloaded newer image for jenkins&#x2F;jenkins:lts-jdk17 [root@k8s-node1 ~]#</p>
+</blockquote>
+<p>太好了！你已经在 <code>k8s-node1</code> 节点上 <strong>成功拉下来了 Jenkins 的镜像</strong>：</p>
+<pre><code>bash
+
+
+复制编辑
+✅ jenkins/jenkins:lts-jdk17 拉取成功！
+</code></pre>
+<hr>
+<h3 id="❓但为什么-Pod-还是拉不到？"><a href="#❓但为什么-Pod-还是拉不到？" class="headerlink" title="❓但为什么 Pod 还是拉不到？"></a>❓但为什么 Pod 还是拉不到？</h3><p>Kubernetes 默认不会自动使用你用 <code>docker pull</code> 拉下来的镜像，除非你的 K8s 用的容器运行时 <strong>就是 Docker</strong>。</p>
+<p>现在我们确认一下你的容器运行时是不是 Docker，执行下面的命令：</p>
+<pre><code>bash
+
+
+复制编辑
+ps -ef | grep kubelet | grep -v grep
+</code></pre>
+<p>看结果里面有没有：</p>
+<ul>
+<li><code>--container-runtime=docker</code> ✅（说明用的是 Docker）</li>
+<li>或者有 <code>containerd</code> 或 <code>cri-o</code> ❌（说明用的是 containerd，不会用 docker 拉的镜像）</li>
+</ul>
+<hr>
+<h3 id="✅-如果你看到用的是-containerd（大概率是）"><a href="#✅-如果你看到用的是-containerd（大概率是）" class="headerlink" title="✅ 如果你看到用的是 containerd（大概率是）"></a>✅ 如果你看到用的是 <code>containerd</code>（大概率是）</h3><p>那你就需要把 Docker 拉下来的镜像导入给 <code>containerd</code> 用！</p>
+<hr>
+<h2 id="🔄-导入镜像到-containerd-的方法如下："><a href="#🔄-导入镜像到-containerd-的方法如下：" class="headerlink" title="🔄 导入镜像到 containerd 的方法如下："></a>🔄 导入镜像到 <code>containerd</code> 的方法如下：</h2><ol>
+<li><strong>在 <code>k8s-node1</code> 节点上保存镜像为 tar 包：</strong></li>
+</ol>
+<pre><code>docker save jenkins/jenkins:lts-jdk17 -o jenkins.tar
+</code></pre>
+<ol>
+<li><strong>用 <code>ctr</code> 命令导入给 containerd 使用：</strong></li>
+</ol>
+<pre><code>ctr -n k8s.io images import jenkins.tar
+</code></pre>
+<ol>
+<li><strong>验证 containerd 已经识别：</strong></li>
+</ol>
+<pre><code>ctr -n k8s.io images ls | grep jenkins
+</code></pre>
+<p>你应该看到 <code>docker.io/jenkins/jenkins:lts-jdk17</code> 这一行。</p>
+<hr>
+<h2 id="🔁-然后重启-Pod："><a href="#🔁-然后重启-Pod：" class="headerlink" title="🔁 然后重启 Pod："></a>🔁 然后重启 Pod：</h2><pre><code>kubectl delete pod jenkins-0 -n kube-ops
+</code></pre>
+<p>过一会再执行：</p>
+<pre><code>kubectl get pod -n kube-ops
+</code></pre>
+<p>你现在在 <strong>master 节点（192.168.200.129）</strong>，但 Jenkins Pod 被调度到 <strong>node1 节点（192.168.200.130）</strong>，所以镜像必须在 node1 上可用。而你刚才是手动在 node1 上 <code>docker pull</code> 了 Jenkins 镜像，这一步做得 ✅<strong>没问题</strong>。</p>
+<hr>
+<h2 id="✅-问题核心确认"><a href="#✅-问题核心确认" class="headerlink" title="✅ 问题核心确认"></a>✅ 问题核心确认</h2><blockquote>
+<p>你当前用的是 Kubernetes，但默认的容器运行时 <strong>不是 Docker，而是 containerd</strong>，所以：</p>
+<p>❗ <strong>你用 <code>docker pull</code> 拉下的镜像 containerd 用不到</strong></p>
+</blockquote>
+<hr>
+<h2 id="✅-解决方案：把-docker-镜像导入到-containerd-里"><a href="#✅-解决方案：把-docker-镜像导入到-containerd-里" class="headerlink" title="✅ 解决方案：把 docker 镜像导入到 containerd 里"></a>✅ 解决方案：把 docker 镜像导入到 containerd 里</h2><h3 id="在-node1-上（192-168-200-130）执行以下命令："><a href="#在-node1-上（192-168-200-130）执行以下命令：" class="headerlink" title="在 node1 上（192.168.200.130）执行以下命令："></a>在 node1 上（192.168.200.130）执行以下命令：</h3><ol>
+<li><strong>把镜像导出为 tar 包</strong></li>
+</ol>
+<pre><code>docker save jenkins/jenkins:lts-jdk17 -o jenkins.tar
+</code></pre>
+<ol>
+<li><strong>导入到 containerd：</strong></li>
+</ol>
+<pre><code>ctr -n k8s.io images import jenkins.tar
+</code></pre>
+<ol>
+<li><strong>检查 containerd 是否导入成功：</strong></li>
+</ol>
+<pre><code>ctr -n k8s.io images ls | grep jenkins
+</code></pre>
+<p>你应该看到输出类似：</p>
+<pre><code>docker.io/jenkins/jenkins:lts-jdk17 ...
+</code></pre>
+<hr>
+<h2 id="🔄-然后，在-master-节点（192-168-200-129）上执行："><a href="#🔄-然后，在-master-节点（192-168-200-129）上执行：" class="headerlink" title="🔄 然后，在 master 节点（192.168.200.129）上执行："></a>🔄 然后，在 master 节点（192.168.200.129）上执行：</h2><pre><code>kubectl delete pod jenkins-0 -n kube-ops
+</code></pre>
+<p>等 10~20 秒后看 Pod 是否启动成功：</p>
+<pre><code>kubectl get pod -n kube-ops
+</code></pre>
+<p>看到状态变为：</p>
+<pre><code>jenkins-0   1/1     Running
+</code></pre>
+<p>就说明一切 OK ✅！</p>
+<p>你现在遇到的问题是：</p>
+<blockquote>
+<p>⚠️ <strong>在 <code>node1（130）</code> 节点上运行 <code>kubectl</code> 命令时，K8s API server 无法正常访问，提示 <code>the server could not find the requested resource</code>。</strong></p>
+</blockquote>
+<p>这是因为：<br> 👉 <code>kubectl</code> 命令只能在 <strong>已配置好 K8s 集群访问权限的节点上使用</strong>，通常是 <strong>master 节点（192.168.200.129）</strong>。</p>
+<hr>
+<h2 id="✅-正确操作流程如下："><a href="#✅-正确操作流程如下：" class="headerlink" title="✅ 正确操作流程如下："></a>✅ 正确操作流程如下：</h2><h3 id="🔁-你刚才在-node1-上导入-containerd-镜像已经成功了，现在："><a href="#🔁-你刚才在-node1-上导入-containerd-镜像已经成功了，现在：" class="headerlink" title="🔁 你刚才在 node1 上导入 containerd 镜像已经成功了，现在："></a>🔁 <strong>你刚才在 node1 上导入 containerd 镜像已经成功了</strong>，现在：</h3><ol>
+<li><strong>返回到 master 节点（192.168.200.129）</strong></li>
+<li><strong>执行删除 pod 的命令（由 master 控制）</strong>：</li>
+</ol>
+<pre><code>kubectl delete pod jenkins-0 -n kube-ops
+</code></pre>
+<ol>
+<li><strong>查看 pod 状态：</strong></li>
+</ol>
+<pre><code>kubectl get pod -n kube-ops
+</code></pre>
+<p>你应该看到 <code>jenkins-0</code> 在 <code>node1</code> 上重新启动，并变成 <code>Running</code> 状态。</p>
+<p>你现在正登录在 <strong>node1 节点（192.168.200.130）</strong>，而你的 <code>kubectl</code> 应该在 <strong>master 节点（192.168.200.129）</strong> 上执行。</p>
+<hr>
+<h3 id="✅-回到-master-节点的方法："><a href="#✅-回到-master-节点的方法：" class="headerlink" title="✅ 回到 master 节点的方法："></a>✅ 回到 master 节点的方法：</h3><p>只要你是通过 SSH 登录进来的，<strong>直接输入 <code>exit</code> 或按 <code>Ctrl+D</code></strong> 即可退出当前 SSH 会话，返回 master 节点：</p>
+<pre><code>[root@k8s-node1 ~]# exit
+</code></pre>
+<p>或</p>
+<pre><code>[root@k8s-node1 ~]# logout
+</code></pre>
+<p>然后你就会看到：</p>
+<pre><code>[root@k8s-master ~]#
+</code></pre>
+<p>这时候你就在 master 节点上了！</p>
+<hr>
+<h3 id="🧠-提醒：kubectl-只能在-master-上执行"><a href="#🧠-提醒：kubectl-只能在-master-上执行" class="headerlink" title="🧠 提醒：kubectl 只能在 master 上执行"></a>🧠 提醒：kubectl 只能在 master 上执行</h3><p>比如这些命令：</p>
+<pre><code>kubectl delete pod jenkins-0 -n kube-ops
+kubectl get pods -n kube-ops
+kubectl logs jenkins-0 -n kube-ops
+</code></pre>
+<p>都需要在 <strong>master 节点（192.168.200.129）</strong> 上执行，其他 node 节点默认是没有权限或 kubeconfig 配置的。</p>
+<hr>
+<p>现在你可以：</p>
+<p>✅ 先退出 <code>node1</code>：</p>
+<pre><code>exit
+</code></pre>
+<p>✅ 然后在 master 上执行：</p>
+<pre><code>kubectl delete pod jenkins-0 -n kube-ops
+kubectl get pod -n kube-ops -w
+</code></pre>
+<h4 id="成功！！！！"><a href="#成功！！！！" class="headerlink" title="成功！！！！"></a>成功！！！！</h4><blockquote>
+<p>[root@k8s-master jenkins-master]# kubectl get pod -n kube-ops<br>NAME        READY   STATUS    RESTARTS   AGE<br>jenkins-0   1&#x2F;1     Running   0          7m39s<br>[root@k8s-master jenkins-master]#</p>
+</blockquote>
+</blockquote>
+<ul>
+<li><p>承接上文！！<br><code> kubectl get service --namespace kube-ops</code> 得到端口号</p>
+<blockquote>
+<p>[root@k8s-master jenkins-master]# kubectl get service –namespace kube-ops<br>NAME      TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)                          AGE<br>jenkins   NodePort   10.1.85.222   <none>        8080:30742&#x2F;TCP,50000:31261&#x2F;TCP   3h3m</p>
+</blockquote>
+<p>访问即可：<a target="_blank" rel="noopener" href="http://192.168.200.130:30742/">http://192.168.200.130:30742/</a><br>如何查密码？</p>
+<blockquote>
+<h5 id="解锁-Jenkins"><a href="#解锁-Jenkins" class="headerlink" title="解锁 Jenkins"></a>解锁 Jenkins</h5><p>为了确保管理员安全地安装 Jenkins，密码已写入到日志中（<a target="_blank" rel="noopener" href="https://www.jenkins.io/redirect/find-jenkins-logs">不知道在哪里？</a>）该文件在服务器上：</p>
+<pre><code>/var/jenkins_home/secrets/initialAdminPassword
+</code></pre>
+<p>请从本地复制密码并粘贴到下面。</p>
+<p>管理员密码：</p>
+</blockquote>
+<p><code>cd /opt/nfs/jenkins</code><br><code>ll</code><br><code>cd kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e </code><br><code> cd secrets</code><br><code>cat initialAdminPassword</code></p>
+<blockquote>
+<p>[root@k8s-master jenkins-master]# cd &#x2F;opt&#x2F;nfs<br>[root@k8s-master nfs]# ll<br>总用量 0<br>drwxr-xr-x 3 root root 86 7月   7 17:13 jenkins<br>[root@k8s-master nfs]# cd jenkins&#x2F;<br>[root@k8s-master jenkins]# ll<br>总用量 4<br>drwxrwxrwx 11 root root 4096 7月   7 19:10 kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e</p>
+<p>[root@k8s-master kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e]# ll<br>总用量 28<br>-rw-r–r–  1 sonar 1000 1663 7月   7 18:58 config.xml<br>-rw-r–r–  1 sonar 1000  216 7月   7 18:57 copy_reference_file.log<br>-rw-r–r–  1 sonar 1000  156 7月   7 18:58 hudson.model.UpdateCenter.xml<br>-rw-r–r–  1 sonar 1000  171 7月   7 18:55 jenkins.telemetry.Correlator.xml<br>drwxr-xr-x  2 sonar 1000    6 7月   7 18:55 jobs<br>-rw-r–r–  1 sonar 1000 1037 7月   7 18:58 nodeMonitors.xml<br>drwxr-xr-x  2 sonar 1000    6 7月   7 18:55 plugins<br>-rw-r–r–  1 sonar 1000  258 7月   7 18:57 queue.xml.bak<br>-rw-r–r–  1 sonar 1000   64 7月   7 18:55 secret.key<br>-rw-r–r–  1 sonar 1000    0 7月   7 18:55 secret.key.not-so-secret<br>drwx——  2 sonar 1000   91 7月   7 18:55 secrets<br>drwxr-xr-x  2 sonar 1000   67 7月   7 18:58 updates<br>drwxr-xr-x  2 sonar 1000   24 7月   7 18:55 userContent<br>drwxr-xr-x  3 sonar 1000   56 7月   7 18:55 users<br>drwxr-xr-x 10 sonar 1000  247 7月   7 18:55 war</p>
+<p>[root@k8s-master kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e]# ^C<br>[root@k8s-master kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e]# cd secrets<br>[root@k8s-master secrets]# ll<br>总用量 12<br>-rw-r—– 1 sonar 1000  33 7月   7 18:55 initialAdminPassword<br>-rw-r–r– 1 sonar 1000  32 7月   7 18:55 jenkins.model.Jenkins.crumbSalt<br>-rw-r–r– 1 sonar 1000 256 7月   7 18:55 master.key<br>[root@k8s-master secrets]# <code>cat initialAdminPassword</code><br>7a2c40f15a564286aac63f61b9f20b95   【复制它去上面管理员密码解锁！！】</p>
+</blockquote>
+</li>
+<li><p>创建管理员用户前选自选安装 → 无 → 账号：root   密码：panchunyao123<br>Jenkins URL：<a target="_blank" rel="noopener" href="http://192.168.200.130:30742/">http://192.168.200.130:30742/</a><br>这里面的插件和配置延续之前129机器上的</p>
+<blockquote>
+<p><code>cd /opt/nfs/jenkins/kube-ops-jenkins-home-jenkins-0-pvc-18f7c50d-f5e6-443d-ab24-2ebd09b88a2e/updates</code></p>
+<p>输入[替换国内地址]：<code>sed -i &#39;s/http:\/\/updates.jenkins ci.org\/download/https:\/\/mirrors.tuna.tsinghua.edu.cn\/jenkins/g&#39; default.json &amp;&amp; sed -i &#39;s/http:\/\/ www.google.com/https:\/\/ www.baidu.com/g&#39; default.json</code></p>
+<p>最后，Manage Plugins点击Advanced，把Update Site改为国内插件下载地址 </p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json">https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json</a><br>上面这个不行就按照老的来吧<br><a target="_blank" rel="noopener" href="https://updates.jenkins.io/update-center.json">https://updates.jenkins.io/update-center.json</a></p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="http://192.168.200.129:8888/restart">http://192.168.200.129:8888/restart</a> 重启Jenkins</p>
+</blockquote>
+</li>
+<li><p>先安装基本的插件</p>
+<ul>
+<li>Localization:Chinese </li>
+<li>Git </li>
+<li>Pipeline </li>
+<li>Extended Choice Parameter</li>
+</ul>
+</li>
+</ul>
+<h3 id="-2"><a href="#-2" class="headerlink" title=""></a></h3><h3 id="Jenkins与Kubernetes整合"><a href="#Jenkins与Kubernetes整合" class="headerlink" title="Jenkins与Kubernetes整合"></a>Jenkins与Kubernetes整合</h3><h5 id="安装Kubernetes插件"><a href="#安装Kubernetes插件" class="headerlink" title="安装Kubernetes插件"></a>安装Kubernetes插件</h5><p>安装后 依次点击<code>Dashboard -&gt; 系统管理 -&gt; 云 -&gt; 新建云 -&gt; Kubernetes</code></p>
+<blockquote>
+<p>new cloud → cloud name：kubernetes     Type：kubernetes → create →<br>Kubernetes 地址：<a target="_blank" rel="noopener" href="https://kubernetes.default.svc.cluster.local/">https://kubernetes.default.svc.cluster.local</a><br>命名空间：kube-ops<br>→ 连接测试 → Connected to Kubernetes v1.28.2<br>→ Jenkins URL地址： <a target="_blank" rel="noopener" href="http://jenkins.kube-ops.svc.cluster.local:8080/">http://jenkins.kube-ops.svc.cluster.local:8080</a><br>→ 应用 + 保存</p>
+</blockquote>
+<ul>
+<li>kubernetes 地址采用了kube的服务器发现： <a target="_blank" rel="noopener" href="https://kubernetes.default.svc.cluster.local/">https://kubernetes.default.svc.cluster.local</a> </li>
+<li>namespace 填kube-ops，然后点击Test Connection，如果出现 Connection test successful 的提 示信息证明 Jenkins 已经可以和 Kubernetes 系统正常通信 </li>
+<li>Jenkins URL  地址： <a target="_blank" rel="noopener" href="http://jenkins.kube-ops.svc.cluster.local:8080/">http://jenkins.kube-ops.svc.cluster.local:8080</a></li>
+</ul>
+<h4 id="构建Jenkins-Slave自定义镜像"><a href="#构建Jenkins-Slave自定义镜像" class="headerlink" title="构建Jenkins-Slave自定义镜像"></a>构建Jenkins-Slave自定义镜像</h4><ul>
+<li>Jenkins-Master在构建Job的时候，Kubernetes会创建Jenkins-Slave的Pod来完成Job的构建。我们选择 运行Jenkins-Slave的镜像为官方推荐镜像：jenkins&#x2F;jnlp-slave:latest，但是这个镜像里面并没有Maven 环境，为了方便使用，我们需要自定义一个新的镜像：<br>先把<code>E:\Java实例项目1-20套\资料-Jenkins教程\Jenkins资料\资料\资料\03.资料\k8s-jenkins</code>的<code>jenkins-slave</code>塞进129的<code>/root/</code>下</li>
+</ul>
+<blockquote>
+<p>[root@k8s-master jenkins-slave]# ll<br>总用量 8948<br>-rw-r–r– 1 root root 9142315 7月   7 20:47 apache-maven-3.6.2-bin.tar.gz<br>-rw-r–r– 1 root root     556 7月   7 20:47 Dockerfile<br>-rw-r–r– 1 root root   10475 7月   7 20:47 settings.xml</p>
+</blockquote>
+<pre><code class="yaml"># Dockerfile
+
+FROM jenkins/jnlp-slave:latest
+MAINTAINER itcast
+
+# 切换到 root 账户进行操作
+USER root
+
+# 安装 maven
+COPY apache-maven-3.6.2-bin.tar.gz .
+
+RUN tar -zxf apache-maven-3.6.2-bin.tar.gz &amp;&amp; \
+    mv apache-maven-3.6.2 /usr/local &amp;&amp; \
+    rm -f apache-maven-3.6.2-bin.tar.gz &amp;&amp; \
+    ln -s /usr/local/apache-maven-3.6.2/bin/mvn /usr/bin/mvn &amp;&amp; \
+    ln -s /usr/local/apache-maven-3.6.2 /usr/local/apache-maven &amp;&amp; \
+    mkdir -p /usr/local/apache-maven/repo
+
+COPY settings.xml /usr/local/apache-maven/conf/settings.xml
+
+USER jenkins
+</code></pre>
+<ul>
+<li><p>构建出一个新镜像：jenkins-slave-maven:latest<br><code>docker build -t jenkins-slave-maven:latest</code></p>
+</li>
+<li><p>然把镜像上传到Harbor的公共库library中</p>
+<p>先打标签！<br><code> docker tag jenkins-slave-maven:latest 192.168.200.131:85/library/jenkins-slave-maven:latest</code><br>然后登录！<br><code> docker login -u admin -p Harbor12345 192.168.200.131:85</code></p>
+</li>
+</ul>
+<blockquote>
+<p>WARNING! Using –password via the CLI is insecure. Use –password-stdin. Error response from daemon: Get <a target="_blank" rel="noopener" href="https://192.168.200.131:85/v2/">https://192.168.200.131:85/v2/</a>: http: server gave HTTP response to HTTPS client [root@k8s-master jenkins-slave]# docker login -u admin -p Harbor12345 192.168.200.131:85 WARNING! Using –password via the CLI is insecure. Use –password-stdin. Error response from daemon: Get <a target="_blank" rel="noopener" href="https://192.168.200.131:85/v2/">https://192.168.200.131:85/v2/</a>: http: server gave HTTP response to HTTPS client [root@k8s-master jenkins-slave]#</p>
+<p>你这个错误的根本原因是：<strong>Harbor 使用的是 HTTP 协议，而 Docker 默认使用 HTTPS</strong>，所以报错：</p>
+<blockquote>
+<pre><code>http: server gave HTTP response to HTTPS client
+</code></pre>
+</blockquote>
+<hr>
+<h2 id="✅-解决方案（分两步）："><a href="#✅-解决方案（分两步）：" class="headerlink" title="✅ 解决方案（分两步）："></a>✅ 解决方案（分两步）：</h2><hr>
+<h3 id="🔧-第一步：允许-Docker-使用-HTTP-连接-Harbor（非安全模式）"><a href="#🔧-第一步：允许-Docker-使用-HTTP-连接-Harbor（非安全模式）" class="headerlink" title="🔧 第一步：允许 Docker 使用 HTTP 连接 Harbor（非安全模式）"></a>🔧 第一步：允许 Docker 使用 HTTP 连接 Harbor（非安全模式）</h3><h4 id="1️⃣-修改-Docker-配置文件-etc-docker-daemon-json"><a href="#1️⃣-修改-Docker-配置文件-etc-docker-daemon-json" class="headerlink" title="1️⃣ 修改 Docker 配置文件 /etc/docker/daemon.json"></a>1️⃣ 修改 Docker 配置文件 <code>/etc/docker/daemon.json</code></h4><pre><code>vi /etc/docker/daemon.json
+</code></pre>
+<p>添加（或修改）以下内容：</p>
+<pre><code>&#123;
+  &quot;insecure-registries&quot;: [&quot;192.168.200.131:85&quot;]
+&#125;
+</code></pre>
+<p>如果已有其他配置，比如 <code>registry-mirrors</code>，合并在一个 JSON 对象内：</p>
+<pre><code>&#123;
+  &quot;registry-mirrors&quot;: [
+    &quot;https://docker.m.daocloud.io&quot;,
+    &quot;https://wy1u1ijg.mirror.aliyuncs.com&quot;,
+    &quot;https://p5lmkba8.mirror.aliyuncs.com&quot;,
+    &quot;https://registry.docker-cn.com&quot;
+  ],
+  &quot;insecure-registries&quot;: [
+    &quot;192.168.200.131:85&quot;
+  ]
+&#125;
+</code></pre>
+<hr>
+<h4 id="2️⃣-重启-Docker-服务"><a href="#2️⃣-重启-Docker-服务" class="headerlink" title="2️⃣ 重启 Docker 服务"></a>2️⃣ 重启 Docker 服务</h4><pre><code>systemctl daemon-reexec
+systemctl restart docker
+</code></pre>
+<hr>
+<h3 id="🧪-第二步：重新登录-Harbor"><a href="#🧪-第二步：重新登录-Harbor" class="headerlink" title="🧪 第二步：重新登录 Harbor"></a>🧪 第二步：重新登录 Harbor</h3><pre><code>docker login 192.168.200.131:85 -u admin -p Harbor12345
+</code></pre>
+<p>这时你不会再看到 HTTPS 报错了。</p>
+</blockquote>
+<ul>
+<li><p>push镜像上harbor [Harbor] (<a target="_blank" rel="noopener" href="http://192.168.200.131:85/harbor/projects/1/repositories">http://192.168.200.131:85/harbor/projects/1/repositories</a>)<br><code> docker push 192.168.200.131:85/library/jenkins-slave-maven:latest</code></p>
+<blockquote>
+<p>[root@k8s-master jenkins-slave]# docker push 192.168.200.131:85&#x2F;library&#x2F;jenkins-slave-maven:latest<br>The push refers to repository [192.168.200.131:85&#x2F;library&#x2F;jenkins-slave-maven]<br>22c917fbd463: Pushed<br>9522f341fa42: Pushed<br>1656341ae8c3: Pushed<br>1a2dbe51b5d3: Pushed<br>ed059ff604cf: Pushed<br>4cb0baa801b1: Pushed<br>3f01ba93adcb: Pushed<br>3dee86c3d230: Pushed<br>5ccb7c9ecca8: Pushed<br>8a510d97a0f7: Pushed<br>3f948fda930d: Pushed<br>cf7a8ba4ff71: Pushed<br>4e006334a6fd: Pushed<br>latest: digest: sha256:38043da78f22253730d941f110156b5130ecdb416fc13b52157d402bbf32f0b4 size: 3046</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="测试Jenkins-Slave是否可以创建"><a href="#测试Jenkins-Slave是否可以创建" class="headerlink" title="测试Jenkins-Slave是否可以创建"></a>测试Jenkins-Slave是否可以创建</h3><p>去子节点的Jenkins创建一个item：<code>test_jenkins_slave</code> 是流水线项目<br>一定要在流水线上告诉Jenkins是放在从节点上的！</p>
+<h5 id="Pipeline-scipt"><a href="#Pipeline-scipt" class="headerlink" title="Pipeline scipt"></a>Pipeline scipt</h5><pre><code class="yaml">// git 的 URL 和 凭证ID
+def git_address = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+def git_auth = &quot;630eed58-d62f-4c1b-bf96-1cf9c92a7f36&quot;
+
+// 正确使用 podTemplate 包裹 node
+podTemplate(label: &#39;jenkins-slave&#39;, cloud: &#39;kubernetes&#39;, containers: [
+    containerTemplate(
+        name: &#39;jnlp&#39;,
+        image: &quot;192.168.200.131:85/library/jenkins-slave-maven:latest&quot;,
+        ttyEnabled: true,
+        command: &#39;/bin/sh&#39;
+    )
+]) &#123;
+    node(&quot;jenkins-slave&quot;) &#123;
+        stage(&#39;拉取代码&#39;) &#123;
+            checkout scmGit(
+                branches: [[name: &quot;master&quot;]],
+                extensions: [],
+                userRemoteConfigs: [[
+                    credentialsId: &quot;$&#123;git_auth&#125;&quot;,
+                    url: &quot;$&#123;git_address&#125;&quot;
+                ]]
+            )
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>然后点击构建 就会在从节点进行创建 此时去看<code>Dashboard → 系统管理 → 节点和云管理</code>的时候就会多一个刚刚自主创建的节点 <strong>快速创建 并快速回收</strong>！！</p>
+<h4 id="Jenkins-Kubernetes-Docker完成微服务持续集成"><a href="#Jenkins-Kubernetes-Docker完成微服务持续集成" class="headerlink" title="Jenkins+Kubernetes+Docker完成微服务持续集成"></a>Jenkins+Kubernetes+Docker完成微服务持续集成</h4><h5 id="拉取代码，构建镜像"><a href="#拉取代码，构建镜像" class="headerlink" title="拉取代码，构建镜像"></a>拉取代码，构建镜像</h5><ul>
+<li><p>创建NFS共享目录</p>
+<p>让所有Jenkins-Slave构建指向NFS的Maven的共享仓库目录</p>
+<pre><code class="yaml">vi /etc/exports
+添加内容：
+/opt/nfs/jenkins   *(rw,no_root_squash) 
+/opt/nfs/maven     *(rw,no_root_squash) 
+systemctl restart nfs   重启NFS
+</code></pre>
+<blockquote>
+<p>[root@k8s-node1 ~]# showmount -e 192.168.200.129<br>Export list for 192.168.200.129:<br>&#x2F;opt&#x2F;nfs&#x2F;maven   *              【maven仓库实现共享】<br>&#x2F;opt&#x2F;nfs&#x2F;jenkins *<br>[root@k8s-node1 ~]#</p>
+</blockquote>
+</li>
+<li><p>创建项目，编写构建Pipeline</p>
+<pre><code class="yaml">// git 的 URL 和 凭证ID
+def git_address = &quot;http://192.168.200.132:82/lanyun_group/tensquare_back.git&quot;
+def git_auth = &quot;630eed58-d62f-4c1b-bf96-1cf9c92a7f36&quot;
+//构建版本的名称
+def tag = &quot;latest&quot;
+ //Harbor私服地址
+def harbor_url = &quot;192.168.200.131:85&quot;
+ //Harbor的项目名称
+def harbor_project_name = &quot;tensquare&quot;
+ //Harbor的凭证
+def harbor_auth = &quot;f82340a4-5173-40e3-bc76-602db3a5acf5&quot;
+
+podTemplate(
+    label: &#39;jenkins-slave&#39;,
+    cloud: &#39;kubernetes&#39;,
+    containers: [
+        containerTemplate(
+            name: &#39;jnlp&#39;,
+            image: &quot;192.168.200.131:85/library/jenkins-slave-maven:latest&quot;
+        ),
+        containerTemplate(
+            name: &#39;docker&#39;,
+            image: &quot;docker:stable&quot;,
+            ttyEnabled: true,
+            command: &#39;cat&#39;
+        )
+    ],
+    volumes: [
+        hostPathVolume(
+            mountPath: &#39;/var/run/docker.sock&#39;,
+            hostPath: &#39;/var/run/docker.sock&#39;
+        ),
+        nfsVolume(
+            mountPath: &#39;/usr/local/apache-maven/repo&#39;,
+            serverAddress: &#39;192.168.200.129&#39;,
+            serverPath: &#39;/opt/nfs/maven&#39;
+        )
+    ]
+) &#123;
+    node(&quot;jenkins-slave&quot;) &#123;
+        stage(&#39;拉取代码&#39;) &#123;
+            checkout scmGit(
+                branches: [[name: &quot;master&quot;]],
+                extensions: [],
+                userRemoteConfigs: [[
+                    credentialsId: &quot;$&#123;git_auth&#125;&quot;,
+                    url: &quot;$&#123;git_address&#125;&quot;
+                ]]
+            )
+        &#125;
+
+        stage(&#39;编译，安装公共子工程&#39;) &#123;
+            sh &quot;mvn -f tensquare_common clean install&quot;
+        &#125;
+
+        stage(&#39;构建镜像，部署项目&#39;) &#123;
+            // 把选择的项目信息转为数组
+            def selectedProjects = &quot;$&#123;project_name&#125;&quot;.split(&#39;,&#39;)
+
+            for (int i = 0; i &lt; selectedProjects.size(); i++) &#123;
+                // 取出每个项目的名称和端口
+                def currentProject = selectedProjects[i]
+                def currentProjectName = currentProject.split(&#39;@&#39;)[0]
+                def currentProjectPort = currentProject.split(&#39;@&#39;)[1]
+                def imageName = &quot;$&#123;currentProjectName&#125;:$&#123;tag&#125;&quot;
+
+                // 编译，构建本地镜像
+                sh &quot;mvn -f $&#123;currentProjectName&#125; clean package dockerfile:build&quot;
+
+                container(&#39;docker&#39;) &#123;
+                    // 给镜像打标签
+                    sh &quot;docker tag $&#123;imageName&#125; $&#123;harbor_url&#125;/$&#123;harbor_project_name&#125;/$&#123;imageName&#125;&quot;
+
+                    // 登录 Harbor，并上传镜像
+                    withCredentials([usernamePassword(
+                        credentialsId: &quot;$&#123;harbor_auth&#125;&quot;,
+                        passwordVariable: &#39;password&#39;,
+                        usernameVariable: &#39;username&#39;
+                    )]) &#123;
+                        sh &quot;docker login -u $&#123;username&#125; -p $&#123;password&#125; $&#123;harbor_url&#125;&quot;
+                        sh &quot;docker push $&#123;harbor_url&#125;/$&#123;harbor_project_name&#125;/$&#123;imageName&#125;&quot;
+                    &#125;
+
+                    // 删除本地镜像
+                    sh &quot;docker rmi -f $&#123;imageName&#125;&quot;
+                    sh &quot;docker rmi -f $&#123;harbor_url&#125;/$&#123;harbor_project_name&#125;/$&#123;imageName&#125;&quot;
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+</li>
+<li><p>勾选<code>参数化构建过程</code> → <code>Extended Choice Parameter</code>和之前的一样 可回看<code>tensquare_eureka_server@10086,tensquare_zuul@10020,tensquare_admin_service@9001,tensquare_gathering@9002</code></p>
+</li>
+</ul>
+<h5 id="安装Kubernetes-Continuous-Deploy插件-Kubernetes-CLI插件-Kubernetes-Credentials-Provider"><a href="#安装Kubernetes-Continuous-Deploy插件-Kubernetes-CLI插件-Kubernetes-Credentials-Provider" class="headerlink" title="安装Kubernetes Continuous Deploy插件 || Kubernetes CLI插件 || Kubernetes Credentials Provider"></a>安装Kubernetes Continuous Deploy插件 || Kubernetes CLI插件 || Kubernetes Credentials Provider</h5><ul>
+<li><p>修改后的流水线脚本</p>
+<pre><code class="yaml">// 这里是在全局凭证添加后点进去可以查看ID
+dsf k8s_auth = &quot;xxxxxxxxx&quot;
+// 定义k8s-harbor的凭证
+def secret_name = &quot;registry-auth-secret&quot;
+...
+...
+def deploy_image_name = &quot;$&#123;harbor_url&#125;/$&#123;harbor_project_name&#125;/$&#123;imageName&#125;&quot;
+ //部署到K8S
+ sh &quot;&quot;&quot;
+ sed -i &#39;s#\$IMAGE_NAME#$&#123;deploy_image_name&#125;#&#39; 
+$&#123;currentProjectName&#125;/deploy.yml
+ sed -i &#39;s#\$SECRET_NAME#$&#123;secret_name&#125;#&#39; 
+$&#123;currentProjectName&#125;/deploy.yml
+ &quot;&quot;&quot;
+ kubernetesDeploy configs: &quot;$&#123;currentProjectName&#125;/deploy.yml&quot;, 
+kubeconfigId: &quot;$&#123;k8s_auth&#125;&quot;
+</code></pre>
+</li>
+<li><p>去Jenkins的凭证里加k8s凭证</p>
+<blockquote>
+<h2 id="❗Credentials-from-Kubernetes-Secrets-will-not-be-available"><a href="#❗Credentials-from-Kubernetes-Secrets-will-not-be-available" class="headerlink" title="❗Credentials from Kubernetes Secrets will not be available"></a>❗<code>Credentials from Kubernetes Secrets will not be available</code></h2><h3 id="🧠-说明："><a href="#🧠-说明：" class="headerlink" title="🧠 说明："></a>🧠 说明：</h3><ul>
+<li>这个警告说明 Jenkins 无法通过 Kubernetes 插件从 <code>Secret</code> 里加载凭证。</li>
+<li>通常是以下原因之一：<ul>
+<li><strong>Pod 没有挂载正确的 ServiceAccount &#x2F; RBAC 不够</strong></li>
+<li>缺少 <code>Kubernetes Credentials Provider Plugin</code></li>
+<li>没有开启 K8s secret credential provider 功能</li>
+</ul>
+</li>
+</ul>
+<h3 id="✅-解决方案："><a href="#✅-解决方案：" class="headerlink" title="✅ 解决方案："></a>✅ 解决方案：</h3><ol>
+<li><p>确保你安装了插件：</p>
+<ul>
+<li><code>Kubernetes</code></li>
+<li><code>Kubernetes Credentials Provider</code></li>
+</ul>
+</li>
+<li><p>配置 Jenkins Deployment 的 ServiceAccount 具备权限，绑定如下 ClusterRole：</p>
+</li>
+<li><p>你可以给 Jenkins 的 ServiceAccount 绑定一个 <code>ClusterRole</code> 来读取 secrets：<br><code>/root/jenkins-master/</code>的<code>ServiceaAcount.yaml</code></p>
+<pre><code>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: kube-ops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-read-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: jenkins
+  namespace: kube-ops
+</code></pre>
+<blockquote>
+<p>👆这会给 <code>jenkins</code> 账户授予读取所有 namespace 的 <code>secret</code> 权限。</p>
+</blockquote>
+<p>将上面内容保存为 <code>jenkins-rbac.yaml</code>，然后执行：</p>
+<pre><code class="yaml">kubectl apply -f jenkins-rbac.yaml
+</code></pre>
+</li>
+</ol>
+</blockquote>
+</li>
+<li><p>添加凭证 → 类型<code>Kubernetes configuration(kubeconfig)</code>；范围全局；描述k8s-auth；Kubeconfig选择<code>Enter directly</code>这里面的密钥要去 129Jenkins机器上拿<br><code>cd /root/.kube</code> → <code>cat config</code> 显示的内容全部原封不动的复制到那里面</p>
+</li>
+<li><p>在每个项目下建立deploy.xml</p>
+<h6 id="Eureka的deply-yml"><a href="#Eureka的deply-yml" class="headerlink" title="Eureka的deply.yml"></a>Eureka的deply.yml</h6><pre><code class="yaml">---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+  labels:
+    app: eureka
+spec:
+  type: NodePort
+  ports:
+    - port: 10086
+      name: eureka
+      targetPort: 10086
+  selector:
+    app: eureka
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eureka
+spec:
+  serviceName: &quot;eureka&quot;
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      imagePullSecrets:
+        - name: $SECRET_NAME
+      containers:
+        - name: eureka
+          image: $IMAGE_NAME
+          ports:
+            - containerPort: 10086
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: EUREKA_SERVER
+              value: &quot;http://eureka-0.eureka:10086/eureka/,http://eureka-1.eureka:10086/eureka/&quot;
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: $&#123;MY_POD_NAME&#125;.eureka
+  podManagementPolicy: &quot;Parallel&quot;
+</code></pre>
+<p>其他项目的deploy.yml主要把名字和端口修改：</p>
+<h6 id="zuul的deploy-yml"><a href="#zuul的deploy-yml" class="headerlink" title="zuul的deploy.yml"></a>zuul的deploy.yml</h6><pre><code class="yaml">---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zuul
+  labels:
+    app: zuul
+spec:
+  type: NodePort
+  ports:
+    - port: 10020
+      name: zuul
+      targetPort: 10020
+  selector:
+    app: zuul
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zuul
+spec:
+  serviceName: &quot;zuul&quot;
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zuul
+  template:
+    metadata:
+      labels:
+        app: zuul
+    spec:
+      imagePullSecrets:
+        - name: $SECRET_NAME
+      containers:
+        - name: zuul
+          image: $IMAGE_NAME
+          ports:
+            - containerPort: 10020
+  podManagementPolicy: &quot;Parallel&quot;
+</code></pre>
+</li>
+<li><p>还要在流水线定义k8s-harbor的凭证<br>生成Docker凭证  Docker凭证，用于Kubernetes到Docker私服拉取镜像</p>
+<blockquote>
+<p>docker login -u itcast -p Itcast123 192.168.66.102:85     登录Harbor </p>
+<p>kubectl create secret docker-registry registry-auth-secret  –docker server&#x3D;192.168.200.131:85 –docker-username&#x3D;itcast –docker-password&#x3D;Itcast123 – docker-email&#x3D;<a href="mailto:&#105;&#x74;&#99;&#x61;&#115;&#x74;&#x40;&#x69;&#116;&#x63;&#97;&#115;&#x74;&#x2e;&#99;&#x6e;">&#105;&#x74;&#99;&#x61;&#115;&#x74;&#x40;&#x69;&#116;&#x63;&#97;&#115;&#x74;&#x2e;&#99;&#x6e;</a>    生成 </p>
+<p>kubectl get secret    查看密钥</p>
+</blockquote>
+</li>
+<li><p>项目构建后，查看服务创建情况</p>
+<blockquote>
+<p>kubectl get pods -owide<br>kubectl get service</p>
+</blockquote>
+</li>
+</ul>
+<h4 id="2025-7-8-0-02-完结撒花★-°-☆-￣▽￣-x2F-°★-。"><a href="#2025-7-8-0-02-完结撒花★-°-☆-￣▽￣-x2F-°★-。" class="headerlink" title="2025.7.8  0:02   完结撒花★,°:.☆(￣▽￣)&#x2F;$:.°★ 。"></a><span style = "color:red">2025.7.8  0:02   完结撒花<em>★,°</em>:.☆(￣▽￣)&#x2F;$:<em>.°★</em> 。</span></h4>
             
         </div>
     </div>
@@ -6071,7 +7701,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -6196,7 +7826,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -6695,7 +8325,7 @@ class Canvas:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ff7d73>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -7302,7 +8932,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -8267,7 +9897,7 @@ import RetrievalForm from &#39;../form/retrieval-form&#39;;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -8400,7 +10030,7 @@ docker-compose up -d
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -8809,7 +10439,7 @@ if __name__ == &quot;__main__&quot;:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -11959,7 +13589,7 @@ except etree.XMLSyntaxError as e:
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
