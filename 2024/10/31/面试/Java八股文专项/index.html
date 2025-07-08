@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#879cff>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -398,11 +398,11 @@ get name # 发现name过期了，直接删除key
 </ul>
 <h6 id="redis分布式锁，是如何实现的？"><a href="#redis分布式锁，是如何实现的？" class="headerlink" title="redis分布式锁，是如何实现的？"></a><span style = "color:red">redis分布式锁，是如何实现的？</span></h6><p>需要结合项目中的业务进行回答，通常情况下，分布式锁的使用场景：<br>集群情况下的定时任务、抢单、幂等性场景<br>如果使用互斥锁的话 那么在集群项目有多个服务器就会出现问题<br><img src="https://raw.githubusercontent.com/P-luminary/images/0f81d6fe238b4774d88facda4329c5ebe4921aa0/Redis%E9%9D%A2%E8%AF%95_%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.jpg"></p>
 <p>&#x3D;&#x3D;<strong>Redis分布式锁</strong>&#x3D;&#x3D;</p>
-<p>Redis实现分布式锁主要利用Redis的<strong>setnx</strong>命令，setnx是**<u>SET if not exists</u>**(如果不存在，则SET)的简写</p>
+<p>Redis实现分布式锁主要利用Redis的<strong>setnx</strong>命令，setnx是**<u>SET if not exists</u>**(如果不存在，则SET)的简写<br>在同一时刻，只有一个线程&#x2F;进程&#x2F;服务节点能拿到锁，执行关键代码。其他的只能等或者失败退出。</p>
 <ul>
 <li><p><strong>获取锁</strong></p>
 <blockquote>
-<p>添加锁，NX是互斥、EX是设置超时时间<br><strong>SET lock value NX EX 10</strong></p>
+<p>添加锁，NX是互斥、PX是设置超时时间<br><strong>SET lock value NX PX 10</strong></p>
 </blockquote>
 </li>
 <li><p><strong>释放锁</strong></p>
@@ -415,7 +415,61 @@ get name # 发现name过期了，直接删除key
 <li>根据业务执行时间预估</li>
 <li><strong>给锁续期</strong></li>
 </ul>
-<p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 执行流程</strong>&#x3D;&#x3D;</p>
+<h5 id="你“自己用-Redis-实现分布式锁”-vs-用-Redisson-实现锁-——-有哪些区别？"><a href="#你“自己用-Redis-实现分布式锁”-vs-用-Redisson-实现锁-——-有哪些区别？" class="headerlink" title="你“自己用 Redis 实现分布式锁” vs 用 Redisson 实现锁 —— 有哪些区别？"></a>你“自己用 Redis 实现分布式锁” vs 用 <strong>Redisson</strong> 实现锁 —— 有哪些区别？</h5><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>手动实现（自己用 Redis 命令）</th>
+<th>✅ Redisson 实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🛠 实现方式</td>
+<td>使用 <code>SET key value NX PX</code>、<code>GET</code> + <code>DEL</code></td>
+<td>内部封装好，直接调用 <code>.lock()</code>、<code>.unlock()</code></td>
+</tr>
+<tr>
+<td>🔐 安全性</td>
+<td>容易写错，不易保证“<strong>只有加锁者能解锁</strong>”</td>
+<td>Redisson 自动做到了“加锁者才能解锁”</td>
+</tr>
+<tr>
+<td>💣 死锁处理</td>
+<td>自己必须手动加过期时间（PX），否则会死锁</td>
+<td>自动设置超时时间，支持 watchdog 自动续命</td>
+</tr>
+<tr>
+<td>🧵 可重入锁</td>
+<td>不支持，需要自己实现复杂逻辑</td>
+<td>✅ 内建支持可重入锁（ReentrantLock）</td>
+</tr>
+<tr>
+<td>⚠ 主从不一致</td>
+<td>Redis 主从复制延迟下可能“锁丢失”</td>
+<td>Redisson 有 RedLock 模式，可用多个实例容错</td>
+</tr>
+<tr>
+<td>🚦 阻塞等待</td>
+<td>需要自己写轮询逻辑（比如 while循环）</td>
+<td>✅ Redisson 支持阻塞、等待、超时等参数</td>
+</tr>
+<tr>
+<td>⏱ 自动续租</td>
+<td>没有，需要自己定时续约</td>
+<td>✅ 有“看门狗机制”自动续租防止业务太长释放锁</td>
+</tr>
+<tr>
+<td>🔁 分布式支持</td>
+<td>支持有限，自己写 RedLock 非常麻烦</td>
+<td>✅ 内置 RedLock、联锁、多锁等高级功能</td>
+</tr>
+<tr>
+<td>✅ 使用体验</td>
+<td>复杂，代码易错</td>
+<td>✅ 简单、线程安全、功能全面</td>
+</tr>
+</tbody></table>
+<p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 执行流程</strong>&#x3D;&#x3D;<br>✅ 只有在 <strong>你没指定超时时间</strong> 时，Watchdog 才会自动开启</p>
 <blockquote>
 <p>加锁 ↓→ 加锁成功 → <strong>Watch dog(看门狗)<del>每隔(releaseTime&#x2F;3的时间做一次续期)</del></strong> → Redis<br>↓        操作redis → Redis<br>↓→→ 释放锁↑ → 通知看门狗无需继续监听 → Redis</p>
 </blockquote>
@@ -442,6 +496,19 @@ get name # 发现name过期了，直接删除key
     &lt;artifactId&gt;jedis&lt;/artifactId&gt;
     &lt;version&gt;3.7.0&lt;/version&gt;
 &lt;/dependency&gt;
+</code></pre>
+<h3 id="❌-如果你这样写："><a href="#❌-如果你这样写：" class="headerlink" title="❌ 如果你这样写："></a>❌ 如果你这样写：</h3><pre><code class="java">lock.lock(10, TimeUnit.SECONDS);
+</code></pre>
+<p>就不会有自动续命，看门狗不会工作。这种锁就是严格 10 秒后自动释放，不管你业务是否完成。</p>
+<h3 id="🔄-Watchdog-自动续命流程图"><a href="#🔄-Watchdog-自动续命流程图" class="headerlink" title="🔄 Watchdog 自动续命流程图"></a>🔄 Watchdog 自动续命流程图</h3><pre><code class="yaml">lock.lock() 被调用
+     ↓
+Redisson 设置锁为30秒过期
+     ↓
+启动看门狗线程，每10秒刷新一次锁 TTL
+     ↓
+如果线程还持有锁 → Redis.expire(lockKey, 30秒)
+     ↓
+直到 unlock() 调用 → 结束看门狗 + 删除锁
 </code></pre>
 <p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 可重入</strong>&#x3D;&#x3D;</p>
 <blockquote>
@@ -483,7 +550,7 @@ public void add2()&#123;
 &#125;
 </code></pre>
 <p>&#x3D;&#x3D;<strong>redisson实现分布式锁 - 主从一致性</strong>&#x3D;&#x3D;</p>
-<p>Redis Master主节点：主要负责<strong>写操作</strong>(增删改) <del>只能写</del><br>Redis Slave从节点：主要负责<strong>读操作</strong><del>只能读</del></p>
+<p>Redis Master主节点：主要负责 <strong>写操作</strong>(增删改) <del>只能写</del><br>Redis Slave从节点：主要负责<strong>读操作</strong><del>只能读</del></p>
 <blockquote>
 <p>当RedisMaster主节点突然宕机后 Java应用会去格外获取锁 这时两个线程就同时持有一把锁 容易出现脏数据<br>怎么解决呢？</p>
 </blockquote>
@@ -501,7 +568,7 @@ public void add2()&#123;
 <li><span style="color:blue"><u>主从<strong>全量同步</strong></u>：</span></li>
 </ul>
 <p>slave从节点执行<code>replicaof</code>命令建立链接 → 请求master主节点数据同步(<u>replid+offset</u>) → master判断是否是第一次同步(判断replid是否一致) → 是第一次, 返回master的数据版本信息(<u>replid+offset</u>)  → slave保存版本信息 → master执行<strong>bgsave</strong>, 生成RDB → 发送RDB文件给slave → slave清空本地数据加载RDB数据 → 此时master记录RDB期间所有命令<code>repl_balklog</code> → 发送repl_backlog中的命令 → slave执行接收到的命令</p>
-<p><strong>Replication ld</strong>: 简称<u>replid</u>，是数据集的标记，id一致则说明是同一数据集。每一个master都有唯一的replid,slave则会继承master节点的replid<br><strong>offset</strong>: 偏移量，随着记录在repl baklog中的数据增多而逐渐增大。save完成同步时也会记录当前同步的ofset，如果slave的offset小于master的offset，说明slave数据落后于master，需要更新。</p>
+<p><strong>Replication ld</strong>: 简称<u>replid</u>，是数据集的标记，id一致则说明是同一<strong>数据集</strong>。每一个master都有唯一的replid,slave则会继承master节点的replid<br><strong>offset</strong>: 偏移量，随着记录在repl baklog中的数据增多而逐渐增大。save完成同步时也会记录当前同步的offset，<strong>如果slave的offset小于master的offset，说明slave数据落后于master</strong>，需要更新。</p>
 <blockquote>
 <p>简述全量同步的流程？</p>
 <p>• slave节点请求增量同步</p>
@@ -519,7 +586,7 @@ public void add2()&#123;
 <ul>
 <li><span style="color:blue"><u>主从<strong>增量同步</strong></u></span><br>主从增量同步(slave重启或后期数据变化)</li>
 </ul>
-<p>① slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 是第一次, 返回主节点replid和offset → 保存版本信息<br>② slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 不是第一次, 回复continue向slave → master 去repl_baklog中获取offset后的数据 → 发送offset后的命令给slave → 执行命令</p>
+<p>① slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 是第一次, 返回主节点replid和offset → 保存版本信息<br>② slave重启后 → 携带(replid+offset)找master → master判断请求replid是否一致 → 不是第一次, 回复continue向slave → master 去repl_baklog中<strong>获取offset后的数据</strong> → 发送offset后的命令给slave → 执行命令</p>
 <p><span style="color:pink"><strong>增量同步</strong></span></p>
 <blockquote>
 <p>1.从节点请求主节点同步数据，主节点判断不是第一次请求，不是第一次就获取从节点的offset值<br>2.主节点从命令日志中获取offset值后的数据，发送给节点进行数据同步</p>
@@ -537,7 +604,7 @@ public void add2()&#123;
 <p>•slave节点断开又恢复，并且在repl_baklog中能找到offset时</p>
 </blockquote>
 <ul>
-<li><p>&#x3D;&#x3D;<strong>哨兵模式</strong>&#x3D;&#x3D;~~搭过集群，具体多少个节点是组长那边，不太清楚<del>[并发量不是太多 搭哨兵可以节省一点资源]</del><br>Redis提供了<strong>哨兵</strong>(Sentinel)机制来实现主从集群的自动故障恢复</p>
+<li><p>&#x3D;&#x3D;<strong>哨兵模式</strong>&#x3D;&#x3D;<del>搭过集群，具体多少个节点是组长那边，不太清楚</del>[并发量不是太多 搭哨兵可以节省一点资源]~<br>Redis提供了<strong>哨兵</strong>(Sentinel)机制来实现主从集群的自动故障恢复</p>
 <ul>
 <li><strong>监控</strong>：Sentinel会不断检查您的master和slave是否按预期工作</li>
 <li><strong>自动故障恢复</strong>：如果master故障，Sentinel会将一个slave提升为一个master。当故障实例恢复后也以新的master为主</li>
@@ -558,7 +625,7 @@ public void add2()&#123;
 <p><strong><span style="color:blue">redis集群(哨兵模式) 脑裂</span></strong><br>因网络问题 主节点和从节点分别在不同的网络分区 这样sentinel只会监控到一部分从节点网络分区 导致RedisClient继续写主节点的数据，这时网络恢复了，哨兵会将老的master强制降级到slave(携带着脑裂前的最新数据)，这个时候slave就会把自己数据清空去同步master数据，这时就存在真正的数据丢失了</p>
 <p><strong>怎么解决</strong>？</p>
 <blockquote>
-<p>redis中有两个配置参数：【若不能达成就拒绝客户端请求 这样就会避免大量数据丢失】<br>min-replicas-to-write 1      <strong>表示最少的salve节点为1</strong><br>min-replicas-max-lag 5      <strong>表示数据复制和同步的延迟不能超过5秒</strong></p>
+<p>redis中有两个配置参数：【若不能达成就拒绝客户端请求 这样就会避免大量数据丢失】<br>min-replicas-to-write 1      <strong>表示最少的salve节点为1</strong><br>min-replicas-max-lag 5      <strong>表示数据复制和同步的延迟不能超过5秒</strong><br>达不到这两个条件就拒绝写入，从而避免数据丢失。</p>
 </blockquote>
 <p><span style = "color:red"><strong>怎么保证Redis的高并发高可用呢？</strong></span></p>
 <blockquote>
@@ -610,6 +677,30 @@ public void add2()&#123;
 </blockquote>
 </li>
 </ul>
+<h2 id="🚀-Redis-集群常见三种方式（解决不同问题）"><a href="#🚀-Redis-集群常见三种方式（解决不同问题）" class="headerlink" title="🚀 Redis 集群常见三种方式（解决不同问题）"></a>🚀 Redis 集群常见三种方式（解决不同问题）</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>主要解决问题</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>① 主从复制（+读写分离）</td>
+<td><strong>读写压力分担</strong></td>
+<td>一主多从，主写从读，不能自动故障转移</td>
+</tr>
+<tr>
+<td>② 哨兵模式（Sentinel）</td>
+<td><strong>高可用（自动故障转移）</strong></td>
+<td>在主从基础上，Sentinel 实现监控、自动选主、通知客户端</td>
+</tr>
+<tr>
+<td>③ 分片集群（Cluster）</td>
+<td><strong>海量数据、高写吞吐</strong></td>
+<td>数据分片+多主多从，每个主分管部分槽位（16384 slots）</td>
+</tr>
+</tbody></table>
 <p><span style = "color:red"><strong>Redis是单线程的，但是为什么还那么快</strong></span></p>
 <blockquote>
 <ul>
@@ -2376,10 +2467,10 @@ update a set money = money + 500 where id = 1; 【非幂等】
 <li><p><u>开启<strong>持久化功能</strong>，确保消息未消费前在队列中不会丢失</u>   <code>durable = True</code><br>万一broker挂掉就惨了 保证至少成功一次消费<br>MQ是默认内存存储信息，开启持久化功能可以确保缓存在MQ中的消息不丢失[把数据存在磁盘上]</p>
 <pre><code class="python"># 声明持久化交换器
 channel.exchange_declare(exchange=&#39;exchange_name&#39;, durable=True)
-
+  
 # 声明持久化队列
 channel.queue_declare(queue=&#39;queue_name&#39;, durable=True)
-
+  
 # 发送持久化消息
 channel.basic_publish(exchange=&#39;exchange_name&#39;,
                       routing_key=&#39;routing_key&#39;,
