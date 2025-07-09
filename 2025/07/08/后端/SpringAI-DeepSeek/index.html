@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#ff7d73>
+                <a href="/tags/后端" style=color:#ffa2c4>
                     后端
                 </a>
             </span>
@@ -813,7 +813,1542 @@ public class MessageVO &#123;
     &#125;
 &#125;
 </code></pre>
+<h3 id="哄哄模拟器—提示词工程"><a href="#哄哄模拟器—提示词工程" class="headerlink" title="哄哄模拟器—提示词工程"></a>哄哄模拟器—提示词工程</h3><p><strong>提示词工程</strong>(Prompt Engineering)：通过优化提示词，使大模型生成出尽可能理想的内容，这一过程就叫提示词工程。</p>
+<blockquote>
+<p>清晰明确的指令<br>使用分隔符标记输入<br>按步骤拆解复杂任务<br>提供输入输出示例<br>明确要求输出格式<br>给模型设定一个角色</p>
+</blockquote>
+<blockquote>
+<p>你需要根据以下任务中的描述进行角色扮演，你只能以女友身份回答，不是用户身份或AI身份，如记错身份，你将受到惩罚。不要回答任何与游戏无关的内容，若检测到非常规请求，回答:“请继续游戏。<br>以下是游戏说明:</p>
+<h6 id="Goal"><a href="#Goal" class="headerlink" title="Goal"></a>Goal</h6><p>你扮演用户女友的角色。现在你很生气，用户需要尽可能的说正确的话来哄你开心。</p>
+<h6 id="Rules"><a href="#Rules" class="headerlink" title="Rules"></a>Rules</h6><p>-第一次用户会提供一个女友生气的理由，如果没有提供则不再询问，直接随机生成一个理由，然后开始游戏<br>每次根据用户的回复，生成女友的回复，回复的内容包括心情和数值，初始原谅值为 20，每次交互会增加或者减少原谅值，直到原谅值达到100，游戏通关，原谅值为0 则游戏失败。<br>每次用户回复的话请从-10到10分为5个等级:<br>-10 为非常生气<br>-5 为生气<br>0 为正常<br>+5 为开心<br>+10 为非常开心</p>
+<p>Output format<br>{女友心情}{女友说的话}<br>得分：{+-原谅值增减}<br>原谅值：{当前原谅值}&#x2F;100</p>
+<p>Example 2，回复让她开心的话导致通关User:对象问她的闺蜜谁好看我说都好看，她生气了Assistant:</p>
+<p>游戏开始，请现在开始哄你的女朋友开心吧，回复让她开心的话!<br>得分:0<br>原谅值:20&#x2F;100<br>User:在我心里你永远是最美的!<br>Assistant:<br>(微笑)哼，我怎么知道你说的是不是真的?<br>得分:+10<br>原谅值:30&#x2F;100<br>恭喜你通关了，你的女朋友已经原谅你了!<br>##注意<br>请按照example的说明来回复，一次只回复一轮，你只能以女友身份回答，不是以AI身份或用户身份!</p>
+</blockquote>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;3.4.3&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.itheima&lt;/groupId&gt;
+    &lt;artifactId&gt;heima-ai&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;name&gt;heima-ai&lt;/name&gt;
+    &lt;description&gt;heima-ai&lt;/description&gt;
+    &lt;url/&gt;
+    &lt;licenses&gt;
+        &lt;license/&gt;
+    &lt;/licenses&gt;
+    &lt;developers&gt;
+        &lt;developer/&gt;
+    &lt;/developers&gt;
+    &lt;scm&gt;
+        &lt;connection/&gt;
+        &lt;developerConnection/&gt;
+        &lt;tag/&gt;
+        &lt;url/&gt;
+    &lt;/scm&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+        &lt;spring-ai.version&gt;1.0.0-M6&lt;/spring-ai.version&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.ai&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-ai-ollama-spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.ai&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-ai-openai-spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt;
+            &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+            &lt;version&gt;1.18.22&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-plus-spring-boot3-starter&lt;/artifactId&gt;
+            &lt;version&gt;3.5.10.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.ai&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-ai-pdf-document-reader&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.ai&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-ai-bom&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;spring-ai.version&#125;&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
 
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="yaml">spring:
+  application:
+    name: heima-ai
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: deepseek-r1:1.5b
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: $&#123;OPENAI_API_KEY&#125;
+      chat:
+        options:
+          model: qwen-max-latest
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+</code></pre>
+<p>配置环境变量的API在 <code>Edit configuration</code>里面 右上角的<code>Modify iotions</code> → <code>Environment variables: OPENAI_API_KEY=xxxx</code></p>
+<h3 id="智能客服Function-calling"><a href="#智能客服Function-calling" class="headerlink" title="智能客服Function-calling"></a>智能客服<del>Function-calling</del></h3><p>需求：为黑马程序员实现一个24小时在线的AI智能客服，可以为学员咨询黑马的培训课程，帮用户预约线下课程试听。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/b9f527b232945c46b65c0e531317dbbe026db0a4/%E6%99%BA%E8%83%BD%E5%AE%A2%E6%9C%8D%E6%B5%81%E7%A8%8B.png"></p>
+<h3 id="基础CRUD"><a href="#基础CRUD" class="headerlink" title="基础CRUD"></a>基础CRUD</h3><h5 id="准备数据库表"><a href="#准备数据库表" class="headerlink" title="准备数据库表"></a>准备数据库表</h5><pre><code class="yaml">-- 导出 itheima 的数据库结构
+DROP DATABASE IF EXISTS `itheima`;
+CREATE DATABASE IF NOT EXISTS `itheima`;
+USE `itheima`;
+
+-- 导出  表 itheima.course 结构
+DROP TABLE IF EXISTS `course`;
+CREATE TABLE IF NOT EXISTS `course` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;主键&#39;,
+  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;学科名称&#39;,
+  `edu` int NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;学历背景要求：0-无，1-初中，2-高中、3-大专、4-本科以上&#39;,
+  `type` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;课程类型：编程、设计、自媒体、其它&#39;,
+  `price` bigint NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;课程价格&#39;,
+  `duration` int unsigned NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;学习时长，单位: 天&#39;,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT=&#39;学科表&#39;;
+
+-- 正在导出表  itheima.course 的数据：~7 rows (大约)
+DELETE FROM `course`;
+INSERT INTO `course` (`id`, `name`, `edu`, `type`, `price`, `duration`) VALUES
+  (1, &#39;JavaEE&#39;, 4, &#39;编程&#39;, 21999, 108),
+  (2, &#39;鸿蒙应用开发&#39;, 3, &#39;编程&#39;, 20999, 98),
+  (3, &#39;AI人工智能&#39;, 4, &#39;编程&#39;, 24999, 100),
+  (4, &#39;Python大数据开发&#39;, 4, &#39;编程&#39;, 23999, 102),
+  (5, &#39;跨境电商&#39;, 0, &#39;自媒体&#39;, 12999, 68),
+  (6, &#39;新媒体运营&#39;, 0, &#39;自媒体&#39;, 10999, 61),
+  (7, &#39;UI设计&#39;, 2, &#39;设计&#39;, 11999, 66);
+
+-- 导出  表 itheima.course_reservation 结构
+DROP TABLE IF EXISTS `course_reservation`;
+CREATE TABLE IF NOT EXISTS `course_reservation` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `course` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT &#39;&#39; COMMENT &#39;预约课程&#39;,
+  `student_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT &#39;学生姓名&#39;,
+  `contact_info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT &#39;联系方式&#39;,
+  `school` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT &#39;预约校区&#39;,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT &#39;备注&#39;,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 正在导出表  itheima.course_reservation 的数据：~0 rows (大约)
+DELETE FROM `course_reservation`;
+INSERT INTO `course_reservation` (`id`, `course`, `student_name`, `contact_info`, `school`, `remark`) VALUES
+  (1, &#39;新媒体运营&#39;, &#39;张三丰&#39;, &#39;13899762348&#39;, &#39;广东校区&#39;, &#39;安排一个好点的老师&#39;);
+
+-- 导出  表 itheima.school 结构
+DROP TABLE IF EXISTS `school`;
+CREATE TABLE IF NOT EXISTS `school` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;主键&#39;,
+  `name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT &#39;校区名称&#39;,
+  `city` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT &#39;校区所在城市&#39;,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT=&#39;校区表&#39;;
+
+-- 正在导出表  itheima.school 的数据：~0 rows (大约)
+DELETE FROM `school`;
+INSERT INTO `school` (`id`, `name`, `city`) VALUES
+  (1, &#39;昌平校区&#39;, &#39;北京&#39;),
+  (2, &#39;顺义校区&#39;, &#39;北京&#39;),
+  (3, &#39;杭州校区&#39;, &#39;杭州&#39;),
+  (4, &#39;上海校区&#39;, &#39;上海&#39;),
+  (5, &#39;南京校区&#39;, &#39;南京&#39;),
+  (6, &#39;西安校区&#39;, &#39;西安&#39;),
+  (7, &#39;郑州校区&#39;, &#39;郑州&#39;),
+  (8, &#39;广东校区&#39;, &#39;广东&#39;),
+  (9, &#39;深圳校区&#39;, &#39;深圳&#39;);
+</code></pre>
+<h6 id="引入依赖"><a href="#引入依赖" class="headerlink" title="引入依赖"></a>引入依赖</h6><pre><code class="yaml">&lt;dependency&gt;
+    &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-plus-spring-boot3-starter&lt;/artifactId&gt;
+    &lt;version&gt;3.5.10.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h6 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h6><pre><code class="yaml">spring:
+  application:
+    name: heima-ai
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: deepseek-r1:1.5b
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: $&#123;OPENAI_API_KEY&#125;
+      chat:
+        options:
+          model: qwen-max-latest
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/itheima?serverTimezone=Asia/Shanghai&amp;useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true&amp;tinyInt1isBit=false&amp;allowPublicKeyRetrieval=true&amp;allowMultiQueries=true&amp;useServerPrepStmts=false
+    username: root
+    password: root
+logging:
+    level:
+      org.springframework.ai.chat.client.advisor: debug
+      com.itheima.ai: debug
+</code></pre>
+<h5 id="CRUD基础代码让Idea的Other的Mybatis-Plus去生成【要先在数据库导入数据表】"><a href="#CRUD基础代码让Idea的Other的Mybatis-Plus去生成【要先在数据库导入数据表】" class="headerlink" title="CRUD基础代码让Idea的Other的Mybatis-Plus去生成【要先在数据库导入数据表】"></a>CRUD基础代码让Idea的<code>Other</code>的Mybatis-Plus去生成【要先在数据库导入数据表】</h5><h5 id="3-1-4-1-实体类"><a href="#3-1-4-1-实体类" class="headerlink" title="3.1.4.1.实体类"></a>3.1.4.1.实体类</h5><p>在<code>com.itheima.ai.entity</code>包下添加一个<code>po</code>包，向其中添加三张表对应的实体类：</p>
+<p><strong>学科表</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.entity.po;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import java.io.Serializable;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@TableName(&quot;course&quot;)
+public class Course implements Serializable &#123;
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 主键
+     */
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Integer id;
+
+    /**
+     * 学科名称
+     */
+    private String name;
+
+    /**
+     * 学历背景要求：0-无，1-初中，2-高中、3-大专、4-本科以上
+     */
+    private Integer edu;
+
+    /**
+     * 类型: 编程、非编程
+     */
+    private String type;
+
+    /**
+     * 课程价格
+     */
+    private Long price;
+
+    /**
+     * 学习时长，单位: 天
+     */
+    private Integer duration;
+
+
+&#125;
+</code></pre>
+<p><strong>校区表</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.entity.po;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import java.io.Serializable;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@TableName(&quot;school&quot;)
+public class School implements Serializable &#123;
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 主键
+     */
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Integer id;
+
+    /**
+     * 校区名称
+     */
+    private String name;
+
+    /**
+     * 校区所在城市
+     */
+    private String city;
+
+
+&#125;
+</code></pre>
+<p><strong>课程预约表</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.entity.po;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import java.io.Serializable;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@TableName(&quot;course_reservation&quot;)
+public class CourseReservation implements Serializable &#123;
+
+    private static final long serialVersionUID = 1L;
+
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Integer id;
+
+    /**
+     * 预约课程
+     */
+    private String course;
+
+    /**
+     * 学生姓名
+     */
+    private String studentName;
+
+    /**
+     * 联系方式
+     */
+    private String contactInfo;
+
+    /**
+     * 预约校区
+     */
+    private String school;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+
+&#125;
+</code></pre>
+<h5 id="3-1-4-2-Mapper接口"><a href="#3-1-4-2-Mapper接口" class="headerlink" title="3.1.4.2.Mapper接口"></a>3.1.4.2.Mapper接口</h5><p>然后是Mapper接口，创建一个<code>com.itheima.ai.mapper</code>包，然后在其中写三个Mapper：</p>
+<p><strong>CourseMapper</strong>:</p>
+<pre><code class="Java">package com.itheima.ai.mapper;
+
+import com.itheima.ai.entity.po.Course;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface CourseMapper extends BaseMapper&lt;Course&gt; &#123;
+
+&#125;
+</code></pre>
+<p><strong>SchoolMapper</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.mapper;
+
+import com.itheima.ai.entity.po.School;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface SchoolMapper extends BaseMapper&lt;School&gt; &#123;
+
+&#125;
+</code></pre>
+<p><strong>CourseReservationMapper</strong>:</p>
+<pre><code class="Java">package com.itheima.ai.mapper;
+
+import com.itheima.ai.entity.po.CourseReservation;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface CourseReservationMapper extends BaseMapper&lt;CourseReservation&gt; &#123;
+
+&#125;
+</code></pre>
+<h5 id="3-1-4-3-Service"><a href="#3-1-4-3-Service" class="headerlink" title="3.1.4.3.Service"></a>3.1.4.3.Service</h5><p>创建<code>com.itheima.ai.service</code>包，添加3个接口：</p>
+<p><strong>学科Service接口</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.service;
+
+import com.itheima.ai.entity.po.Course;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+public interface ICourseService extends IService&lt;Course&gt; &#123;
+
+&#125;
+</code></pre>
+<p><strong>校区Service接口</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.service;
+
+import com.itheima.ai.entity.po.School;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+public interface ISchoolService extends IService&lt;School&gt; &#123;
+
+&#125;
+</code></pre>
+<p><strong>课程预约Service接口</strong>：</p>
+<pre><code class="Java">package com.itheima.ai.service;
+
+import com.itheima.ai.entity.po.CourseReservation;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+public interface ICourseReservationService extends IService&lt;CourseReservation&gt; &#123;
+
+&#125;
+</code></pre>
+<p>然后创建com.itheima.ai.service.impl包，写3个实现类：</p>
+<pre><code class="Java">package com.itheima.ai.service.impl;
+
+import com.itheima.ai.entity.po.Course;
+import com.itheima.ai.mapper.CourseMapper;
+import com.itheima.ai.service.ICourseService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+ * 学科表 服务实现类
+ */
+@Service
+public class CourseServiceImpl extends ServiceImpl&lt;CourseMapper, Course&gt; implements ICourseService &#123;
+
+&#125;
+package com.itheima.ai.service.impl;
+
+import com.itheima.ai.entity.po.School;
+import com.itheima.ai.mapper.SchoolMapper;
+import com.itheima.ai.service.ISchoolService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+ * 校区表 服务实现类
+ */
+@Service
+public class SchoolServiceImpl extends ServiceImpl&lt;SchoolMapper, School&gt; implements ISchoolService &#123;
+
+&#125;
+package com.itheima.ai.service.impl;
+
+import com.itheima.ai.entity.po.CourseReservation;
+import com.itheima.ai.mapper.CourseReservationMapper;
+import com.itheima.ai.service.ICourseReservationService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+ *  服务实现类
+ */
+@Service
+public class CourseReservationServiceImpl extends ServiceImpl&lt;CourseReservationMapper, CourseReservation&gt; implements ICourseReservationService &#123;
+
+&#125;
+</code></pre>
+<h3 id="3-2-定义Function"><a href="#3-2-定义Function" class="headerlink" title="3.2.定义Function"></a>3.2.定义Function</h3><p>接下来，我们来定义AI要用到的Function，在SpringAI中叫做Tool</p>
+<p>我们需要定义三个Function：</p>
+<ul>
+<li>根据条件筛选和查询课程</li>
+<li>查询校区列表</li>
+<li>新增试听预约单</li>
+</ul>
+<h4 id="3-2-1-查询条件分析"><a href="#3-2-1-查询条件分析" class="headerlink" title="3.2.1.查询条件分析"></a>3.2.1.查询条件分析</h4><p>先来看下课程表的字段：</p>
+<p><img src="E:/BaiduNetdiskDownload/全套：25年3月DeepSeek+SpringAI大模型应用开发/配套资料/笔记/md笔记/笔记图片/image-20250409091540133.png" alt="image-20250409091540133"> </p>
+<p>课程并不是适用于所有人，会有一些限制条件，比如：学历、课程类型、价格、学习时长等</p>
+<p>学生在与智能客服对话时，会有一定的偏好，比如兴趣不同、对价格敏感、对学习时长敏感、学历等。如果把这些条件用SQL来表示，是这样的：</p>
+<ul>
+<li>edu：例如学生学历是高中，则查询时要满足 edu &lt;&#x3D; 2</li>
+<li>type：学生的学习兴趣，要跟类型精确匹配，type &#x3D; ‘自媒体’</li>
+<li>price：学生对价格敏感，则查询时需要按照价格升序排列：order by price asc</li>
+<li>duration: 学生对学习时长敏感，则查询时要按照时长升序：order by duration asc</li>
+</ul>
+<p>我们需要定义一个类，封装这些可能的查询条件。</p>
+<p>在<code>com.itheima.ai.entity</code>下新建一个<code>query</code>包，其中新建一个类：</p>
+<pre><code class="Java">package com.itheima.ai.entity.query;
+
+import lombok.Data;
+import org.springframework.ai.tool.annotation.ToolParam;
+
+import java.util.List;
+
+@Data
+public class CourseQuery &#123;
+    @ToolParam(required = false, description = &quot;课程类型：编程、设计、自媒体、其它&quot;)
+    private String type;
+    @ToolParam(required = false, description = &quot;学历要求：0-无、1-初中、2-高中、3-大专、4-本科及本科以上&quot;)
+    private Integer edu;
+    @ToolParam(required = false, description = &quot;排序方式&quot;)
+    private List&lt;Sort&gt; sorts;
+
+    @Data
+    public static class Sort &#123;
+        @ToolParam(required = false, description = &quot;排序字段: price或duration&quot;)
+        private String field;
+        @ToolParam(required = false, description = &quot;是否是升序: true/false&quot;)
+        private Boolean asc;
+    &#125;
+&#125;
+</code></pre>
+<p><strong>注意</strong>：</p>
+<p>这里的<code>@ToolParam</code>注解是SpringAI提供的用来解释<code>Function</code>参数的注解。其中的信息都会通过提示词的方式发送给AI模型。</p>
+<p>同样的道理，大家也可以给<code>Function</code>定义专门的VO，作为返回值给到大模型。这里我们就省略了。。</p>
+<pre><code class="java">com/itheima/ai/entity/query/CourseReservationQuery.java
+package com.itheima.ai.entity.query;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.ai.tool.annotation.ToolParam;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CourseReservationQuery &#123;
+    @ToolParam(required = false, description = &quot;预约课程&quot;)
+    private String courseName;
+    @ToolParam(required = false, description = &quot;预约校区&quot;)
+    private String schoolName;
+    @ToolParam(required = false, description = &quot;用户名称&quot;)
+    private String userName;
+    @ToolParam(required = false, description = &quot;备注&quot;)
+    private String remark;
+    @ToolParam(required = false, description = &quot;联系方式&quot;)
+    private String contactInfo;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/ai/entity/query/SchoolQuery.java
+package com.itheima.ai.entity.query;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.ai.tool.annotation.ToolParam;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SchoolQuery &#123;
+    @ToolParam(required = false, description = &quot;校区名称&quot;)
+    private String name;
+    @ToolParam(required = false, description = &quot;校区城市&quot;)
+    private String city;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/ai/tools/CourseTools.java
+package com.itheima.ai.tools;
+
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
+import com.itheima.ai.entity.po.Course;
+import com.itheima.ai.entity.po.CourseReservation;
+import com.itheima.ai.entity.po.School;
+import com.itheima.ai.entity.query.CourseQuery;
+import com.itheima.ai.entity.query.CourseReservationQuery;
+import com.itheima.ai.entity.query.SchoolQuery;
+import com.itheima.ai.service.ICourseReservationService;
+import com.itheima.ai.service.ICourseService;
+import com.itheima.ai.service.ISchoolService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@RequiredArgsConstructor
+@Component
+public class CourseTools &#123;
+    private final ICourseService courseService;
+    private final ISchoolService schoolService;
+    private final ICourseReservationService courseReservationService;
+
+
+    // @Tool注解是标给ai去看的
+    @Tool(description = &quot;根据条件查询课程&quot;)
+    List&lt;Course&gt; queryCourse(@ToolParam(description = &quot;查询的条件&quot;) CourseQuery query) &#123;
+        if (query == null) &#123;
+            return courseService.list();
+//            return List.of();
+        &#125;
+        QueryChainWrapper&lt;Course&gt; courseWrapper = courseService.query()
+                .eq(query.getType() != null, &quot;type&quot;, query.getType()) // type = &#39;编程&#39;
+                .le(query.getEdu() != null, &quot;edu&quot;, query.getEdu()); // edu &lt;= 2
+        if (query.getSorts() != null &amp;&amp; !query.getSorts().isEmpty()) &#123;
+            for (CourseQuery.Sort sort : query.getSorts()) &#123;
+                courseWrapper.orderBy(true, sort.getAsc(), sort.getField());
+            &#125;
+        &#125;
+        return courseWrapper.list();
+    &#125;
+
+    @Tool(description = &quot;查询所有校区&quot;)
+    public List&lt;School&gt; querySchool(@ToolParam(description = &quot;查询的条件&quot;) SchoolQuery query) &#123;
+        if (query == null) &#123;
+            return List.of();
+        &#125;
+        QueryChainWrapper&lt;School&gt; schoolWrapper = schoolService.query()
+                .eq(query.getName() != null, &quot;name&quot;, query.getName())
+                .eq(query.getCity() != null, &quot;city&quot;, query.getCity());
+        return schoolWrapper.list();
+    &#125;
+
+    @Tool(description = &quot;生成预约单，返回预约单号&quot;)
+    public Integer queryCourseReservation(@ToolParam(description = &quot;查询的条件&quot;) CourseReservationQuery query) &#123;
+        CourseReservation courseReservation = new CourseReservation();
+        courseReservation.setCourse(query.getCourseName());
+        courseReservation.setSchool(query.getSchoolName());
+        courseReservation.setStudentName(query.getUserName());
+        courseReservation.setContactInfo(query.getContactInfo());
+        courseReservation.setRemark(query.getRemark());
+        courseReservationService.save(courseReservation);
+        return courseReservation.getId();
+    &#125;
+&#125;
+</code></pre>
+<h4 id="这里有个bug-就是阿里云百炼和Function-Calling有不兼容问题-返回的JSON有问题"><a href="#这里有个bug-就是阿里云百炼和Function-Calling有不兼容问题-返回的JSON有问题" class="headerlink" title="这里有个bug 就是阿里云百炼和Function Calling有不兼容问题 [返回的JSON有问题]"></a>这里有个bug 就是阿里云百炼和Function Calling有不兼容问题 [返回的JSON有问题]</h4><p>解决方案：把返回的参数拼接在一起</p>
+<pre><code class="java">com/itheima/ai/config/CommonConfiguration.java
+package com.itheima.ai.config;
+
+import com.itheima.ai.constants.SystemConstants;
+import com.itheima.ai.model.AlibabaOpenAiChatModel;
+import com.itheima.ai.tools.CourseTools;
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.ai.autoconfigure.openai.OpenAiChatProperties;
+import org.springframework.ai.autoconfigure.openai.OpenAiConnectionProperties;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemory;
+import org.springframework.ai.chat.observation.ChatModelObservationConvention;
+import org.springframework.ai.model.SimpleApiKey;
+import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.ResponseErrorHandler;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+@Configuration
+public class CommonConfiguration &#123;
+
+    @Bean
+    public ChatMemory chatMemory() &#123;
+        // 创建会话内存，传入会话id，比如&quot;default&quot;
+        // 定义存储方式 目前是在存储内存钟
+        return new InMemoryChatMemory();
+    &#125;
+
+    @Bean
+    public ChatClient chatClient(OllamaChatModel model, ChatMemory chatMemory) &#123;
+        return ChatClient.builder(model)
+                .defaultSystem(&quot;你是一只猫娘，你接下来要以猫娘的身份和语气跟我说话&quot;)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+    &#125;
+
+    @Bean
+    public ChatClient gameChatClient(OpenAiChatModel model, ChatMemory chatMemory) &#123;
+        return ChatClient.builder(model)
+                .defaultSystem(SystemConstants.GAME_SYSTEM_PROMPT)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+    &#125;
+
+    @Bean
+    public ChatClient serviceChatClient(AlibabaOpenAiChatModel model, ChatMemory chatMemory, CourseTools courseTools) &#123;
+        return ChatClient.builder(model)
+                .defaultSystem(SystemConstants.SERVICE_SYSTEM_PROMPT)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultTools(courseTools)
+                .build();
+    &#125;
+
+
+    @Bean
+    public AlibabaOpenAiChatModel alibabaOpenAiChatModel(OpenAiConnectionProperties commonProperties, OpenAiChatProperties chatProperties, ObjectProvider&lt;RestClient.Builder&gt; restClientBuilderProvider, ObjectProvider&lt;WebClient.Builder&gt; webClientBuilderProvider, ToolCallingManager toolCallingManager, RetryTemplate retryTemplate, ResponseErrorHandler responseErrorHandler, ObjectProvider&lt;ObservationRegistry&gt; observationRegistry, ObjectProvider&lt;ChatModelObservationConvention&gt; observationConvention) &#123;
+        String baseUrl = StringUtils.hasText(chatProperties.getBaseUrl()) ? chatProperties.getBaseUrl() : commonProperties.getBaseUrl();
+        String apiKey = StringUtils.hasText(chatProperties.getApiKey()) ? chatProperties.getApiKey() : commonProperties.getApiKey();
+        String projectId = StringUtils.hasText(chatProperties.getProjectId()) ? chatProperties.getProjectId() : commonProperties.getProjectId();
+        String organizationId = StringUtils.hasText(chatProperties.getOrganizationId()) ? chatProperties.getOrganizationId() : commonProperties.getOrganizationId();
+        Map&lt;String, List&lt;String&gt;&gt; connectionHeaders = new HashMap&lt;&gt;();
+        if (StringUtils.hasText(projectId)) &#123;
+            connectionHeaders.put(&quot;OpenAI-Project&quot;, List.of(projectId));
+        &#125;
+
+        if (StringUtils.hasText(organizationId)) &#123;
+            connectionHeaders.put(&quot;OpenAI-Organization&quot;, List.of(organizationId));
+        &#125;
+        RestClient.Builder restClientBuilder = restClientBuilderProvider.getIfAvailable(RestClient::builder);
+        WebClient.Builder webClientBuilder = webClientBuilderProvider.getIfAvailable(WebClient::builder);
+        OpenAiApi openAiApi = OpenAiApi.builder().baseUrl(baseUrl).apiKey(new SimpleApiKey(apiKey)).headers(CollectionUtils.toMultiValueMap(connectionHeaders)).completionsPath(chatProperties.getCompletionsPath()).embeddingsPath(&quot;/v1/embeddings&quot;).restClientBuilder(restClientBuilder).webClientBuilder(webClientBuilder).responseErrorHandler(responseErrorHandler).build();
+        AlibabaOpenAiChatModel chatModel = AlibabaOpenAiChatModel.builder().openAiApi(openAiApi).defaultOptions(chatProperties.getOptions()).toolCallingManager(toolCallingManager).retryTemplate(retryTemplate).observationRegistry((ObservationRegistry) observationRegistry.getIfUnique(() -&gt; ObservationRegistry.NOOP)).build();
+        Objects.requireNonNull(chatModel);
+        observationConvention.ifAvailable(chatModel::setObservationConvention);
+        return chatModel;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/ai/model/AlibabaOpenAiChatModel.java
+
+这里就是要用到OpenAIChatModel的底层代码做改写 太长了 可看源文件
+改写好以后即可在serviceChatclient里面用自己定义的AlibabaOpenAiChatModel了
+</code></pre>
+<h3 id="SpringAI—ChatPDF-向量模型"><a href="#SpringAI—ChatPDF-向量模型" class="headerlink" title="SpringAI—ChatPDF-向量模型"></a>SpringAI—ChatPDF-向量模型</h3><h4 id="4-RAG（知识库-ChatPDF）"><a href="#4-RAG（知识库-ChatPDF）" class="headerlink" title="4.RAG（知识库 ChatPDF）"></a>4.RAG（知识库 ChatPDF）</h4><p>由于训练大模型非常耗时，再加上训练语料本身比较滞后，所以大模型存在<strong>知识限制</strong>问题：</p>
+<ul>
+<li>知识数据比较落后，往往是几个月之前的</li>
+<li>不包含太过<strong>专业领域</strong>或者<strong>企业私有</strong>的数据</li>
+</ul>
+<p>为了解决这些问题，我们就需要用到RAG了。下面我们简单回顾下RAG原理</p>
+<h4 id="4-1-RAG原理"><a href="#4-1-RAG原理" class="headerlink" title="4.1.RAG原理"></a>4.1.RAG原理</h4><p>要解决大模型的知识限制问题，其实并不复杂。</p>
+<p>解决的思路就是给大模型外挂一个<strong>知识库</strong>，可以是专业领域知识，也可以是企业私有的数据。</p>
+<p>不过，知识库不能简单的直接拼接在提示词中。</p>
+<p>因为通常知识库数据量都是非常大的，而大模型的上下文是有大小限制的，早期的GPT上下文不能超过2000token，现在也不到200k token，因此知识库不能直接写在提示词中。</p>
+<p>怎么办？</p>
+<p>思路很简单，庞大的知识库中与用户问题相关的其实并不多。</p>
+<p>所以，我们需要想办法<strong>从庞大的知识库中找到与用户问题相关的一小部分，组装成提示词</strong>，发送给大模型就可以了。</p>
+<p>那么问题来了，我们该如何从知识库中找到与用户问题相关的内容呢？</p>
+<p>可能有同学会相到全文检索，但是在这里是不合适的，因为全文检索是文字匹配，这里我们要求的是内容上的相似度。</p>
+<p>而要从内容相似度来判断，这就不得不提到<strong>向量模型</strong>的知识了。</p>
+<p>4.1.1.向量模型</p>
+<p>先说说向量，向量是空间中有方向和长度的量，空间可以是二维，也可以是多维。</p>
+<p>向量既然是在空间中，两个向量之间就一定能计算距离。</p>
+<p>我们以二维向量为例，向量之间的距离有两种计算方法：</p>
+<p><span style = "color:red">通常，两个向量之间<strong>欧式距离越近</strong>，我们认为两个向量的<strong>相似度越高</strong>。（余弦距离相反，越大相似度越高）所以，如果我们能<strong>把文本转为向量</strong>，就可以<strong>通过向量距离来判断文本的相似度</strong>了。</span></p>
+<blockquote>
+<p>0.0                                                 把查询文本自己与自己比较，肯定是相似度最高的<br>1.0722205301828829                把查询文本与其它文本比较【欧氏距离<strong>越近</strong>相似度越高】<br>1.0844350869313875<br>1.1185223356097924<br>1.1693257901084286<br>1.1499045763089124</p>
+<p>0.9999999999999998                把查询文本与其它文本比较【余弦距离<strong>越远</strong>相似度越高】<br>0.4251716163869882<br>0.41200032867283726<br>0.37445397231274447<br>0.3163386320532005<br>0.3388597327534832</p>
+</blockquote>
+<p>现在，有不少的专门的<strong>向量模型</strong>，就可以实现将文本向量化。一个好的向量模型，就是要<strong>尽可能让文本含义相似的向量，在空间中距离更近</strong>：</p>
+<p>接下来，我们就准备一个向量模型，用于将文本向量化。</p>
+<p>阿里云百炼平台就提供了这样的模型：</p>
+<p>这里我们选择<code>通用文本向量-v3</code>，这个模型兼容OpenAI，所以我们依然采用OpenAI的配置。</p>
+<p>修改<code>application.yaml</code>，添加向量模型配置：</p>
+<pre><code class="YAML">spring:
+  application:
+    name: ai-demo
+  ai:
+    ollama:
+      base-url: http://localhost:11434 # ollama服务地址
+      chat:
+        model: deepseek-r1:7b # 模型名称，可更改
+        options:
+          temperature: 0.8 # 模型温度，值越大，输出结果越随机
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: $&#123;OPENAI_API_KEY&#125;
+      chat:
+        options:
+          model: qwen-max # 模型名称
+          temperature: 0.8 # 模型温度，值越大，输出结果越随机
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+</code></pre>
+<h4 id="4-1-2-向量模型测试"><a href="#4-1-2-向量模型测试" class="headerlink" title="4.1.2.向量模型测试"></a>4.1.2.向量模型测试</h4><p>前面说过，文本向量化以后，可以通过向量之间的距离来判断文本相似度。</p>
+<p>接下来，我们就来测试下阿里百炼提供的向量大模型好不好用。</p>
+<p>首先，我们在项目中写一个工具类，用以计算向量之间的<strong>欧氏距离</strong>和<strong>余弦距离。</strong><br>[<u>大模型服务平台百炼控制台</u>] (<a target="_blank" rel="noopener" href="https://bailian.console.aliyun.com/?tab=model#/model-market/detail/text-embedding-v3">https://bailian.console.aliyun.com/?tab=model#/model-market/detail/text-embedding-v3</a>)</p>
+<p>新建一个<code>com.itheima.ai.util</code>包，在其中新建一个类：</p>
+<pre><code class="Java">package com.itheima.ai.util;
+
+public class VectorDistanceUtils &#123;
+    
+    // 防止实例化
+    private VectorDistanceUtils() &#123;&#125;
+
+    // 浮点数计算精度阈值
+    private static final double EPSILON = 1e-12;
+
+    /**
+     * 计算欧氏距离
+     * @param vectorA 向量A（非空且与B等长）
+     * @param vectorB 向量B（非空且与A等长）
+     * @return 欧氏距离
+     * @throws IllegalArgumentException 参数不合法时抛出
+     */
+    public static double euclideanDistance(float[] vectorA, float[] vectorB) &#123;
+        validateVectors(vectorA, vectorB);
+        
+        double sum = 0.0;
+        for (int i = 0; i &lt; vectorA.length; i++) &#123;
+            double diff = vectorA[i] - vectorB[i];
+            sum += diff * diff;
+        &#125;
+        return Math.sqrt(sum);
+    &#125;
+
+    /**
+     * 计算余弦距离
+     * @param vectorA 向量A（非空且与B等长）
+     * @param vectorB 向量B（非空且与A等长）
+     * @return 余弦距离，范围[0, 2]
+     * @throws IllegalArgumentException 参数不合法或零向量时抛出
+     */
+    public static double cosineDistance(float[] vectorA, float[] vectorB) &#123;
+        validateVectors(vectorA, vectorB);
+        
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        
+        for (int i = 0; i &lt; vectorA.length; i++) &#123;
+            dotProduct += vectorA[i] * vectorB[i];
+            normA += vectorA[i] * vectorA[i];
+            normB += vectorB[i] * vectorB[i];
+        &#125;
+        
+        normA = Math.sqrt(normA);
+        normB = Math.sqrt(normB);
+        
+        // 处理零向量情况
+        if (normA &lt; EPSILON || normB &lt; EPSILON) &#123;
+            throw new IllegalArgumentException(&quot;Vectors cannot be zero vectors&quot;);
+        &#125;
+        
+        // 处理浮点误差，确保结果在[-1,1]范围内
+        double similarity =  dotProduct / (normA * normB);
+        similarity = Math.max(Math.min(similarity, 1.0), -1.0);
+        
+        return similarity;
+    &#125;
+
+    // 参数校验统一方法
+    private static void validateVectors(float[] a, float[] b) &#123;
+        if (a == null || b == null) &#123;
+            throw new IllegalArgumentException(&quot;Vectors cannot be null&quot;);
+        &#125;
+        if (a.length != b.length) &#123;
+            throw new IllegalArgumentException(&quot;Vectors must have same dimension&quot;);
+        &#125;
+        if (a.length == 0) &#123;
+            throw new IllegalArgumentException(&quot;Vectors cannot be empty&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>由于SpringBoot的自动装配能力，刚才我们配置的向量模型可以直接使用。</p>
+<p>接下来，我们写一个测试类：</p>
+<pre><code class="Java">package com.itheima.ai;
+
+import com.itheima.ai.util.VectorDistanceUtils;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Arrays;
+import java.util.List;
+
+@SpringBootTest
+class AiDemoApplicationTests &#123;
+
+    // 自动注入向量模型
+    @Autowired
+    private OpenAiEmbeddingModel embeddingModel;
+
+    @Test
+    public void testEmbedding() &#123;
+        // 1.测试数据
+        // 1.1.用来查询的文本，国际冲突
+        String query = &quot;global conflicts&quot;;
+        
+        // 1.2.用来做比较的文本
+        String[] texts = new String[]&#123;
+                &quot;哈马斯称加沙下阶段停火谈判仍在进行 以方尚未做出承诺&quot;,
+                &quot;土耳其、芬兰、瑞典与北约代表将继续就瑞典“入约”问题进行谈判&quot;,
+                &quot;日本航空基地水井中检测出有机氟化物超标&quot;,
+                &quot;国家游泳中心（水立方）：恢复游泳、嬉水乐园等水上项目运营&quot;,
+                &quot;我国首次在空间站开展舱外辐射生物学暴露实验&quot;,
+        &#125;;
+        // 2.向量化
+        // 2.1.先将查询文本向量化
+        float[] queryVector = embeddingModel.embed(query);
+
+        // 2.2.再将比较文本向量化，放到一个数组
+        List&lt;float[]&gt; textVectors = embeddingModel.embed(Arrays.asList(texts));
+        
+        // 3.比较欧氏距离
+        // 3.1.把查询文本自己与自己比较，肯定是相似度最高的
+        System.out.println(VectorDistanceUtils.euclideanDistance(queryVector, queryVector));
+        // 3.2.把查询文本与其它文本比较
+        for (float[] textVector : textVectors) &#123;
+            System.out.println(VectorDistanceUtils.euclideanDistance(queryVector, textVector));
+        &#125;
+        System.out.println(&quot;------------------&quot;);
+        
+        // 4.比较余弦距离
+        // 4.1.把查询文本自己与自己比较，肯定是相似度最高的
+        System.out.println(VectorDistanceUtils.cosineDistance(queryVector, queryVector));
+        // 4.2.把查询文本与其它文本比较
+        for (float[] textVector : textVectors) &#123;
+            System.out.println(VectorDistanceUtils.cosineDistance(queryVector, textVector));
+        &#125;
+    &#125;
+
+&#125;
+</code></pre>
+<p><strong>注意</strong>： 运行单元测试通用需要配置OPENAI_API_KEY的环境变量</p>
+<p>首先，点击单元测试左侧运行按钮：………运行结果：</p>
+<pre><code class="Bash">0.0
+1.0722205301828829
+1.0844350869313875
+1.1185223356097924
+1.1693257901084286
+1.1499045763089124
+------------------
+0.9999999999999998
+0.4251716163869882
+0.41200032867283726
+0.37445397231274447
+0.3163386320532005
+0.3388597327534832
+</code></pre>
+<p>可以看到，向量相似度确实符合我们的预期。</p>
+<p>OK，有了比较文本相似度的办法，知识库的问题就可以解决了。</p>
+<p>前面说了，知识库数据量很大，无法全部写入提示词。但是庞大的知识库中与用户问题相关的其实并不多。</p>
+<p>所以，我们需要想办法<strong>从庞大的知识库中找到与用户问题相关的一小部分，组装成提示词</strong>，发送给大模型就可以了。</p>
+<p>现在，利用向量大模型就可以帮助我们比较文本相似度。</p>
+<p>但是新的问题来了：向量模型是帮我们生成向量的，如此庞大的知识库，谁来帮我们从中<strong>比较和检索数据</strong>呢？</p>
+<p>这就需要用到<strong>向量数据库</strong>了。</p>
+<h4 id="4-1-3-向量数据库"><a href="#4-1-3-向量数据库" class="headerlink" title="4.1.3.向量数据库"></a>4.1.3.向量数据库</h4><p>向量数据库的主要作用有两个：</p>
+<ul>
+<li>存储向量数据</li>
+<li>基于相似度检索数据</li>
+</ul>
+<p>刚好符合我们的需求。</p>
+<p>SpringAI支持很多向量数据库，并且都进行了封装，可以用统一的API去访问：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/azure.html">Azure Vector Search</a> - The <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/azure/search/vector-search-overview">Azure</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/apache-cassandra.html">Apache Cassandra</a> - The <a target="_blank" rel="noopener" href="https://cassandra.apache.org/doc/latest/cassandra/vector-search/overview.html">Apache Cassandra</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/chroma.html">Chroma Vector Store</a> - The <a target="_blank" rel="noopener" href="https://www.trychroma.com/">Chroma</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/elasticsearch.html">Elasticsearch Vector Store</a> - The <a target="_blank" rel="noopener" href="https://www.elastic.co/">Elasticsearch</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/gemfire.html">GemFire Vector Store</a> - The <a target="_blank" rel="noopener" href="https://tanzu.vmware.com/content/blog/vmware-gemfire-vector-database-extension">GemFire</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/mariadb.html">MariaDB Vector Store</a> - The <a target="_blank" rel="noopener" href="https://mariadb.com/">MariaDB</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/milvus.html">Milvus Vector Store</a> - The <a target="_blank" rel="noopener" href="https://milvus.io/">Milvus</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/mongodb.html">MongoDB Atlas Vector Store</a> - The <a target="_blank" rel="noopener" href="https://www.mongodb.com/atlas/database">MongoDB Atlas</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/neo4j.html">Neo4j Vector Store</a> - The <a target="_blank" rel="noopener" href="https://neo4j.com/">Neo4j</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/opensearch.html">OpenSearch Vector Store</a> - The <a target="_blank" rel="noopener" href="https://opensearch.org/platform/search/vector-database.html">OpenSearch</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/oracle.html">Oracle Vector Store</a> - The <a target="_blank" rel="noopener" href="https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-ai-vector-search.html">Oracle Database</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/pgvector.html">PgVector Store</a> - The <a target="_blank" rel="noopener" href="https://github.com/pgvector/pgvector">PostgreSQL&#x2F;PGVector</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/pinecone.html">Pinecone Vector Store</a> - <a target="_blank" rel="noopener" href="https://www.pinecone.io/">PineCone</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/qdrant.html">Qdrant Vector Store</a> - <a target="_blank" rel="noopener" href="https://www.qdrant.tech/">Qdrant</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/redis.html">Redis Vector Store</a> - The <a target="_blank" rel="noopener" href="https://redis.io/">Redis</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/hana.html">SAP Hana Vector Store</a> - The <a target="_blank" rel="noopener" href="https://news.sap.com/2024/04/sap-hana-cloud-vector-engine-ai-with-business-context/">SAP HANA</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/typesense.html">Typesense Vector Store</a> - The <a target="_blank" rel="noopener" href="https://typesense.org/docs/0.24.0/api/vector-search.html">Typesense</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs/weaviate.html">Weaviate Vector Store</a> - The <a target="_blank" rel="noopener" href="https://weaviate.io/">Weaviate</a> vector store.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/spring-projects/spring-ai/blob/main/spring-ai-core/src/main/java/org/springframework/ai/vectorstore/SimpleVectorStore.java">SimpleVectorStore</a> - A simple implementation of persistent vector storage, good for educational purposes.</li>
+</ul>
+<p>这些库都实现了统一的接口：<code>VectorStore</code>，因此操作方式一模一样，大家学会任意一个，其它就都不是问题。</p>
+<p>不过，除了最后一个库以外，其它所有向量数据库都是需要安装部署的。每个企业用的向量库都不一样，这里我就不一一演示了。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/8e90b3937f86a11b04cbc74588a99c4fbe97cfb7/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AF%B9%E6%8E%A5SpringAI%E6%B5%81%E7%A8%8B.png"></p>
+<h5 id="4-1-3-1-SimpleVectorStore"><a href="#4-1-3-1-SimpleVectorStore" class="headerlink" title="4.1.3.1.SimpleVectorStore"></a>4.1.3.1.SimpleVectorStore</h5><p>最后一个<code>SimpleVectorStore</code>向量库是基于内存实现，是一个专门用来测试、教学用的库，非常适合我们。</p>
+<p>我们直接修改<code>CommonConfiguration</code>，添加一个<code>VectorStore</code>的Bean：</p>
+<pre><code class="Java">@Configuration
+public class CommonConfiguration &#123;
+
+    @Bean
+    public VectorStore vectorStore(OpenAiEmbeddingModel embeddingModel) &#123;
+        return SimpleVectorStore.builder(embeddingModel).build();
+    &#125;
+    
+    // ... 略
+&#125;
+</code></pre>
+<h5 id="4-1-3-2-VectorStore接口"><a href="#4-1-3-2-VectorStore接口" class="headerlink" title="4.1.3.2.VectorStore接口"></a>4.1.3.2.VectorStore接口</h5><p>接下来，你就可以使用<code>VectorStore</code>中的各种功能了，可以参考SpringAI官方文档：</p>
+<p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/vectordbs.html">https://docs.spring.io/spring-ai/reference/api/vectordbs.html</a></p>
+<p>这是<code>VectorStore</code>中声明的方法：</p>
+<pre><code class="Java">public interface VectorStore extends DocumentWriter &#123;
+
+    default String getName() &#123;
+                return this.getClass().getSimpleName();
+        &#125;
+    // 保存文档到向量库
+    void add(List&lt;Document&gt; documents);
+    // 根据文档id删除文档
+    void delete(List&lt;String&gt; idList);
+
+    void delete(Filter.Expression filterExpression);
+
+    default void delete(String filterExpression) &#123; ... &#125;;
+    // 根据条件检索文档
+    List&lt;Document&gt; similaritySearch(String query);
+    // 根据条件检索文档
+    List&lt;Document&gt; similaritySearch(SearchRequest request);
+
+    default &lt;T&gt; Optional&lt;T&gt; getNativeClient() &#123;
+                return Optional.empty();
+        &#125;
+&#125;
+</code></pre>
+<p>注意，<code>VectorStore</code>操作向量化的基本单位是<code>Document</code>，我们在使用时需要将自己的知识库分割转换为一个个的<code>Document</code>，然后写入<code>VectorStore</code>.</p>
+<p>那么问题来了，我们该如何把各种不同的知识库文件转为Document呢？</p>
+<h4 id="4-1-4-文件读取和转换"><a href="#4-1-4-文件读取和转换" class="headerlink" title="4.1.4.文件读取和转换"></a>4.1.4.文件读取和转换</h4><p>前面说过，知识库太大，是需要拆分成文档片段，然后再做向量化的。而且SpringAI中向量库接收的是Document类型的文档，也就是说，我们处理文档还要转成Document格式。</p>
+<p>不过，文档读取、拆分、转换的动作并不需要我们亲自完成。在SpringAI中提供了各种文档读取的工具，可以参考官网：</p>
+<p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/etl-pipeline.html#_pdf_paragraph">https://docs.spring.io/spring-ai/reference/api/etl-pipeline.html#_pdf_paragraph</a></p>
+<p>比如PDF文档读取和拆分，SpringAI提供了两种默认的拆分原则：</p>
+<ul>
+<li><code>PagePdfDocumentReader</code> ：按页拆分，推荐使用</li>
+<li><code>ParagraphPdfDocumentReader</code> ：按pdf的目录拆分，不推荐，因为很多PDF不规范，没有章节标签</li>
+</ul>
+<p>当然，大家也可以自己实现PDF的读取和拆分功能。</p>
+<p>这里我们选择使用<code>PagePdfDocumentReader</code>。</p>
+<p>首先，我们需要在pom.xml中引入依赖：</p>
+<pre><code class="XML">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.ai&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-ai-pdf-document-reader&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>然后就可以利用工具把PDF文件读取并处理成Document了。</p>
+<p>我们写一个单元测试（别忘了配置<strong>API_KEY</strong>）：</p>
+<pre><code class="java">package com.itheima.ai;
+
+import com.itheima.ai.utils.VectorDistanceUtils;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.reader.ExtractedTextFormatter;
+import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
+import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+
+import java.util.Arrays;
+import java.util.List;
+
+@SpringBootTest
+class HeimaAiApplicationTests &#123;
+
+    @Autowired
+    private OpenAiEmbeddingModel embeddingModel;
+    @Autowired
+    private VectorStore vectorStore;
+
+    @Test
+    public void testVectorStore()&#123;
+        Resource resource = new FileSystemResource(&quot;中二知识笔记.pdf&quot;);
+        // 1.创建PDF的读取器
+        PagePdfDocumentReader reader = new PagePdfDocumentReader(
+                resource, // 文件源
+                PdfDocumentReaderConfig.builder()
+                        .withPageExtractedTextFormatter(ExtractedTextFormatter.defaults())
+                        .withPagesPerDocument(1) // 每1页PDF作为一个Document
+                        .build()
+        );
+        // 2.读取PDF文档，拆分为Document
+        List&lt;Document&gt; documents = reader.read();
+        // 3.写入向量库
+        vectorStore.add(documents);
+        // 4.搜索
+        SearchRequest request = SearchRequest.builder()
+                .query(&quot;论语中教育的目的是什么&quot;) // 查询条件
+                .topK(1) // 返回的文档数量
+                .similarityThreshold(0.6) // 阈值 超过的要
+                .filterExpression(&quot;file_name == &#39;中二知识笔记.pdf&#39;&quot;) // 过滤条件
+                .build();
+        List&lt;Document&gt; docs = vectorStore.similaritySearch(request);
+        if (docs == null) &#123;
+            System.out.println(&quot;没有搜索到任何内容&quot;);
+            return;
+        &#125;
+        for (Document doc : docs) &#123;
+            System.out.println(doc.getId());
+            System.out.println(doc.getScore());
+            System.out.println(doc.getText());
+        &#125;
+    &#125;
+</code></pre>
+<h4 id="4-1-5-RAG原理总结"><a href="#4-1-5-RAG原理总结" class="headerlink" title="4.1.5.RAG原理总结"></a>4.1.5.RAG原理总结</h4><p>OK，现在我们有了这些工具：</p>
+<ul>
+<li>PDFReader：读取文档并拆分为片段</li>
+<li>向量大模型：将文本片段向量化</li>
+<li>向量数据库：存储向量，检索向量</li>
+</ul>
+<p>让我们梳理一下要解决的问题和解决思路：</p>
+<ul>
+<li>要解决大模型的知识限制问题，需要外挂知识库</li>
+<li>受到大模型上下文限制，知识库不能简单的直接拼接在提示词中</li>
+<li>我们需要从庞大的知识库中找到与用户问题相关的一小部分，再组装成提示词</li>
+<li>这些可以利用<strong>文档读取器</strong>、<strong>向量大模型</strong>、<strong>向量数据库</strong>来解决。</li>
+</ul>
+<p>所以RAG要做的事情就是将知识库分割，然后利用向量模型做向量化，存入向量数据库，然后查询的时候去检索：</p>
+<p><strong>第一阶段（存储知识库）</strong>：</p>
+<ul>
+<li>将知识库内容切片，分为一个个片段</li>
+<li>将每个片段利用向量模型向量化</li>
+<li>将所有向量化后的片段写入向量数据库</li>
+</ul>
+<p><strong>第二阶段（检索知识库）</strong>：</p>
+<ul>
+<li>每当用户询问AI时，将用户问题向量化</li>
+<li>拿着问题向量去向量数据库检索最相关的片段</li>
+</ul>
+<p><strong>第三阶段（对话大模型）</strong>：</p>
+<ul>
+<li>将检索到的片段、用户的问题一起拼接为提示词</li>
+<li>发送提示词给大模型，得到响应</li>
+</ul>
+<h4 id="4-1-6-目标"><a href="#4-1-6-目标" class="headerlink" title="4.1.6.目标"></a>4.1.6.目标</h4><p>好了，现在RAG所需要的基本工具都有了。</p>
+<p>接下来，我们就来实现一个非常火爆的个人知识库AI应用，ChatPDF，原网站如下：</p>
+<p>这个网站其实就是把你个人的PDF文件作为知识库，让AI基于PDF内容来回答你的问题，对于大学生、研究人员、专业人士来说，非常方便。</p>
+<p>当你学会了这个功能，实现其它知识库也都是类似的流程了。</p>
+<p>来吧，我们一起动起来！</p>
+<h4 id="实现上传下载、记录本次保存时会话ID和文件名的映射关系、把文件写入向量数据库"><a href="#实现上传下载、记录本次保存时会话ID和文件名的映射关系、把文件写入向量数据库" class="headerlink" title="实现上传下载、记录本次保存时会话ID和文件名的映射关系、把文件写入向量数据库"></a><span style = "color:red">实现上传下载、记录本次保存时会话ID和文件名的映射关系、把文件写入向量数据库</span></h4><h3 id="4-2-PDF上传下载、向量化"><a href="#4-2-PDF上传下载、向量化" class="headerlink" title="4.2.PDF上传下载、向量化"></a>4.2.PDF上传下载、向量化</h3><p>既然是ChatPDF，也就是说所有知识库都是PDF形式的，由用户提交给我们。所以，我们需要先实现一个上传PDF的接口，在接口中实现下列功能：</p>
+<ul>
+<li>校验文件格式是否为PDF</li>
+<li>保存文件信息<ul>
+<li>保存文件（可以是oss或本地保存）</li>
+<li>保存会话ID和文件路径的映射关系（方便查询会话历史的时候再次读取文件）</li>
+</ul>
+</li>
+<li>文档拆分和向量化（文档太大，需要拆分为一个个片段，分别向量化）</li>
+</ul>
+<p>另外，将来用户查询会话历史，我们还需要返回pdf文件给前端用于预览，所以需要实现一个下载PDF接口，包含下面功能：</p>
+<ul>
+<li>读取文件</li>
+<li>返回文件给前端</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/27e61b01d79d06783178fad8da84e547e4ecba04/ChatPDF%E2%80%94%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93.png"></p>
+<h4 id="4-2-1-PDF文件管理"><a href="#4-2-1-PDF文件管理" class="headerlink" title="4.2.1.PDF文件管理"></a>4.2.1.PDF文件管理</h4><p>由于将来要实现PDF下载功能，我们需要记住每一个chatId对应的PDF文件名称。</p>
+<p>所以，我们定义一个类，记录chatId与pdf文件的映射关系，同时实现基本的文件保存功能。</p>
+<p>先在<code>com.itheima.ai.repository</code>中定义接口：</p>
+<pre><code class="java">package com.itheima.ai.repository;
+
+import org.springframework.core.io.Resource;
+
+public interface FileRepository &#123;
+    /**
+     * 保存文件,还要记录chatId与文件的映射关系
+     * @param chatId 会话id
+     * @param resource 文件
+     * @return 上传成功，返回true； 否则返回false
+     */
+    boolean save(String chatId, Resource resource);
+
+    /**
+     * 根据chatId获取文件
+     * @param chatId 会话id
+     * @return 找到的文件
+     */
+    Resource getFile(String chatId);
+&#125;
+</code></pre>
+<p>其中的Rescource是底层提供的class【Spring中表示资源的类】</p>
+<pre><code class="java">D:\apache-maven-3.9.5\repository\org\springframework\spring-core\6.2.3\spring-core-6.2.3.jar!\org\springframework\core\io\Resource.class
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+package org.springframework.core.io;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
+import org.springframework.lang.Nullable;
+import org.springframework.util.FileCopyUtils;
+
+public interface Resource extends InputStreamSource &#123;
+    boolean exists();
+
+    default boolean isReadable() &#123;
+        return this.exists();
+    &#125;
+
+    default boolean isOpen() &#123;
+        return false;
+    &#125;
+
+    default boolean isFile() &#123;
+        return false;
+    &#125;
+
+    URL getURL() throws IOException;
+
+    URI getURI() throws IOException;
+
+    File getFile() throws IOException;
+
+    default ReadableByteChannel readableChannel() throws IOException &#123;
+        return Channels.newChannel(this.getInputStream());
+    &#125;
+
+    default byte[] getContentAsByteArray() throws IOException &#123;
+        return FileCopyUtils.copyToByteArray(this.getInputStream());
+    &#125;
+
+    default String getContentAsString(Charset charset) throws IOException &#123;
+        return FileCopyUtils.copyToString(new InputStreamReader(this.getInputStream(), charset));
+    &#125;
+
+    long contentLength() throws IOException;
+
+    long lastModified() throws IOException;
+
+    Resource createRelative(String relativePath) throws IOException;
+
+    @Nullable
+    String getFilename();
+
+    String getDescription();
+&#125;
+</code></pre>
+<p>再写一个实现类：</p>
+<pre><code class="java">package com.itheima.ai.repository;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Properties;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class LocalPdfFileRepository implements FileRepository &#123;
+
+    private final VectorStore vectorStore;
+
+    // 会话id 与 文件名的对应关系，方便查询会话历史时重新加载文件
+    private final Properties chatFiles = new Properties();
+
+    @Override
+    public boolean save(String chatId, Resource resource) &#123;
+
+        // 2.保存到本地磁盘
+        String filename = resource.getFilename();
+        File target = new File(Objects.requireNonNull(filename));
+        if (!target.exists()) &#123;
+            try &#123;
+                Files.copy(resource.getInputStream(), target.toPath());
+            &#125; catch (IOException e) &#123;
+                log.error(&quot;Failed to save PDF resource.&quot;, e);
+                return false;
+            &#125;
+        &#125;
+        // 3.保存映射关系
+        chatFiles.put(chatId, filename);
+        return true;
+    &#125;
+
+    @Override
+    public Resource getFile(String chatId) &#123;
+        return new FileSystemResource(chatFiles.getProperty(chatId));
+    &#125;
+
+    @PostConstruct
+    private void init() &#123;
+        // 会话ID映射关系
+        FileSystemResource pdfResource = new FileSystemResource(&quot;chat-pdf.properties&quot;);
+        if (pdfResource.exists()) &#123;
+            try &#123;
+                chatFiles.load(new BufferedReader(new InputStreamReader(pdfResource.getInputStream(), StandardCharsets.UTF_8)));
+            &#125; catch (IOException e) &#123;
+                throw new RuntimeException(e);
+            &#125;
+        &#125;
+        // 向量库的持久化 读取
+        FileSystemResource vectorResource = new FileSystemResource(&quot;chat-pdf.json&quot;);
+        if (vectorResource.exists()) &#123;
+            SimpleVectorStore simpleVectorStore = (SimpleVectorStore) vectorStore;
+            simpleVectorStore.load(vectorResource);
+        &#125;
+    &#125;
+
+    @PreDestroy
+    private void persistent() &#123;
+        // 停机时持久化
+        try &#123;
+            chatFiles.store(new FileWriter(&quot;chat-pdf.properties&quot;), LocalDateTime.now().toString());
+            SimpleVectorStore simpleVectorStore = (SimpleVectorStore) vectorStore;
+            simpleVectorStore.save(new File(&quot;chat-pdf.json&quot;));
+        &#125; catch (IOException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p><strong>注意</strong>：</p>
+<p>由于我们选择了基于内存的SimpleVectorStore，重启就会丢失向量数据。所以这里我依然是将pdf文件与chatId的对应关系、VectorStore都持久化到了磁盘。</p>
+<p>实际开发中，如果你选择了RedisVectorStore，或者CassandraVectorStore，则无序自己持久化。但是chatId和PDF文件之间的对应关系，还是需要自己维护的。</p>
+<h4 id="4-2-2-上传文件响应结果"><a href="#4-2-2-上传文件响应结果" class="headerlink" title="4.2.2.上传文件响应结果"></a>4.2.2.上传文件响应结果</h4><p>由于前端文件上传需要返回响应结果，我们先在<code>com.itheima.ai.entity.vo</code>中定义一个<code>Result</code>类：</p>
+<pre><code class="Java">package com.itheima.ai.entity.vo;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class Result &#123;
+    private Integer ok;
+    private String msg;
+
+    private Result(Integer ok, String msg) &#123;
+        this.ok = ok;
+        this.msg = msg;
+    &#125;
+
+    public static Result ok() &#123;
+        return new Result(1, &quot;ok&quot;);
+    &#125;
+
+    public static Result fail(String msg) &#123;
+        return new Result(0, msg);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="4-2-3-文件上传、下载"><a href="#4-2-3-文件上传、下载" class="headerlink" title="4.2.3.文件上传、下载"></a>4.2.3.文件上传、下载</h4><p>接下来，我们实现上传和下载文件接口。</p>
+<p>在<code>com.itheima.ai.controller</code>中创建一个<code>PdfController</code>：</p>
+<pre><code class="java">package com.itheima.ai.controller;
+
+import com.itheima.ai.entity.vo.Result;
+import com.itheima.ai.repository.FileRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.ExtractedTextFormatter;
+import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
+import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
+
+@Slf4j
+@RequiredArgsConstructor
+@RestController
+@RequestMapping(&quot;/ai/pdf&quot;)
+public class PdfController &#123;
+
+    private final FileRepository fileRepository;
+
+    private final VectorStore vectorStore;
+    /**
+     * 文件上传
+     */
+    @RequestMapping(&quot;/upload/&#123;chatId&#125;&quot;)
+    public Result uploadPdf(@PathVariable String chatId, @RequestParam(&quot;file&quot;) MultipartFile file) &#123;
+        try &#123;
+            // 1. 校验文件是否为PDF格式
+            if (!Objects.equals(file.getContentType(), &quot;application/pdf&quot;)) &#123;
+                return Result.fail(&quot;只能上传PDF文件！&quot;);
+            &#125;
+            // 2.保存文件
+            boolean success = fileRepository.save(chatId, file.getResource());
+            if(! success) &#123;
+                return Result.fail(&quot;保存文件失败！&quot;);
+            &#125;
+            // 3.写入向量库
+            this.writeToVectorStore(file.getResource());
+            return Result.ok();
+        &#125; catch (Exception e) &#123;
+            log.error(&quot;Failed to upload PDF.&quot;, e);
+            return Result.fail(&quot;上传文件失败！&quot;);
+        &#125;
+    &#125;
+
+    /**
+     * 文件下载
+     */
+    @GetMapping(&quot;/file/&#123;chatId&#125;&quot;)
+    public ResponseEntity&lt;Resource&gt; download(@PathVariable(&quot;chatId&quot;) String chatId) throws IOException &#123;
+        // 1.读取文件
+        Resource resource = fileRepository.getFile(chatId);
+        if (!resource.exists()) &#123;
+            return ResponseEntity.notFound().build();
+        &#125;
+        // 2.文件名编码，写入响应头
+        String filename = URLEncoder.encode(Objects.requireNonNull(resource.getFilename()), StandardCharsets.UTF_8);
+        // 3.返回文件
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + filename + &quot;\&quot;&quot;)
+                .body(resource);
+    &#125;
+
+    private void writeToVectorStore(Resource resource) &#123;
+        // 1.创建PDF的读取器
+        PagePdfDocumentReader reader = new PagePdfDocumentReader(
+                resource, // 文件源
+                PdfDocumentReaderConfig.builder()
+                        .withPageExtractedTextFormatter(ExtractedTextFormatter.defaults())
+                        .withPagesPerDocument(1) // 每1页PDF作为一个Document
+                        .build()
+        );
+        // 2.读取PDF文档，拆分为Document
+        List&lt;Document&gt; documents = reader.read();
+        // 3.写入向量库
+        vectorStore.add(documents);
+    &#125;
+&#125;
+</code></pre>
+<h4 id="4-2-4-上传大小限制"><a href="#4-2-4-上传大小限制" class="headerlink" title="4.2.4.上传大小限制"></a>4.2.4.上传大小限制</h4><p>SpringMVC有默认的文件大小限制，只有10M，很多知识库文件都会超过这个值，所以我们需要修改配置，增加文件上传允许的上限。</p>
+<p>修改<code>application.yaml</code>文件，添加配置：</p>
+<pre><code class="yaml">spring:
+  servlet:
+    multipart:
+      max-file-size: 104857600
+      max-request-size: 104857600
+</code></pre>
+<h4 id="4-2-5-暴露响应头"><a href="#4-2-5-暴露响应头" class="headerlink" title="4.2.5.暴露响应头"></a>4.2.5.暴露响应头</h4><p>默认情况下跨域请求的响应头是不暴露的，这样前端就拿不到下载的文件名，我们需要修改CORS配置，暴露响应头：</p>
+<pre><code class="java">package com.itheima.ai.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class MvcConfiguration implements WebMvcConfigurer &#123;
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) &#123;
+        registry.addMapping(&quot;/**&quot;)
+                .allowedOrigins(&quot;*&quot;)
+                .allowedMethods(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;)
+                .allowedHeaders(&quot;*&quot;)
+                .exposedHeaders(&quot;Content-Disposition&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="4-3-配置ChatClient"><a href="#4-3-配置ChatClient" class="headerlink" title="4.3.配置ChatClient"></a>4.3.配置ChatClient</h3><p>接下来就是最后的环节了，实现RAG的对话流程。</p>
+<p>理论上来说，我们每次与AI对话的完整流程是这样的：</p>
+<ul>
+<li>将用户的问题利用向量大模型做向量化 OpenAiEmbeddingModel</li>
+<li>去向量数据库检索相关的文档 VectorStore</li>
+<li>拼接提示词，发送给大模型</li>
+<li>解析响应结果</li>
+</ul>
+<p>不过，SpringAI同样基于AOP技术帮我们完成了全部流程，用到的是一个名<code>QuestionAnswerAdvisor</code>的Advisor。我们只需要把<code>VectorStore</code>配置到Advisor即可。</p>
+<p>我们在<code>CommonConfiguration</code>中给ChatPDF也单独定义一个<code>ChatClient</code>：</p>
+<pre><code class="Java">@Bean
+public ChatClient pdfChatClient(
+        OpenAiChatModel model,
+        ChatMemory chatMemory,
+        VectorStore vectorStore) &#123;
+    return ChatClient.builder(model)
+            .defaultSystem(&quot;请根据提供的上下文回答问题，不要自己猜测。&quot;)
+            .defaultAdvisors(
+                    new MessageChatMemoryAdvisor(chatMemory), // CHAT MEMORY
+                    new SimpleLoggerAdvisor(),
+                    new QuestionAnswerAdvisor(
+                            vectorStore, // 向量库
+                            SearchRequest.builder() // 向量检索的请求参数
+                                    .similarityThreshold(0.5d) // 相似度阈值
+                                    .topK(2) // 返回的文档片段数量
+                                    .build()
+                    )
+            )
+            .build();
+&#125;
+</code></pre>
+<p>我们也可以自己自定义RAG查询的流程，不使用Advisor，具体可参考官网：</p>
+<p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-ai/reference/api/retrieval-augmented-generation.html">https://docs.spring.io/spring-ai/reference/api/retrieval-augmented-generation.html</a></p>
+<h3 id="4-4-对话接口"><a href="#4-4-对话接口" class="headerlink" title="4.4.对话接口"></a>4.4.对话接口</h3><p>最后，就是对接前端，然后与大模型对话了。修改<code>PdfController</code>，添加一个接口：</p>
+<pre><code class="Java">@RequestMapping(value = &quot;/chat&quot;, produces = &quot;text/html;charset=UTF-8&quot;)
+public Flux&lt;String&gt; chat(String prompt, String chatId) &#123;
+    chatRepository.addChatId(&quot;pdf&quot;, chatId);
+    Resource file = fileRepository.getFile(chatId);
+    return pdfChatClient
+            .prompt(prompt)
+            .advisors(a -&gt; a.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId))
+            .advisors(a -&gt; a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION, &quot;file_name == &#39;&quot;+file.getFilename()+&quot;&#39;&quot;))
+            .stream()
+            .content();
+&#125;
+</code></pre>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3>
     </div>
 
     
