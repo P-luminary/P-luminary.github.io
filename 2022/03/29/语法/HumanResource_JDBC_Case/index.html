@@ -1,0 +1,541 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || HumanResource_JDBC_Case</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>HumanResource_JDBC_Case </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/3/29
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/语法" style=color:#00bcd4>
+                    语法
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h3 id="HumanResourceApplication"><a href="#HumanResourceApplication" class="headerlink" title="HumanResourceApplication"></a>HumanResourceApplication</h3><pre><code class="java">package jdbc.hrapp.command;
+
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class HumanResourceApplication &#123;
+    public static void main(String[] args) throws SQLException, ClassNotFoundException &#123;
+        System.out.println(&quot;1-查询部门员工&quot;);
+        System.out.println(&quot;2-办理员工入职&quot;);
+        System.out.println(&quot;3-更新员工薪资&quot;);
+        System.out.println(&quot;4-员工离职手续&quot;);
+        System.out.println(&quot;5-分页查询员工数据&quot;);
+        System.out.println(&quot;请选择功能&quot;);
+        Scanner in = new Scanner(System.in);
+        Integer cmd = in.nextInt();
+        Command command = null;
+        switch (cmd)&#123;
+            case 1://查询部门员工
+                command = new PstmtQueryCommand();
+                command.execute();
+                break;
+            case 2://办理员工入职
+                command = new InsertCommand();
+                command.execute();
+                break;
+            case 3://更新员工薪资
+                command = new UpdateCommand();
+                command.execute();
+                break;
+            case 4://离职员工
+                command = new DeleteCommand();
+                command.execute();
+                break;
+            case 5://分页查询员工数据
+                command = new PaginationCommand();
+                command.execute();
+                break;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="PstmtQueryCommand-查询部门员工"><a href="#PstmtQueryCommand-查询部门员工" class="headerlink" title="PstmtQueryCommand(查询部门员工)"></a>PstmtQueryCommand(查询部门员工)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class PstmtQueryCommand implements Command&#123;
+
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        System.out.println(&quot;请输入部门名称: &quot;);
+        Scanner in = new Scanner(System.in);
+        String pdname = in.next();
+        Connection conn = null; //放外面可扩大生命周期
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //1. 加载并注册侧JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+
+            //2. 创建数据库连接
+            conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;&amp;allowPublicKeyRetrieval=true&quot;,&quot;root&quot;,&quot;root&quot;);
+
+            //3. 创建Statement对象
+            String sql = &quot;select * from employee where dname=? and eno &gt; ?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1,pdname);
+            pstmt.setInt(2,3100);
+
+            //结果集
+            rs = pstmt.executeQuery();
+
+            //4. 遍历查询结果
+            //rs.next() 返回布尔值，代表是否存在下一条记录
+            //如果有，返回true，同时结果集提取下一条记录
+            //如果没有，返回false，循环就会停止
+            while(rs.next())&#123;
+               Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而不是0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+            &#125;
+
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally&#123;
+            if(rs != null)&#123;
+                rs.close();
+            &#125;
+            if(pstmt != null)&#123;
+                pstmt.close();
+            &#125;
+            if(conn != null &amp;&amp; !conn.isClosed())&#123;
+                conn.close();
+            &#125;
+            //5. 关闭连接，释放资源
+            conn.close();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="InsertCommand-办理员工入职"><a href="#InsertCommand-办理员工入职" class="headerlink" title="InsertCommand(办理员工入职)"></a>InsertCommand(办理员工入职)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Scanner;
+
+/**
+ * 新增员工数据
+ */
+public class InsertCommand implements Command &#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工姓名: &quot;);
+        String ename = in.next();
+        System.out.println(&quot;请输入员工薪资: &quot;);
+        Float salary = in.nextFloat();
+        System.out.println(&quot;请输入隶属部门: &quot;);
+        String dname = in.next();
+        System.out.println(&quot;请输入入职日期: &quot;);
+        String strHiredate = in.next();
+        //String到java.sql.Date分为两步：
+
+        //1、String转为java.util.Date
+        java.util.Date udHiredate = null;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        try &#123;
+            udHiredate = sdf.parse(strHiredate);
+        &#125; catch (ParseException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        //2、java.util.Date转为java.sql.Date
+        long time = udHiredate.getTime();//获取自1970年到现在的毫秒数
+        java.sql.Date sdHiredate = new java.sql.Date(time);
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            //引用DbUtils类的置入方法
+            conn = DbUtils.getConnection();
+            //1、参数化的写操作
+            String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)&quot;;
+            //2、对这些参数进行赋值
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1,eno);
+            pstmt.setString(2,ename);
+            pstmt.setFloat(3,salary);
+            pstmt.setString(4,dname);
+            pstmt.setDate(5,sdHiredate);//java.sql.Date
+            //3、对所有写操作进行更新
+            int cnt = pstmt.executeUpdate();//所有写操作都使用executeUpdate
+            System.out.println(&quot;cnt: &quot; + cnt);
+            System.out.println(ename + &quot;员工入职手续已办理&quot;);
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;finally&#123;
+            DbUtils.closeConnection(null, pstmt, conn);
+        &#125;
+
+    &#125;
+&#125;
+</code></pre>
+<h4 id="UpdateCommand-更新员工薪资"><a href="#UpdateCommand-更新员工薪资" class="headerlink" title="UpdateCommand(更新员工薪资)"></a>UpdateCommand(更新员工薪资)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class UpdateCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工新的薪资&quot;);
+        float salary = in.nextFloat();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;update employee set salary =? where eno=?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setFloat(1,salary);
+            pstmt.setInt(2,eno);
+            int cnt = pstmt.executeUpdate();
+            if(cnt == 1)&#123;
+                System.out.println(&quot;员工薪资调整完毕&quot;);
+            &#125;else &#123;
+                System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="DeleteCommand-离职员工"><a href="#DeleteCommand-离职员工" class="headerlink" title="DeleteCommand(离职员工)"></a>DeleteCommand(离职员工)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DeleteCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;delete from employee where eno =?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setFloat(1,eno);
+            int cnt = pstmt.executeUpdate();
+            if(cnt == 1)&#123;
+                System.out.println(&quot;员工离职手续已完成&quot;);
+            &#125;else &#123;
+                System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="PaginationCommand-分页查询员工数据"><a href="#PaginationCommand-分页查询员工数据" class="headerlink" title="PaginationCommand(分页查询员工数据)"></a>PaginationCommand(分页查询员工数据)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+import jdbc.hrapp.entily.Employee;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * 分页查询员工数据
+ */
+public class PaginationCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入页号：&quot;);
+        int page = in.nextInt();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        //List每条里面都是Employee实体对象
+        List&lt;Employee&gt; list = new ArrayList();
+        try &#123;
+            conn = DbUtils.getConnection();//从可变参数向后取10个参数
+            String sql = &quot;select * from employee limit ?,10&quot;;
+            pstmt = conn.prepareStatement(sql); //第一页位置从0~9
+            pstmt.setInt(1,(page - 1) * 10);
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(&quot;eno&quot;);
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String danme = rs.getString(&quot;dname&quot;);
+                Date hiredate  = rs.getDate(&quot;hiredate&quot;);
+                //每产生一个就封装为employee对象
+                Employee emp = new Employee();
+                emp.setEno(eno);
+                emp.setEname(ename);
+                emp.setSalary(salary);
+                emp.setDname(danme);
+                emp.setHiredate(hiredate);
+                list.add(emp);
+            &#125;
+            System.out.println(list.size());
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

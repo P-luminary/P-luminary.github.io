@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || Apache_Druid</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>Apache_Druid </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/3/29
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/语法" style=color:#879cff>
+                    语法
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <pre><code class="java">package jdbc.sample;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import jdbc.hrapp.entily.Employee;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * Apache DBUtils + Druid联合使用演示
+ */
+public class DbUtilsSample &#123;
+    private static void query()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile, &quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile));
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            //利用Apache DbUtils大幅简化了数据的提取过程
+            QueryRunner qr = new QueryRunner(dataSource);
+            List&lt;Employee&gt; list =  qr.query(&quot;select * from employee limit ?,10&quot;,
+                    new BeanListHandler&lt;&gt;(Employee.class),
+                    new Object[]&#123;10&#125;);
+            for (Employee emp : list) &#123;
+                System.out.println(emp.getEname());
+            &#125;
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+
+    public static void update()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        Connection conn = null;
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile, &quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile));
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);//对数据进行修改
+            String sql1 = &quot;update employee set salary=salary+1000 where eno=?&quot;;
+            String sql2 = &quot;update employee set salary=salary-500 where eno=?&quot;;
+            QueryRunner qr = new QueryRunner();//用于数据的查询和写入
+            qr.update(conn,sql1,new Object[]&#123;1000&#125;);
+            qr.update(conn,sql2,new Object[]&#123;1001&#125;);
+            conn.commit();
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback();
+                &#125;
+            &#125; catch (SQLException e1) &#123;
+                e1.printStackTrace();
+            &#125;
+        &#125; finally &#123;
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.close(); //数据库回收
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+//        query();
+        update();
+    &#125;
+&#125;
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

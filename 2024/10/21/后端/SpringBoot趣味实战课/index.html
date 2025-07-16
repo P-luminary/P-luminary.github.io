@@ -1,0 +1,3132 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || SpringBoot趣味实战课</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>SpringBoot趣味实战课 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/10/21
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#00bcd4>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h3 id="Swagger-Mariadb-Hibernate-实现极简CRUD"><a href="#Swagger-Mariadb-Hibernate-实现极简CRUD" class="headerlink" title="Swagger + Mariadb + Hibernate 实现极简CRUD"></a>Swagger + Mariadb + Hibernate 实现极简CRUD</h3><pre><code class="yaml">application.yaml
+spring:
+  application:
+    name: Pluminary
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/pcy?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;nullCatalogMeansCurrent=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDB103Dialect
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+
+  server:
+    port: 8080
+    servlet:
+      context-path: /springboot
+      session:
+        timeout: 60
+  debug: true
+</code></pre>
+<pre><code class="java">com/pcy/Swagger/SwaggerConfig.java
+package com.pcy.Swagger;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SwaggerConfig &#123;
+
+    @Bean
+    public GroupedOpenApi createRestApi() &#123;
+        return GroupedOpenApi.builder()
+                .group(&quot;Spring Boot 实战&quot;)
+                .pathsToMatch(&quot;/users/**&quot;) //这里是扫描包
+                .build();
+    &#125;
+
+    @Bean
+    public OpenAPI customOpenAPI() &#123;
+        return new OpenAPI()
+                .info(new Info()
+                        .title(&quot;Spring Boot 实战&quot;)
+                        .version(&quot;1.0&quot;)
+                        .description(&quot;Spring Boot 实战的 RESTFul 接口文档说明&quot;)
+                        .contact(new Contact()
+                                .name(&quot;Pluminary&quot;)
+                                .url(&quot;https://github.com/P-luminary&quot;)
+                                .email(&quot;390415030@qq.com&quot;)));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/UserRepository.java //【这个是持久化接口 实现CRUD】
+package com.pcy.service;
+
+import com.pcy.dao.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository&lt;User,Integer&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/controller/UserController.java
+package com.pcy.controller;
+
+import com.pcy.dao.User;
+import com.pcy.service.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/users&quot;)
+@Tag(name = &quot;User Controller&quot;, description = &quot;用户相关操作&quot;)
+public class UserController &#123;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Operation(summary = &quot;根据ID获取用户信息&quot;, description = &quot;通过用户ID获取用户详细信息&quot;)
+    @ApiResponses(value = &#123;
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;成功获取用户信息&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;未找到用户&quot;)
+    &#125;)
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    public User get(@PathVariable int id) &#123;
+        return userRepository.findById(id).orElse(null);
+    &#125;
+
+    @Operation(summary = &quot;创建用户&quot;, description = &quot;创建一个新的用户&quot;)
+    @ApiResponses(value = &#123;
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;成功创建用户&quot;),
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;无效的输入&quot;)
+    &#125;)
+    @PostMapping
+    public User create(@RequestBody User user) &#123;
+        return userRepository.save(user);
+    &#125;
+
+    @Operation(summary = &quot;更新用户&quot;, description = &quot;更新用户信息&quot;)
+    @ApiResponses(value = &#123;
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;成功更新用户信息&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;未找到用户&quot;)
+    &#125;)
+    @PutMapping
+    public User update(@RequestBody User user) &#123;
+        return userRepository.save(user);
+    &#125;
+
+    @Operation(summary = &quot;删除用户&quot;, description = &quot;根据ID删除用户&quot;)
+    @ApiResponses(value = &#123;
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;成功删除用户&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;未找到用户&quot;)
+    &#125;)
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    public void delete(@PathVariable int id) &#123;
+        userRepository.deleteById(id);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;3.3.2&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.pcy&lt;/groupId&gt;
+    &lt;artifactId&gt;Pluminary&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;name&gt;Pluminary&lt;/name&gt;
+    &lt;description&gt;Pluminary&lt;/description&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+            &lt;version&gt;2.2.5.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.swagger.core.v3&lt;/groupId&gt;
+            &lt;artifactId&gt;swagger-annotations&lt;/artifactId&gt;
+            &lt;version&gt;2.2.15&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+&lt;!--        &lt;dependency&gt;--&gt;
+&lt;!--            &lt;groupId&gt;mysql&lt;/groupId&gt;--&gt;
+&lt;!--            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;--&gt;
+&lt;!--            &lt;version&gt;8.0.33&lt;/version&gt;--&gt;
+&lt;!--        &lt;/dependency&gt;--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mariadb.jdbc&lt;/groupId&gt;
+            &lt;artifactId&gt;mariadb-java-client&lt;/artifactId&gt;
+            &lt;version&gt;3.0.3&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+            &lt;artifactId&gt;springdoc-openapi-starter-webmvc-ui&lt;/artifactId&gt;
+            &lt;version&gt;2.1.0&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mariadb.jdbc&lt;/groupId&gt;
+            &lt;artifactId&gt;mariadb-java-client&lt;/artifactId&gt;
+            &lt;version&gt;2.7.4&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+            &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+            &lt;version&gt;6.1.7.Final&lt;/version&gt; &lt;!-- 选择与 Spring Boot 3.3.2 兼容的版本 --&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+<h3 id="增加分页、排序"><a href="#增加分页、排序" class="headerlink" title="增加分页、排序"></a>增加分页、排序</h3><pre><code class="java">com/pcy/controller/UserController.java
+@Operation(summary = &quot;获取用户列表&quot;, description = &quot;获取用户列表&quot;)
+    @GetMapping
+    public Page&lt;User&gt; list(@RequestParam(defaultValue = &quot;id&quot;) String property,
+ @RequestParam(defaultValue = &quot;ASC&quot;)Sort.Direction direction,
+ @RequestParam(defaultValue = &quot;0&quot;) Integer page,
+ @RequestParam(defaultValue = &quot;10&quot;) Integer pageSize) &#123;
+    Pageable pageable = PageRequest.of(page, pageSize, direction, property);
+        return userRepository.findAll(pageable);
+    &#125;
+</code></pre>
+<h3 id="根据姓名查用户"><a href="#根据姓名查用户" class="headerlink" title="根据姓名查用户"></a>根据姓名查用户</h3><pre><code class="java">com/pcy/controller/UserController.java    
+    @Operation(summary = &quot;根据姓名查用户&quot;,description = &quot;根据姓名查用户&quot;)
+    @GetMapping(&quot;/name&quot;)
+    public List&lt;User&gt; getByName(String name)&#123;
+        return userRepository.findByNameContaining(name);
+    &#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/UserRepository.java
+package com.pcy.service;
+
+import com.pcy.dao.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface UserRepository extends JpaRepository&lt;User,Integer&gt; &#123;
+    List&lt;User&gt; findByNameContaining(String name);
+&#125;
+</code></pre>
+<h3 id="根据生日查用户、删除User表"><a href="#根据生日查用户、删除User表" class="headerlink" title="根据生日查用户、删除User表"></a>根据生日查用户、删除User表</h3><pre><code class="java">com/pcy/controller/UserController.java
+@Operation(summary = &quot;根据生日获取用户信息①&quot;,description = &quot;根据生日获取用户信息①&quot;)
+    @GetMapping(&quot;/birthdayOne&quot;)
+    public List&lt;User&gt; getBirthDayOne(LocalDate birthDay)&#123;
+        return userRepository.findByBirthDay(birthDay);
+    &#125;
+
+    @Operation(summary = &quot;根据生日获取用户信息②&quot;,description = &quot;根据生日获取用户信息②&quot;)
+    @GetMapping(&quot;/birthdayTwo&quot;)
+    public List&lt;User&gt; getBirthDayTwo(LocalDate birthDay)&#123;
+        return userRepository.findByBirthDayNative(birthDay);
+    &#125;
+
+    @Operation(summary = &quot;删除User&quot;,description = &quot;删除User&quot;)
+    @GetMapping(&quot;/delete&quot;)
+    public void delete()&#123;
+        userRepository.delete();
+    &#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/UserRepository.java
+@Query(&quot;SELECT u FROM User u WHERE u.birthday=?1&quot;)
+    List&lt;User&gt; findByBirthDay(LocalDate birthDay);
+
+    @Query(value = &quot;SELECT * FROM user WHERE birth_day =:birthDay&quot;,nativeQuery = true)
+    List&lt;User&gt; findByBirthDayNative(LocalDate birthDay);
+
+    @Modifying
+    @Transactional
+    @Query(value = &quot;DELETE FROM User&quot;)
+    int delete();
+</code></pre>
+<h3 id="增加审计"><a href="#增加审计" class="headerlink" title="增加审计"></a>增加审计</h3><pre><code class="java">com/pcy/MallApplication.java //【增加@EnableJpaAuditing】
+package com.pcy;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@EnableJpaAuditing
+@SpringBootApplication
+public class MallApplication &#123;
+    public static void main(String[] args) &#123;
+        SpringApplication.run(MallApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/dao/BaseEntity.java //【没有必要为每个实体类都编写 直接封装导一个类 User去继承】
+package com.pcy.dao;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.MappedSuperclass;
+import lombok.Data;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@Data
+@MappedSuperclass
+//该注解用于监听实体类，在save、update之后的状态
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity &#123;
+    @CreatedBy
+    @Column(updatable = false)
+    private String creator;
+
+    @LastModifiedBy
+    private String modifier;
+
+    @CreatedDate
+    @Column(updatable = false) //不可修改的
+    private LocalDateTime createTime;
+
+    @LastModifiedDate
+    private LocalDateTime updateTime;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/dao/User.java //【增加@EqualsAndHashCode 与 extends BaseEntity】
+@Data
+@Entity
+@EqualsAndHashCode(callSuper = true)
+//@Schema(name=&quot;用户信息&quot;)
+@Table(indexes = &#123;@Index(name = &quot;uk_email&quot;,columnList = &quot;email&quot;,unique = true)&#125;)
+public class User extends BaseEntity&#123;
+    @Id
+//    @Schema(description = &quot;用户ID&quot;)
+//    @NotBlank(message = &quot;Id不能为空&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    ...
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/impl/AuditorAwareImpl.java
+package com.pcy.service.impl;
+
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+public class AuditorAwareImpl implements AuditorAware&lt;String&gt; &#123;
+
+    @Override
+    public Optional&lt;String&gt; getCurrentAuditor() &#123;
+        // 添加一个随机数
+        return Optional.of(&quot;管理员&quot;+(int)(Math.random()));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="引入Mybatis-Plus-FreeMarker"><a href="#引入Mybatis-Plus-FreeMarker" class="headerlink" title="引入Mybatis-Plus + FreeMarker"></a>引入Mybatis-Plus + FreeMarker</h3><pre><code class="xml">pom.xml
+&lt;dependency&gt;
+  &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+  &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;
+  &lt;version&gt;3.4.2&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-freemarker&lt;/artifactId&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">//根据你提供的实体类BaseEntity和User，我为你设计了一个基于MyBatis-Plus 3.5.x版本的代码生成器MysqlGenerator，它将自动生成与这些实体类相关的代码，如Mapper、Service、Controller等。以下是生成器的代码示例
+【仅供查看学习 实际代码爆红无法导入】
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.core.toolkit.StringPool;
+import com.baomidou.mybatisplus.generator.AutoGenerator;
+import com.baomidou.mybatisplus.generator.config.*;
+import com.baomidou.mybatisplus.generator.config.builder.*;
+import com.baomidou.mybatisplus.generator.config.po.TableInfo;
+import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
+import com.baomidou.mybatisplus.generator.fill.Property;
+import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler;
+
+import java.util.Collections;
+
+public class MysqlGenerator &#123;
+
+    // 项目路径
+    private static final String PROJECT_PATH = System.getProperty(&quot;user.dir&quot;);
+    // 输出路径
+    private static final String OUTPUT_DIR = PROJECT_PATH + &quot;/src/main/java&quot;;
+    // 作者
+    private static final String AUTHOR = &quot;YourName&quot;;
+    // 包名
+    private static final String BASE_PACKAGE = &quot;com.pcy&quot;;
+    // 数据源配置
+    private static final String DATABASE_URL = &quot;jdbc:mysql://localhost:3306/your_database&quot;;
+    private static final String DATABASE_USERNAME = &quot;root&quot;;
+    private static final String DATABASE_PASSWORD = &quot;password&quot;;
+    private static final String DATABASE_DRIVER = &quot;com.mysql.cj.jdbc.Driver&quot;;
+
+    public static void main(String[] args) &#123;
+        // 1. 全局配置
+        GlobalConfig.Builder globalConfig = new GlobalConfig.Builder()
+            .outputDir(OUTPUT_DIR)
+            .author(AUTHOR)
+            .enableSwagger()
+            .fileOverride()
+            .disableOpenDir(); // 不自动打开输出目录
+
+        // 2. 数据源配置
+        DataSourceConfig.Builder dataSourceConfig = new DataSourceConfig.Builder(DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD)
+            .dbQuery(new MySqlQuery())
+            .schema(&quot;public&quot;)
+            .dbType(DbType.MYSQL)
+            .keyWordsHandler(new MySqlKeyWordsHandler())
+            .driverName(DATABASE_DRIVER);
+
+        // 3. 包配置
+        PackageConfig.Builder packageConfig = new PackageConfig.Builder()
+            .parent(BASE_PACKAGE)
+            .entity(&quot;dao&quot;)
+            .mapper(&quot;mapper&quot;)
+            .service(&quot;service&quot;)
+            .controller(&quot;controller&quot;);
+
+        // 4. 策略配置
+        StrategyConfig.Builder strategyConfig = new StrategyConfig.Builder()
+            .addInclude(&quot;user&quot;) // 生成指定表
+            .addTablePrefix(&quot;t_&quot;) // 去掉表前缀
+            .entityBuilder()
+                .superClass(BaseEntity.class)
+                .enableLombok()
+                .addSuperEntityColumns(&quot;id&quot;, &quot;creator&quot;, &quot;modifier&quot;, &quot;create_time&quot;, &quot;update_time&quot;)
+                .logicDeleteColumnName(&quot;deleted&quot;)
+                .addTableFills(new Property(&quot;create_time&quot;, FieldFill.INSERT))
+                .addTableFills(new Property(&quot;update_time&quot;, FieldFill.INSERT_UPDATE))
+                .enableActiveRecord()
+                .naming(NamingStrategy.underline_to_camel)
+                .columnNaming(NamingStrategy.underline_to_camel)
+            .controllerBuilder()
+                .enableRestStyle()
+                .enableHyphenStyle()
+            .serviceBuilder()
+                .formatServiceFileName(&quot;%sService&quot;)
+                .formatServiceImplFileName(&quot;%sServiceImpl&quot;)
+            .mapperBuilder()
+                .enableBaseResultMap()
+                .enableBaseColumnList();
+
+        // 5. 模板配置
+        TemplateConfig.Builder templateConfig = new TemplateConfig.Builder();
+
+        // 6. 自定义配置
+        InjectionConfig.Builder injectionConfig = new InjectionConfig.Builder()
+            .beforeOutputFile((tableInfo, objectMap) -&gt; objectMap.put(&quot;parent&quot;, BASE_PACKAGE));
+
+        // 7. 整合配置
+        AutoGenerator autoGenerator = new AutoGenerator(dataSourceConfig.build())
+            .global(globalConfig.build())
+            .packageInfo(packageConfig.build())
+            .strategy(strategyConfig.build())
+            .template(templateConfig.build())
+            .injection(injectionConfig.build())
+            .templateEngine(new FreemarkerTemplateEngine()); // 选择模板引擎
+
+        // 8. 执行
+        autoGenerator.execute();
+    &#125;
+&#125;
+/*
+关键配置说明：
+GlobalConfig：设置代码生成的全局配置，包括作者、输出目录、是否覆盖已有文件等。
+DataSourceConfig：配置数据库连接信息，使用MySQL数据库。
+PackageConfig：指定生成的代码所在的包路径。
+StrategyConfig：配置生成策略，包括实体类的继承关系、使用Lombok、Rest风格的控制器等。
+TemplateConfig：模板配置，可定制生成的模板。
+InjectionConfig：自定义配置，用于在生成文件前注入自定义的变量或逻辑。
+AutoGenerator：整合所有配置并执行代码生成。
+
+生成的文件包括：
+实体类：根据数据库表生成实体类，并继承BaseEntity。
+Mapper接口：生成Mapper接口用于数据库操作。
+Service接口和实现类：生成Service接口及其实现类。
+Controller类：生成Rest风格的控制器类。
+
+使用方法：
+修改数据库连接信息（DATABASE_URL、DATABASE_USERNAME、DATABASE_PASSWORD）。
+配置需要生成代码的表名（addInclude(&quot;user&quot;)）。
+运行MysqlGenerator.java的main方法，代码将会生成在指定的输出目录中。
+*
+</code></pre>
+<pre><code class="java">//【以下都是自动生成的代码】
+com/pcy/mapper/UserMapper.java
+package com.pcy.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.pcy.entity.User;
+import org.apache.ibatis.annotations.Mapper;
+@Mapper
+public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/UserService.java
+package com.pcy.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.pcy.entity.User;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * &lt;p&gt;
+ * 用户表 服务类
+ * &lt;/p&gt;
+ */
+public interface UserService extends IService&lt;User&gt; &#123;
+// 在Spring中使用事务
+    @Transactional(propagation = Propagation.REQUIRED)
+    void addWithRequired(User user);
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    void addWithRequiredAndException(User user);
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void addWithRequiredNew(User user);
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void addWithRequiredNewAndException(User user);
+
+    @Transactional(propagation = Propagation.NESTED)
+    void addWithNested(User user);
+
+    @Transactional(propagation = Propagation.NESTED)
+    void addWithNestedAndException(User user);
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/impl/UserServiceImpl.java
+package com.pcy.service.impl;
+
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pcy.entity.User;
+import com.pcy.mapper.UserMapper;
+import com.pcy.service.UserService;
+import com.pcy.mapper.UserMapper;
+import com.pcy.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * &lt;p&gt;
+ * 用户表 服务实现类
+ * &lt;/p&gt;
+ */
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements UserService &#123;
+
+    @Autowired
+    private UserMapper mapper;
+    
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void addWithRequired(User user) &#123;
+        mapper.insert(user);
+    &#125;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void addWithRequiredAndException(User user) &#123;
+        mapper.insert(user);
+        throw new RuntimeException();
+    &#125;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void addWithRequiredNew(User user) &#123;
+        mapper.insert(user);
+    &#125;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void addWithRequiredNewAndException(User user) &#123;
+        mapper.insert(user);
+        throw new RuntimeException();
+    &#125;
+
+    @Override
+    @Transactional(propagation = Propagation.NESTED)
+    public void addWithNested(User user) &#123;
+        mapper.insert(user);
+    &#125;
+
+    @Override
+    @Transactional(propagation = Propagation.NESTED)
+    public void addWithNestedAndException(User user) &#123;
+        mapper.insert(user);
+        throw new RuntimeException();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">resources/mapper/UserMapper.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.pcy.mapper.UserMapper&quot;&gt;
+
+    &lt;!-- 通用查询映射结果 --&gt;
+    &lt;resultMap id=&quot;BaseResultMap&quot; type=&quot;com.pcy.entity.User&quot;&gt;
+    &lt;result column=&quot;id&quot; property=&quot;id&quot; /&gt;
+    &lt;result column=&quot;creator&quot; property=&quot;creator&quot; /&gt;
+    &lt;result column=&quot;modifier&quot; property=&quot;modifier&quot; /&gt;
+    &lt;result column=&quot;create_time&quot; property=&quot;createTime&quot; /&gt;
+    &lt;result column=&quot;update_time&quot; property=&quot;updateTime&quot; /&gt;
+        &lt;result column=&quot;name&quot; property=&quot;name&quot; /&gt;
+        &lt;result column=&quot;email&quot; property=&quot;email&quot; /&gt;
+        &lt;result column=&quot;birth_day&quot; property=&quot;birthDay&quot; /&gt;
+    &lt;/resultMap&gt;
+
+    &lt;!-- 通用查询结果列 --&gt;
+    &lt;sql id=&quot;Base_Column_List&quot;&gt;
+        id,
+        creator,
+        modifier,
+        create_time,
+        update_time,
+        name, email, birth_day
+    &lt;/sql&gt;
+
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">//【提问：爆bug  &quot;Could not autowire. No beans of &#39;UserMapper&#39; type found&quot;】 深度解析
+1. @MapperScan 注解的原理 //启动类里面的 @MapperScan(&quot;com.pcy.mapper&quot;)
+@MapperScan 是 MyBatis-Spring 提供的一个注解，用于指定要扫描的 Mapper 接口所在的包路径。它的作用是告诉 Spring 框架应该在哪些包路径下寻找 Mapper 接口，并将它们注册为 Spring 的 Bean。
+扫描 Mapper 接口：Spring Boot 在启动时，会扫描你指定的包路径下的所有接口，并检测这些接口是否包含 MyBatis 的 Mapper 注解或者继承了 BaseMapper 等相关接口。
+注册为 Bean：一旦找到这些接口，Spring 会自动为这些接口生成一个实现类，并将它们注册为 Spring 容器中的 Bean，这样你就可以通过 @Autowired 注入这些 Mapper。
+
+2. @Mapper 注解的原理
+@Mapper 是 MyBatis 提供的一个注解，用于标记一个接口为 MyBatis 的 Mapper 接口。被标记为 @Mapper 的接口会被 MyBatis-Spring 扫描到，并且 MyBatis 会为该接口生成一个实现类，负责执行 SQL 语句。
+当你在 UserMapper 接口上添加 @Mapper 注解时，即使没有使用 @MapperScan，MyBatis 也会知道这个接口是一个 Mapper 接口，并将其注册为一个 Bean。这使得你可以在 UserServiceImpl 中通过 @Autowired 注入它。
+
+3. 为什么使用 @MapperScan 和 @Mapper 不会报错
+自动注册 Bean：@MapperScan 会自动扫描指定包路径下的所有 Mapper 接口，并将它们注册为 Spring 容器中的 Bean。这意味着在 UserServiceImpl 中，当你使用 @Autowired 注入 UserMapper 时，Spring 可以找到对应的 Bean，从而避免 Could not autowire 错误。
+手动注册 Bean：当你在 Mapper 接口上直接使用 @Mapper 注解时，Spring 也会将该接口注册为一个 Bean，这样你同样可以通过 @Autowired 进行注入，而不会出现 Bean 找不到的问题。
+</code></pre>
+<pre><code class="java">//【提问：MysqlGenerator 逆向生成那些包的原理】
+MyBatis-Plus 提供的 MyBatis-Plus Generator 是一个非常强大的代码生成工具，可以通过数据库表结构生成对应的 Java 代码，包括实体类、Mapper 接口、Mapper XML 文件、Service 类、Controller 类等。这个过程通常被称为“逆向工程”或“代码生成”。
+1. MyBatis-Plus Generator 的工作原理
+ 1.1 读取数据库表结构
+数据源配置：首先，MyBatis-Plus Generator 通过配置的数据源连接到指定的数据库。它会读取数据库中的表结构信息，包括表名、字段名、数据类型、主键、外键、索引等信息。
+&gt; DataSourceConfig dsc = new DataSourceConfig.Builder(DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD)
+    .driverName(DATABASE_DRIVER)
+    .build();
+
+元数据解析：MyBatis-Plus Generator 通过 JDBC 获取数据库的元数据 (Metadata)，并解析每个表的结构，将其转换为可以用于代码生成的数据结构。
+
+ 1.2 生成代码
+代码生成器：AutoGenerator 是核心的代码生成器类。它根据从数据库中获取的表结构信息，生成相应的 Java 类文件。
+&gt; AutoGenerator generator = new AutoGenerator(dsc);
+
+模板引擎：MyBatis-Plus Generator 使用模板引擎（例如 Freemarker）来渲染代码模板。通过模板和解析后的元数据，生成代码文件。每个生成的 Java 类文件都对应着一个模板文件，模板文件中包含了如何生成特定类型文件的逻辑。
+&gt; generator.templateEngine(new FreemarkerTemplateEngine());
+
+ 1.3 生成的包和文件
+实体类 (entity)：根据表结构生成对应的 Java 实体类。每个实体类与数据库表一一对应，包含表中字段的定义。
+&gt; strategyConfig.entityBuilder().enableLombok().naming(NamingStrategy.underline_to_camel);
+
+Mapper 接口 (mapper)：生成的 Mapper 接口用于与数据库交互，执行基本的增删改查操作。Mapper 接口通常继承自 BaseMapper，提供基本的 CRUD 操作。
+&gt; strategyConfig.mapperBuilder().enableBaseResultMap().enableBaseColumnList();
+Mapper XML 文件 (mapper.xml)：生成的 Mapper XML 文件包含了 Mapper 接口中对应的方法的 SQL 语句。这些 XML 文件用于定义复杂的查询、更新语句等。
+
+Service 接口和实现类 (service, service.impl)：Service 层是业务逻辑层。生成的 Service 接口提供了业务操作的定义，Service 实现类则实现这些业务操作。
+&gt; strategyConfig.serviceBuilder().formatServiceFileName(&quot;%sService&quot;);
+
+Controller 类 (controller)：生成的 Controller 类用于处理 HTTP 请求，调用 Service 层的方法进行业务处理，然后返回结果。Controller 通常与前端交互，处理用户请求。
+&gt; strategyConfig.controllerBuilder().enableRestStyle().enableHyphenStyle();
+
+
+2. MyBatis-Plus Generator 如何生成这些包和文件
+ 2.1 代码生成策略 (StrategyConfig)
+StrategyConfig 类用于配置代码生成的策略，如生成哪些表，生成哪些类，类的命名规则，是否使用 Lombok 等。
+StrategyConfig strategyConfig = new StrategyConfig.Builder()
+    .addInclude(&quot;user&quot;) // 生成指定表
+    .entityBuilder().enableLombok() // 实体类配置
+    .mapperBuilder().enableBaseResultMap() // Mapper 配置
+    .serviceBuilder().formatServiceFileName(&quot;%sService&quot;) // Service 配置
+    .controllerBuilder().enableRestStyle() // Controller 配置
+    .build();
+
+ 2.2 模板文件
+MyBatis-Plus Generator 使用的模板文件可以自定义，通常位于 resources/templates 目录下。每个模板文件对应一个需要生成的 Java 文件类型，例如 entity.java.ftl 对应实体类，mapper.java.ftl 对应 Mapper 接口。
+     
+模板文件中可以使用变量和逻辑来决定生成的代码内容。例如，$&#123;className&#125; 会被替换为实际的类名，&lt;#if useLombok&gt; @Data &lt;/#if&gt; 会根据条件生成代码。
+     
+ 2.3 文件输出配置 (InjectionConfig 和 FileOutConfig)
+通过 InjectionConfig 和 FileOutConfig，可以控制生成文件的路径、名称、以及自定义生成的文件内容。例如，可以指定某个表的实体类生成到特定的包下，或者将 XML 文件输出到特定的路径。
+InjectionConfig cfg = new InjectionConfig.Builder()
+    .beforeOutputFile((tableInfo, objectMap) -&gt; &#123;
+        // 自定义处理逻辑
+    &#125;)
+    .build();
+</code></pre>
+<h3 id="用MyBatis-Plus的分页"><a href="#用MyBatis-Plus的分页" class="headerlink" title="用MyBatis Plus的分页"></a>用MyBatis Plus的分页</h3><pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;3.3.2&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.pcy&lt;/groupId&gt;
+    &lt;artifactId&gt;Pluminary&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;name&gt;Pluminary&lt;/name&gt;
+    &lt;description&gt;Pluminary&lt;/description&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+    &lt;/properties&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+            &lt;version&gt;2.2.5.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.swagger.core.v3&lt;/groupId&gt;
+            &lt;artifactId&gt;swagger-annotations&lt;/artifactId&gt;
+            &lt;version&gt;2.2.15&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+&lt;!--        &lt;dependency&gt;--&gt;
+&lt;!--            &lt;groupId&gt;mysql&lt;/groupId&gt;--&gt;
+&lt;!--            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;--&gt;
+&lt;!--            &lt;version&gt;8.0.33&lt;/version&gt;--&gt;
+&lt;!--        &lt;/dependency&gt;--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mariadb.jdbc&lt;/groupId&gt;
+            &lt;artifactId&gt;mariadb-java-client&lt;/artifactId&gt;
+            &lt;version&gt;3.0.3&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+            &lt;artifactId&gt;springdoc-openapi-starter-webmvc-ui&lt;/artifactId&gt;
+            &lt;version&gt;2.1.0&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+            &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+            &lt;version&gt;6.1.7.Final&lt;/version&gt; &lt;!-- 选择与 Spring Boot 3.3.2 兼容的版本 --&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;3.5.5&lt;/version&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;artifactId&gt;mybatis-spring&lt;/artifactId&gt;
+                    &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring&lt;/artifactId&gt;
+            &lt;version&gt;3.0.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-plus-generator&lt;/artifactId&gt;
+            &lt;version&gt;3.5.5&lt;/version&gt; &lt;!-- 版本对齐 --&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-freemarker&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">//【添加MyBatis-Plus的分页插件】
+com/pcy/utils/MyBatisPlusConfig.java
+package com.pcy.utils;
+
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+//@Configuration 用于定义配置类，被注解的类内部包含有一个或多个被@Bean注解的方法
+// 用于构建bean定义，初始化Spring容器
+@Configuration
+public class MyBatisPlusConfig &#123;
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor()&#123;
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MARIADB));
+        return interceptor;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/controller/UserController.java //【增加listPage】
+package com.pcy.controller;
+
+import com.pcy.entity.User;
+import com.pcy.service.UserRepository;
+import com.pcy.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/users&quot;)
+@Tag(name = &quot;User Controller&quot;, description = &quot;用户相关操作&quot;)
+public class UserController &#123;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Operation(summary = &quot;根据ID获取用户信息&quot;, description = &quot;通过用户ID获取用户详细信息&quot;)
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    public User get(@PathVariable int id) &#123;
+        return userRepository.findById(id).orElse(null);
+    &#125;
+
+    @Operation(summary = &quot;创建用户&quot;, description = &quot;创建一个新的用户&quot;)
+    @PostMapping
+    public User create(@RequestBody User user) &#123;
+        return userRepository.save(user);
+    &#125;
+
+    @Operation(summary = &quot;更新用户&quot;, description = &quot;更新用户信息&quot;)
+    @PutMapping
+    public User update(@RequestBody User user) &#123;
+        return userRepository.save(user);
+    &#125;
+
+    @Operation(summary = &quot;删除用户&quot;, description = &quot;根据ID删除用户&quot;)
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    public void delete(@PathVariable int id) &#123;
+        userRepository.deleteById(id);
+    &#125;
+
+    @Operation(summary = &quot;获取用户列表&quot;, description = &quot;获取用户列表&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public org.springframework.data.domain.Page&lt;User&gt; list(@RequestParam(defaultValue = &quot;id&quot;) String property,
+                                                           @RequestParam(defaultValue = &quot;ASC&quot;) Sort.Direction direction,
+                                                           @RequestParam(defaultValue = &quot;0&quot;) Integer page,
+                                                           @RequestParam(defaultValue = &quot;10&quot;) Integer pageSize) &#123;
+        Pageable pageable = PageRequest.of(page, pageSize, direction, property);
+        return userRepository.findAll(pageable);
+    &#125;
+
+    @Operation(summary = &quot;根据生日获取用户信息①&quot;, description = &quot;根据生日获取用户信息①&quot;)
+    @GetMapping(&quot;/birthdayOne&quot;)
+    public List&lt;User&gt; getBirthDayOne(@RequestParam LocalDate birthDay) &#123;
+        return userRepository.findByBirthDay(birthDay);
+    &#125;
+
+    @Operation(summary = &quot;根据生日获取用户信息②&quot;, description = &quot;根据生日获取用户信息②&quot;)
+    @GetMapping(&quot;/birthdayTwo&quot;)
+    public List&lt;User&gt; getBirthDayTwo(@RequestParam LocalDate birthDay) &#123;
+        return userRepository.findByBirthDayNative(birthDay);
+    &#125;
+
+    @Operation(summary = &quot;删除所有用户&quot;, description = &quot;删除所有用户&quot;)
+    @DeleteMapping(&quot;/deleteAll&quot;)
+    public void deleteAll() &#123;
+        userRepository.deleteAll();
+    &#125;
+
+    @Operation(summary = &quot;分页查询用户列表&quot;, description = &quot;分页查询用户列表&quot;)
+    @GetMapping(&quot;/page&quot;)
+    public Page&lt;User&gt; listPage(@RequestParam(defaultValue = &quot;1&quot;) Integer page,
+                               @RequestParam(defaultValue = &quot;10&quot;) Integer pageSize) &#123;
+        return userService.page(new Page&lt;&gt;(page, pageSize));
+    &#125;
+&#125;
+</code></pre>
+<h3 id="高级SQL语句-Lambda"><a href="#高级SQL语句-Lambda" class="headerlink" title="高级SQL语句(Lambda)"></a>高级SQL语句(Lambda)</h3><pre><code class="java">wrapper.lambda().like(user -&gt; user.getName(), &quot;p&quot;);
+/*
+Lambda 表达式:
+
+user -&gt; user.getName() 是一个 Lambda 表达式。
+user 是 User 类的一个实例，作为 Lambda 表达式的输入参数。
+user.getName() 是对 user 对象的 getName() 方法的调用，返回 name 字段的值。
+作用:
+
+这行代码告诉 MyBatis-Plus：在生成的 SQL 查询中，查找 name 字段值中包含 &quot;p&quot; 的所有记录。
+wrapper.lambda() 返回一个 LambdaQueryWrapper&lt;User&gt; 对象，支持使用 Lambda 表达式进行条件构建。
+.like() 方法添加了一个 LIKE 条件，表示在 SQL 查询中进行模糊匹配。
+*/
+
+
+wrapper.lambda().like(User::getName, &quot;p&quot;);
+/*
+方法引用:
+
+User::getName 是一种方法引用，它引用了 User 类的 getName() 方法。
+方法引用是对 Lambda 表达式的一种简写。它表示将某个方法作为函数式接口的实现。
+作用:
+
+这行代码与第一行代码的作用相同，都是在生成的 SQL 查询中查找 name 字段值中包含 &quot;p&quot; 的所有记录。
+User::getName 告诉 MyBatis-Plus：使用 User 类中的 getName() 方法来获取要参与条件判断的字段。
+*/
+</code></pre>
+<pre><code class="java">com/pcy/controller/UserController.java
+@Operation(summary = &quot;自定义查询&quot;, description = &quot;自定义查询&quot;)
+    @GetMapping(&quot;/Dingyi&quot;)
+    public List&lt;User&gt; getWrapper() &#123; //类型List&lt;User&gt; 可以返回数据库列表
+        QueryWrapper&lt;User&gt; wrapper = new QueryWrapper&lt;&gt;();
+//        wrapper.eq(&quot;name&quot;, &quot;潘春尧&quot;);
+//        wrapper.lambda().ge(User::getBirthDay, LocalDate.parse(&quot;2011-01-01&quot;));
+//        wrapper.between(User::getBirthDay, &quot;2011-01-01&quot;, &quot;2011-12-31&quot;);
+        wrapper.lambda().like(User::getName, &quot;string&quot;);
+
+//      wrapper.lambda().like(user -&gt; user.getName(), &quot;p&quot;);
+//        wrapper.select(&quot;name,count(*)&quot;).groupBy(&quot;name&quot;);
+//        return (QueryWrapper&lt;User&gt;) userMapper.selectList(wrapper);
+//        wrapper.in(CollectionUtils.isNotEmpty(nameList), User::getName, nameList);
+        return userMapper.selectList(wrapper);
+    &#125;
+</code></pre>
+<h3 id="自动填充、填充实现策略"><a href="#自动填充、填充实现策略" class="headerlink" title="自动填充、填充实现策略"></a>自动填充、填充实现策略</h3><pre><code class="java">com/pcy/utils/MyMetaObjectHandler.java
+package com.pcy.utils;
+
+import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import org.apache.ibatis.reflection.MetaObject;
+
+import java.time.LocalDateTime;
+
+public class MyMetaObjectHandler implements MetaObjectHandler &#123;
+    @Override
+    public void insertFill(MetaObject metaObject) &#123;
+        this.strictInsertFill(metaObject, &quot;createTime&quot;, LocalDateTime::now, LocalDateTime.class);
+        this.strictInsertFill(metaObject, &quot;updateTime&quot;, LocalDateTime::now, LocalDateTime.class);
+        this.strictInsertFill(metaObject, &quot;creator&quot;, this::getCurrentUser, String.class);
+        this.strictInsertFill(metaObject, &quot;modifier&quot;, this::getCurrentUser, String.class);
+    &#125;
+
+    @Override
+    public void updateFill(MetaObject metaObject) &#123;
+        this.strictUpdateFill(metaObject, &quot;updateTime&quot;, LocalDateTime::now, LocalDateTime.class);
+        this.strictUpdateFill(metaObject, &quot;modifier&quot;, this::getCurrentUser, String.class);
+    &#125;
+    
+    // 模拟获取当前用户
+    private String getCurrentUser()&#123;
+        return &quot;管理员&quot; + (int) (Math.random() * 10);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 这是自动填充的原理
+default MetaObjectHandler strictFillStrategy(MetaObject metaObject, String fieldName, Supplier&lt;?&gt; fieldVal) &#123;
+        if (metaObject.getValue(fieldName) == null) &#123;
+            Object obj = fieldVal.get();
+            if (Objects.nonNull(obj)) &#123;
+                metaObject.setValue(fieldName, obj);
+            &#125;
+        &#125;
+        return this;
+    &#125;
+</code></pre>
+<h3 id="强大的Druid"><a href="#强大的Druid" class="headerlink" title="强大的Druid"></a>强大的Druid</h3><pre><code class="xml">pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;druid-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.2.5&lt;/version&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">// Druid和MariaDB是两种不同类型的数据库系统
+1、类型和用途：
+Druid：Druid是一种分布式的实时分析数据库，主要用于处理高吞吐量的时间序列数据或事件数据。它专为快速查询和分析大规模数据而设计，常用于数据仓库、在线分析处理（OLAP）以及实时数据分析等场景。
+MariaDB：MariaDB是一种关系型数据库管理系统（RDBMS），它是MySQL的一个分支，广泛用于常规的事务处理、数据存储和管理。MariaDB通常用于传统的OLTP（在线事务处理）场景，如web应用、内容管理系统等。
+
+2、适用场景：
+Druid：适合用于实时数据分析、日志分析、时间序列分析、用户行为分析等需要快速响应的场景。
+MariaDB：适合传统的数据库应用，如电子商务系统、内容管理系统、ERP、CRM等需要强事务处理能力的场景。
+    
+总结来说，Druid和MariaDB各自适用于不同的数据处理需求，Druid更侧重于实时分析和大规模数据处理，而MariaDB更侧重于事务处理和关系型数据管理
+</code></pre>
+<h3 id="Spring-Data-JPA与MyBatis-Plus的区别并且简单举例说明"><a href="#Spring-Data-JPA与MyBatis-Plus的区别并且简单举例说明" class="headerlink" title="Spring Data JPA与MyBatis-Plus的区别并且简单举例说明"></a>Spring Data JPA与MyBatis-Plus的区别并且简单举例说明</h3><pre><code class="java">Spring Data JPA: //【实现接口】
+
+@Entity
+public class User &#123;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    // Other fields, getters, and setters
+&#125;
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; &#123;
+    List&lt;User&gt; findByName(String name);
+&#125;
+</code></pre>
+<pre><code class="java">Spring Data JPA: //【实现控制类】
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/jpa/users&quot;)
+public class UserJpaController &#123;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @GetMapping
+    public List&lt;User&gt; getAllUsers() &#123;
+        return userRepository.findAll();
+    &#125;
+
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    public User getUserById(@PathVariable Long id) &#123;
+        return userRepository.findById(id)
+                             .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + id));
+    &#125;
+
+    @PostMapping
+    public User createUser(@RequestBody User user) &#123;
+        return userRepository.save(user);
+    &#125;
+    @PutMapping(&quot;/&#123;id&#125;&quot;)
+    public User updateUser(@PathVariable Long id, @RequestBody User userDetails) &#123;
+        User user = userRepository.findById(id)
+                                  .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + id));
+
+        user.setName(userDetails.getName());
+        // Update other fields here
+        return userRepository.save(user);
+    &#125;
+
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    public void deleteUser(@PathVariable Long id) &#123;
+        User user = userRepository.findById(id)
+                                  .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + id));
+
+        userRepository.delete(user);
+    &#125;
+
+    @GetMapping(&quot;/search&quot;)
+    public List&lt;User&gt; searchUsersByName(@RequestParam String name) &#123;
+        return userRepository.findByName(name);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<hr>
+<pre><code class="java">MyBatis Plus: //【实现接口】
+
+@TableName(&quot;user&quot;)
+public class User &#123;
+    private Long id;
+    private String name;
+    // Other fields, getters, and setters
+&#125;
+
+public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+    // Custom SQL
+    @Select(&quot;SELECT * FROM user WHERE name = #&#123;name&#125;&quot;)
+    List&lt;User&gt; selectByName(@Param(&quot;name&quot;) String name);
+&#125;
+</code></pre>
+<pre><code class="java">MyBatis-Plus: //【实现控制类】
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/mybatis/users&quot;)
+public class UserMyBatisController &#123;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @GetMapping
+    public List&lt;User&gt; getAllUsers() &#123;
+        return userMapper.selectList(null);
+    &#125;
+
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    public User getUserById(@PathVariable Long id) &#123;
+        return userMapper.selectById(id);
+    &#125;
+
+    @PostMapping
+    public void createUser(@RequestBody User user) &#123;
+        userMapper.insert(user);
+    &#125;
+
+    @PutMapping(&quot;/&#123;id&#125;&quot;)
+    public void updateUser(@PathVariable Long id, @RequestBody User userDetails) &#123;
+        User user = userMapper.selectById(id);
+        if (user == null) &#123;
+            throw new ResourceNotFoundException(&quot;User not found with id: &quot; + id);
+        &#125;
+
+        user.setName(userDetails.getName());
+        // Update other fields here
+        userMapper.updateById(user);
+    &#125;
+
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    public void deleteUser(@PathVariable Long id) &#123;
+        User user = userMapper.selectById(id);
+        if (user == null) &#123;
+            throw new ResourceNotFoundException(&quot;User not found with id: &quot; + id);
+        &#125;
+
+        userMapper.deleteById(id);
+    &#125;
+
+    @GetMapping(&quot;/search&quot;)
+    public List&lt;User&gt; searchUsersByName(@RequestParam String name) &#123;
+        return userMapper.selectByName(name);
+    &#125;
+&#125;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 构建查询条件的包装类，它使用 Lambda 表达式避免了手写字符串可能导致的字段错误。
+// 这种方式非常适合需要根据多个条件动态生成SQL查询的场景，使用LambdaQueryWrapper不仅能提高代码的可读性，还能减少由于硬编码字符串导致的错误。
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/mybatis/users&quot;)
+public class UserMyBatisController &#123;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @GetMapping(&quot;/search&quot;)
+    public List&lt;User&gt; searchUsersByName(@RequestParam String name) &#123;
+        // 使用 LambdaQueryWrapper 构建模糊查询条件
+        LambdaQueryWrapper&lt;User&gt; queryWrapper = new LambdaQueryWrapper&lt;&gt;();
+        queryWrapper.like(User::getName, name); // 类似于 SQL 中的 &quot;WHERE name LIKE &#39;%name%&#39;&quot;
+
+        // 执行查询并返回结果
+        return userMapper.selectList(queryWrapper);
+    &#125;
+    // 其他CRUD方法与前面的示例相同
+&#125;
+</code></pre>
+<h3 id="Junit"><a href="#Junit" class="headerlink" title="Junit"></a>Junit</h3><h6 id="经过单元测试，观察日志输出，就会发现没有进行数据库查询，对数据库的交互逻辑不是Service层的单元测试需要关心的事情，而是Dao层的单元测试需要考虑的。Service层的单元测试是假定Dao层全部正确的基础上写的，我们只需要关注Service层是正确即可。"><a href="#经过单元测试，观察日志输出，就会发现没有进行数据库查询，对数据库的交互逻辑不是Service层的单元测试需要关心的事情，而是Dao层的单元测试需要考虑的。Service层的单元测试是假定Dao层全部正确的基础上写的，我们只需要关注Service层是正确即可。" class="headerlink" title="经过单元测试，观察日志输出，就会发现没有进行数据库查询，对数据库的交互逻辑不是Service层的单元测试需要关心的事情，而是Dao层的单元测试需要考虑的。Service层的单元测试是假定Dao层全部正确的基础上写的，我们只需要关注Service层是正确即可。"></a>经过单元测试，观察日志输出，就会发现没有进行数据库查询，对数据库的交互逻辑不是Service层的单元测试需要关心的事情，而是Dao层的单元测试需要考虑的。Service层的单元测试是假定Dao层全部正确的基础上写的，我们只需要关注Service层是正确即可。</h6><pre><code class="xml">pom.xml
+          &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">com/pcy/service/impl/UserServiceImpl.java
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements UserService &#123;
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    @Autowired
+    private UserMapper mapper;
+
+    public User getById(int id) &#123;
+        logger.info(&quot;id为：&quot;,id);
+        return mapper.selectById(id);
+    &#125;
+......
+&#125;
+</code></pre>
+<h6 id="这是测试Service"><a href="#这是测试Service" class="headerlink" title="这是测试Service"></a>这是测试Service</h6><pre><code class="java">test/java  com/pcy/service/impl/UserServiceImplTest.java //【用Mock改造 + log4j】
+// 检查 UserServiceImpl 是否在测试中被 @MockBean 或其他方式替换为Mock对象。如果使用了Mock对象，测试时不会真正访问数据库，而是使用模拟数据。
+package com.pcy.service.impl;
+
+import com.pcy.entity.User;
+import com.pcy.mapper.UserMapper;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class UserServiceImplTest &#123;
+    @InjectMocks
+    UserServiceImpl userService;
+
+    @Mock
+    UserMapper userMapper;
+
+    @Test
+    @DisplayName(&quot;Test Service getById&quot;)
+    void getById() &#123;
+        // 模拟userMapper的selectById方法返回一个User对象
+        User mockUser = new User().setId(1).setName(&quot;qwe&quot;).setEmail(&quot;1234@qq.com&quot;);
+        Mockito.when(userMapper.selectById(1)).thenReturn(mockUser);
+
+        // 调用userService的getById方法，并验证返回结果
+        User user = userService.getById(1);
+
+        System.out.println(user);
+        Assertions.assertEquals(&quot;qwe&quot;, user.getName());
+    &#125;
+&#125;
+=====================================================================
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2024-08-12T21:18:07.805+08:00  INFO 31512 --- [Pluminary] [           main] com.pcy.service.impl.UserServiceImpl     : id为：
+User(id=1, name=qwe, age=0, email=1234@qq.com, birthDay=null)
+</code></pre>
+<pre><code class="java">com/pcy/entity/User.java
+//你的 User 类同时使用了 Lombok 注解 (@Data, @Accessors(chain = true)) 和手动定义的 getter/setter 方法。由于 Lombok 已经生成了这些方法，手动定义的 getter/setter 方法会覆盖 Lombok 自动生成的方法，这可能导致链式调用的 setEmail 和其他类似方法无法正确解析。
+package com.pcy.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+import java.time.LocalDate;
+
+@Data
+@Entity
+@EqualsAndHashCode(callSuper = true)
+//@Schema(name=&quot;用户信息&quot;)
+@Table(indexes = &#123;@Index(name = &quot;uk_email&quot;,columnList = &quot;email&quot;,unique = true)&#125;)
+@Accessors(chain = true) // 允许链式调用
+public class User extends BaseEntity&#123;
+    @Id
+//    @Schema(description = &quot;用户ID&quot;)
+//    @NotBlank(message = &quot;Id不能为空&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+//    @Schema(description = &quot;用字&quot;)
+//    @NotBlank(message = &quot;名字不能为空&quot;)
+    @Column(nullable = false, columnDefinition = &quot;varchar(20) comment &#39;姓名&#39;&quot;)
+    private String name;
+
+//    @Transient //注解修饰
+//    @Schema(description = &quot;年龄&quot;)
+//    @Min(value = 1, message = &quot;年龄不能小于1&quot;)
+    private int age;
+
+//    @Schema(description = &quot;邮箱&quot;)
+//    @Email(message = &quot;E-mail格式不正确&quot;)
+    @Column(nullable = false, length = 50)
+    private String email;
+
+//    @Schema(description = &quot;生日&quot;)
+//    @Past(message = &quot;生日必须为过去的时间&quot;)
+    private LocalDate birthDay;
+&#125;
+</code></pre>
+<h6 id="这是测试Controller"><a href="#这是测试Controller" class="headerlink" title="这是测试Controller"></a>这是测试Controller</h6><pre><code class="java">test/java  com/pcy/controller/UserControllerTest.java
+// Controller层的单元测试需要用到一个特定的类——MockMvc 专门为SpringMVC提供支持的
+package com.pcy.controller;
+
+import com.pcy.entity.User;
+import com.pcy.service.UserService;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import static org.junit.jupiter.api.Assertions.*;
+@Slf4j
+@SpringBootTest
+class UserControllerTest &#123;
+    MockMvc mockMvc;
+
+    @Mock
+    UserService userService;
+
+    @InjectMocks
+    UserController userController;
+
+    @BeforeEach
+    void setUp()&#123;
+        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+    &#125;
+
+    @Test
+    @DisplayName(&quot;Test Controller get&quot;)
+    void get() throws Exception &#123;
+        Mockito.when(userService.getById(1)).thenReturn(new User().setName(&quot;刘水镜&quot;).setEmail(&quot;liushuijing@mail.com&quot;));
+        BDDMockito.given(userService.getById(1)).willReturn(new User().setName(&quot;刘水镜&quot;).setEmail(&quot;liushuijing@mail.com&quot;));
+        mockMvc.perform(MockMvcRequestBuilders.get(&quot;/user/&#123;id&#125;&quot;, 1)
+                        .accept(&quot;application/json;charset=UTF-8&quot;)
+                        .contentType(&quot;application/json;charset=UTF-8&quot;))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath(&quot;$.name&quot;).value(&quot;刘水镜&quot;))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+        log.info(&quot;Test Controller get&quot;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="全局异常处理"><a href="#全局异常处理" class="headerlink" title="全局异常处理"></a>全局异常处理</h3><pre><code class="java">/*
+一、@RestControllerAdvice 注解的作用
+@RestControllerAdvice 是 Spring Framework 为我们提供的一个复合注解，它是 @ControllerAdvice 和 @ResponseBody 的结合体。
+
+@ControllerAdvice：该注解标志着一个类可以为所有的 @RequestMapping 处理方法提供通用的异常处理和数据绑定等增强功能。当应用到一个类上时，该类中定义的方法将在所有控制器类的请求处理链中生效。
+
+@ResponseBody：表示方法的返回值将被直接写入 HTTP 响应体中，通常配合 Jackson 或 Gson 等 JSON 库将对象转换为 JSON 格式的响应。
+
+因此，@RestControllerAdvice 就是专门为 RESTful 控制器设计的全局异常处理器，它的方法返回值将自动转换为响应体。
+*/
+</code></pre>
+<h6 id="“全球”异常"><a href="#“全球”异常" class="headerlink" title="“全球”异常"></a>“全球”异常</h6><pre><code class="java">com/pcy/controller/UserController.java
+@Operation(summary = &quot;异常查询&quot;, description = &quot;异常查询&quot;)
+    @GetMapping(value = &quot;/&#123;id&#125;&quot;)
+    public Result&lt;User&gt; get(@PathVariable Integer id) &#123;
+        User user = userService.getById(id);
+        if (user == null)&#123;
+            throw new RuntimeException(&quot;找不到id信息&quot; + id);
+        &#125;
+        return Result.success(userService.getById(id));
+    &#125;
+/*
+当输入id信息错误的时候
+&#123;
+  &quot;code&quot;: 200,
+  &quot;message&quot;: &quot;操作成功&quot;,
+  &quot;data&quot;: &#123;
+    &quot;creator&quot;: null,
+    &quot;modifier&quot;: null,
+    &quot;createTime&quot;: null,
+    &quot;updateTime&quot;: null,
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;潘春尧&quot;,
+    &quot;age&quot;: 1,
+    &quot;email&quot;: &quot;390@qq.com&quot;,
+    &quot;birthDay&quot;: &quot;2024-08-10&quot;
+  &#125;
+&#125;
+
+
+当输入id信息错误的时候
+&#123;
+  &quot;code&quot;: 500,
+  &quot;message&quot;: &quot;找不到id信息3323&quot;,
+  &quot;data&quot;: null
+&#125;
+*/
+</code></pre>
+<pre><code class="java">com/pcy/utils/GlobalExceptionHandler.java
+package com.pcy.utils;
+
+import com.pcy.entity.MessageEnum;
+import com.pcy.entity.Result;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler &#123;
+//@ExceptionHandler注解用于在Spring MVC控制器中处理特定类型的异常。它可以应用于方法上
+//当控制器方法抛出指定类型的异常时，@ExceptionHandler注解的方法将被调用来处理该异常
+    @ExceptionHandler(Exception.class)
+    public Result&lt;Boolean&gt; globalException(Exception e)&#123;
+        Result&lt;Boolean&gt; result = new Result&lt;&gt;();
+        result.setCode(MessageEnum.ERROR.getCode());
+        result.setMessage(e.getMessage() == null ? MessageEnum.ERROR.getMessage() : e.getMessage());
+        log.error(e.getMessage(), e);
+        return result;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/entity/MessageEnum.java
+package com.pcy.entity;
+
+import lombok.Getter;
+
+@Getter
+public enum MessageEnum &#123;
+    SUCCESS(200, &quot;操作成功&quot;),
+    ERROR(500, &quot;操作失败&quot;);
+
+    private final Integer code;
+    private final String message;
+    MessageEnum(Integer code, String message)&#123;
+        this.code = code;
+        this.message = message;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/entity/Result.java
+package com.pcy.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Result&lt;T&gt; &#123;
+   private Integer code;
+   private String message;
+   private T data;
+   // 用于生成一个没有具体数据内容的成功响应
+   public static &lt;T&gt; Result&lt;T&gt; success()&#123;
+       return success(null);
+   &#125;
+   // 用于生成包含数据的成功响应
+    public static &lt;T&gt; Result&lt;T&gt; success(T data)&#123;
+        return new Result&lt;&gt;(MessageEnum.SUCCESS.getCode(), MessageEnum.SUCCESS.getMessage(), data);
+    &#125;
+    // 用于生成一个没有具体错误信息的默认错误响应
+    public static&lt;T&gt; Result&lt;T&gt; error()&#123;
+        return error(MessageEnum.ERROR);
+    &#125;
+    // 用于生成带有特定错误信息的错误响应，MessageEnum 是一个枚举类型，包含了不同的错误信息和代码。
+    public static&lt;T&gt; Result&lt;T&gt; error(MessageEnum messageEnum)&#123;
+        return new Result&lt;&gt;(messageEnum.ERROR.getCode(), messageEnum.getMessage(), null);
+    &#125;
+    // 用于生成包含自定义错误信息的错误响应
+    public static &lt;T&gt; Result&lt;T&gt; error(String message) &#123;
+        return error(message, MessageEnum.ERROR.getCode());
+    &#125;
+    // 用于生成包含自定义错误信息和自定义状态码的错误响应
+    protected static &lt;T&gt; Result&lt;T&gt; error(String message, Integer code) &#123;
+        return new Result&lt;&gt;(code, message, null);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="写个小异常"><a href="#写个小异常" class="headerlink" title="写个小异常"></a>写个小异常</h6><pre><code class="java">com/pcy/controller/ExceptionController.java
+package com.pcy.controller;
+
+import com.pcy.entity.Result;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/exception&quot;)
+@Tag(name = &quot;Exception&quot;, description = &quot;异常操作&quot;)
+public class ExceptionController &#123;
+    @GetMapping(&quot;/runtimeexception&quot;)
+    public Result&lt;Boolean&gt; runtimeException()&#123;
+        throw new RuntimeException();
+    &#125;
+&#125;
+/*
+开启全局异常处理的返回值
+&#123;
+  &quot;code&quot;: 500,
+  &quot;message&quot;: &quot;操作失败&quot;,
+  &quot;data&quot;: null
+&#125;
+
+没有全局异常处理的错误返回值
+&#123;
+  &quot;timestamp&quot;: &quot;2024-08-13T08:21:43.192+00:00&quot;,
+  &quot;status&quot;: 500,
+  &quot;error&quot;: &quot;Internal Server Error&quot;,
+  &quot;path&quot;: &quot;/exception/runtimeexception&quot;
+&#125;
+*/
+</code></pre>
+<pre><code class="java">//在SwaggerConfig中添加扫描路径 &quot;/exception/**&quot;  不然接口无法获取
+package com.pcy.Swagger;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+// http://localhost:8080/swagger-ui/index.html
+@Configuration
+public class SwaggerConfig &#123;
+
+    @Bean
+    public GroupedOpenApi createRestApi() &#123;
+        return GroupedOpenApi.builder()
+                .group(&quot;Spring Boot 实战&quot;)
+                .pathsToMatch(&quot;/users/**&quot;, &quot;/exception/**&quot;)
+                // .addPathsToMatch(&quot;/exception/**&quot;)
+                .build();
+    &#125;
+
+    @Bean
+    public OpenAPI customOpenAPI() &#123;
+        return new OpenAPI()
+                .info(new Info()
+                        .title(&quot;Spring Boot 实战&quot;)
+                        .version(&quot;1.0&quot;)
+                        .description(&quot;Spring Boot 实战的 RESTFul 接口文档说明&quot;)
+                        .contact(new Contact()
+                                .name(&quot;Pluminary&quot;)
+                                .url(&quot;https://github.com/P-luminary&quot;)
+                                .email(&quot;390415030@qq.com&quot;)));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">你提到的 GlobalExceptionHandler 和 ExceptionController 是用于统一处理 Spring MVC 控制器中的异常。让我逐步分析它们的作用，以及为什么在某些情况下它返回错误值。
+
+//1. GlobalExceptionHandler 的作用
+@RestControllerAdvice：这个注解用来全局处理控制器层的异常。它会拦截所有抛出的异常，并根据异常类型调用相应的 @ExceptionHandler 方法。
+
+@ExceptionHandler(Exception.class)：这个注解标注的方法会在控制器抛出 Exception 或其子类时执行。它用来捕获并处理全局的异常，比如你代码中的 RuntimeException。
+
+globalException(Exception e)：这是一个全局异常处理方法。当控制器中出现 Exception 时，这个方法会被调用。它将返回一个带有错误状态码的 Result&lt;Boolean&gt; 对象，并且会将错误信息记录到日志中。
+
+//2. ExceptionController 的作用
+@RestController：声明这个类是一个 Spring MVC 控制器，处理 Web 请求并返回数据。
+
+runtimeException() 方法：在这个方法中，你手动抛出了一个 RuntimeException，这会触发 GlobalExceptionHandler 中的 globalException 方法，并返回一个包含错误信息的 Result&lt;Boolean&gt; 对象。
+
+//3. 为什么只有引用 runtimeException() 才返回错误值
+runtimeException() 方法直接抛出了一个 RuntimeException，因此会被 GlobalExceptionHandler 捕获并处理。这就是为什么在访问 /exception/runtimeexception 时，你会看到返回的是错误信息。
+
+//4. 在 get() 方法中返回 200 状态码的原因
+在 get() 方法中，如果你传入的 id 是无效的，返回的 Result&lt;User&gt; 仍然会是 Result.success(userService.getById(id))，即使 userService.getById(id) 返回的是 null。这种情况下，你的 Result.success(null) 仍然会返回状态码 200，因为 Result.success() 的设计是用于表示成功状态的，且你没有抛出任何异常。
+
+//5. 如何让 get() 方法在出错时返回错误信息
+你可以通过以下方法来确保在 get() 方法中传入无效的 id 时，抛出异常并触发全局异常处理器：
+
+手动抛出异常：
+
+java
+复制代码
+@GetMapping(value = &quot;/&#123;id&#125;&quot;)
+public Result&lt;User&gt; get(@PathVariable Integer id) &#123;
+    User user = userService.getById(id);
+    if (user == null) &#123;
+        throw new RuntimeException(&quot;User not found with id: &quot; + id);
+    &#125;
+    return Result.success(user);
+&#125;
+在 userService.getById(id) 方法中抛出异常：如果你的业务逻辑要求在找不到用户时抛出异常，那么可以在 userService.getById(id) 方法中实现这个逻辑。
+
+//6. 总结
+GlobalExceptionHandler 用于捕获和处理全局异常。
+当你手动抛出 RuntimeException 或其他异常时，它会捕获并返回带有错误信息的 Result。
+在 get() 方法中，如果你想要在找不到用户时返回错误信息，需要手动抛出异常，这样才能触发 GlobalExceptionHandler。
+</code></pre>
+<h3 id="日志级别"><a href="#日志级别" class="headerlink" title="日志级别"></a>日志级别</h3><h6 id="方法一：直接编写使用"><a href="#方法一：直接编写使用" class="headerlink" title="方法一：直接编写使用"></a>方法一：直接编写使用</h6><pre><code class="java">// [配置方法：一种是直接在application.yml文件中配置、另一种是在外置logback-spring.xml文件中配置]
+logging:
+  pattern:
+    console: &quot;%d - %m%n&quot;
+</code></pre>
+<h6 id="方法二：引用外置xml文件"><a href="#方法二：引用外置xml文件" class="headerlink" title="方法二：引用外置xml文件"></a>方法二：引用外置xml文件</h6><pre><code class="xml">resources/pom.xml               &lt;引用外部的配置&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-logging&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+resources/application.yaml
+logging:
+  config: classpath:logback-spring.xml
+</code></pre>
+<pre><code class="xml">               &lt;如果你有更多样的配置需求，就需要使用外置XML文件的配置方式&gt;
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+
+&lt;configuration&gt;
+
+    &lt;!--    日志文件存放路径--&gt;
+    &lt;property name=&quot;PATH&quot; value=&quot;C:/Users/Pluminary/Desktop/log&quot;/&gt;
+
+    &lt;!-- 彩色日志依赖的渲染类 --&gt;
+    &lt;conversionRule conversionWord=&quot;clr&quot; converterClass=&quot;org.springframework.boot.logging.logback.ColorConverter&quot;/&gt;
+    &lt;conversionRule conversionWord=&quot;wex&quot;
+                    converterClass=&quot;org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter&quot;/&gt;
+    &lt;conversionRule conversionWord=&quot;wEx&quot;
+                    converterClass=&quot;org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter&quot;/&gt;
+    &lt;!-- 彩色日志格式 --&gt;
+    &lt;property name=&quot;CONSOLE_LOG_PATTERN&quot;
+              value=&quot;$&#123;CONSOLE_LOG_PATTERN:-%clr(%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:-%wEx&#125;&#125;&quot;/&gt;
+    &lt;!-- 文件日志格式 --&gt;
+    &lt;property name=&quot;FILE_LOG_PATTERN&quot;
+              value=&quot;%d&#123;yyyy-MM-dd HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; -%msg%n&quot;/&gt;
+
+    &lt;!-- 控制台输出配置--&gt;
+    &lt;appender name=&quot;console&quot; class=&quot;ch.qos.logback.core.ConsoleAppender&quot;&gt;
+        &lt;!--日志输出格式--&gt;
+        &lt;layout class=&quot;ch.qos.logback.classic.PatternLayout&quot;&gt;
+            &lt;pattern&gt;
+                $&#123;CONSOLE_LOG_PATTERN&#125;
+            &lt;/pattern&gt;
+        &lt;/layout&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- INFO 级别日志文件输出配置--&gt;
+    &lt;appender name=&quot;info&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;!--按级别过滤日志，只输出 INFO 级别--&gt;
+        &lt;filter class=&quot;ch.qos.logback.classic.filter.LevelFilter&quot;&gt;
+            &lt;level&gt;INFO&lt;/level&gt;
+            &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+            &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+        &lt;/filter&gt;
+        &lt;!--当天日志文件名--&gt;
+        &lt;File&gt;$&#123;PATH&#125;/info.log&lt;/File&gt;
+        &lt;!--按天分割日志文件--&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;!--历史日志文件名规则--&gt;
+            &lt;fileNamePattern&gt;$&#123;PATH&#125;/info.log.%d&#123;yyyy-MM-dd&#125;.%i&lt;/fileNamePattern&gt;
+            &lt;!--按大小分割同一天的日志--&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class=&quot;ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP&quot;&gt;
+                &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文件保留天数--&gt;
+            &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;!--日志输出格式--&gt;
+        &lt;layout class=&quot;ch.qos.logback.classic.PatternLayout&quot;&gt;
+            &lt;Pattern&gt;$&#123;FILE_LOG_PATTERN&#125;&lt;/Pattern&gt;
+        &lt;/layout&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- ERROR 级别日志文件输出配置--&gt;
+    &lt;appender name=&quot;error&quot; class=&quot;ch.qos.logback.core.rolling.RollingFileAppender&quot;&gt;
+        &lt;!--按级别过滤日志，只输出 ERROR 及以上级别--&gt;
+        &lt;filter class=&quot;ch.qos.logback.classic.filter.ThresholdFilter&quot;&gt;
+            &lt;level&gt;ERROR&lt;/level&gt;
+        &lt;/filter&gt;
+        &lt;!--当天日志文件名--&gt;
+        &lt;File&gt;$&#123;PATH&#125;/error.log&lt;/File&gt;
+        &lt;!--按天分割日志文件--&gt;
+        &lt;rollingPolicy class=&quot;ch.qos.logback.core.rolling.TimeBasedRollingPolicy&quot;&gt;
+            &lt;!--历史日志文件名规则--&gt;
+            &lt;fileNamePattern&gt;$&#123;PATH&#125;/error.log.%d&#123;yyyy-MM-dd&#125;.%i&lt;/fileNamePattern&gt;
+            &lt;!--按大小分割同一天的日志--&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class=&quot;ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP&quot;&gt;
+                &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文件保留天数--&gt;
+            &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;!--日志输出格式--&gt;
+        &lt;layout class=&quot;ch.qos.logback.classic.PatternLayout&quot;&gt;
+            &lt;Pattern&gt;$&#123;FILE_LOG_PATTERN&#125;&lt;/Pattern&gt;
+        &lt;/layout&gt;
+    &lt;/appender&gt;
+
+    &lt;!--日志级别--&gt;
+    &lt;root level=&quot;info&quot;&gt;
+        &lt;appender-ref ref=&quot;console&quot;/&gt;
+        &lt;appender-ref ref=&quot;info&quot;/&gt;
+        &lt;appender-ref ref=&quot;error&quot;/&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;
+                   
+                   
+&lt;
+Logback 能够精确区分并输出特定日志级别的错误，是通过 Appender 配置中的 Filter 机制实现的。在你的 Logback 配置文件中，RollingFileAppender 使用了不同的 Filter 来确保只有指定级别的日志信息会被记录到特定的日志文件中。
+
+工作原理
+LevelFilter 和 ThresholdFilter:
+
+LevelFilter: 这个过滤器允许你指定只接受特定日志级别的日志。例如，LevelFilter 被配置为只接受 INFO 级别的日志，而拒绝其他级别的日志。&lt;level&gt;INFO&lt;/level&gt; 表示只记录 INFO 级别的日志。
+ThresholdFilter: 这个过滤器允许你指定一个日志级别的下限，只有高于或等于这个级别的日志才会被记录。例如，ThresholdFilter 被配置为只接受 ERROR 级别及以上的日志（例如 ERROR 和 FATAL）。
+日志级别的传递:
+
+日志框架从最底层（比如 TRACE）开始逐级向上检查日志的级别，直到它与 Appender 中配置的 Filter 级别匹配。例如，如果一个 ERROR 级别的日志被触发，RollingFileAppender 的 ThresholdFilter 将检测到这个日志并允许它通过，然后将日志写入指定的 error.log 文件。
+日志级别匹配:
+
+当应用程序运行时，它会生成不同级别的日志信息（如 DEBUG、INFO、WARN、ERROR 等）。每个 Appender 都会根据它的 Filter 规则检查这些日志条目。只有符合条件的日志条目才会被记录到相应的日志文件中。
+&gt;
+</code></pre>
+<h3 id="AOP切面"><a href="#AOP切面" class="headerlink" title="AOP切面"></a>AOP切面</h3><pre><code class="xml">        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-aop&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">com/pcy/controller/AspectController.java
+package com.pcy.controller;
+
+import com.pcy.entity.Result;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
+@RestController
+@RequestMapping(&quot;/aspect&quot;)
+public class AspectController &#123;
+    @GetMapping
+    public Result aspect(String message)&#123;
+        log.info(&quot;aspect controller&quot;);
+        return Result.success(message);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/Swagger/SwaggerConfig.java //【增加&quot;/aspect/**&quot;】
+package com.pcy.Swagger;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+// http://localhost:8080/swagger-ui/index.html
+@Configuration
+public class SwaggerConfig &#123;
+
+    @Bean
+    public GroupedOpenApi createRestApi() &#123;
+        return GroupedOpenApi.builder()
+                .group(&quot;Spring Boot 实战&quot;)
+                .pathsToMatch(&quot;/users/**&quot;, &quot;/exception/**&quot;,&quot;/aspect/**&quot;)
+                // .addPathsToMatch(&quot;/exception/**&quot;)
+                .build();
+    &#125;
+
+    @Bean
+    public OpenAPI customOpenAPI() &#123;
+        return new OpenAPI()
+                .info(new Info()
+                        .title(&quot;Spring Boot 实战&quot;)
+                        .version(&quot;1.0&quot;)
+                        .description(&quot;Spring Boot 实战的 RESTFul 接口文档说明&quot;)
+                        .contact(new Contact()
+                                .name(&quot;Pluminary&quot;)
+                                .url(&quot;https://github.com/P-luminary&quot;)
+                                .email(&quot;390415030@qq.com&quot;)));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/utils/WebAspect.java
+package com.pcy.utils;
+
+import com.pcy.entity.Result;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Aspect
+@Component
+public class WebAspect &#123;
+// ★★★★★★★★★★★ 一定要注意这个AOP切面扫描的包 ★★★★★★★★★★★
+    @Pointcut(&quot;execution(public * com.pcy.controller.*.*(..))&quot;)
+    public void pointCut() &#123;
+    &#125;
+
+    @Before(value = &quot;pointCut()&quot;)
+    public void before(JoinPoint joinPoint) &#123;
+        System.out.println(&quot;======================================== 这是@Before ========================================&quot;);
+        String methodName = joinPoint.getSignature().getName();
+        String className = joinPoint.getTarget().getClass().getName();
+        Object[] args = joinPoint.getArgs();
+        String[] parameterNames = ((MethodSignature) joinPoint.getSignature()).getParameterNames();
+
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+
+        Map&lt;String, Object&gt; paramMap = new HashMap&lt;&gt;();
+        for (int i = 0; i &lt; parameterNames.length; i++) &#123;
+            paramMap.put(parameterNames[i], args[i]);
+        &#125;
+
+        log.info(&quot;before path：&#123;&#125;&quot;,request.getServletPath());
+        log.info(&quot;before class name：&#123;&#125;&quot;,className);
+        log.info(&quot;before method name：&#123;&#125;&quot;,methodName);
+        log.info(&quot;before args：&#123;&#125;&quot;,paramMap.toString());
+    &#125;
+
+    @After(value = &quot;pointCut()&quot;)
+    public void after(JoinPoint joinPoint) &#123;
+        System.out.println(&quot;======================================== 这是@After =========================================&quot;);
+        log.info(&quot;&#123;&#125; after&quot;, joinPoint.getSignature().getName());
+    &#125;
+
+    @AfterReturning(value = &quot;pointCut()&quot;, returning = &quot;returnVal&quot;)
+    public void afterReturning(JoinPoint  joinPoint, Object returnVal) &#123;
+        System.out.println(&quot;==================================== 这是@AfterReturning ====================================&quot;);
+        log.info(&quot;&#123;&#125; after return, returnVal: &#123;&#125;&quot;, joinPoint.getSignature().getName(), returnVal);
+    &#125;
+&#125;
+
+/*
+2024-08-14 18:28:20.249  INFO 3296 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet &#39;dispatcherServlet&#39;
+2024-08-14 18:28:20.249  INFO 3296 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet &#39;dispatcherServlet&#39;
+2024-08-14 18:28:20.250  INFO 3296 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2024-08-14 18:28:20.261  INFO 3296 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : preHandle开始时间：18:28:20:261 毫秒
+======================================== 这是@Before ========================================
+2024-08-14 18:28:20.278  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : before path：/aspect
+2024-08-14 18:28:20.278  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : before class name：com.pcy.controller.AspectController
+2024-08-14 18:28:20.278  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : before method name：aspect
+2024-08-14 18:28:20.278  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : before args：&#123;message=www&#125;
+2024-08-14 18:28:20.278  INFO 3296 --- [nio-8080-exec-1] com.pcy.controller.AspectController      : aspect controller
+==================================== 这是@AfterReturning ====================================
+2024-08-14 18:28:20.279  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : aspect after return, returnVal: Result(code=200, message=操作成功, data=www)
+======================================== 这是@After =========================================
+2024-08-14 18:28:20.280  INFO 3296 --- [nio-8080-exec-1] com.pcy.utils.WebAspect                  : aspect after
+2024-08-14 18:28:20.308  INFO 3296 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : postHandle结束时间：18:28:20:308 毫秒
+2024-08-14 18:28:20.308  INFO 3296 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : afterCompletion
+2024-08-14 18:28:20.309  INFO 3296 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : 接口运行时间：47 毫秒
+
+*/
+</code></pre>
+<h6 id="若是调用UserController的get接口"><a href="#若是调用UserController的get接口" class="headerlink" title="若是调用UserController的get接口"></a>若是调用UserController的get接口</h6><pre><code class="java">com/pcy/controller/UserController.java
+...
+    @Operation(summary = &quot;根据ID获取用户信息&quot;, description = &quot;通过用户ID获取用户详细信息&quot;)
+    @GetMapping(&quot;/user/&#123;id&#125;&quot;)
+    public User get(@PathVariable int id) &#123;
+        return userRepository.findById(id).orElse(null);
+    &#125;
+...
+
+Console控制台的报错信息：
+/*
+2024-08-14 18:33:22.383  INFO 3296 --- [nio-8080-exec-9] c.pcy.HandlerInterceptor.LogInterceptor  : preHandle开始时间：18:33:22:383 毫秒
+======================================== 这是@Before ========================================
+2024-08-14 18:33:22.385  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before path：/users/user/2
+2024-08-14 18:33:22.385  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before class name：com.pcy.controller.UserController
+2024-08-14 18:33:22.385  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before method name：get
+2024-08-14 18:33:22.385  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before args：&#123;id=2&#125;
+==================================== 这是@AfterReturning ====================================
+2024-08-14 18:33:22.425  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : get after return, returnVal: User(id=2, name=we2, age=2, email=2, birthDay=2024-08-10)
+======================================== 这是@After =========================================
+2024-08-14 18:33:22.426  INFO 3296 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : get after
+2024-08-14 18:33:22.428  INFO 3296 --- [nio-8080-exec-9] c.pcy.HandlerInterceptor.LogInterceptor  : postHandle结束时间：18:33:22:428 毫秒
+2024-08-14 18:33:22.428  INFO 3296 --- [nio-8080-exec-9] c.pcy.HandlerInterceptor.LogInterceptor  : afterCompletion
+2024-08-14 18:33:22.428  INFO 3296 --- [nio-8080-exec-9] c.pcy.HandlerInterceptor.LogInterceptor  : 接口运行时间：45 毫秒
+*/
+</code></pre>
+<h6 id="异常善后处理"><a href="#异常善后处理" class="headerlink" title="异常善后处理"></a>异常善后处理</h6><pre><code class="java">com/pcy/controller/AspectController.java //【浏览exception接口的时候会报错】
+package com.pcy.controller;
+
+import com.pcy.entity.Result;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
+@RestController
+@RequestMapping(&quot;/aspect&quot;)
+public class AspectController &#123;
+    @GetMapping
+    public Result aspect(String message)&#123;
+        log.info(&quot;aspect controller&quot;);
+        return Result.success(message);
+    &#125;
+    @GetMapping(&quot;/exception&quot;)
+    public Result exception()&#123;//抛出异常
+        throw new RuntimeException(&quot;runtime exception&quot;);
+    &#125;
+&#125;
+
+
+/*
+======================================== 这是@Before ========================================
+2024-08-15 15:09:20.586  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : before path：/aspect/exception
+2024-08-15 15:09:20.586  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : before class name：com.pcy.controller.AspectController
+2024-08-15 15:09:20.586  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : before method name：exception
+2024-08-15 15:09:20.587  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : before args：&#123;&#125;
+2024-08-15 15:09:20.587  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : exception after throwing, message: runtime exception
+======================================== 这是@After =========================================
+2024-08-15 15:09:20.587  INFO 4200 --- [nio-8080-exec-4] com.pcy.utils.WebAspect                  : exception after
+2024-08-15 15:09:20.588 ERROR 4200 --- [nio-8080-exec-4] com.pcy.utils.GlobalExceptionHandler     : runtime exception
+*/
+</code></pre>
+<pre><code class="java">com/pcy/utils/WebAspect.java
+@AfterThrowing(value = &quot;pointCut()&quot;, throwing = &quot;e&quot;)
+    public void afterThrowing(JoinPoint  joinPoint, Exception e) &#123;
+        log.info(&quot;&#123;&#125; after throwing, message: &#123;&#125;&quot;, joinPoint.getSignature().getName(), e.getMessage());
+    &#125;
+</code></pre>
+<h6 id="综上所述：after方法不关心方法是否成功，当方法执行完成之后就会被执行；afterReturning方法必须在目标方法成果return之后才会被执行；afterThrowing方法则会在目标方法抛出异常后被执行"><a href="#综上所述：after方法不关心方法是否成功，当方法执行完成之后就会被执行；afterReturning方法必须在目标方法成果return之后才会被执行；afterThrowing方法则会在目标方法抛出异常后被执行" class="headerlink" title="综上所述：after方法不关心方法是否成功，当方法执行完成之后就会被执行；afterReturning方法必须在目标方法成果return之后才会被执行；afterThrowing方法则会在目标方法抛出异常后被执行"></a><span style = "color:red">综上所述：<span style = "color:blue">after</span>方法不关心方法是否成功，当方法执行完成之后就会被执行；<span style = "color:blue">afterReturning</span>方法必须在目标方法成果return之后才会被执行；<span style = "color:blue">afterThrowing</span>方法则会在目标方法抛出异常后被执行</span></h6><h5 id="性能统计"><a href="#性能统计" class="headerlink" title="性能统计"></a>性能统计</h5><blockquote>
+<p>Around可以囊括以上所有能力</p>
+</blockquote>
+<pre><code class="java">com/pcy/controller/AspectController.java
+@Slf4j
+@RestController
+@RequestMapping(&quot;/aspect&quot;)
+public class AspectController &#123;
+  @GetMapping(&quot;/sleep/&#123;time&#125;&quot;)
+    public Result sleep(@PathVariable(&quot;time&quot;) long time) &#123;
+        log.info(&quot;sleep&quot;);
+        try &#123;
+            Thread.sleep(time);
+        &#125; catch (InterruptedException e) &#123;
+           log.error(&quot;error&quot;, e);
+        &#125;
+        if (time == 1000) &#123;
+            throw new RuntimeException(&quot;runtime exception&quot;);
+        &#125;
+        log.info(&quot;wake up&quot;);
+        return Result.success(&quot;wake up&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">@Around(&quot;pointCut()&quot;)
+    public Object around(ProceedingJoinPoint joinPoint) &#123;
+        log.info(&quot;around start&quot;);
+        long startTime = System.currentTimeMillis();
+        Object result = null;
+        try &#123;
+            result = joinPoint.proceed();
+        &#125; catch (Throwable e) &#123;
+            log.error(&quot;around error&quot;,e);
+        &#125;
+        long endTime = System.currentTimeMillis();
+        log.info(&quot;execute time：&#123;&#125; ms&quot;,endTime - startTime);
+        return result;
+    &#125;
+</code></pre>
+<pre><code class="java">//【当输入time值为2004时】
+2024-08-15 15:27:21.987  INFO 10844 --- [nio-8080-exec-6] c.pcy.HandlerInterceptor.LogInterceptor  : preHandle开始时间：15:27:21:987 毫秒
+2024-08-15 15:27:21.990  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : around start
+======================================== 这是@Before ========================================
+2024-08-15 15:27:21.991  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : before path：/aspect/sleep/2004
+2024-08-15 15:27:21.991  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : before class name：com.pcy.controller.AspectController
+2024-08-15 15:27:21.991  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : before method name：sleep
+2024-08-15 15:27:21.991  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : before args：&#123;time=2004&#125;
+2024-08-15 15:27:21.991  INFO 10844 --- [nio-8080-exec-6] com.pcy.controller.AspectController      : sleep
+2024-08-15 15:27:23.996  INFO 10844 --- [nio-8080-exec-6] com.pcy.controller.AspectController      : wake up
+==================================== 这是@AfterReturning ====================================
+2024-08-15 15:27:23.997  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : sleep after return, returnVal: Result(code=200, message=操作成功, data=wake up)
+======================================== 这是@After =========================================
+2024-08-15 15:27:23.997  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : sleep after
+2024-08-15 15:27:23.997  INFO 10844 --- [nio-8080-exec-6] com.pcy.utils.WebAspect                  : execute time：2007 ms
+2024-08-15 15:27:23.999  INFO 10844 --- [nio-8080-exec-6] c.pcy.HandlerInterceptor.LogInterceptor  : postHandle结束时间：15:27:23:999 毫秒
+2024-08-15 15:27:23.999  INFO 10844 --- [nio-8080-exec-6] c.pcy.HandlerInterceptor.LogInterceptor  : afterCompletion
+2024-08-15 15:27:23.999  INFO 10844 --- [nio-8080-exec-6] c.pcy.HandlerInterceptor.LogInterceptor  : 接口运行时间：12 毫秒
+
+
+//【当输入time值为1000时】
+2024-08-15 15:28:19.596  INFO 10844 --- [nio-8080-exec-9] c.pcy.HandlerInterceptor.LogInterceptor  : preHandle开始时间：15:28:19:596 毫秒
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : around start
+======================================== 这是@Before ========================================
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before path：/aspect/sleep/1000
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before class name：com.pcy.controller.AspectController
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before method name：sleep
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : before args：&#123;time=1000&#125;
+2024-08-15 15:28:19.597  INFO 10844 --- [nio-8080-exec-9] com.pcy.controller.AspectController      : sleep
+2024-08-15 15:28:20.607  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : sleep after throwing, message: runtime exception
+======================================== 这是@After =========================================
+2024-08-15 15:28:20.607  INFO 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : sleep after
+2024-08-15 15:28:20.607 ERROR 10844 --- [nio-8080-exec-9] com.pcy.utils.WebAspect                  : around error
+
+java.lang.RuntimeException: runtime exception
+    at com.pcy.controller.AspectController.sleep(AspectController.java:32)
+    at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+    at java.base/java.lang.reflect.Method.invoke(Method.java:578)
+......
+</code></pre>
+<h6 id="同一切面内的执行顺序"><a href="#同一切面内的执行顺序" class="headerlink" title="同一切面内的执行顺序"></a>同一切面内的执行顺序</h6><blockquote>
+<p>先执行before方法，再执行afterReturning &#x2F; afterThrowing方法，最后执行after方法<br>要验证的关键点是around方法和它们之间的先后关系</p>
+<p>around方法早于before方法开始执行，并且晚于after方法结束执行，刚好将其他同志完全包裹了起来</p>
+</blockquote>
+<pre><code class="java">//【注释掉WebAspect.java里面的代码不然会叠叠乐累加】
+com/pcy/utils/AspectOne.java
+package com.pcy.utils;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Aspect
+@Component
+public class AspectOne &#123;
+    @Pointcut(&quot;execution(public * com.pcy.controller.*.*(..))&quot;)
+    public void pointCut()&#123;&#125;
+    @Before(value = &quot;pointCut()&quot;)
+    public void before()&#123;
+        log.info(&quot;before one&quot;);
+    &#125;
+    @After(value = &quot;pointCut()&quot;)
+    public void after()&#123;
+        log.info(&quot;after one&quot;);
+    &#125;
+    @AfterReturning(value = &quot;pointCut()&quot;)
+    public void afterReturning()&#123;
+        log.info(&quot;afterReturning one&quot;);
+    &#125;
+
+    @Around(value = &quot;pointCut()&quot;)
+    public Object around(ProceedingJoinPoint joinPoint) &#123;
+        log.info(&quot;around one start&quot;);
+        Object result = null;
+        try &#123;
+            result = joinPoint.proceed();
+        &#125; catch (Throwable e) &#123;
+            log.error(&quot;around error&quot;, e);
+        &#125;
+        log.info(&quot;around one end&quot;);
+        return result;
+    &#125;
+&#125;
+
+/*
+2024-08-15 16:12:12.819  INFO 28788 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet &#39;dispatcherServlet&#39;
+2024-08-15 16:12:12.819  INFO 28788 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet &#39;dispatcherServlet&#39;
+2024-08-15 16:12:12.820  INFO 28788 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2024-08-15 16:12:12.839  INFO 28788 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : preHandle开始时间：16:12:12:839 毫秒
+2024-08-15 16:12:12.864  INFO 28788 --- [nio-8080-exec-1] com.pcy.utils.AspectOne                  : around one start
+2024-08-15 16:12:12.864  INFO 28788 --- [nio-8080-exec-1] com.pcy.utils.AspectOne                  : before one
+2024-08-15 16:12:12.864  INFO 28788 --- [nio-8080-exec-1] com.pcy.controller.AspectController      : aspect controller
+2024-08-15 16:12:12.865  INFO 28788 --- [nio-8080-exec-1] com.pcy.utils.AspectOne                  : afterReturning one
+2024-08-15 16:12:12.865  INFO 28788 --- [nio-8080-exec-1] com.pcy.utils.AspectOne                  : after one
+2024-08-15 16:12:12.865  INFO 28788 --- [nio-8080-exec-1] com.pcy.utils.AspectOne                  : around one end
+2024-08-15 16:12:12.908  INFO 28788 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : postHandle结束时间：16:12:12:908 毫秒
+2024-08-15 16:12:12.909  INFO 28788 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : afterCompletion
+2024-08-15 16:12:12.909  INFO 28788 --- [nio-8080-exec-1] c.pcy.HandlerInterceptor.LogInterceptor  : 接口运行时间：69 毫秒
+*/
+</code></pre>
+<h6 id="不同切面间的执行顺序"><a href="#不同切面间的执行顺序" class="headerlink" title="不同切面间的执行顺序"></a>不同切面间的执行顺序</h6><blockquote>
+<p>将AspectOne复制两份命名AspectTwo和AspectThree [<strong>执行后是One→Three→Two</strong>]<br>在Spring中的加载顺序是根据类名升序排列的，Three字母排序排在Two前面<br>那如何指定执行顺序按照One Two Three？<br>分别为AspectOne&#x2F;Two&#x2F;Three加上@Order(1)，@Order(2)，@Order(3)</p>
+</blockquote>
+<h3 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h3><h6 id="集成"><a href="#集成" class="headerlink" title="集成"></a>集成</h6><pre><code class="xml">pom.xml
+       &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;io.lettuce&lt;/groupId&gt;
+                    &lt;artifactId&gt;lettuce-core&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+            &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="yaml">spring:
+  application:
+    name: Pluminary
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/pcy?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;nullCatalogMeansCurrent=true
+    username: root
+    password: root
+
+    redis:
+      host: localhost port:6379
+      connect-timeout: 1000
+      jedis:
+        pool:
+          min-idle: 5
+          max-active: 10
+          max-idle: 10
+          max-wait: 2000
+</code></pre>
+<pre><code class="java">com/pcy/controller/HelloController.java
+@Slf4j
+@RestController
+@RequestMapping(&quot;/test&quot;)
+public class HelloController &#123;
+ @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello()&#123;
+        stringRedisTemplate.opsForValue().set(&quot;hello&quot;,&quot;world&quot;);
+        return stringRedisTemplate.opsForValue().get(&quot;hello&quot;);
+    &#125;
+&#125;
+
+//先访问hello接口 再去redis-cli中尝试访问自己定义的内容
+http://localhost:8080/swagger-ui/index.html#/hello-controller/hello
+
+/*
+127.0.0.1:6379&gt; get hello
+&quot;world&quot;
+*/
+</code></pre>
+<h3 id="Spring-Security"><a href="#Spring-Security" class="headerlink" title="Spring Security"></a>Spring Security</h3><pre><code class="xml">pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="java">com/pcy/controller/HelloController.java
+package com.pcy.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+@Slf4j
+@RestController
+@RequestMapping(&quot;/test&quot;)
+public class HelloController &#123;
+    @GetMapping(&quot;/hi&quot;)
+//  http://localhost:8080/hi
+    public String hi()&#123;
+        log.info(&quot;hi&quot;);
+        return &quot;ok!&quot;;
+    &#125;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello()&#123;
+        stringRedisTemplate.opsForValue().set(&quot;hello&quot;,&quot;world&quot;);
+        return stringRedisTemplate.opsForValue().get(&quot;hello&quot;);
+    &#125;
+&#125;
+
+/* Console:
+Using generated security password: 4147707e-58d6-46d9-b5cc-19865a2c523f
+*/
+
+账号：user
+密码：4147707e-58d6-46d9-b5cc-19865a2c523f
+</code></pre>
+<pre><code class="java">com/pcy/config/SecurityConfig.java
+package com.pcy.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig &#123;
+
+    // 配置HTTP安全性
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception &#123;
+        http
+                .authorizeRequests(authorizeRequests -&gt;
+                        authorizeRequests
+//          .antMatchers(&quot;/swagger-ui/**&quot;, &quot;/v3/api-docs/**&quot;).permitAll() // 允许访问Swagger UI和API文档
+                                .anyRequest().authenticated() // 所有请求都需要认证
+                )
+                .httpBasic(withDefaults()); // 使用HTTP Basic认证
+
+        return http.build();
+    &#125;
+
+    // 配置认证管理器
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception &#123;
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        authenticationManagerBuilder
+                .inMemoryAuthentication()
+                .withUser(&quot;pcy&quot;)
+                .password(passwordEncoder().encode(&quot;123456&quot;))
+                .roles(&quot;admin&quot;);
+
+        return authenticationManagerBuilder.build();
+    &#125;
+
+    // 配置密码编码器
+    @Bean
+    public PasswordEncoder passwordEncoder() &#123;
+        return new BCryptPasswordEncoder();
+    &#125;
+&#125;
+
+/*
+你可能无法访问 http://localhost:8080/swagger-ui/index.html 的原因可能与 Spring Security 配置有关。由于你启用了 Spring Security，默认情况下，所有请求都需要经过身份认证，这可能会阻止你访问 Swagger UI。
+
+为了确保你能够访问 Swagger UI，你需要在 Spring Security 的配置中添加一个例外规则，允许对 /swagger-ui/** 和相关的 Swagger 资源进行无认证访问。
+
+添加代码：.antMatchers(&quot;/swagger-ui/**&quot;, &quot;/v3/api-docs/**&quot;).permitAll()
+
+
+账号：pcy
+密码：123456
+*/
+</code></pre>
+<h3 id="从数据库中获取用户信息"><a href="#从数据库中获取用户信息" class="headerlink" title="从数据库中获取用户信息"></a>从数据库中获取用户信息</h3><pre><code class="java">com/pcy/config/SecurityConfig.java
+package com.pcy.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig &#123;
+    @Autowired
+    private UserDetailsService userDetailsService; // 使用 Spring Security 的 UserDetailsService
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception &#123;
+        http
+                .authorizeHttpRequests(authorizeRequests -&gt;
+                        authorizeRequests
+                                .anyRequest().authenticated()
+                )
+                .userDetailsService(userDetailsService) // 设置 UserDetailsService
+                .httpBasic(withDefaults())
+                .csrf(csrf -&gt; csrf.disable());
+
+        return http.build();
+    &#125;
+
+    // 配置认证管理器
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception &#123;
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        authenticationManagerBuilder
+                .userDetailsService(userDetailsService)  // 使用数据库中的用户信息
+                .passwordEncoder(passwordEncoder());
+
+        return authenticationManagerBuilder.build();
+    &#125;
+
+    // 配置密码编码器
+    @Bean
+    public PasswordEncoder passwordEncoder() &#123;
+        return new BCryptPasswordEncoder();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/impl/UserDetailsServiceImpl.java
+package com.pcy.service.impl;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.pcy.entity.SysUser;
+import com.pcy.service.SysUserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+//确保你的 UserDetailsServiceImpl 类被 Spring 管理，且实现了 Spring Security 的 UserDetailsService 接口
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService  &#123;
+
+    @Autowired
+    private SysUserService sysUserService;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException &#123;
+        SysUser sysUser = sysUserService.getOne(Wrappers.&lt;SysUser&gt;lambdaQuery().eq(SysUser::getUsername, username));
+        if (sysUser == null) &#123;
+            throw new UsernameNotFoundException(&quot;User not found with username: &quot; + username);
+        &#125;
+        return User.builder()
+                .username(sysUser.getUsername())
+                .password(sysUser.getPassword())
+                .authorities(AuthorityUtils.commaSeparatedStringToAuthorityList(sysUser.getRole()))
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/entity/SysUser.java
+package com.pcy.entity;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@Schema(name = &quot;SysUser对象&quot;, description = &quot;系统用户表&quot;)
+public class SysUser extends Model&lt;SysUser&gt; &#123;
+
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = &quot;主键 id&quot;)
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Integer id;
+
+    @Schema(description = &quot;用户名&quot;)
+    private String username;
+
+    @Schema(description = &quot;密码&quot;)
+    private String password;
+
+    @Schema(description = &quot;角色&quot;)
+    private String role;
+
+
+    @Override
+    public Serializable pkVal() &#123;
+        return this.id;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/SysUserService.java
+package com.pcy.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.pcy.entity.SysUser;
+
+public interface SysUserService extends IService&lt;SysUser&gt; &#123;
+    String getCurrentUser();
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/service/impl/SysUserServiceImpl.java
+package com.pcy.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pcy.common.ApiException;
+import com.pcy.entity.SysUser;
+import com.pcy.mapper.SysUserMapper;
+import com.pcy.service.SysUserService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+@Slf4j
+@Service
+public class SysUserServiceImpl extends ServiceImpl&lt;SysUserMapper, SysUser&gt; implements SysUserService &#123;
+    @Override
+    public String getCurrentUser() &#123;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 非匿名用户访问才能获得用户信息
+        if (!(authentication instanceof AnonymousAuthenticationToken)) &#123;
+            String userName = authentication.getName();
+            log.info(&quot;userName by SecurityContextHolder: &#123;&#125;&quot;, userName);
+            return userName;
+        &#125;
+        throw new ApiException(&quot;用户不存在！&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/mapper/SysUserMapper.java
+package com.pcy.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.pcy.entity.SysUser;
+
+/**
+ * &lt;p&gt;
+ * 系统用户表 Mapper 接口
+ * &lt;/p&gt;
+ */
+public interface SysUserMapper extends BaseMapper&lt;SysUser&gt; &#123;
+
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/common/ApiException.java
+package com.pcy.common;
+
+import com.pcy.entity.MessageEnum;
+import lombok.Data;
+
+@Data
+public class ApiException extends RuntimeException &#123;
+
+    private Integer code;
+
+    public ApiException(MessageEnum messageEnum) &#123;
+        super(messageEnum.getMessage());
+        this.code = messageEnum.getCode();
+    &#125;
+
+    public ApiException(String message) &#123;
+        super(message);
+        this.code = 500;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">//【由于数据库的密码要被加密后的形式保存到数据中】
+com/pcy/common/test.java
+package com.pcy.common;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+public class test &#123;
+    public static void main(String[] args) &#123;
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String encodedPassword = encoder.encode(&quot;123456&quot;);
+        System.out.println(encodedPassword);
+    &#125;
+&#125;
+
+//$2a$10$GzDPdLyrzC9NudmE937AAetR2bef2VQzuSbP6KM6Y.I3045OuT/xC
+</code></pre>
+<h6 id="修改创建SysUser用户的时候用Spring-Security-登录的时候就可以用自己创建的了"><a href="#修改创建SysUser用户的时候用Spring-Security-登录的时候就可以用自己创建的了" class="headerlink" title="修改创建SysUser用户的时候用Spring Security [登录的时候就可以用自己创建的了]"></a>修改创建SysUser用户的时候用Spring Security [登录的时候就可以用自己创建的了]</h6><pre><code class="java">com/pcy/controller/UserController.java
+/* 对比User数据
+    @Operation(summary = &quot;创建User用户&quot;, description = &quot;创建一个新的User用户&quot;)
+    @PostMapping(&quot;/create/&quot;)
+    public User create(@RequestBody User User) &#123;
+        return userRepository.save(User);
+    &#125;
+*/
+    @Autowired
+    private SysUserService sysUserService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Operation(summary = &quot;创建SysUser用户&quot;, description = &quot;创建一个新的SysUser用户&quot;)
+    @PostMapping(&quot;/create/test&quot;)
+    public SysUser create(@RequestBody SysUser sysUser) &#123;
+        sysUser.setPassword(passwordEncoder.encode(sysUser.getPassword()));
+        sysUserService.save(sysUser);
+        return sysUser;
+    &#125;
+</code></pre>
+<pre><code class="java">package com.pcy.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.pcy.entity.SysUser;
+public interface SysUserService extends IService&lt;SysUser&gt;&#123;
+
+    String getCurrentUser();
+&#125;
+</code></pre>
+<pre><code class="java">@Slf4j
+@Service
+public class SysUserServiceImpl extends ServiceImpl&lt;SysUserMapper, SysUser&gt; implements SysUserService &#123;
+
+ @Override
+    public boolean save(SysUser sysUser) &#123;
+        return SqlHelper.retBool(this.baseMapper.insert(sysUser));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/mapper/SysUserMapper.java
+package com.pcy.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.pcy.entity.SysUser;
+
+/**
+ * &lt;p&gt;
+ * 系统用户表 Mapper 接口
+ * &lt;/p&gt;
+ */
+public interface SysUserMapper extends BaseMapper&lt;SysUser&gt; &#123;
+
+&#125;
+</code></pre>
+<h6 id="权限控制"><a href="#权限控制" class="headerlink" title="权限控制"></a>权限控制</h6><pre><code class="java">com/pcy/config/SecurityConfig.java
+package com.pcy.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig &#123;
+    @Autowired
+    private UserDetailsService userDetailsService; // 使用 Spring Security 的 UserDetailsService
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception &#123;
+        http
+                .authorizeHttpRequests(authorizeRequests -&gt; authorizeRequests
+                        .requestMatchers(&quot;/security/permitall&quot;).permitAll() // 允许所有人访问
+                        .requestMatchers(&quot;/security/anonymous&quot;).anonymous() // 仅允许匿名用户访问
+                        .requestMatchers(&quot;/security/config&quot;).hasAuthority(&quot;ROLE_config&quot;) // 仅拥有 ROLE_config 权限的用户可以访问
+                        .requestMatchers(&quot;/security/Secured&quot;).hasRole(&quot;Secured&quot;) // 仅拥有 ROLE_Secured 的用户可以访问
+                        .requestMatchers(&quot;/security/preAuthorize&quot;).hasAuthority(&quot;PreAuthorize&quot;) // 仅拥有 PreAuthorize 权限的用户可以访问
+                        .anyRequest().authenticated() // 其他所有请求需要认证
+                )
+                .userDetailsService(userDetailsService) // 设置 UserDetailsService
+                .httpBasic(withDefaults()) // 使用 HTTP Basic 认证
+                .csrf(csrf -&gt; csrf.disable()); // 禁用 CSRF
+
+        return http.build();
+    &#125;
+
+    // 配置认证管理器
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception &#123;
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+
+        authenticationManagerBuilder
+                .userDetailsService(userDetailsService)  // 使用数据库中的用户信息
+                .passwordEncoder(passwordEncoder());
+
+        return authenticationManagerBuilder.build();
+    &#125;
+
+    // 配置密码编码器
+    @Bean
+    public PasswordEncoder passwordEncoder() &#123;
+        return new BCryptPasswordEncoder();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/pcy/controller/SecurityController.java
+package com.pcy.controller;
+
+import com.pcy.entity.Result;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/security&quot;)
+@Tag(name = &quot;权限控制&quot;, description = &quot;权限控制&quot;)
+public class SecurityController &#123;
+    // Anyone
+    @Operation(summary = &quot;permitAll 权限&quot;)
+    @GetMapping(value = &quot;/permitall&quot;)
+    public Result&lt;String&gt; permitAll()&#123;
+        return Result.success(&quot;permitAll&quot;);
+    &#125;
+    // 未登录时可以访问
+    @Operation(summary = &quot;anonymous 权限&quot;)
+    @GetMapping(value = &quot;/anonymous&quot;)
+    public Result&lt;String&gt; anonymous()&#123;
+        return Result.success(&quot;anonymous&quot;);
+    &#125;
+    // xiaopan可以访问
+    @Operation(summary = &quot;config 权限&quot;)
+    @GetMapping(value = &quot;/config&quot;)
+    public Result&lt;String&gt; config()&#123;
+        return Result.success(&quot;permitAll&quot;);
+    &#125;
+    // xiaochun可以访问
+    @Operation(summary = &quot;Secured 权限&quot;)
+    @GetMapping(value = &quot;/Secured&quot;)
+    @Secured(&#123;&quot;ROLE_Secured&quot;&#125;)
+    public Result&lt;String&gt; Secured()&#123;
+        return Result.success(&quot;Secured&quot;);
+    &#125;
+    // panchunyao可以访问
+    @Operation(summary = &quot;PreAuthorize 权限&quot;)
+    @GetMapping(value = &quot;/preAuthorize&quot;)
+    @PreAuthorize(&quot;hasAnyAuthority(&#39;PreAuthorize&#39;)&quot;)
+    public Result&lt;String&gt; PreAuthorize()&#123;
+        return Result.success(&quot;PreAuthorize&quot;);
+    &#125;
+&#125;
+
+/*
+首先，确保在数据库中创建几个测试用户，并为每个用户分配不同的角色或权限。假设你有以下几个用户：
+User 1: Username: xiaopan, Password: 123456, Role: ROLE_config
+User 2: Username: xiaochun, Password: 123456, Role: ROLE_Secured
+User 3: Username: panchun, Password: 123456, Authority: PreAuthorize
+
+尝试使用不同用户登录:
+使用 xiaopan 登录后，尝试访问 /security/config。
+使用 xiaochun 登录后，尝试访问 /security/Secured。
+使用 panchunyao 登录后，尝试访问 /security/preAuthorize。
+
+检查响应:
+/security/config: 只有 xiaopan 能访问，其他用户会被拒绝访问。
+/security/Secured: 只有 xiaochun 能访问，其他用户会被拒绝访问。
+/security/preAuthorize: 只有 panchunyao 能访问，其他用户会被拒绝访问。
+/security/permitall: 所有用户都可以访问。
+/security/anonymous: 只有未登录的用户可以访问，登录的用户会被拒绝。
+
+验证权限控制
+每个请求的响应应该反映你在 SecurityConfig 中配置的权限。
+如果用户没有适当的角色或权限，应该会返回 403 Forbidden 或其他错误响应。
+*/
+</code></pre>
+<pre><code class="java">@Configuration
+public class SwaggerConfig &#123;
+
+    @Bean
+    public GroupedOpenApi createRestApi() &#123;
+        return GroupedOpenApi.builder()
+                .group(&quot;Spring Boot 实战&quot;)
+                .pathsToMatch(&quot;/users/**&quot;, &quot;/exception/**&quot;,&quot;/aspect/**&quot;,&quot;/test/**&quot;,&quot;/security/**&quot;)
+                // .addPathsToMatch(&quot;/exception/**&quot;)
+                .build();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">// 【问答环节】
+我的数据库创建的是Role字段但是为什么 下面这些有.hasAuthority 有.hasRole 还有其他的 这是怎么匹配到我数据库 按照你的方式设置的数据的
+
+/*
+1. hasRole() 和 hasAuthority() 的区别
+
+hasRole(String role):
+hasRole 方法通常用于检查用户是否拥有特定的角色。
+Spring Security 会在你传递的角色名称前自动加上 &quot;ROLE_&quot; 前缀。因此，当你使用 hasRole(&quot;Secured&quot;) 时，实际上它会检查用户是否有 &quot;ROLE_Secured&quot; 这个权限。
+
+hasAuthority(String authority):
+hasAuthority 方法用于检查用户是否拥有特定的权限（或授权）。
+hasAuthority 不会自动添加任何前缀。所以当你使用 hasAuthority(&quot;ROLE_config&quot;) 时，它会直接匹配 &quot;ROLE_config&quot;，而不会添加任何前缀。
+
+
+2. 匹配数据库中的角色和权限
+hasRole(&quot;Secured&quot;):
+代码中的 hasRole(&quot;Secured&quot;) 实际上会匹配数据库中的 ROLE_Secured，因为 hasRole 方法会自动加上 &quot;ROLE_&quot; 前缀。
+
+hasAuthority(&quot;ROLE_config&quot;):
+代码中的 hasAuthority(&quot;ROLE_config&quot;) 会直接匹配数据库中的 &quot;ROLE_config&quot;，没有任何前缀变化。
+
+hasAuthority(&quot;PreAuthorize&quot;):
+代码中的 hasAuthority(&quot;PreAuthorize&quot;) 会直接匹配数据库中的 &quot;PreAuthorize&quot;，因为没有添加任何前缀。
+*/
+    
+它为什么能查到我数据库的role字段里面的数据 如果我把这个字段换成test这个名字 它又是怎么去匹配到的呢
+/*
+Spring Security 默认会使用 UserDetails 接口中的 getAuthorities() 方法来获取用户的权限或角色信息。这些权限或角色信息通常是通过你在 UserDetailsService 实现类中定义的逻辑从数据库中获取的。
+而在SecurityConfig中有代码：
+@Autowired // 使用 Spring Security 的UserDetailsService
+private UserDetailsService userDetailsService; 
+回顾securityFilterChain代码
+下面会有 .userDetailsService(userDetailsService) // 设置 UserDetailsService
+
+Spring Security 本身并不直接访问你的数据库表或字段。它依赖于你在 UserDetailsService 中提供的 UserDetails 对象的 getAuthorities() 方法的返回值。因此，当你在 SecurityConfig 中使用 hasRole() 或 hasAuthority() 方法时，它实际上是在检查用户的权限信息，即 UserDetails 对象中的 authorities。
+===========================================================================
+@Override
+public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException &#123;
+    SysUser sysUser = sysUserService.getOne(Wrappers.&lt;SysUser&gt;lambdaQuery().eq(SysUser::getUsername, username));
+    if (sysUser == null) &#123;
+        throw new UsernameNotFoundException(&quot;User not found with username: &quot; + username);
+    &#125;
+    return User.builder()
+            .username(sysUser.getUsername())
+            .password(sysUser.getPassword())
+            .authorities(AuthorityUtils.commaSeparatedStringToAuthorityList(sysUser.getTest()))  // 修改为使用 &#39;test&#39; 字段
+            .build();
+&#125;
+
+*/
+</code></pre>
+<h3 id="记住我-√-Remember-Me"><a href="#记住我-√-Remember-Me" class="headerlink" title="记住我               √ Remember Me"></a>记住我               √ Remember Me</h3><h6 id="基于SpringSession的方式"><a href="#基于SpringSession的方式" class="headerlink" title="基于SpringSession的方式"></a>基于SpringSession的方式</h6><pre><code class="xml">pom.xml
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.session&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-session-data-redis&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="yaml">//【要新搞个登录界面 .ftl】
+application.yaml
+
+spring:
+  freemarker:
+    template-loader-path: /templates/
+    suffix: .ftl
+</code></pre>
+<pre><code class="html">resources/templates/loginPage.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Login&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Login&lt;/h1&gt;
+&lt;form action=&quot;/login&quot; method=&quot;post&quot;&gt;
+    &lt;div&gt;
+        &lt;label for=&quot;username&quot;&gt;Username:&lt;/label&gt;
+        &lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+        &lt;label for=&quot;password&quot;&gt;Password:&lt;/label&gt;
+        &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+        &lt;input type=&quot;checkbox&quot; id=&quot;remember-me&quot; name=&quot;remember-me&quot;&gt;
+        &lt;label for=&quot;remember-me&quot;&gt;Remember me&lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+        &lt;button type=&quot;submit&quot;&gt;Login&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="java">com/pcy/controller/LoginController.java
+package com.pcy.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class LoginController &#123;
+    @GetMapping(&quot;/login&quot;) // 修改为 &quot;/custom-login&quot;
+    public String login() &#123;
+        return &quot;loginPage&quot;; // 返回的视图名仍然是 &quot;loginPage&quot;
+    &#125;
+&#125;
+
+/*
+http://localhost:8080/login
+
+Please sign in
+Username
+    panchunyao
+Password
+    •••••••••••••
+√ Remember me on this computer.
+
+
+127.0.0.1:6379&gt; keys spring*
+1) &quot;spring:session:sessions:96c83240-f939-4fd1-ac2c-93542f883aef&quot;
+2) &quot;spring:session:sessions:56baf3c6-7a5c-483b-b04a-422b8a2be1b7&quot;
+*/
+</code></pre>
+<pre><code class="java">com/pcy/config/SecurityConfig.java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig &#123;
+    @Autowired
+    private UserDetailsService userDetailsService; // 使用 Spring Security 的 UserDetailsService
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception &#123;
+        http
+                .authorizeHttpRequests(authorizeRequests -&gt; authorizeRequests
+                        .requestMatchers(&quot;/security/permitall&quot;).permitAll() // 允许所有人访问
+                        .requestMatchers(&quot;/security/anonymous&quot;).anonymous() // 仅允许匿名用户访问
+                        .requestMatchers(&quot;/security/config&quot;).hasAuthority(&quot;ROLE_config&quot;) // 仅拥有 ROLE_config 权限的用户可以访问
+                        .requestMatchers(&quot;/security/Secured&quot;).hasRole(&quot;Secured&quot;) // 仅拥有 ROLE_Secured 的用户可以访问
+                        .requestMatchers(&quot;/security/preAuthorize&quot;).hasAuthority(&quot;PreAuthorize&quot;) // 仅拥有 PreAuthorize 权限的用户可以访问
+                        .anyRequest().authenticated() // 其他所有请求需要认证
+                )
+                .formLogin(form -&gt; form
+//                        .loginPage(&quot;/custom-login&quot;) // 将登录页面的路径改为 &quot;/custom-login&quot; 打开会循环重定向
+                        .defaultSuccessUrl(&quot;http://localhost:8080/swagger-ui/index.html&quot;, true) // 登录成功后的跳转路径
+                        .permitAll()
+                )
+                .rememberMe(rememberMe -&gt; rememberMe
+                        .rememberMeServices(rememberMeServices()) // 配置 Remember Me 服务
+                )
+                .userDetailsService(userDetailsService) // 设置 UserDetailsService
+                .httpBasic(withDefaults()) // 使用 HTTP Basic 认证
+                .csrf(csrf -&gt; csrf.disable()); // 禁用 CSRF
+
+        return http.build();
+    &#125;
+&#125;
+......
+</code></pre>
+<pre><code class="java">//【问答环节】
+分析一下freemarker这个配置的含义
+    freemarker:
+      template-loader-path: /templates/
+      suffix: .ftl
+/*
+这些配置项的含义如下：
+template-loader-path: /templates/: 这个配置指定了 Freemarker 模板文件的加载路径，也就是 /templates/ 目录。Spring Boot 会在这个目录下寻找所有的 .ftl 模板文件。
+
+suffix: .ftl: 这个配置指定了 Freemarker 模板文件的文件后缀，也就是 .ftl。在控制器中返回视图名称时，Spring 会自动添加这个后缀来查找相应的模板文件。
+
+
+配置的工作原理
+@Controller
+public class LoginController &#123;
+    @GetMapping(&quot;/login&quot;)
+    public String login() &#123;
+        return &quot;loginPage&quot;; // 返回的视图名
+    &#125;
+&#125;
+在 LoginController 中的 login() 方法中，你返回的是 &quot;loginPage&quot;：
+因为在 application.yaml 中已经配置了 template-loader-path 和 suffix，Spring Boot 会根据这些配置来查找模板文件：
+它会在 template-loader-path 配置的 /templates/ 目录下寻找文件。
+它会在视图名称 &quot;loginPage&quot; 后面自动添加 .ftl 后缀。
+因此，最终 Spring Boot 会查找路径 /templates/loginPage.ftl，并使用这个模板文件来渲染登录页面。这就是为什么当你在控制器中返回 &quot;loginPage&quot; 时，Freemarker 能正确地找到并渲染 loginPage.ftl 模板。
+
+如果你想修改 Freemarker 模板文件的目录或后缀，可以调整 application.yaml 中的相应配置。
+视图名称在 return 中不需要包含目录或后缀，Spring 会根据配置自动处理。
+*/
+</code></pre>
+<h1 id="SpringBoot-Vue企业级狐狸"><a href="#SpringBoot-Vue企业级狐狸" class="headerlink" title="SpringBoot + Vue企业级狐狸"></a>SpringBoot + Vue企业级狐狸</h1><pre><code class="mysql">@RequestMapping 注解指定控制器类中的方法可以处理哪些格式的URL请求
+@RequestMapping(&quot;/hello&quot;) 说明该方法将接收并处理格式为/hello的HTTP请求
+@RestController 注解指定本类承担着SpringBoot项目的&#39;控制器&#39;效果
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>包名</th>
+<th>所放置的业务代码类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>common</td>
+<td>放置了通用的参数和业务方法</td>
+</tr>
+<tr>
+<td>controller</td>
+<td>放置了针对各业务请求的控制类</td>
+</tr>
+<tr>
+<td>domain</td>
+<td>放置了各种业务实体类</td>
+</tr>
+<tr>
+<td>mapper</td>
+<td>放置了针对MyBatis框架的映射关系类</td>
+</tr>
+<tr>
+<td>service</td>
+<td>放置了诸多实现业务逻辑的类</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

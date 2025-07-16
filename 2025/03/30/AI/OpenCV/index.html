@@ -1,0 +1,1026 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || OpenCV</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>OpenCV </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2025/3/30
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/AI" style=color:#ff7d73>
+                    AI
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h4 id="图形相关处理"><a href="#图形相关处理" class="headerlink" title="图形相关处理"></a>图形相关处理</h4><p>OpenCV是应用广泛的开源图像处理库，我们以其为基础，介绍相关的图像处理方法:包括基本的图像处理方法:几何变换，形态学变换，围伦平滑，直方围操作，板匹配，霍夫变换等；特征提取和描述方法：理解角点特征，Harris和Shi-TomaS算法，SIFT&#x2F;SURF算法，Fast算法，ORB算法等；还有OpenCV在视频操作中的应用，最后的案例是使用OpenCV进行人险检测。</p>
+<p>在第一次世界大战后，1921年美国科学家发明了BartlaneSystem，并从伦敦传到纽约传输了第一幅数字图像，其亮度用离散数值表示，:将图片编码成5个灰度级，如下图所示，通过海底电缆进行传输。在发送端图片被编码并使用打孔带记录，通过系统传输后在接收方使用特殊的打印机恢复成图像。</p>
+<p>1950年左右，计算机被发明，数字图像处理学科正式诞生</p>
+<h6 id="位数"><a href="#位数" class="headerlink" title="位数"></a>位数</h6><p>计算机采用0&#x2F;1编码的系统，数字图像也是利用0&#x2F;1来记录信息，我们平常接触的图像都是8位数图像，包含0~255灰度，其中0，代表最黑，1，表示最白。</p>
+<h6 id="二值图像"><a href="#二值图像" class="headerlink" title="二值图像:"></a>二值图像:</h6><p>一幅二值图像的二维矩阵仅由0、1两个值构成，“0”代表黑色，“1”代白色。由于每一像素(矩阵中每一元素)取值仅有0、1两种可能，所以计算机中二值图像的数据类型通常为1个二进制位。二值图像通常用于文字、线条图的扫描识别(OCR)和掩膜图像的存储，</p>
+<h6 id="灰度图"><a href="#灰度图" class="headerlink" title="灰度图:"></a>灰度图:</h6><p>每个像素只有一个采样颜色的图像，这类图像通常显示为从最暗黑色到最亮的白色的灰度，尽管理论上这个采样可以任何颜色的不同深浅，甚至可以是不同亮度上的不同颜色。灰度图像与黑白图像不同，在计算机图像领域中黑白图像只有黑色与白色两种颜色;但是，灰度图像在黑色与白色之间还有许多级的颜色深度。灰度图像经常是在单个电磁波频谱如可见光内测量每个像素的亮度得到的，用于显示的灰度图像通常用每个采样像素8位的非线性尺度来保存，这样可以有256级灰度(如果用16位，则有65536级)。</p>
+<h6 id="彩色图"><a href="#彩色图" class="headerlink" title="彩色图:"></a>彩色图:</h6><p>每个像素通常是由红(R)、绿(G)、蓝(B)三个分量来表示的，分量介干(0，255)。RGB图像与索引图像一样都可以用来表示彩色图像。与索引图像一样，它分别用红(R)、绿(G)、蓝(B)三原色的组合来表示每个像素的颜色。但与索引图像不同的是，RGB图像每一个像素的颜色值(由RGB三原色表示)直接存放在图像矩阵中，由于每一像素的颜色需由R、G、B三个分量来表示，M、N分别表示图像的行列数，三个MxN的二维矩阵分别表示各个像素的R、G、B三个颜色分量。RGB图像的数据类型一般为8位无符号整形，通常用于表示和存放真彩色图像。</p>
+<h6 id="1-图像是什么"><a href="#1-图像是什么" class="headerlink" title="1. 图像是什么"></a>1. 图像是什么</h6><p>图：物体反射或透射光的分布<br>像：人的视觉系统所接受的图在人脑中所形版的印象或认识</p>
+<h6 id="2-模拟图像和数字图像"><a href="#2-模拟图像和数字图像" class="headerlink" title="2. 模拟图像和数字图像"></a>2. 模拟图像和数字图像</h6><p>模拟图像：连续存储的数据<br>数字图像：分级存储的数据</p>
+<h6 id="3-数字图像"><a href="#3-数字图像" class="headerlink" title="3. 数字图像"></a>3. 数字图像</h6><p>位数:图像的表示，常见的就是8位分类：二值图像，灰度图像和彩色图像</p>
+<h5 id="OpenCV的优势"><a href="#OpenCV的优势" class="headerlink" title="OpenCV的优势:"></a>OpenCV的优势:</h5><h6 id="1-编程语言"><a href="#1-编程语言" class="headerlink" title="1. 编程语言"></a>1. 编程语言</h6><p>OpenCV基于C++实现，同时提供python,Ruby,Matlab等语言的接口。OpenCV-Python是OpenCV的Python API，结合了OpenCV C++ API和Python语言的最佳特性。</p>
+<h6 id="2-跨平台"><a href="#2-跨平台" class="headerlink" title="2. 跨平台"></a>2. 跨平台</h6><p>可以在不同的系统平台上使用，包括Windows，Linux，OSX，Android和i0S。基于CUDA和OpenCl的高速GPU操作接口也在积极开发中</p>
+<h6 id="3-活跃的开发团队"><a href="#3-活跃的开发团队" class="headerlink" title="3. 活跃的开发团队"></a>3. 活跃的开发团队</h6><h6 id="4-丰富的AP"><a href="#4-丰富的AP" class="headerlink" title="4. 丰富的AP!"></a>4. 丰富的AP!</h6><p>同时添加了对深度学习的支持。完善的传统计算机视觉算法，涵盖主流的机器学习算法，</p>
+<h5 id="OpenCV-Python"><a href="#OpenCV-Python" class="headerlink" title="OpenCV-Python"></a>OpenCV-Python</h5><p>OpenCV-Python是一个Python绑定库，旨在解决计算机视觉问题。<br>Python是一种由Guido van Rossum开发的通用编程语言，它很快就变得非常流行，主要是因为它的简单性和代码可读性。它使程序员能够用更少的代码行表达思想，而不会降低可读性</p>
+<p>与C&#x2F;C++等语言相比，Python速度较慢。也就是说，Python可以使用C&#x2F;C++轻松扩展，这使我们可以在C&#x2F;C++中编写计算密集型代码，并创建可用作Python模块的Python包装器。这给我们带来了两个好处:首先，代码与原始C&#x2F;C++代码一样快(因为它是在后台工作的实际C++代码)，其次，在Python中编写代码比使用C&#x2F;C++更容易。OpenCV-Python是原始OpenCVC++实现的Python包装器。</p>
+<p>OpenCV-Python使用Numpy，这是一个高度优化的数据库操作库，具有MATLAB风格的语法。所有OpenCV数组结构都转换为Numpy数组。这也使得与使用Numpy的其他库(如SciPy和Matplotib)集成更容易。</p>
+<h5 id="OpenCV部署方法"><a href="#OpenCV部署方法" class="headerlink" title="OpenCV部署方法"></a>OpenCV部署方法</h5><p>安装OpenCV之前需要先安装<code>numpy</code>, <code>matplotlibJ</code><br>创建Python虚拟环境cv,在cv中安装即可<br>先安装OpenCV-Python,由于一些经典的算法被申请了版权，新版本有很大的限制，所以选用3.4.3以下的版</p>
+<h5 id="OpenCV模块简介"><a href="#OpenCV模块简介" class="headerlink" title="OpenCV模块简介"></a>OpenCV模块简介</h5><p>其中core、highgui、imgproc是最基础的模块，该课程主要是围绕这几个模块展开的，分别介绍如下:</p>
+<ul>
+<li><p><strong>core</strong>模块实现了最核心的数据结构及其基本运算，如绘图函数、数组操作相关函数等。</p>
+</li>
+<li><p><strong>highgui</strong>模块实现了视频与图像的读取、显示、存储等接口。</p>
+</li>
+<li><p><strong>imgproc</strong>模块实现了图像处理的基础方法，包括图像滤波、图像的几何变换、平滑、阈值分割、形态学处理、边缘检测、目标检测、运动分析和对象跟踪等。</p>
+<p>对于图像处理其他更高层次的方向及应用，penCV也有相关的模块实现</p>
+</li>
+<li><p><strong>features2d</strong>模块用于提取图像特征以及特征匹配，nonfree模块实现了一些专利算法，如sift特征</p>
+</li>
+<li><p><strong>objdetect</strong>模块实现了一些目标检测的功能，经典的基于Haar、LBP特征的人脸检测，基于HOG的行人、汽车等目标检测，分类器使用Cascade Classification(级联分类)和Latent SVM等。</p>
+</li>
+<li><p><strong>stitching</strong>模块实现了图像拼接功能。</p>
+</li>
+<li><p><strong>FLANN</strong>模块(Fast Library for Approximate Nearest Neighbors)，包含快速近似最近邻搜索FLANN和聚类Clustering算法。</p>
+</li>
+<li><p><strong>mI</strong>模块机器学习模块(SVM，决策树，Boosting等等)</p>
+</li>
+<li><p><strong>photo</strong>模块包含图像修复和图像去噪两部分。</p>
+</li>
+<li><p><strong>video</strong>模块针对视频处理，如背景分离，前景检测、对象跟踪等。</p>
+</li>
+<li><p><strong>calib3d</strong>模块即Calibration(校准)3D，这个模块主要是相机校准和三维重建相关的内容。包含了基本的多视角几何算法，单个立体摄像头标定，物体姿态估计，立体相似性算法，3D信息的重建等等。</p>
+</li>
+<li><p><strong>G-API</strong>模块包含超高效的图像处理pipeline引整</p>
+</li>
+</ul>
+<h5 id="OpenCV基本操作"><a href="#OpenCV基本操作" class="headerlink" title="OpenCV基本操作"></a>OpenCV基本操作</h5><p>本章主要介绍图像的基础操作，包括:</p>
+<ul>
+<li>图像的IO操作，读取和保存方法</li>
+<li>在图像上绘制几何图形</li>
+<li>怎么获取图像的属性</li>
+<li>怎么访问图像的像素，进行通道分离，合并等</li>
+<li>怎么实现颜色空间的变换</li>
+<li>图像的算术运算</li>
+</ul>
+<h5 id="图像的基础操作"><a href="#图像的基础操作" class="headerlink" title="图像的基础操作"></a>图像的基础操作</h5><ul>
+<li>掌握图像的读取和保存方法</li>
+<li>能够使用OpenCV在图像上绘制几何图形</li>
+<li>能够访问图像的像素</li>
+<li>能够获取图像的属性，并进行通道的分离和合并</li>
+<li>能够实现颜色空间的变换</li>
+</ul>
+<h1 id="图像的IO操作"><a href="#图像的IO操作" class="headerlink" title="图像的IO操作"></a>图像的IO操作</h1><p>这里我们会给大家介绍如何读取图像，如何显示图像和如何保存图像。</p>
+<h2 id="1-1-读取图像"><a href="#1-1-读取图像" class="headerlink" title="1.1 读取图像"></a>1.1 读取图像</h2><ol>
+<li>API</li>
+</ol>
+<pre><code class="python">cv.imread()
+</code></pre>
+<p>参数：</p>
+<ul>
+<li><p>要读取的图像</p>
+</li>
+<li><p>读取方式的标志</p>
+<ul>
+<li><p><code>cv.IMREAD*COLOR</code>：以<strong>彩色模式</strong>加载图像，任何图像的透明度都将被忽略。这是默认参数。</p>
+</li>
+<li><p><code>cv.IMREAD*GRAYSCALE</code>：以<strong>灰度模式</strong>加载图像</p>
+</li>
+<li><p><code>cv.IMREAD_UNCHANGED</code>：包括<strong>alpha通道</strong>的加载图像模式。</p>
+<p><strong>可以使用1、0或者-1来替代上面三个标志</strong></p>
+</li>
+</ul>
+</li>
+<li><p>参考代码</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+# 以灰度图的形式读取图像
+img = cv.imread(&#39;messi5.jpg&#39;,0)
+</code></pre>
+</li>
+</ul>
+<p><strong>注意：如果加载的路径有错误，不会报错，会返回一个None值</strong></p>
+<h2 id="1-2显示图像"><a href="#1-2显示图像" class="headerlink" title="1.2显示图像"></a>1.2显示图像</h2><p>1 . API</p>
+<pre><code class="python">cv.imshow()
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>显示图像的窗口名称，以字符串类型表示</li>
+<li>要加载的图像</li>
+</ul>
+<p><strong>注意：在调用显示图像的API后，要调用cv.waitKey()给图像绘制留下时间，否则窗口会出现无响应情况，并且图像无法显示出来</strong>。</p>
+<p>另外我们也可使用matplotlib对图像进行展示。</p>
+<ol>
+<li><p>参考代码</p>
+<pre><code class="python"># opencv中显示
+cv.imshow(&#39;image&#39;,img)
+cv.waitKey(0) # 永远的等待下去
+# matplotlib中展示
+plt.imshow(img[:,:,::-1])
+</code></pre>
+</li>
+</ol>
+<h2 id="1-3-保存图像"><a href="#1-3-保存图像" class="headerlink" title="1.3 保存图像"></a>1.3 保存图像</h2><ol>
+<li><p>API</p>
+<pre><code class="python">cv.imwrite()
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>文件名，要保存在哪里</li>
+<li>要保存的图像</li>
+</ul>
+</li>
+<li><p>参考代码</p>
+<pre><code class="python">cv.imwrite(&#39;messigray.png&#39;,img)
+</code></pre>
+</li>
+</ol>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p>我们通过加载灰度图像，显示图像，如果按’s’并退出则保存图像，或者按ESC键直接退出而不保存。</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 读取图像
+img = cv.imread(&#39;messi5.jpg&#39;,0)
+# 2 显示图像
+# 2.1 利用opencv展示图像
+cv.imshow(&#39;image&#39;,img)
+# 2.2 在matplotplotlib中展示图像【RGB通道】  后面要反转图像去显示
+plt.imshow(img[:,:,::-1])
+plt.title(&#39;匹配结果&#39;), plt.xticks([]), plt.yticks([])
+plt.show()
+k = cv.waitKey(0)
+# 3 保存图像
+cv.imwrite(&#39;messigray.png&#39;,img)
+</code></pre>
+<h1 id="2-绘制几何图形"><a href="#2-绘制几何图形" class="headerlink" title="2 绘制几何图形"></a>2 绘制几何图形</h1><h2 id="2-1-绘制直线"><a href="#2-1-绘制直线" class="headerlink" title="2.1 绘制直线"></a>2.1 绘制直线</h2><pre><code>cv.line(img,start,end,color,thickness)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>img:要绘制直线的图像</li>
+<li>Start,end: 直线的起点和终点</li>
+<li>color: 线条的颜色</li>
+<li>Thickness: 线条宽度</li>
+</ul>
+<h2 id="2-2-绘制圆形"><a href="#2-2-绘制圆形" class="headerlink" title="2.2 绘制圆形"></a>2.2 绘制圆形</h2><pre><code class="python">cv.circle(img,centerpoint, r, color, thickness)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>img:要绘制圆形的图像</li>
+<li>Centerpoint, r: 圆心和半径</li>
+<li>color: 线条的颜色</li>
+<li>Thickness: 线条宽度，为-1时生成闭合图案并填充颜色</li>
+</ul>
+<h2 id="2-3-绘制矩形"><a href="#2-3-绘制矩形" class="headerlink" title="2.3 绘制矩形"></a>2.3 绘制矩形</h2><pre><code class="python">cv.rectangle(img,leftupper,rightdown,color,thickness)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>img:要绘制矩形的图像</li>
+<li>Leftupper, rightdown: 矩形的左上角和右下角坐标</li>
+<li>color: 线条的颜色</li>
+<li>Thickness: 线条宽度</li>
+</ul>
+<h2 id="2-4-向图像中添加文字"><a href="#2-4-向图像中添加文字" class="headerlink" title="2.4 向图像中添加文字"></a>2.4 向图像中添加文字</h2><pre><code class="python">cv.putText(img,text,station, font, fontsize,color,thickness,cv.LINE_AA)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>img: 图像</li>
+<li>text：要写入的文本数据</li>
+<li>station：文本的放置位置</li>
+<li>font：字体</li>
+<li>Fontsize :字体大小</li>
+</ul>
+<h2 id="2-5-效果展示"><a href="#2-5-效果展示" class="headerlink" title="2.5 效果展示"></a>2.5 效果展示</h2><p>我们生成一个全黑的图像，然后在里面绘制图像并添加文字</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 创建一个空白的图像
+img = np.zeros((512,512,3), np.uint8)
+# 2 绘制图形
+cv.line(img,(0,0),(511,511),(255,0,0),5)
+cv.rectangle(img,(384,0),(510,128),(0,255,0),3)
+cv.circle(img,(447,63), 63, (0,0,255), -1)
+font = cv.FONT_HERSHEY_SIMPLEX
+cv.putText(img,&#39;OpenCV&#39;,(10,500), font, 4,(255,255,255),2,cv.LINE_AA)
+# 3 图像展示
+plt.imshow(img[:,:,::-1])
+plt.title(&#39;匹配结果&#39;), plt.xticks([]), plt.yticks([])
+plt.show()
+</code></pre>
+<h1 id="3-获取并修改图像中的像素点"><a href="#3-获取并修改图像中的像素点" class="headerlink" title="3 获取并修改图像中的像素点"></a>3 获取并修改图像中的像素点</h1><p>我们可以通过行和列的坐标值获取该像素点的像素值。对于BGR图像，它返回一个蓝，绿，红值的数组。对于灰度图像，仅返回相应的强度值。使用相同的方法对像素值进行修改。</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+img = cv.imread(&#39;messi5.jpg&#39;)
+# 获取某个像素点的值
+px = img[100,100]
+# 仅获取蓝色通道的强度值
+blue = img[100,100,0]
+# 修改某个位置的像素值
+img[100,100] = [255,255,255]
+</code></pre>
+<h1 id="4-获取图像的属性"><a href="#4-获取图像的属性" class="headerlink" title="4 获取图像的属性"></a>4 获取图像的属性</h1><p>图像属性包括行数，列数和通道数，图像数据类型，像素数等。</p>
+<h1 id="5-图像通道的拆分与合并"><a href="#5-图像通道的拆分与合并" class="headerlink" title="5 图像通道的拆分与合并"></a>5 图像通道的拆分与合并</h1><p>有时需要在B，G，R通道图像上单独工作。在这种情况下，需要将BGR图像分割为单个通道。或者在其他情况下，可能需要将这些单独的通道合并到BGR图像。你可以通过以下方式完成。</p>
+<pre><code class="python"># 通道拆分
+b,g,r = cv.split(img)
+# 通道合并
+img = cv.merge((b,g,r))
+</code></pre>
+<h1 id="6-色彩空间的改变"><a href="#6-色彩空间的改变" class="headerlink" title="6 色彩空间的改变"></a>6 色彩空间的改变</h1><p>OpenCV中有150多种颜色空间转换方法。最广泛使用的转换方法有两种，BGR↔Gray和BGR↔HSV。</p>
+<p>API：</p>
+<pre><code class="python">cv.cvtColor(input_image，flag)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>input_image: 进行颜色空间转换的图像</li>
+<li>flag: 转换类型<ul>
+<li><code>cv.COLOR_BGR2GRAY</code> : BGR↔Gray</li>
+<li><code>cv.COLOR_BGR2HSV</code>: BGR→HSV</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>总结：</strong></p>
+<ol>
+<li><p>图像IO操作的API：</p>
+<p><code>cv.imread()</code>: 读取图像</p>
+<p><code>cv.imshow()</code>：显示图像</p>
+<p><code>cv.imwrite()</code>: 保存图像</p>
+</li>
+<li><p>在图像上绘制几何图像</p>
+<p><code>cv.line()</code>: 绘制直线</p>
+<p><code>cv.circle()</code>: 绘制圆形</p>
+<p><code>cv.rectangle()</code>: 绘制矩形</p>
+<p><code>cv.putText()</code>: 在图像上添加文字</p>
+</li>
+<li><p>直接使用行列索引获取图像中的像素并进行修改</p>
+</li>
+<li><p>图像的属性</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>形状</td>
+<td>img.shape</td>
+</tr>
+<tr>
+<td>图像大小</td>
+<td>img.size</td>
+</tr>
+<tr>
+<td>数据类型</td>
+<td>img.dtype</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>拆分通道：cv.split()</p>
+<p>通道合并：cv.merge()</p>
+</li>
+<li><p>色彩空间的改变</p>
+<p>cv.cvtColor(input_image，flag)</p>
+</li>
+</ol>
+<p>★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★</p>
+<h5 id="Jupyter-Notebook增加临时环境"><a href="#Jupyter-Notebook增加临时环境" class="headerlink" title="Jupyter Notebook增加临时环境"></a>Jupyter Notebook增加临时环境</h5><p>在Jupyter的terminal中</p>
+<pre><code class="python">★ ★ PS C:\Users\Pluminary\Documents&gt; pip config set global.index-url https://pypi.tuna.tsi
+nghua.edu.cn/simple
+Writing to C:\Users\Pluminary\AppData\Roaming\pip\pip.ini
+★ ★ PS C:\Users\Pluminary\Documents&gt; pip install opencv-python --cache-dir ./pipcache
+&gt;&gt;
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple, https://pypi.ngc.nvidia.
+com
+Collecting opencv-python
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/a4/7d/f1c30a92854540bf789e9cd
+5dde7ef49bbe63f855b85a2e6b3db8135c591/opencv_python-4.11.0.86-cp37-abi3-win_amd64.whl
+(39.5 MB)
+     --------------------------------------- 39.5/39.5 MB 1.3 MB/s eta 0:00:00
+★ ★ PS C:\Users\Pluminary\Documents&gt; pip install matplotlib
+</code></pre>
+<p>★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★</p>
+<h3 id="算数操作【要用到上面的Jupyter-Notebook】"><a href="#算数操作【要用到上面的Jupyter-Notebook】" class="headerlink" title="算数操作【要用到上面的Jupyter Notebook】"></a>算数操作【要用到上面的Jupyter Notebook】</h3><p><strong>学习目标</strong></p>
+<ul>
+<li>了解图像的加法、混合操作</li>
+</ul>
+<h1 id="1-图像的加法注意：这里都要求两幅图像是相同大小的"><a href="#1-图像的加法注意：这里都要求两幅图像是相同大小的" class="headerlink" title="1.图像的加法注意：这里都要求两幅图像是相同大小的"></a>1.图像的加法<del>注意：这里都要求两幅图像是相同大小的</del></h1><p>你可以使用OpenCV的cv.add()函数把两幅图像相加，或者可以简单地通过numpy操作添加两个图像，如res &#x3D; img1 + img2。两个图像应该具有相同的大小和类型，或者第二个图像可以是标量值。</p>
+<p><strong>注意：OpenCV加法和Numpy加法之间存在差异。<u>OpenCV的加法是饱和操作</u>，而<u>Numpy添加是模运算</u>。</strong></p>
+<p>参考以下代码：</p>
+<pre><code class="python">【OpenCV】
+&gt;&gt;&gt; x = np.uint8([250])
+&gt;&gt;&gt; y = np.uint8([10])
+&gt;&gt;&gt; print( cv.add(x,y) ) # 250+10 = 260 =&gt; 255
+[[255]]
+
+【Numpy】
+&gt;&gt;&gt; print( x+y )          # 250+10 = 260 % 256 = 4
+[4]
+</code></pre>
+<p>这种差别在你对两幅图像进行加法时会更加明显。OpenCV 的结果会更好一点。所以我们尽量使用 OpenCV 中的函数。</p>
+<p>代码：</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+# 1 读取图像
+img1 = cv.imread(&quot;view.jpg&quot;)
+img2 = cv.imread(&quot;rain.jpg&quot;)
+
+# 2 加法操作
+img3 = cv.add(img1,img2) # cv中的加法
+img4 = img1+img2 # 直接相加
+
+# 3 图像显示
+fig,axes=plt.subplots(nrows=1,ncols=2,figsize=(10,8),dpi=100)
+axes[0].imshow(img3[:,:,::-1])
+axes[0].set_title(&quot;cv中的加法&quot;)
+axes[1].imshow(img4[:,:,::-1])
+axes[1].set_title(&quot;直接相加&quot;)
+plt.show()
+</code></pre>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+# 显示下雨的图片 (&quot;./image/view.jpg&quot;)
+rain = cv.imread(&quot;./rain.jpg&quot;)
+plt.imshow(rain[:,:,::-1])
+
+# 显示风景图片
+view = cv.imread(&quot;./view.jpg&quot;)
+plt.imshow(view[:,:,::-1])
+
+# 用cv去做加法 显示雨中风景图
+img1 = cv.add(rain,view)
+plt.imshow(img1[:,:,::-1])
+
+# 用普通做加法 显示雨中风景图
+img2 = rain+view
+plt.imshow(img2[:,:,::-1])
+</code></pre>
+<p>总结：OpenCV的加法效果要大于Numpy的加法效果</p>
+<h1 id="2-图像的混合注意：这里都要求两幅图像是相同大小的"><a href="#2-图像的混合注意：这里都要求两幅图像是相同大小的" class="headerlink" title="2.图像的混合注意：这里都要求两幅图像是相同大小的"></a>2.图像的混合<del>注意：这里都要求两幅图像是相同大小的</del></h1><p>这其实也是加法，但是不同的是两幅图像的权重不同，这就会给人一种混合或者透明的感觉。图像混合的计算公式如下：</p>
+<blockquote>
+<p>g(x) &#x3D; (1−α)f0(x) + αf1(x)</p>
+</blockquote>
+<p>通过修改 α 的值（0 → 1），可以实现非常炫酷的混合。</p>
+<p>现在我们把两幅图混合在一起。第一幅图的权重是0.7，第二幅图的权重是0.3。函数cv2.addWeighted()可以按下面的公式对图片进行混合操作。</p>
+<blockquote>
+<p>dst &#x3D; α⋅img1 + β⋅img2 + γ</p>
+</blockquote>
+<p>这里γ取为零。</p>
+<p>参考以下代码：</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+# 1 读取图像
+img1 = cv.imread(&quot;view.jpg&quot;)
+img2 = cv.imread(&quot;rain.jpg&quot;)
+
+# 2 图像混合
+img3 = cv.addWeighted(img1,0.7,img2,0.3,0)
+
+# 3 图像显示
+plt.figure(figsize=(8,8))
+plt.imshow(img3[:,:,::-1])
+plt.show()
+</code></pre>
+<pre><code class="python">## 结合上方的代码
+import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+# 显示下雨的图片
+rain = cv.imread(&quot;./rain.jpg&quot;)
+plt.imshow(rain[:,:,::-1])
+
+# 显示风景图片
+view = cv.imread(&quot;./view.jpg&quot;)
+plt.imshow(view[:,:,::-1])
+
+# 用cv去做加法 显示雨中风景图
+img1 = cv.add(rain,view)
+plt.imshow(img1[:,:,::-1])
+
+# 用普通做加法 显示雨中风景图
+img2 = rain+view
+plt.imshow(img2[:,:,::-1])
+
+# 做指定参数的混合加法
+img3 = cv.addWeighted(view,0.5,rain,0.5,0)
+plt.imshow(img3[:,:,::-1])
+</code></pre>
+<p><strong>总结</strong></p>
+<ol>
+<li><p>图像加法：将两幅图像加载一起</p>
+<p>cv.add()</p>
+</li>
+<li><p>图像的混合：将两幅图像按照不同的比例进行混合</p>
+<p>cv.addweight()</p>
+</li>
+</ol>
+<p>注意：这里都要求两幅图像是相同大小的。</p>
+<h2 id="1-图像缩放-绝对尺寸-相对尺寸"><a href="#1-图像缩放-绝对尺寸-相对尺寸" class="headerlink" title="1 图像缩放[绝对尺寸+相对尺寸]"></a>1 图像缩放<del>[绝对尺寸+相对尺寸]</del></h2><p>缩放是对图像的大小进行调整，即使图像放大或缩小。</p>
+<ol>
+<li><p>lAPI</p>
+<pre><code class="python">cv2.resize(src,dsize,fx=0,fy=0,interpolation=cv2.INTER_LINEAR)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li><p>src : 输入图像</p>
+</li>
+<li><p>dsize: 绝对尺寸，直接指定调整后图像的大小</p>
+</li>
+<li><p>fx,fy: 相对尺寸，将dsize设置为None，然后将fx和fy设置为比例因子即可</p>
+</li>
+<li><p>interpolation：插值方法，</p>
+<table>
+<thead>
+<tr>
+<th>插值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cv2.INTER_LINEAR</td>
+<td>双线性插值法</td>
+</tr>
+<tr>
+<td>cv2.INTER_NEAREST</td>
+<td>最近邻插值</td>
+</tr>
+<tr>
+<td>cv2.INTER_AREA</td>
+<td>像素</td>
+</tr>
+<tr>
+<td>cv2.INTER_CUBIC</td>
+<td>双三次插值</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+<li><p>示例</p>
+</li>
+<li><pre><code class="python">import cv2 as cv
+# 1. 读取图片
+img1 = cv.imread(&quot;./image/dog.jpeg&quot;)
+# 2.图像缩放
+# 2.1 绝对尺寸
+rows,cols = img1.shape[:2]
+res = cv.resize(img1,(2*cols,2*rows),interpolation=cv.INTER_CUBIC)
+
+# 2.2 相对尺寸
+res1 = cv.resize(img1,None,fx=0.5,fy=0.5)
+
+# 3 图像显示
+# 3.1 使用opencv显示图像(不推荐)
+cv.imshow(&quot;orignal&quot;,img1)
+cv.imshow(&quot;enlarge&quot;,res)
+cv.imshow(&quot;shrink）&quot;,res1)
+cv.waitKey(0)
+
+# 3.2 使用matplotlib显示图像
+fig,axes=plt.subplots(nrows=1,ncols=3,figsize=(10,8),dpi=100)
+axes[0].imshow(res[:,:,::-1])
+axes[0].set_title(&quot;绝对尺度（放大）&quot;)
+axes[1].imshow(img1[:,:,::-1])
+axes[1].set_title(&quot;原图&quot;)
+axes[2].imshow(res1[:,:,::-1])
+axes[2].set_title(&quot;相对尺度（缩小）&quot;)
+plt.show()
+</code></pre>
+</li>
+</ol>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+kids = cv.imread(&quot;./kids.jpg&quot;)
+plt.imshow(kids[:,:,::-1])
+
+# 绝对尺寸
+rows,cols = kids.shape[:2]
+rows =&gt;&gt; 374
+cols =&gt;&gt; 500
+res = cv.resize(kids,[2*rows,2*cols])
+plt.imshow(res[:,:,::-1])
+res.shape =&gt;&gt; (1000,748,3)
+
+# 相对尺寸
+res1 = cv.resize(kids,None,fx=0.5,fy=0.5)
+plt.imshow(res1[:,:,::-1])
+res1.shape =&gt;&gt; (187,250,3)
+</code></pre>
+<h2 id="2-图像平移"><a href="#2-图像平移" class="headerlink" title="2 图像平移"></a>2 图像平移</h2><p>图像平移将图像按照指定方向和距离，移动到相应的位置。</p>
+<ol>
+<li>API</li>
+</ol>
+<pre><code class="python">cv.warpAffine(img,M,dsize)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li><p>img: 输入图像</p>
+</li>
+<li><p>M： 2∗∗3移动矩阵</p>
+<p>对于(x,y)处的像素点，要把它移动到(x+tx,y+ty<em>x</em>+<em>t**x</em>,<em>y</em>+<em>t**y</em>)处时，M矩阵应如下设置：</p>
+<p>M &#x3D; [1 0 t<del>x</del>]<br>    [0 1 t<del>y</del>]<br>注意：将M<em>M</em>设置为np.float32类型的Numpy数组。</p>
+</li>
+<li><p>dsize: 输出图像的大小</p>
+<p><strong>注意：输出图像的大小，它应该是(宽度，高度)的形式。请记住,width&#x3D;列数，height&#x3D;行数。</strong></p>
+</li>
+<li><p>示例</p>
+</li>
+</ul>
+<p>需求是将图像的像素点移动(50,100)的距离：</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1. 读取图像
+img1 = cv.imread(&quot;./image/image2.jpg&quot;)
+
+# 2. 图像平移
+rows,cols = img1.shape[:2]
+M = M = np.float32([[1,0,100],[0,1,50]])# 平移矩阵
+dst = cv.warpAffine(img1,M,(cols,rows))
+
+# 3. 图像显示
+fig,axes=plt.subplots(nrows=1,ncols=2,figsize=(10,8),dpi=100)
+axes[0].imshow(img1[:,:,::-1])
+axes[0].set_title(&quot;原图&quot;)
+axes[1].imshow(dst[:,:,::-1])
+axes[1].set_title(&quot;平移后结果&quot;)
+plt.show()
+</code></pre>
+<h2 id="3-图像旋转-每一个像素点坐标进行修改"><a href="#3-图像旋转-每一个像素点坐标进行修改" class="headerlink" title="3 图像旋转[每一个像素点坐标进行修改]"></a>3 图像旋转<del>[每一个像素点坐标进行修改]</del></h2><h6 id="图像旋转是指图像按照某个位置转动一定角度的过程，旋转中图像仍保持这原始尺寸。图像旋转后图像的水平对称轴、垂直对称轴及中心坐标原点都可能会发生变换，因此需要对图像旋转中的坐标进行相应转换。"><a href="#图像旋转是指图像按照某个位置转动一定角度的过程，旋转中图像仍保持这原始尺寸。图像旋转后图像的水平对称轴、垂直对称轴及中心坐标原点都可能会发生变换，因此需要对图像旋转中的坐标进行相应转换。" class="headerlink" title="图像旋转是指图像按照某个位置转动一定角度的过程，旋转中图像仍保持这原始尺寸。图像旋转后图像的水平对称轴、垂直对称轴及中心坐标原点都可能会发生变换，因此需要对图像旋转中的坐标进行相应转换。"></a>图像旋转是指图像按照某个位置转动一定角度的过程，旋转中图像仍保持这原始尺寸。图像旋转后图像的水平对称轴、垂直对称轴及中心坐标原点都可能会发生变换，因此需要对图像旋转中的坐标进行相应转换。</h6><p>同时我们要修正原点的位置，因为原图像中的坐标原点在图像的左上角，经过旋转后图像的大小会有所变化，原点也需要修正。</p>
+<p>假设在旋转的时候是以旋转中心为坐标原点的，旋转结束后还需要将坐标原点移到图像左上角，也就是还要进行一次变换。</p>
+<h6 id="在OpenCV中图像旋转首先根据旋转角度和旋转中心获取旋转矩阵，然后根据旋转矩阵进行变换，即可实现任意角度和任意中心的旋转效果。"><a href="#在OpenCV中图像旋转首先根据旋转角度和旋转中心获取旋转矩阵，然后根据旋转矩阵进行变换，即可实现任意角度和任意中心的旋转效果。" class="headerlink" title="在OpenCV中图像旋转首先根据旋转角度和旋转中心获取旋转矩阵，然后根据旋转矩阵进行变换，即可实现任意角度和任意中心的旋转效果。"></a>在OpenCV中图像旋转首先根据旋转角度和旋转中心获取旋转矩阵，然后根据旋转矩阵进行变换，即可实现任意角度和任意中心的旋转效果。</h6><ol>
+<li><p>API</p>
+<pre><code>cv2.getRotationMatrix2D(center, angle, scale)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li><strong>center</strong>：旋转中心</li>
+<li><strong>angle</strong>：旋转角度</li>
+<li><strong>scale</strong>：缩放比例</li>
+</ul>
+<p>返回：</p>
+<ul>
+<li><p><strong>M</strong>：旋转矩阵</p>
+<p>调用cv.warpAffine完成图像的旋转</p>
+</li>
+</ul>
+</li>
+<li><p>示例</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 读取图像
+img = cv.imread(&quot;./image/image2.jpg&quot;)
+
+# 2 图像旋转
+rows,cols = img.shape[:2]
+# 2.1 生成旋转矩阵
+M = cv.getRotationMatrix2D((cols/2,rows/2),90,1)
+# 2.2 进行旋转变换
+dst = cv.warpAffine(img,M,(cols,rows))
+
+# 3 图像展示
+fig,axes=plt.subplots(nrows=1,ncols=2,figsize=(10,8),dpi=100)
+axes[0].imshow(img1[:,:,::-1])
+axes[0].set_title(&quot;原图&quot;)
+axes[1].imshow(dst[:,:,::-1])
+axes[1].set_title(&quot;旋转后结果&quot;)
+plt.show()
+</code></pre>
+</li>
+</ol>
+<pre><code class="python">## 完整的Jupyter
+import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+kids = cv.imread(&quot;./kids.jpg&quot;)
+plt.imshow(kids[:,:,::-1])
+
+# 绝对尺寸
+rows,cols = kids.shape[:2]
+rows =&gt;&gt; 374
+cols =&gt;&gt; 500
+res = cv.resize(kids,[2*rows,2*cols])
+plt.imshow(res[:,:,::-1])
+res.shape
+
+# 相对尺寸
+res1 = cv.resize(kids,None,fx=0.5,fy=0.5)
+plt.imshow(res1[:,:,::-1])
+res1.shape
+
+# 图像平移
+rows,cols = kids.shape[:2]
+M = np.float32([[1,0,100],[0,1,50]])
+res2 = cv.warpAffine(kids,M,(cols,rows))
+plt.imshow(res2[:,:,::-1])
+
+# 图像旋转
+M = cv.getRotationMatrix2D((cols/2,rows/2),45,1)
+res3 = cv.warpAffine(kids,M,(cols,rows))
+plt.imshow(res3[:,:,::-1])
+</code></pre>
+<h2 id="4-仿射变换-类似ps的扭曲"><a href="#4-仿射变换-类似ps的扭曲" class="headerlink" title="4 仿射变换[类似ps的扭曲]"></a>4 仿射变换[类似ps的扭曲]</h2><p>图像的仿射变换涉及到图像的形状位置角度的变化，是深度学习预处理中常到的功能,仿射变换主要是对图像的缩放，旋转，翻转和平移等操作的组合。</p>
+<p>那什么是图像的仿射变换，如下图所示，图1中的点1, 2 和 3 与图二中三个点一一映射, 仍然形成三角形, 但形状已经大大改变，通过这样两组三点（感兴趣点）求出仿射变换， 接下来我们就能把仿射变换应用到图像中所有的点中，就完成了图像的仿射变换。</p>
+<p>在OpenCV中，仿射变换的矩阵是一个2×3的矩阵：<br>M&#x3D;[A   B]&#x3D;[a00  a01  b0]<br>                &#x3D;[a10  a11  b1]<br>其中左边的2×2子矩阵$A$是线性变换矩阵，右边的2×1子矩阵$B$是平移项：<br>A&#x3D;[a<del>00</del>  a<del>01</del>]  ,  B&#x3D;[b<del>0</del>]<br>     [a<del>10</del>  a<del>11</del>]          [b<del>1</del>]<br>对于图像上的任一位置(x,y)，仿射变换执行的是如下的操作：<br>T<del>affine</del> &#x3D; A[x] + B &#x3D; M[x]<br>                 [y]              [y]<br>                                    [1]<br>需要注意的是，对于图像而言，宽度方向是x，高度方向是y，坐标的顺序和图像像素对应下标一致。所以原点的位置不是左下角而是右上角，y的方向也不是向上，而是向下。</p>
+<p>在仿射变换中，原图中所有的平行线在结果图像中同样平行。为了创建这个矩阵我们需要从原图像中找到三个点以及他们在输出图像中的位置。然后cv2.getAﬃneTransform 会创建一个 2x3 的矩阵，最后这个矩阵会被传给函数 cv2.warpAﬃne。</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 图像读取
+img = cv.imread(&quot;./image/image2.jpg&quot;)
+
+# 2 仿射变换
+rows,cols = img.shape[:2]
+# 2.1 创建变换矩阵
+pts1 = np.float32([[50,50],[200,50],[50,200]])
+pts2 = np.float32([[100,100],[200,50],[100,250]])
+M = cv.getAffineTransform(pts1,pts2)
+# 2.2 完成仿射变换
+dst = cv.warpAffine(img,M,(cols,rows))
+
+# 3 图像显示
+fig,axes=plt.subplots(nrows=1,ncols=2,figsize=(10,8),dpi=100)
+axes[0].imshow(img[:,:,::-1])
+axes[0].set_title(&quot;原图&quot;)
+axes[1].imshow(dst[:,:,::-1])
+axes[1].set_title(&quot;仿射后结果&quot;)
+plt.show()
+</code></pre>
+<pre><code class="python">## 代码承接上方
+# 仿射变换
+pts1 = np.float32([[56,65],[368,52],[389,390]])
+pts2 = np.float32([[100,145],[300,100],[310,300]])
+
+M = cv.getAffineTransform(pts1,pts2)
+    M array([[ 6.40600025e-01, -1.02147944e-02,  6.47903603e+01],
+               [-1.19267183e-01,  5.99126068e-01,  1.12735768e+02]])
+res4 = cv.warpAffine(kids,M,(cols,rows))
+plt.imshow(res4[:,:,::-1])
+</code></pre>
+<h2 id="5-透射变换"><a href="#5-透射变换" class="headerlink" title="5 透射变换"></a>5 透射变换</h2><p>透射变换是视角变化的结果，是指利用透视中心、像点、目标点三点共线的条件，按透视旋转定律使承影面（透视面）绕迹线（透视轴）旋转某一角度，破坏原有的投影光线束，仍能保持承影面上投影几何图形不变的变换。</p>
+<p>在opencv中，我们要找到四个点，其中任意三个不共线，然后获取变换矩阵T，再进行透射变换。通过函数cv.getPerspectiveTransform找到变换矩阵，将cv.warpPerspective应用于此3x3变换矩阵。</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 读取图像
+img = cv.imread(&quot;./image/image2.jpg&quot;)
+# 2 透射变换
+rows,cols = img.shape[:2]
+# 2.1 创建变换矩阵
+pts1 = np.float32([[56,65],[368,52],[28,387],[389,390]])
+pts2 = np.float32([[100,145],[300,100],[80,290],[310,300]])
+
+T = cv.getPerspectiveTransform(pts1,pts2)
+# 2.2 进行变换
+dst = cv.warpPerspective(img,T,(cols,rows))
+
+# 3 图像显示
+fig,axes=plt.subplots(nrows=1,ncols=2,figsize=(10,8),dpi=100)
+axes[0].imshow(img[:,:,::-1])
+axes[0].set_title(&quot;原图&quot;)
+axes[1].imshow(dst[:,:,::-1])
+axes[1].set_title(&quot;透射后结果&quot;)
+plt.show()
+</code></pre>
+<pre><code class="python">## 代码承接上方
+# 投射变换
+pst1 = np.float32([[56,65],[368,52],[28,387],[389,390]])
+pst2 = np.float32([[100,145],[300,100],[80,290],[310,300]])
+T = cv.getPerspectiveTransform(pst1,pst2)
+T
+res5 = cv.warpPerspective(kids,T,(cols,rows))
+plt.imshow(res5[:,:,::-1])
+</code></pre>
+<h2 id="6-图像金字塔"><a href="#6-图像金字塔" class="headerlink" title="6 图像金字塔"></a>6 图像金字塔</h2><p>图像金字塔是图像多尺度表达的一种，最主要用于图像的分割，是一种以多分辨率来解释图像的有效但概念简单的结构。</p>
+<p>图像金字塔用于机器视觉和图像压缩，一幅图像的金字塔是一系列以金字塔形状排列的分辨率逐步降低，且来源于同一张原始图的图像集合。其通过梯次向下采样获得，直到达到某个终止条件才停止采样。</p>
+<p>金字塔的<strong>底部</strong>是<u>待处理图像的高分辨率表示</u>，而<strong>顶部</strong>是<u>低分辨率的近似，层级越高，图像越小，分辨率越低</u>。</p>
+<ol>
+<li><p>API</p>
+<pre><code class="python">cv.pyrUp(img)       #对图像进行上采样
+cv.pyrDown(img)        #对图像进行下采样
+</code></pre>
+</li>
+<li><p>示例</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 图像读取
+img = cv.imread(&quot;./image/image2.jpg&quot;)
+# 2 进行图像采样
+up_img = cv.pyrUp(img)  # 上采样操作
+img_1 = cv.pyrDown(img)  # 下采样操作
+# 3 图像显示
+cv.imshow(&#39;enlarge&#39;, up_img)
+cv.imshow(&#39;original&#39;, img)
+cv.imshow(&#39;shrink&#39;, img_1)
+cv.waitKey(0)
+cv.destroyAllWindows()
+</code></pre>
+</li>
+</ol>
+<pre><code class="python">## 代码承接上方
+# 图像金字塔
+ # 图像上采样
+plt.imshow(kids[:,:,::-1])
+imgup = cv.pyrUp(kids)
+plt.imshow(imgup[:,:,::-1])
+imgup2 = cv.pyrUp(imgup)
+plt.imshow(imgup2[:,:,::-1])
+ # 图像下采样
+imgdown = cv.pyrDown(kids)
+plt.imshow(imgdown[:,:,::-1])
+</code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h2><ol>
+<li><p>图像缩放：对图像进行放大或缩小</p>
+<p>cv.resize()</p>
+</li>
+<li><p>图像平移：</p>
+<p>指定平移矩阵后，调用cv.warpAffine()平移图像</p>
+</li>
+<li><p>图像旋转：</p>
+<p>调用cv.getRotationMatrix2D获取旋转矩阵，然后调用cv.warpAffine()进行旋转</p>
+</li>
+<li><p>仿射变换：</p>
+<p>调用cv.getAffineTransform将创建变换矩阵，最后该矩阵将传递给cv.warpAffine()进行变换</p>
+</li>
+<li><p>透射变换：</p>
+<p>通过函数cv.getPerspectiveTransform()找到变换矩阵，将cv.warpPerspective()进行投射变换</p>
+</li>
+<li><p>金字塔</p>
+<p>图像金字塔是图像多尺度表达的一种，使用的API：</p>
+<p>cv.pyrUp(): 向上采样</p>
+<p>cv.pyrDown(): 向下采样</p>
+</li>
+</ol>
+<h1 id="形态学操作"><a href="#形态学操作" class="headerlink" title="形态学操作"></a>形态学操作</h1><p><strong>学习目标</strong></p>
+<ul>
+<li>理解图像的邻域，连通性</li>
+<li>了解不同的形态学操作：腐蚀，膨胀，开闭运算，礼帽和黑帽等，及其不同操作之间的关系</li>
+</ul>
+<hr>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/7899a786380300b8aa93bbd471ba874c0b649fd9/%E5%BD%A2%E6%80%81%E5%AD%A6-%E8%BF%9E%E9%80%9A%E6%80%A7.jpg"></p>
+<p>形态学转换是基于图像形状的一些简单操作。它通常在二进制图像上执行。腐蚀和膨胀是两个基本的形态学运算符。然后它的变体形式如开运算，闭运算，礼帽黑帽等。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/c7f87aace71d4989fc73f89741e4f29a24c619a4/%E5%BD%A2%E6%80%81%E5%AD%A6-%E8%85%90%E8%9A%80%E4%B8%8E%E8%86%A8%E8%83%80.jpg"></p>
+<h6 id="膨胀的作用是将与物体接触的所有背景点合并到物体中，使目标增大，可添补目标中的孔洞。"><a href="#膨胀的作用是将与物体接触的所有背景点合并到物体中，使目标增大，可添补目标中的孔洞。" class="headerlink" title="膨胀的作用是将与物体接触的所有背景点合并到物体中，使目标增大，可添补目标中的孔洞。"></a>膨胀的作用是将与物体接触的所有背景点合并到物体中，使目标增大，可添补目标中的孔洞。</h6><p><strong>API</strong>：</p>
+<pre><code class="python">   cv.dilate(img,kernel,iterations)
+</code></pre>
+<p>参数：</p>
+<ul>
+<li>img: 要处理的图像</li>
+<li>kernel: 核结构</li>
+<li>iterations: 腐蚀的次数，默认是1</li>
+</ul>
+<ol>
+<li><strong>示例</strong></li>
+</ol>
+<p>我们使用一个5*5的卷积核实现腐蚀和膨胀的运算：</p>
+<pre><code class="python">import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+# 1 读取图像
+img = cv.imread(&quot;./image/image3.png&quot;)
+# 2 创建核结构
+kernel = np.ones((5, 5), np.uint8)
+
+# 3 图像腐蚀和膨胀
+erosion = cv.erode(img, kernel) # 腐蚀
+dilate = cv.dilate(img,kernel) # 膨胀
+
+# 4 图像展示
+fig,axes=plt.subplots(nrows=1,ncols=3,figsize=(10,8),dpi=100)
+axes[0].imshow(img)
+axes[0].set_title(&quot;原图&quot;)
+axes[1].imshow(erosion)
+axes[1].set_title(&quot;腐蚀后结果&quot;)
+axes[2].imshow(dilate)
+axes[2].set_title(&quot;膨胀后结果&quot;)
+plt.show()
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

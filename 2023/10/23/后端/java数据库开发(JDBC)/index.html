@@ -1,0 +1,1601 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || java数据库开发(JDBC)</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>java数据库开发(JDBC) </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2023/10/23
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#ffa2c4>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h3 id="IDEA窗口快捷键"><a href="#IDEA窗口快捷键" class="headerlink" title="IDEA窗口快捷键"></a>IDEA窗口快捷键</h3><table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ctrl+Alt+S</td>
+<td>Settings面板</td>
+</tr>
+<tr>
+<td><strong>Ctrl+Shift+F&#x2F;R</strong></td>
+<td>当前Project中全局查找&#x2F;替换</td>
+</tr>
+<tr>
+<td><strong>Ctrl+Shif+N</strong></td>
+<td>文件查找面板</td>
+</tr>
+<tr>
+<td>Alt+Insert</td>
+<td>快速生成面板</td>
+</tr>
+<tr>
+<td><strong>Ctrl+Shift+A</strong></td>
+<td>Find Action模糊<strong>查询快速定位</strong></td>
+</tr>
+</tbody></table>
+<h3 id="代码快捷键"><a href="#代码快捷键" class="headerlink" title="代码快捷键"></a>代码快捷键</h3><table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ctrl+←→</td>
+<td>上一个&#x2F;下一个单词</td>
+</tr>
+<tr>
+<td><strong>Ctrl+Shift+Enter</strong></td>
+<td><strong>自动完成</strong></td>
+</tr>
+<tr>
+<td>Alt+Enter</td>
+<td>智能提示</td>
+</tr>
+<tr>
+<td>Ctrl+Alt+L</td>
+<td>格式化代码</td>
+</tr>
+<tr>
+<td>Ctrl+(Shift)+&#x2F;</td>
+<td>行注释&#x2F;块注释</td>
+</tr>
+<tr>
+<td>Ctrl+Alt+Shift+J</td>
+<td>列操作</td>
+</tr>
+<tr>
+<td>Shift+F6</td>
+<td>重命名(当前选择变量修改)</td>
+</tr>
+<tr>
+<td>Ctrl+W</td>
+<td>选中单词</td>
+</tr>
+</tbody></table>
+<h3 id="代码快速定位"><a href="#代码快速定位" class="headerlink" title="代码快速定位"></a>代码快速定位</h3><table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ctrl+(Shift)+E</td>
+<td>最近访问(编辑)的文件列表</td>
+</tr>
+<tr>
+<td><strong>Ctrl+Shift+1~9</strong></td>
+<td><strong>创建书签</strong></td>
+</tr>
+<tr>
+<td><strong>Shift+F11</strong></td>
+<td><strong>查看书签</strong></td>
+</tr>
+<tr>
+<td><strong>Ctrl+1~9</strong></td>
+<td><strong>快速切换书签</strong></td>
+</tr>
+<tr>
+<td>Alt+←→</td>
+<td>切换书签</td>
+</tr>
+</tbody></table>
+<h6 id="Template使用"><a href="#Template使用" class="headerlink" title="Template使用"></a>Template使用</h6><p><strong>Live Templates</strong>可以添加常用快捷字母作为快捷代码</p>
+<blockquote>
+<p>右方 + “custom”<br>“<strong>Abbreviation</strong>：al”<br>“<strong>Description</strong>：Create ArrayList”<br>“<strong>Template text</strong>：List&lt; String &gt;list &#x3D; new ArrayList();”<br>“<strong>Template text</strong>：List&lt; $VAR1$&gt;$VAR2$ &#x3D; new ArrayList();”<br>点击define设置全部</p>
+</blockquote>
+<h3 id="运行与打包"><a href="#运行与打包" class="headerlink" title="运行与打包"></a>运行与打包</h3><table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Shift+F9</td>
+<td>调试</td>
+</tr>
+<tr>
+<td>Shift+F10</td>
+<td>运行</td>
+</tr>
+<tr>
+<td>F8</td>
+<td>单步运行</td>
+</tr>
+<tr>
+<td>F9</td>
+<td>恢复运行至下一个端点</td>
+</tr>
+<tr>
+<td>Shift+Ctrl+F8</td>
+<td>查看所有端点</td>
+</tr>
+</tbody></table>
+<h6 id="Jar包核心配置文件设置-加载响应的Class"><a href="#Jar包核心配置文件设置-加载响应的Class" class="headerlink" title="Jar包核心配置文件设置(加载响应的Class)"></a>Jar包核心配置文件设置(加载响应的Class)</h6><h4 id="将编译的类导入jar包"><a href="#将编译的类导入jar包" class="headerlink" title="将编译的类导入jar包"></a>将编译的类导入jar包</h4><p><strong><u>‘……’ compile output</u></strong><br><strong>Project Structure → Artifacts → Outpub Layout</strong></p>
+<p>设置jar包的入口类 → Create Manifest… → Main Class(Jar包加载相应目录)</p>
+<h4 id="生成jar包"><a href="#生成jar包" class="headerlink" title="生成jar包"></a>生成jar包</h4><p>上述操作完毕后 点<strong>Build</strong> 点<strong>Build Artifacts…</strong> </p>
+<h3 id="IDEA快速开发Web应用"><a href="#IDEA快速开发Web应用" class="headerlink" title="IDEA快速开发Web应用"></a>IDEA快速开发Web应用</h3><p>New Project → Java Enterprise → SDK1.8 &#x3D; Java EE7</p>
+<h6 id="改变Tomcat启动时自动弹出的地址"><a href="#改变Tomcat启动时自动弹出的地址" class="headerlink" title="改变Tomcat启动时自动弹出的地址"></a>改变Tomcat启动时自动弹出的地址</h6><p><strong>Run&#x2F;Debug Configurations</strong> → Deployment → 下方的 Application context</p>
+<h6 id="Project-Structure"><a href="#Project-Structure" class="headerlink" title="Project Structure"></a>Project Structure</h6><p>Artifacts 中默认存在 <strong>javaweb: war exploded</strong> 代表用文件夹的方式与Tomcat联动<br>点Add → <strong>Web Application: Archive</strong>打包 右侧是待添加 [文件成功发布到jar包中 <strong>‘javaweb’ compile output</strong>] 右侧的<strong>Web facet resources</strong> 是 jsp, html等静态资源双击放到左边[<strong>‘javaweb’module: ‘Web’ facet resources</strong>] 至此javaweb.war包就包含了所有文件。上述操作完毕后 点<strong>Build</strong> 点<strong>Build Artifacts…</strong> build！！之后若在实际运行的时候放在D:\apache-tomcat-8.5.93\webapps内 之后启动<strong>tomcat</strong>[D:\apache-tomcat-8.5.93\bin\startup.bat]就可以显示结果</p>
+<h3 id="JDBC-Java-DataBase-Connectivity-快速入门"><a href="#JDBC-Java-DataBase-Connectivity-快速入门" class="headerlink" title="JDBC(Java DataBase Connectivity)快速入门"></a>JDBC(Java DataBase Connectivity)快速入门</h3><p>JDBC作用，<u>在java程序中与关系型数据库进行交互</u></p>
+<h6 id="JDBC优点"><a href="#JDBC优点" class="headerlink" title="JDBC优点"></a>JDBC优点</h6><ul>
+<li>统一的API，提供一致的开发过程</li>
+<li>易于学习，容易上手，代码结构稳定</li>
+<li>功能强大，执行效率高，可处理海量数据</li>
+</ul>
+<h3 id="开发流程"><a href="#开发流程" class="headerlink" title="开发流程"></a>开发流程</h3><table>
+<thead>
+<tr>
+<th>1.加载并注册JDBC驱动</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.创建数据库连接</td>
+</tr>
+<tr>
+<td>3.创建Satement对象</td>
+</tr>
+<tr>
+<td>4.遍历查询结果</td>
+</tr>
+<tr>
+<td>5.关闭连接.释放资源</td>
+</tr>
+</tbody></table>
+<h3 id="Class-forName的作用"><a href="#Class-forName的作用" class="headerlink" title="Class.forName的作用"></a>Class.forName的作用</h3><ul>
+<li>Class.forName用于加载指定的JDBC驱动类</li>
+<li>Class.forName本质是通知JDBC注册这个驱动类</li>
+<li>驱动由数据库厂商自行开发，俩厂家不同链接祖父串了，字符串也不同</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/34bcb468f79e1c2701e12f8c4d8eb06954ed2f38/data/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E8%BF%9E%E6%8E%A5%E5%AD%97%E7%AC%A6%E4%B8%B2.png"></p>
+<h3 id="创建数据库连接代码"><a href="#创建数据库连接代码" class="headerlink" title="创建数据库连接代码"></a>创建数据库连接代码</h3><pre><code class="sql">String dbDriver = &quot;com.mysql.cj.jdbc.Driver&quot;; //JDBC驱动类
+String dbURL = &quot;jdbc:mysql://localhost:3306/imooc&quot;; //连接字符串
+String dbUsername =  &quot;root&quot;;
+String dbPassword = &quot;123456&quot;;
+//1.加载并初始化JDBC驱动
+Class.forName(dbDriver);
+//2.创建数据库连接
+Connection connection = DriverManager.getConnection(dbURL,dbUsername,dbPassword);
+</code></pre>
+<pre><code class="sql">StandardJDBCSample.java
+package com.example.imoocjdbc;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+public class StandardJDBCSample &#123;
+    public static void main(String[] args) &#123;
+        Connection conn = null;
+        try &#123;
+            //1.加载并注册JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;); //加载指定的类
+            //2.创建数据库连接
+            conn = DriverManager.getConnection(
+                    &quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;&amp;allowPublicKeyRetrieval=true&quot;,
+                    &quot;root&quot;, &quot;root&quot;
+            ); //程序和数据库的网络通信桥梁
+            //3.创建Satement对象 ResultSet结果集
+            Statement stmt = conn.createStatement(); //一条或多条sql语句
+            ResultSet rs = stmt.executeQuery(&quot;SELECT * FROM employee WHERE dname=&#39;研发部&#39;&quot;);
+            //4.遍历查询结果
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1); //把当前行指定未知的提取 eno
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+            &#125;
+        &#125;catch (Exception e)&#123;
+            e.printStackTrace();
+        &#125;finally &#123;
+            try &#123;
+                if (conn != null &amp;&amp; conn.isClosed() == false) &#123;
+                    //5.关闭连接.释放资源
+                    conn.close();
+                &#125;
+            &#125;catch (Exception e)&#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="JDBC驱动的秘密"><a href="#JDBC驱动的秘密" class="headerlink" title="JDBC驱动的秘密"></a>JDBC驱动的秘密</h3><h5 id="DriverManager"><a href="#DriverManager" class="headerlink" title="DriverManager"></a>DriverManager</h5><ul>
+<li><strong>DriverManager</strong>用于注册&#x2F;管理JDBC驱动程序</li>
+<li><strong>DriverManager.getConnection</strong>(连接字符串,用户名,密码)</li>
+<li>返回值<strong>Connection</strong>对象,对应数据库的物理网络连接</li>
+</ul>
+<h5 id="Connection对象"><a href="#Connection对象" class="headerlink" title="Connection对象"></a>Connection对象</h5><ul>
+<li><strong>Connection</strong>对象用于JDBC与数据库的网络通信对象</li>
+<li>java.sql.Connection是一个接口，具体由驱动厂商实现</li>
+<li>所有数据库的操作都建立在Connection上</li>
+</ul>
+<h3 id="MySQL连接字符串"><a href="#MySQL连接字符串" class="headerlink" title="MySQL连接字符串"></a>MySQL连接字符串</h3><ul>
+<li>格式: jdbc:mysql:&#x2F;&#x2F;[主机ip] [:端口]&#x2F;数据库名?参数列表</li>
+<li>主机ip与端口是可选设置，默认值为127.0.0.1与3306</li>
+<li>参数列表采用url编码,格式:参数1&#x3D;值1&amp;参数2&#x3D;值2</li>
+</ul>
+<h6 id="MySQL连接字符串常用参数"><a href="#MySQL连接字符串常用参数" class="headerlink" title="MySQL连接字符串常用参数"></a>MySQL连接字符串常用参数</h6><table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>建议参数值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>useSSL</td>
+<td>true(生产) false(开发)</td>
+<td>是否禁用ssl</td>
+</tr>
+<tr>
+<td>useUnicode</td>
+<td>true</td>
+<td>启用unicode编码传输数据</td>
+</tr>
+<tr>
+<td>characterEncoding</td>
+<td>UTF-8</td>
+<td>使用UTF-8编码传输数据</td>
+</tr>
+<tr>
+<td>serverTimezone</td>
+<td>Asia&#x2F;Shanghai</td>
+<td>使用东8时区时间,UTC+8</td>
+</tr>
+<tr>
+<td>allowPublicKeyRetrieval</td>
+<td>true</td>
+<td>允许从客户端获取公钥加密传输</td>
+</tr>
+</tbody></table>
+<h6 id="超级异常捕获"><a href="#超级异常捕获" class="headerlink" title="超级异常捕获"></a>超级异常捕获</h6><p>选中所需要的代码区域 → Code → Surround With → 6.try…catch</p>
+<h3 id="SQL注入攻击-数据泄露"><a href="#SQL注入攻击-数据泄露" class="headerlink" title="SQL注入攻击 [数据泄露]"></a>SQL注入攻击 [数据泄露]</h3><p>当输入部门名称：**’ or 1&#x3D;1 or 1&#x3D;’**<br>只要在or左右两侧有一个成立就都成立的 输入的数据中并没有对单引号加以处理；</p>
+<pre><code class="sql">package com.imooc.jdbc.hrapp.command;
+
+import java.sql.*;
+import java.util.Scanner;
+
+/**
+ * 数据查询方法
+ */
+public class QueryCommand implements Command &#123;
+    @Override
+    public void execute() &#123;
+        System.out.print(&quot;请输入部门名称：&quot;);
+        Scanner in = new Scanner(System.in);
+        String pdname = in.nextLine();
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //1. 加载并注册JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+            //2. 创建数据库连接
+            conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&quot;, &quot;root&quot;, &quot;root&quot;);
+            //3. 创建Statement对象
+            stmt = conn.createStatement();
+            //结果集
+            System.out.println(&quot;select * from employee where dname=&#39;&quot; + pdname + &quot;&#39;&quot;);
+            rs = stmt.executeQuery(&quot;select * from employee where dname=&#39;&quot; + pdname + &quot;&#39;&quot;);
+            //4. 遍历查询结果
+            //rs.next()返回布尔值，代表是否存在下一条记录
+            //如果有，返回true,同时结果集提取下一条记录
+            //如果没有，返回false，循环就会停止
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            //5. 关闭连接,释放资源
+            try &#123;
+                if(rs != null)&#123;
+                    rs.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+
+            try &#123;
+                if(stmt != null)&#123;
+                    stmt.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed() ) &#123;
+                    conn.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="PreparedStatement-解决SQL攻击注入问题-特殊字符转义"><a href="#PreparedStatement-解决SQL攻击注入问题-特殊字符转义" class="headerlink" title="PreparedStatement[解决SQL攻击注入问题(特殊字符转义)]"></a><span style = "color:red">PreparedStatement[解决SQL攻击注入问题(特殊字符转义)]</span></h3><h6 id="SQL注入攻击"><a href="#SQL注入攻击" class="headerlink" title="SQL注入攻击"></a>SQL注入攻击</h6><ul>
+<li>SQL注入攻击是指利用SQL漏洞越权获取数据的黑客行为</li>
+<li>SQL注入攻击根源是未对原始SQL中的敏感字符做特殊处理</li>
+<li>解决方法：放弃Statement改用PreparedStatement处理SQL</li>
+</ul>
+<h6 id="PreparedStatement-变化的地方用问号替代"><a href="#PreparedStatement-变化的地方用问号替代" class="headerlink" title="PreparedStatement [变化的地方用问号替代]"></a>PreparedStatement [变化的地方用问号替代]</h6><ul>
+<li>PreparedStatement预编译Statement是Statement的子接口</li>
+<li>PreparedStatement对SQL进行参数化, 预防SQL注入攻击</li>
+<li>PreparedStatement比Statement执行效率更高</li>
+<li>要用<strong>参数化</strong>的sql语句(问号只能出现在值的地方 且不能二次计算)<br><strong>String sql &#x3D; “select * from employee where <u>dname&#x3D;?</u> and <u>eno &gt; ?</u>“;</strong><br><strong>pstmt &#x3D; conn.prepareStatement(sql);</strong><br><strong>pstmt.setString(1,pdname);</strong> &#x2F;&#x2F;插入多句 自动寻导入上方sql语句<br><strong>pstmt.setInt(2,3500);</strong></li>
+</ul>
+<pre><code class="sql">//利用PreparedStatement预防SQL注入风险
+//当dname值为&#39; or 1=1 or 1=&#39; 时，查询不到任何结果
+//SQL:select * from employee where dname = &#39;\&#39; or 1=1 or 1=\”
+String sql = &quot;select * from employee where dname=?&quot;;
+PreparedStatement pstmt = conn.prepareStatement(sql);
+pstmt.setString(1,dname); //设置SQL参数,参数从1开始
+ResultSet rs = pstmt.executeQuery();
+while(rs.next())&#123;
+    ...
+&#125;
+</code></pre>
+<h3 id="JDBC实现写数据"><a href="#JDBC实现写数据" class="headerlink" title="JDBC实现写数据"></a>JDBC实现写数据</h3><h5 id="封装DbUtils工具类-重复代码封装工具类-封装打开和关闭连接方法"><a href="#封装DbUtils工具类-重复代码封装工具类-封装打开和关闭连接方法" class="headerlink" title="封装DbUtils工具类 [重复代码封装工具类(封装打开和关闭连接方法)]"></a>封装DbUtils工具类 [<u>重复代码封装工具类(封装打开和关闭连接方法)</u>]</h5><pre><code class="sql">DbUtils.java
+package common;
+
+import kotlin.Result;
+
+import java.sql.*;
+
+public class DbUtils &#123;
+    /**
+     * 创建新的数据库连接
+     * @return 新的Connection对象
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
+    public static Connection getConnection() throws ClassNotFoundException, SQLException &#123;
+        //1. 加载并注册JDBC驱动
+        Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+        //2. 创建数据库连接
+        Connection conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&quot;, &quot;root&quot;, &quot;root&quot;);
+        return conn;
+    &#125;
+
+    /**
+     * 关闭连接，释放资源
+     * @param rs 结果集对象
+     * @param stmt Statement对象
+     * @param conn Connection对象
+     */
+    public static void closeConnection(ResultSet rs, Statement stmt, Connection conn)&#123;
+        try &#123;
+            if(rs != null)&#123;
+                rs.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(stmt != null)&#123;
+                stmt.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(conn != null &amp;&amp; !conn.isClosed() ) &#123;
+                conn.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="JDBC执行INSERT语句"><a href="#JDBC执行INSERT语句" class="headerlink" title="JDBC执行INSERT语句"></a>JDBC执行INSERT语句</h3><pre><code class="sql">String sql = &quot;insert into employee(eno,ename) values(?,?)&quot;;
+PreparedStatement pstmt = conn.PreparedStatement(sql);
+pstmt.setInt(1,10);
+pstmt.setString(2,&quot;张三&quot;);
+//executeUpdate方法返回记录数
+int cnt = pstmt.executeUpdate(); //cnt=1
+System.out.println(&quot;数据新增成功&quot;);
+</code></pre>
+<h3 id="JDBC执行UPDATE语句"><a href="#JDBC执行UPDATE语句" class="headerlink" title="JDBC执行UPDATE语句"></a>JDBC执行UPDATE语句</h3><pre><code class="sql">String sql = &quot;update employee set salary = salary + 1000 where dname=?&quot;;
+PreparedStatement pstmt = conn.prepareStatement(sql);
+pstmt.setString(1,&quot;研发部&quot;);
+//executeUpdate方法返回记录数
+int cnt = pstmt.exexuteUpdate();
+System.out.println(“研发部”+cnt+&quot;名员工提薪1000元&quot;);
+</code></pre>
+<h3 id="JDBC执行DELETE语句"><a href="#JDBC执行DELETE语句" class="headerlink" title="JDBC执行DELETE语句"></a>JDBC执行DELETE语句</h3><pre><code class="sql">String sql = &quot;delete from employee where eno = ?&quot;;
+PreparedStatement pstmt = conn.prepareStatement(sql);
+pstmt.setInt(1,3395);
+//executeUpdate方法返回记录数
+int cnt = pstmt.executeUpdate();
+System.out.println(cnt+&quot;名员工数据已被删除&quot;);
+</code></pre>
+<h3 id="JDBC事务管理方式"><a href="#JDBC事务管理方式" class="headerlink" title="JDBC事务管理方式"></a>JDBC事务管理方式</h3><ul>
+<li>事务是以一种可靠的、一致的方式，访问和操作数据库的程序单元</li>
+<li>说人话：要么把事情做完，要么什么都不做，不要做一半</li>
+<li>事务依赖于数据库实现，MySQL通过<strong>事务区</strong>作为数据缓冲地带</li>
+</ul>
+<blockquote>
+<h6 id="事务的提交操作"><a href="#事务的提交操作" class="headerlink" title="事务的提交操作"></a>事务的提交操作</h6><p>应用程序写操作給事务区等全部完成后事务区再<strong>commit提交</strong>給数据表<strong>一次性写入</strong>給mysql。提交成功后事务区中的数据被清空</p>
+<h6 id="事务的回滚操作"><a href="#事务的回滚操作" class="headerlink" title="事务的回滚操作"></a>事务的回滚操作</h6><p>应用程序写操作給事务区，如果+100突然-100程序报错了，由jdbc会向事务区发起rollback回滚操作 清空事务区，最终数据表不会产生任何写操作[<u>要么什么都不做，不要做一半</u>]</p>
+</blockquote>
+<h3 id="JDBC两种事务模式"><a href="#JDBC两种事务模式" class="headerlink" title="JDBC两种事务模式"></a>JDBC两种事务模式</h3><ul>
+<li><h6 id="自动提交事务模式"><a href="#自动提交事务模式" class="headerlink" title="自动提交事务模式"></a>自动提交事务模式</h6></li>
+</ul>
+<p>​        自动提交模式是指每一次写操作SQL，自动提交事务</p>
+<pre><code class="sql">自动提交开启方法:
+conn.setAutoCommit(true)
+</code></pre>
+<p>​        自动事务是JDBC默认行为，此模式无法保证多数据一致性[A钱少了 B钱增加]</p>
+<ul>
+<li><h6 id="手动提交事务模式"><a href="#手动提交事务模式" class="headerlink" title="手动提交事务模式"></a>手动提交事务模式</h6></li>
+</ul>
+<p>​        手动提交模式是指显式调用commit()与rollback()方法管理事务</p>
+<pre><code class="sql">手动提交开启方法:
+conn.setAutoCommit(false)
+</code></pre>
+<p>​        手动提交事务可保证多数据一致性，但必须手动调用提交&#x2F;回滚方法</p>
+<h3 id="实现批量增加员工"><a href="#实现批量增加员工" class="headerlink" title="实现批量增加员工"></a>实现批量增加员工</h3><pre><code class="sql">package test;
+
+import common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class TransactionSample &#123;
+    public static void main(String[] args) &#123;
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123; //JDBC默认使用自动提交模式
+            conn = DbUtils.getConnection();
+            conn.setAutoCommit(false); //关闭自动提交
+            String sql = &quot;insert ignore into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            for (int i = 1000; i &lt; 2000; i++) &#123;
+                if (i==1005)&#123;
+//                    throw new RuntimeException(&quot;插入失败&quot;);
+                &#125;
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1,i);
+                pstmt.setString(2,&quot;员工&quot; + i);
+                pstmt.setFloat(3,4000f);
+                pstmt.setString(4,&quot;市场部&quot;);
+                pstmt.executeUpdate();
+            &#125;
+            conn.commit(); //提交数据
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback(); //回滚数据
+                &#125;
+            &#125; catch (SQLException ex) &#123;
+                throw new RuntimeException(ex);
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="基于实体类实现分页数据封装"><a href="#基于实体类实现分页数据封装" class="headerlink" title="基于实体类实现分页数据封装"></a>基于实体类实现分页数据封装</h3><p>日常开发中如果要对数据进行提取以后最常见的形式是将数据转换为对应的实体类再放到集合中进行保存，即使被关闭数据也不会丢失。</p>
+<pre><code class="sql">package common;
+
+import common.entity.Employee;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * 分页查询员工数据
+ */
+public class PaginationCommand implements Command&#123;
+    @Override
+    public void execute() &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入页号:&quot;);
+        int page = in.nextInt();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List&lt;Employee&gt; list = new ArrayList(); //将底下的信息封装到实体类中
+        try &#123;
+            conn = DbUtils.getConnection(); //?前面第几行 10从这行开始向后取10条记录 limit是分页独有的方言
+            String sql = &quot;select * from employee limit ?,10&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1,(page-1)*10); //第二页(2-1)*10从第十条记录开始向后取10条
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(&quot;eno&quot;); //不能在原有字段1前再新增1 按照名字来获取
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                //JDBC获取日期使用java.sql.Date,其继承自java.util.Date
+                //所以两者互相兼容
+                Date hiredate = rs.getDate(&quot;hiredate&quot;);
+                Employee emp = new Employee(); //每产生一条记录都要封装成Employee对象
+                emp.setEno(eno);
+                emp.setEname(ename);
+                emp.setSalary(salary);
+                emp.setDname(dname);
+                emp.setHiredate(hiredate);//把每一条记录都封装成为了实体类 放入list
+                list.add(emp);
+            &#125;
+            System.out.println(list.size());
+        &#125; catch (Exception e)&#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="JDBC中Date日期对象的处理"><a href="#JDBC中Date日期对象的处理" class="headerlink" title="JDBC中Date日期对象的处理"></a>JDBC中Date日期对象的处理</h3><pre><code class="sql">package common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+
+/*
+   新增员工数据
+ */
+public class InsertCommand implements Command&#123;
+    @Override
+    public void execute()&#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号:&quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工姓名:&quot;);
+        String ename = in.next();
+        System.out.println(&quot;请输入员工薪资:&quot;);
+        float salary = in.nextFloat();
+        System.out.println(&quot;请输入隶属部门:&quot;);
+        String dname = in.next();
+        System.out.println(&quot;请输入入职日期:&quot;);
+        String strHiredate = in.next();
+        //String到java.sql.Date分为两步
+        //1.前端传入的String字符串转为java.util.Date
+        java.util.Date udHiredate = null;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        try &#123;
+            udHiredate = sdf.parse(strHiredate);//对原有字符串解析
+        &#125; catch (ParseException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        //2.java.util.Date转为java.sql.Date
+        long time = udHiredate.getTime();//获取从1970到现在的毫秒数
+        java.sql.Date sdHiredate = new java.sql.Date(time); //sdHiredate成功表达了strHiredate所表达的时间
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        //新增数据 获取数据库连接
+        try &#123;
+            conn = DbUtils.getConnection(); //↓作为写操作的sql一定要是参数化的(pstmt)
+            String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) value(?,?,?,?,?)&quot;;
+            pstmt = conn.prepareStatement(sql); //sql被解析
+            pstmt.setInt(1,eno);
+            pstmt.setString(2,ename);
+            pstmt.setFloat(3,salary);
+            pstmt.setString(4,dname);
+            pstmt.setDate(5,sdHiredate); //目标java.sql.Date
+            int cnt = pstmt.executeUpdate();//所有要改变数据表的都要使用executeUpdate
+            System.out.println(&quot;cnt:&quot; + cnt); //代表本次写入影响的记录数量
+            System.out.println(ename + &quot;员工入职手续已办理&quot;);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (SQLException e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn); //释放所有资源
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="JDBC批量处理"><a href="#JDBC批量处理" class="headerlink" title="JDBC批量处理"></a>JDBC批量处理</h3><p>需要反复执行同时一次性要插入很多数据的操作使用批处理操作</p>
+<pre><code class="sql">BatchSample.java
+package test;
+
+import common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Date;
+
+public class BatchSample &#123;
+    private static void tc1()&#123;
+        //标准未使用批处理
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123; //JDBC默认使用自动提交模式
+            long startTime = new Date().getTime();
+            conn = DbUtils.getConnection();
+            conn.setAutoCommit(false); //关闭自动提交
+            String sql = &quot;insert ignore into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            for (int i = 100000; i &lt; 200000; i++) &#123;
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1,i);
+                pstmt.setString(2,&quot;员工&quot; + i);
+                pstmt.setFloat(3,4000f);
+                pstmt.setString(4,&quot;市场部&quot;);
+                pstmt.executeUpdate();
+            &#125;
+            conn.commit(); //提交数据
+            long endTime = new Date().getTime();
+            System.out.println(&quot;tc1()执行时长: &quot; + (endTime-startTime));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback(); //回滚数据
+                &#125;
+            &#125; catch (SQLException ex) &#123;
+                throw new RuntimeException(ex);
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+
+    private static void tc2()&#123;
+        //使用批处理插入若干数据
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123; //JDBC默认使用自动提交模式
+            long startTime = new Date().getTime();
+            conn = DbUtils.getConnection();
+            conn.setAutoCommit(false); //关闭自动提交
+            String sql = &quot;insert ignore into employee(eno,ename,salary,dname) values(?,?,?,?)&quot;;
+            for (int i = 200000; i &lt; 300000; i++) &#123;
+                pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1,i);
+                pstmt.setString(2,&quot;员工&quot; + i);
+                pstmt.setFloat(3,4000f);
+                pstmt.setString(4,&quot;市场部&quot;);
+//                pstmt.executeUpdate();
+                pstmt.addBatch();//将参数加入批处理任务
+            &#125;
+            pstmt.executeBatch();//执行批处理任务
+            conn.commit(); //提交数据
+            long endTime = new Date().getTime();
+            System.out.println(&quot;tc2()执行时长: &quot; + (endTime-startTime));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed()) &#123;
+                    conn.rollback(); //回滚数据
+                &#125;
+            &#125; catch (SQLException ex) &#123;
+                throw new RuntimeException(ex);
+            &#125;
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+    public static void main(String[] args) &#123;
+        tc1(); //222279ms
+        tc2(); //15827 ms
+    &#125;
+&#125;
+</code></pre>
+<h3 id="综合数据库的增删改查"><a href="#综合数据库的增删改查" class="headerlink" title="综合数据库的增删改查"></a>综合数据库的增删改查</h3><pre><code class="sql">HumanResourceApplication.java
+package test;
+
+import common.*;
+
+import java.util.Scanner;
+
+public class HumanResourceApplication &#123;
+    public static void main(String[] args) &#123;
+        System.out.println(&quot;1-查询部门员工&quot;);
+        System.out.println(&quot;2-办理员工入职&quot;);
+        System.out.println(&quot;3-调整薪资&quot;);
+        System.out.println(&quot;4-员工离职&quot;);
+        System.out.println(&quot;5-分页查询员工数据&quot;);
+        System.out.println(&quot;请选择功能:&quot;);
+        Scanner in = new Scanner(System.in);
+        Integer cmd = in.nextInt();
+        Command command = null;
+        switch (cmd)&#123;
+            case 1://查询部门员工
+                command = new PstmtQueryCommand();
+                command.execute();
+                break;
+            case 2:
+                command = new InsertCommand();
+                command.execute();
+                break;
+            case 3:
+                command = new UpdateCommand();
+                command.execute();
+                break;
+            case 4:
+                command = new DeleteCommand();
+                command.execute();
+                break;
+            case 5:
+                command = new PaginationCommand();
+                command.execute();
+                break;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="插入员工"><a href="#插入员工" class="headerlink" title="插入员工"></a>插入员工</h6><pre><code class="sql">InsertCommand.java
+package common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+
+/*
+   新增员工数据
+ */
+public class InsertCommand implements Command&#123;
+    @Override
+    public void execute()&#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号:&quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工姓名:&quot;);
+        String ename = in.next();
+        System.out.println(&quot;请输入员工薪资:&quot;);
+        float salary = in.nextFloat();
+        System.out.println(&quot;请输入隶属部门:&quot;);
+        String dname = in.next();
+        System.out.println(&quot;请输入入职日期:&quot;);
+        String strHiredate = in.next();
+        //String到java.sql.Date分为两步
+        //1.前端传入的String字符串转为java.util.Date
+        java.util.Date udHiredate = null;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        try &#123;
+            udHiredate = sdf.parse(strHiredate);//对原有字符串解析
+        &#125; catch (ParseException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        //2.java.util.Date转为java.sql.Date
+        long time = udHiredate.getTime();//获取从1970到现在的毫秒数
+        java.sql.Date sdHiredate = new java.sql.Date(time); //sdHiredate成功表达了strHiredate所表达的时间
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        //新增数据 获取数据库连接
+        try &#123;
+            conn = DbUtils.getConnection(); //↓作为写操作的sql一定要是参数化的(pstmt)
+            String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) value(?,?,?,?,?)&quot;;
+            pstmt = conn.prepareStatement(sql); //sql被解析
+            pstmt.setInt(1,eno);
+            pstmt.setString(2,ename);
+            pstmt.setFloat(3,salary);
+            pstmt.setString(4,dname);
+            pstmt.setDate(5,sdHiredate); //目标java.sql.Date
+            int cnt = pstmt.executeUpdate();//所有要改变数据表的都要使用executeUpdate
+            System.out.println(&quot;cnt:&quot; + cnt); //代表本次写入影响的记录数量
+            System.out.println(ename + &quot;员工入职手续已办理&quot;);
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (SQLException e) &#123;
+            throw new RuntimeException(e);
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn); //释放所有资源
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="更新员工数据"><a href="#更新员工数据" class="headerlink" title="更新员工数据"></a>更新员工数据</h6><pre><code class="sql">UpdateCommand.java
+package common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class UpdateCommand implements Command&#123;
+    @Override
+    public void execute()&#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号&quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工新的薪资&quot;);
+        float salary = in.nextFloat();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;update employee set salary=? where dname=?&quot;;
+             pstmt = conn.prepareStatement(sql);
+             pstmt.setFloat(1,salary);
+             pstmt.setInt(2,eno);
+             int cnt = pstmt.executeUpdate();
+             if (cnt == 1)&#123;
+                 System.out.println(&quot;员工薪资调整完毕&quot;);
+             &#125;else &#123;
+                 System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+             &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (SQLException e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="删除员工数据"><a href="#删除员工数据" class="headerlink" title="删除员工数据"></a>删除员工数据</h6><pre><code class="sql">DeleteCommand.java
+package common;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DeleteCommand implements Command&#123;
+    @Override
+    public void execute()&#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号&quot;);
+        int eno = in.nextInt();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;delete from employee where eno = ?&quot;;
+             pstmt = conn.prepareStatement(sql);
+             pstmt.setFloat(1,eno);
+             int cnt = pstmt.executeUpdate();
+             if (cnt == 1)&#123;
+                 System.out.println(&quot;员工离职手续已完成&quot;);
+             &#125;else &#123;
+                 System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+             &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            throw new RuntimeException(e);
+        &#125; catch (SQLException e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="查找员工数据"><a href="#查找员工数据" class="headerlink" title="查找员工数据"></a>查找员工数据</h6><pre><code class="sql">PstmtQueryCommand.java
+package common;
+
+import java.sql.*;
+import java.util.Scanner;
+
+/**
+ * PreparedStatement对象使用方法
+ */
+public class PstmtQueryCommand implements Command &#123;
+
+    public void execute() &#123;
+        System.out.print(&quot;请输入部门名称：&quot;);
+        Scanner in = new Scanner(System.in);
+        String pdname = in.nextLine();
+        Connection conn = null;
+//        Statement stmt = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //1. 加载并注册JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+            //2. 创建数据库连接
+            conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&quot;, &quot;root&quot;, &quot;root&quot;);
+            //3. 创建PreparedStatement对象
+            String sql = &quot;select * from employee where dname=? and eno &gt; ?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1,pdname); //注意:参数索引从1
+            pstmt.setInt(2,3500);
+            //结果集
+            rs = pstmt.executeQuery();
+            //4. 遍历查询结果
+            //rs.next()返回布尔值，代表是否存在下一条记录
+            //如果有，返回true,同时结果集提取下一条记录
+            //如果没有，返回false，循环就会停止
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            //5. 关闭连接,释放资源
+            try &#123;
+                if(rs != null)&#123;
+                    rs.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+
+            try &#123;
+                if(pstmt != null)&#123;
+                    pstmt.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+
+            try &#123;
+                if(conn != null &amp;&amp; !conn.isClosed() ) &#123;
+                    conn.close();
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="分页查询员工数据"><a href="#分页查询员工数据" class="headerlink" title="分页查询员工数据"></a>分页查询员工数据</h6><pre><code class="sql">PaginationCommand.java
+package common;
+
+import common.entity.Employee;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * 分页查询员工数据
+ */
+public class PaginationCommand implements Command&#123;
+    @Override
+    public void execute() &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入页号:&quot;);
+        int page = in.nextInt();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List&lt;Employee&gt; list = new ArrayList(); //将底下的信息封装到实体类中
+        try &#123;
+            conn = DbUtils.getConnection(); //?前面第几行 10从这行开始向后取10条记录 limit是分页独有的方言
+            String sql = &quot;select * from employee limit ?,10&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1,(page-1)*10); //第二页(2-1)*10从第十条记录开始向后取10条
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(&quot;eno&quot;); //不能在原有字段1前再新增1 按照名字来获取
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                //JDBC获取日期使用java.sql.Date,其继承自java.util.Date
+                //所以两者互相兼容
+                Date hiredate = rs.getDate(&quot;hiredate&quot;);
+                Employee emp = new Employee(); //每产生一条记录都要封装成Employee对象
+                emp.setEno(eno);
+                emp.setEname(ename);
+                emp.setSalary(salary);
+                emp.setDname(dname);
+                emp.setHiredate(hiredate);//把每一条记录都封装成为了实体类 放入list
+                list.add(emp);
+            &#125;
+            System.out.println(list.size());
+        &#125; catch (Exception e)&#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="DbUtils【通用】"><a href="#DbUtils【通用】" class="headerlink" title="DbUtils【通用】"></a>DbUtils【通用】</h6><pre><code class="sql">DbUtils.java
+package common;
+
+import kotlin.Result;
+
+import java.sql.*;
+
+public class DbUtils &#123;
+    /**
+     * 创建新的数据库连接
+     * @return 新的Connection对象
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
+    public static Connection getConnection() throws ClassNotFoundException, SQLException &#123;
+        //1. 加载并注册JDBC驱动
+        Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+        //2. 创建数据库连接
+        Connection conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&quot;, &quot;root&quot;, &quot;root&quot;);
+        return conn;
+    &#125;
+
+    /**
+     * 关闭连接，释放资源
+     * @param rs 结果集对象
+     * @param stmt Statement对象
+     * @param conn Connection对象
+     */
+    public static void closeConnection(ResultSet rs, Statement stmt, Connection conn)&#123;
+        try &#123;
+            if(rs != null)&#123;
+                rs.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(stmt != null)&#123;
+                stmt.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        try &#123;
+            if(conn != null &amp;&amp; !conn.isClosed() ) &#123;
+                conn.close();
+            &#125;
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="Employee（entity）"><a href="#Employee（entity）" class="headerlink" title="Employee（entity）"></a>Employee（entity）</h6><pre><code class="sql">package common.entity;
+
+import java.util.Date;
+
+/**
+ * 员工实体类
+ */
+public class Employee &#123;
+    /**
+     * 1. 具备默认构造函数
+     * 2. 属性私有
+     * 3. 存在getter与setter
+     */
+    public Employee()&#123;
+
+    &#125;
+    //通常和数据库数据一一对应
+    private Integer eno;
+    private String ename;
+    private Float salary;
+    private String dname;
+    private Date hiredate;
+
+    public Integer getEno() &#123;
+        return eno;
+    &#125;
+
+    public void setEno(Integer eno) &#123;
+        this.eno = eno;
+    &#125;
+
+    public String getEname() &#123;
+        return ename;
+    &#125;
+
+    public void setEname(String ename) &#123;
+        this.ename = ename;
+    &#125;
+
+    public Float getSalary() &#123;
+        return salary;
+    &#125;
+
+    public void setSalary(Float salary) &#123;
+        this.salary = salary;
+    &#125;
+
+    public String getDname() &#123;
+        return dname;
+    &#125;
+
+    public void setDname(String dname) &#123;
+        this.dname = dname;
+    &#125;
+
+    public Date getHiredate() &#123;
+        return hiredate;
+    &#125;
+
+    public void setHiredate(Date hiredate) &#123;
+        this.hiredate = hiredate;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="阿里巴巴Druid连接池-类似于施工仓库-在启动应用时创建连接池"><a href="#阿里巴巴Druid连接池-类似于施工仓库-在启动应用时创建连接池" class="headerlink" title="阿里巴巴Druid连接池[类似于施工仓库 在启动应用时创建连接池]"></a>阿里巴巴Druid连接池[类似于施工仓库 在启动应用时创建连接池]</h3><p>JDBC先去创建与数据库的连接 比较浪费资源和时间</p>
+<ul>
+<li>Druid是阿里巴巴开源连接池组件，是最好的连接池之一</li>
+<li>Druid对数据库连接进行有效管理与重用，最大化程序执行效率</li>
+<li>连接池负责创建管理连接，程序只负责取用和归还</li>
+</ul>
+<p>&#x2F;druid-config.properties要放到resources文件夹内</p>
+<pre><code class="sql">druid-config.properties
+
+driverClassName=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true
+username=root
+password=root
+initialSize=10 #初始数量
+maxActive=20 #数据库最大连接数量
+#最好初始数量=最大数量 一开始j
+</code></pre>
+<pre><code class="sql">DruidSample.java
+package test;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import common.DbUtils;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Properties;
+
+public class DruidSample &#123;
+    public static void main(String[] args) &#123;
+        //1.加载属性文件
+        Properties properties = new Properties();
+        String propertyFile = DruidSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        //空格-&gt;%20 会被转换
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile,&quot;UTF-8&quot;); //%20还原回去
+            properties.load(new FileInputStream(propertyFile));
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //2.获取DataSource数据源对象
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            //3.创建数据库连接
+            conn = dataSource.getConnection();
+            pstmt = conn.prepareStatement(&quot;select * from employee limit 0,100&quot;);
+            rs = pstmt.executeQuery();
+            while (rs.next()) &#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(eno + &quot;-&quot; + ename + &quot;-&quot; + salary + &quot;-&quot; + dname);
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="扩展知识：C3P0连接池"><a href="#扩展知识：C3P0连接池" class="headerlink" title="扩展知识：C3P0连接池"></a>扩展知识：C3P0连接池</h3><p>不用属性文件，改用<strong>c3p0-config.xml</strong>保存文件</p>
+<blockquote>
+<p>在里面&amp;无法转义 要写成  ‘ <u>&amp; amp;</u> ‘</p>
+</blockquote>
+<h6 id="idea-C3P0时出现java-sql-SQLException-No-suitable-driver的几种解决办法"><a href="#idea-C3P0时出现java-sql-SQLException-No-suitable-driver的几种解决办法" class="headerlink" title="idea C3P0时出现java.sql.SQLException: No suitable driver的几种解决办法"></a>idea C3P0时出现java.sql.SQLException: No suitable driver的几种解决办法</h6><blockquote>
+<p>1、对lib包Add as library<br>2、<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=c3p0&spm=1001.2101.3001.7020">c3p0</a>-config.xml<strong>必须放在source目录下</strong>，在此目录会被自动读取<br>3、c3p0命名必须是c3p0-config.xml（至少<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=xml%E6%A0%BC%E5%BC%8F&spm=1001.2101.3001.7020">xml格式</a>是这样）<br>4、c3p0-config.xml文件配置错误、书写错误</p>
+</blockquote>
+<pre><code class="sql">c3p0-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;c3p0-config&gt;
+    &lt;default-config&gt;
+        &lt;property name=&quot;driverClass&quot;&gt;com.mysql.cj.jdbc.Driver&lt;/property&gt;
+        &lt;property name=&quot;jdbcUrl&quot;&gt;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&lt;/property&gt;
+        &lt;property name=&quot;user&quot;&gt;root&lt;/property&gt;
+        &lt;property name=&quot;password&quot;&gt;root&lt;/property&gt;
+        &lt;!-- 连接池初始连接数量 --&gt;
+        &lt;property name=&quot;initialPoolSize&quot;&gt;10&lt;/property&gt;
+        &lt;!--最大连接数量--&gt;
+        &lt;property name=&quot;maxPoolSize&quot;&gt;20&lt;/property&gt;
+    &lt;/default-config&gt;
+&lt;/c3p0-config&gt;
+</code></pre>
+<pre><code class="sql">C3P0Sample.java
+package test;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import common.DbUtils;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class C3P0Sample &#123;
+    public static void main(String[] args) &#123;
+        //1.加载配置文件
+        //2.创建DataSource
+        DataSource dataSource = new ComboPooledDataSource();
+        //3.得到数据库连接
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            conn = dataSource.getConnection();
+            pstmt = conn.prepareStatement(&quot;select * from employee limit 0,10&quot;);
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而非0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(eno + &quot;-&quot; + ename + &quot;-&quot; + salary + &quot;-&quot; + dname);
+            &#125;
+        &#125; catch (Exception e) &#123;
+            throw new RuntimeException(e);
+        &#125;finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn); //将数据库连接回收到连接池中而不是真正关闭
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="Apache-Commos-DBUtils"><a href="#Apache-Commos-DBUtils" class="headerlink" title="Apache Commos DBUtils"></a>Apache Commos DBUtils</h3><ul>
+<li>commons-dbutils是Apache提供的开源JDBC工具类库</li>
+<li>它是对JDBC的简单封装，学习成本极低</li>
+<li>使用commons-dbutils可以极大简化JDBC编码工作量</li>
+</ul>
+<pre><code class="sql">DbUtilsSample.java 【对数据的查询与更新】
+package test;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import common.DbUtils;
+import common.entity.Employee;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * Apache DBUtils + Druid 联合使用演示
+ */
+public class DbUtilsSample &#123;
+    private static void query()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile, &quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile));
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+            //利用Apache DbUtils大幅简化了数据的提取过程
+            QueryRunner qr = new QueryRunner(dataSource); //查询执行者  ↓连接自动关闭 不用手动写代码
+            List&lt;Employee&gt; list = qr.query(&quot;select * from employee limit ?,10&quot;,
+                    new BeanListHandler&lt;&gt;(Employee.class),
+                    new Object[]&#123;10&#125;);//没有结果集只能new 结果自动转换成List实体类 后面的是问号赋值
+            for (Employee emp : list)&#123;
+                System.out.println(emp.getEname());
+            &#125;
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+    private static void update()&#123;
+        Properties properties = new Properties();
+        String propertyFile = DbUtilsSample.class.getResource(&quot;/druid-config.properties&quot;).getPath();
+        Connection conn = null;
+        try &#123;
+            propertyFile = new URLDecoder().decode(propertyFile,&quot;UTF-8&quot;);
+            properties.load(new FileInputStream(propertyFile)); //文件加载
+            DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);//利用工厂类对properties信息进行载入创建对应的datasource对象
+            conn = dataSource.getConnection();//获取数据库连接
+            conn.setAutoCommit(false);
+            String sql1 = &quot;update employee set salary=salary+1000 where eno=?&quot;;
+            String sql2 = &quot;update employee set salary=salary-599 where eno=?&quot;;
+            QueryRunner qr = new QueryRunner();
+            qr.update(conn, sql1, new Object[]&#123;1000&#125;);//写入表操作都用update
+            qr.update(conn, sql2, new Object[]&#123;1001&#125;);//分别完成加工资和减工资的操作
+            conn.commit();//如果都执行成功 就提交 否则回滚
+        &#125; catch (Exception e) &#123;
+           e.printStackTrace();
+            try &#123;
+                if (conn!=null &amp;&amp; !conn.isClosed())&#123;
+                    conn.rollback();
+                &#125;
+            &#125; catch (SQLException e1) &#123;
+                e1.printStackTrace();
+            &#125;
+        &#125;finally &#123;
+            try &#123;
+                if (conn!=null &amp;&amp; !conn.isClosed())&#123;
+                    conn.close(); //对数据库进行回收
+                &#125;
+            &#125; catch (SQLException e) &#123;
+                throw new RuntimeException(e);
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+//        query();
+        update();
+    &#125;
+
+&#125;
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

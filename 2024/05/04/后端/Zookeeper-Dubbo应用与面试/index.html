@@ -1,0 +1,3230 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || Zookeeper+Dubbo应用与面试</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>Zookeeper+Dubbo应用与面试 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/5/4
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#879cff>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h1 id="Zookeeper-Dubbo与面试周介绍"><a href="#Zookeeper-Dubbo与面试周介绍" class="headerlink" title="Zookeeper+Dubbo与面试周介绍"></a>Zookeeper+Dubbo与面试周介绍</h1><ul>
+<li>Zookeeper的下载、配置与运行</li>
+<li>数据结构node与常用命令</li>
+<li>Watcher机制和权限cal介绍</li>
+<li>使用Zookeeper的Java原生客户端和Curator进行开发</li>
+<li>RPC调用，在Dubbo架构下各服务的关系</li>
+<li>整合Dubbo和Zookeeper</li>
+<li>完成Dubbo开发案例</li>
+<li>线程进阶面试</li>
+<li>分布式、微服务面试题</li>
+<li>Spring Cloud、Zookeeper的理解</li>
+</ul>
+<h3 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h3><ul>
+<li>理解Zookeeper</li>
+<li>安装、配置</li>
+<li>节点znode</li>
+<li>常用命令</li>
+<li>Watcher机制</li>
+<li>ACL权限控制</li>
+<li>代码实操</li>
+</ul>
+<h3 id="理解Zookeeper"><a href="#理解Zookeeper" class="headerlink" title="理解Zookeeper"></a>理解Zookeeper</h3><ul>
+<li>5大特点</li>
+<li>集群架构</li>
+<li>Zookeeper和CAP关系</li>
+<li>Zookeeper作用</li>
+</ul>
+<h3 id="为什么需要Zookeeper"><a href="#为什么需要Zookeeper" class="headerlink" title="为什么需要Zookeeper"></a>为什么需要Zookeeper</h3><ul>
+<li><p>用起来像<strong>单机</strong>但是又比单机更<strong>可靠</strong></p>
+</li>
+<li><p>leader在团队里的<strong>协调</strong>作用  </p>
+</li>
+<li><p>内存、单机 </p>
+</li>
+<li><p>集群、<strong>可靠</strong></p>
+</li>
+<li><p>当信息<strong>还没同步完成时，不对外提供服务</strong></p>
+</li>
+<li><p>同步的时间压缩的更短</p>
+</li>
+</ul>
+<h3 id="Zookeeper诞生历史"><a href="#Zookeeper诞生历史" class="headerlink" title="Zookeeper诞生历史"></a>Zookeeper诞生历史</h3><p>雅虎研究室</p>
+<ul>
+<li>无单点问题的<strong>分布式协调架构</strong>，精力集中在处理业务逻辑</li>
+<li>内部很多项目都是使用动物的名字来命名</li>
+<li>大型动物园</li>
+</ul>
+<h3 id="Zookeeper是什么-底层是Java"><a href="#Zookeeper是什么-底层是Java" class="headerlink" title="Zookeeper是什么 [底层是Java]"></a>Zookeeper是什么 [底层是Java]</h3><ul>
+<li>Zookeeper是<strong>开源的高性能的分布式应用协调系统</strong>，一个高性能的分布式数据一致性解决方案</li>
+</ul>
+<h3 id="5大特点"><a href="#5大特点" class="headerlink" title="5大特点"></a>5大特点</h3><ul>
+<li>顺序一致性</li>
+<li>原子性 [全部成功或者全部不成功]</li>
+<li>单一视图 [无论连接哪个 都是一致的信息]</li>
+<li>可靠性</li>
+<li>及时性 [一定时间内能从服务器读到状态]</li>
+</ul>
+<h5 id="架构图、集群、工作过程"><a href="#架构图、集群、工作过程" class="headerlink" title="架构图、集群、工作过程"></a>架构图、集群、工作过程</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/b25f2311da13cf23726ffd71545a05cdc2630f95/data/zookeeper%E6%9E%B6%E6%9E%84%E5%9B%BE%E3%80%81%E9%9B%86%E7%BE%A4%E3%80%81%E5%B7%A5%E4%BD%9C%E8%BF%87%E7%A8%8B.jpg"></p>
+<h3 id="Zookeeper和CAP的关系"><a href="#Zookeeper和CAP的关系" class="headerlink" title="Zookeeper和CAP的关系"></a>Zookeeper和CAP的关系</h3><ul>
+<li>CP：一致性+分区容错性</li>
+<li>能<strong>得到一致的数据结果</strong>，同时系统对网络具备容错性</li>
+<li>但是它不能保证每次服务请求的可用性</li>
+</ul>
+<h5 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h5><ul>
+<li>分布式服务注册与订阅</li>
+<li>统一配置文件</li>
+<li>生成分布式唯一ID [&#x2F;order-0000001、&#x2F;order-0000002]</li>
+<li>Master节点选举</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/96130bcb29ba40dee3d21543e5d7b46f33ad9920/data/Zookeeper%E7%89%B9%E7%82%B9.jpg"></p>
+<h5 id="针对不能同时进行写数据，保证互斥同步-→-分布式锁"><a href="#针对不能同时进行写数据，保证互斥同步-→-分布式锁" class="headerlink" title="针对不能同时进行写数据，保证互斥同步 → 分布式锁"></a>针对不能同时进行写数据，保证互斥同步 → 分布式锁</h5><h3 id="Zookeeper的安装、配置"><a href="#Zookeeper的安装、配置" class="headerlink" title="Zookeeper的安装、配置"></a>Zookeeper的安装、配置</h3><ul>
+<li>寻找教辅里的<code>apache-zookeeper-3.6.0-bin.tar</code></li>
+<li>解压压缩包：<code>tar zxvf apache-zookeeper-3.6.0-bin.tar.gz</code></li>
+<li>进入压缩包：<code>cd apache-zookeeper-3.6.0-bin</code></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ls
+bin  conf  docs  lib  LICENSE.txt  NOTICE.txt  README.md README_packaging.md
+</code></pre>
+<ul>
+<li>配置[进入文件]：<code>cp conf/zoo_sample.cfg conf/zoo</code></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# cp conf/zoo_sample.cfg conf/zoo
+[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ls conf/
+configuration.xsl  log4j.properties  zoo  zoo.cfg  zoo_sample.cfg
+</code></pre>
+<ul>
+<li>打开文件, 进行修改：<code>vi conf/zoo.cfg</code></li>
+</ul>
+<pre><code class="java">找到 dataDir=/tmp/zookeeper
+修改成 dataDir=/tmp/lib/zookeeper 以免被自动清除
+</code></pre>
+<ul>
+<li>启动：<code>./bin/zkServer.sh start</code></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... already running as process 1877.
+======================================================================
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... ^[[ASTARTED
+[root@iZbp1dssknxftmjczbtpndZ bin]# ./zkServer.sh status
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Client port found: 2181. Client address: localhost.
+Mode: standalone
+======================================================================
+</code></pre>
+<ul>
+<li>停止：<code>./bin/zkServer.sh stop</code></li>
+</ul>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkServer.sh stop
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Stopping zookeeper ... STOPPED
+</code></pre>
+<h3 id="znode节点-基本数据模型"><a href="#znode节点-基本数据模型" class="headerlink" title="znode节点 [基本数据模型]"></a>znode节点 [基本数据模型]</h3><ul>
+<li><h5 id="树结构"><a href="#树结构" class="headerlink" title="树结构"></a>树结构</h5></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/15f1b158dfd61ad9498e5febc8d809e4dcb7f0af/data/Znode%E8%8A%82-%20%E6%A0%91%E5%BD%A2%E5%9B%BE.jpg"></p>
+<h5 id="节点性质"><a href="#节点性质" class="headerlink" title="节点性质"></a>节点性质</h5><ul>
+<li>树形结构，也可以理解为linux的文件目录</li>
+<li>每一个节点都是znode，里面可以包含<strong>数据</strong>，也可以有<strong>子节点</strong></li>
+<li>点分为<strong>永久节点</strong>和<strong>临时节点</strong>(与客户端绑定) [session失效，也就是客户端断开过，临时节点消失]</li>
+<li>每个znode都有<strong>版本号</strong>，每当数据变化，版本号都会累加(<strong>乐观锁</strong>)</li>
+<li>删除或修改节点，版本号不匹配的话(版本号已超时), 会报错)</li>
+<li>每个节点存储的<strong>数据不宜过大</strong>，几k即可 [保存路径再去查询]</li>
+<li>节点可以设置<strong>权限</strong>，来限制用户的访问</li>
+<li>Zookeeper保证读和写都是<strong>原子操作</strong>，且每次读写操作都是对数据的完整读取或完整写入</li>
+</ul>
+<h5 id="节点类型"><a href="#节点类型" class="headerlink" title="节点类型"></a>节点类型</h5><ul>
+<li><strong>持久</strong>节点</li>
+<li><strong>临时</strong>节点</li>
+<li><strong>顺序</strong>节点</li>
+</ul>
+<h5 id="节点属性"><a href="#节点属性" class="headerlink" title="节点属性"></a>节点属性</h5><ul>
+<li>dataVersion</li>
+<li>cversion [child]</li>
+<li>aclVersion [权限]</li>
+</ul>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a><span style = "color:blue">常用命令</span></h2><ul>
+<li><p>启动：<code>./bin/zkServer.sh start</code></p>
+</li>
+<li><p>连接到Zookeeper</p>
+<pre><code class="java">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED
+
+[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkCli.sh -server 127.0.0.1:2181
+</code></pre>
+</li>
+<li><p><span style = "color:red"><strong>查看节点</strong></span></p>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 3] ls 
+ls [-s] [-w] [-R] path
+[zk: 127.0.0.1:2181(CONNECTED) 4] ls /
+[zookeeper]
+[zk: 127.0.0.1:2181(CONNECTED) 5] ls /zookeeper
+[config, quota]
+[zk: 127.0.0.1:2181(CONNECTED) 6] 
+</code></pre>
+<ul>
+<li>查看节点状态：<code>stat /</code></li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 6] stat /
+cZxid = 0x0
+ctime = Thu Jan 01 08:00:00 CST 1970
+mZxid = 0x0
+mtime = Thu Jan 01 08:00:00 CST 1970
+pZxid = 0x0
+cversion = -1    //子节点更改的次数
+dataVersion = 0  //数据更改的情况
+aclVersion = 0   //权限修改的情况
+ephemeralOwner = 0x0  //[0是永久节点 其他的是临时节点]
+dataLength = 0
+numChildren = 1  //有几个子节点
+</code></pre>
+<ul>
+<li>查看节点的数据和状态：<code>get</code></li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 7] get /45
+jj
+</code></pre>
+<ul>
+<li>创建、修改、删除节点</li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 8] create
+create [-s] [-e] [-c] [-t ttl] path [data] [acl]
+
+//创建
+[zk: 127.0.0.1:2181(CONNECTED) 9] create /imooc2
+Created /imooc2
+[zk: 127.0.0.1:2181(CONNECTED) 10] create /imooc3 123
+Created /imooc3
+[zk: 127.0.0.1:2181(CONNECTED) 11] get /imooc3
+123
+
+[zk: 127.0.0.1:2181(CONNECTED) 12] stat /imooc3
+cZxid = 0x5
+ctime = Sun May 05 01:41:21 CST 2024
+mZxid = 0x5
+mtime = Sun May 05 01:41:21 CST 2024
+pZxid = 0x5
+cversion = 0
+dataVersion = 0
+aclVersion = 0
+ephemeralOwner = 0x0
+dataLength = 3
+numChildren = 0
+
+//修改
+[zk: 127.0.0.1:2181(CONNECTED) 13] set /imooc3 456
+[zk: 127.0.0.1:2181(CONNECTED) 14] get /imooc3
+456
+[zk: 127.0.0.1:2181(CONNECTED) 15] stat /imooc3
+cZxid = 0x5
+ctime = Sun May 05 01:41:21 CST 2024
+mZxid = 0x6
+mtime = Sun May 05 01:42:16 CST 2024
+pZxid = 0x5
+cversion = 0
+dataVersion = 1
+aclVersion = 0
+ephemeralOwner = 0x0
+dataLength = 3
+numChildren = 0
+</code></pre>
+</li>
+</ul>
+<h2 id="高级命令"><a href="#高级命令" class="headerlink" title="高级命令"></a><span style = "color:blue">高级命令</span></h2><h4 id="创建节点的高级功能"><a href="#创建节点的高级功能" class="headerlink" title="创建节点的高级功能"></a>创建节点的高级功能</h4><ul>
+<li><h5 id="创建顺序节点-s-会戴上序号"><a href="#创建顺序节点-s-会戴上序号" class="headerlink" title="创建顺序节点 [-s] (会戴上序号)"></a>创建顺序节点 [-s] (会戴上序号)</h5></li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 16] create /imooc4
+Created /imooc4
+[zk: 127.0.0.1:2181(CONNECTED) 17] create -s /imooc4 /s
+Created /imooc40000000003
+[zk: 127.0.0.1:2181(CONNECTED) 18] create -s /imooc4 /s
+Created /imooc40000000004
+</code></pre>
+<ul>
+<li><h5 id="临时节点"><a href="#临时节点" class="headerlink" title="临时节点"></a>临时节点</h5><blockquote>
+<p>ephemeralOwner &#x3D; 0x0  [0是永久节点 其他的是临时节点]</p>
+</blockquote>
+</li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 22] create /imooc
+Created /imooc
+[zk: 127.0.0.1:2181(CONNECTED) 23] create -e /imooc/tmp 123
+Created /imooc/tmp
+[zk: 127.0.0.1:2181(CONNECTED) 24] stat /imooc/tmp
+cZxid = 0xd
+ctime = Sun May 05 01:48:50 CST 2024
+mZxid = 0xd
+mtime = Sun May 05 01:48:50 CST 2024
+pZxid = 0xd
+cversion = 0
+dataVersion = 0
+aclVersion = 0
+ephemeralOwner = 0x10085ad02c90001  //[0x0是永久节点 其他的是临时节点]
+dataLength = 3
+numChildren = 0
+</code></pre>
+<ul>
+<li><h5 id="乐观锁"><a href="#乐观锁" class="headerlink" title="乐观锁"></a>乐观锁</h5></li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 27] set /imooc 6
+[zk: 127.0.0.1:2181(CONNECTED) 28] get /imooc
+6
+[zk: 127.0.0.1:2181(CONNECTED) 29] stat /imooc
+cZxid = 0xc
+ctime = Sun May 05 01:48:46 CST 2024
+mZxid = 0xe
+mtime = Sun May 05 01:51:15 CST 2024
+pZxid = 0xd
+cversion = 1
+dataVersion = 1
+aclVersion = 0
+ephemeralOwner = 0x0
+dataLength = 1
+numChildren = 1 
+//set -v 1 /imooc 9 是因为上面 dataVersion = 1  指定条件版本更新
+[zk: 127.0.0.1:2181(CONNECTED) 35] set -v 1 /imooc 9  
+[zk: 127.0.0.1:2181(CONNECTED) 36] get /imooc
+9
+</code></pre>
+<ul>
+<li><h5 id="删除命令"><a href="#删除命令" class="headerlink" title="删除命令"></a>删除命令</h5></li>
+</ul>
+<pre><code class="java">[zk: 127.0.0.1:2181(CONNECTED) 38] delete
+delete [-v version] path //也可以按照版本号去删除
+[zk: 127.0.0.1:2181(CONNECTED) 42] ls /
+[imooc, imooc2, imooc3, imooc4, imooc40000000003, imooc40000000004, imooc40000000005, zookeeper]
+[zk: 127.0.0.1:2181(CONNECTED) 43] delete /imooc40000000003
+[zk: 127.0.0.1:2181(CONNECTED) 44] ls /
+[imooc, imooc2, imooc3, imooc4, imooc40000000004, imooc40000000005, zookeeper]
+[zk: 127.0.0.1:2181(CONNECTED) 45] 
+</code></pre>
+<h3 id="Watcher机制"><a href="#Watcher机制" class="headerlink" title="Watcher机制"></a><span style = "color:red">Watcher机制</span></h3><ul>
+<li><h5 id="触发器、监督者"><a href="#触发器、监督者" class="headerlink" title="触发器、监督者"></a>触发器、监督者</h5></li>
+<li><h5 id="使用场景：统一资源配置-发生变化时-会給所有监听客户端发送信息"><a href="#使用场景：统一资源配置-发生变化时-会給所有监听客户端发送信息" class="headerlink" title="使用场景：统一资源配置 [发生变化时 会給所有监听客户端发送信息]"></a>使用场景：统一资源配置 [发生变化时 会給所有监听客户端发送信息]</h5></li>
+</ul>
+<h5 id="Watcher事件类型"><a href="#Watcher事件类型" class="headerlink" title="Watcher事件类型"></a>Watcher事件类型</h5><table>
+<thead>
+<tr>
+<th>EventType</th>
+<th>触发条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NodeCreated (节点创建)</td>
+<td>Watcher监听的对应数据节点被创建</td>
+</tr>
+<tr>
+<td>NodeDeleted (节点删除)</td>
+<td>Watcher监听的对应数据节点被删除</td>
+</tr>
+<tr>
+<td>NodeDataChanged(节点数据修改)</td>
+<td>Watcher监听的对应数据节点的数据内容发生变更</td>
+</tr>
+<tr>
+<td>NodeChildrenChanged(子节点变更)</td>
+<td>Watcher监听的对应数据节点的子节点列表发生变更</td>
+</tr>
+</tbody></table>
+<h5 id="ACL"><a href="#ACL" class="headerlink" title="ACL"></a>ACL</h5><ul>
+<li>access control list 权限控制</li>
+<li>它使用<strong>权限位</strong>来允许&#x2F;禁止对话节点及其所作用域的各种操作</li>
+<li>ACL仅与特定的znode有关，与<strong>子节点无关</strong></li>
+</ul>
+<h5 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h5><ul>
+<li>ACL：[scheme采用的权限机制：id用户：permissions权限组合字符串]</li>
+<li>world</li>
+<li>auth [认证登录]</li>
+<li>digest [密文加密]</li>
+<li>ip [只允许特定ip访问]</li>
+<li>super [超级权限]</li>
+</ul>
+<h5 id="权限字符串crdwa"><a href="#权限字符串crdwa" class="headerlink" title="权限字符串crdwa"></a>权限字符串crdwa</h5><ul>
+<li><h6 id="Create"><a href="#Create" class="headerlink" title="Create"></a>Create</h6></li>
+<li><h6 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h6></li>
+<li><h6 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h6></li>
+<li><h6 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h6></li>
+<li><h6 id="Admin"><a href="#Admin" class="headerlink" title="Admin"></a>Admin</h6></li>
+</ul>
+<h5 id="ACL-权限使用场景"><a href="#ACL-权限使用场景" class="headerlink" title="[ACL]权限使用场景"></a>[ACL]权限使用场景</h5><ul>
+<li>区分开发&#x2F;测试&#x2F;运维环境，防止误操作</li>
+<li>可以针对不同IP而产生具体的配置，更安全</li>
+</ul>
+<h3 id="Java原生客户端连接到zookeeper-ZK"><a href="#Java原生客户端连接到zookeeper-ZK" class="headerlink" title="Java原生客户端连接到zookeeper [ZK]"></a>Java原生客户端连接到zookeeper [ZK]</h3><ul>
+<li>利用<strong>ZK原生的Java</strong>的API</li>
+<li>利用Apache <strong>Curator</strong>作为客户端来操作ZK</li>
+</ul>
+<pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;zk-practicer&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;
+            &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;
+            &lt;version&gt;3.6.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/zkjavaapi/ZKConnect.java
+package com.imooc.zkjavaapi;
+
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.omg.CORBA.TIMEOUT;
+
+import java.io.IOException;
+
+/**
+ * 连接到ZK服务端，打印连接状态
+ */
+public class ZKConnect implements Watcher &#123;
+    public static final String SERVER_PATH=&quot;47.98.225.105:2181&quot;;
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args) throws IOException, InterruptedException &#123;
+        //后面new的相当于把这个作为参数传递进去
+        //客户端和服务端是异步连接，连接成功之后，客户端会收到watcher通知
+        //connectString：服务器的IP+端口号
+        //sessionTImeout：超时时间
+        //watcher：接收通知事件
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKConnect());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+        System.out.println(zk.getState());
+    &#125;
+
+    @Override
+    public void process(WatchedEvent watchedEvent) &#123;
+        System.out.println(&quot;收到了通知&quot; + watchedEvent);
+    &#125;
+&#125;
+===========================================================
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.free=466MB
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.max=7209MB
+17:35:46 INFO zookeeper.ZooKeeper: Client environment:os.memory.total=487MB
+17:35:46 INFO zookeeper.ZooKeeper: Initiating client connection, connectString=127.0.0.1:2181 sessionTimeout=5000 watcher=com.imooc.zkjavaapi.ZKConnect@7591083d
+17:35:46 INFO common.X509Util: Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation
+17:35:46 INFO zookeeper.ClientCnxnSocket: jute.maxbuffer value is 1048575 Bytes
+17:35:46 INFO zookeeper.ClientCnxn: zookeeper.request.timeout value is 0. feature enabled=false
+客户端开始连接ZK服务器了
+CONNECTING
+17:35:46 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:35:46 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:35:46 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:50517, server: 127.0.0.1/127.0.0.1:2181
+17:35:46 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710001, negotiated timeout = 5000
+收到了通知WatchedEvent state:SyncConnected type:None path:null
+CONNECTED
+</code></pre>
+<pre><code class="xml">log4j.properties
+log4j.rootLogger=INFO, stdout
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.out
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d&#123;HH:mm:ss&#125; %p %c&#123;2&#125;: %m%n
+</code></pre>
+<pre><code class="linux">[root@iZbp1dssknxftmjczbtpndZ apache-zookeeper-3.6.0-bin]# ./bin/zkServer.sh start
+/usr/bin/java
+ZooKeeper JMX enabled by default
+Using config: /root/apache-zookeeper-3.6.0-bin/bin/../conf/zoo.cfg
+Starting zookeeper ... already running as process 4147.
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33316784/article/details/88563482">windows环境下安装zookeeper教程详解（单机版）_windows zooke-CSDN博客</a></p>
+<h3 id="用代码对节点进行操作"><a href="#用代码对节点进行操作" class="headerlink" title="用代码对节点进行操作"></a>用代码对节点进行操作</h3><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+package com.imooc.zkjavaapi;
+
+import java.io.IOException;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.ZooKeeper;
+
+/**
+ * 描述：     演示对节点的操作，包含创建、读取、删除等。
+ */
+public class ZKOperator implements Watcher &#123;
+
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args)
+            throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKOperator());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+
+        /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+        System.out.println(zk.create(&quot;/imooc-create-node2&quot;, &quot;imooc2&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+                CreateMode.PERSISTENT));
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+    &#125;
+&#125;
+==========================================================================
+客户端开始连接ZK服务器了
+CONNECTING
+17:57:14 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:57:14 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:57:14 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:57443, server: 127.0.0.1/127.0.0.1:2181
+17:57:14 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710008, negotiated timeout = 5000
+/imooc-create-node2
+==========================================================================
+==========================================================================
+ /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+//        System.out.println(zk.create(&quot;/imooc-create-node2&quot;, &quot;imooc2&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+//                CreateMode.PERSISTENT));
+//        zk.setData(&quot;/imooc-create-node&quot;, &quot;imooc3&quot;.getBytes(), 1);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data));
+    &#125;
+==========================================================================
+客户端开始连接ZK服务器了
+CONNECTING
+17:58:09 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+17:58:09 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+17:58:09 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:57766, server: 127.0.0.1/127.0.0.1:2181
+17:58:09 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec08710009, negotiated timeout = 5000
+imooc2
+</code></pre>
+<h5 id="version版本不一样-保证不做修改"><a href="#version版本不一样-保证不做修改" class="headerlink" title="version版本不一样 保证不做修改"></a>version版本不一样 保证不做修改</h5><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+修改值 让版本变成1
+ zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 1);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data)); 
+----------------------------------------------------------------------------
+Exception in thread &quot;main&quot; org.apache.zookeeper.KeeperException$BadVersionException: KeeperErrorCode = BadVersion for /imooc-create-node2
+    at org.apache.zookeeper.KeeperException.create(KeeperException.java:122)
+    at org.apache.zookeeper.KeeperException.create(KeeperException.java:54)
+    at org.apache.zookeeper.ZooKeeper.setData(ZooKeeper.java:2551)
+    at com.imooc.zkjavaapi.ZKOperator.main(ZKOperator.java:41)
+
+报错=&gt;版本不一致
+===========================================================================
+[修改]
+ zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 0);
+        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+        System.out.println(new String(data));
+----------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:01:35 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:01:35 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:01:35 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:58870, server: 127.0.0.1/127.0.0.1:2181
+18:01:35 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec0871000d, negotiated timeout = 5000
+imooc3 [修改成功]
+</code></pre>
+<h5 id="删除节点-引入回调函数-休眠"><a href="#删除节点-引入回调函数-休眠" class="headerlink" title="删除节点 [引入回调函数+休眠]"></a>删除节点 [引入回调函数+休眠]</h5><pre><code class="java">com/imooc/zkjavaapi/ZKOperator.java
+package com.imooc.zkjavaapi;
+
+import java.io.IOException;
+
+import com.imooc.zkjavaapi.callback.DeleteCallBack;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.ZooKeeper;
+
+/**
+ * 描述：     演示对节点的操作，包含创建、读取、删除等。
+ */
+public class ZKOperator implements Watcher &#123;
+
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    public static void main(String[] args)
+            throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKOperator());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+
+        /**
+         * path:创建的路径
+         * data：存储的数据
+         * acl：权限，开放
+         * createMode：永久、临时、顺序。
+         */
+        zk.create(&quot;/imooc-create-node3&quot;, &quot;imooc3&quot;.getBytes(), Ids.OPEN_ACL_UNSAFE,
+                CreateMode.PERSISTENT);
+//        zk.setData(&quot;/imooc-create-node2&quot;, &quot;imooc3&quot;.getBytes(), 0);
+//        byte[] data = zk.getData(&quot;/imooc-create-node2&quot;, null, null);
+
+        String ctx = &quot;删除成功&quot;; //把ctx的内容代入到DeleteCallBack()里面去运行
+        zk.delete(&quot;/imooc-create-node3&quot;,0,new DeleteCallBack(),ctx);
+        Thread.sleep(2000);
+//        System.out.println(new String(data));
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+    &#125;
+&#125;
+--------------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:10:01 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:10:01 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:10:01 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:2600, server: 127.0.0.1/127.0.0.1:2181
+18:10:01 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x10004ec0871000f, negotiated timeout = 5000
+删除节点/imooc-create-node3
+删除成功
+</code></pre>
+<pre><code class="java">com/imooc/zkjavaapi/callback/DeleteCallBack.java
+package com.imooc.zkjavaapi.callback;
+
+import org.apache.zookeeper.AsyncCallback;
+
+/**
+ * 删除后运行的方法
+ */
+public class DeleteCallBack implements AsyncCallback.VoidCallback &#123;
+    @Override
+    public void processResult(int rc, String path, Object ctx) &#123;
+        System.out.println(&quot;删除节点&quot; + path);
+        System.out.println((String)ctx);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="处理Watcher事件"><a href="#处理Watcher事件" class="headerlink" title="处理Watcher事件"></a>处理Watcher事件</h3><pre><code class="java">com/imooc/zkjavaapi/ZKGetNode.java
+package com.imooc.zkjavaapi;
+
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
+/**
+ * 和节点相关：是否存在，获取数据，加上Watch
+ */
+public class ZKGetNode implements Watcher &#123;
+    public static final String SERVER_PATH = &quot;127.0.0.1:2181&quot;;
+
+    public static final Integer TIMEOUT = 5000;
+
+    //这个是门闩
+    private static CountDownLatch countDownLatch = new CountDownLatch(1);
+
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException &#123;
+        /**
+         * 客户端和服务端他们是异步连接，连接成功之后，客户端会收到watcher通知。
+         * connectString：服务器的IP+端口号，比如127.0.0.1:2181
+         * sessionTimeout：超时时间
+         * watcher：通知事件
+         */
+        ZooKeeper zk = new ZooKeeper(SERVER_PATH, TIMEOUT, new ZKGetNode());
+        System.out.println(&quot;客户端开始连接ZK服务器了&quot;);
+        System.out.println(zk.getState());
+        Thread.sleep(2000);
+        System.out.println(zk.getState());
+
+//        Stat exists = zk.exists(&quot;/imooc-create-node&quot;, false);//不需要额外监听
+//        if (exists != null)&#123;
+//            System.out.println(&quot;节点的版本为： &quot;+exists.getVersion());
+//        &#125;else&#123;
+//            System.out.println(&quot;该节点不存在&quot;);
+//        &#125;
+        zk.getData(&quot;/imooc-create-node&quot;, true, null);
+        countDownLatch.await();
+    &#125;
+
+    @Override
+    public void process(WatchedEvent event) &#123;
+        if (event.getType() == Event.EventType.NodeChildrenChanged)&#123;
+            System.out.println(&quot;数据被改变&quot;);
+            countDownLatch.countDown();
+        &#125;
+        System.out.println(&quot;收到了通知&quot; + event);
+    &#125;
+&#125;
+--------------------------------------------------------------------------------
+在运行的情况下 去cmd中 修改
+[zk: localhost:2181(CONNECTED) 1] set /imooc-create-node 11
+--------------------------------------------------------------------------------
+客户端开始连接ZK服务器了
+CONNECTING
+18:52:14 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+18:52:14 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+18:52:14 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:16204, server: 127.0.0.1/127.0.0.1:2181
+18:52:14 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x1000534afde0001, negotiated timeout = 5000
+收到了通知WatchedEvent state:SyncConnected type:None path:null
+CONNECTED
+数据被改变
+收到了通知WatchedEvent state:SyncConnected type:NodeDataChanged path:/imooc-create-node
+</code></pre>
+<h3 id="用Curator操作ZK"><a href="#用Curator操作ZK" class="headerlink" title="用Curator操作ZK"></a><span style = "color:red">用Curator操作ZK</span></h3><h5 id="原生的Java的API的缺点"><a href="#原生的Java的API的缺点" class="headerlink" title="原生的Java的API的缺点"></a>原生的Java的API的缺点</h5><ul>
+<li>不支持连接超时后的<strong>自动连接</strong></li>
+<li>Watcher<strong>注册一次</strong>后会失效</li>
+<li>不支持<strong>递归</strong>创建节点</li>
+</ul>
+<h5 id="利用Apache-Curator"><a href="#利用Apache-Curator" class="headerlink" title="利用Apache Curator"></a>利用Apache Curator</h5><ul>
+<li>解决了Watcher注册一次后会失效的问题</li>
+<li>API更加<strong>简单易用</strong>，提供了工具类</li>
+</ul>
+<pre><code class="java">com/imooc/curator/CuratorTests.java
+package com.imooc.curator;
+
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+
+/**
+ * 用Curator来操作ZK
+ */
+public class CuratorTests &#123;
+    public static void main(String[] args) throws Exception &#123;
+        String connectString = &quot;127.0.0.1:2181&quot;;
+        RetryPolicy retry = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework client = CuratorFrameworkFactory.newClient(connectString, retry);
+        client.start();
+        String path = &quot;/curator&quot;;
+        String data = &quot;test&quot;;
+        client.create().withMode(CreateMode.PERSISTENT).forPath(path,data.getBytes());
+        byte[] bytes = client.getData().forPath(path);
+        System.out.println(new String(bytes));
+    &#125;
+&#125;
+</code></pre>
+<h6 id="更改高级一点！！！【添加-修改-删除】"><a href="#更改高级一点！！！【添加-修改-删除】" class="headerlink" title="更改高级一点！！！【添加+修改+删除】"></a>更改高级一点！！！【添加+修改+删除】</h6><pre><code class="java">com/imooc/curator/CuratorTests.java
+package com.imooc.curator;
+
+import com.sun.net.httpserver.Authenticator.Retry;
+import java.text.MessageFormat;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.CuratorEvent;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher.Event.EventType;
+
+/**
+ * 描述：     用Curator来操作ZK
+ */
+public class CuratorTests &#123;
+
+    public static void main(String[] args) throws Exception &#123;
+        String connectString = &quot;127.0.0.1:2181&quot;;
+        String path = &quot;/curator2&quot;;
+
+        RetryPolicy retry = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework client = CuratorFrameworkFactory.newClient(connectString, retry);
+        client.start();
+        client.getCuratorListenable().addListener((CuratorFramework c, CuratorEvent event) -&gt; &#123;
+            switch (event.getType()) &#123;
+                case WATCHED:
+                    WatchedEvent watchedEvent = event.getWatchedEvent();
+                    if (watchedEvent.getType() == EventType.NodeDataChanged) &#123;
+                        System.out.println(new String(c.getData().forPath(path)));
+                    &#125;
+            &#125;
+        &#125;);
+        String data = &quot;test&quot;;
+        String data2 = &quot;test2&quot;;
+        //添加
+        client.create().withMode(CreateMode.PERSISTENT).forPath(path, data.getBytes());
+
+        byte[] bytes = client.getData().watched().forPath(path);
+        System.out.println(new String(bytes));
+        //更改
+        client.setData().forPath(path, data2.getBytes());
+        //删除
+        client.delete().forPath(path);
+        Thread.sleep(2000); //保证足够时间运行成功
+    &#125;
+&#125;
+-------------------------------------------------------------------------------------
+19:44:41 INFO zookeeper.ClientCnxn: Opening socket connection to server 127.0.0.1/127.0.0.1:2181.
+19:44:41 INFO zookeeper.ClientCnxn: SASL config status: Will not attempt to authenticate using SASL (unknown error)
+19:44:41 INFO zookeeper.ClientCnxn: Socket connection established, initiating session, client: /127.0.0.1:32984, server: 127.0.0.1/127.0.0.1:2181
+19:44:41 INFO zookeeper.ClientCnxn: Session establishment complete on server 127.0.0.1/127.0.0.1:2181, session id = 0x1000534afde0005, negotiated timeout = 40000
+19:44:41 INFO state.ConnectionStateManager: State change: CONNECTED
+test
+test2
+</code></pre>
+<h2 id="Dubbo-RPC远程过程调用"><a href="#Dubbo-RPC远程过程调用" class="headerlink" title="Dubbo [RPC远程过程调用]"></a>Dubbo [RPC远程过程调用]</h2><ul>
+<li>初识Dubbo</li>
+<li><strong>RPC</strong>介绍</li>
+<li>Dubbo<strong>工作原理</strong></li>
+<li>案例实操：项目编写</li>
+<li>整合Dubbo和Zookeeper</li>
+<li>实现服务间调用</li>
+</ul>
+<h3 id="初始Dubbo"><a href="#初始Dubbo" class="headerlink" title="初始Dubbo"></a>初始Dubbo</h3><h5 id="Dubbo是什么"><a href="#Dubbo是什么" class="headerlink" title="Dubbo是什么"></a>Dubbo是什么</h5><ul>
+<li>轻量级、高性能的<strong>RPC框架</strong></li>
+<li>并不是要成为一个微服务的全面解决方案</li>
+<li>以Java语言而出名</li>
+</ul>
+<h5 id="Dubbo现状"><a href="#Dubbo现状" class="headerlink" title="Dubbo现状"></a>Dubbo现状</h5><ul>
+<li>全称是<strong>Apache Dubbo</strong></li>
+<li>微店、网易云音乐、滴滴、中国电信、中国人寿</li>
+<li>star有30K+个，fork有20K+个</li>
+</ul>
+<h5 id="Dubbo的故事"><a href="#Dubbo的故事" class="headerlink" title="Dubbo的故事"></a>Dubbo的故事</h5><ul>
+<li>09年开始做，做的第一个版本</li>
+<li>10年初的时候，架构升级，Dubbo2.0</li>
+<li><strong>开源</strong></li>
+<li>one company战略</li>
+<li>合到HSF去</li>
+<li>第3节点，捐给Apache</li>
+</ul>
+<h5 id="开源的理解"><a href="#开源的理解" class="headerlink" title="开源的理解"></a>开源的理解</h5><ul>
+<li><strong>共同成长</strong>、巨人的肩膀上</li>
+<li>演化慢、不断革新、很强大的生命力</li>
+<li>突破任何的束缚，突破任何的常规，<strong>包容和开放</strong></li>
+</ul>
+<h3 id="RPC介绍"><a href="#RPC介绍" class="headerlink" title="RPC介绍"></a>RPC介绍</h3><ul>
+<li>RPC ——远程过程调用</li>
+<li>早期单机时代：IPC</li>
+<li>网络时代：<strong>把IPC扩展到网络上，这就是RPC</strong></li>
+<li>实现RPC很头疼，于是有了<strong>RPC框架</strong></li>
+<li>调用其他机器上的程序和<strong>调用本地的程序一样方便</strong></li>
+</ul>
+<h5 id="常见的RPC框架"><a href="#常见的RPC框架" class="headerlink" title="常见的RPC框架"></a>常见的RPC框架</h5><ul>
+<li>阿里的Dubbo</li>
+<li>新浪的Montan</li>
+<li>Facebook的Thrift</li>
+<li>各个框架都有其各自的优缺点</li>
+</ul>
+<h5 id="HTTP和RPC对比"><a href="#HTTP和RPC对比" class="headerlink" title="HTTP和RPC对比"></a>HTTP和RPC对比</h5><ul>
+<li><strong>普通话</strong>[通用] 与 <strong>方言</strong>[企业内部]</li>
+<li>普通话本质上也是一种方言，只不过它是官方的方言</li>
+<li>传输效率 <ul>
+<li>RPC定制自己传输请求让传输效率更高</li>
+<li>HTTP会包含一些无用的内容效率较低</li>
+</ul>
+</li>
+<li>性能消耗，主要在于序列化和反序列化的耗时</li>
+<li>负载均衡</li>
+</ul>
+<h3 id="Dubbo工作原理"><a href="#Dubbo工作原理" class="headerlink" title="Dubbo工作原理"></a>Dubbo工作原理</h3><h6 id="一旦注册中心的信息有变化的时候会主动推送信息"><a href="#一旦注册中心的信息有变化的时候会主动推送信息" class="headerlink" title="一旦注册中心的信息有变化的时候会主动推送信息"></a>一旦注册中心的信息有变化的时候会主动推送信息</h6><ul>
+<li>服务<strong>容器</strong>负责启动，加载，<strong>运行服务提供者</strong></li>
+<li><strong>服务提供者</strong>在启动时，向注册中心<strong>注册</strong>自己提供的服务</li>
+<li><strong>服务提供者</strong>在启动时，向注册中心<strong>订阅</strong>自己所需的服务</li>
+<li>注册中心返回服务提供者<strong>地址列表</strong>给消费者</li>
+<li>从提供者地址列表中，<strong>选一台</strong>提供者进行调用</li>
+<li>定期发送一次<strong>统计数据</strong>到监控中心</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/2ded5afda4ae8cff8392f5ccf0217657054c8981/data/Dubbo%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86.png"></p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Provider</td>
+<td>暴露服务的服务提供方</td>
+</tr>
+<tr>
+<td>Consumer</td>
+<td>调用远程服务的服务消费方</td>
+</tr>
+<tr>
+<td>Registry</td>
+<td>服务注册与发现的注册中心</td>
+</tr>
+<tr>
+<td>Monitor</td>
+<td>统计服务的调用次数和调用时间的控制中心</td>
+</tr>
+<tr>
+<td>Container</td>
+<td>服务运行容器</td>
+</tr>
+</tbody></table>
+<h3 id="服务提供者开发"><a href="#服务提供者开发" class="headerlink" title="服务提供者开发"></a>服务提供者开发</h3><h5 id="案例实操"><a href="#案例实操" class="headerlink" title="案例实操"></a>案例实操</h5><ul>
+<li>引入依赖</li>
+<li>添加注解</li>
+<li>整合Dubbo和<strong>Zookeeper</strong></li>
+</ul>
+<pre><code class="xml">pom.xml[dubbo-practice]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;packaging&gt;pom&lt;/packaging&gt;
+    &lt;modules&gt;
+        &lt;module&gt;producer&lt;/module&gt;
+    &lt;/modules&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.1.12.RELEASE&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;artifactId&gt;dubbo-practice&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1&lt;/version&gt;
+    &lt;name&gt;dubbo-practice&lt;/name&gt;
+    &lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+
+    &lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+        &lt;spring-boot.version&gt;2.1.12.RELEASE&lt;/spring-boot.version&gt;
+        &lt;dubbo.version&gt;2.7.4.1&lt;/dubbo.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;!-- Spring Boot --&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;spring-boot.version&#125;&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+
+            &lt;!-- Apache Dubbo  --&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+                &lt;artifactId&gt;dubbo-dependencies-bom&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+                &lt;artifactId&gt;dubbo&lt;/artifactId&gt;
+                &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;
+                &lt;exclusions&gt;
+                    &lt;exclusion&gt;
+                        &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+                        &lt;artifactId&gt;spring&lt;/artifactId&gt;
+                    &lt;/exclusion&gt;
+                    &lt;exclusion&gt;
+                        &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+                        &lt;artifactId&gt;servlet-api&lt;/artifactId&gt;
+                    &lt;/exclusion&gt;
+                    &lt;exclusion&gt;
+                        &lt;groupId&gt;log4j&lt;/groupId&gt;
+                        &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+                    &lt;/exclusion&gt;
+                &lt;/exclusions&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="xml">pom.xml[dubbo-practice-producer]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;parent&gt;
+        &lt;artifactId&gt;dubbo-practice&lt;/artifactId&gt;
+        &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+        &lt;version&gt;0.0.1&lt;/version&gt;
+    &lt;/parent&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;artifactId&gt;producer&lt;/artifactId&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- Dubbo Spring Boot Starter --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.7.4.1&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- Zookeeper dependencies --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+            &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;
+            &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;
+            &lt;type&gt;pom&lt;/type&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+                    &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+        &lt;/dependency&gt;
+        &lt;!-- Web 功能 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- MySQL connector, 需要与 MySQL 版本对应 --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- MyBatis依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;2.1.1&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/producer/service/CourseListService.java
+package com.imooc.producer.service;
+
+import com.imooc.producer.entity.Course;
+
+import java.util.List;
+
+/**
+ * 课程列表服务
+ */
+public interface CourseListService &#123;
+    List&lt;Course&gt; getCourseList();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/producer/entity/Course.java
+package com.imooc.producer.entity;
+
+import java.io.Serializable;
+
+/**
+ * 描述：     Course实体类
+ */
+public class Course implements Serializable &#123;
+
+    Integer id;
+    Integer courseId;
+    String name;
+    //1上架，0下架
+    Integer valid;
+
+    @Override
+    public String toString() &#123;
+        return &quot;Course&#123;&quot; +
+                &quot;id=&quot; + id +
+                &quot;, courseId=&quot; + courseId +
+                &quot;, name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &quot;, valid=&quot; + valid +
+                &#39;&#125;&#39;;
+    &#125; Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/producer/service/impl/CourseListServiceImpl.java
+package com.imooc.producer.service.impl;
+
+import com.imooc.producer.entity.Course;
+import com.imooc.producer.mapper.CourseMapper;
+import com.imooc.producer.service.CourseListService;
+import java.util.List;
+import org.apache.dubbo.config.annotation.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * 描述：     课程列表服务实现类
+ */
+@Service(version = &quot;$&#123;demo.service.version&#125;&quot;)
+public class CourseListServiceImpl implements CourseListService &#123;
+
+    @Autowired
+    CourseMapper courseMapper;
+
+    public List&lt;Course&gt; getCourseList() &#123;
+        return courseMapper.findValidCourses();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/producer/mapper/CourseMapper.java
+package com.imooc.producer.mapper;
+
+import com.imooc.producer.entity.Course;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * Mapper类
+ */
+@Mapper
+@Repository
+public interface CourseMapper &#123;
+    @Select(&quot;SELECT * FORM course WHERE valid = 1&quot;)
+    List&lt;Course&gt; findValidCourses();
+&#125;
+</code></pre>
+<pre><code class="mysql">application.properties
+demo.service.version=1.0.0
+
+#server.port=8081
+
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/course_prepare?serverTimezone=UTC&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true
+spring.datasource.username=root
+spring.datasource.password=root
+
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+
+
+spring.application.name=course-list
+
+#dubbo协议
+dubbo.protocol.name=dubbo
+dubbo.protocol.port=-1
+#dubbo注册
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+dubbo.registry.file=$&#123;user.home&#125;/dubbo-cache/$&#123;spring.application.name&#125;/dubbo.cache
+
+mybatis.configuration.map-underscore-to-camel-case=true
+
+dubbo.scan.base-packages=com.imooc.producer.service.impl
+</code></pre>
+<pre><code class="java">com/imooc/producer/DubboProducerApplication.java
+package com.imooc.producer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+/**
+ * 描述：     Spring Boot启动类
+ */
+@EnableAutoConfiguration
+public class DubboProducerApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(DubboProducerApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="服务消费方开发"><a href="#服务消费方开发" class="headerlink" title="服务消费方开发"></a>服务消费方开发</h3><p>查看PID为8080：<code>netstat -ano|findstr 8080</code><br>杀死进程：<code>taskkill /pid 查询的PID /f</code></p>
+<pre><code class="xml">pom.xml[dubbo-practice-consumer]
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+  xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+  xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;parent&gt;
+    &lt;artifactId&gt;dubbo-practice&lt;/artifactId&gt;
+    &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+    &lt;version&gt;0.0.1&lt;/version&gt;
+  &lt;/parent&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+  &lt;artifactId&gt;concumer&lt;/artifactId&gt;
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- Dubbo Spring Boot Starter --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+      &lt;artifactId&gt;dubbo-spring-boot-starter&lt;/artifactId&gt;
+      &lt;version&gt;2.7.4.1&lt;/version&gt;
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+      &lt;artifactId&gt;dubbo&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;!-- Zookeeper dependencies --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.apache.dubbo&lt;/groupId&gt;
+      &lt;artifactId&gt;dubbo-dependencies-zookeeper&lt;/artifactId&gt;
+      &lt;version&gt;$&#123;dubbo.version&#125;&lt;/version&gt;
+      &lt;type&gt;pom&lt;/type&gt;
+      &lt;exclusions&gt;
+        &lt;exclusion&gt;
+          &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+          &lt;artifactId&gt;slf4j-log4j12&lt;/artifactId&gt;
+        &lt;/exclusion&gt;
+      &lt;/exclusions&gt;
+    &lt;/dependency&gt;
+    &lt;!-- Web 功能 --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;!-- MySQL connector, 需要与 MySQL 版本对应 --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;mysql&lt;/groupId&gt;
+      &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;!-- MyBatis依赖--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+      &lt;version&gt;2.1.1&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.imooc&lt;/groupId&gt;
+      &lt;artifactId&gt;producer&lt;/artifactId&gt;
+      &lt;version&gt;0.0.1&lt;/version&gt;
+      &lt;scope&gt;compile&lt;/scope&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<pre><code class="java">com/imooc/consumer/service/CoursePriceService.java
+package com.imooc.consumer.service;
+
+import com.imooc.consumer.entity.CourseAndPrice;
+import com.imooc.consumer.entity.CoursePrice;
+import java.util.List;
+
+/**
+ * 描述：     课程价格服务
+ */
+public interface CoursePriceService &#123;
+
+    CoursePrice getCoursePrice(Integer courseId);
+
+    List&lt;CourseAndPrice&gt; getCoursesAndPrice();
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/consumer/service/impl/CoursePriceServiceImpl.java
+package com.imooc.consumer.service.impl;
+
+import com.imooc.consumer.dao.CoursePriceMapper;
+import com.imooc.consumer.entity.CourseAndPrice;
+import com.imooc.consumer.entity.CoursePrice;
+import com.imooc.consumer.service.CoursePriceService;
+import com.imooc.producer.entity.Course;
+import com.imooc.producer.service.CourseListService;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.dubbo.config.annotation.Reference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * 描述：     课程 价格服务
+ */
+@Service
+public class CoursePriceServiceImpl implements CoursePriceService &#123;
+
+    @Autowired
+    CoursePriceMapper coursePriceMapper;
+
+    @Reference(version = &quot;$&#123;demo.service.version&#125;&quot;)
+    CourseListService courseListService;
+
+    @Override
+    public CoursePrice getCoursePrice(Integer courseId) &#123;
+        return coursePriceMapper.findCoursePrices(courseId);
+    &#125;
+
+    @Override
+    public List&lt;CourseAndPrice&gt; getCoursesAndPrice() &#123;
+        List&lt;CourseAndPrice&gt; courseAndPriceList = new ArrayList&lt;&gt;();
+        List&lt;Course&gt; courseList = courseListService.getCourseList();
+        for (int i = 0; i &lt; courseList.size(); i++) &#123;
+            Course course = courseList.get(i);
+            if (course != null) &#123;
+                CoursePrice price = getCoursePrice(course.getCourseId());
+                if (price != null &amp;&amp; price.getPrice() &gt; 0) &#123;
+                    CourseAndPrice courseAndPrice = new CourseAndPrice();
+                    courseAndPrice.setId(course.getId());
+                    courseAndPrice.setCourseId(course.getCourseId());
+                    courseAndPrice.setName(course.getName());
+                    courseAndPrice.setPrice(price.getPrice());
+                    courseAndPriceList.add(courseAndPrice);
+                &#125;
+            &#125;
+        &#125;
+        return courseAndPriceList;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/consumer/dao/CoursePriceMapper.java
+package com.imooc.consumer.dao;
+
+import com.imooc.consumer.entity.CoursePrice;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Repository;
+
+/**
+ * 描述：     Mapper类
+ */
+@Mapper
+@Repository
+public interface CoursePriceMapper &#123;
+
+    @Select(&quot;SELECT * FROM course_price WHERE course_id = #&#123;courseId&#125;&quot;)
+    CoursePrice findCoursePrices(Integer courseId);
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/consumer/entity/CourseAndPrice.java
+package com.imooc.consumer.entity;
+
+import java.io.Serializable;
+
+/**
+ * 描述：     CoursePrice实体类
+ */
+public class CourseAndPrice implements Serializable &#123;
+
+    Integer id;
+    Integer courseId;
+    String name;
+    Integer price;
+
+    @Override
+    public String toString() &#123;
+        return &quot;CourseAndPrice&#123;&quot; +
+                &quot;id=&quot; + id +
+                &quot;, courseId=&quot; + courseId +
+                &quot;, name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &quot;, price=&quot; + price +
+                &#39;&#125;&#39;;
+    &#125; Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">com/imooc/consumer/entity/CoursePrice.java
+package com.imooc.consumer.entity;
+
+
+import java.io.Serializable;
+
+/**
+ * 描述：     CoursePrice实体类
+ */
+public class CoursePrice implements Serializable &#123;
+
+    Integer id;
+    Integer courseId;
+    Integer price;
+&#125; Getter+Setter
+</code></pre>
+<pre><code class="java">com/imooc/consumer/controller/CoursePriceController.java
+package com.imooc.consumer.controller;
+
+import com.imooc.consumer.entity.CourseAndPrice;
+import com.imooc.consumer.entity.CoursePrice;
+import com.imooc.consumer.service.CoursePriceService;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 描述：CoursePriceController
+ */
+@RestController
+public class CoursePriceController &#123;
+
+    @Autowired
+    CoursePriceService coursePriceService;
+
+
+    @GetMapping(&#123;&quot;/price&quot;&#125;)
+    public Integer getCoursePrice(Integer courseId) &#123;
+        CoursePrice coursePrice = coursePriceService.getCoursePrice(courseId);
+        if (coursePrice != null) &#123;
+            return coursePrice.getPrice();
+        &#125; else &#123;
+            return -1;
+        &#125;
+    &#125;
+
+
+    @GetMapping(&#123;&quot;/coursesAndPrice&quot;&#125;)
+    public List&lt;CourseAndPrice&gt; getcoursesAndPrice() &#123;
+        return coursePriceService.getCoursesAndPrice();
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="mysql">application.properties
+demo.service.version=1.0.0
+
+server.port=8084
+
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/course_practice?serverTimezone=UTC&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=true
+spring.datasource.username=root
+spring.datasource.password=root
+
+logging.pattern.console=%clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:%wEx&#125;
+
+
+spring.application.name=course-price
+
+#dubboåè®®
+dubbo.protocol.name=dubbo
+dubbo.protocol.port=-1
+#dubboæ³¨å
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+dubbo.registry.file=$&#123;user.home&#125;/dubbo-cache/$&#123;spring.application.name&#125;/dubbo.cache
+</code></pre>
+<pre><code class="java">com/imooc/consumer/DubboConsumerApplication.java
+package com.imooc.consumer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+/**
+ * 描述：     Spring Boot启动类
+ */
+@SpringBootApplication
+public class DubboConsumerApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(DubboConsumerApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="案例实操总结"><a href="#案例实操总结" class="headerlink" title="案例实操总结"></a>案例实操总结</h5><ul>
+<li><strong>自动检查</strong>zk和依赖的服务</li>
+<li>dubbo.scan.base-packages配置</li>
+<li>实现<strong>服务间调用</strong></li>
+</ul>
+<h1 id="面试课"><a href="#面试课" class="headerlink" title=" 面试课"></a><span style = "color:red"> 面试课</span></h1><ul>
+<li><h5 id="Spring-Boot常见面试题"><a href="#Spring-Boot常见面试题" class="headerlink" title="Spring Boot常见面试题"></a>Spring Boot常见面试题</h5></li>
+<li><h5 id="线程常见面试题"><a href="#线程常见面试题" class="headerlink" title="线程常见面试题"></a>线程常见面试题</h5></li>
+<li><h5 id="分布式的面试题"><a href="#分布式的面试题" class="headerlink" title="分布式的面试题"></a>分布式的面试题</h5></li>
+<li><h5 id="Docker相关面试题"><a href="#Docker相关面试题" class="headerlink" title="Docker相关面试题"></a>Docker相关面试题</h5></li>
+<li><h5 id="Nginx和Zookeeper相关面试题"><a href="#Nginx和Zookeeper相关面试题" class="headerlink" title="Nginx和Zookeeper相关面试题"></a>Nginx和Zookeeper相关面试题</h5></li>
+<li><h5 id="RabbitMQ相关面试题"><a href="#RabbitMQ相关面试题" class="headerlink" title="RabbitMQ相关面试题"></a>RabbitMQ相关面试题</h5></li>
+<li><h5 id="微服务相关"><a href="#微服务相关" class="headerlink" title="微服务相关"></a>微服务相关</h5></li>
+<li><h5 id="彩蛋：学习方法"><a href="#彩蛋：学习方法" class="headerlink" title="彩蛋：学习方法"></a>彩蛋：学习方法</h5></li>
+<li><h5 id="锁分类、死锁"><a href="#锁分类、死锁" class="headerlink" title="锁分类、死锁"></a>锁分类、死锁</h5></li>
+<li><h5 id="HashMap和final"><a href="#HashMap和final" class="headerlink" title="HashMap和final"></a>HashMap和final</h5></li>
+<li><h5 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h5></li>
+<li><h5 id="面试避坑指南"><a href="#面试避坑指南" class="headerlink" title="面试避坑指南"></a>面试避坑指南</h5></li>
+<li><h5 id="重要的软实力"><a href="#重要的软实力" class="headerlink" title="重要的软实力"></a>重要的软实力</h5></li>
+</ul>
+<h3 id="Spring、Spring-Boot和Spring-Cloud的关系？"><a href="#Spring、Spring-Boot和Spring-Cloud的关系？" class="headerlink" title="Spring、Spring Boot和Spring Cloud的关系？"></a>Spring、Spring Boot和Spring Cloud的关系？</h3><ul>
+<li>Spring最初利用<strong>IOC</strong>和<strong>AOP</strong>解耦</li>
+<li>按照这种模式搞了<strong>MVC框架</strong> [之后就配置太繁琐了]</li>
+<li>写了很多样板代码很麻烦，就有了Spring Boot</li>
+<li>Spring Boot是在强大的Spring帝国发展起来的，发明Spring Boot是为了让人们更好更高效的使用Spring，Spring Boot理念是约定优于配置</li>
+<li>Spring Cloud是在Spring Boot基础上诞生的 [一系列框架的有序集合]</li>
+</ul>
+<h3 id="Spring-Boot如何配置多环境"><a href="#Spring-Boot如何配置多环境" class="headerlink" title="Spring Boot如何配置多环境"></a>Spring Boot如何配置多环境</h3><ul>
+<li><h5 id="开发、测试、预发、生产"><a href="#开发、测试、预发、生产" class="headerlink" title="开发、测试、预发、生产"></a>开发、测试、预发、生产</h5></li>
+</ul>
+<blockquote>
+<p>面试官你好，我这边平时是会使用多套环境，比如说”开发、测试、预发、生产”环境。<br>开发环境通常在本地，它所连接的数据库也是专门用于开发的，里面的数据也是一定情况下算出来的，因为并不需要在开发环境的情况下保证数据的完全精确，为了开发效率的提高，我们通常造一些模拟的数据，通常开发完后我们要把程序部署到测试环境，因为测试环境通常是公司所提供的服务器，而开发环境通常是我们本机，对于本机而言如果关闭或关机后别人就无法访问了，但是测试的同学工作时间不一定能和开发的同学一致，如果把程序关掉了他们就没办法测试了。我们需要给测试同学提供一套稳定的环境去测试。而且有的时候会同时开发多种功能，前一个功能开发完了需要去测试，这个时候就要去开发新的功能了，此时本地的代码已经发生了变化，如果把开发环境当成测试环境的话会发生很多问题，它实际测试的和我们想要测试的不是同一套代码，正是这个原因测试环境是必不可少的，需要用一台稳定的服务器把我们开发好的部署上测试环境中去，这样的话无论电脑是否关机都不会影响测试人员的进度。但是在测试环境的数据库往往可以和开发环境的保持一致可以允许公用同一个数据。<br>预发环境是预备发布，和真正的线上环境高度统一，和测试环境的区别：<br>1.网络隔离 为了保证线上环境的稳定会采取环境隔离，在本地或者测试环境下是没有办法访问到预发环境的机器，不可直接访问。在预发环境通常采用真实的数据库去测试。在测试环境并不能把所有问题都测试出来，所以在测试环境中无法测试到的问题在预发环境就可以暴露出来了，有时候在测试环境中模拟的数据不是准确，比如模拟一个商品详情，报的是50个字，最后发现真实情况是100个字，就能看到数据库大小不够，再次比如测试的是整数，到真实环境中发现是小数。隔离+数据验真<br>生产环境是真实对外的数据，也会有很多流量进来，直接面向所有用户，也有并发问题，要确保数据稳定</p>
+</blockquote>
+<ul>
+<li><h5 id="提供多套配置文件"><a href="#提供多套配置文件" class="headerlink" title="提供多套配置文件"></a>提供多套配置文件</h5></li>
+</ul>
+<blockquote>
+<p>在发布到某个环境之前，不建议把配置文件全部删除替换，有可能漏了文件导致了错误的替换，如果发布环境是测试环境的数据库，有可能会产生对外暴露的是测试环境的情况，这是很严重的事故</p>
+</blockquote>
+<ul>
+<li><h5 id="通过改变application里的profiles-active值来加载对应的环境"><a href="#通过改变application里的profiles-active值来加载对应的环境" class="headerlink" title="通过改变application里的profiles.active值来加载对应的环境"></a>通过改变application里的profiles.active值来加载对应的环境</h5></li>
+</ul>
+<pre><code class="java">com/imooc/profiles/ProfilesApplication.java
+package com.imooc.profiles;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ProfilesApplication &#123;
+
+    public static void main(String[] args) &#123;
+        SpringApplication.run(ProfilesApplication.class, args);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="mysql">application.properties
+
+spring.profiles.active=prod
+</code></pre>
+<pre><code class="mysql">application-pre.properties
+
+spring.profiles.active=test
+server.port=8082
+</code></pre>
+<pre><code class="mysql">application-prod.properties
+
+spring.profiles.active=test
+server.port=8083
+</code></pre>
+<pre><code class="mysql">application-test.properties
+
+spring.profiles.active=test
+server.port=8081
+</code></pre>
+<h3 id="实际工作中，如何全局处理异常？"><a href="#实际工作中，如何全局处理异常？" class="headerlink" title="实际工作中，如何全局处理异常？"></a>实际工作中，如何全局处理异常？</h3><ul>
+<li><h5 id="为什么异常需要全局处理？不处理行不行？"><a href="#为什么异常需要全局处理？不处理行不行？" class="headerlink" title="为什么异常需要全局处理？不处理行不行？"></a>为什么异常需要全局处理？不处理行不行？</h5></li>
+</ul>
+<blockquote>
+<p>如果我们不进行处理的话，异常可能会把整个堆栈抛出去，一旦发生异常，用户或者别用用心的黑客可以看到详细的异常发生情况，包含详细的错误信息和代码的行数，这样的话对方可以利用一个漏洞进行不同的尝试，而且可以顺藤摸瓜分析出更多潜在的风险，最终把系统攻击破，异常是必须处理的。<br>但为什么要全局处理呢？电商项目→exception→GlobalExceptionHandler</p>
+</blockquote>
+<ul>
+<li><h5 id="GlobalExceptionHandler-使用全局处理"><a href="#GlobalExceptionHandler-使用全局处理" class="headerlink" title="GlobalExceptionHandler [使用全局处理]"></a>GlobalExceptionHandler [使用全局处理]</h5>识别到什么异常，调用什么其处理器。写了全局异常处理器，轻松的针对不同的异常做出定制化的解决方案，不但增加了安全性，对用户也是友好的</li>
+</ul>
+<pre><code class="java">package com.imooc.mall.exception;
+
+import com.imooc.mall.common.ApiRestResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 19.处理统一异常的handler 业务异常 处理不同逻辑异常  20对密码进行MD5加密UserServiceImpl 先创建MD5Utils
+ */
+@ControllerAdvice
+public class GlobalExceptionHandler &#123;
+    private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    //   统一处理Exception.class异常 所有异常的父类
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public Object handleException(Exception e) &#123;
+        log.error(&quot;Default Exception: &quot;, e);
+        return ApiRestResponse.error(ImoocMallExceptionEnum.SYSTEM_ERROR);
+    &#125;
+    
+    // 处理自己所定义的异常 用户/密码不能为空......
+    @ExceptionHandler(ImoocMallException.class)
+    @ResponseBody
+    public Object handleImoocMallException(ImoocMallException e) &#123;
+        log.error(&quot;ImoocMallException: &quot;, e); //传进来的是什么就传出去
+        return ApiRestResponse.error(e.getCode(), e.getMessage());
+    &#125;
+
+    //  39.处理方法参数不合规的情况
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseBody
+    public ApiRestResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) &#123;
+        log.error(&quot;handleMethodArgumentNotValidException: &quot;, e);
+        return handleBindingResult(e.getBindingResult());
+    &#125;
+//  40.处理返回异常的ApiRespond 41去pom引入Swagger自动生成API文档
+    private ApiRestResponse handleBindingResult(BindingResult result)&#123;
+//  把异常处理为对外暴露的提示
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        if (result.hasErrors())&#123;
+            List&lt;ObjectError&gt; allErrors = result.getAllErrors();
+            for (ObjectError objectError : allErrors) &#123; //itli快速  对着for按alt+回车 改成增强for
+                String message = objectError.getDefaultMessage();
+                list.add(message);
+            &#125;
+        &#125;
+        if (list.size() == 0)&#123;
+            return ApiRestResponse.error(ImoocMallExceptionEnum.REQUEST_PARAM_ERROR);
+        &#125; //list.toString()生成所创建的异常描述信息
+        return ApiRestResponse.error(ImoocMallExceptionEnum.REQUEST_PARAM_ERROR.getCode(), list.toString());
+    &#125;
+&#125;
+</code></pre>
+<h3 id="线程如何启动？"><a href="#线程如何启动？" class="headerlink" title="线程如何启动？"></a>线程如何启动？</h3><blockquote>
+<p>Thread.start.run</p>
+</blockquote>
+<ul>
+<li><h5 id="既然start-方法会调用run-方法，为什么我们选择调用start-方法，而不是直接调用run-方法呢？"><a href="#既然start-方法会调用run-方法，为什么我们选择调用start-方法，而不是直接调用run-方法呢？" class="headerlink" title="既然start()方法会调用run()方法，为什么我们选择调用start()方法，而不是直接调用run()方法呢？"></a>既然start()方法会调用run()方法，为什么我们选择调用start()方法，而不是直接调用run()方法呢？</h5></li>
+</ul>
+<blockquote>
+<p>因为它只是一个普通的java代码，而不会真正的启动一个线程，调用一次run()方法只执行一次，而且是在主线程执行的，就没有起到任何创建线程的效果了。<br>如果选择start方法的话会在后台执行很多操作，比如去申请一个线程、让子方法去执行run()里的内容，而且还包括执行之后的对线程状态的调整。所以说表面上是相同都是执行一段代码，但是实际上是不同的。</p>
+</blockquote>
+<ul>
+<li><h5 id="两次调用start-方法会出现什么情况？"><a href="#两次调用start-方法会出现什么情况？" class="headerlink" title="两次调用start()方法会出现什么情况？"></a>两次调用start()方法会出现什么情况？</h5></li>
+</ul>
+<blockquote>
+<p>两次调用start()方法会报异常，异常类型叫做<code>IllegalThreadStateException</code>，在start()的时候首先会进行线程状态的检测只有是new的时候才能正常启动，不允许启动两次</p>
+</blockquote>
+<pre><code class="java">com/imooc/interniew/StartTwice.java
+package com.imooc.interniew;
+
+/**
+ * 描述：     两次启动线程
+ */
+public class StartTwice &#123;
+
+    public static void main(String[] args) &#123;
+        Thread thread = new Thread();
+        thread.start();
+        thread.start();
+    &#125;
+&#125;
+======================== 报错信息  ==========================
+Exception in thread &quot;main&quot; java.lang.IllegalThreadStateException
+    at java.lang.Thread.start(Thread.java:705)
+    at com.imooc.interniew.StartTwice.main(StartTwice.java:11)
+</code></pre>
+<pre><code class="java">Thread.java
+public synchronized void start() &#123;
+        /**
+         * This method is not invoked for the main method thread or &quot;system&quot;
+         * group threads created/set up by the VM. Any new functionality added
+         * to this method in the future may have to also be added to the VM.
+         *
+         * A zero status value corresponds to state &quot;NEW&quot;.
+         */
+        if (threadStatus != 0)
+            throw new IllegalThreadStateException();
+
+        /* Notify the group that this thread is about to be started
+         * so that it can be added to the group&#39;s list of threads
+         * and the group&#39;s unstarted count can be decremented. */
+        group.add(this);
+
+        boolean started = false;
+        try &#123;
+            start0();
+            started = true;
+        &#125; finally &#123;
+            try &#123;
+                if (!started) &#123;
+                    group.threadStartFailed(this);
+                &#125;
+            &#125; catch (Throwable ignore) &#123;
+                /* do nothing. If start0 threw a Throwable then
+                  it will be passed up the call stack */
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<h3 id="实现多线程的方法有几种？"><a href="#实现多线程的方法有几种？" class="headerlink" title="实现多线程的方法有几种？"></a>实现多线程的方法有几种？</h3><ul>
+<li><h5 id="方法一：实现Runnable接口"><a href="#方法一：实现Runnable接口" class="headerlink" title="方法一：实现Runnable接口"></a>方法一：实现<strong>Runnable</strong>接口</h5></li>
+</ul>
+<pre><code class="java">com/imooc/interniew/createthreads/RunnableStyle.java
+package com.imooc.interniew.createthreads;
+
+import java.util.concurrent.Callable;
+
+/**
+ * 描述：     用Runnable方式创建线程
+ */
+public class RunnableStyle implements Runnable &#123;
+//new里new的意思是 把这个Runnable类作为参数传进Thread里面
+    public static void main(String[] args) &#123;
+        Thread thread = new Thread(new RunnableStyle());
+        thread.start();
+    &#125;
+
+    @Override
+    public void run() &#123;
+        System.out.println(&quot;用Runnable方法实现线程&quot;);
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><h5 id="方法二：继承Thread类"><a href="#方法二：继承Thread类" class="headerlink" title="方法二：继承Thread类"></a>方法二：继承Thread类</h5></li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.createthreads;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+/**
+ * 描述：     利用定时器新建线程
+ */
+public class TimerDemo &#123;
+
+    public static void main(String[] args) &#123;
+        System.out.println(Thread.currentThread().getName());
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(Thread.currentThread().getName());
+            &#125;
+        &#125;, 1000, 1000);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="两种方式的对比"><a href="#两种方式的对比" class="headerlink" title="两种方式的对比"></a>两种方式的对比</h3><h4 id="方法1-实现Runnable接口更好"><a href="#方法1-实现Runnable接口更好" class="headerlink" title="方法1(实现Runnable接口更好)"></a><span style = "color:blue">方法1(实现Runnable接口更好)</span></h4><h5 id="实现多线程——常见面试问题"><a href="#实现多线程——常见面试问题" class="headerlink" title="实现多线程——常见面试问题"></a>实现多线程——常见面试问题</h5><ul>
+<li><p><span style = "color:red"><strong>实现Runnable接口和继承Thread类哪种方式更好？</strong></span></p>
+<ul>
+<li><h5 id="从代码架构角度"><a href="#从代码架构角度" class="headerlink" title="从代码架构角度"></a>从代码架构角度</h5></li>
+</ul>
+<blockquote>
+<p>本意是想让我们的执行类和任务的具体内容解耦，关系不那么密切，从架构角度好<br>★ Runnable具体描述的是工作的内容和线程的启动没有什么关系<br>★ Thread是维护整个线程的: 线程的启动、线程状态更改、线程结束，这两个本身的任务很分明的，不应该过度耦合[未来会发生很难扩展的问题]</p>
+</blockquote>
+<ul>
+<li><h5 id="新建线程损耗"><a href="#新建线程损耗" class="headerlink" title="新建线程损耗"></a>新建线程损耗</h5></li>
+</ul>
+<blockquote>
+<p>★ Runnable 在线程池更高级的用法中，一定不是每个任务都去新建一个线程的，为了提高整体的效率会让有限数量的线程由我们自己来确定，10个线程可以运行成千上万个任务。减少了新建线程的损耗。<br>可以把任务作为一个参数直接传递给线程池，线程池里面用固定的线程去执行任务不需要每次都新建和销毁线程，这样大大降低了线程的开销。</p>
+<p>★ Runnable 如果用这个不得不去把线程损耗承担起来，有的时候run方法执行的比较少，开销的少比不上新建线程的开销[捡了芝麻丢了西瓜]。</p>
+</blockquote>
+<ul>
+<li><h5 id="Java不支持双继承"><a href="#Java不支持双继承" class="headerlink" title="Java不支持双继承"></a>Java不支持双继承</h5></li>
+</ul>
+<blockquote>
+<p>public class ThreadStyle extends Thread,Date (×)<br>Class cannot extend multiple classes</p>
+<p>从语法的角度不允许继承多个类，一旦选定了一个父类就无法更改了[一辈子就被定死了]。在创建线程起就限制了代码的可扩展性，如果实现Runnable接口就不会出现这个问题，实现接口并不仅仅只能实现一个，实现接口后还可以继承类</p>
+<blockquote>
+<p>public class RunnableStyle extends Thread implements Runnable,Callable</p>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<h4 id="两种方法的本质对比"><a href="#两种方法的本质对比" class="headerlink" title="两种方法的本质对比"></a><span style = "color:blue">两种方法的本质对比</span></h4><h5 id="方法一：最终调用target-run"><a href="#方法一：最终调用target-run" class="headerlink" title="方法一：最终调用target.run();"></a><span style = "color:red">方法一：最终调用target.run();</span></h5><blockquote>
+<p>此方法本质是传入类后调用！<br>Ctrl+F12可以精确查找方法<br>@Override<br>public void run(){<br>    if(target !&#x3D; null){<br>        target.run()<br>    }<br>}<br>而target是什么呢？实际上就是我们写的<br>@Override<br>public void run() {<br>    System.<em>out</em>.println(“用Runnable方法实现线程”);<br>}</p>
+</blockquote>
+<h5 id="方法二：run-整个都被重写"><a href="#方法二：run-整个都被重写" class="headerlink" title="方法二：run()整个都被重写"></a><span style = "color:red">方法二：run()整个都被重写</span></h5><blockquote>
+<p>整个重写代码</p>
+</blockquote>
+<h4 id="若同时使用这两种方法会发生什么？"><a href="#若同时使用这两种方法会发生什么？" class="headerlink" title="若同时使用这两种方法会发生什么？"></a>若同时使用这两种方法会发生什么？</h4><ul>
+<li><h5 id="从面向对象的思想去考虑"><a href="#从面向对象的思想去考虑" class="headerlink" title="从面向对象的思想去考虑"></a>从面向对象的思想去考虑</h5></li>
+</ul>
+<pre><code class="java">com/imooc/interniew/createthreads/BothRunnableThread.java
+package com.imooc.interniew.createthreads;
+/**
+ * 描述：     同时使用RUNNABLE和Thread两种方式实现线程
+ */
+public class BothRunnableThread &#123;
+
+    public static void main(String[] args) &#123;
+        Thread t1 = new Thread(new Runnable() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(&quot;实现Runnable接口的方式&quot;);
+            &#125;
+        &#125;) &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(&quot;我来自Thread&quot;);
+            &#125;
+        &#125;;
+        t1.start();
+    &#125;
+&#125;
+=========================================================
+我来自Thread
+---------------------------------------------------------
+因为 run重写会被覆盖！！子类覆盖父类时 实行子类方法
+@Override
+public void run()&#123;
+    if(target != null)&#123;
+        target.run()
+    &#125;
+&#125;
+</code></pre>
+<h5 id="其他观点分析"><a href="#其他观点分析" class="headerlink" title="其他观点分析"></a>其他观点分析</h5><ul>
+<li><p><strong>线程池</strong>创建线程也算是一种新建线程的方式 [把那两种方式进行包装]</p>
+</li>
+<li><p>通过<strong>Callable</strong>创建线程，也算是一种新建线程的方式</p>
+</li>
+<li><p>定时器[方法二：extends Thread]</p>
+<pre><code class="java">package com.imooc.interniew.createthreads;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+/**
+ * 描述：     利用定时器新建线程
+ */
+public class TimerDemo &#123;
+
+    public static void main(String[] args) &#123;
+        System.out.println(Thread.currentThread().getName());
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() &#123;
+            @Override
+            public void run() &#123;
+                System.out.println(Thread.currentThread().getName());
+            &#125;
+        &#125;, 1000, 1000);
+    &#125;
+&#125;
+=======================================================
+main     //两个不一致证明新建了一个线程
+Timer-0
+Timer-0
+......
+</code></pre>
+</li>
+<li><p>匿名内部类</p>
+</li>
+<li><p>Lambda表达式</p>
+</li>
+</ul>
+<h5 id="实现多线程——常见面试问题-1"><a href="#实现多线程——常见面试问题-1" class="headerlink" title="实现多线程——常见面试问题"></a>实现多线程——常见面试问题</h5><ul>
+<li>有多少种实现线程的方法？5点思路<ul>
+<li>从<strong>不同的角度</strong>看，会有不同的答案</li>
+<li>经典答案是<strong>两</strong>种</li>
+<li>我们看原理，两种<strong>本质</strong>都是一样的</li>
+<li>具体<strong>展开</strong>说其他方式</li>
+</ul>
+</li>
+</ul>
+<h5 id="总结：最精准的描述"><a href="#总结：最精准的描述" class="headerlink" title="总结：最精准的描述"></a>总结：最精准的描述</h5><blockquote>
+<p>准确地讲：创建线程只有一种方法那就是构造Thread类，而实现线程的执行单元有两种方式<br>  ★ 方法一：实现<strong>Runnable</strong>接口的run方法，并把Runnable实例传給Thread类<br>  ★ 方法二：重写Thread的run方法(继承<strong>Thread</strong>类)<br>多线程的实现方法，在代码种写法千变万化，但其本质<strong>万变不离其宗</strong></p>
+</blockquote>
+<h3 id="线程的生命周期是什么？"><a href="#线程的生命周期是什么？" class="headerlink" title="线程的生命周期是什么？"></a>线程的生命周期是什么？</h3><h5 id="线程有几种状态？"><a href="#线程有几种状态？" class="headerlink" title="线程有几种状态？"></a>线程有几种状态？</h5><ul>
+<li>有哪<strong>6</strong>种状态</li>
+<li><strong>每个状态</strong>是什么含义？</li>
+<li>状态间的转化？</li>
+<li><strong>阻塞</strong>状态是什么？</li>
+</ul>
+<h5 id="每个状态是什么含义？"><a href="#每个状态是什么含义？" class="headerlink" title="每个状态是什么含义？"></a>每个状态是什么含义？</h5><ul>
+<li>New</li>
+<li>Runnable [从new到调用start方法]</li>
+<li>Blocked [线程状态由sychronized修饰]</li>
+<li>Waiting</li>
+<li>Timed Waiting</li>
+<li>Terminated</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/215ff6397d1cc14f17c11471dc420af64d92ea83/data/%E7%BA%BF%E7%A8%8B%E9%97%B4%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2.png" style="zoom: 200%;" />
+
+
+
+<h3 id="状态转换的注意点和阻塞"><a href="#状态转换的注意点和阻塞" class="headerlink" title="状态转换的注意点和阻塞"></a>状态转换的注意点和阻塞</h3><pre><code class="java">com/imooc/interniew/NewRunnableTerminated.java
+package com.imooc.interniew;
+
+/**
+ * 描述：     演示New、Runnable、Terminated状态。
+ */
+public class NewRunnableTerminated &#123;
+
+    public static void main(String[] args) throws InterruptedException &#123;
+        Thread thread = new Thread();
+        //打印出NEW的状态 线程被创建但没有启动会打出new状态
+        System.out.println(thread.getState());
+        thread.start();
+        //打印出Runnable状态 线程被启动后打印runnable状态
+        System.out.println(thread.getState());
+        Thread.sleep(100);
+        //打印出TERMINATED状态 打印terminate状态
+        System.out.println(thread.getState());
+    &#125;
+&#125;
+=================================================================================
+NEW
+RUNNABLE
+TERMINATED
+
+Process finished with exit code 0
+</code></pre>
+<pre><code class="java">com/imooc/interniew/BlockedWaitingTimedWaiting.java
+package com.imooc.interniew;
+
+/**
+ * 描述：     展示Blocked、Waiting、Timed_Waiting状态
+ */
+public class BlockedWaitingTimedWaiting implements Runnable &#123;
+
+    public static void main(String[] args) throws InterruptedException &#123;
+        Runnable runnable = new BlockedWaitingTimedWaiting();
+        Thread t1 = new Thread(runnable);
+        t1.start();
+        Thread t2 = new Thread(runnable);
+        t2.start();
+        Thread.sleep(10);
+        //打印Timed_Waiting状态，因为正在执行Thread.sleep(1000);
+        System.out.println(t1.getState());
+        //打印出BLOCKED状态，因为t2拿不到synchronized锁[线程1还在休眠]
+        System.out.println(t2.getState());
+
+        Thread.sleep(1300);
+        //打印出WAITING状态，以为执行了wait()
+        System.out.println(t1.getState());
+    &#125;
+
+    @Override
+    public void run() &#123;
+        syn();
+    &#125;
+
+    private synchronized void syn() &#123; //锁！！
+        try &#123;
+            Thread.sleep(1000);
+            wait();
+        &#125; catch (InterruptedException e) &#123;
+            e.printStackTrace();
+        &#125;
+    &#125;
+&#125;
+=================================================================================
+TIMED_WAITING
+BLOCKED
+WAITING
+</code></pre>
+<h5 id="阻塞状态"><a href="#阻塞状态" class="headerlink" title="阻塞状态"></a>阻塞状态</h5><ul>
+<li>一般习惯而言，把<strong>Blocked</strong>(被阻塞)、<strong>Waiting</strong>(等待)、<strong>Timed_waiting</strong>(计时等待)都称为阻塞状态</li>
+<li>不仅仅是Blocked</li>
+</ul>
+<h1 id="分布式面试题"><a href="#分布式面试题" class="headerlink" title="分布式面试题"></a><span style = "color:red">分布式面试题</span></h1><h5 id="什么是分布式"><a href="#什么是分布式" class="headerlink" title="什么是分布式"></a>什么是分布式</h5><ul>
+<li>饭店厨师的例子<ul>
+<li>一个厨师</li>
+<li>多个厨师</li>
+<li>术业有专攻：配菜师、洗菜工</li>
+</ul>
+</li>
+<li>实际项目的演进过程<ul>
+<li>一个项目，大而全</li>
+<li>多台机器，部署同样的应用</li>
+<li>分布式：权限系统、员工系统、请假系统</li>
+</ul>
+</li>
+</ul>
+<h5 id="分布式和单体结构哪个更好？-脱离业务场景和发展阶段的空谈就是耍流氓"><a href="#分布式和单体结构哪个更好？-脱离业务场景和发展阶段的空谈就是耍流氓" class="headerlink" title="分布式和单体结构哪个更好？[脱离业务场景和发展阶段的空谈就是耍流氓]"></a>分布式和单体结构哪个更好？[脱离业务场景和发展阶段的空谈就是耍流氓]</h5><table>
+<thead>
+<tr>
+<th></th>
+<th>传统单体架构</th>
+<th>分布式架构</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新人的学习成本</td>
+<td>业务逻辑成本高</td>
+<td>架构逻辑成本高</td>
+</tr>
+<tr>
+<td>部署、运维</td>
+<td>容易</td>
+<td>发布频繁、发布顺序复杂、运维难</td>
+</tr>
+<tr>
+<td>隔离性</td>
+<td>一损俱损，殃及鱼池</td>
+<td>故障影响范围小</td>
+</tr>
+</tbody></table>
+<h3 id="CAP理论是什么？-只选其二-三者不可兼得"><a href="#CAP理论是什么？-只选其二-三者不可兼得" class="headerlink" title="CAP理论是什么？[只选其二 三者不可兼得]"></a>CAP理论是什么？[只选其二 三者不可兼得]</h3><ul>
+<li>C(Consistency, 一致性)：读操作是否总能读到前一个写操作的结果</li>
+<li>A(Availability, 可用性)：非故障节点应该在合理的时间内做出合理的响应</li>
+<li>P(Partition tolerance, 分区容错性)：当出现网络分区现象后，系统能够继续运行</li>
+</ul>
+<h5 id="CAP怎么选？"><a href="#CAP怎么选？" class="headerlink" title="CAP怎么选？"></a>CAP怎么选？</h5><ul>
+<li>CP或者AP</li>
+<li>在什么场合，可用性高于一致性？</li>
+</ul>
+<h3 id="为什么需要Docker？"><a href="#为什么需要Docker？" class="headerlink" title="为什么需要Docker？"></a>为什么需要Docker？</h3><ul>
+<li>Docker：用来装程序以及环境的容器</li>
+<li><strong>环境配置</strong>的难题</li>
+<li>虚拟机</li>
+</ul>
+<h5 id="Docker的用途是什么？"><a href="#Docker的用途是什么？" class="headerlink" title="Docker的用途是什么？"></a>Docker的用途是什么？</h5><ul>
+<li>提供<strong>统一</strong>的环境</li>
+<li>提供<strong>快速拓展</strong>、弹性伸缩的云服务</li>
+<li>防止其他用户的进程把服务器资源<strong>占用过多</strong></li>
+</ul>
+<p>Docker的架构是什么样的？</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/28665426b3b7f9351280ab4c58b1ea388391f211/data/image%E9%95%9C%E5%83%8F.jpg"></p>
+<h5 id="Docker的网络模式有哪些？"><a href="#Docker的网络模式有哪些？" class="headerlink" title="Docker的网络模式有哪些？"></a>Docker的网络模式有哪些？</h5><ul>
+<li><strong>Bridge</strong> [桥接 用外面主机的端口号映射到里面的端口号 实现了一座桥]</li>
+<li><strong>Host</strong> [里面的容器不会获得独立的网络配置 不会使用虚拟网卡ip 而是使用宿主机上的ip和端口号]</li>
+<li>None [不需要网络模式]</li>
+</ul>
+<h3 id="Nginx的适用场景有哪些？"><a href="#Nginx的适用场景有哪些？" class="headerlink" title="Nginx的适用场景有哪些？"></a>Nginx的适用场景有哪些？</h3><ul>
+<li><p>HTTP的<strong>反向代理</strong>服务器</p>
+</li>
+<li><p><strong>动态静态</strong>资源分离</p>
+<ul>
+<li>不分离会<strong>变慢</strong></li>
+<li>静态资源<strong>无需经过Tomcat</strong>，Tomcat只负责处理动态请求</li>
+<li>后缀为gif的时候，Nginx会直接获取到当前请求的文件并返回</li>
+<li>静态资源服务器</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/93ef10f6db6a389181a9f20268c6c4b8b82c46d7/data/%E6%AD%A3%E5%90%91_%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86_.jpg"></p>
+<h3 id="Nginx常用命令有哪些？"><a href="#Nginx常用命令有哪些？" class="headerlink" title="Nginx常用命令有哪些？"></a>Nginx常用命令有哪些？</h3><pre><code class="java">/usr/sbin/nginx 启动
+-h 帮助
+-c 读取指定的配置文件
+-t 测试
+-v 版本
+-s信号
+  stop 立即停止(不再接收任何请求立刻停止)  
+  quit 优雅停止(不接收了但目前的请求要作完)
+  reload 重启
+  reopen 更换日志文件
+</code></pre>
+<h3 id="Zookeeper有哪些节点类型？"><a href="#Zookeeper有哪些节点类型？" class="headerlink" title="Zookeeper有哪些节点类型？"></a>Zookeeper有哪些节点类型？</h3><ul>
+<li>持久节点</li>
+<li>临时节点</li>
+<li>顺序节点</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/15f1b158dfd61ad9498e5febc8d809e4dcb7f0af/data/Znode%E8%8A%82-%20%E6%A0%91%E5%BD%A2%E5%9B%BE.jpg"></p>
+<h3 id="为什么要用消息队列？什么场景用？"><a href="#为什么要用消息队列？什么场景用？" class="headerlink" title="为什么要用消息队列？什么场景用？"></a>为什么要用消息队列？什么场景用？</h3><ul>
+<li>系统<strong>解耦</strong></li>
+<li><strong>异步</strong>调用</li>
+<li>流量<strong>削峰</strong></li>
+</ul>
+<h5 id="消息队列RabbitMQ核心概念？"><a href="#消息队列RabbitMQ核心概念？" class="headerlink" title="消息队列RabbitMQ核心概念？"></a>消息队列RabbitMQ核心概念？</h5><p>同一个RabbitMQ的Server下建立不同的虚拟主机，他们之间是相互独立的，用于不同的业务线。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/8fc65400c147b4cda128b49a11d646330a5860fc/data/RabiitMQ%E6%B6%88%E6%81%AF%E6%B5%81%E8%BD%AC%E6%96%B9%E5%BC%8F.jpg"></p>
+<h5 id="交换机工作模式有哪4种？"><a href="#交换机工作模式有哪4种？" class="headerlink" title="交换机工作模式有哪4种？"></a>交换机工作模式有哪4种？</h5><ul>
+<li><p><strong>fanout</strong>：广播，这种模式只需要将队列绑定到交换机上即可，是不需要设置路由键的</p>
+</li>
+<li><p><strong>direct</strong>：根据RoutingKey匹配消息路由到指定队列 [消费者接收消息不一致]</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/df64342f867398846ad29a0cb944a8490cd247b0/data/%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%B1%BB%E5%9E%8B-direct.jpg"></p>
+<ul>
+<li><p><strong>topic</strong>：比如消息严重性怎么样、只想记录error模块的用户信息</p>
+<ul>
+<li><p>***** 可以替代一个单词</p>
+</li>
+<li><p><strong>#</strong> 可以替代零个或多个单词</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/76b7e6d6ebbac01f8f73850149fefbf50ca51712/data/%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%B1%BB%E5%9E%8B-topic%E7%94%9F%E4%BA%A7%E8%80%85.jpg"></p>
+<ul>
+<li><strong>headers</strong>：根据发送消息内容中的headers属性来匹配</li>
+</ul>
+<h1 id="微服务面试题"><a href="#微服务面试题" class="headerlink" title="微服务面试题"></a><span style = "color:red">微服务面试题</span></h1><h3 id="微服务有哪两大门派？"><a href="#微服务有哪两大门派？" class="headerlink" title="微服务有哪两大门派？"></a>微服务有哪两大门派？</h3><ul>
+<li><strong>Spring Cloud</strong>：众多子项目</li>
+<li><strong>dubbo</strong>：高性能、轻量级的开源RPC框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现</li>
+<li>dubbo提供的能力只是SpringCloud的一部分<strong>子集</strong></li>
+</ul>
+<h5 id="Spring-Cloud核心组件有哪些？"><a href="#Spring-Cloud核心组件有哪些？" class="headerlink" title="Spring Cloud核心组件有哪些？"></a>Spring Cloud核心组件有哪些？</h5><table>
+<thead>
+<tr>
+<th align="center">核心组件</th>
+<th align="center">Spring Cloud</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">服务注册中心</td>
+<td align="center">Spring Cloud Netflix Eureka</td>
+</tr>
+<tr>
+<td align="center">服务调用</td>
+<td align="center">Spring Cloud Netflix Feign</td>
+</tr>
+<tr>
+<td align="center">服务网关</td>
+<td align="center">Spring Cloud Netflix Zuul</td>
+</tr>
+<tr>
+<td align="center">断路器</td>
+<td align="center">Spring Cloud Netflix Hystrix</td>
+</tr>
+</tbody></table>
+<h5 id="画一下Eureka架构"><a href="#画一下Eureka架构" class="headerlink" title="画一下Eureka架构"></a>画一下Eureka架构</h5><ul>
+<li>EureKa <strong>Server</strong> 和 EureKa <strong>Client</strong></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/6a3bfcded810da5a827559f3b8f868a0de867787/data/Eureka%E6%9E%B6%E6%9E%84.png"></p>
+<ul>
+<li><strong>集群</strong> [只要能获得一个Eureka Server 就能获得整个信息]</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f756e06eed90edb75c6b3b6f234eee57763d8811/data/Eureka%E6%9E%B6%E6%9E%84-%E9%9B%86%E7%BE%A4.png"></p>
+<h5 id="负载均衡的两种类型是什么？"><a href="#负载均衡的两种类型是什么？" class="headerlink" title="负载均衡的两种类型是什么？"></a>负载均衡的两种类型是什么？</h5><ul>
+<li><strong>客户端</strong>负载均衡(Ribbon)</li>
+<li><strong>服务端</strong>负载均衡(Nginx)</li>
+</ul>
+<h5 id="负载均衡有哪些策略？"><a href="#负载均衡有哪些策略？" class="headerlink" title="负载均衡有哪些策略？"></a>负载均衡有哪些策略？</h5><ul>
+<li>RandomRule表示<strong>随机</strong>策略</li>
+<li>RoundRobinRule表示<strong>轮询</strong>策略</li>
+<li>ResponseTimeWeightedRule<strong>加权</strong>，根据每一个Server的平均响应时间动态加权</li>
+</ul>
+<h5 id="为什么需要断路器？"><a href="#为什么需要断路器？" class="headerlink" title="为什么需要断路器？"></a>为什么需要断路器？</h5><p>防止线程突然卡住，当发现某个模块不可用时，把它摘除不影响主要流程。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/e441bfbcf0e2cf07f9d53564669b2dbd90533142/data/%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%96%AD%E8%B7%AF%E5%99%A8.jpg"></p>
+<h5 id="为什么需要网关？"><a href="#为什么需要网关？" class="headerlink" title="为什么需要网关？"></a>为什么需要网关？</h5><ul>
+<li>签名校验、登录校验<strong>冗余</strong>问题</li>
+<li>统一对外，安全 [对恶意IP进行拦截 打出日志]</li>
+</ul>
+<h5 id="Dubbo的工作流程是什么？"><a href="#Dubbo的工作流程是什么？" class="headerlink" title="Dubbo的工作流程是什么？"></a>Dubbo的工作流程是什么？</h5><p><img src="https://raw.githubusercontent.com/P-luminary/images/2ded5afda4ae8cff8392f5ccf0217657054c8981/data/Dubbo%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86.png"></p>
+<h3 id="彩蛋：学习编程知识的优质路径"><a href="#彩蛋：学习编程知识的优质路径" class="headerlink" title="彩蛋：学习编程知识的优质路径"></a>彩蛋：学习编程知识的优质路径</h3><ul>
+<li><h5 id="宏观上"><a href="#宏观上" class="headerlink" title="宏观上"></a>宏观上</h5></li>
+</ul>
+<ol>
+<li>并不是靠工作年限，有的人工作5年技术却还是只懂皮毛</li>
+<li>要有强大的责任心，不放过任何bug，找到原因并去解决，这就是提高</li>
+<li>主动：永远不会觉得自己的时间多余，重构、优化、学习、总结等</li>
+<li>敢于承担：虽然这个技术难题以前没有碰到过，但是在一定的了解调研后，敢于承担技术难题，让工作充满挑战，这一次次攻克难关的过程种，进步是飞速的</li>
+<li>关心产品，关心业务，而不是只写代码</li>
+</ol>
+<ul>
+<li><h5 id="微观上"><a href="#微观上" class="headerlink" title="微观上"></a>微观上</h5></li>
+</ul>
+<ol>
+<li>系统化的学习 看经典的书籍</li>
+<li>看官方文档</li>
+<li>自己动手写代码，尝试应用到项目中</li>
+<li>不理解的内容参考多个知识来源，综合判断</li>
+<li>学习开源项目，总结代码</li>
+</ol>
+<h3 id="Synchronized和Lock"><a href="#Synchronized和Lock" class="headerlink" title="Synchronized和Lock"></a>Synchronized和Lock</h3><h5 id="Lock简介、地址、作用"><a href="#Lock简介、地址、作用" class="headerlink" title="Lock简介、地址、作用"></a>Lock简介、地址、作用</h5><ul>
+<li>锁是一种工具，用于控制对<strong>共享资源</strong>的访问</li>
+<li>Lock和Synchronized，这两个是最常见的锁，它们都可以达到<strong>线程安全</strong>的目的，但是在使用上和功能上又有较大的不同</li>
+<li>Lock并不是用来替代Synchronized的，而是当使用Synchronized不合适或不满足要求的时候，来提供<strong>高级功能</strong>的</li>
+<li>Lock接口最常见的实现类是<strong>ReentrantLock</strong></li>
+<li><strong>lock()、tryLock()、tryLock(long time, TimeUnit unit)</strong> 和<strong>locakInterruptibly()</strong></li>
+</ul>
+<h5 id="lock"><a href="#lock" class="headerlink" title="lock()"></a>lock()</h5><ul>
+<li>lock()就是最普通的获取锁。如果锁已经被其他线程获取，则进行等待</li>
+<li>Lock不会像Synchronized一样在<strong>异常时自动释放锁</strong></li>
+<li>因此最佳实践是，在<strong>finally中释放锁</strong>，以保证发生异常时锁一定被释放</li>
+<li>lock()方法不能被中断，这就会带来很大隐患：一旦陷入<strong>死锁</strong>，lock()就会陷入永久等待</li>
+</ul>
+<h5 id="tryLock"><a href="#tryLock" class="headerlink" title="tryLock()"></a>tryLock()</h5><ul>
+<li>tryLock()用来<strong>尝试获取锁</strong>，如果当前锁没有被其他线程占用，则获取成功，则返回true，否则返回false，代表获取锁失败</li>
+<li>相对比lock，这样的方法显然功能更加强大了，我们可以根据是否能获取到锁来<strong>决定后续程序的行为</strong></li>
+<li>该方法会<strong>立即返回</strong>，即便在拿不到锁时不会一直在那等</li>
+</ul>
+<h5 id="tryLock-long-time-TimeUnit-unit-：超时就放弃"><a href="#tryLock-long-time-TimeUnit-unit-：超时就放弃" class="headerlink" title="tryLock(long time, TimeUnit unit)：超时就放弃"></a>tryLock(long time, TimeUnit unit)：超时就放弃</h5><p><strong>locakInterruptibly()<strong>：相当于tryLock(long time, TimeUnit unit)把超时时间设置为无限。在等待锁的过程中，线程可以被</strong>中断</strong></p>
+<p><strong>unlock()：</strong>解锁 [最应该写在try…finally里面]</p>
+<h4 id="Synchronized和Lock有什么不同？"><a href="#Synchronized和Lock有什么不同？" class="headerlink" title="Synchronized和Lock有什么不同？"></a>Synchronized和Lock有什么不同？</h4><h5 id="相同点："><a href="#相同点：" class="headerlink" title="相同点："></a>相同点：</h5><ul>
+<li>保障资源线程的安全：目的和作用都是为了 保障资源线程的安全<br>[使用Synchronized后被保护的代码块最多只有一个线程可以访问]</li>
+<li>可重入 [不然就必须在获得第二个锁前释放]</li>
+</ul>
+<pre><code class="java">com/imooc/interniew/Reentrant.java
+package com.imooc.interniew;
+
+/**
+ * 描述：     synchronized可重入
+ */
+public class Reentrant &#123;
+
+    public synchronized void f1() &#123;
+        System.out.println(&quot;f1方法被运行了&quot;);
+        f2();
+    &#125;
+
+    public synchronized void f2() &#123;
+        System.out.println(&quot;f2方法被运行了&quot;);
+    &#125;
+
+    public static void main(String[] args) &#123;
+        Reentrant reentrant = new Reentrant();
+        reentrant.f1();
+    &#125;
+&#125;
+========================================================
+f1方法被运行了
+f2方法被运行了
+</code></pre>
+<ul>
+<li><strong>ReentrantLock</strong> [实现了Lock接口]</li>
+</ul>
+<h5 id="不同点："><a href="#不同点：" class="headerlink" title="不同点："></a>不同点：</h5><ul>
+<li><h6 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h6><ul>
+<li>Synchronized用在方法上、用在同步代码块上 [隐式]</li>
+<li>Lock必须使<u>用lock方法加锁</u>，<u>unlock方法解锁</u> [显式]</li>
+</ul>
+</li>
+<li><h6 id="加解锁顺序不同"><a href="#加解锁顺序不同" class="headerlink" title="加解锁顺序不同"></a>加解锁顺序不同</h6><ul>
+<li>Synchronized是java内部控制，自动加解锁</li>
+<li>Lock可以手动调节</li>
+</ul>
+</li>
+<li><h6 id="Synchronized锁不够灵活"><a href="#Synchronized锁不够灵活" class="headerlink" title="Synchronized锁不够灵活"></a>Synchronized锁不够灵活</h6><ul>
+<li>Synchronized获得了一个锁 其他的只能等待</li>
+<li>Lock获得锁很灵活 可以随时调整</li>
+</ul>
+</li>
+<li><h6 id="性能区别"><a href="#性能区别" class="headerlink" title="性能区别"></a>性能区别</h6><ul>
+<li>Synchronized由差到好 目前同等程度的性能</li>
+</ul>
+</li>
+</ul>
+<h3 id="你知道有几种锁？"><a href="#你知道有几种锁？" class="headerlink" title="你知道有几种锁？"></a>你知道有几种锁？</h3><ul>
+<li><p><span style = "color:blue"><strong>共享锁</strong>[读写锁] 和 <strong>独占锁</strong>[排他锁]</span></p>
+</li>
+<li><p>共享锁，又称为读锁，获得<strong>共享锁</strong>之后，可以查看但无法修改和删除数据，其他线程此时也可以获取到共享锁，也可以查看但<strong>无法修改和删除</strong>数据</p>
+</li>
+<li><p>共享锁和排他锁的典型是读写锁<strong>ReentrantReadWriteLock</strong>，其中<strong>读锁是共享锁，写锁是独享锁</strong></p>
+</li>
+</ul>
+<h5 id="读写锁的作用"><a href="#读写锁的作用" class="headerlink" title="读写锁的作用"></a>读写锁的作用</h5><ul>
+<li>在没有读写锁之前，我们假设使用ReentrantLock，那么虽然我们保证了线程安全，但是也<strong>浪费了一定的资源：多个读操作同时进行，并没有线程安全问题</strong></li>
+<li>在读的地方使用读锁，在写的地方使用写锁，灵活控制，如果<strong>没有写锁的情况下，读是无阻塞的</strong>，提高了程序的执行效率</li>
+</ul>
+<h5 id="读写锁的规则"><a href="#读写锁的规则" class="headerlink" title="读写锁的规则"></a>读写锁的规则</h5><ul>
+<li>多个线程只申请读锁，都可以申请到</li>
+<li>如果有一个线程已经占用了读锁，则此时其他线程如果要申请写锁，则申请写锁的线程会一直等待释放读锁</li>
+<li>如果有一个线程已经占用了写锁，则此时其他线程如果申请写锁或者读锁，则申请的线程会一直等待释放写锁</li>
+<li>一句话总结：要么是<strong>一个</strong>或<strong>多个</strong>线程同时有<strong>读锁</strong>，要么一个线程有写锁，但是两者不会同时出现(要么多读，要麽一写)</li>
+</ul>
+<h5 id="公平锁-和-非公平锁"><a href="#公平锁-和-非公平锁" class="headerlink" title="公平锁 和 非公平锁"></a><span style = "color:blue">公平锁 和 非公平锁</span></h5><ul>
+<li>公平指的是按照线程请求的顺序，来分配锁</li>
+<li>非公平指的是不完全按照请求的顺序，在一定情况下，可以插队 </li>
+<li>注意：<strong>非公平</strong>也同样不提倡 ”插队“ 行为，这里的非公平，指的是”在合适的时机”插队，而不是盲目插队</li>
+<li>什么是合适的时机呢？<ul>
+<li>买火车票被插队的例子，排队买的例子</li>
+</ul>
+</li>
+<li>实际情况并不是这样的，java设计者这样设计的目的是为了<strong>提高效率</strong></li>
+<li><span style = "color:red"><strong>避免唤醒带来的空档期，提升吞吐量</strong></span></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>优势</th>
+<th>劣势</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>公平锁</td>
+<td>各线程公平平等，每个线程在等待一段时间后，总有执行的机会</td>
+<td>更慢，吞吐量更小</td>
+</tr>
+<tr>
+<td>不公平锁</td>
+<td>更快，吞吐量更大</td>
+<td>有可能产生线程饥饿，也就是某些线程在长时间内，始终得不到执行</td>
+</tr>
+</tbody></table>
+<h5 id="悲观锁-和-乐观锁"><a href="#悲观锁-和-乐观锁" class="headerlink" title=" 悲观锁 和 乐观锁"></a><span style = "color:blue"> 悲观锁 和 乐观锁</span></h5><ul>
+<li>从<strong>是否锁住资源</strong>的角度分类</li>
+</ul>
+<h5 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h5><ul>
+<li>如果我不锁住这个资源，别人就会来争抢，就会造成数据结果错误，所以每次悲观锁为了确保结果的正确性，会在每次获取并修改数据时，把数据锁住，让别人无法访问该数据，这样就可以确保数据内容万无一失</li>
+<li>java中悲观锁的实现就是<code>synchronized</code>和<code>Lock</code>相关类</li>
+</ul>
+<h5 id="乐观锁-1"><a href="#乐观锁-1" class="headerlink" title="乐观锁"></a>乐观锁</h5><ul>
+<li>认为自己在处理操作的时候不会有其他线程来干扰，所以并<strong>不会锁住</strong>被操作对象</li>
+<li>在更新的时候，去对比在我修改的期间数据有没有被其他人改变过，如果<strong>没被改变过</strong>，就说明真的是只有我自己在操作，那我就正常去修改数据</li>
+<li>如果数据和我<strong>一开始拿到的不一样</strong>了，说明其他人在这段时间内改过数据，那我就不能继续刚才的更新数据过程了，我会选择放弃、报错、重试等策略</li>
+<li>乐观锁的实现一般都是利用<strong>CAS</strong>算法来实现的</li>
+</ul>
+<h6 id="在数据库中"><a href="#在数据库中" class="headerlink" title="在数据库中"></a>在数据库中</h6><ul>
+<li><strong>select for update</strong>就是悲观锁</li>
+<li>用<strong>version</strong>控制数据库就是乐观锁</li>
+</ul>
+<h6 id="经典例子"><a href="#经典例子" class="headerlink" title="经典例子"></a>经典例子</h6><pre><code class="mysql">添加一个字段lock_version
+先查询这个更新语句的vesion：SELECT * FROM table
+然后
+UPDATE SET num = 2, 
+version = version + 1 WHERE version = 1 AND id = 5
+如果version被更新了等于2，不一样就会更新出错，这就是乐观锁的原理
+</code></pre>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/a6265784dee5e723d22bfceddca39a9a2afe91b8/data/%E4%B9%90%E8%A7%82%E9%94%81%E5%92%8C%E6%82%B2%E8%A7%82%E9%94%81.jpg"></p>
+<h5 id="自旋锁-和-非自旋锁"><a href="#自旋锁-和-非自旋锁" class="headerlink" title="自旋锁 和 非自旋锁"></a><span style = "color:blue">自旋锁 和 非自旋锁</span></h5><ul>
+<li>阻塞或唤醒一个Java线程需要操作系统切换CPU状态来完成，这种状态转换需要耗费处理器时间</li>
+<li>如果同步代码块的内容过于简单，<strong>状态转换消耗的时间有可能比用户代码执行的时间还要长</strong></li>
+<li>在许多场景中，同步资源的锁定时间很短，为了这一小段时间去切换线程，线程挂起和恢复线程的花费可能会让系统<strong>得不偿失</strong></li>
+<li>如果物理机器有多个处理器，能够让两个或以上的线程同时并行执行，我们就可以让后面那个请求锁的线程不放弃CPU的执行时间，看看持有锁的线程是否很快就会释放锁 </li>
+<li>而为了让当前线程“<strong>稍等一下</strong>”，我们需要让当前线程进行自旋，如果在自旋完成后前面锁定同步资源资源的线程已经释放了锁，那么当前线程就可以不必阻塞而是直接获取同步资源，从而<strong>避免切换线程的开销</strong>，这就是自旋锁。</li>
+</ul>
+<h5 id="自旋锁的缺点"><a href="#自旋锁的缺点" class="headerlink" title="自旋锁的缺点"></a>自旋锁的缺点</h5><ul>
+<li>如果锁被占用的时间很长，那么自旋的线程只会白浪费处理器资源</li>
+<li>在自旋的过程中，一直消耗CPU，所以虽然自旋锁的起始开销低于悲观锁，但是随着自旋时间的增长，开销也是线性增长的</li>
+</ul>
+<h5 id="可重入锁-和-非可重入锁"><a href="#可重入锁-和-非可重入锁" class="headerlink" title="可重入锁 和 非可重入锁"></a><span style = "color:blue">可重入锁 和 非可重入锁</span></h5><ul>
+<li><p>什么是可重入 [摇一个号拿N个牌]</p>
+</li>
+<li><p>好处 [避免死锁]</p>
+</li>
+</ul>
+<h5 id="可中断锁-和-不可中断锁"><a href="#可中断锁-和-不可中断锁" class="headerlink" title="可中断锁 和 不可中断锁"></a><span style = "color:blue">可中断锁 和 不可中断锁</span></h5><ul>
+<li>可中断锁 [可以随时中断]</li>
+</ul>
+<h3 id="死锁相关"><a href="#死锁相关" class="headerlink" title="死锁相关"></a>死锁相关</h3><h5 id="写一个必然死锁的例子？"><a href="#写一个必然死锁的例子？" class="headerlink" title="写一个必然死锁的例子？"></a>写一个必然死锁的例子？</h5><h6 id="什么是死锁？"><a href="#什么是死锁？" class="headerlink" title="什么是死锁？"></a>什么是死锁？</h6><ul>
+<li><p>发生在<strong>并发</strong>中</p>
+</li>
+<li><p><strong>互不相让</strong>：当两个(或更多)线程(或进程)相互持有对方所需要的资源，又不主动释放，导致所有人都无法继续前进，导致程序陷入无尽的阻塞，这就是死锁</p>
+</li>
+<li><p>一图胜千言</p>
+</li>
+<li><p>线程A持有锁1但试图获取锁2 线程B持有锁2但视图获取锁1</p>
+</li>
+</ul>
+<h5 id="多个线程造成死锁的情况"><a href="#多个线程造成死锁的情况" class="headerlink" title="多个线程造成死锁的情况"></a>多个线程造成死锁的情况</h5><ul>
+<li>如果多个线程之间的依赖关系是<strong>环形</strong>，存在环路的锁的依赖关系，那么也可能会发生死锁</li>
+</ul>
+<h5 id="死锁的影响"><a href="#死锁的影响" class="headerlink" title="死锁的影响"></a>死锁的影响</h5><ul>
+<li>死锁的影响在不同系统中是不一样的，这取决于系统对死锁的处理能力<ul>
+<li><strong>数据库</strong>中：检测并放弃事务</li>
+<li><strong>JVM</strong>中：无法自动处理</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ce81bd17386cbcc3d04b5ef352a1c492ec9b0668/data/%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%BB%E9%94%81.jpg"></p>
+<h5 id="几率不高但危害大"><a href="#几率不高但危害大" class="headerlink" title="几率不高但危害大"></a>几率不高但危害大</h5><ul>
+<li>不一定发生，但是遵守<strong>墨菲定律</strong></li>
+<li>一旦发生，多是<strong>高并发</strong>场景，影响用户多</li>
+<li>整个<strong>系统崩溃</strong>、子系统崩溃、性能降低</li>
+<li>压力测试<strong>无法找出</strong>所有潜在的死锁</li>
+</ul>
+<pre><code class="java">deadlock/DeadLock.java
+package deadlock;
+
+/**
+ * 描述：     必然发生死锁
+ */
+public class DeadLock implements Runnable &#123;
+
+    public int flag;
+
+    static Object o1 = new Object();
+    static Object o2 = new Object();
+
+    public void run() &#123;
+        System.out.println(&quot;开始执行&quot;);
+        if (flag == 1) &#123;
+            synchronized (o1) &#123;
+                try &#123;
+                    Thread.sleep(500);
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+                synchronized (o2) &#123;
+                    System.out.println(&quot;成功获取到了两把锁&quot;);
+                &#125;
+            &#125;
+        &#125;
+        if (flag == 2) &#123;
+            synchronized (o2) &#123;
+                try &#123;
+                    Thread.sleep(500);
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+                synchronized (o1) &#123;
+                    System.out.println(&quot;成功获取到了两把锁&quot;);
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        DeadLock r1 = new DeadLock();
+        DeadLock r2 = new DeadLock();
+        r1.flag = 1;
+        r2.flag = 2;
+        new Thread(r1).start();
+        new Thread(r2).start();
+    &#125;
+&#125;
+====================================== 分析 =======================================
+★ 当类的对象flag=1时(T1),先锁定O1,睡眠500毫秒，然后锁定O2;
+★ 而T1在睡眠的时候另一个flag=2的对象(T2)线程启动，先锁定O2，睡眠500毫秒，等待T1释放O1;
+★ T1睡眠结束后需要锁定O2才能继续执行，而此时O2已被T2锁定
+★ T2睡眠结束后需要锁定O1才能继续执行，而此时O1已被T1锁定
+★ T1、T2相互等待，都需要对方锁定的资源才能继续执行，从而死锁
+</code></pre>
+<h3 id="哲学家就餐问题？"><a href="#哲学家就餐问题？" class="headerlink" title="哲学家就餐问题？"></a>哲学家就餐问题？</h3><ul>
+<li>先拿起左手的筷子</li>
+<li>然后拿起右手的筷子</li>
+<li>如果筷子被人使用了，那就等别人用完</li>
+</ul>
+<pre><code class="java">while(true)&#123; //伪代码
+    think();
+    pick_up_left_fork();
+    pick_up_right_fork();
+    eat();
+    put_down_right_fork();
+    put_down_left_fork();
+&#125;
+</code></pre>
+<pre><code class="java">package deadlock;
+
+/**
+ * 描述：     哲学家就餐问题导致的死锁
+ */
+public class DiningPhilosophers &#123;
+
+    public static class Philosopher implements Runnable &#123;
+
+        private Object leftChopstick;
+
+        public Philosopher(Object leftChopstick, Object rightChopstick) &#123;
+            this.leftChopstick = leftChopstick;
+            this.rightChopstick = rightChopstick;
+        &#125;
+
+        private Object rightChopstick;
+
+        @Override
+        public void run() &#123;
+            try &#123;
+                while (true) &#123;
+                    doAction(&quot;Thinking&quot;);
+                    synchronized (leftChopstick) &#123;
+                        doAction(&quot;Picked up left chopstick&quot;);
+                        synchronized (rightChopstick) &#123;
+                            doAction(&quot;Picked up right chopstick - eating&quot;);
+                            doAction(&quot;Put down right chopstick&quot;);
+                        &#125;
+                        doAction(&quot;Put down left chopstick&quot;);
+                    &#125;
+                &#125;
+            &#125; catch (InterruptedException e) &#123;
+                e.printStackTrace();
+            &#125;
+        &#125;
+
+        private void doAction(String action) throws InterruptedException &#123;
+            System.out.println(Thread.currentThread().getName() + &quot; &quot; + action);
+            Thread.sleep((long) (Math.random() * 10));
+        &#125;
+    &#125;
+
+    public static void main(String[] args) &#123;//五个哲学家方便管理
+        Philosopher[] philosophers = new Philosopher[5];
+        Object[] chopsticks = new Object[philosophers.length];
+        for (int i = 0; i &lt; chopsticks.length; i++) &#123;
+            chopsticks[i] = new Object();
+        &#125;
+        for (int i = 0; i &lt; philosophers.length; i++) &#123;
+            Object leftChopstick = chopsticks[i]; //从0开始 i为5 所以底下要加1 但是越界就取余
+            Object rightChopstick = chopsticks[(i + 1) % chopsticks.length];
+            //领导调节(检测与恢复策略) [定期巡视命令哲学家] 让最后一个 跟别人不一样 
+            //别人都是先左后右面 它是先后面再左边 避免了环路的形成
+            //直接避免死锁发生！！！！！
+            if (i == philosophers.length - 1) &#123;
+                philosophers[i] = new Philosopher(rightChopstick, leftChopstick);
+            &#125; else &#123;
+                philosophers[i] = new Philosopher(leftChopstick, rightChopstick);
+            &#125;
+            new Thread(philosophers[i], &quot;哲学家&quot; + (i + 1) + &quot;号&quot;).start();
+        &#125;
+    &#125;
+&#125;
+=============================================================================
+哲学家4号 Thinking
+哲学家5号 Thinking
+哲学家3号 Thinking
+哲学家1号 Thinking
+哲学家2号 Thinking
+哲学家2号 Picked up left chopstick
+哲学家3号 Picked up left chopstick
+哲学家1号 Picked up left chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+哲学家4号 Put down right chopstick
+哲学家4号 Put down left chopstick
+哲学家4号 Thinking
+哲学家3号 Picked up right chopstick - eating
+哲学家3号 Put down right chopstick
+哲学家3号 Put down left chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+哲学家4号 Put down right chopstick
+哲学家4号 Put down left chopstick
+哲学家3号 Thinking
+哲学家2号 Picked up right chopstick - eating
+哲学家4号 Thinking
+哲学家2号 Put down right chopstick
+哲学家4号 Picked up left chopstick
+哲学家4号 Picked up right chopstick - eating
+.............................
+发生死锁的时候哲学家都拿着左边的筷子
+原理：Thread.sleep((long) (Math.random() * 10));
+random到了一个更大的数
+</code></pre>
+<h5 id="多种解决策略"><a href="#多种解决策略" class="headerlink" title="多种解决策略"></a>多种解决策略</h5><ul>
+<li>服务员检查(避免策略) [提前看一看是否发生死锁]</li>
+<li><strong>改变一个哲学家拿叉子的顺序</strong>(避免策略)</li>
+<li>餐票(避免策略)</li>
+<li>领导调节(检测与恢复策略) [定期巡视命令哲学家]</li>
+</ul>
+<h5 id="实际工程中如何避免死锁"><a href="#实际工程中如何避免死锁" class="headerlink" title="实际工程中如何避免死锁"></a>实际工程中如何避免死锁</h5><h6 id="①-设置超时时间"><a href="#①-设置超时时间" class="headerlink" title="① 设置超时时间"></a>① 设置<strong>超时</strong>时间</h6><ul>
+<li>Lock的<strong>tryLock</strong>(long timeout, TImeUnit unit)</li>
+<li><strong>synchronized</strong>不具备尝试锁的能力</li>
+<li>造成超时的可能性很多：发生了死锁、线程陷入死循环、线程执行很慢</li>
+<li>获取锁失败：打日志、发报警邮件、<strong>重启</strong>等</li>
+<li>代码演示：<strong>退一步海阔天空</strong></li>
+</ul>
+<pre><code class="java">package deadlock;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 描述：     用tryLock来避免死锁
+ */
+public class TryLockDeadlock implements Runnable &#123;
+
+    int flag = 1;
+    static Lock lock1 = new ReentrantLock();
+    static Lock lock2 = new ReentrantLock();
+
+    public static void main(String[] args) &#123;
+        TryLockDeadlock r1 = new TryLockDeadlock();
+        TryLockDeadlock r2 = new TryLockDeadlock();
+        r1.flag = 1;
+        r2.flag = 0;
+        new Thread(r1).start();
+        new Thread(r2).start();
+    &#125;
+
+    @Override
+    public void run() &#123;
+        for (int i = 0; i &lt; 100; i++) &#123;
+            if (flag == 1) &#123;
+                try &#123;
+                    if (lock1.tryLock(800, TimeUnit.MILLISECONDS)) &#123;
+                        System.out.println(&quot;线程1获取到了锁1&quot;);
+                        Thread.sleep(new Random().nextInt(1000));
+                        if (lock2.tryLock(800, TimeUnit.MILLISECONDS)) &#123;
+                            System.out.println(&quot;线程1获取到了锁2&quot;);
+                            System.out.println(&quot;线程1成功获取到了两把锁&quot;);
+                            lock2.unlock();
+                            lock1.unlock();
+                            break;
+                        &#125; else &#123;
+                            System.out.println(&quot;线程1尝试获取锁2失败，已重试&quot;);
+                            lock1.unlock();
+                            Thread.sleep(new Random().nextInt(1000));
+                        &#125;
+                    &#125; else &#123;
+                        System.out.println(&quot;线程1获取锁1失败，已重试&quot;);
+                    &#125;
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+            if (flag == 0) &#123;
+                try &#123;
+                    if (lock2.tryLock(3000, TimeUnit.MILLISECONDS)) &#123;
+                        System.out.println(&quot;线程2获取到了锁2&quot;);
+
+                        Thread.sleep(new Random().nextInt(1000));
+                        if (lock1.tryLock(3000, TimeUnit.MILLISECONDS)) &#123;
+                            System.out.println(&quot;线程2获取到了锁1&quot;);
+                            System.out.println(&quot;线程2成功获取到了两把锁&quot;);
+                            lock1.unlock();
+                            lock2.unlock();
+                            break;
+                        &#125; else &#123;
+                            System.out.println(&quot;线程2尝试获取锁1失败，已重试&quot;);
+                            lock2.unlock();
+                            Thread.sleep(new Random().nextInt(1000));
+                        &#125;
+                    &#125; else &#123;
+                        System.out.println(&quot;线程2获取锁2失败，已重试&quot;);
+                    &#125;
+                &#125; catch (InterruptedException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+====================================================================================
+线程1获取到了锁1
+线程2获取到了锁2
+线程1尝试获取锁2失败，已重试 【正是有了线程1的释放 才让线程2拿到了锁1】
+线程2获取到了锁1
+线程2成功获取到了两把锁
+线程1获取到了锁1
+线程1获取到了锁2
+线程1成功获取到了两把锁
+</code></pre>
+<h6 id="②-多使用并发类而不是自己设置锁"><a href="#②-多使用并发类而不是自己设置锁" class="headerlink" title="② 多使用并发类而不是自己设置锁"></a>② 多使用并发类而不是自己设置锁</h6><h6 id="③-尽量降低锁的使用粒度：用不同的锁而不是一个锁"><a href="#③-尽量降低锁的使用粒度：用不同的锁而不是一个锁" class="headerlink" title="③ 尽量降低锁的使用粒度：用不同的锁而不是一个锁"></a>③ 尽量降低锁的使用粒度：用不同的锁而不是一个锁</h6><h6 id="④-如果能使用同步代码块，就不使用同步方法：自己锁定锁对象"><a href="#④-如果能使用同步代码块，就不使用同步方法：自己锁定锁对象" class="headerlink" title="④ 如果能使用同步代码块，就不使用同步方法：自己锁定锁对象"></a>④ 如果能使用同步代码块，就不使用同步方法：自己锁定锁对象</h6><h6 id="⑤-给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践"><a href="#⑤-给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践" class="headerlink" title="⑤ 给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践"></a>⑤ 给你的线程起个有意义的名字：debug和排查时事半功倍，框架和JDK都遵守这个最佳实践</h6><h3 id="Hashmap为什么-线程-不安全？"><a href="#Hashmap为什么-线程-不安全？" class="headerlink" title="Hashmap为什么[线程]不安全？"></a>Hashmap为什么[线程]不安全？</h3><ul>
+<li><p>i++</p>
+<ul>
+<li>第一个步骤是<strong>读取</strong></li>
+<li>第二个步骤是<strong>增加</strong></li>
+<li>第三个步骤是<strong>保存</strong></li>
+</ul>
+<p>有可能会发生线程不安全的情况<br><img src="https://raw.githubusercontent.com/P-luminary/images/ae6685b2f5be7812a77134895bdd7c4fe843933f/data/HashMap%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%AE%89%E5%85%A8.jpg"></p>
+</li>
+<li><p>同时put碰撞导致数据丢失</p>
+</li>
+<li><p>可见性问题无法保证</p>
+</li>
+</ul>
+<h3 id="final的作用是什么？有哪些用法？"><a href="#final的作用是什么？有哪些用法？" class="headerlink" title="final的作用是什么？有哪些用法？"></a>final的作用是什么？有哪些用法？</h3><ul>
+<li>final修饰<strong>变量</strong></li>
+<li>final修饰<strong>方法</strong></li>
+<li>final修饰<strong>类</strong></li>
+</ul>
+<h5 id="final的作用"><a href="#final的作用" class="headerlink" title="final的作用"></a>final的作用</h5><ul>
+<li>早期<ul>
+<li>锁定</li>
+<li>final效率：早期的Java实现版本中，会将final方法转为内嵌调用</li>
+</ul>
+</li>
+<li>现在<ul>
+<li><strong>类防止被继承、方法防止被重写、变量防止被修改</strong></li>
+<li>天生是<strong>线程安全</strong>的，而不需要额外的同步开销</li>
+</ul>
+</li>
+</ul>
+<h5 id="final的3种用法"><a href="#final的3种用法" class="headerlink" title="final的3种用法"></a>final的3种用法</h5><h6 id="final修饰变量：赋值时机"><a href="#final修饰变量：赋值时机" class="headerlink" title="final修饰变量：赋值时机"></a>final修饰变量：赋值时机</h6><ul>
+<li><p><strong>属性</strong>被声明为final后，该变量则<strong>只能被赋值一次</strong>。且一旦被赋值，final的变量就<strong>不能再被改变</strong>，无论如何也不会改变</p>
+</li>
+<li><p>final修饰<strong>变量</strong></p>
+<ul>
+<li><p>final instance variable (类中的final属性) </p>
+<ul>
+<li>第一种是在声明变量的<strong>等号右边</strong>直接赋值</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew;
+
+/**
+ * 描述：     final修饰变量
+ */
+public class FinalVariable &#123;
+
+    public static int a = 5;
+
+    public static void main(String[] args) &#123;
+        FinalVariable.a = 8;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>第二种就是<strong>构造函数</strong>中赋值</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew;
+
+/**
+ * 描述：     final修饰变量
+ */
+public class FinalVariable &#123;
+
+    public final int a;
+
+    public testFinal(int a) &#123;
+        this.a = b;
+    &#125;
+    public static void main(String[] args) &#123;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>第三种就是在类的<strong>初始代码块种</strong>赋值(不常用)</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew;
+
+/**
+ * 描述：     final修饰变量
+ */
+public class FinalVariable &#123;
+
+    public static final int a;
+
+    static &#123;
+        a = 9;
+    &#125;
+
+    void testFinal() &#123;
+        final int b;
+    &#125;
+    public static void main(String[] args) &#123;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>如果不采用第一种赋值方法，那么就必须在第2、3种挑一个来赋值，而不能不赋值，这是final语法所 规定的</li>
+</ul>
+</li>
+<li><p>final <strong>static</strong> variable (类中的static final属性)</p>
+<ul>
+<li>两种赋值时机：除了在声明变量的<strong>等号右边</strong>直接赋值外，static final变量还可以用<strong>static初始代码块</strong>赋值，但是不能用普通的初始代码块赋值</li>
+</ul>
+</li>
+<li><p>final <strong>local</strong> variable (方法中的final变量)</p>
+<ul>
+<li>和前两种不同，由于这里的变量是在方法里的，所以没有构造函数，也不存在初始代码块</li>
+<li>final local variable不规则赋值时机，只要求在<strong>使用前必须赋值</strong>，这和方法中的非final变量的要求也是一样的</li>
+</ul>
+</li>
+</ul>
+<h6 id="为什么要规定赋值时机？"><a href="#为什么要规定赋值时机？" class="headerlink" title="为什么要规定赋值时机？"></a>为什么要规定赋值时机？</h6><ul>
+<li>如果初始化不赋值，<strong>后续赋值，就是从null变成你的赋值</strong>，这就违反final不变的规则了</li>
+</ul>
+</li>
+<li><p>final修饰<strong>方法</strong></p>
+<ul>
+<li><strong>构造方法</strong>不允许final修饰</li>
+<li><strong>不可被重写</strong>，也就是不能被<strong>override</strong></li>
+</ul>
+<pre><code class="java">package com.imooc.interniew;
+
+/**
+ * 描述：     final修饰方法
+ */
+public class FinalMethodDemo&#123;
+
+    public void drink() &#123;
+    &#125;
+
+    public final void eat() &#123;
+    &#125;
+&#125;
+
+class SubClass extends FinalMethodDemo &#123;
+
+    @Override
+    public void drink() &#123;
+        super.drink();
+    &#125;
+
+//    @Override
+//    public void eat() &#123;
+//        super.drink();
+//    &#125;
+&#125;
+</code></pre>
+</li>
+<li><p>final修饰<strong>类</strong></p>
+<ul>
+<li><strong>不可被继承</strong></li>
+<li>例如经典的<strong>String类就是final</strong>的，我们从见过哪个类是继承String类的</li>
+</ul>
+</li>
+</ul>
+<h3 id="单例模式你会写吗？"><a href="#单例模式你会写吗？" class="headerlink" title="单例模式你会写吗？"></a><span style = "color:red">单例模式你会写吗？</span></h3><ul>
+<li><h5 id="什么是单例模式"><a href="#什么是单例模式" class="headerlink" title="什么是单例模式"></a>什么是单例模式</h5></li>
+</ul>
+<p>保证只有一个实例且提供只有一个全局入口</p>
+<ul>
+<li><h5 id="为什么需要单例：节省内存和计算、保证结果正确、方便管理"><a href="#为什么需要单例：节省内存和计算、保证结果正确、方便管理" class="headerlink" title="为什么需要单例：节省内存和计算、保证结果正确、方便管理"></a>为什么需要单例：节省内存和计算、保证结果正确、方便管理</h5></li>
+<li><h5 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h5><ul>
+<li>无状态的工具类</li>
+<li>全局信息类</li>
+</ul>
+</li>
+<li><h5 id="单例模式的8种写法"><a href="#单例模式的8种写法" class="headerlink" title="单例模式的8种写法"></a>单例模式的8种写法</h5><ul>
+<li>饿汉式(静态常量) [可用]</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     饿汉式（静态常量）（可用）
+ */
+public class Singleton1 &#123;
+
+    private Singleton1() &#123;
+
+    &#125;
+
+    private final static Singleton1 INSTANCE = new Singleton1();
+// [未达到懒加载] 直接创建出来了
+    public static Singleton1 getInstance() &#123;
+        return INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>饿汉式(静态代码块) [可用]</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     饿汉式（静态代码块）（可用） // [未达到懒加载]
+ */
+public class Singleton2 &#123;
+
+    private Singleton2() &#123;
+
+    &#125;
+
+    static &#123;
+        INSTANCE = new Singleton2();
+    &#125;
+    private final static Singleton2 INSTANCE;
+
+    public static Singleton2 getInstance() &#123;
+        return INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>懒汉式(线程不安全) <strong>[不可用]</strong></li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     懒汉式（线程不安全）
+ */
+public class Singleton3 &#123;
+
+    private Singleton3() &#123;
+
+    &#125;
+
+    private static Singleton3 INSTANCE;
+
+    public static Singleton3 getInstance() &#123;
+        if (INSTANCE == null) &#123;//第一次访问方法
+            INSTANCE = new Singleton3();//初始化
+        &#125;
+        //此时如果两个线程同时访问，都是null，就创造了两个初始化 违反单例模式
+        return INSTANCE; //已经被初始化 就返回
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>懒汉式(线程安全，同步方法) <strong>[不推荐用]</strong></li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     懒汉式（线程安全，同步方法）（不推荐）
+ */
+public class Singleton4 &#123;
+
+    private Singleton4() &#123;
+
+    &#125;
+
+    private static Singleton4 INSTANCE;
+    //synchronized同步关键字 最多一个线程访问
+    //不推荐用的原因是因为一旦适用了synchronized同步关键字 线程就要排队 并发量大
+    public synchronized static Singleton4 getInstance() &#123;
+        if (INSTANCE == null) &#123;
+            INSTANCE = new Singleton4();
+        &#125;
+        return INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">//方法上不进行同步了
+package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     懒汉式（线程安全，同步方法）（不推荐）
+ */
+public class Singleton5 &#123;
+
+    private Singleton5() &#123;
+
+    &#125;
+
+    private static Singleton5 INSTANCE;
+
+    public static Singleton5 getInstance() &#123;
+        if (INSTANCE == null) &#123; //此时不会存在两个线程同时出来了
+            synchronized (Singleton5.class) &#123;
+                //假如第一个执行完了 第二个进去执行 那么结果还是生成了两个 不符合单例
+                INSTANCE = new Singleton5();
+            &#125;
+        &#125;
+        return INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>双重检查[推荐用]</strong><ul>
+<li>新建一个对象，但还未初始化</li>
+<li>调用构造函数等来初始化该对象</li>
+<li>把对象指向引用</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     懒汉式（线程安全，同步方法）（不推荐）
+ */
+public class Singleton6 &#123;
+
+    private Singleton6() &#123;//2
+
+    &#125;
+
+    private static volatile Singleton6 INSTANCE;
+
+    public static Singleton6 getInstance() &#123;
+        if (INSTANCE == null) &#123;
+            synchronized (Singleton6.class) &#123;
+                if (INSTANCE == null) &#123; //3
+                    //就不会出现多个结果了
+                    INSTANCE = new Singleton6 //1
+                &#125;
+            &#125;
+        &#125;
+        return INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li>静态内部类[推荐用]</li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     静态内部类写法（推荐用）
+ */
+public class Singleton7 &#123;
+
+    private Singleton7() &#123;
+
+    &#125;
+
+    private static class SingletonInstance &#123;
+        private static Singleton7 INSTANCE = new Singleton7();
+    &#125;
+
+    public static Singleton7 getInstance() &#123;
+        return SingletonInstance.INSTANCE;
+    &#125;
+&#125;
+</code></pre>
+<ul>
+<li><strong>枚举[推荐用]</strong></li>
+</ul>
+<pre><code class="java">package com.imooc.interniew.singleton;
+
+/**
+ * 描述：     枚举单例模式
+ */
+public enum Singleton8 &#123;
+    //1.写法简洁
+    //2.线程安全
+    //3.防止反射
+    
+    INSTANCE;
+&#125;
+</code></pre>
+</li>
+</ul>
+<h5 id="不同写法对比"><a href="#不同写法对比" class="headerlink" title="不同写法对比"></a>不同写法对比</h5><ul>
+<li><strong>饿汉</strong>：简单，但是没有lazy loading</li>
+<li><strong>懒汉</strong>：有线程安全问题</li>
+<li><strong>静态内部类</strong>：可用</li>
+<li><strong>双重检查：面试用</strong></li>
+<li><strong>枚举：最好</strong></li>
+</ul>
+<h5 id="单例模式面试常见问题"><a href="#单例模式面试常见问题" class="headerlink" title="单例模式面试常见问题"></a>单例模式面试常见问题</h5><ul>
+<li>饿汉式的缺点？[没有懒加载]</li>
+<li>懒汉式的缺点？[不可以保证线程安全]</li>
+<li><strong>为什么要用double-check</strong>？不用就不安全吗？</li>
+<li>为什么双重检查模式要用<strong>volatile</strong>？</li>
+<li>应该如何选择，<strong>用哪种单例的实现方案最好</strong>？<ul>
+<li>单元素的枚举类型已经成为实现Singleton的最佳方法</li>
+<li>写法简单</li>
+<li>线程安全有保障</li>
+<li>避免反射破坏单例</li>
+</ul>
+</li>
+</ul>
+<h3 id="面试避坑指南-1"><a href="#面试避坑指南-1" class="headerlink" title="面试避坑指南"></a>面试避坑指南</h3><ul>
+<li>何时投简历 [Offer数量只会越来越少，越早越好]  秋招7-9月 社招金3银4 </li>
+<li>信息尽量全面</li>
+<li>技术栈契合</li>
+<li>慎用”<strong>精通</strong>“ [对源码有很多熟悉] &#x3D;&gt; 多写<strong>熟悉</strong></li>
+<li>面试无处不在 [如果没时间可以申请换一个时间节点 并询问对方是否有时间]</li>
+<li>提前调试设备</li>
+<li>仪容仪表、提前到场 [提前5分钟左右联系面试官]</li>
+<li>确认问题 [实在不会可以说思路设想]</li>
+<li>问面试官的问题 [提前查公司信息 我了解到我们公司… 可不可以介绍一下… 未来规划… 技术栈…]</li>
+</ul>
+<h3 id="哪些软素质值得面试官认可？"><a href="#哪些软素质值得面试官认可？" class="headerlink" title="哪些软素质值得面试官认可？"></a>哪些软素质值得面试官认可？</h3><ul>
+<li>基本能力：聆听、沟通表达、<strong>学习能力</strong></li>
+<li>工作能力：<strong>协作</strong>、<strong>执行力</strong>、管理能力</li>
+<li>个人素质：技术自驱力、韧性、积极开放的心态</li>
+</ul>
+<h3 id="面试课总结"><a href="#面试课总结" class="headerlink" title="面试课总结"></a>面试课总结</h3><ul>
+<li>Spring Boot常见面试题</li>
+<li>线程常见面试题</li>
+<li>分布式的面试题</li>
+<li>Docker相关面试题</li>
+<li>Nginx和Zookeeper相关面试题</li>
+<li>RabbitMQ相关面试题</li>
+<li>微服务相关</li>
+<li>彩蛋：学习方法</li>
+<li>锁分类、死锁</li>
+<li>HashMap和final</li>
+<li>单例模式[高频考点]</li>
+<li>面试避坑指南</li>
+<li>重要的软实力</li>
+</ul>
+<h4 id="2024-5-9-14-34-在创新楼B105-JSP动态网页设计课上-完成了java-4399全部课程的学习"><a href="#2024-5-9-14-34-在创新楼B105-JSP动态网页设计课上-完成了java-4399全部课程的学习" class="headerlink" title="2024.5.9 14:34   在创新楼B105-JSP动态网页设计课上  完成了java+4399全部课程的学习"></a><span style = "color:red">2024.5.9 14:34   在创新楼B105-JSP动态网页设计课上  完成了java+4399全部课程的学习</span></h4>
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,867 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || ElasticSearch</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>ElasticSearch </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2025/1/3
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#00bcd4>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <p>ElasticSearch结合Kibana、Logstash、Beats，核心是elastic stack的核心，负责<strong>存储、搜索、分析数据</strong><br>Lucene的优势：容易扩展、高性能(基于倒排索引)<br>Lucene的缺点：直选与java语言开发<br>ElasticSearch是基于Lucene开发的</p>
+<h6 id="Elasticsearch：开源的分布式搜索引擎，可以用来实现搜索、日志统计、分析、系统监控等功能"><a href="#Elasticsearch：开源的分布式搜索引擎，可以用来实现搜索、日志统计、分析、系统监控等功能" class="headerlink" title="Elasticsearch：开源的分布式搜索引擎，可以用来实现搜索、日志统计、分析、系统监控等功能"></a>Elasticsearch：开源的分布式搜索引擎，可以用来实现搜索、日志统计、分析、系统监控等功能</h6><h4 id="正向索引和倒排索引"><a href="#正向索引和倒排索引" class="headerlink" title="正向索引和倒排索引"></a>正向索引和倒排索引</h4><p>传统数据库是<strong>正向索引</strong></p>
+<p><strong>ElasticSearch采用倒排索引</strong>：</p>
+<ul>
+<li>文档(document)：每条数据就是一个文档</li>
+<li>词条(term)：文档按照语义分成词语</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">title</th>
+<th align="center">price</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">小米手机</td>
+<td align="center">3499</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">华为手机</td>
+<td align="center">4999</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">华为小米充电器</td>
+<td align="center">49</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">小米手环</td>
+<td align="center">299</td>
+</tr>
+</tbody></table>
+<p>  ↓↓↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓         ↓↓ ↓↓       </p>
+<table>
+<thead>
+<tr>
+<th align="center">词条(term)</th>
+<th align="center">文档id</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">小米</td>
+<td align="center">1，3，4</td>
+</tr>
+<tr>
+<td align="center">手机</td>
+<td align="center">1，2</td>
+</tr>
+<tr>
+<td align="center">华为</td>
+<td align="center">2，3</td>
+</tr>
+<tr>
+<td align="center">充电器</td>
+<td align="center">3</td>
+</tr>
+<tr>
+<td align="center">手环</td>
+<td align="center">4</td>
+</tr>
+</tbody></table>
+<p><strong>过程</strong>：搜索<code>华为手机</code> → 得到：<code>华为</code>、<code>手机</code>两个词条 → 得到每个词条所在文档id：华为:2,3 手机:1,2 → 得到id为1,2,3的文档 → 存入结果集<br><strong>倒排索引</strong>：对文档内容分词，对词条创建索引，并记录词条所在文档的信息。查询时现根据词条查询到文档id，而后获取到文档<br><strong>正排索引</strong>：基于文档id创建索引。查询词条时必须先找到文档，而后判断是否包含词条</p>
+<h4 id="文档"><a href="#文档" class="headerlink" title="文档"></a>文档</h4><p>ElasticSearch是面向文档存储的，可以是数据库中的一条商品数据，一个订单信息，文档数据会被序列化为json格式后存储在ElasticSearch中<br>在ElasticSearch中</p>
+<ul>
+<li>**索引(index)**：相同类型的文档的集合</li>
+<li>**映射(mapping)**：索引中文档的字段约束信息，类似表的结构约束</li>
+</ul>
+<h6 id="概念对比"><a href="#概念对比" class="headerlink" title="概念对比"></a>概念对比</h6><table>
+<thead>
+<tr>
+<th align="center">MySQL</th>
+<th align="center">ElasticSearch</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Table</td>
+<td align="center">Index</td>
+<td align="center">索引(index)，就是文档的集合，类似于数据库的表(table)</td>
+</tr>
+<tr>
+<td align="center">Row</td>
+<td align="center">Document</td>
+<td align="center">文档(Document)，就是一条条的数据，类似数据库中的行(Row)，文档都是JSON格式</td>
+</tr>
+<tr>
+<td align="center">Column</td>
+<td align="center">Field</td>
+<td align="center">字段(Field)，就是JSON文档中的字段，类似数据库中的列(Column)</td>
+</tr>
+<tr>
+<td align="center">Schema</td>
+<td align="center">Mapping</td>
+<td align="center">Mapping(映射)，就是索引中文档的约束，例如字段类型约束。类似数据库的表结构(Schema)</td>
+</tr>
+<tr>
+<td align="center">SQL</td>
+<td align="center">DSL</td>
+<td align="center">DSL是ElasticSearch提供的JSON风格的请求语句，用来操作ElasticSearch，实现CRUD</td>
+</tr>
+</tbody></table>
+<h6 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h6><p><strong>MySQL</strong><del>写操作</del>：擅长事务类型操作，可以确保数据的安全和一致性<br><strong>ElasticSearch</strong><del>查询</del>：擅长海量数据的搜索、分析、计算<br>[<strong><u>可以互补达到数据双写一致性</u></strong>]</p>
+<h2 id="1-1-创建网络"><a href="#1-1-创建网络" class="headerlink" title="1.1.创建网络"></a>1.1.创建网络</h2><p>因为我们还需要部署kibana容器，因此需要让es和kibana容器互联。这里先创建一个网络（创建过的不用再创建）：</p>
+<pre><code class="sh">docker network create es-net
+</code></pre>
+<h2 id="1-2-加载镜像"><a href="#1-2-加载镜像" class="headerlink" title="1.2.加载镜像"></a>1.2.加载镜像</h2><p>这里我们采用elasticsearch的7.12.1版本的镜像，这个镜像体积非常大，接近1G。不建议大家自己pull。</p>
+<p>课前资料提供了镜像的tar包：</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210510165308064.png" alt="image-20210510165308064"></p>
+<p>大家将其上传到虚拟机中，然后运行命令加载即可：</p>
+<pre><code class="sh"># 导入数据
+docker load -i es.tar
+</code></pre>
+<p>同理还有<code>kibana</code>的tar包也需要这样做。</p>
+<h2 id="1-3-运行"><a href="#1-3-运行" class="headerlink" title="1.3.运行"></a>1.3.运行</h2><p>运行docker命令，部署单点es：</p>
+<pre><code class="sh">docker run -d \
+    --name es \
+    -e &quot;ES_JAVA_OPTS=-Xms512m -Xmx512m&quot; \
+    -e &quot;discovery.type=single-node&quot; \
+    -v es-data:/usr/share/elasticsearch/data \
+    -v es-plugins:/usr/share/elasticsearch/plugins \
+    --privileged \
+    --network es-net \
+    -p 9200:9200 \
+    -p 9300:9300 \
+elasticsearch:7.12.1
+</code></pre>
+<p>命令解释：</p>
+<ul>
+<li><code>-e &quot;cluster.name=es-docker-cluster&quot;</code>：设置集群名称</li>
+<li><code>-e &quot;http.host=0.0.0.0&quot;</code>：监听的地址，可以外网访问</li>
+<li><code>-e &quot;ES_JAVA_OPTS=-Xms512m -Xmx512m&quot;</code>：内存大小</li>
+<li><code>-e &quot;discovery.type=single-node&quot;</code>：非集群模式</li>
+<li><code>-v es-data:/usr/share/elasticsearch/data</code>：挂载逻辑卷，绑定es的数据目录</li>
+<li><code>-v es-logs:/usr/share/elasticsearch/logs</code>：挂载逻辑卷，绑定es的日志目录</li>
+<li><code>-v es-plugins:/usr/share/elasticsearch/plugins</code>：挂载逻辑卷，绑定es的插件目录</li>
+<li><code>--privileged</code>：授予逻辑卷访问权</li>
+<li><code>--network es-net</code> ：加入一个名为es-net的网络中</li>
+<li><code>-p 9200:9200</code>：端口映射配置</li>
+</ul>
+<p>在浏览器中输入：<a target="_blank" rel="noopener" href="http://192.168.xxx.xxx:9200/">http://192.168.xxx.xxx:9200</a> 即可看到elasticsearch的响应结果：</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210506101053676.png" alt="image-20210506101053676"></p>
+<h1 id="2-部署kibana"><a href="#2-部署kibana" class="headerlink" title="2.部署kibana"></a>2.部署kibana</h1><p>kibana可以给我们提供一个elasticsearch的可视化界面，便于我们学习。</p>
+<h2 id="2-1-部署"><a href="#2-1-部署" class="headerlink" title="2.1.部署"></a>2.1.部署</h2><p>运行docker命令，部署kibana，同理先加载镜像： docker load -i kibana.tar，然后启动：</p>
+<pre><code class="sh">docker run -d \
+--name kibana \
+-e ELASTICSEARCH_HOSTS=http://es:9200 \
+--network=es-net \
+-p 5601:5601  \
+kibana:7.12.1
+</code></pre>
+<ul>
+<li><code>--network es-net</code> ：加入一个名为es-net的网络中，与elasticsearch在同一个网络中</li>
+<li><code>-e ELASTICSEARCH_HOSTS=http://es:9200&quot;</code>：设置elasticsearch的地址，因为<strong>kibana已经与elasticsearch在一个网络</strong>，因此可以用容器名直接访问elasticsearch</li>
+<li><code>-p 5601:5601</code>：端口映射配置</li>
+</ul>
+<p>kibana启动一般比较慢，需要多等待一会，可以通过命令：</p>
+<pre><code class="sh">docker logs -f kibana
+</code></pre>
+<p>查看运行日志，当查看到下面的日志，说明成功：</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210109105135812.png" alt="image-20210109105135812"></p>
+<p>此时，在浏览器输入地址访问：<a href="http://192.168.xxx.xxx:5601，即可看到结果">http://192.168.xxx.xxx:5601，即可看到结果</a></p>
+<h6 id="分词效果概览-Dev-Tools-Elastic"><a href="#分词效果概览-Dev-Tools-Elastic" class="headerlink" title="分词效果概览 Dev Tools - Elastic"></a>分词效果概览 <a target="_blank" rel="noopener" href="http://192.168.200.146:5601/app/dev_tools#/console">Dev Tools - Elastic</a></h6><blockquote>
+<p>GET &#x2F;_analyze<br>{<br>  “analyzer”: “standard”,<br>  “text”: “黑马程序员”<br>}</p>
+</blockquote>
+<pre><code class="json">&#123;
+  &quot;tokens&quot; : [
+    &#123;
+      &quot;token&quot; : &quot;黑&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;&lt;IDEOGRAPHIC&gt;&quot;,
+      &quot;position&quot; : 0
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;马&quot;,
+      &quot;start_offset&quot; : 1,
+      &quot;end_offset&quot; : 2,
+      &quot;type&quot; : &quot;&lt;IDEOGRAPHIC&gt;&quot;,
+      &quot;position&quot; : 1
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;程&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 3,
+      &quot;type&quot; : &quot;&lt;IDEOGRAPHIC&gt;&quot;,
+      &quot;position&quot; : 2
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;序&quot;,
+      &quot;start_offset&quot; : 3,
+      &quot;end_offset&quot; : 4,
+      &quot;type&quot; : &quot;&lt;IDEOGRAPHIC&gt;&quot;,
+      &quot;position&quot; : 3
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;员&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 5,
+      &quot;type&quot; : &quot;&lt;IDEOGRAPHIC&gt;&quot;,
+      &quot;position&quot; : 4
+    &#125;
+  ]
+&#125;
+</code></pre>
+<p>如果是分析中午就不能用它原有的，存在明显的问题：将中文逐字分词，没有任何业务语义，因此需要借助专业的分词器</p>
+<h1 id="3-安装IK分词器"><a href="#3-安装IK分词器" class="headerlink" title="3.安装IK分词器"></a>3.安装IK分词器</h1><h2 id="3-1-在线安装ik插件（较慢）"><a href="#3-1-在线安装ik插件（较慢）" class="headerlink" title="3.1.在线安装ik插件（较慢）"></a>3.1.在线安装ik插件（较慢）</h2><pre><code class="shell"># 进入容器内部
+docker exec -it elasticsearch /bin/bash
+
+# 在线下载并安装
+./bin/elasticsearch-plugin  install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.12.1/elasticsearch-analysis-ik-7.12.1.zip
+
+#退出
+exit
+#重启容器
+docker restart elasticsearch
+</code></pre>
+<h2 id="3-2-离线安装ik插件（推荐）"><a href="#3-2-离线安装ik插件（推荐）" class="headerlink" title="3.2.离线安装ik插件（推荐）"></a>3.2.离线安装ik插件（推荐）</h2><h3 id="1）查看数据卷目录"><a href="#1）查看数据卷目录" class="headerlink" title="1）查看数据卷目录"></a>1）查看数据卷目录</h3><p>安装插件需要知道elasticsearch的plugins目录位置，而我们用了数据卷挂载，因此需要查看elasticsearch的数据卷目录，通过下面命令查看:</p>
+<pre><code class="sh">docker volume inspect es-plugins
+</code></pre>
+<p>显示结果：</p>
+<pre><code class="json">[
+    &#123;
+        &quot;CreatedAt&quot;: &quot;2022-05-06T10:06:34+08:00&quot;,
+        &quot;Driver&quot;: &quot;local&quot;,
+        &quot;Labels&quot;: null,
+        &quot;Mountpoint&quot;: &quot;/var/lib/docker/volumes/es-plugins/_data&quot;,
+        &quot;Name&quot;: &quot;es-plugins&quot;,
+        &quot;Options&quot;: null,
+        &quot;Scope&quot;: &quot;local&quot;
+    &#125;
+]
+</code></pre>
+<p>说明plugins目录被挂载到了：<code>/var/lib/docker/volumes/es-plugins/_data </code>这个目录中。</p>
+<h3 id="2）解压缩分词器安装包"><a href="#2）解压缩分词器安装包" class="headerlink" title="2）解压缩分词器安装包"></a>2）解压缩分词器安装包</h3><p>下面我们需要把课前资料中的ik分词器解压缩，重命名为ik</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210506110249144.png" alt="image-20210506110249144"></p>
+<h3 id="3）上传到es容器的插件数据卷中"><a href="#3）上传到es容器的插件数据卷中" class="headerlink" title="3）上传到es容器的插件数据卷中"></a>3）上传到es容器的插件数据卷中</h3><p>也就是<code>/var/lib/docker/volumes/es-plugins/_data </code>：</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210506110704293.png" alt="image-20210506110704293"></p>
+<h3 id="4）重启容器"><a href="#4）重启容器" class="headerlink" title="4）重启容器"></a>4）重启容器</h3><pre><code class="shell"># 4、重启容器
+docker restart es
+</code></pre>
+<pre><code class="sh"># 查看es日志
+docker logs -f es
+</code></pre>
+<h3 id="5）测试："><a href="#5）测试：" class="headerlink" title="5）测试："></a>5）测试：</h3><p><span style = "color:red"><strong>IK分词器包含两种模式</strong>：</span></p>
+<ul>
+<li><p><code>ik_smart</code>：最少切分</p>
+</li>
+<li><p><code>ik_max_word</code>：最细切分</p>
+</li>
+</ul>
+<pre><code class="json">GET /_analyze
+&#123;
+  &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+  &quot;text&quot;: &quot;黑马程序员学习java太棒了&quot;
+&#125;
+</code></pre>
+<p>结果：</p>
+<pre><code class="json">&#123;
+  &quot;tokens&quot; : [
+    &#123;
+      &quot;token&quot; : &quot;黑马&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 2,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 0
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;程序员&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 5,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 1
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;程序&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 4,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 2
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;员&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 5,
+      &quot;type&quot; : &quot;CN_CHAR&quot;,
+      &quot;position&quot; : 3
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;学习&quot;,
+      &quot;start_offset&quot; : 5,
+      &quot;end_offset&quot; : 7,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 4
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;java&quot;,
+      &quot;start_offset&quot; : 7,
+      &quot;end_offset&quot; : 11,
+      &quot;type&quot; : &quot;ENGLISH&quot;,
+      &quot;position&quot; : 5
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;太棒了&quot;,
+      &quot;start_offset&quot; : 11,
+      &quot;end_offset&quot; : 14,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 6
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;太棒&quot;,
+      &quot;start_offset&quot; : 11,
+      &quot;end_offset&quot; : 13,
+      &quot;type&quot; : &quot;CN_WORD&quot;,
+      &quot;position&quot; : 7
+    &#125;,
+    &#123;
+      &quot;token&quot; : &quot;了&quot;,
+      &quot;start_offset&quot; : 13,
+      &quot;end_offset&quot; : 14,
+      &quot;type&quot; : &quot;CN_CHAR&quot;,
+      &quot;position&quot; : 8
+    &#125;
+  ]
+&#125;
+</code></pre>
+<h2 id="3-3-扩展词词典"><a href="#3-3-扩展词词典" class="headerlink" title="3.3 扩展词词典"></a>3.3 扩展词词典</h2><h5 id="注意当前文件的编码必须是-UTF-8-格式，严禁使用Windows记事本编辑，可以直接linux系统vi编辑"><a href="#注意当前文件的编码必须是-UTF-8-格式，严禁使用Windows记事本编辑，可以直接linux系统vi编辑" class="headerlink" title="注意当前文件的编码必须是 UTF-8 格式，严禁使用Windows记事本编辑，可以直接linux系统vi编辑"></a><span style = "color:red">注意当前文件的编码必须是 UTF-8 格式，严禁使用Windows记事本编辑，可以直接linux系统vi编辑</span></h5><p>随着互联网的发展，“造词运动”也越发的频繁。出现了很多新的词语，在原有的词汇列表中并不存在。比如：“奥力给”，“传智播客” 等。</p>
+<p>所以我们的词汇也需要不断的更新，IK分词器提供了扩展词汇的功能。</p>
+<p>1）打开IK分词器config目录：<code>/var/lib/docker/volumes/es-plugins/_data/ik/config/IKAnalyzer.cfg.xml</code></p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20210506112225508.png" alt="image-20210506112225508"></p>
+<p>2）在IKAnalyzer.cfg.xml配置文件内容添加：</p>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE properties SYSTEM &quot;http://java.sun.com/dtd/properties.dtd&quot;&gt;
+&lt;properties&gt;
+        &lt;comment&gt;IK Analyzer 扩展配置&lt;/comment&gt;
+      
+        &lt;entry key=&quot;ext_dict&quot;&gt;ext.dic&lt;/entry&gt; 
+&lt;/properties&gt;
+</code></pre>
+<p>3）新建一个 ext.dic，可以参考config目录下复制一个配置文件进行修改</p>
+<pre><code class="properties">传智播客
+奥力给
+</code></pre>
+<p>4）重启elasticsearch </p>
+<pre><code class="sh">docker restart es
+
+# 查看 日志
+docker logs -f es
+</code></pre>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\微服务\es\day1-es\资料\assets\image-20201115230900504.png" alt="image-20201115230900504"></p>
+<p>日志中已经成功加载ext.dic配置文件</p>
+<p>5）测试效果：</p>
+<pre><code class="json">GET /_analyze
+&#123;
+  &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+  &quot;text&quot;: &quot;传智播客Java就业超过90%,奥力给！&quot;
+&#125;
+</code></pre>
+<blockquote>
+<p>注意当前文件的编码必须是 UTF-8 格式，严禁使用Windows记事本编辑，可以直接linux系统vi编辑</p>
+</blockquote>
+<h2 id="3-4-停用词词典"><a href="#3-4-停用词词典" class="headerlink" title="3.4 停用词词典"></a>3.4 停用词词典</h2><p>在互联网项目中，在网络间传输的速度很快，所以很多语言是不允许在网络上传递的，如：关于宗教、政治等敏感词语，那么我们在搜索时也应该忽略当前词汇。</p>
+<p>IK分词器也提供了强大的停用词功能，让我们在索引时就直接忽略当前的停用词汇表中的内容。</p>
+<p>1）IKAnalyzer.cfg.xml配置文件内容添加：</p>
+<pre><code class="xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE properties SYSTEM &quot;http://java.sun.com/dtd/properties.dtd&quot;&gt;
+&lt;properties&gt;
+        &lt;comment&gt;IK Analyzer 扩展配置&lt;/comment&gt;
+        &lt;!--用户可以在这里配置自己的扩展字典--&gt;
+        &lt;entry key=&quot;ext_dict&quot;&gt;ext.dic&lt;/entry&gt;
+         &lt;!--用户可以在这里配置自己的扩展停止词字典  *** 添加停用词词典--&gt;
+        &lt;entry key=&quot;ext_stopwords&quot;&gt;stopword.dic&lt;/entry&gt;
+&lt;/properties&gt;
+</code></pre>
+<p>3）在 stopword.dic 添加停用词</p>
+<pre><code class="properties">习大大
+</code></pre>
+<p>4）重启elasticsearch </p>
+<pre><code class="sh"># 重启服务
+docker restart es
+docker restart kibana
+
+# 查看 日志
+docker logs -f es
+</code></pre>
+<p>日志中已经成功加载stopword.dic配置文件</p>
+<p>5）测试效果：</p>
+<pre><code class="json">GET /_analyze
+&#123;
+  &quot;analyzer&quot;: &quot;ik_max_word&quot;,
+  &quot;text&quot;: &quot;传智播客Java就业率超过95%,习大大都点赞,奥力给！&quot;
+&#125;
+</code></pre>
+<blockquote>
+<p>注意当前文件的编码必须是 UTF-8 格式，严禁使用Windows记事本编辑</p>
+</blockquote>
+<hr>
+<hr>
+<h4 id="索引库操作"><a href="#索引库操作" class="headerlink" title="索引库操作"></a>索引库操作</h4><h5 id="mapping属性"><a href="#mapping属性" class="headerlink" title="mapping属性"></a>mapping属性</h5><h6 id="mapping是对索引库中文档的约束，常见的mapping属性包括："><a href="#mapping是对索引库中文档的约束，常见的mapping属性包括：" class="headerlink" title="mapping是对索引库中文档的约束，常见的mapping属性包括："></a>mapping是对索引库中文档的约束，常见的mapping属性包括：</h6><p>• type：字段数据类型，常见的简单类型有：<br>• 字符串：text（可分词的文本）、<strong>keyword</strong>（精确值，例如：品牌、国家、ip地址）<br>• 数值：long、integer、short、byte、double、float<br>• 布尔：boolean<br>• 日期：date<br>• 对象：object<br>• index：是否创建索引，默认为true【默认倒排】<br>• analyzer：使用哪种分词器【只有text才需要分词】<br>• properties：该字段的子字段</p>
+<pre><code class="java">&#123;
+    &quot;age&quot;: 21,
+    &quot;weight&quot;: 52.1,
+    &quot;isMarried&quot;: false,
+    &quot;info&quot;: &quot;黑马程序员Java讲师&quot;,
+    &quot;email&quot;: &quot;zy@itcast.cn&quot;,
+    &quot;score&quot;: [99.1, 99.5, 98.9],
+    &quot;name&quot;: &#123;
+        &quot;firstName&quot;: &quot;云&quot;,
+        &quot;lastName&quot;: &quot;赵&quot;
+    &#125;
+&#125;
+</code></pre>
+<h5 id="索引库操作-1"><a href="#索引库操作-1" class="headerlink" title="索引库操作"></a>索引库操作</h5><h6 id="创建索引库和mapping的请求语法"><a href="#创建索引库和mapping的请求语法" class="headerlink" title="创建索引库和mapping的请求语法"></a>创建索引库和mapping的请求语法</h6><pre><code class="java">PUT /索引库名称
+&#123;
+  &quot;mappings&quot;: &#123;
+    &quot;properties&quot;: &#123;
+      &quot;字段名&quot;:&#123;
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;analyzer&quot;: &quot;ik_smart&quot;
+      &#125;,
+      &quot;字段名2&quot;:&#123;
+        &quot;type&quot;: &quot;keyword&quot;,
+        &quot;index&quot;: &quot;false&quot;
+      &#125;,
+      &quot;字段名3&quot;:&#123;
+        &quot;properties&quot;: &#123;
+          &quot;子字段&quot;: &#123;
+            &quot;type&quot;: &quot;keyword&quot;
+          &#125;
+        &#125;
+      &#125;,
+      // ...略
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓    ↓ ↓</p>
+<pre><code class="java"># 创建索引库
+PUT /heima
+&#123;
+  &quot;mappings&quot;: &#123;
+    &quot;properties&quot;: &#123;
+      &quot;info&quot;:&#123;
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;analyzer&quot;: &quot;ik_max_word&quot;
+      &#125;,
+      &quot;email&quot;:&#123;
+        &quot;type&quot;: &quot;keyword&quot;,
+        &quot;index&quot;: false
+      &#125;,
+      &quot;name&quot;:&#123;
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: &#123;
+          &quot;firstName&quot;:&#123;
+            &quot;type&quot;: &quot;keyword&quot;
+          &#125;,
+          &quot;lastName&quot;:&#123;
+            &quot;type&quot;: &quot;keyword&quot;
+          &#125;
+        &#125;
+      &#125;
+    &#125;
+  &#125;
+&#125;
+---------------------------------------------------------------------
+&#123;
+  &quot;acknowledged&quot; : true,
+  &quot;shards_acknowledged&quot; : true,
+  &quot;index&quot; : &quot;heima&quot;
+&#125;
+</code></pre>
+<h4 id="操作索引库禁止修改索引库-因为已经映射好了"><a href="#操作索引库禁止修改索引库-因为已经映射好了" class="headerlink" title="操作索引库禁止修改索引库(因为已经映射好了)"></a>操作索引库<del>禁止修改索引库(因为已经映射好了)</del></h4><h6 id="查看索引语法："><a href="#查看索引语法：" class="headerlink" title="查看索引语法："></a>查看索引语法：</h6><p><code>GET/索引名</code></p>
+<h6 id="删除索引库的语法："><a href="#删除索引库的语法：" class="headerlink" title="删除索引库的语法："></a>删除索引库的语法：</h6><p><code>DELETE/索引库名</code></p>
+<h6 id="可以在修改索引的过程中添加新的字段"><a href="#可以在修改索引的过程中添加新的字段" class="headerlink" title="可以在修改索引的过程中添加新的字段"></a>可以在修改索引的过程中添加新的字段</h6><pre><code class="java">PUT /索引库名/_mapping
+&#123;
+  &quot;properties&quot;: &#123;
+    &quot;新字段名&quot;:&#123;
+      &quot;type&quot;: &quot;integer&quot;
+    &#125;
+  &#125;
+&#125;
+---------------------------
+PUT /heima/_mapping
+&#123;
+  &quot;properties&quot;: &#123;
+    &quot;age&quot;:&#123;
+      &quot;type&quot;: &quot;integer&quot;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<blockquote>
+<p>当您使用Elasticsearch（ES）的PUT请求创建索引库时，这个索引库实际上是存储在Elasticsearch集群的节点上的。如果您的Elasticsearch集群是安装在Linux服务器上的，那么是的，索引库会被创建在Linux文件系统中。</p>
+<p>Elasticsearch为每个索引分配一个或多个主分片，并为每个主分片分配一个或多个副本分片。这些分片实际上是存储在Elasticsearch节点的文件系统上的。具体来说，索引数据存储在以下路径：</p>
+<p>复制</p>
+<pre><code>/path/to/elasticsearch/data/nodes/&lt;node-id&gt;/&lt;index&gt;/&lt;shard-id&gt;
+</code></pre>
+<p>这里的<code>/path/to/elasticsearch</code>是Elasticsearch的安装路径，<code>data</code>目录是默认的数据存储位置，<code>nodes</code>目录包含了集群中各个节点的数据，<code>&lt;node-id&gt;</code>是节点的唯一标识，<code>&lt;index&gt;</code>是您创建的索引名称，而<code>&lt;shard-id&gt;</code>则是分片的ID。</p>
+</blockquote>
+<h4 id="索引库的增删改查汇总"><a href="#索引库的增删改查汇总" class="headerlink" title="索引库的增删改查汇总"></a>索引库的增删改查汇总</h4><pre><code class="mysql">
+# 创建索引库
+PUT /heima
+&#123;
+  &quot;mappings&quot;: &#123;
+    &quot;properties&quot;: &#123;
+      &quot;info&quot;:&#123;
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;analyzer&quot;: &quot;ik_max_word&quot;
+      &#125;,
+      &quot;email&quot;:&#123;
+        &quot;type&quot;: &quot;keyword&quot;,
+        &quot;index&quot;: false
+      &#125;,
+      &quot;name&quot;:&#123;
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: &#123;
+          &quot;firstName&quot;:&#123;
+            &quot;type&quot;: &quot;keyword&quot;
+          &#125;,
+          &quot;lastName&quot;:&#123;
+            &quot;type&quot;: &quot;keyword&quot;
+          &#125;
+        &#125;
+      &#125;
+    &#125;
+  &#125;
+&#125;
+
+# 查询
+GET /heima
+
+# 修改索引库
+PUT /heima/_mapping
+&#123;
+  &quot;properties&quot;:&#123;
+    &quot;age&quot;:&#123;
+      &quot;type&quot;: &quot;integer&quot;
+    &#125;
+  &#125;
+&#125;
+
+# 修改
+DELETE /heima
+</code></pre>
+<h5 id="文档操作——添加文档"><a href="#文档操作——添加文档" class="headerlink" title="文档操作——添加文档"></a>文档操作——添加文档</h5><pre><code class="mysql"># 每次写操作的时候 版本会增加 &quot;_version ++&quot;
+
+# 插入文档
+POST /heima/_doc/1
+&#123;
+  &quot;info&quot;: &quot;广州黑马198班&quot;,
+  &quot;email&quot;: &quot;390415049@qq.com&quot;,
+  &quot;name&quot;:&#123;
+    &quot;firstName&quot;: &quot;春&quot;,
+    &quot;lastName&quot;: &quot;尧&quot;
+  &#125;
+&#125;
+
+# 查询文档
+GET /heima/_doc/1
+
+# 删除文档
+DELETE /heima/_doc/1
+</code></pre>
+<h5 id="文档操作——修改文档"><a href="#文档操作——修改文档" class="headerlink" title="文档操作——修改文档"></a>文档操作——修改文档</h5><h6 id="方式一：全量修改，会删除旧文档，添加新文档"><a href="#方式一：全量修改，会删除旧文档，添加新文档" class="headerlink" title="方式一：全量修改，会删除旧文档，添加新文档"></a>方式一：全量修改，会删除旧文档，添加新文档</h6><pre><code class="java">PUT /索引库名/_doc/文档id
+&#123;
+    &quot;字段1&quot;: &quot;值1&quot;,
+    &quot;字段2&quot;: &quot;值2&quot;,
+    // ... 略
+&#125;
+-------------------------
+PUT /heima/_doc/1
+&#123;
+    &quot;info&quot;: &quot;黑马程序员高级Java讲师&quot;,
+    &quot;email&quot;: &quot;zy@itcast.cn&quot;,
+    &quot;name&quot;: &#123;
+        &quot;firstName&quot;: &quot;云&quot;,
+        &quot;lastName&quot;: &quot;赵&quot;
+    &#125;
+&#125;
+
+
+# 全量修改文档
+POST /heima/_doc/1
+&#123;
+  &quot;info&quot;: &quot;广州黑马198班&quot;,
+  &quot;email&quot;: &quot;90415049@qq.com&quot;,
+  &quot;name&quot;:&#123;
+    &quot;firstName&quot;: &quot;尧&quot;,
+    &quot;lastName&quot;: &quot;春&quot;
+  &#125;
+&#125;
+</code></pre>
+<h6 id="方式二：增量修改，修改指定字段值"><a href="#方式二：增量修改，修改指定字段值" class="headerlink" title="方式二：增量修改，修改指定字段值"></a>方式二：增量修改，修改指定字段值</h6><pre><code class="java">POST /索引库名/_update/文档id
+&#123;
+    &quot;doc&quot;: &#123;
+         &quot;字段名&quot;: &quot;新的值&quot;,
+    &#125;
+&#125;
+-------------------------
+POST /heima/_update/1
+&#123;
+  &quot;doc&quot;: &#123;
+    &quot;email&quot;: &quot;ZhaoYun@itcast.cn&quot;
+  &#125;
+&#125;
+
+
+# 局部修改文档
+POST /heima/_update/1
+&#123;
+  &quot;doc&quot;: &#123;
+    &quot;email&quot;: &quot;ZYun@itcast.cn&quot;
+  &#125;
+&#125;
+</code></pre>
+<h6 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h6><p>文档操作有哪些？</p>
+<ul>
+<li><p>创建文档：POST &#x2F;索引库名&#x2F;_doc&#x2F;文档id { json文档 }</p>
+</li>
+<li><p>查询文档：GET &#x2F;索引库名&#x2F;_doc&#x2F;文档id</p>
+</li>
+<li><p>删除文档：DELETE &#x2F;索引库名&#x2F;_doc&#x2F;文档id</p>
+</li>
+<li><p>修改文档：</p>
+<ul>
+<li><p>全量修改：PUT &#x2F;索引库名&#x2F;_doc&#x2F;文档id { json文档 }</p>
+</li>
+<li><p>增量修改：POST &#x2F;索引库名&#x2F;_update&#x2F;文档id { “doc”: {字段}}</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="JavaRestClient"><a href="#JavaRestClient" class="headerlink" title="JavaRestClient"></a>JavaRestClient</h3><p>Elasticsearch目前最新版本是8.0，其Java客户端有很大变化。不过大多数企业使用的还是8以下版本，所以我们选择使用早期的JavaRestClient客户端来学习。官方文档地址：<a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/client/index.html">Elasticsearch Clients | Elastic</a></p>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>

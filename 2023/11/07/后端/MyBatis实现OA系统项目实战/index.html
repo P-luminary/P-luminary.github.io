@@ -1,0 +1,3285 @@
+
+<!DOCTYPE html>
+<html lang="zh_CH ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-luminary || MyBatis实现OA系统项目实战</title>
+    <meta name="author" content="Asuna">
+    <meta name="description" content=" ">
+    <meta name="keywords" content=" ">
+    <link rel="icon" href="/https://raw.githubusercontent.com/P-luminary/images/master/data/asuna.jpg">
+    <link rel="stylesheet" href="/css/antd.min.css">
+    
+    <link rel="stylesheet" href="/css/maiden-theme.css">
+    
+    <script src="/js/vue.js"></script>
+    <script src="/js/antd.min.js"></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+
+    <div id="loading"
+        style="height: 100vh; width: 100%; position: fixed;display: flex;z-index: 200; justify-content: space-between;">
+        <div id="loadleft" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div id="loadright" style="width: 50%;background-color: #ffffff;transition: width 0.6s ease-out;"></div>
+        <div
+            style="position: fixed; height: 100vh; width: 100%;display: flex;justify-content: center;align-items: center;">
+            <div id="loadcontent"
+                style="width:400px;height:400px;padding:50px;border-radius:50%;display:flex;justify-content:center;align-items:center;border:solid 10px#a3ddfb; text-align:center;opacity:1;transition:opacity 0.3s ease-out;">
+                <div>
+                    <h2>LOADING...</h2>
+                    <p>加载过慢请开启缓存(浏览器默认开启)</p>
+                    <div>
+                        <img src="/dancingkitty.gif" alt="loading">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="layout">
+        <transition name="into">
+            <div v-show="show_page" style="display: none;">
+                <div id="menu_show">
+                     
+<nav id="menu">
+    <div class="desktop-menu">
+        <a href="/">
+            <span class="title">P-luminary</span>
+        </a>
+        
+        <a href="/">
+            <span>
+                <a-icon type="home" theme="filled" />
+            </span>
+            <span>home</span>
+        </a>
+        
+        <a href="/tags/语法">
+            <span>
+                <a-icon type="tags" theme="filled" />
+            </span>
+            <span>tags</span>
+        </a>
+        
+    </div>
+
+    <div :class="'phone-menu ' + menu_show" id="phone-menu">
+        <div :class="'title'" @click="menu_show=!menu_show">
+            <span style="margin-right: 10px;">
+                <a-icon type="appstore" theme="filled" />
+            </span>
+            <span>P-luminary</span>
+        </div>
+        <div class="items" v-show="menu_show">
+            
+            <a href="/">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="home" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">home</div>
+                </div>
+            </a>
+            
+            <a href="/tags/语法">
+                <div class="item">
+                    <div style="min-width:20px; max-width:50px; width: 10%">
+                        <a-icon type="tags" theme="filled" />
+                    </div>
+                    <div style="min-width:100px;max-width: 150%;width: 20%;">tags</div>
+                </div>
+            </a>
+            
+        </div>
+        <div class="curtain" v-show="menu_show"></div>
+    </div>
+
+</nav>
+                </div>
+
+                <div id="main">
+                     
+<link rel="stylesheet" href="/css/post-body.css">
+<div class="article">
+    <div>
+        <h1>MyBatis实现OA系统项目实战 </h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2023/11/7
+        </span>
+
+        
+
+        
+
+        <span class="tags">
+            <span class="icon">
+                <a-icon type="tags" theme="filled" />
+            </span>
+            
+            <span class="tag">
+                
+                <a href="/tags/后端" style=color:#879cff>
+                    后端
+                </a>
+            </span>
+            
+        </span>
+        
+    </div>
+
+    <div class="content" v-pre>
+        <h3 id="慕课网办公OA平台"><a href="#慕课网办公OA平台" class="headerlink" title="慕课网办公OA平台"></a>慕课网办公OA平台</h3><h5 id="课程介绍"><a href="#课程介绍" class="headerlink" title="课程介绍"></a>课程介绍</h5><ul>
+<li>需求说明与环境准备</li>
+<li>开发基于RBAC的访问控制模块</li>
+<li>开发多级请假审批流程</li>
+</ul>
+<h3 id="办公自动化OA系统"><a href="#办公自动化OA系统" class="headerlink" title="办公自动化OA系统"></a>办公自动化OA系统</h3><ul>
+<li>办公自动化系统(Office Automation)是替代传统办公的解决方案</li>
+<li>OA系统是利用软件技术构建的单位内部办公平台，用于辅助办公</li>
+<li>利用OA系统可将办公数据数字化，可扩大提高办公流程执行效率</li>
+</ul>
+<h3 id="项目需求"><a href="#项目需求" class="headerlink" title="项目需求"></a>项目需求</h3><ul>
+<li>慕课网办公OA系统要求采用多用户B&#x2F;S架构设计开发</li>
+<li>HR为每一位员工分配系统账户，员工用此账户登录系统</li>
+<li>公司采用分级定岗，从1-8依次提升，不同岗位薪资水平不同<ul>
+<li>6级(含)以下员工为<strong>业务岗</strong>，对应人员执行公司业务事宜</li>
+<li>7-8级为<strong>管理岗</strong>，其中<u>7级为部门经理</u>，<u>8级为总经理</u></li>
+<li>业务岗与管理岗员工可用系统功能不同，要求允许灵活配置</li>
+</ul>
+</li>
+</ul>
+<h3 id="请假流程"><a href="#请假流程" class="headerlink" title="请假流程"></a>请假流程</h3><ul>
+<li>公司所有员工都可以使用”请假申请”功能申请休假</li>
+<li>请假时间少于72小时，部门经理审批后直接通过</li>
+<li>请假时间大于72小时，部门经理审批后还需总经理进行审批</li>
+<li>部门经理只允许批准本部门员工申请</li>
+<li>部门经理请假需直接由总经理审批</li>
+<li>总经理提起请假申请，系统自动批准通过</li>
+</ul>
+<h3 id="搭建基础架构"><a href="#搭建基础架构" class="headerlink" title="搭建基础架构"></a>搭建基础架构</h3><h5 id="框架-amp-组件"><a href="#框架-amp-组件" class="headerlink" title="框架&amp;组件"></a>框架&amp;组件</h5><ul>
+<li>MySQL 8</li>
+<li>Mybatis 3.5</li>
+<li>Alibaba Druid</li>
+<li>Servlet 3.1</li>
+<li>Freemarker 2.3</li>
+<li>LayUl 2.5</li>
+</ul>
+<h5 id="工程结构"><a href="#工程结构" class="headerlink" title="工程结构"></a>工程结构</h5><pre><code class="java">imooc-oa  eclipse工程项目
+ /src - java源代码目录
+ /WebContent - Web资源目录
+ /css - css文件目录
+ /js - js文件目录
+ /image - 图片资源目录
+ /upload - 上传文件目录
+ /WEB-INF   //jsp数据来自controller 不允许在web中直接访问 要从控制器跳转
+   /jsp - jsp页面目录
+   /lib - jar文件目录
+   /classes - 编译后的class目录
+   /web.xml web描述符文件
+</code></pre>
+<h5 id="包结构"><a href="#包结构" class="headerlink" title="包结构"></a>包结构</h5><pre><code class="java">com.imooc-oa //逆命名法
+    /controller - 存放Servlet控制器类 //承上启下接收参数 调用逻辑 返回处理结果
+    /service - 存放处理逻辑类model[伪数据库] //完成业务逻辑 service与dao进行传递调用
+    /dao - Data Access Object 数据访问对象类 数据读写的java类 数据来自xml文件
+    /entity - 存放实体类 JavaBean java中的简单对象
+    /utils - 通用工具类 底层通用的工具类或方法
+</code></pre>
+<h4 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h4><img src="https://raw.githubusercontent.com/P-luminary/images/1f7a3c8c83e3c7c1743888e25207d2ff4d0b116d/data/OA%E7%B3%BB%E7%BB%9F%E9%85%8D%E7%BD%AE.png" style="zoom: 67%;" />
+
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_58642210/article/details/123806612">Mybatis复习_resources.getresourceasreader的读取路径-CSDN博客</a></p>
+<h6 id="配置pom-xml"><a href="#配置pom-xml" class="headerlink" title="配置pom.xml"></a>配置pom.xml</h6><pre><code class="xml">pom.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;org.example&lt;/groupId&gt;
+    &lt;artifactId&gt;imooc-oa&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;repositories&gt;
+        &lt;repository&gt;
+            &lt;id&gt;aliyun&lt;/id&gt;
+            &lt;name&gt;aliyun&lt;/name&gt;
+            &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+        &lt;/repository&gt;
+    &lt;/repositories&gt;
+
+    &lt;dependencies&gt;
+        &lt;!--Mybatis 框架--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+            &lt;version&gt;3.5.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--MySQL 8 JDBC驱动--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;8.0.19&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--Druid数据库连接池--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;druid&lt;/artifactId&gt;
+            &lt;version&gt;1.1.14&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--Junit4单元测试框架--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;!--只参与Maven Test,不进行发布--&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;!--Logback日志输出组件--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;ch.qos.logback&lt;/groupId&gt;
+            &lt;artifactId&gt;logback-classic&lt;/artifactId&gt;
+            &lt;version&gt;1.2.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--Freemarker依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
+            &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
+            &lt;version&gt;2.3.29&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--servlet-api--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.1.0&lt;/version&gt;
+            &lt;!--依赖只参与编译测试,不进行发布--&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+&lt;!--用Maven时必打的代码--&gt;
+                &lt;!--利用Maven编译插件将编译级别提高至1.8,解决lambda表达式错误--&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;!--maven-compiler-plugin是Maven自带的编译插件--&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.3&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;!--检查源码采用1.8规则,默认为1.5--&gt;
+                    &lt;source&gt;1.8&lt;/source&gt;
+                    &lt;!--按1.8规则生成字节码--&gt;
+                    &lt;target&gt;1.8&lt;/target&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;8&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+&lt;/project&gt;
+</code></pre>
+<h6 id="配置数据库连接池"><a href="#配置数据库连接池" class="headerlink" title="配置数据库连接池"></a>配置数据库连接池</h6><pre><code class="xml">mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+    &lt;environments default=&quot;dev&quot;&gt;
+        &lt;!--开发环境配置--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;
+            &lt;!--事务管理器采用JDBC方式--&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--利用Mybatis自带连接池管理连接--&gt;
+            &lt;dataSource type=&quot;POOLED&quot;&gt;
+            &lt;!--MyBatis与Druid的整合--&gt;
+                &lt;!--JDBC连接属性--&gt;
+                &lt;property name=&quot;driver&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/imooc-oa?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;mappers&gt;
+        &lt;mapper resource=&quot;mappers/test.xml&quot;/&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;
+</code></pre>
+<h3 id="开发Mybatis"><a href="#开发Mybatis" class="headerlink" title="开发Mybatis"></a>开发Mybatis</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_58642210/article/details/123806612">Mybatis复习_resources.getresourceasreader的读取路径-CSDN博客</a></p>
+<pre><code class="xml">test.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;test&quot;&gt;
+    &lt;select id=&quot;sample&quot; resultType=&quot;string&quot;&gt;
+        select &#39;success&#39;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">util-MybatisUtils.java
+package util;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.function.Function;
+
+public class MybatisUtils &#123;
+    //利用static(静态)属于类不属于对象,且全局唯一
+    private static SqlSessionFactory sqlSessionFactory = null;
+    //利用静态块在初始化类时实例化sqlSessionFactory
+    static&#123;
+        Reader reader = null;
+        try&#123;
+            reader = Resources.getResourceAsReader(&quot;mybatis-config.xml&quot;);
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        &#125;catch(IOException e)&#123;
+            //初始化错误时,通过抛出异常ExceptionInInitializerError通知调用者
+            throw new ExceptionInInitializerError(e);
+        &#125;
+    &#125;
+
+    /**
+     * 执行SELECT查询SQL
+     * @param func 要执行查询语句的代码块
+     * @return 查询结果
+     */
+    //用于数据的查询[极大的简化查询] mybatis执行SQL时一定要有mapper的xml
+    public static Object executeQuery(Function&lt;SqlSession,Object&gt; func)&#123; //函数式接口
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        try&#123;//具体查询交给Function实现 查询前完成连接的打开和关闭
+            Object obj = func.apply(sqlSession);
+            return obj;
+        &#125;finally &#123;
+            sqlSession.close(); //最后一步释放连接资源
+        &#125;
+    &#125;
+
+    /**
+     * 执行INSERT/UPDATE/DELETE写操作SQL
+     * @param func 要执行的写操作代码块
+     * @return 写操作后返回的结果
+     */
+    public static Object executeUpdate(Function&lt;SqlSession,Object&gt; func)&#123; //函数式接口
+        SqlSession sqlSession = sqlSessionFactory.openSession(false);
+        try&#123;//具体查询交给Function实现 查询前完成连接的打开和关闭
+            Object obj = func.apply(sqlSession);
+            sqlSession.commit();
+            return obj;
+        &#125;catch (RuntimeException e)&#123;
+            sqlSession.rollback();
+            throw e;
+        &#125;finally &#123;
+            sqlSession.close(); //最后一步释放连接资源
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">MybatisUtilsTestor.java
+import org.apache.ibatis.session.SqlSession;
+import org.junit.Test;
+import util.MybatisUtils;
+
+public class MybatisUtilsTestor &#123;
+//    @Test
+//    public void testcase1()&#123;
+//        String result = (String)MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+//            String out = (String)sqlSession.selectOne(&quot;test.sample&quot;);
+//            return out; //out会被retrun obj接收 返回Object
+//        &#125;);
+//        System.out.println(result);
+//    &#125;
+    @Test
+    public void testcase2()&#123;
+        String result = (String) MybatisUtils.executeQuery(sqlSession -&gt; sqlSession.selectOne(&quot;test.sample&quot;));
+        System.out.println(result);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="MyBatis整合Druid连接池-自定义连接池"><a href="#MyBatis整合Druid连接池-自定义连接池" class="headerlink" title="MyBatis整合Druid连接池 (自定义连接池)"></a>MyBatis整合Druid连接池 (自定义连接池)</h3><pre><code class="xml">重新整合mybatis-config.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE configuration
+        PUBLIC &quot;-//mybatis.org//DTD Config 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-config.dtd&quot;&gt;
+&lt;configuration&gt;
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+    &lt;environments default=&quot;dev&quot;&gt;
+        &lt;!--开发环境配置--&gt;
+        &lt;environment id=&quot;dev&quot;&gt;
+            &lt;!--事务管理器采用JDBC方式--&gt;
+            &lt;transactionManager type=&quot;JDBC&quot;&gt;&lt;/transactionManager&gt;
+            &lt;!--利用Mybatis自带连接池管理连接--&gt;
+&lt;!--            &lt;dataSource type=&quot;POOLED&quot;&gt;--&gt;
+            &lt;dataSource type=&quot;com.imooc.oa.datasource.DruidDataSourceFactory&quot;&gt;
+            &lt;!--MyBatis与Druid的整合--&gt;
+                &lt;!--JDBC连接属性--&gt;
+                &lt;property name=&quot;driverClassName&quot; value=&quot;com.mysql.cj.jdbc.Driver&quot;/&gt;
+                &lt;property name=&quot;url&quot; value=&quot;jdbc:mysql://localhost:3306/imooc-oa?useSSL=false&amp;amp;useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;serverTimezone=Asia/Shanghai&amp;amp;allowPublicKeyRetrieval=true&quot;/&gt;
+                &lt;property name=&quot;username&quot; value=&quot;root&quot;/&gt;
+                &lt;property name=&quot;password&quot; value=&quot;root&quot;/&gt;
+                &lt;!--连接池初始连接数--&gt;
+                &lt;property name=&quot;initialSize&quot; value=&quot;10&quot;/&gt;
+                &lt;!--连接池最大连接数--&gt;
+                &lt;property name=&quot;maxActive&quot; value=&quot;20&quot;/&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;mappers&gt;
+        &lt;mapper resource=&quot;mappers/test.xml&quot;/&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;
+</code></pre>
+<pre><code class="java">com.imooc.oa.datasource.DruidDataSourceFactory
+package com.imooc.oa.datasource;
+
+import com.alibaba.druid.pool.DruidDataSource;
+import org.apache.ibatis.datasource.unpooled.UnpooledDataSourceFactory;
+
+import javax.sql.DataSource;
+import java.sql.SQLException;
+
+public class DruidDataSourceFactory extends UnpooledDataSourceFactory &#123;
+    public DruidDataSourceFactory()&#123; //1.创造空的数据源对象
+        // 2.调用setProperties读取xml对dataSource属性源进行设置
+        this.dataSource = new DruidDataSource(); //表达数据源信息
+    &#125;
+    //3.数据源需要额外设置要重写
+    @Override
+    public DataSource getDataSource() &#123; //获取已经初始化的连接池进行返回
+        try &#123;
+            ((DruidDataSource)this.dataSource).init(); //初始化Druid数据源
+        &#125; catch (SQLException e) &#123;
+            throw new RuntimeException(e);
+        &#125;
+        return this.dataSource;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="Ctrl-Shift-N-文件查找对话框"><a href="#Ctrl-Shift-N-文件查找对话框" class="headerlink" title="Ctrl + Shift + N 文件查找对话框"></a>Ctrl + Shift + N 文件查找对话框</h6><h3 id="整合Freemarker"><a href="#整合Freemarker" class="headerlink" title="整合Freemarker"></a>整合Freemarker</h3><pre><code class="xml">pom.xml
+    &lt;!--Freemarker依赖--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.freemarker&lt;/groupId&gt;
+            &lt;artifactId&gt;freemarker&lt;/artifactId&gt;
+            &lt;version&gt;2.3.29&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!--servlet-api--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.1.0&lt;/version&gt;
+            &lt;!--依赖只参与编译测试,不进行发布--&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+</code></pre>
+<pre><code class="ftl">web-WEB-INF-ftl-test.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;$&#123;result&#125;&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="xml">web.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;web-app xmlns=&quot;http://xmlns.jcp.org/xml/ns/javaee&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&quot;
+         version=&quot;4.0&quot;&gt;
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;freemaker&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;freemarker.ext.servlet.FreemarkerServlet&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;!--        定义模板的存储路径--&gt;
+            &lt;param-name&gt;TemplatePath&lt;/param-name&gt;
+            &lt;param-value&gt;/WEB-INF/ftl&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        &lt;init-param&gt;
+&lt;!-- default_encoding用于设置读取ftl文件时采用的字符集,进而避免中文乱码的产生--&gt;
+            &lt;param-name&gt;default_encoding&lt;/param-name&gt;
+            &lt;param-value&gt;UTF-8&lt;/param-value&gt;
+        &lt;/init-param&gt;
+    &lt;/servlet&gt;
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;freemaker&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;*.ftl&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+&lt;/web-app&gt;
+</code></pre>
+<pre><code class="java">TestServlet.java
+package com.imooc.oa.test;
+
+import com.imooc.oa.util.MybatisUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(name = &quot;TestServlet&quot;, urlPatterns = &quot;/test&quot;)
+public class TestServlet extends HttpServlet &#123;
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+
+    &#125;
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException &#123;
+        String result = (String)MybatisUtils.executeQuery(sqlSession -&gt; sqlSession.selectOne(&quot;test.sample&quot;));
+        req.setAttribute(&quot;result&quot;,result);
+        req.getRequestDispatcher(&quot;/test.ftl&quot;).forward(req,resp);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="RBAC-Role-Based-Access-Control-介绍"><a href="#RBAC-Role-Based-Access-Control-介绍" class="headerlink" title="RBAC(Role-Based Access Control)介绍"></a>RBAC(Role-Based Access Control)介绍</h3><ul>
+<li><p>基于**<u>角色权限控制</u>**(<strong>RBAC</strong>)是面向企业安全策略的访问控制方式</p>
+</li>
+<li><p>RBAC核心思想是将控制访问的资源与角色(Role)进行绑定</p>
+</li>
+<li><p>系统的用户(User)与角色(Role)再进行绑定, 用户便拥有对应权限</p>
+</li>
+</ul>
+<h6 id="一般主键cno或id都要设定字段类型为-BigInt"><a href="#一般主键cno或id都要设定字段类型为-BigInt" class="headerlink" title="一般主键cno或id都要设定字段类型为 BigInt"></a>一般主键cno或id都要设定字段类型为 BigInt</h6><h5 id="imooc-oa-sql"><a href="#imooc-oa-sql" class="headerlink" title="imooc-oa.sql"></a>imooc-oa.sql</h5><h2 id="实现用户登录"><a href="#实现用户登录" class="headerlink" title="实现用户登录"></a>实现用户登录</h2><h4 id="基于LayUI开发登录页"><a href="#基于LayUI开发登录页" class="headerlink" title="基于LayUI开发登录页"></a>基于LayUI开发登录页</h4><h4 id="LayUI前端框架"><a href="#LayUI前端框架" class="headerlink" title="LayUI前端框架"></a>LayUI前端框架</h4><p><a target="_blank" rel="noopener" href="https://www.layuiweb.com/">Layui - 经典开源模块化前端 UI 框架（官网文档镜像站） (layuiweb.com)</a></p>
+<pre><code class="html">login.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui-main/src/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        body &#123;
+            background-color: #f2f2f2;
+        &#125;
+
+        .oa-container &#123;
+            /*background-color: white;*/
+            position: absolute;
+            width: 400px;
+            height: 350px;
+            top: 50%;
+            left: 50%;
+            padding: 20px;
+            margin-left: -200px;
+            margin-top: -175px;
+        &#125;
+        #username,#password&#123;
+            /*text-align: center;*/
+            /*font-size: 24px;*/
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;oa-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center; margin-bottom: 20px&quot;&gt;办公OA系统&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot; placeholder=&quot;请输入用户名&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; placeholder=&quot;请输入密码&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid&quot; lay-submit lay-filter=&quot;login&quot;&gt;登录&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现用户登录-1"><a href="#实现用户登录-1" class="headerlink" title="实现用户登录-1"></a>实现用户登录-1</h3><pre><code class="java">com.imooc.oa.entity.User
+package com.imooc.oa.entity;
+
+public class User &#123;
+    /*
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+     */
+    private Long userId;
+    private String username;
+    private String password;
+    private Long employeeId;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">com.imooc.oa.dao.UserDao
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.User;
+import com.imooc.oa.util.MybatisUtils;
+
+/**
+ * 用户表
+ */
+public class UserDao &#123;
+    /**
+     * 按照用户名查询用户表
+     * @param username 用户名
+     * @return User对象包含对应的用户信息，null则代表对象不存在
+     */
+    public User selectByUsername(String username)&#123;
+        User user = (User)MybatisUtils.executeQuery(sqlSession -&gt; sqlSession.selectOne(&quot;usermapper.selectByUsername&quot;,username));
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">user.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;usermapper&quot;&gt;
+    &lt;select id=&quot;selectByUsername&quot; parameterType=&quot;String&quot; resultType=&quot;com.imooc.oa.entity.User&quot;&gt;
+        select * from sys_user where username = #&#123;value&#125;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mappers&gt;
+    &lt;mapper resource=&quot;mappers/test.xml&quot;/&gt;
+    &lt;mapper resource=&quot;mappers/user.xml&quot;/&gt;
+&lt;/mappers&gt;
+</code></pre>
+<p><strong>Dao → Service</strong></p>
+<h6 id="创建测试用例快捷键-Ctrl-Shift-T"><a href="#创建测试用例快捷键-Ctrl-Shift-T" class="headerlink" title="创建测试用例快捷键 Ctrl+Shift+T"></a>创建测试用例快捷键 Ctrl+Shift+T</h6><pre><code class="java">UserSerive.java
+package com.imooc.oa.serive;
+
+import com.imooc.oa.dao.UserDao;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.serive.exception.BussinessException;
+
+public class UserService &#123; //创建测试用例快捷键 Ctrl+Shift+T
+    private UserDao userDao = new UserDao(); //实例化
+
+    /**
+     * 根据前台输入进行登录校验
+     * @param username 前台输入的用户名
+     * @param password 前台输入的密码
+     * @return 校验通过后，包含对应用户数据的User实体类
+     * @throws BussinessException L001-用户名不存在,L002-密码错误
+     */ 
+    public User checkLogin(String username, String password)&#123;
+        User user = userDao.selectByUsername(username);
+        if (user == null)&#123;
+            //抛出用户不存在异常
+            throw new BussinessException(&quot;L001&quot;, &quot;用户名不存在&quot;);
+        &#125;
+        if(!password.equals(user.getPassword()))&#123;
+            throw new BussinessException(&quot;L002&quot;, &quot;密码错误&quot;);
+        &#125;
+        return user;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">test/serive.UserServiceTest.java
+package com.imooc.oa.serive;
+
+import junit.framework.TestCase;
+import org.junit.Test;
+
+public class UserServiceTest extends TestCase &#123;
+    private UserService userService = new UserService();
+
+    @Test
+    public void testCheckLogin1() &#123;
+        userService.checkLogin(&quot;uu&quot;,&quot;1234&quot;);
+    &#125;
+    @Test
+    public void testCheckLogin2() &#123;
+        userService.checkLogin(&quot;m8&quot;,&quot;1234&quot;);
+    &#125;
+    @Test
+    public void testCheckLogin3() &#123;
+        userService.checkLogin(&quot;uu&quot;,&quot;test&quot;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">serive.exception.BussinessException.java
+package com.imooc.oa.serive.exception;
+
+/**
+ * 业务逻辑异常
+ */
+public class BussinessException extends RuntimeException&#123;
+    private String code; //异常编码,异常的以为标识
+    private String message; //异常的具体文本消息
+    public BussinessException(String code, String msg)&#123;
+        super(code + &quot;:&quot; + msg);
+        this.code = code;
+        this.message = msg;
+    &#125;
+
+    public String getCode() &#123;
+        return code;
+    &#125;
+
+    public void setCode(String code) &#123;
+        this.code = code;
+    &#125;
+
+    @Override
+    public String getMessage() &#123;
+        return message;
+    &#125;
+
+    public void setMessage(String message) &#123;
+        this.message = message;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现用户登录-2"><a href="#实现用户登录-2" class="headerlink" title="实现用户登录-2"></a>实现用户登录-2</h3><pre><code class="java">com.imooc.oa.controller.LoginServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.UserService;
+import com.imooc.oa.service.exception.BussinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet(name = &quot;LoginServlet&quot; ,urlPatterns = &quot;/check_login&quot;)
+public class LoginServlet extends HttpServlet &#123;
+    Logger logger = LoggerFactory.getLogger(LoginServlet.class);
+    private UserService userService = new UserService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //接收用户输入
+        String username = request.getParameter(&quot;username&quot;);
+        String password = request.getParameter(&quot;password&quot;);
+        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+        try &#123;
+            //调用业务逻辑
+            User user = userService.checkLogin(username, password);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;message&quot;, &quot;success&quot;);
+        &#125;catch (BussinessException ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;catch (Exception ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getClass().getSimpleName());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;
+        //返回对应结果
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<h4 id="实现用户登录-3"><a href="#实现用户登录-3" class="headerlink" title="实现用户登录-3"></a>实现用户登录-3</h4><pre><code class="xml">pom.xml
+&lt;dependency&gt;
+   &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+   &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+   &lt;version&gt;1.2.62&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<pre><code class="html">login.xml实现增添表单校验
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;慕课网办公OA系统&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        body&#123;
+            background-color: #F2F2F2;
+        &#125;
+        .oa-container&#123;
+            /*background-color: white;*/
+            position: absolute;
+            width: 400px;
+            height: 350px;
+            top: 50%;
+            left: 50%;
+            padding: 20px;
+            margin-left: -200px;
+            margin-top: -175px;
+        &#125;
+        #username,#password&#123;
+            /*text-align: center;*/
+            /*font-size: 24px;*/
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;oa-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center;margin-bottom: 20px&quot;&gt;办公OA系统&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;username&quot; lay-verify=&quot;required&quot; name=&quot;username&quot; placeholder=&quot;请输入用户名&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot; &gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;input type=&quot;password&quot; id=&quot;password&quot; lay-verify=&quot;required&quot; name=&quot;password&quot; placeholder=&quot;请输入密码&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot; &gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid&quot; lay-submit lay-filter=&quot;login&quot;&gt;登录&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    // 表单提交事件 表单输入校验 在上面加 lay-verify=&quot;requrired&quot;
+    layui.form.on(&quot;submit(login)&quot; , function(formdata)&#123;//data参数包含了当前表单的数据
+        console.log(formdata);
+        //发送ajax请求进行登录校验
+        layui.$.ajax(&#123;
+            url : &quot;/check_login&quot;,
+            data : formdata.field, //提交表单数据
+            type : &quot;post&quot;,
+            dataType : &quot;json&quot; ,
+            success : function(json)&#123;
+                console.log(json);
+                if(json.code == &quot;0&quot;)&#123; //登录校验成功 内置弹出层
+                    layui.layer.msg(&quot;登录成功&quot;);
+                &#125;else&#123;
+                    layui.layer.msg(json.message);
+                &#125;
+            &#125;
+        &#125;)
+        return false;//submit提交事件返回true则表单提交,false则阻止表单提交
+    &#125;)
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+&lt;/html&gt;
+</code></pre>
+<h6 id="后面通过Ajax-浏览器后台-上面return-false-请求向服务器发起异步通信获取校验是否通过"><a href="#后面通过Ajax-浏览器后台-上面return-false-请求向服务器发起异步通信获取校验是否通过" class="headerlink" title="后面通过Ajax[浏览器后台(上面return false)]请求向服务器发起异步通信获取校验是否通过"></a>后面通过Ajax[浏览器后台(上面return false)]请求向服务器发起异步通信获取校验是否通过</h6><h3 id="分析后台首页布局与设计"><a href="#分析后台首页布局与设计" class="headerlink" title="分析后台首页布局与设计"></a>分析后台首页布局与设计</h3><pre><code class="html">index.html
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课网办公OA系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    姓名[部门-职务]
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;#&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+                &lt;!--父节点--&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;模块1&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;1&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                &lt;!--子节点--&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;1&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能1&lt;/a&gt;
+                &lt;/dd&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;1&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能2&lt;/a&gt;
+                &lt;/dd&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;1&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能3&lt;/a&gt;
+                &lt;/dd&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;模块2&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;2&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;2&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能3&lt;/a&gt;
+                &lt;/dd&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;2&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能4&lt;/a&gt;
+                &lt;/dd&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;2&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;功能5&lt;/a&gt;
+                &lt;/dd&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下 一开始先dl与dd对齐[程序维护方便]
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;)
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="动态显示功能菜单-1-【核心：rbac-xml】"><a href="#动态显示功能菜单-1-【核心：rbac-xml】" class="headerlink" title="动态显示功能菜单-1 【核心：rbac.xml】"></a>动态显示功能菜单-1 【<u>核心：rbac.xml</u>】</h3><p>通过用户找到角色sys_user 再通过角色找到节点sys_role_user 接下来通过节点编号sys_role_node去获取与之对应的节点其他信息(三表关联)</p>
+<p>xml→Dao→UserService</p>
+<pre><code class="xml">resources.mappers.rbac.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;rbacmapper&quot;&gt;
+    &lt;select id=&quot;selectNodeByUserId&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Node&quot;&gt;
+        select distinct n.*
+        from
+            sys_role_user ru, sys_role_node rn, sys_node n
+        where
+            ru.role_id = rn.role_id and user_id = #&#123;value&#125; and rn.node_id = n.node_id
+        order by n.node_code
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+    &lt;mappers&gt;
+        &lt;mapper resource=&quot;mappers/test.xml&quot;/&gt;
+        &lt;mapper resource=&quot;mappers/user.xml&quot;/&gt;
+        &lt;mapper resource=&quot;mappers/rbac.xml&quot;/&gt;
+    &lt;/mappers&gt;
+</code></pre>
+<pre><code class="java">imooc.oa.dao.RbacDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.util.List;
+
+public class RbacDao &#123;
+    public List&lt;Node&gt; selectNodeByUserId(Long userId)&#123;
+        return (List)MybatisUtils.executeQuery(sqlSession -&gt; sqlSession.selectList(&quot;rbacmapper.selectNodeByUserId&quot;, userId));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">service.UserService.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.RbacDao;
+import com.imooc.oa.dao.UserDao;
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.exception.BussinessException;
+
+import java.util.List;
+
+public class UserService &#123; //创建测试用例快捷键 Ctrl+Shift+T
+    private UserDao userDao = new UserDao(); //实例化
+    private RbacDao rbacDao = new RbacDao();
+
+    /**
+     * 根据前台输入进行登录校验
+     * @param username 前台输入的用户名
+     * @param password 前台输入的密码
+     * @return 校验通过后,包含对应用户数据的User实体类
+     * @throws BussinessException L001-用户名不存在,L002-密码错误
+     */
+    public User checkLogin(String username, String password)&#123;
+        User user = userDao.selectByUsername(username);
+        if (user == null)&#123;
+            //抛出用户不存在异常
+            throw new BussinessException(&quot;L001&quot;, &quot;用户名不存在&quot;);
+        &#125;
+        if(!password.equals(user.getPassword()))&#123;
+            throw new BussinessException(&quot;L002&quot;, &quot;密码错误&quot;);
+        &#125;
+        return user;
+    &#125;
+    public List&lt;Node&gt; selectNodeByUserId(Long userId)&#123;
+        List&lt;Node&gt; nodeList = rbacDao.selectNodeByUserId(userId);
+        return nodeList;
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceTest.java
+@Test
+    public void selectNodeByUserId()&#123;
+        List&lt;Node&gt; nodeList = userService.selectNodeByUserId(2l);
+        System.out.println(nodeList);
+    &#125;
+</code></pre>
+<pre><code class="java">Node.java
+public class Node &#123;
+    private Long nodeId;
+    private Integer nodeType;
+    private String nodeName;
+    private String url;
+    private Integer nodeCode;
+    private Long parentId;
+    Setter + Getter
+&#125;
+</code></pre>
+<h3 id="动态显示功能菜单-2-不同用户登录不同功能"><a href="#动态显示功能菜单-2-不同用户登录不同功能" class="headerlink" title="动态显示功能菜单-2 (不同用户登录不同功能)"></a>动态显示功能菜单-2 (不同用户登录不同功能)</h3><pre><code class="java">修改LoginServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.UserService;
+import com.imooc.oa.service.exception.BussinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet(name = &quot;LoginServlet&quot; ,urlPatterns = &quot;/check_login&quot;)
+public class LoginServlet extends HttpServlet &#123;
+    Logger logger = LoggerFactory.getLogger(LoginServlet.class);
+    private UserService userService = new UserService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        //接收用户输入
+        String username = request.getParameter(&quot;username&quot;);
+        String password = request.getParameter(&quot;password&quot;);
+        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+        try &#123;
+            //调用业务逻辑 不能直接 request.setAttribute 选更大的对象
+            User user = userService.checkLogin(username, password);
+            HttpSession session = request.getSession();
+            //session种存在用户信息 向session存入登录用户信息,属性名：login_user
+            session.setAttribute(&quot;login_user&quot;, user);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;message&quot;, &quot;success&quot;);
+            result.put(&quot;redirect_url&quot;, &quot;/index&quot;); //url登陆成功直接返回客户端
+        &#125;catch (BussinessException ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getCode());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;catch (Exception ex)&#123;
+            logger.error(ex.getMessage() , ex);
+            result.put(&quot;code&quot;, ex.getClass().getSimpleName());
+            result.put(&quot;message&quot;, ex.getMessage());
+        &#125;
+        //返回对应结果
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">oa.controller.IndexServlet.java
+package com.imooc.oa.controller;
+
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.UserService;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.List;
+//接收数据传入
+@WebServlet(name = &quot;IndexServlet&quot;, urlPatterns = &quot;/index&quot;)
+public class IndexServlet extends HttpServlet &#123;
+    private UserService userService = new UserService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)&#123;
+
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute(&quot;login_user&quot;);
+        List&lt;Node&gt; nodeList = userService.selectNodeByUserId(user.getUserId());
+        request.setAttribute(&quot;node_list&quot;,nodeList);
+        request.getRequestDispatcher(&quot;/index.ftl&quot;).forward(request, response);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">将index.html 变成 index.ftl并放在Web/WEB-INF/ftl/index.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课网办公OA系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    姓名[部门-职务]
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;#&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+                &lt;#list node_list as node&gt;
+                &lt;!--父节点--&gt;
+                    &lt;#if node.nodeType == 1&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;$&#123;node.nodeId&#125;&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                    &lt;/#if&gt;
+                    &lt;#if node.nodeType == 2&gt;
+                &lt;!--子节点--&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                &lt;/dd&gt;
+                    &lt;/#if&gt;
+                &lt;/#list&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下 一开始先dl与dd对齐[程序维护方便]
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;)
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="Xml配置下实现Mapper接口-登录用户所对应员工"><a href="#Xml配置下实现Mapper接口-登录用户所对应员工" class="headerlink" title="Xml配置下实现Mapper接口 (登录用户所对应员工)"></a>Xml配置下实现Mapper接口 (登录用户所对应员工)</h3><p>接口 xml mapper增加 employeeservice </p>
+<p>index.ftl  indexServlet  改index.ftl</p>
+<p>增加自动化部门 entity.Department  dao.创建接口DepartmentDao  mappers.department.xml  -config.xml注册     DepartmentSerive.java<br>IndexServlet.java   index.ftl</p>
+<pre><code class="java">entity.Employee.java
+public class Employee&#123;
+    private Long employeeId;
+    private String name;
+    private Long departmentId;
+    private String title;
+    private Integer level;
+    Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.EmployeeDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Department;
+
+public interface DepartmentDao &#123;
+    public Department selectById(Long departmentId);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/employee.xml&quot;/&gt;
+
+index.ftl
+ &lt;!--右侧当前用户信息--&gt;
+   &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+       &lt;li class=&quot;layui-nav-item&quot;&gt;
+           &lt;a href=&quot;javascript:void(0)&quot;&gt;
+               &lt;!--图标--&gt;
+              &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+               &lt;/span&gt;
+               &lt;!--用户信息--&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_department.departmentName&#125;-$&#123;current_employee.title&#125;]
+                &lt;/a&gt;
+            &lt;/li&gt;
+</code></pre>
+<pre><code class="java">IndexServlet.java
+package com.imooc.oa.controller;
+
+import com.imooc.oa.entity.Department;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.DepartmentService;
+import com.imooc.oa.service.EmployeeService;
+import com.imooc.oa.service.UserService;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.List;
+
+@WebServlet(name = &quot;IndexServlet&quot;, urlPatterns = &quot;/index&quot;)
+public class IndexServlet extends HttpServlet &#123;
+    private UserService userService = new UserService();
+    private EmployeeService employeeService = new EmployeeService();
+    private DepartmentService departmentService = new DepartmentService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)&#123;
+
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        HttpSession session = request.getSession();
+        //得到当前登录用户对象
+        User user = (User) session.getAttribute(&quot;login_user&quot;);
+        Employee employee = employeeService.selectById(user.getEmployeeId());
+        //获取登录用户可用功能模块列表
+        List&lt;Node&gt; nodeList = userService.selectNodeByUserId(user.getUserId());
+        //获取员工对应的部门
+        Department department = departmentService.selectById(employee.getDepartmentId());
+        //放入请求属性 session生存时间长
+        request.setAttribute(&quot;node_list&quot;,nodeList);
+        session.setAttribute(&quot;current_employee&quot;,employee);
+        session.setAttribute(&quot;current_department&quot;, department);
+        //请求派发至ftl进行展现
+        request.getRequestDispatcher(&quot;/index.ftl&quot;).forward(request, response);
+    &#125;
+&#125;
+</code></pre>
+<h6 id="增加自动化部门"><a href="#增加自动化部门" class="headerlink" title="增加自动化部门"></a>增加自动化部门</h6><pre><code class="java">entity.Department.java
+public class Department &#123;
+    private Long departmentId;
+    private String departmentName;
+    Getter+Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.DepartmentDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Department;
+
+public interface DepartmentDao &#123;
+    public Department selectById(Long departmentId);
+&#125;
+</code></pre>
+<pre><code class="xml">mapper.department.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;!--namespace与包名类名一致--&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.DepartmentDao&quot;&gt;
+    &lt;!--id与方法名对应 parameterType与方法参数类型对应 resultType与方法返回类型对应--&gt;
+    &lt;select id=&quot;selectById&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Department&quot;&gt;
+        select * from adm_department where department_id = #&#123;value&#125;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+
+mybatis-config.xml
+&lt;mapper resource=&quot;mappers/department.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">service.DepartmentServlet.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.DepartmentDao;
+import com.imooc.oa.entity.Department;
+import com.imooc.oa.util.MybatisUtils;
+
+public class DepartmentService &#123;
+    /**
+     * 按编号得到部门对象
+     * @param departmentId 部门编号
+     * @return 部门对象,null代表部门不存在
+     */
+    public Department selectById(Long departmentId)&#123;
+        return (Department) MybatisUtils.executeQuery(
+                sqlSession -&gt; sqlSession.getMapper(DepartmentDao.class).selectById(departmentId));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">controller.indexServlet.java
+package com.imooc.oa.controller;
+
+import com.imooc.oa.entity.Department;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.DepartmentService;
+import com.imooc.oa.service.EmployeeService;
+import com.imooc.oa.service.UserService;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.List;
+
+@WebServlet(name = &quot;IndexServlet&quot;, urlPatterns = &quot;/index&quot;)
+public class IndexServlet extends HttpServlet &#123;
+    private UserService userService = new UserService();
+    private EmployeeService employeeService = new EmployeeService();
+    private DepartmentService departmentService = new DepartmentService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)&#123;
+
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        HttpSession session = request.getSession();
+        //得到当前登录用户对象
+        User user = (User) session.getAttribute(&quot;login_user&quot;);
+        Employee employee = employeeService.selectById(user.getEmployeeId());
+        //获取登录用户可用功能模块列表
+        List&lt;Node&gt; nodeList = userService.selectNodeByUserId(user.getUserId());
+        //获取员工对应的部门
+        Department department = departmentService.selectById(employee.getDepartmentId());
+        //放入请求属性 session生存时间长
+        request.setAttribute(&quot;node_list&quot;,nodeList);
+        session.setAttribute(&quot;current_employee&quot;,employee);
+        session.setAttribute(&quot;current_department&quot;, department);
+        //请求派发至ftl进行展现
+        request.getRequestDispatcher(&quot;/index.ftl&quot;).forward(request, response);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">index.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课网办公OA系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_department.departmentName&#125;-$&#123;current_employee.title&#125;]
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;#&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+                &lt;#list node_list as node&gt;
+                &lt;!--父节点--&gt;
+                    &lt;#if node.nodeType == 1&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;$&#123;node.nodeId&#125;&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                    &lt;/#if&gt;
+                    &lt;#if node.nodeType == 2&gt;
+                &lt;!--子节点--&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                &lt;/dd&gt;
+                    &lt;/#if&gt;
+                &lt;/#list&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下 一开始先dl与dd对齐[程序维护方便]
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;)
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="基于MD5算法对密码加密"><a href="#基于MD5算法对密码加密" class="headerlink" title="基于MD5算法对密码加密"></a>基于MD5算法对密码加密</h3><h5 id="MD5摘要算法"><a href="#MD5摘要算法" class="headerlink" title="MD5摘要算法"></a>MD5摘要算法</h5><ul>
+<li>MD5信息摘要算法广泛使用的密码散列函数</li>
+<li>MD5可以产生出一个128位的散列值用于唯一标识源数据</li>
+<li>项目中通常使用MD5作为敏感数据的加密算法</li>
+</ul>
+<h5 id="MD5特点"><a href="#MD5特点" class="headerlink" title="MD5特点"></a>MD5特点</h5><ul>
+<li>压缩性, MD5生成的摘要长度固定</li>
+<li>抗修改, 源数据哪怕有一个字节变化, MD5也会有巨大差异</li>
+<li>不可逆, 无法通过MD5反向推算源数据</li>
+</ul>
+<h5 id="Apache-Commons-Codec"><a href="#Apache-Commons-Codec" class="headerlink" title="Apache Commons Codec"></a>Apache Commons Codec</h5><ul>
+<li>Commons-Codec是Apache提供的编码&#x2F;解码组件</li>
+<li>通过Commons-Codec可以轻易生成源数据的MD5摘要</li>
+<li>MD5摘要方法: <strong>String md5 &#x3D; DigestUtils.md5Hex</strong> (源数据)</li>
+</ul>
+<pre><code class="java">util.MD5Utils.java
+package com.imooc.oa.util;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+public class MD5Utils &#123;
+    public static String md5Digest(String source)&#123;
+        return DigestUtils.md5Hex(source);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="敏感数据加盐混淆"><a href="#敏感数据加盐混淆" class="headerlink" title="敏感数据加盐混淆"></a>敏感数据加盐混淆</h3><p> md5utilstest  userservice user</p>
+<pre><code class="java">public class User &#123;
+    /*
+    &lt;settings&gt;
+        &lt;!--开启驼峰命名转换 form_id -&gt; formId--&gt;
+        &lt;setting name=&quot;mapUnderscoreToCamelCase&quot; value=&quot;true&quot;/&gt;
+    &lt;/settings&gt;
+     */
+    private Long userId;
+    private String username;
+    private String password;
+    private Long employeeId;
+    private Integer salt;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">util.MD5Utils.java
+package com.imooc.oa.util;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+public class MD5Utils &#123;
+    /**
+     * 对数据源加盐混淆后生成MD5摘要
+     * @param source 源数据
+     * @return MD5摘要
+     */
+    public static String md5Digest(String source)&#123;
+        return DigestUtils.md5Hex(source);
+    &#125;
+    public static String md5Digest(String source, Integer salt)&#123;
+        char[] ca = source.toCharArray(); //字符数组
+        for (int i = 0; i &lt; ca.length; i++) &#123;
+            ca[i] = (char)(ca[i] + salt);
+        &#125;
+        String target = new String(ca);
+//        System.out.println(target);
+        String md5 = DigestUtils.md5Hex(target);
+        return md5;
+    &#125;
+
+    public static void main(String[] args) &#123;
+        System.out.println(MD5Utils.md5Digest(&quot;test&quot;, 188));
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">修改UserService.java 中的密码校验
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.RbacDao;
+import com.imooc.oa.dao.UserDao;
+import com.imooc.oa.entity.Node;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.exception.BussinessException;
+import com.imooc.oa.util.MD5Utils;
+
+import java.util.List;
+
+public class UserService &#123; //创建测试用例快捷键 Ctrl+Shift+T
+    private UserDao userDao = new UserDao(); //实例化
+    private RbacDao rbacDao = new RbacDao();
+
+    /**
+     * 根据前台输入进行登录校验
+     * @param username 前台输入的用户名
+     * @param password 前台输入的密码
+     * @return 校验通过后,包含对应用户数据的User实体类
+     * @throws BussinessException L001-用户名不存在,L002-密码错误
+     */
+    public User checkLogin(String username, String password)&#123;
+        User user = userDao.selectByUsername(username);
+        if (user == null)&#123;
+            //抛出用户不存在异常
+            throw new BussinessException(&quot;L001&quot;, &quot;用户名不存在&quot;);
+        &#125;
+        //对前台输入的密码加盐混淆后生成MD5,与保存在数据库中的MD5密码进行对比
+        String md5 = MD5Utils.md5Digest(password, user.getSalt());
+        if(!md5.equals(user.getPassword()))&#123;
+            throw new BussinessException(&quot;L002&quot;, &quot;密码错误&quot;);
+        &#125;
+        return user;
+    &#125;
+    public List&lt;Node&gt; selectNodeByUserId(Long userId)&#123;
+        List&lt;Node&gt; nodeList = rbacDao.selectNodeByUserId(userId);
+        return nodeList;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现注销功能"><a href="#实现注销功能" class="headerlink" title="实现注销功能"></a>实现注销功能</h3><p>loginServlet保存着数据 indexservlet中的session保存着数据<br>清除session</p>
+<pre><code class="java">oa.controller.LogoutServlet.java
+package com.imooc.oa.controller;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(name = &quot;LogoutServlet&quot;, urlPatterns = &quot;/logout&quot;)
+public class LogoutServlet extends HttpServlet &#123;
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        request.getSession().invalidate(); //会话注销
+        response.sendRedirect(&quot;/login.html&quot;); //跳转回去
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">index.ftl
+&lt;!--注销按钮--&gt;
+&lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;/logout&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+</code></pre>
+<h3 id="请假流程数据库设计"><a href="#请假流程数据库设计" class="headerlink" title="请假流程数据库设计"></a>请假流程数据库设计</h3><h6 id="开发多级审批流程"><a href="#开发多级审批流程" class="headerlink" title="开发多级审批流程"></a>开发多级审批流程</h6><ul>
+<li>公司所有员工都可以使用”请假申请”功能申请休假</li>
+<li>请假时间少于72小时，部门经理审批后直接通过</li>
+<li>请假时间大于72小时，部门经理审批后还需总经理进行审批</li>
+<li>部门经理只允许批准本部门员工申请</li>
+<li>部门经理请假需直接由总经理审批</li>
+<li>总经理提起请假申请，系统自动批准通过</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/87fb5232c47e90f94a7580b26bd204150433faf5/data/OA%E7%B3%BB%E7%BB%9F%E8%AF%B7%E5%81%87%E6%B5%81%E7%A8%8B.jpg"></p>
+<h5 id="工作流程表设计"><a href="#工作流程表设计" class="headerlink" title="工作流程表设计"></a>工作流程表设计</h5><p><span style = "color:red"><strong>请假单表</strong>LeaveForm → <strong>审批任务流程表</strong>ProcessFlow → <strong>消息通知表</strong>Notice</span></p>
+<h5 id="设计约束"><a href="#设计约束" class="headerlink" title="设计约束"></a>设计约束</h5><ul>
+<li><p>每一个请假单对应一个审批流程</p>
+</li>
+<li><p>请假单创建后, 按业务规则生成部门经理、总经理审批任务</p>
+</li>
+<li><p>审批任务的经办人只能审批自己辖区内的请假申请(总裁办可以审批所有 软件只能审批软件)</p>
+</li>
+<li><p>所有审批任务”通过”, 代表请假已经批准</p>
+</li>
+<li><p>任意审批任务”驳回”操作, 其余审批任务取消, 请假申请驳回</p>
+</li>
+<li><p>请假流程中注意节点产生的操作都要生成对应的系统通知</p>
+</li>
+</ul>
+<img src="https://raw.githubusercontent.com/P-luminary/images/324ce1f7aa2d127ed415e216b61742f0b1550c7d/data/OA%E7%B3%BB%E7%BB%9F%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E8%A1%A8.jpg" style="zoom: 150%;" />
+
+
+
+<h3 id="实现Dao与数据交互"><a href="#实现Dao与数据交互" class="headerlink" title="实现Dao与数据交互"></a>实现Dao与数据交互</h3><p>entity  数据新增接口dao(依靠Mybatis) 增加mapper 创造LeaveFormDaoTest<br>                                    ProcessFlowDao + Test mapper<br>                                    NoticeDao</p>
+<pre><code class="java">entity.LeaveForm.java
+public class LeaveForm &#123;
+    private Long formId;
+    private Long employeeId;
+    private Integer formType;
+    private Date startTime;
+    private Date endTime;
+    private String reason;
+    private Date createTime;
+    private String state;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.LeaveForm.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+
+public interface LeaveFormDao &#123;
+    public void insert(LeaveForm form);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/leave_form.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.LeaveFormDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class LeaveFormDaoTest extends TestCase &#123;
+    @Test
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = new LeaveForm();
+            form.setEmployeeId(4L);//员工编号
+            form.setFormType(1); //事假
+            SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+            Date startTime = null; //起始时间
+            Date endTime = null; //结束时间
+            try &#123;
+                startTime = sdf.parse(&quot;2020-03-25 08:00:00&quot;);
+                endTime = sdf.parse(&quot;2020-04-01 18:00:00&quot;);
+            &#125; catch (ParseException e) &#123;
+                throw new RuntimeException(e);
+            &#125;
+            form.setStartTime(startTime);
+            form.setEndTime(endTime);
+            form.setReason(&quot;回家探亲&quot;); //请假事由
+            form.setCreateTime(new Date()); //创建时间
+            form.setState(&quot;processing&quot;); //当前状态
+            dao.insert(form);
+            return null;
+        &#125;);
+    &#125;
+
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">entity.ProcessFlow.java
+package com.imooc.oa.entity;
+
+import java.util.Date;
+
+public class ProcessFlow &#123;
+    private Long processId;
+    private Long formId;
+    private Long operatorId;
+    private String action;
+    private String result;
+    private String reason;
+    private Date createTime;
+    private Date auditTime;
+    private Integer orderNo;
+    private String state;
+    private Integer isLast;
+    Setter + Getter
+&#125;
+</code></pre>
+<pre><code class="java">dao.ProcessFlowDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.ProcessFlow;
+
+public interface ProcessFlowDao &#123;
+    public void insert(ProcessFlow processFlow);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/process_flow.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.ProcessFlowDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+
+import java.util.Date;
+
+public class ProcessFlowDaoTest extends TestCase &#123;
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            ProcessFlowDao dao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow = new ProcessFlow();
+            flow.setFormId(31L);
+            flow.setOperatorId(21L);
+            flow.setAction(&quot;audit&quot;);
+            flow.setReason(&quot;approved&quot;);
+            flow.setReason(&quot;同意&quot;);
+            flow.setCreateTime(new Date());
+            flow.setAuditTime(new Date());
+            flow.setOrderNo(1);
+            flow.setState(&quot;ready&quot;);
+            flow.setIsLast(1);
+            dao.insert(flow);
+            return null;
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">entity.Notice.java
+public class Notice &#123;
+    private Long noticeId;
+    private Long receiverId;
+    private String content;
+    private Date createTime;
+    Getter + Setter
+&#125;
+</code></pre>
+<pre><code class="java">dao.NoticeDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+
+public interface NoticeDao &#123;
+    public void insert(Notice notice);
+&#125;
+</code></pre>
+<pre><code class="xml">mybatis-config.xml
+&lt;mapper resource=&quot;mappers/notice.xml&quot;/&gt;
+</code></pre>
+<pre><code class="java">test.dao.NoticeDaoTest.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.util.MybatisUtils;
+import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.util.Date;
+
+public class NoticeDaoTest extends TestCase &#123;
+    @Test
+    public void testInsert()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            NoticeDao dao = sqlSession.getMapper(NoticeDao.class);
+            Notice notice = new Notice();
+            notice.setReceiverId(21L);
+            notice.setContent(&quot;测试消息&quot;);
+            notice.setCreateTime(new Date());
+            dao.insert(notice);
+            return null;
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现请假申请业务逻辑-1"><a href="#实现请假申请业务逻辑-1" class="headerlink" title="实现请假申请业务逻辑-1"></a>实现请假申请业务逻辑-1</h3><p>LeaveFormService employee.xml{动态审批sql}</p>
+<pre><code class="xml">employee.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper
+        PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;
+        &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;!--namespace与包名类名一致--&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.EmployeeDao&quot;&gt;
+    &lt;!--id与方法名对应 parameterType与方法参数类型对应 resultType与方法返回类型对应--&gt;
+    &lt;select id=&quot;selectById&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Employee&quot;&gt;
+        select * from adm_employee where employee_id = #&#123;value&#125;
+    &lt;/select&gt;
+    &lt;select id=&quot;selectLeader&quot; parameterType=&quot;com.imooc.oa.entity.Employee&quot; resultType=&quot;com.imooc.oa.entity.Employee&quot;&gt;
+        select * from adm_employee where
+            &lt;if test=&quot;emp.level &amp;lt; 7&quot;&gt;
+                level = 7 and department_id = #&#123;emp.departmentId&#125;
+            &lt;/if&gt;
+            &lt;if test=&quot;emp.level == 7&quot;&gt;
+                level = 8;
+            &lt;/if&gt;
+            &lt;if test=&quot;emp.level == 8&quot;&gt;
+                employee_id = #&#123;emp.employeeId&#125;
+            &lt;/if&gt;
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">service.LeaveFormService.java (重要业务走向代码不放在程序中)
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.EmployeeDao;
+import com.imooc.oa.dao.LeaveFormDao;
+import com.imooc.oa.dao.ProcessFlowDao;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.util.Date;
+
+/**
+ * 请假单流程服务
+ */
+public class LeaveFormService &#123;
+    /**
+     * 创建请假单
+     * @param form 前端输入的请假单数据
+     * @return 持久化后的请假单对象
+     */
+    public LeaveForm createLeaveForm(LeaveForm form)&#123;
+            LeaveForm savedForm = (LeaveForm) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.持久化form表单数据,8级以下员工表单状态位processing,8级(总经理)状态位approved
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());
+            if (employee.getLevel() == 8)&#123;
+                form.setState(&quot;approved&quot;);
+            &#125;else &#123;
+                form.setState(&quot;processing&quot;);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            leaveFormDao.insert(form);
+            //2.增加第一条流程数据,说明表单已提交,状态位complete 初始化数据↓
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow1 = new ProcessFlow();
+            flow1.setFormId(form.getFormId());
+            flow1.setOperatorId(employee.getEmployeeId());
+            flow1.setAction(&quot;apply&quot;);
+            flow1.setCreateTime(new Date());
+            flow1.setOrderNo(1);
+            flow1.setState(&quot;complete&quot;);
+            flow1.setIsLast(0);
+            processFlowDao.insert(flow1);
+            //3.分情况创建其余流程数据 employee.xml(动态sql语句)
+              //3.1 7级以下员工,生成部门经理审批任务,请假时间大于36小时(后期单独处理),还需生成总经理审批任务
+            if (employee.getLevel() &lt; 7)&#123;
+                //动态sql EmployeeDao
+                Employee dmanage = employeeDao.selectLeader(employee);
+                ProcessFlow flow2 = new ProcessFlow();
+                flow2.setFormId(form.getFormId());
+                flow2.setOperatorId(dmanage.getEmployeeId());
+                flow2.setAction(&quot;audit&quot;);//审批任务
+                flow2.setCreateTime(new Date());
+                flow2.setOrderNo(2);
+                flow2.setState(&quot;process&quot;);
+                long diff = form.getEndTime().getTime() - form.getStartTime().getTime(); //毫秒数
+                float hours = diff/(1000*60*60) * 1f;
+                if (hours &gt;= BussinessConstants.MANAGER_AUDIT_HOURS)&#123;
+                    flow2.setIsLast(0); //最后节点
+                    processFlowDao.insert(flow2);
+                    Employee manager = employeeDao.selectLeader(dmanage);//总经理
+                    ProcessFlow flow3 = new ProcessFlow();
+                    flow3.setFormId(form.getFormId());
+                    flow3.setOperatorId(manager.getEmployeeId());
+                    flow3.setAction(&quot;audit&quot;);
+                    flow3.setCreateTime(new Date());
+                    flow3.setState(&quot;ready&quot;);
+                    flow3.setOrderNo(3);
+                    flow3.setIsLast(1);
+                    processFlowDao.insert(flow3);
+                &#125;else &#123;//小于3天&#123;
+                    flow2.setIsLast(1);
+                    processFlowDao.insert(flow2);
+                &#125;
+            &#125; else if (employee.getLevel() == 7) &#123;//部门经理
+                //3.2 7级员工,生成总经理审批任务
+                Employee manager = employeeDao.selectLeader(employee);
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(manager.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setCreateTime(new Date());
+                flow.setState(&quot;process&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+            &#125;else if (employee.getLevel() == 8)&#123;
+                //3.3 8级员工,生成总经理审批任务,系统自动通过
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(employee.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setResult(&quot;自动通过&quot;);
+                flow.setCreateTime(new Date());
+                flow.setAuditTime(new Date());
+                flow.setState(&quot;complete&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+            &#125;
+            return form;
+        &#125;);
+        return savedForm;
+    &#125;
+&#125; 
+</code></pre>
+<pre><code class="java">service.BussinessConstants.java
+package com.imooc.oa.service;
+
+public class BussinessConstants &#123;
+    public static final int MANAGER_AUDIT_HOURS = 36; //总经理请假审批时间阈值
+&#125;
+</code></pre>
+<p>ctrl+shift+t 生成测试用例</p>
+<pre><code class="java">Test.service.LeaveFormServiceTest.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.entity.LeaveForm;
+import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static org.junit.Assert.*;
+
+public class LeaveFormServiceTest &#123;
+    LeaveFormService leaveFormService = new LeaveFormService();
+
+    /**
+     * 市场部员工请假单(72小时以上)测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm1() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(8l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1); //事假
+        form.setReason(&quot;市场部员工请假单(72小时以上)&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 市场部员工请假单(72小时内)测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm2() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(8l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020032718&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;市场部员工请假单(72小时内)&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 研发部部门经理请假单测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm3() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(2l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;研发部部门经理请假单&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+
+    /**
+     * 总经理请假单测试用例
+     * @throws ParseException
+     */
+    @Test
+    public void createLeaveForm4() throws ParseException &#123;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMddHH&quot;);
+        LeaveForm form = new LeaveForm();
+        form.setEmployeeId(1l);
+        form.setStartTime(sdf.parse(&quot;2020032608&quot;));
+        form.setEndTime(sdf.parse(&quot;2020040118&quot;));
+        form.setFormType(1);
+        form.setReason(&quot;总经理请假单&quot;);
+        form.setCreateTime(new Date());
+        LeaveForm savedForm = leaveFormService.createLeaveForm(form);
+        System.out.println(savedForm.getFormId());
+    &#125;
+&#125;
+</code></pre>
+<h3 id="实现请假申请控制"><a href="#实现请假申请控制" class="headerlink" title="实现请假申请控制"></a>实现请假申请控制</h3><h5 id="Servlet-前后端整体交互-底层"><a href="#Servlet-前后端整体交互-底层" class="headerlink" title="Servlet 前后端整体交互(底层)"></a>Servlet 前后端整体交互(底层)</h5><p>leaveformservlet</p>
+<pre><code class="java">controller.LeaveFormServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.LeaveFormService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet(name = &quot;LeaveFormServlet&quot;, urlPatterns = &quot;/leave/*&quot;)
+public class LeaveFormServlet extends HttpServlet &#123;
+    private LeaveFormService leaveFormService = new LeaveFormService();
+    private Logger logger = LoggerFactory.getLogger(LoggerFactory.class);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException &#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        // http://localhost/leave/create
+        String uri = request.getRequestURI();
+        String methodName = uri.substring(uri.lastIndexOf(&quot;/&quot;) + 1); //截取本身就包含斜杠
+        if (methodName.equals(&quot;create&quot;))&#123;
+
+        &#125;
+    &#125;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException &#123;
+        this.doPost(request,response);
+    &#125;
+
+    /**
+     * 创建请假单
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void create(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute(&quot;login_user&quot;);
+        String formType = request.getParameter(&quot;formType&quot;);
+        String strStartTime = request.getParameter(&quot;startTime&quot;);
+        String strEndTime = request.getParameter(&quot;endTime&quot;);
+        String reason = request.getParameter(&quot;reason&quot;);
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH&quot;);
+        Map result = new HashMap();
+        try &#123;
+            LeaveForm form = new LeaveForm();
+            form.setEmployeeId(user.getEmployeeId());
+            form.setStartTime(sdf.parse(strStartTime));
+            form.setEndTime(sdf.parse(strEndTime));
+            form.setFormType(Integer.parseInt(formType));
+            form.setReason(reason);
+            form.setCreateTime(new Date());
+            //2.调用业务逻辑方法
+            leaveFormService.createLeaveForm(form);
+            result.put(&quot;code&quot;, &quot;0&quot;);
+            result.put(&quot;message&quot;, &quot;success&quot;);
+        &#125; catch (Exception e)&#123;
+            logger.error(&quot;请假申请异常&quot;,e);
+            result.put(&quot;code&quot;, e.getClass().getSimpleName());
+            result.put(&quot;message&quot;, e.getMessage());
+        &#125;
+        //3.组织相应数据
+        String json = JSON.toJSONString(result); //将result转换为字符串
+        response.getWriter().println(json);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="完整实现请假申请功能"><a href="#完整实现请假申请功能" class="headerlink" title="完整实现请假申请功能"></a>完整实现请假申请功能</h3><pre><code class="java">controller.ForwardServlet.java
+package com.imooc.oa.controller;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * 页面跳转Servlet
+ */
+@WebServlet(name=&quot;ForwardServlet&quot;, urlPatterns = &quot;/forward/*&quot;)
+public class ForwardServlet extends HttpServlet &#123;
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        String uri = request.getRequestURI();
+        /** 动态提取 把第一个/抛出外 再去寻找第一个‘/’
+         * /forward/form
+         * /forward/a/b/c/form
+         */
+        String subUri = uri.substring(1);
+        String page = subUri.substring(subUri.indexOf(&quot;/&quot;));
+        request.getRequestDispatcher(page + &quot;.ftl&quot;).forward(request,response); //扩展名 + web.xml映射路径
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="html">form.html 变换为 form.ftl 放在ftl内
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;请假申请&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        /*表单容器*/
+        .ns-container &#123;
+            position: absolute;
+            width: 500px;
+            height: 450px;
+            top: 150px;
+            left: 50%;
+            margin-left: -250px;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid #cccccc;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h2&gt;请假申请&lt;/h2&gt;
+    &lt;/blockquote&gt;
+    &lt;table id=&quot;grdNoticeList&quot; lay-filter=&quot;grdNoticeList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ns-container&quot;&gt;
+    &lt;h1 style=&quot;text-align: center;margin-bottom: 20px&quot;&gt;请假申请单&lt;/h1&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+        &lt;!--基本信息--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;部门&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block&quot;&gt;
+                &lt;div class=&quot;layui-col-md12&quot; style=&quot;padding-top: 10px;&quot;&gt;
+                    研发部
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;申请人&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block&quot;&gt;
+                &lt;div class=&quot;layui-col-md12&quot; style=&quot;padding-top: 10px;&quot;&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_employee.title&#125;]
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;!--请假类型下拉框--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假类别&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;select name=&quot;formType&quot; lay-verify=&quot;required&quot; lay-filter=&quot;cityCode&quot;&gt;
+                        &lt;option value=&quot;1&quot;&gt;事假&lt;/option&gt;
+                        &lt;option value=&quot;2&quot;&gt;病假&lt;/option&gt;
+                        &lt;option value=&quot;3&quot;&gt;工伤假&lt;/option&gt;
+                        &lt;option value=&quot;4&quot;&gt;婚嫁&lt;/option&gt;
+                        &lt;option value=&quot;5&quot;&gt;产假&lt;/option&gt;
+                        &lt;option value=&quot;6&quot;&gt;丧假&lt;/option&gt;
+                    &lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;!--请假时长日期选择框--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假时长&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;input name=&quot;leaveRange&quot; type=&quot;text&quot; class=&quot;layui-input&quot; id=&quot;daterange&quot; placeholder=&quot; - &quot;&gt;
+                    &lt;input id=&quot;startTime&quot; name=&quot;startTime&quot; type=&quot;hidden&quot;&gt;
+                    &lt;input id=&quot;endTime&quot; name=&quot;endTime&quot; type=&quot;hidden&quot;&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!--请假事由--&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;label class=&quot;layui-form-label&quot;&gt;请假事由&lt;/label&gt;
+            &lt;div class=&quot;layui-input-block layui-col-space5&quot;&gt;
+                    &lt;input name=&quot;reason&quot; type=&quot;text&quot;  lay-verify=&quot;required|mobile&quot; placeholder=&quot;&quot; autocomplete=&quot;off&quot; class=&quot;layui-input&quot;&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!--提交按钮--&gt;
+        &lt;div class=&quot;layui-form-item &quot; style=&quot;text-align: center&quot;&gt;
+                &lt;button class=&quot;layui-btn&quot; type=&quot;button&quot; lay-submit lay-filter=&quot;sub&quot;&gt;立即申请&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;!--Sweetalert2对话框--&gt;
+&lt;script src=&quot;/resources/sweetalert2.all.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+        var layDate = layui.laydate; //Layui日期选择框JS对象
+        var layForm = layui.form; //layui表单对象
+        var $ = layui.$; //jQuery对象
+        //日期时间范围
+        layDate.render(&#123;
+            elem: &#39;#daterange&#39;  //daterange渲染成日期选择框
+            ,type: &#39;datetime&#39;
+            ,range: true
+            ,format: &#39;yyyy年M月d日H时&#39;
+            ,done: function(value, start, end)&#123;
+                //选择日期后出发的时间,设置startTime与endTime隐藏域
+                var startTime = start.year + &quot;-&quot; + start.month + &quot;-&quot; + start.date + &quot;-&quot; + start.hours;
+                var endTime = end.year + &quot;-&quot; + end.month + &quot;-&quot; + end.date + &quot;-&quot; + end.hours;
+                console.info(&quot;请假开始时间&quot;,startTime);
+                $(&quot;#startTime&quot;).val(startTime);
+                console.info(&quot;请假结束时间&quot;,endTime);
+                $(&quot;#endTime&quot;).val(endTime);
+            &#125;
+        &#125;);
+
+        //表单提交时间
+        layForm.on(&#39;submit(sub)&#39;, function(data)&#123;
+            console.info(&quot;向服务器提交的表单数据&quot;,data.field);
+            $.post(&quot;/leave/create&quot;,data.field,function (json) &#123;
+                console.info(&quot;服务器返回数值&quot;,json);
+                if(json.code == &quot;0&quot;)&#123;
+                    /*SweetAlert2确定对话框*/
+                    swal(&#123;
+                        type: &#39;success&#39;,
+                        html: &quot;&lt;h2&gt;请假单已提交,等待上级审批&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;).then(function (result) &#123;
+                        window.location.href=&quot;/forward/notice&quot;;
+                    &#125;);
+                &#125;else&#123;
+                    swal(&#123;
+                        type: &#39;warning&#39;,
+                        html: &quot;&lt;h2&gt;&quot; + json.message + &quot;&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;);
+                &#125;
+            &#125;,&quot;json&quot;);
+            return false;
+        &#125;);
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h5 id="把localhost-x2F-index-主页添加数据"><a href="#把localhost-x2F-index-主页添加数据" class="headerlink" title="把localhost&#x2F;index 主页添加数据"></a>把localhost&#x2F;index 主页添加数据</h5><pre><code class="html">index.ftl中的47行到50行
+ &lt;!--子节点--&gt;
+&lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+ &lt;a href=&quot;#&#123;node.url&#125;&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+&lt;/dd&gt;
+</code></pre>
+<h3 id="请假审批功能"><a href="#请假审批功能" class="headerlink" title="请假审批功能"></a>请假审批功能</h3><pre><code class="java">leave_form.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.LeaveFormDao&quot;&gt;
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.oa.entity.LeaveForm&quot;
+        useGeneratedKeys=&quot;true&quot; keyProperty=&quot;formId&quot; keyColumn=&quot;form_id&quot;&gt;
+        INSERT INTO adm_leave_form( employee_id, form_type, start_time, end_time, reason, create_time, state)
+        VALUES ( #&#123;employeeId&#125;, #&#123;formType&#125;, #&#123;startTime&#125;, #&#123;endTime&#125;, #&#123;reason&#125;, #&#123;createTime&#125;, #&#123;state&#125;)
+    &lt;/insert&gt;
+    &lt;select id=&quot;selectByParams&quot; parameterType=&quot;java.util.Map&quot; resultType=&quot;java.util.Map&quot;&gt;
+        select f.* ,e.name , d.*
+        from
+          adm_leave_form f,adm_process_flow pf , adm_employee e , adm_department d
+        where
+          f.form_id = pf.form_id
+          and f.employee_id = e.employee_id
+          and e.department_id = d.department_id
+          and pf.state = #&#123;pf_state&#125; and pf.operator_id = #&#123;pf_operator_id&#125;
+    &lt;/select&gt;
+&lt;!--    &lt;select id=&quot;selectById&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.LeaveForm&quot;&gt;--&gt;
+&lt;!--        select * from adm_leave_form where form_id = #&#123;value&#125;--&gt;
+&lt;!--    &lt;/select&gt;--&gt;
+
+&lt;!--    &lt;update id=&quot;update&quot; parameterType=&quot;com.imooc.oa.entity.LeaveForm&quot;&gt;--&gt;
+&lt;!--        UPDATE adm_leave_form SET employee_id = #&#123;employeeId&#125; , form_type = #&#123;formType&#125;, start_time = #&#123;startTime&#125;, end_time = #&#123;endTime&#125;, reason = #&#123;reason&#125;, state = #&#123;state&#125; ,create_time = #&#123;createTime&#125; WHERE form_id = #&#123;formId&#125;--&gt;
+&lt;!--    &lt;/update&gt;--&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="java">dao.LeaveFormDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.LeaveForm;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Map;
+
+public interface LeaveFormDao &#123;
+    public void insert(LeaveForm form);
+    public List&lt;Map&gt; selectByParams(@Param(&quot;pf_state&quot;) String pfState , @Param(&quot;pf_operator_id&quot;) Long operatorId);
+&#125; 
+</code></pre>
+<pre><code class="java">Test
+  @Test
+    public void testSelectByParams()&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            List&lt;Map&gt; list = dao.selectByParams(&quot;process&quot;, 21L);
+            System.out.println(list);
+            return list;
+        &#125;);
+    &#125;
+</code></pre>
+<pre><code class="java">controller.LeaveFormServlet.java
+   /**
+     * 查询需要审核的请假单列表
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void getLeaveFormList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        User user = (User) request.getSession().getAttribute(&quot;login_user&quot;);
+        List&lt;Map&gt; formList = leaveFormService.getLeaveFormList(&quot;process&quot;, user.getEmployeeId());
+        Map result = new HashMap();
+        result.put(&quot;code&quot;,&quot;0&quot;); //服务器处理成功
+        result.put(&quot;msg&quot;,&quot;&quot;); //服务器返回具体处理消息
+        result.put(&quot;count&quot;, formList.size()); //数据总数
+        result.put(&quot;data&quot;, formList); //当前显示的对象页表
+        String json = JSON.toJSONString(result);
+        response.getWriter().println(json);
+    &#125;
+</code></pre>
+<h3 id="实现待审批请假列表"><a href="#实现待审批请假列表" class="headerlink" title="实现待审批请假列表"></a>实现待审批请假列表</h3><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=utf-8&quot;&gt;
+    &lt;title&gt;请假审批&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+    &lt;style&gt;
+        .form-item&#123;
+            padding: 10px;
+        &#125;
+        .form-item-value&#123;
+            padding: 10px;
+        &#125;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h1&gt;请假审批&lt;/h1&gt;
+    &lt;/blockquote&gt;
+    &lt;!--待审批列表--&gt;
+    &lt;table id=&quot;grdFormList&quot; lay-filter=&quot;grdFormList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;!--请假详情对话框--&gt;
+&lt;div id=&quot;divDialog&quot; style=&quot;display: none;padding: 10px&quot;&gt;
+    &lt;form class=&quot;layui-form&quot;&gt;
+
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;部门&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;dname&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;姓名&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;name&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;起始时间&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;startTime&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;结束时间&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs4 form-item-value&quot; id=&quot;endTime&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;layui-row&quot;&gt;
+                &lt;div class=&quot;layui-col-xs2 form-item&quot;&gt;请假原因&lt;/div&gt;
+                &lt;div class=&quot;layui-col-xs10 form-item-value&quot; id=&quot;reason&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;!--表单Id--&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;formId&quot; id=&quot;formId&quot;&gt;
+            &lt;!--审批结果--&gt;
+            &lt;select name=&quot;result&quot; lay-verfity=&quot;required&quot;&gt;
+                &lt;option value=&quot;approved&quot;&gt;同意&lt;/option&gt;
+                &lt;option value=&quot;refused&quot;&gt;驳回&lt;/option&gt;
+            &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;!--审批意见--&gt;
+            &lt;input type=&quot;text&quot; name=&quot;reason&quot; placeholder=&quot;请输入审批意见&quot;
+                   autocomplete=&quot;off&quot; class=&quot;layui-input&quot;/&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;layui-form-item&quot;&gt;
+            &lt;button class=&quot;layui-btn layui-btn-fluid &quot; lay-submit lay-filter=&quot;audit&quot;&gt;确认提交&lt;/button&gt;
+
+        &lt;/div&gt;
+    &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;/resources/sweetalert2.all.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    var $ = layui.$;
+    //将毫秒数转换为&quot;yyyy-MM-dd HH时&quot;字符串格式
+    function formatDate(time)&#123;
+        var newDate = new Date(time);
+        return newDate.getFullYear() + &quot;-&quot; +
+            (newDate.getMonth() + 1) + &quot;-&quot; + newDate.getDate()
+            + &quot; &quot; + newDate.getHours() + &quot;时&quot;;
+    &#125;
+    // 将table渲染为数据表格
+    layui.table.render(&#123;
+        elem : &quot;#grdFormList&quot; , //选择器
+        id : &quot;grdFormList&quot; , //id
+        url : &quot;/leave/list&quot; , //ajax请求url
+        page : false , //是否分页 true-是 false-否
+        cols :[[ //列描述
+            &#123;title : &quot;&quot; , width:70 , style : &quot;height:60px&quot; , type:&quot;numbers&quot;&#125;, // numbers代表序号列
+            &#123;field : &quot;create_time&quot; , title : &quot;申请时间&quot; , width : 150 , templet: function (d) &#123;
+                //templet代表对数据进行加工后再显示
+                return formatDate(d.create_time)
+            &#125;&#125;,
+            &#123;field : &quot;form_type&quot; , title : &quot;类型&quot; , width : 100 , templet: function(d)&#123;
+                switch (d.form_type) &#123;
+                    case 1:
+                        return &quot;事假&quot;;
+                    case 2:
+                        return &quot;病假&quot;;
+                    case 3:
+                        return &quot;工伤假&quot;;
+                    case 4:
+                        return &quot;婚假&quot;;
+                    case 5:
+                        return &quot;产假&quot;;
+                    case 6:
+                        return &quot;丧假&quot;;
+                &#125;
+            &#125;&#125;,
+            &#123;field : &quot;department_name&quot; , title : &quot;部门&quot; , width : 100&#125;,
+            &#123;field : &quot;name&quot; , title : &quot;员工&quot; , width : 100&#125;,
+            &#123;field : &quot;start_time&quot; , title : &quot;起始时间&quot; , width : 150, templet: function (d) &#123;
+                    return formatDate(d.start_time)
+                &#125;&#125;,
+            &#123;field : &quot;end_time&quot; , title : &quot;结束时间&quot; , width : 150 , templet: function (d) &#123;
+                    return formatDate(d.end_time)
+                &#125;&#125;,
+            &#123;field : &quot;reason&quot; , title : &quot;请假原因&quot; , width : 350 &#125;,
+            &#123;title : &quot;&quot; , width:150 ,type:&quot;space&quot; , templet : function(d)&#123;
+                var strRec = JSON.stringify(d);
+                console.info(&quot;请假单数据&quot;, d);
+                console.info(&quot;请假单数据&quot;, strRec);
+                //将请假单数据存放至data-laf属性中
+                return &quot;&lt;button class=&#39;layui-btn layui-btn-danger layui-btn-sm btn-audit&#39; data-laf=&quot; + strRec + &quot; &gt;审批&lt;/button&gt;&quot;;
+            &#125;&#125;
+        ]]
+    &#125;)
+
+    // 绑定每一行的审批按钮
+    $(document).on(&quot;click&quot; , &quot;.btn-audit&quot; , function()&#123;
+        //初始化表单
+        $(&quot;#divDialog form&quot;)[0].reset();
+        $(&quot;#divDialog form form-item-value&quot;).text(&quot;&quot;);
+        //获取当前点击按钮的请假单数据,回填至显示项 json对象 内置数据显示页面
+        var laf = $(this).data(&quot;laf&quot;);
+        $(&quot;#dname&quot;).text(laf.department_name);
+        $(&quot;#name&quot;).text(laf.name);
+        $(&quot;#startTime&quot;).text(formatDate(laf.start_time));
+        $(&quot;#endTime&quot;).text(formatDate(laf.end_time));
+        $(&quot;#reason&quot;).text(laf.reason);
+        $(&quot;#formId&quot;).val(laf.form_id);
+        //弹出layui对话框
+        layui.layer.open(&#123;
+            type : &quot;1&quot; , //页面层
+            title : &quot;请假审批&quot; , //标题
+            content : $(&quot;#divDialog&quot;) , //指定对话框容器对象
+            area : [&quot;500px&quot; , &quot;400px&quot;] , //尺寸
+            end : function()&#123; //销毁后触发事件
+                $(&quot;#divDialog&quot;).hide();
+            &#125;
+        &#125;)
+    &#125;)
+    /**
+     * 提交审批数据 本质:发送Ajax请求
+     */
+    layui.form.on(&quot;submit(audit)&quot; , function(data)&#123;
+        $.ajax(&#123;
+            url : &quot;/leave/audit&quot;, //审核URL
+            data : data.field ,
+            type : &quot;post&quot; ,
+            dataType : &quot;json&quot; ,
+            success: function (json) &#123;
+                //关闭所有layui对话框
+                layui.layer.closeAll();
+                //显示处理结果
+                if(json.code == &quot;0&quot;)&#123;
+                    swal(&#123;
+                        type: &#39;success&#39;,
+                        html: &quot;&lt;h2&gt;请假已审批完毕&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;).then(function (result) &#123;
+                        window.location.href=&quot;/forward/notice&quot;;
+                    &#125;);
+                &#125;else&#123;
+                    swal(&#123;
+                        type: &#39;warning&#39;,
+                        html: &quot;&lt;h2&gt;&quot; + json.message + &quot;&lt;/h2&gt;&quot;,
+                        confirmButtonText: &quot;确定&quot;
+                    &#125;);
+                &#125;
+            &#125;
+        &#125;)
+        return false;
+    &#125;)
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="实现审批业务逻辑"><a href="#实现审批业务逻辑" class="headerlink" title="实现审批业务逻辑"></a>实现审批业务逻辑</h3><pre><code class="java">service.LeaveFormService.java
+ public void audit(Long formId, Long operatorId, String result, String reason)&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.无论同意/驳回, 当前任务状态变更为complete
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            List&lt;ProcessFlow&gt; flowList = processFlowDao.selectByFormId(formId);
+            if (flowList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF001&quot;, &quot;无效的审批流程&quot;);//自定义错误抛出
+            &#125;
+            //获取当前任务ProcessFlow对象
+            List&lt;ProcessFlow&gt; processList = flowList.stream().filter(p-&gt;p.getOperatorId() == operatorId &amp;&amp; p.getState().equals(&quot;process&quot;)).collect(Collectors.toList());
+            ProcessFlow process = null;
+            if (processList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF002&quot;, &quot;未找到待处理任务&quot;);
+            &#125;else&#123;
+                process = processList.get(0);
+                process.setState(&quot;complete&quot;);
+                process.setResult(result);
+                process.setReason(reason);
+                process.setAuditTime(new Date());
+                processFlowDao.update(process);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = leaveFormDao.selectById(formId);
+            //2.如果当前任务是最后一个节点,代表流程结束,更新请假单状态对应的approved/refused
+            if (process.getIsLast() == 1)&#123;
+                form.setState(result); // approved\refused
+                leaveFormDao.update(form);
+            &#125;else &#123;
+                //readyList包含所有后续任务节点
+                List&lt;ProcessFlow&gt; readyList = flowList.stream().filter(p-&gt;p.getState().equals(&quot;ready&quot;)).collect(Collectors.toList());
+                //3.如果当前任务不是最后一个节点且审批通过,那下一个节点的状态从ready变为process
+                if (result.equals(&quot;approved&quot;))&#123;
+                    ProcessFlow readyProcess = readyList.get(0);
+                    readyProcess.setState(&quot;process&quot;);
+                    processFlowDao.update(readyProcess);
+                &#125; else if (result.equals(&quot;refused&quot;)) &#123;
+                    //4.如果当前任务不是最后一个切点且审核驳回,则后续所有任务状态变为cancel,请假单状态变为refused
+                    for (ProcessFlow p : readyList)&#123;
+                        p.setState(&quot;cancel&quot;);
+                        processFlowDao.update(p);
+                    &#125;
+                    form.setState(&quot;refused&quot;);
+                    leaveFormDao.update(form);
+                &#125;
+            &#125;
+            return null;
+        &#125;);
+    &#125;
+</code></pre>
+<pre><code class="java">test.LeaveFormServiceTest.java (在数据库中增加新建查询 导入训练素材的 请假单审核测试数据.sql)
+   /**
+     * 请假3天以上,部门经理审批通过
+     */
+    @Test
+    public void audit1()&#123;
+        leaveFormService.audit(31l,2l,&quot;approved&quot;,&quot;祝早日康复&quot;);
+    &#125;
+
+    /**
+     * 请假3天以上,部门经理审批驳回
+     */
+    @Test
+    public void audit2()&#123;
+        leaveFormService.audit(32l,2l,&quot;refused&quot;,&quot;工期紧张,请勿拖延&quot;);
+    &#125;
+
+    /**
+     * 部门经理请假,总经理审批通过
+     */
+    @Test
+    public void audit3()&#123;
+        leaveFormService.audit(33l,1l,&quot;approved&quot;,&quot;同意&quot;);
+    &#125;
+</code></pre>
+<h3 id="完整实现请假审批"><a href="#完整实现请假审批" class="headerlink" title="完整实现请假审批"></a>完整实现请假审批</h3><pre><code class="java">controller.LeaveFormServlet.java
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException&#123;
+        request.setCharacterEncoding(&quot;utf-8&quot;);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        // http://localhost/leave/create
+        String uri = request.getRequestURI();
+        String methodName = uri.substring(uri.lastIndexOf(&quot;/&quot;) + 1); //截取本身就包含斜杠
+        if (methodName.equals(&quot;create&quot;))&#123;
+            this.create(request,response);
+        &#125;else if (methodName.equals(&quot;list&quot;))&#123;
+            this.getLeaveFormList(request,response);
+        &#125; else if (methodName.equals(&quot;audit&quot;)) &#123;
+            this.audit(request,response);
+        &#125;
+    &#125;
+...
+...
+...
+  /**
+     * 处理审批操作
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void audit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        String formId = request.getParameter(&quot;formId&quot;);
+        String result = request.getParameter(&quot;result&quot;);
+        String reason = request.getParameter(&quot;reason&quot;);
+        User user = (User) request.getSession().getAttribute(&quot;login_user&quot;);
+        Map mpResult = new HashMap();
+        try &#123;
+            leaveFormService.audit(Long.parseLong(formId), user.getEmployeeId(), result,reason);
+            mpResult.put(&quot;code&quot;, &quot;0&quot;);
+            mpResult.put(&quot;message&quot;, &quot;success&quot;);
+
+        &#125; catch (Exception e) &#123;
+            logger.error(&quot;请假单审核失败&quot;, e);
+            mpResult.put(&quot;code&quot;, e.getClass().getSimpleName());
+            mpResult.put(&quot;message&quot;, e.getMessage());
+        &#125;
+        String json = JSON.toJSONString(mpResult);
+        response.getWriter().println(json);
+    &#125;
+</code></pre>
+<h3 id="实现系统消息业务逻辑"><a href="#实现系统消息业务逻辑" class="headerlink" title="实现系统消息业务逻辑"></a>实现系统消息业务逻辑</h3><pre><code class="java">entity.Notice.java
+    private Long noticeId;
+    private Long receiverId;
+    private String content;
+    private Date createTime;
+    public Notice()&#123;
+
+    &#125;
+    public Notice(Long receiverId, String content)&#123;
+        this.receiverId = receiverId;
+        this.content = content;
+        this.createTime = new Date();
+    &#125;
+    Getter + Setter
+</code></pre>
+<pre><code class="java">service.LeaveFormService.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.EmployeeDao;
+import com.imooc.oa.dao.LeaveFormDao;
+import com.imooc.oa.dao.NoticeDao;
+import com.imooc.oa.dao.ProcessFlowDao;
+import com.imooc.oa.entity.Employee;
+import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.entity.ProcessFlow;
+import com.imooc.oa.service.exception.BussinessException;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * 请假单流程服务
+ */
+public class LeaveFormService &#123;
+    /**
+     * 创建请假单
+     * @param form 前端输入的请假单数据
+     * @return 持久化后的请假单对象
+     */
+    public LeaveForm createLeaveForm(LeaveForm form)&#123;
+            LeaveForm savedForm = (LeaveForm) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.持久化form表单数据,8级以下员工表单状态位processing,8级(总经理)状态位approved
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());
+            if (employee.getLevel() == 8)&#123;
+                form.setState(&quot;approved&quot;);
+            &#125;else &#123;
+                form.setState(&quot;processing&quot;);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            leaveFormDao.insert(form);
+            //2.增加第一条流程数据,说明表单已提交,状态位complete 初始化数据↓
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            ProcessFlow flow1 = new ProcessFlow();
+            flow1.setFormId(form.getFormId());
+            flow1.setOperatorId(employee.getEmployeeId());
+            flow1.setAction(&quot;apply&quot;);
+            flow1.setCreateTime(new Date());
+            flow1.setOrderNo(1);
+            flow1.setState(&quot;complete&quot;);
+            flow1.setIsLast(0);
+            processFlowDao.insert(flow1);
+            //3.分情况创建其余流程数据 employee.xml(动态sql语句)
+                // 3.1 7级以下员工,生成部门经理审批任务,请假时间大于36小时(后期单独处理),还需生成总经理审批任务
+                SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH时&quot;);
+                NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            if (employee.getLevel() &lt; 7)&#123;
+                //动态sql EmployeeDao
+                Employee dmanager = employeeDao.selectLeader(employee);
+                ProcessFlow flow2 = new ProcessFlow();
+                flow2.setFormId(form.getFormId());
+                flow2.setOperatorId(dmanager.getEmployeeId());
+                flow2.setAction(&quot;audit&quot;);//审批任务
+                flow2.setCreateTime(new Date());
+                flow2.setOrderNo(2);
+                flow2.setState(&quot;process&quot;);
+                long diff = form.getEndTime().getTime() - form.getStartTime().getTime(); //毫秒数
+                float hours = diff/(1000*60*60) * 1f;
+                if (hours &gt;= BussinessConstants.MANAGER_AUDIT_HOURS)&#123;
+                    flow2.setIsLast(0); //最后节点
+                    processFlowDao.insert(flow2);
+                    Employee manager = employeeDao.selectLeader(dmanager);//总经理
+                    ProcessFlow flow3 = new ProcessFlow();
+                    flow3.setFormId(form.getFormId());
+                    flow3.setOperatorId(manager.getEmployeeId());
+                    flow3.setAction(&quot;audit&quot;);
+                    flow3.setCreateTime(new Date());
+                    flow3.setState(&quot;ready&quot;);
+                    flow3.setOrderNo(3);
+                    flow3.setIsLast(1);
+                    processFlowDao.insert(flow3);
+                &#125;else &#123;//小于3天&#123;
+                    flow2.setIsLast(1);
+                    processFlowDao.insert(flow2);
+                &#125;
+                //请假单已提交消息
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]已提交,请等待上级审批.&quot;
+                        , sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+                //通知部门经理审批消息
+                noticeContent = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot;,
+                        employee.getTitle() , employee.getName() ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(dmanager.getEmployeeId(),noticeContent));
+            &#125; else if (employee.getLevel() == 7) &#123;//部门经理
+                //3.2 7级员工,生成总经理审批任务
+                Employee manager = employeeDao.selectLeader(employee);
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(manager.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setCreateTime(new Date());
+                flow.setState(&quot;process&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+                //请假单已提交消息
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]已提交,请等待上级审批.&quot;
+                        , sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+                //通知总经理审批消息
+                noticeContent = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot;,
+                        employee.getTitle() , employee.getName() ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(manager.getEmployeeId(),noticeContent));
+            &#125;else if (employee.getLevel() == 8)&#123;
+                //3.3 8级员工,生成总经理审批任务,系统自动通过
+                ProcessFlow flow = new ProcessFlow();
+                flow.setFormId(form.getFormId());
+                flow.setOperatorId(employee.getEmployeeId());
+                flow.setAction(&quot;audit&quot;);
+                flow.setResult(&quot;自动通过&quot;);
+                flow.setCreateTime(new Date());
+                flow.setAuditTime(new Date());
+                flow.setState(&quot;complete&quot;);
+                flow.setOrderNo(2);
+                flow.setIsLast(1);
+                processFlowDao.insert(flow);
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]系统已自动批准通过.&quot; ,
+                        sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()));
+                noticeDao.insert(new Notice(employee.getEmployeeId(),noticeContent));
+            &#125;
+            return form;
+        &#125;);
+        return savedForm;
+    &#125;
+    /**
+     * 获取指定任务状态及指定经办人对应的请假单列表
+     * @param pfState ProcessFlow任务状态
+     * @param operatorId 经办人编号
+     * @return 请假单及相关数据列表
+     */
+    public List&lt;Map&gt; getLeaveFormList(String pfState, Long operatorId)&#123;
+        return (List&lt;Map&gt;)MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            LeaveFormDao dao = sqlSession.getMapper(LeaveFormDao.class);
+            List&lt;Map&gt; formList = dao.selectByParams(pfState, operatorId);
+            return formList;
+        &#125;);
+    &#125;
+    /**
+     * 审核请假单
+     * @param formId 表单编号
+     * @param operatorId 经办人(当前登录员工)
+     * @param result 审批结果
+     * @param reason 审批意见
+     */
+    public void audit(Long formId, Long operatorId, String result, String reason)&#123;
+        MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            //1.无论同意/驳回, 当前任务状态变更为complete
+            ProcessFlowDao processFlowDao = sqlSession.getMapper(ProcessFlowDao.class);
+            List&lt;ProcessFlow&gt; flowList = processFlowDao.selectByFormId(formId);
+            if (flowList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF001&quot;, &quot;无效的审批流程&quot;);//自定义错误抛出
+            &#125;
+            //获取当前任务ProcessFlow对象
+            List&lt;ProcessFlow&gt; processList = flowList.stream().filter(p-&gt;p.getOperatorId() == operatorId &amp;&amp; p.getState().equals(&quot;process&quot;)).collect(Collectors.toList());
+            ProcessFlow process = null;
+            if (processList.size() == 0)&#123;
+                throw new BussinessException(&quot;PF002&quot;, &quot;未找到待处理任务&quot;);
+            &#125;else&#123;
+                process = processList.get(0);
+                process.setState(&quot;complete&quot;);
+                process.setResult(result);
+                process.setReason(reason);
+                process.setAuditTime(new Date());
+                processFlowDao.update(process);
+            &#125;
+            LeaveFormDao leaveFormDao = sqlSession.getMapper(LeaveFormDao.class);
+            LeaveForm form = leaveFormDao.selectById(formId);
+            SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd-HH时&quot;);
+            EmployeeDao employeeDao = sqlSession.getMapper(EmployeeDao.class);
+            Employee employee = employeeDao.selectById(form.getEmployeeId());//表单提交人信息
+            Employee operator = employeeDao.selectById(operatorId);//任务经办人信息
+            NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            //2.如果当前任务是最后一个节点,代表流程结束,更新请假单状态对应的approved/refused
+            if (process.getIsLast() == 1)&#123;
+                form.setState(result); // approved\refused
+                leaveFormDao.update(form);
+                String strResult = null;
+                if (result.equals(&quot;aproved&quot;))&#123;
+                    strResult = &quot;批准&quot;;
+                &#125; else if (result.equals(&quot;refused&quot;)) &#123;
+                    strResult = &quot;驳回&quot;;
+                &#125;
+                String noticeContent = String.format(&quot;您的请假申请[%s-%s]%s%s已%s,审批意见:%s,审批流程已结束&quot;
+                        sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                        operator.getTitle(),operator.getName(), //批准\驳回
+                        strResult,reason);//发给表单提交人的通知
+                noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent));
+            &#125;else &#123;
+                //readyList包含所有后续任务节点
+                List&lt;ProcessFlow&gt; readyList = flowList.stream().filter(p-&gt;p.getState().equals(&quot;ready&quot;)).collect(Collectors.toList());
+                //3.如果当前任务不是最后一个节点且审批通过,那下一个节点的状态从ready变为process
+                if (result.equals(&quot;approved&quot;))&#123;
+                    ProcessFlow readyProcess = readyList.get(0);
+                    readyProcess.setState(&quot;process&quot;);
+                    processFlowDao.update(readyProcess);
+                    //消息1: 通知表单提交人,部门经理已经审批通过,交由上级继续审批
+                    String noticeContent1 = String.format(&quot;您的请假申请[%s-%s]%s%s已批准,审批意见:%s ,请继续等待上级审批&quot; ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent1));
+
+                    //消息2: 通知总经理有新的审批任务
+                    String noticeContent2 = String.format(&quot;%s-%s提起请假申请[%s-%s],请尽快审批&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()));
+                    noticeDao.insert(new Notice(readyProcess.getOperatorId(),noticeContent2));
+
+                    //消息3: 通知部门经理(当前经办人),员工的申请单你已批准,交由上级继续审批
+                    String noticeContent3 = String.format(&quot;%s-%s提起请假申请[%s-%s]您已批准,审批意见:%s,申请转至上级领导继续审批&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeDao.insert(new Notice(operator.getEmployeeId(),noticeContent3));
+                &#125; else if(result.equals(&quot;refused&quot;)) &#123;
+                    //4.如果当前任务不是最后一个节点且审批驳回,则后续所有任务状态变为cancel,请假单状态变为refused
+                    for(ProcessFlow p:readyList)&#123;
+                        p.setState(&quot;cancel&quot;);
+                        processFlowDao.update(p);
+                    &#125;
+                    form.setState(&quot;refused&quot;);
+                    leaveFormDao.update(form);
+                    //消息1: 通知申请人表单已被驳回
+                    String noticeContent1 = String.format(&quot;您的请假申请[%s-%s]%s%s已驳回,审批意见:%s,审批流程已结束&quot; ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeDao.insert(new Notice(form.getEmployeeId(),noticeContent1));
+
+                    //消息2: 通知经办人表单&quot;您已驳回&quot;
+                    String noticeContent2 = String.format(&quot;%s-%s提起请假申请[%s-%s]您已驳回,审批意见:%s,审批流程已结束&quot; ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeDao.insert(new Notice(operator.getEmployeeId(),noticeContent2));
+                &#125;
+            &#125;
+            return null;
+        &#125;);
+</code></pre>
+<h3 id="完整实现系统消息功能"><a href="#完整实现系统消息功能" class="headerlink" title="完整实现系统消息功能"></a>完整实现系统消息功能</h3><pre><code class="java">dao.NoticeDao.java
+package com.imooc.oa.dao;
+
+import com.imooc.oa.entity.Notice;
+
+import java.util.List;
+
+public interface NoticeDao &#123;
+    public void insert(Notice notice);
+    public List&lt;Notice&gt; selectByReceiverId(Long receiverId);
+&#125;
+</code></pre>
+<pre><code class="java">service.NoticeService.java
+package com.imooc.oa.service;
+
+import com.imooc.oa.dao.NoticeDao;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.util.MybatisUtils;
+
+import java.util.List;
+
+/**
+ * 消息服务
+ */
+public class NoticeService &#123;
+    /**
+     * 查询指定员工的系统消息
+     * @param receiverId
+     * @return 最近100条消息列表
+     */
+    public List&lt;Notice&gt; getNoticeList(Long receiverId)&#123;
+        return (List) MybatisUtils.executeQuery(sqlSession -&gt; &#123;
+            NoticeDao noticeDao = sqlSession.getMapper(NoticeDao.class);
+            return noticeDao.selectByReceiverId(receiverId);
+        &#125;);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">controller.NoticeServlet.java
+package com.imooc.oa.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imooc.oa.entity.Notice;
+import com.imooc.oa.entity.User;
+import com.imooc.oa.service.NoticeService;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@WebServlet(name = &quot;NoticeServlet&quot; , urlPatterns = &quot;/notice/list&quot;)
+public class NoticeServlet extends HttpServlet &#123;
+    private NoticeService noticeService = new NoticeService();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+
+    &#125;
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException &#123;
+        User user = (User)request.getSession().getAttribute(&quot;login_user&quot;);
+        List&lt;Notice&gt; noticeList = noticeService.getNoticeList(user.getEmployeeId());
+        Map result = new HashMap&lt;&gt;();
+        result.put(&quot;code&quot;, &quot;0&quot;);
+        result.put(&quot;msg&quot;, &quot;&quot;);
+        result.put(&quot;count&quot;, noticeList.size());
+        result.put(&quot;data&quot;, noticeList);
+        String json = JSON.toJSONString(result);
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().println(json);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="xml">resources.mappers.notice.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.imooc.oa.dao.NoticeDao&quot;&gt;
+    &lt;insert id=&quot;insert&quot; parameterType=&quot;com.imooc.oa.entity.Notice&quot;
+            useGeneratedKeys=&quot;true&quot; keyProperty=&quot;noticeId&quot; keyColumn=&quot;notice_id&quot;&gt;
+        INSERT INTO sys_notice( receiver_id, content, create_time) VALUES (#&#123;receiverId&#125;, #&#123;content&#125;, #&#123;createTime&#125;)
+    &lt;/insert&gt;
+
+    &lt;select id=&quot;selectByReceiverId&quot; parameterType=&quot;Long&quot; resultType=&quot;com.imooc.oa.entity.Notice&quot;&gt;
+        select * from sys_notice where receiver_id = #&#123;value&#125; order by create_time desc limit 0,100
+    &lt;/select&gt;
+&lt;/mapper&gt;
+</code></pre>
+<pre><code class="html">index.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;办公OA系统&lt;/title&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+
+&lt;body class=&quot;layui-layout-body&quot;&gt;
+&lt;!-- Layui后台布局CSS --&gt;
+&lt;div class=&quot;layui-layout layui-layout-admin&quot;&gt;
+    &lt;!--头部导航栏--&gt;
+    &lt;div class=&quot;layui-header&quot;&gt;
+        &lt;!--系统标题--&gt;
+        &lt;div class=&quot;layui-logo&quot; style=&quot;font-size:18px&quot;&gt;慕课网办公OA系统&lt;/div&gt;
+        &lt;!--右侧当前用户信息--&gt;
+        &lt;ul class=&quot;layui-nav layui-layout-right&quot;&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;
+                &lt;a href=&quot;javascript:void(0)&quot;&gt;
+                    &lt;!--图标--&gt;
+                    &lt;span class=&quot;layui-icon layui-icon-user&quot; style=&quot;font-size: 20px&quot;&gt;
+                    &lt;/span&gt;
+                    &lt;!--用户信息--&gt;
+                    $&#123;current_employee.name&#125;[$&#123;current_department.departmentName&#125;-$&#123;current_employee.title&#125;]
+                &lt;/a&gt;
+            &lt;/li&gt;
+            &lt;!--注销按钮--&gt;
+            &lt;li class=&quot;layui-nav-item&quot;&gt;&lt;a href=&quot;/logout&quot;&gt;注销&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;!--左侧菜单栏--&gt;
+    &lt;div class=&quot;layui-side layui-bg-black&quot;&gt;
+        &lt;!--可滚动菜单--&gt;
+        &lt;div class=&quot;layui-side-scroll&quot;&gt;
+            &lt;!--可折叠导航栏--&gt;
+            &lt;ul class=&quot;layui-nav layui-nav-tree&quot;&gt;
+                &lt;#list node_list as node&gt;
+                &lt;!--父节点--&gt;
+                    &lt;#if node.nodeType == 1&gt;
+                &lt;li class=&quot;layui-nav-item layui-nav-itemed&quot;&gt;
+                    &lt;a href=&quot;javascript:void(0)&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                    &lt;dl class=&quot;layui-nav-child module&quot; data-node-id=&quot;$&#123;node.nodeId&#125;&quot;&gt;&lt;/dl&gt;
+                &lt;/li&gt;
+                    &lt;/#if&gt;
+                    &lt;#if node.nodeType == 2&gt;
+                &lt;!--子节点--&gt;
+                &lt;dd class=&quot;function&quot; data-parent-id=&quot;$&#123;node.parentId&#125;&quot;&gt;
+                    &lt;a href=&quot;$&#123;node.url&#125;&quot; target=&quot;ifmMain&quot;&gt;$&#123;node.nodeName&#125;&lt;/a&gt;
+                &lt;/dd&gt;
+                    &lt;/#if&gt;
+                &lt;/#list&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!--主体部分采用iframe嵌入其他页面--&gt;
+    &lt;div class=&quot;layui-body&quot; style=&quot;overflow-y: hidden&quot;&gt;
+        &lt;iframe name=&quot;ifmMain&quot; src=&quot;/forward/notice&quot; style=&quot;border: 0px;width: 100%;height: 100%&quot;&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    &lt;!--版权信息--&gt;
+    &lt;div class=&quot;layui-footer&quot;&gt;
+        Copyright © imooc. All Rights Reserved.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--LayUI JS文件--&gt;
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+    //将所有功能根据parent_id移动到指定模块下 一开始先dl与dd对齐[程序维护方便]
+    layui.$(&quot;.function&quot;).each(function () &#123;
+        var func = layui.$(this);
+        var parentId = func.data(&quot;parent-id&quot;);
+        layui.$(&quot;dl[data-node-id=&quot; + parentId + &quot;]&quot;).append(func);
+    &#125;)
+    //刷新折叠菜单
+    layui.element.render(&#39;nav&#39;);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code class="html">notice.ftl
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;系统通知&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/layui/css/layui.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;layui-row&quot;&gt;
+    &lt;blockquote class=&quot;layui-elem-quote&quot;&gt;
+        &lt;h2&gt;系统通知&lt;/h2&gt;
+    &lt;/blockquote&gt;
+    &lt;table id=&quot;grdNoticeList&quot; lay-filter=&quot;grdNoticeList&quot;&gt;&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;/resources/layui/layui.all.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    layui.table.render(&#123;
+        elem : &quot;#grdNoticeList&quot; ,
+        id : &quot;grdNoticeList&quot; ,
+        url : &quot;/notice/list&quot; ,
+        page : false ,
+        cols :[[
+            &#123;field : &quot;&quot; , title : &quot;序号&quot; , width:&quot;10%&quot; , style : &quot;height:60px&quot; , type:&quot;numbers&quot;&#125;,
+            &#123;field : &quot;create_time&quot; , title : &quot;通知时间&quot; , width : &quot;20%&quot; , templet: function (d) &#123;
+                    var newDate = new Date(d.createTime);
+                    return newDate.getFullYear() + &quot;-&quot; +
+                        (newDate.getMonth() + 1) + &quot;-&quot; + newDate.getDate()
+                        + &quot; &quot; + newDate.getHours() + &quot;:&quot; + newDate.getMinutes() + &quot;:&quot; + newDate.getSeconds();
+                &#125;&#125;,
+            &#123;field : &quot;content&quot; , title : &quot;通知内容&quot; , width : &quot;60%&quot;&#125;
+        ]]
+    &#125;)
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+    </div>
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <div id="comment">
+        <div id="gitalk-container">
+        </div>
+    </div>
+    
+</div>
+                     
+<footer id="footer">
+    <div class="footer-wrap">
+        <div>
+            © 2018 - 2025 P-luminary
+            <span class="footer-icon">
+                <a-icon type="flag" theme="filled" /></span>
+            @Asuna
+        </div>
+        <div></div>
+        <div>Based on the <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo Engine</a>
+<!--         & <a target="_blank" rel="noopener" href="https://github.com/korilin/hexo-theme-particle">Particle Theme</a></div> -->
+        
+    </div>
+
+</footer>
+
+<script src="/js/highlight.min.js"></script>
+<script src="/js/particle.js"></script>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+    new Vue({
+        el: "#layout",
+        data: {
+            show_page: false,
+            onload_menu: false,
+            menu_show: false,
+            card_top: 100
+        },
+        created: function () {
+            var that = this
+            window.onload = function () {
+                that.show_page = true
+                document.getElementById("loadcontent").style.opacity = 0
+                setTimeout(function () {
+                    document.getElementById("loadleft").style.width = 0
+                    document.getElementById("loadright").style.width = 0
+                }, 300)
+                setTimeout(function () {
+                    document.getElementById("loading").style = "display:none"
+                }, 600)
+            }
+        },
+        mounted: function () {
+            var that = this
+            window.addEventListener('scroll', function (e) {
+                that.menu_show = false
+            })
+        },
+        methods: {
+            home_click: function () {
+                window.scrollTo({
+                    top: window.innerHeight - 80,
+                    behavior: "smooth",
+                });
+            }
+        }
+    })
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '',
+        clientSecret: '',
+        repo: 'hexo-theme-particle',      // The repository of store comments,
+        owner: 'P-luminary',
+        admin: ['P-luminary'],
+        language: 'en',
+        id: location.pathname,      // Ensure uniqueness and length less than 50
+        distractionFreeMode: true  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+</body>
+
+</html>
