@@ -2845,7 +2845,7 @@ function getRegionInfo(row) &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -4490,7 +4490,7 @@ void update(...) throw FileNotFoundException&#123;
 public void methodA() &#123;
     methodB(); // 不经过代理
 &#125;
-
+  
 @Transactional
 public void methodB() &#123;
     // 无效
@@ -6318,10 +6318,10 @@ public class OrderJob &#123;
 <li><p><u>开启<strong>持久化功能</strong>，确保消息未消费前在队列中不会丢失</u>   <code>durable = True</code><br>万一broker挂掉就惨了 保证至少成功一次消费<br>MQ是默认内存存储信息，开启持久化功能可以确保缓存在MQ中的消息不丢失[把数据存在磁盘上]</p>
 <pre><code class="python"># 声明持久化交换器
 channel.exchange_declare(exchange=&#39;exchange_name&#39;, durable=True)
-    
+      
 # 声明持久化队列
 channel.queue_declare(queue=&#39;queue_name&#39;, durable=True)
-    
+      
 # 发送持久化消息
 channel.basic_publish(exchange=&#39;exchange_name&#39;,
                       routing_key=&#39;routing_key&#39;,
@@ -7506,7 +7506,7 @@ public ArrayList(int initialCapacity) &#123;
 </li>
 <li><p>查找(未知索引)：ArrayList需要遍历，链表也需要遍历，时间复杂度都是O(n)</p>
 </li>
-<li><p><strong>新增</strong>和<strong>删除</strong></p>
+<li><p><strong>新增</strong>和<strong>删除</strong>【查询多用<code>ArrayList</code>；插入&#x2F;删除多用<code>LinkedList</code>】</p>
 <ul>
 <li>ArrayList 尾部插入和删除，时间复杂度是O(1)；其他部分增删需要挪动数组，时间复杂度是O(n)</li>
 <li>LinkedList 头尾节点增删时间复杂度是O(1)，其他都需要遍历链表，时间复杂度是O(n)</li>
@@ -7655,7 +7655,7 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <li>JDK1.8之后采用数组+链表+红黑树<br>链表长度大于8且数组长度大于64则会从链表转化为红黑树</li>
 </ul>
 </blockquote>
-<p>当我们往HashMap中put元素时，利用key的hashCode重新hash计算出当前对象的元素在数组中的下标</p>
+<p>当我们往HashMap中put元素时(扰动函数)，利用key的hashCode重新hash计算出当前对象的元素在数组中的下标</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/27826dde4b711105a212f30f6381f8097eca69ba/HashMap%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86.png"></p>
 <h4 id="HashMap的put方法的具体流程"><a href="#HashMap的put方法的具体流程" class="headerlink" title="HashMap的put方法的具体流程"></a><span style = "color:red"><strong>HashMap的put方法的具体流程</strong></span></h4><blockquote>
 <p>1.判断键值对数组table是否为空或为null，否则执行resize()进行扩容 [初始化]<br>2.根据键值key计算hash值得到数组索引<br>3.判断table[i] &#x3D;&#x3D; null，条件成立，直接新建节点添加<br>4.如果table[i] &#x3D;&#x3D; null，不成立<br>4.1 判断table[i]的首个元素是否和key一样，如果相同直接覆盖value<br>4.2 判断table[i]是否为<strong>treeNode</strong>，即table[i]是否是红黑树，如果是红黑树，则直接在树中插入键值对<br>4.3 遍历table[i]，链表的尾部插入数据，然后判断链表长度是否大于8，大于8的话把链表转换为红黑树，在红黑树中执行插入操作，遍历过程中若发现key已经存在直接覆盖value</p>
@@ -7667,16 +7667,92 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <p>桶下标是hash值取模数组(长度)下标 capacity</p>
 <p><span style = "color:red"><strong>HashMap的寻址算法</strong></span></p>
 <p>Hash值右移16位后与原来的hash值进行异或运算【扰动算法<del>hash值更加均匀,减少hash冲突</del>】<br>数组长度必须是2的n次幂 按位<strong>与运算</strong>的效果才能代替取模</p>
+<blockquote>
+<p>int hash &#x3D; h ^ (h &gt;&gt;&gt; 16);                 &#x2F;&#x2F; hashCode 的扰动处理<br>index &#x3D; hash &amp; (table.length - 1);   &#x2F;&#x2F; 更快的取模运算</p>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/85bdc4d076df91ec3d29294926d65f55713b2d26/HashMap%E5%AF%BB%E5%9D%80%E7%AE%97w%E6%B3%95.png"></p>
 <p><span style = "color:red"><strong>HashMap在1.7情况下的多线程死循环问题</strong></span></p>
-<p>jdk7的数据结构是：数组+链表<br>在数组进行扩容的时候，因为链表是<strong>头插法</strong>，在进行数据迁移的过程中，有可能导致死循环</p>
+<p>jdk7的数据结构是：数组+链表<br>在数组进行扩容的时候，因为链表是<strong>头插法</strong>(在并发情况下可能出现<strong>链表反转成环形结构</strong>)，在进行数据迁移的过程中，有可能导致死循环</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/1be6d73360d8cdf5baa6b2fea0b1fc8fa8b7fadc/HashMap%E5%9C%A81.7%E6%83%85%E5%86%B5%E4%B8%8B%E7%9A%84%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%AD%BB%E5%BE%AA%E7%8E%AF%E9%97%AE%E9%A2%98.png"></p>
 <h4 id="进程和线程的区别？"><a href="#进程和线程的区别？" class="headerlink" title="进程和线程的区别？"></a><span style = "color:red">进程和线程的区别？</span></h4><blockquote>
 <h6 id="两者对比："><a href="#两者对比：" class="headerlink" title="两者对比："></a>两者对比：</h6><ul>
-<li>进程是整个在运行程序的实例，进程中包含了线程，每个线程执行不同的任务</li>
+<li><u><strong>进程</strong>是整个在运行程序的实例</u>，<u>进程中包含了<strong>线程</strong></u>，每个线程执行不同的任务</li>
 <li>不同的进程使用不同的内存空间，在当前进程下的所有线程可以共享内存空间</li>
 <li>线程更轻量，线程上下文切换成本一般上要比进程上下文切换低(上下文切换指的是从一个线程切换到另一个线程)</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>简要定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>进程</td>
+<td>程序的执行实例，<strong>资源分配的最小单位</strong></td>
+</tr>
+<tr>
+<td>线程</td>
+<td>进程内的执行单元，<strong>cpu调度的最小单位</strong></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>进程</th>
+<th>线程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>概念</td>
+<td>正在运行的程序实例</td>
+<td>进程中的执行单元</td>
+</tr>
+<tr>
+<td>所属关系</td>
+<td>进程可包含多个线程</td>
+<td>线程依附于进程存在</td>
+</tr>
+<tr>
+<td>内存空间</td>
+<td>拥有独立地址空间</td>
+<td>共享所属进程的内存空间</td>
+</tr>
+<tr>
+<td>创建开销</td>
+<td>创建&#x2F;销毁成本高（需要资源分配）</td>
+<td>创建&#x2F;销毁成本低（共享资源）</td>
+</tr>
+<tr>
+<td>通信方式</td>
+<td>进程间通信较复杂（如管道&#x2F;套接字）</td>
+<td>线程通信简单（共享变量）</td>
+</tr>
+<tr>
+<td>崩溃影响</td>
+<td>一个进程崩溃不会影响其他进程</td>
+<td>一个线程崩溃可能影响整个进程</td>
+</tr>
+<tr>
+<td>切换开销</td>
+<td>上下文切换开销大</td>
+<td>上下文切换开销小</td>
+</tr>
+<tr>
+<td>资源隔离</td>
+<td>资源独立，安全性高</td>
+<td>资源共享，效率高但易出错</td>
+</tr>
+</tbody></table>
+<pre><code class="css">[ 进程A ]
+ ├── 线程1：负责计算
+ ├── 线程2：负责文件IO
+ └── 线程3：负责网络通信
+
+[ 进程B ]
+ └── 线程1：完全独立
+</code></pre>
 </blockquote>
 <p>程序由<strong>指令</strong>和<strong>数据</strong>组成，但这些指令要运行，数据要读写，就必须将指令加载至CPU，数据加载至内存。在指令运行过程中还需要用到磁盘、网络等设备，<strong>进程</strong>就是用来加载指令、管理内存、管理IO的。<br>当一个程序被运行，从磁盘加载这个程序的代码至内存，这时就开启了一个**<u>进程</u>**</p>
 <p>一个线程就是一个指令流，将指令流中的一条条指令以一定的顺序交给CPU执行。一个进程之内可以分为一到多个线程</p>
@@ -7689,6 +7765,22 @@ List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(new LinkedList&
 <li>并发是<strong>同一时间</strong>应对多件事情的能力，多个线程<strong>轮流使用</strong>一个或多个CPU</li>
 <li>并行是<strong>同一时间</strong>动手做多件事的能力，4核CPU<strong>同时执行</strong>4个线程</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>并发</td>
+<td>同一时间段<strong>处理多个任务的能力</strong>（任务<strong>轮流切片</strong>执行）</td>
+</tr>
+<tr>
+<td>并行</td>
+<td>同一时刻<strong>真正同时执行多个任务</strong>（多个核同时执行）</td>
+</tr>
+</tbody></table>
 </blockquote>
 <p>&#x3D;&#x3D;<strong>单核CPU</strong>&#x3D;&#x3D; → 单核CPU下线程实际还是串行执行的</p>
 <ul>
@@ -7890,12 +7982,12 @@ public class CallableExample &#123;
 <p>线程状态之间如何变化：</p>
 <ul>
 <li>创建线程对象是<strong>新建状态</strong></li>
-<li>调用了start()方法转变为<strong>可执行状态</strong></li>
+<li>调用了<strong>start()<strong>方法转变为</strong>可执行状态</strong></li>
 <li>线程获取到了CPU的执行权，执行结束是<strong>终止状态</strong></li>
 <li>在可执行状态的过程中，如果没有获取CPU的执行权，可能会切换其他状态<ul>
-<li>如果没有获取锁(synchronized或lock) 进入<strong>阻塞状态</strong>，获得锁再切换为可执行状态</li>
-<li>如果线程调用了wait()方法进入<strong>等待状态</strong>，其他线程调用notify()唤醒后可转换为可执行状态</li>
-<li>如果线程调用了sleep(50)方法，进入<strong>计时等待状态</strong>，到时间后可切换为可执行状态</li>
+<li>如果没有获取锁(<strong>synchronized</strong>或lock) 进入<strong>阻塞状态</strong>，获得锁再切换为可执行状态</li>
+<li>如果线程调用了<strong>wait()<strong>方法进入</strong>等待状态</strong>，其他线程调用notify()唤醒后可转换为可执行状态</li>
+<li>如果线程调用了<strong>sleep(50)<strong>方法，进入</strong>计时等待状态</strong>，到时间后可切换为可执行状态</li>
 </ul>
 </li>
 </ul>
@@ -7935,7 +8027,7 @@ public enum State &#123;
 </code></pre>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/981d7e954005439be7e8261b142100e3e87f800b/%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81%E4%B9%8B%E9%97%B4%E7%9A%84%E8%BD%AC%E6%8D%A2.png"></p>
 <p><span style = "color:red"><strong>新建T1、T2、T3三个线程，如何保证它们按顺序执行？</strong></span></p>
-<p>可以使用线程中的join方法解决<br><code>join() 等待线程运行结束</code></p>
+<p>可以使用线程中的<strong>join</strong>方法解决<br><code>join() 等待线程运行结束</code></p>
 <pre><code class="java">t.join() 阻塞调用此方法的线程进入timed_waiting 直到线程t执行完毕后，此线程再继续执行
 </code></pre>
 <pre><code class="java">Thread t1 = new Thread(()-&gt;&#123;
@@ -7970,33 +8062,114 @@ t3.start();
 </ul>
 </blockquote>
 <p><span style = "color:red"><strong>java中wait和sleep方法有什么区别？</strong></span><del>wait要和synchronized一起使用</del></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>归属类</th>
+<th>是否释放锁</th>
+<th>唤醒方式</th>
+<th>使用前提</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sleep()</code></td>
+<td><code>Thread</code></td>
+<td>❌ 不释放锁</td>
+<td>时间到、被打断</td>
+<td>直接调用即可</td>
+</tr>
+<tr>
+<td><code>wait()</code></td>
+<td><code>Object</code></td>
+<td>✅ 释放锁</td>
+<td><code>notify()</code>&#x2F;时间到&#x2F;被打断</td>
+<td>必须配合 <code>synchronized</code> 使用</td>
+</tr>
+</tbody></table>
 <h6 id="共同点"><a href="#共同点" class="headerlink" title="共同点"></a>共同点</h6><p>wait()，wait(long)和sleep(long)的效果都是让当前线程暂时放弃CPU的使用权，进入阻塞状态</p>
 <h6 id="不同点"><a href="#不同点" class="headerlink" title="不同点"></a>不同点</h6><ul>
-<li><p>方法归属不同</p>
-<ul>
+<li>方法归属不同<ul>
 <li>sleep(long)是Thread的静态方法</li>
 <li>而wait()，wait(long)都是Object的成员方法，每个对象都有</li>
 </ul>
 </li>
-<li><p>醒来时机不同</p>
-<ul>
+<li>醒来时机不同<ul>
 <li>执行sleep(long)和wait(long)的线程都会在等待相应毫秒后醒来</li>
-<li>wait(long)和wait()还可以被notify唤醒，wait()如果不唤醒就一直等下去</li>
+<li><strong>wait(long)和wait()还可以被notify唤醒</strong>，wait()如果不唤醒就一直等下去<del>wait要和synchronized一起使用</del></li>
 <li>它们都可以被打断唤醒</li>
 </ul>
 </li>
-<li><p><strong>锁特性不同</strong>【重点】</p>
-<ul>
-<li>wait方法的调用必须先获取wait对象的锁，而sleep则无此限制</li>
+<li><strong>锁特性不同</strong>【重点】<ul>
+<li><strong>wait方法的调用必须先获取wait对象的锁</strong>，而sleep则无此限制</li>
 <li>wait方法执行后会释放锁对象，允许其他线程获得该锁对象 (我放弃cpu，但你们还可以用)</li>
 <li>而sleep如果在synchronized代码块中执行，并不会释放锁对象 (我放弃cpu，你们也用不了)</li>
 </ul>
 </li>
 </ul>
+<blockquote>
+<h2 id="✅-核心区别（面试高频）"><a href="#✅-核心区别（面试高频）" class="headerlink" title="✅ 核心区别（面试高频）"></a>✅ 核心区别（面试高频）</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th><code>sleep()</code></th>
+<th><code>wait()</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>所属类</td>
+<td><code>Thread</code> 静态方法</td>
+<td><code>Object</code> 实例方法</td>
+</tr>
+<tr>
+<td>是否释放锁</td>
+<td>❌ 不释放锁</td>
+<td>✅ 释放当前对象锁</td>
+</tr>
+<tr>
+<td>是否需要锁</td>
+<td>❌ 不需要任何锁</td>
+<td>✅ 必须持有该对象的锁（<code>synchronized</code>）</td>
+</tr>
+<tr>
+<td>唤醒方式</td>
+<td>到时间&#x2F;中断</td>
+<td>到时间&#x2F;中断&#x2F;<code>notify</code> &#x2F; <code>notifyAll</code></td>
+</tr>
+<tr>
+<td>使用目的</td>
+<td><strong>让线程暂停执行</strong>，但持有锁不让别人进</td>
+<td><strong>让线程等待并释放锁，协调多线程通信</strong></td>
+</tr>
+</tbody></table>
+<h2 id="✅-场景对比"><a href="#✅-场景对比" class="headerlink" title="✅ 场景对比"></a>✅ 场景对比</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>使用方法</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>想暂停线程几秒钟（不释放锁）</td>
+<td><code>Thread.sleep(ms)</code></td>
+<td>常用于模拟网络延迟&#x2F;定时任务</td>
+</tr>
+<tr>
+<td>多线程协作（生产者-消费者模型）</td>
+<td><code>wait()</code> &#x2F; <code>notify()</code></td>
+<td>用于线程间通信，让出锁资源</td>
+</tr>
+</tbody></table>
+<h2 id="✅-通俗类比-🌰"><a href="#✅-通俗类比-🌰" class="headerlink" title="✅ 通俗类比 🌰"></a>✅ 通俗类比 🌰</h2><ul>
+<li><code>sleep()</code>：你在<strong>厕所里睡觉</strong>，门上锁了（别人不能进），你虽然休息了，但别人也进不来。</li>
+<li><code>wait()</code>：你说“我出去抽根烟（释放锁）”，别人可以进去用厕所（释放资源），抽完烟再回来（被唤醒）继续工作。</li>
+</ul>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/5541d691652184639a4936426271a2f6ea03d2fb/wait%E5%92%8Csleep%E6%96%B9%E6%B3%95%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB.png"></p>
 <p><span style = "color:red"><strong>如何停止一个正在运行的线程？</strong></span></p>
 <h6 id="有三种方式可以停止线程"><a href="#有三种方式可以停止线程" class="headerlink" title="有三种方式可以停止线程"></a>有三种方式可以停止线程</h6><ul>
-<li>使用退出标志，使线程<strong>正常退出</strong>，也就是当run方法完成后线程终止</li>
+<li>使用<strong>退出标志位</strong>，使线程<strong>正常退出</strong>，也就是当run方法完成后线程终止</li>
 <li>使用<strong>stop方法</strong>强行终止(不推荐，方法已作废)</li>
 <li>使用<strong>interrupt</strong>方法中断线程<ul>
 <li>打断阻塞的线程(sleep, wait, join)的线程，线程会抛出InterruptedException异常</li>
@@ -8048,6 +8221,77 @@ t3.start();
 <li>Monitor实现的锁属于重量级锁，里面涉及到了用户态<del>权限低</del>和内核态<del>权限高</del>的切换、进程的上下文切换，成本较高，性能比较低</li>
 <li>在JDK1.6引入了两种新型锁机制：<strong>偏向锁和轻量级锁</strong>，它们的引入是为了解决在没有多线程竞争或基本没有竞争的场景下使用传统锁机制带来的性能开销问题</li>
 </ul>
+<blockquote>
+<p>每一个 Java 对象在 JVM 中都有一个对象头，其中包含 <strong>MarkWord</strong>，用于存储锁信息。<br>当线程访问 <code>synchronized</code> 方法或代码块时，会尝试获取对象关联的 <strong>Monitor</strong>，进入临界区：Monitor 中包含：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>owner</td>
+<td>当前持有锁的线程</td>
+</tr>
+<tr>
+<td>entryList</td>
+<td>等待获取锁（阻塞）的线程队列</td>
+</tr>
+<tr>
+<td>waitSet</td>
+<td>调用 <code>wait()</code> 被挂起的线程队列</td>
+</tr>
+</tbody></table>
+<h3 id="获取锁流程（简化）："><a href="#获取锁流程（简化）：" class="headerlink" title="获取锁流程（简化）："></a>获取锁流程（简化）：</h3><ol>
+<li>检查对象头中的 MarkWord；</li>
+<li>如果未被锁，尝试通过 CAS 设置为当前线程（偏向或轻量级）；</li>
+<li>如果竞争失败 → 升级为重量级锁（Monitor）；</li>
+<li>等待唤醒或抢占锁。</li>
+</ol>
+<h5 id="锁升级过程（从偏向锁-→-轻量级锁-→-重量级锁）"><a href="#锁升级过程（从偏向锁-→-轻量级锁-→-重量级锁）" class="headerlink" title="锁升级过程（从偏向锁 → 轻量级锁 → 重量级锁）"></a>锁升级过程（从偏向锁 → 轻量级锁 → 重量级锁）</h5><table>
+<thead>
+<tr>
+<th>锁类型</th>
+<th>触发条件</th>
+<th>优点</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>偏向锁</td>
+<td>只有一个线程访问（无竞争）</td>
+<td>几乎无开销，不用 CAS</td>
+<td>单线程长时间持有的锁</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>多线程访问，但加锁时间错开</td>
+<td>使用 CAS，无阻塞，性能较高</td>
+<td>少量线程短时间交替访问</td>
+</tr>
+<tr>
+<td>重量级锁</td>
+<td>多线程同时竞争同一把锁</td>
+<td>线程阻塞 + 唤醒，开销大</td>
+<td>并发激烈，必须互斥的场景</td>
+</tr>
+</tbody></table>
+<h5 id="偏向锁-x2F-轻量级锁-x2F-重量级锁细节图解（简述）"><a href="#偏向锁-x2F-轻量级锁-x2F-重量级锁细节图解（简述）" class="headerlink" title="偏向锁 &#x2F; 轻量级锁 &#x2F; 重量级锁细节图解（简述）"></a>偏向锁 &#x2F; 轻量级锁 &#x2F; 重量级锁细节图解（简述）</h5><h3 id="🚀-偏向锁原理："><a href="#🚀-偏向锁原理：" class="headerlink" title="🚀 偏向锁原理："></a>🚀 偏向锁原理：</h3><ul>
+<li>第一次访问：CAS 记录当前线程 ID 到对象头</li>
+<li>再次访问时：只判断对象头的线程 ID 是否是自己</li>
+<li>如果有竞争，偏向锁就会被撤销，升级为轻量级锁</li>
+</ul>
+<h3 id="🚀-轻量级锁原理："><a href="#🚀-轻量级锁原理：" class="headerlink" title="🚀 轻量级锁原理："></a>🚀 轻量级锁原理：</h3><ul>
+<li>在 <strong>线程栈中创建 LockRecord</strong>；</li>
+<li>尝试 CAS 将 LockRecord 指针复制到对象头；</li>
+<li>成功 → 获取锁；失败 → 说明竞争，升级为重量级锁</li>
+</ul>
+<h3 id="🚀-重量级锁原理（Monitor）："><a href="#🚀-重量级锁原理（Monitor）：" class="headerlink" title="🚀 重量级锁原理（Monitor）："></a>🚀 重量级锁原理（Monitor）：</h3><ul>
+<li>Monitor 的实现是基于 <strong>操作系统的互斥量（mutex）</strong></li>
+<li>涉及线程的挂起、唤醒（用户态 → 内核态切换，开销大）</li>
+</ul>
+</blockquote>
 <h6 id="Monitor重量级锁"><a href="#Monitor重量级锁" class="headerlink" title="Monitor重量级锁"></a>Monitor重量级锁</h6><p>每个Java对象都可以关联一个Monitor对象，如果使用 synchronized 给对象上锁(重量级)之后，该对象头的Mark Word中就被设置指向Monitor对象的指针</p>
 <h6 id="加锁流程"><a href="#加锁流程" class="headerlink" title="加锁流程"></a>加锁流程</h6><ul>
 <li>在线程栈中创建一个Lock Record，将其obj字段指向锁对象。</li>
@@ -8070,13 +8314,24 @@ t3.start();
 <li>JMM把内存分为两块，一块是私有线程的工作区域(工作内存)，一块是所有线程的共享区域(主内存)</li>
 <li>线程跟线程之间是相互隔离，线程跟线程相互需要通过主内存</li>
 </ul>
-<p><span style = "color:red"><strong>CAS你知道吗？</strong></span></p>
+<p><span style = "color:red"><strong>CAS你知道吗？</strong></span><del>乐观锁</del></p>
 <blockquote>
 <ul>
-<li>CAS全称是：Compare And Swap(比较再交换)，它体现的一种<strong>乐观锁</strong>的思想，在无锁情况下保证线程操作共享数据的原子性。</li>
+<li>CAS全称是：Compare And Swap(比较再交换)，它体现的一种无锁（<strong>乐观锁</strong>）的思想，在无锁情况下保证线程操作共享数据的原子性。</li>
 <li>CAS使用到的地方很多：AQS框架、AtomicXXX类</li>
 <li>在操作共享变量的时候使用自旋锁，效率上更高一些</li>
 <li>CAS的底层是调用的Unsafe类中的方法，都是操作系统提供的，其他语言实现</li>
+</ul>
+<p>比较内存值是否与预期值相等，如果相等则更新为新值；否则不做操作，重新尝试（一般配合自旋）</p>
+<pre><code class="java">// 伪代码
+if (value == expectedValue) &#123;
+  value = newValue;
+&#125;
+</code></pre>
+<h3 id="💡-应用场景："><a href="#💡-应用场景：" class="headerlink" title="💡 应用场景："></a>💡 应用场景：</h3><ul>
+<li><code>java.util.concurrent.atomic</code> 包下的 <code>AtomicInteger</code> 等</li>
+<li><code>ReentrantLock</code> 的底层 AQS</li>
+<li><code>ConcurrentHashMap</code> 局部并发控制</li>
 </ul>
 </blockquote>
 <p>在JUC(java.util.concurrent)包下实现的很多类都用到了CAS操作</p>
@@ -8086,12 +8341,129 @@ t3.start();
 </ul>
 <p><span style = "color:red"><strong>乐观锁和悲观锁的区别？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/ed89cde4cab6a88d6f2a86f3430be2b28a5e3626/JMM%20(Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)+CAS.png"></p>
-<p><span style = "color:red"><strong>谈一谈你对volatile的理解？</strong></span></p>
+<h4 id="乐观锁-vs-悲观锁（对比表）"><a href="#乐观锁-vs-悲观锁（对比表）" class="headerlink" title="乐观锁 vs 悲观锁（对比表）"></a>乐观锁 vs 悲观锁（对比表）</h4><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>乐观锁（CAS）</th>
+<th>悲观锁（synchronized&#x2F;Lock）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>思想</td>
+<td>默认不会冲突，失败后重试</td>
+<td>默认可能冲突，先加锁</td>
+</tr>
+<tr>
+<td>开销</td>
+<td>CPU 开销高（自旋）</td>
+<td>上下文切换成本高</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>高并发下优于悲观锁</td>
+<td>并发低时更稳定</td>
+</tr>
+<tr>
+<td>实现方式</td>
+<td>CAS，自旋锁，版本号控制</td>
+<td>synchronized, ReentrantLock等</td>
+</tr>
+</tbody></table>
+<p><span style = "color:red"><strong>谈一谈你对volatile的理解？</strong></span><del>轻量级的同步机制</del></p>
 <p>一旦一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，那么就具备了两层语义：</p>
 <ul>
 <li><h5 id="保证线程间的可见性"><a href="#保证线程间的可见性" class="headerlink" title="保证线程间的可见性"></a>保证线程间的可见性</h5><p>用volatile修饰共享变量，能够防止编译器等优化发生，让一个线程对共享变量的修改对另一个线程可见</p>
+<blockquote>
+<p>当一个线程修改了被 <code>volatile</code> 修饰的变量，<strong>新值会立即同步到主内存中</strong>，其他线程读取这个变量时也会<strong>立即从主内存中刷新</strong>，而不是使用线程工作内存中的旧副本。</p>
+<ul>
+<li>✅ <strong>保证多个线程看到的是同一个值</strong></li>
+<li>❌ 但是 <strong>不能保证原子性</strong></li>
+</ul>
+</blockquote>
 </li>
 <li><h5 id="禁止进行指令重排序"><a href="#禁止进行指令重排序" class="headerlink" title="禁止进行指令重排序"></a>禁止进行指令重排序</h5><p>用volatile修饰共享变量会在读、写共享变量时加入不同的屏障，阻止其他读写操作越过屏障，从而达到阻止重排序的效果</p>
+<blockquote>
+<ul>
+<li><p>Java 编译器 &amp; CPU <u>为了提高性能可能会对指令进行优化</u>，造成<strong>代码执行顺序</strong>与<strong>书写顺序</strong>不一致。</p>
+</li>
+<li><p><code>volatile</code> 能在变量读写操作前插入内存屏障（Memory Barrier）：</p>
+<ul>
+<li><p>写屏障：防止写操作后面的指令重排到前面</p>
+</li>
+<li><p>读屏障：防止读操作前面的指令被排到后面</p>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="JMM-是理论模型，volatile-是其具体体现。"><a href="#JMM-是理论模型，volatile-是其具体体现。" class="headerlink" title="JMM 是理论模型，volatile 是其具体体现。"></a>JMM 是理论模型，<code>volatile</code> 是其具体体现。</h5><blockquote>
+<p>🔄 <code>volatile</code> 是 JMM（Java内存模型）在语义上的一个重要实现。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>JMM 内容</th>
+<th><code>volatile</code> 实现作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主内存 &amp; 工作内存</td>
+<td>强制将值立即刷新到主内存</td>
+</tr>
+<tr>
+<td>可见性保证</td>
+<td>✅ volatile 提供</td>
+</tr>
+<tr>
+<td>原子性保证</td>
+<td>❌ volatile 不提供</td>
+</tr>
+<tr>
+<td>禁止指令重排</td>
+<td>✅ volatile 提供（内存屏障）</td>
+</tr>
+</tbody></table>
+<h5 id="这几个进行一下比较"><a href="#这几个进行一下比较" class="headerlink" title="这几个进行一下比较"></a>这几个进行一下比较</h5><table>
+<thead>
+<tr>
+<th>特性</th>
+<th><code>volatile</code></th>
+<th><code>synchronized</code> &#x2F; <code>Lock</code></th>
+<th>CAS (<code>AtomicXXX</code>)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>可见性</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>原子性</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅（通过硬件指令）</td>
+</tr>
+<tr>
+<td>重排序控制</td>
+<td>✅（内存屏障）</td>
+<td>✅（通过锁的语义）</td>
+<td>✅（内存屏障）</td>
+</tr>
+<tr>
+<td>是否加锁</td>
+<td>否，轻量，性能高</td>
+<td>是，重量级，性能相对低</td>
+<td>否，自旋CAS</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>状态标志、单例双检锁等</td>
+<td>临界区互斥、大块同步场景</td>
+<td>高并发下原子计数&#x2F;计量等操作</td>
+</tr>
+</tbody></table>
+</blockquote>
 </li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/2ce52eb544e19cacdc7c7d22cb6fa3135b27e6a3/volatile%E6%B7%B1%E5%B1%82%E6%AC%A1%E7%90%86%E8%A7%A3[%E7%BA%BF%E7%A8%8B%E9%97%B4%E5%8F%AF%E8%A7%81+%E7%A6%81%E6%AD%A2%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E5%BA%8F].png"></p>
@@ -8101,30 +8473,148 @@ t3.start();
 <li>是多线程中的队列同步器。是一种锁机制，它是做为一个<strong>基础框架</strong>使用的，像ReentrantLock、Semaphore都是基于AQS实现的</li>
 <li>AQS内部维护了一个**<u>先进先出的双向队列</u>**，队列中存储的排队的线程</li>
 <li>在AQS内部还有一个属性state，这个state就相当于是一个资源，默认是0(无所状态)，如果队列中有一个线程修改成功了state为1，则当前线程就相当于获取了资源。</li>
-<li>在对state修改的时候使用CAS(compare and swap)操作，保证多个线程修改的情况下原子性</li>
+<li>在对state修改的时候使用<strong>CAS</strong>(compare and swap)操作，保证多个线程修改的情况下<strong>原子性</strong></li>
 </ul>
 </blockquote>
 <p>AQS(<strong>A</strong>bstract<strong>Q</strong>ueued<strong>S</strong>ynchronizer)，即抽象队列同步器。它是构建锁或者其他同步组件的<strong>基础框架</strong></p>
 <h6 id="AQS与Synchronized的区别"><a href="#AQS与Synchronized的区别" class="headerlink" title="AQS与Synchronized的区别"></a>AQS与Synchronized的区别</h6><table>
 <thead>
 <tr>
-<th align="center">synchronized</th>
 <th align="center">AQS</th>
+<th align="center">synchronized</th>
 </tr>
 </thead>
 <tbody><tr>
-<td align="center">关键字，C++语言实现</td>
 <td align="center">java语言实现</td>
+<td align="center">关键字，C++语言实现</td>
 </tr>
 <tr>
-<td align="center">悲观锁，自动释放锁</td>
 <td align="center">悲观锁，手动开启和关闭</td>
+<td align="center">悲观锁，自动释放锁</td>
 </tr>
 <tr>
-<td align="center">锁竞争激励都会升级为<strong>重量级锁</strong>，性能差</td>
 <td align="center">锁竞争激烈的情况下，提供了多种解决方案</td>
+<td align="center">锁竞争激励都会升级为<strong>重量级锁</strong>，性能差</td>
 </tr>
 </tbody></table>
+<blockquote>
+<h4 id="CAS和AQS的区别"><a href="#CAS和AQS的区别" class="headerlink" title="CAS和AQS的区别"></a>CAS和AQS的区别</h4><p><strong>CAS(Compare And Swap)</strong><del>乐观锁</del>：一种<strong>无锁的原子操作机制</strong>，用于实现<strong>数据层面的原子性</strong>，是底层原语。</p>
+<p><strong>AQS(AbstractQueuedSynchronizer)</strong><del>悲观锁</del>：一种<strong>同步器框架</strong>，用于构建<strong>锁和同步器</strong>（如 ReentrantLock、Semaphore 等），是结构设计。</p>
+<h4 id="表格对比：CAS-vs-AQS"><a href="#表格对比：CAS-vs-AQS" class="headerlink" title="表格对比：CAS vs AQS"></a>表格对比：CAS vs AQS</h4><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>CAS</th>
+<th>AQS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全称</td>
+<td>Compare And Swap</td>
+<td>AbstractQueuedSynchronizer</td>
+</tr>
+<tr>
+<td>概念类型</td>
+<td>原子操作机制（CPU指令级别）</td>
+<td>同步器框架（Java并发包核心）</td>
+</tr>
+<tr>
+<td>功能目的</td>
+<td>保证<strong>共享变量原子性更新</strong></td>
+<td>实现<strong>线程同步控制</strong>（排队、阻塞、唤醒等）</td>
+</tr>
+<tr>
+<td>属于哪一层</td>
+<td>底层原子操作</td>
+<td>高层并发框架</td>
+</tr>
+<tr>
+<td>是否加锁</td>
+<td>否（无锁）</td>
+<td>是（加锁或排队等待）</td>
+</tr>
+<tr>
+<td>底层依赖</td>
+<td>CPU的 CAS 指令（如 <code>cmpxchg</code>）</td>
+<td>CAS、LockSupport、队列、模板方法</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>AtomicXXX、线程安全计数器、乐观锁等</td>
+<td>ReentrantLock、Semaphore、CountDownLatch、FutureTask 等</td>
+</tr>
+<tr>
+<td>是否自带阻塞&#x2F;唤醒</td>
+<td>❌ 不具备阻塞机制</td>
+<td>✅ 自带阻塞&#x2F;唤醒机制（如 condition.await&#x2F;signal）</td>
+</tr>
+<tr>
+<td>实现原理</td>
+<td>通过比较内存值 + 原子更新</td>
+<td>模板方法 + 状态位 state + FIFO 等待队列</td>
+</tr>
+<tr>
+<td>失败机制</td>
+<td>自旋重试（乐观锁）</td>
+<td>阻塞挂起，进入等待队列</td>
+</tr>
+</tbody></table>
+<h4 id="各自常见应用场景"><a href="#各自常见应用场景" class="headerlink" title="各自常见应用场景"></a>各自常见应用场景</h4><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>用的是谁？</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实现原子操作</td>
+<td>CAS</td>
+<td><code>AtomicInteger.incrementAndGet()</code></td>
+</tr>
+<tr>
+<td>实现线程排队获取锁</td>
+<td>AQS</td>
+<td><code>ReentrantLock.lock()</code></td>
+</tr>
+<tr>
+<td>信号量控制</td>
+<td>AQS</td>
+<td><code>Semaphore.acquire()</code></td>
+</tr>
+<tr>
+<td>倒计时器</td>
+<td>AQS</td>
+<td><code>CountDownLatch.await()</code></td>
+</tr>
+<tr>
+<td>实现 Future 机制</td>
+<td>AQS</td>
+<td><code>FutureTask.run()</code></td>
+</tr>
+<tr>
+<td>高并发无锁计数器</td>
+<td>CAS</td>
+<td><code>LongAdder.add()</code>（改进版</td>
+</tr>
+</tbody></table>
+<p><strong>CAS 是 AQS 的底层基础</strong>之一：AQS 内部更新同步状态（<code>state</code>）时就用的是 CAS。<br><strong>AQS 是基于 CAS + FIFO 队列实现的线程同步框架</strong>，比 CAS 更复杂、能力更强。</p>
+<pre><code class="java">// AQS 内部设置状态的关键方法
+protected final boolean compareAndSetState(int expect, int update) &#123;
+    return unsafe.compareAndSwapInt(this, stateOffset, expect, update); // 使用CAS
+&#125;
+</code></pre>
+<h4 id="举个例子：ReentrantLock"><a href="#举个例子：ReentrantLock" class="headerlink" title="举个例子：ReentrantLock"></a>举个例子：ReentrantLock</h4><pre><code class="java">lock.lock();
+</code></pre>
+<ul>
+<li><strong>内部结构：</strong><ul>
+<li>使用 <strong>AQS 实现公平&#x2F;非公平锁的排队机制</strong></li>
+<li>使用 <strong>CAS 来设置 state &#x3D; 1（加锁）</strong></li>
+</ul>
+</li>
+</ul>
+<p>CAS 是一种基于硬件的原子操作指令，用于在无锁环境下保证共享变量的线程安全，常用于 <code>AtomicInteger</code> 等类。而 AQS 是 Java 并发包中用于构建同步器（如锁、信号量等）的框架，它通过 CAS 操作来维护内部状态 <code>state</code>，并通过一个基于 FIFO 的等待队列来实现线程的阻塞与唤醒。因此，<strong>CAS 是底层原语，而 AQS 是上层的并发框架，AQS 内部正是基于 CAS 实现的</strong>。</p>
+</blockquote>
 <h6 id="AQS常见的实现类"><a href="#AQS常见的实现类" class="headerlink" title="AQS常见的实现类"></a>AQS常见的实现类</h6><ul>
 <li><strong>ReentrantLock 阻塞式锁</strong></li>
 <li>Semaphore 信号量</li>
@@ -8148,7 +8638,7 @@ t3.start();
 <ul>
 <li><strong>语法层面</strong></li>
 </ul>
-<p>synchronized是关键字，源码在jvm中，用c++语言实现<br>Lock是接口，源码由jdk提供，用java语言实现<br>使用synchronized时，退出同步代码块锁会<strong>自动释放</strong>，而使用Lock时，需要<strong>手动</strong>调用unlock方法<strong>释放锁</strong></p>
+<p><strong>synchronized是关键字</strong>，源码在jvm中，用<strong>c++<strong>语言实现<br><strong>Lock是接口</strong>，源码由jdk提供，用</strong>java</strong>语言实现<br>使用synchronized时，退出同步代码块锁会<strong>自动释放</strong>，而使用Lock时，需要<strong>手动</strong>调用unlock方法<strong>释放锁</strong></p>
 <ul>
 <li><strong>功能层面</strong></li>
 </ul>
@@ -8240,6 +8730,47 @@ t3.start();
 <li>JDK1.7采用<code>Segment</code>分段锁，底层使用的是<code>ReentrantLock</code></li>
 <li>JDK1.8采用<code>CAS</code><del>自旋锁</del>添加新节点，采用<code>synchronized</code>锁定链表或红黑二叉树的首节点，相对Segment分段锁粒度更细，性能更好</li>
 </ul>
+<blockquote>
+<p>在 <strong>JDK1.7</strong> 的 <code>ConcurrentHashMap</code> 实现中：</p>
+<ul>
+<li><code>ConcurrentHashMap</code> 底层被分成了多个 <strong>Segment</strong>（段）。</li>
+<li>每个 Segment 本质上就是一个小型的 HashMap + 一把锁（<code>ReentrantLock</code>）。</li>
+<li>整个 Map 是由多个 Segment 组成的数组：<code>Segment&lt;K, V&gt;[] segments;</code></li>
+<li>每个 Segment 管理自己那部分的数据，<strong>互不干扰</strong>，从而实现高并发。</li>
+</ul>
+<p><strong>提高并发性，减小锁竞争：</strong></p>
+<ul>
+<li>将一个大的 <strong>HashMap</strong> 拆成多个 Segment（默认16个），每个 Segment 单独加锁。</li>
+<li>这样多个线程并发访问不同 Segment 的数据时，就不会互相阻塞，从而提升性能。</li>
+<li>线程只会锁定自己需要访问的那个 Segment，不会锁全表。</li>
+</ul>
+<h5 id="【下列图中针对于整体和put的解释】"><a href="#【下列图中针对于整体和put的解释】" class="headerlink" title="【下列图中针对于整体和put的解释】"></a>【下列图中针对于整体和put的解释】</h5><h3 id="📌-1-整体结构"><a href="#📌-1-整体结构" class="headerlink" title="📌 1. 整体结构"></a>📌 1. 整体结构</h3><ul>
+<li>外部是一个 <strong>Segment 数组</strong>：每个 Segment 是独立加锁的。</li>
+<li>每个 Segment 内部又是一个 HashEntry 数组（就像 HashMap 的结构）。</li>
+</ul>
+<h3 id="📌-2-put-操作流程（以-JDK1-7-为例）："><a href="#📌-2-put-操作流程（以-JDK1-7-为例）：" class="headerlink" title="📌 2. put 操作流程（以 JDK1.7 为例）："></a>📌 2. put 操作流程（以 JDK1.7 为例）：</h3><ol>
+<li>根据 key 的 hash 计算出 Segment 的<strong>下标</strong>（如 Segment[5]）。</li>
+<li>进入对应的 Segment，获<strong>取其锁</strong>（<code>ReentrantLock.lock()</code>）。</li>
+<li>再在该 Segment 中，查找对应的<strong>桶位</strong>（HashEntry 数组）。</li>
+<li>找到位置后：<ul>
+<li>如果该位置已有数据，做链表遍历、替换或追加。</li>
+<li>如果链表过长，在 JDK1.7 仍然是链表（没有红黑树）。</li>
+</ul>
+</li>
+<li>插入完成后释放锁。</li>
+</ol>
+<h5 id="✅-JDK1-8-为什么放弃-Segment？"><a href="#✅-JDK1-8-为什么放弃-Segment？" class="headerlink" title="✅ JDK1.8 为什么放弃 Segment？"></a>✅ JDK1.8 为什么放弃 Segment？</h5><p>JDK1.8 里，<strong>取消了 Segment 分段锁结构，改为节点粒度的同步控制</strong>：</p>
+<ul>
+<li>使用 <strong>CAS + synchronized</strong> 替代了 Segment + ReentrantLock。</li>
+<li>好处：<ul>
+<li>不再有 Segment 的内存占用与操作复杂度。</li>
+<li>粒度更细，性能更好。</li>
+<li>数据结构与 HashMap 接轨，统一维护。</li>
+</ul>
+</li>
+</ul>
+<p>在 JDK1.7 中，<code>ConcurrentHashMap</code> 使用 <strong>Segment 分段锁机制</strong> 提高并发性能，将 Map 拆成多个小的 Segment，每个 Segment 内部结构类似 HashMap，通过加锁控制并发。而在 JDK1.8 中，放弃 Segment，采用 <strong>CAS + synchronized 锁节点的方式</strong>，结构变为数组 + 链表 + 红黑树，性能与简洁性双双提升。</p>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/fc8e6e126e8fff5692b8c53102ac3237b913310d/%E8%81%8A%E4%B8%80%E8%81%8AConcurrentHashMap.png"></p>
 <h4 id="导致并发程序出现问题的根本原因是什么-Java程序中怎么保证多线程的执行安全"><a href="#导致并发程序出现问题的根本原因是什么-Java程序中怎么保证多线程的执行安全" class="headerlink" title="导致并发程序出现问题的根本原因是什么 (Java程序中怎么保证多线程的执行安全)"></a><span style = "color:red"><strong>导致并发程序出现问题的根本原因是什么 (Java程序中怎么保证多线程的执行安全)</strong></span></h4><h6 id="Java并发编程三大特性"><a href="#Java并发编程三大特性" class="headerlink" title="Java并发编程三大特性"></a>Java并发编程三大特性</h6><ul>
 <li><span style = "color:blue"><strong>原子性<del>synchronized、lock</del></strong></span>：一个线程在CPU中操作不可暂停，也不可中断，要么执行完成，要么不执行</li>
@@ -8305,7 +8836,7 @@ public void actor2(II_Result r)&#123;
 </code></pre>
 <p><strong>解决办法</strong>：在前面加上<code>volatile</code></p>
 <p><span style = "color:red"><strong>说一下线程池的核心参数</strong></span></p>
-<p>为什么要创建线程池 因为每次创建线程的时候就要占用一定的内存空间 无限创建线程回浪费内存<del>严重会导致内存溢出</del><br>CPU有限的同一时刻只能同时处理一个线程 大量线程来的话就没有线程权 会造成线程等待 造成大量线程在之间切换也会导致性能变慢</p>
+<p>为什么要创建线程池 因为每次创建线程的时候就要占用一定的内存空间 无限创建线程会浪费内存<del>严重会导致内存溢出</del><br>CPU有限的同一时刻只能同时处理一个线程 大量线程来的话就没有线程权 会造成线程等待 造成大量线程在之间切换也会导致性能变慢</p>
 <pre><code class="java">在这个例子中，我们创建了一个线程池，核心线程数为5，最大线程数为10，如果线程池中的线程数大于核心线程数，则空闲线程在60秒后会被终止。工作队列使用ArrayBlockingQueue，其容量为100。
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -8357,8 +8888,8 @@ public class ThreadPoolExample &#123;
     &#125;
 &#125;
 </code></pre>
-<p>一开始new的时候没有 是空的。先当一个任务提交给线程池时，线程池首先检查当前运行的线程数是否达到核心线程数。如果没有达到核心线程数，线程池会创建一个新的线程来执行任务。如果已经达到核心线程数，线程池会将任务放入工作队列中等待执行。如果工作队列满了，并且当前运行的线程数小于最大线程数，，线程池会创建新的线程来执行任务。如果工作队列满了，并且当前运行的线程数等于最大线程数，线程池会根据<strong>拒绝策略</strong></p>
-<ul>
+<p>一开始new的时候没有是空的。先当一个任务提交给线程池时，线程池首先检查当前运行的线程数是否达到核心线程数。如果没有达到核心线程数，线程池会创建一个新的线程来执行任务。如果已经达到核心线程数，线程池会将任务放入工作队列中等待执行。如果工作队列满了，并且当前运行的线程数小于最大线程数，线程池会创建新的线程来执行任务。如果工作队列满了，并且当前运行的线程数等于最大线程数，线程池会根据<strong>拒绝策略</strong></p>
+<h6 id="拒绝策略："><a href="#拒绝策略：" class="headerlink" title="拒绝策略："></a>拒绝策略：</h6><ul>
 <li><u>丢弃任务抛出异常</u></li>
 <li><u>丢弃任务不抛弃异常</u></li>
 <li><u>丢弃队列最前面的任务,然后重新提交被拒绝的任务、</u></li>
@@ -8418,6 +8949,127 @@ public class ThreadPoolExample &#123;
 <td align="center">两把锁(头尾)<del>可以一边入队,一边出队</del></td>
 </tr>
 </tbody></table>
+<blockquote>
+<h4 id="ArrayBlockingQueue（数组有界队列）"><a href="#ArrayBlockingQueue（数组有界队列）" class="headerlink" title="ArrayBlockingQueue（数组有界队列）"></a><strong>ArrayBlockingQueue（数组有界队列）</strong></h4><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>类型</td>
+<td>有界队列（必须指定容量）</td>
+</tr>
+<tr>
+<td>底层结构</td>
+<td>数组（先进先出 FIFO）</td>
+</tr>
+<tr>
+<td>线程安全</td>
+<td>内部使用一把锁（ReentrantLock）实现</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>读写快，结构稳定</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>可以<strong>准确预估任务数量</strong>的场景，推荐用于<strong>生产环境</strong>保障系统稳定</td>
+</tr>
+<tr>
+<td>特点</td>
+<td>不支持扩容，满了会阻塞或抛异常</td>
+</tr>
+</tbody></table>
+<p>✅ <strong>适用于：生产环境中任务量可控，保证内存稳定，不希望触发OOM。</strong></p>
+<h4 id="LinkedBlockingQueue（链表无界队列）"><a href="#LinkedBlockingQueue（链表无界队列）" class="headerlink" title="LinkedBlockingQueue（链表无界队列）"></a><strong>LinkedBlockingQueue（链表无界队列）</strong></h4><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>类型</td>
+<td>默认无界队列（最大为 Integer.MAX_VALUE，可设置为有界）</td>
+</tr>
+<tr>
+<td>底层结构</td>
+<td>链表（FIFO）</td>
+</tr>
+<tr>
+<td>线程安全</td>
+<td>使用两把锁（put锁 + take锁），可以同时入队出队</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>插入删除性能好，随机访问性能差（O(n)）</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>任务流量大、不可预估任务量的场景</td>
+</tr>
+<tr>
+<td>特点</td>
+<td>不容易触发拒绝策略，但容易造成内存溢出（OOM）</td>
+</tr>
+</tbody></table>
+<p>✅ <strong>适用于：高并发日志、事件处理等消费速度快但生产不确定的情况。</strong></p>
+<table>
+<thead>
+<tr>
+<th>队列类型</th>
+<th>有界性</th>
+<th>底层结构</th>
+<th>锁机制</th>
+<th>特点描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ArrayBlockingQueue</code></td>
+<td>有界</td>
+<td>数组</td>
+<td>一把锁</td>
+<td>性能稳定，适合任务量可控场景</td>
+</tr>
+<tr>
+<td><code>LinkedBlockingQueue</code></td>
+<td>默认无界</td>
+<td>链表</td>
+<td>两把锁（头尾）</td>
+<td>插入删除效率高，容易堆积任务造成内存压力</td>
+</tr>
+</tbody></table>
+<h4 id="线程池中选择哪个阻塞队列？"><a href="#线程池中选择哪个阻塞队列？" class="headerlink" title="线程池中选择哪个阻塞队列？"></a>线程池中选择哪个阻塞队列？</h4><table>
+<thead>
+<tr>
+<th>使用场景</th>
+<th>推荐队列类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通后台异步任务</td>
+<td><code>ArrayBlockingQueue</code></td>
+<td>稳定、安全，可预估任务量</td>
+</tr>
+<tr>
+<td>高并发任务，消费快但产量不可控</td>
+<td><code>LinkedBlockingQueue</code></td>
+<td>适合吞吐量大场景，注意内存风险</td>
+</tr>
+</tbody></table>
+<h4 id="守护线程补充"><a href="#守护线程补充" class="headerlink" title="守护线程补充"></a>守护线程补充</h4><p>你提到的这段也非常好，总结如下：</p>
+<ul>
+<li><strong>守护线程（daemon）</strong>：依附主线程存在，主线程结束，守护线程也自动终止。如：GC线程。</li>
+<li><strong>非守护线程（user thread）</strong>：默认类型，主线程结束后仍会继续运行。</li>
+</ul>
+<p>可通过：</p>
+<pre><code class="java">Thread thread = new Thread(...);
+thread.setDaemon(true); // 设置为守护线程
+</code></pre>
+</blockquote>
 <p><span style = "color:red"><strong>如何确定核心线程数</strong></span></p>
 <blockquote>
 <p>① 高并发、任务执行时间短 → (CPU核数 + 1)，减少线程上下文的切换<br>② 并发不高、任务执行时间长</p>
@@ -8478,6 +9130,9 @@ public static void main(String[] args)&#123;
 允许的请求队列长度为 Integer.MAX_VALUE,可能会堆积大量的请求，从而导致OOM
 2. CachedThreadPool：
 允许的创建线程数量为 Integer.MAX_VALUE,可能会创建大量的线程，从而导致OOM
+    
+    
+在实际开发中，不建议使用 Executors 创建线程池，因为其底层默认参数具有潜在的 OOM 风险。例如 FixedThreadPool 使用无界队列、CachedThreadPool 最大线程数为 Integer.MAX_VALUE，容易在高并发场景下造成内存溢出。因此建议通过 ThreadPoolExecutor 显式指定核心参数，做到资源可控，避免系统风险。
 </code></pre>
 <p><span style = "color:red"><strong>线程池的使用场景①：ES数据批量导入</strong></span></p>
 <h6 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h6><p>CountDownLatch(闭锁&#x2F;倒计时锁)用来进行线程同步协作，等待所有线程完成倒计时时(一个或多个线程，等待其他多个线程完成某件事情之后才能执行)</p>
@@ -8487,6 +9142,9 @@ public static void main(String[] args)&#123;
 <li><code>countDown()</code>用来让计数减一</li>
 </ul>
 <h6 id="多线程使用场景一-es数据批量导入"><a href="#多线程使用场景一-es数据批量导入" class="headerlink" title="多线程使用场景一 (es数据批量导入)"></a>多线程使用场景一 (es数据批量导入)</h6><p>在我们项目上线之前，我们需要把数据库中的数据一次性的同步到es索引库中，但是当时的数据好像是1000万左右一次性读取数据肯定不行(oom异常)，当时我就想到可以使用线程池的方式导入，利用CountDownLatch来控制就能避免一次性加载过多，防止内存溢出</p>
+<blockquote>
+<p>在我们项目中，曾有一次需要把MySQL中的一千万条历史文章同步到ES。为了避免一次性加载引发OOM，我将数据分页为每页2000条，使用线程池批量提交导入任务，同时使用 <code>CountDownLatch</code> 控制主线程阻塞等待所有子任务完成，再统一执行收尾逻辑。这样做极大优化了内存占用和同步效率。</p>
+</blockquote>
 <p>DB(一千万) → 线程池(CountDownLatch) → Elasticearch</p>
 <pre><code class="java">       批量导入  →  查询总条数   →       DB
                       ↓               ↑          批量导入到ES中     →   ES
@@ -8507,6 +9165,20 @@ public static void main(String[] args)&#123;
 </ul>
 </li>
 </ul>
+<blockquote>
+<h4 id="并发数据汇总（如订单数据聚合）"><a href="#并发数据汇总（如订单数据聚合）" class="headerlink" title="并发数据汇总（如订单数据聚合）"></a><strong>并发数据汇总（如订单数据聚合）</strong></h4><blockquote>
+<p>关键词：<strong>接口无依赖、加速响应、Future并发调用</strong></p>
+</blockquote>
+<h4 id="📌-适用场景"><a href="#📌-适用场景" class="headerlink" title="📌 适用场景"></a>📌 适用场景</h4><ul>
+<li>一个接口需要聚合多个来源服务（如订单服务、商品服务、物流服务）</li>
+<li>服务之间<strong>无强依赖</strong>，可并发发起请求提升响应速度</li>
+</ul>
+<h4 id="✅-技术点"><a href="#✅-技术点" class="headerlink" title="✅ 技术点"></a>✅ 技术点</h4><ul>
+<li><code>线程池 + Future + Callable</code></li>
+<li>三个子任务并发发起 → <code>.get()</code>阻塞获取返回值</li>
+<li>总响应时间 ≈ 最慢的那个接口，而不是三个之和</li>
+</ul>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/b9ec7c6d685bab18893fbfa3b6637c48f3384ecf/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%E2%80%94%E6%95%B0%E6%8D%AE%E6%B1%87%E6%80%BB.png"></p>
 <p><span style = "color:red"><strong>线程池的使用场景③：异步调用</strong></span></p>
 <p>为了避免下一级方法影响上一级方法(性能考虑)，可使用<strong>异步线程调用</strong>下一个方法(不需要下一级方法返回值)，可以提升方法相应时间</p>
@@ -8518,8 +9190,56 @@ public static void main(String[] args)&#123;
 <li>semaphore.acquire()：请求一个信号量，这时候的信号量个数 -1 (<u>一旦没有可使用的信号量，也即信号量个数变为负数时，再次请求的时候就会阻塞，直到其他线程释放了信号量</u>)</li>
 <li>semaphore.release()：释放一个信号量，此时信号量个数 +1</li>
 </ul>
+<blockquote>
+<h3 id="使用-Semaphore-信号量"><a href="#使用-Semaphore-信号量" class="headerlink" title="使用 Semaphore 信号量"></a>使用 <code>Semaphore</code> 信号量</h3><ul>
+<li><code>Semaphore</code> 是 JUC 包下的并发工具类，用于<strong>控制同时访问某个资源的线程数量</strong></li>
+<li>底层基于 AQS（AbstractQueuedSynchronizer）实现</li>
+<li>常用于<strong>限流、并发资源控制、连接池管理、接口控制等场景</strong></li>
+</ul>
+<pre><code class="yaml">Semaphore 就像操作系统中的“通行证/信号灯”，只有拿到令牌（acquire）才能进入方法执行，执行完后必须释放令牌（release），否则其他线程会一直阻塞在那等令牌释放。
+</code></pre>
+<ul>
+<li><code>new Semaphore(n)</code>：设置可同时访问的线程数量为 n</li>
+<li><code>semaphore.acquire()</code>：申请令牌，获取不到则阻塞</li>
+<li><code>semaphore.release()</code>：释放令牌，通知其他线程</li>
+</ul>
+<blockquote>
+<p>Semaphore 可以限制方法的并发访问线程数，常用于限流或控制资源并发度。通过 <code>acquire()</code> 获取访问许可、<code>release()</code> 释放许可，从而确保同时最多只有固定数量的线程能访问目标方法或资源。</p>
+</blockquote>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/76cde79a53b36086d940f2874f8aa7ffd93ce6ef/%E5%A6%82%E4%BD%95%E6%8E%A7%E5%88%B6%E6%9F%90%E4%B8%AA%E6%96%B9%E6%B3%95%E5%85%81%E8%AE%B8%E5%B9%B6%E5%8F%91%E8%AE%BF%E9%97%AE%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%95%B0%E9%87%8F.png"></p>
 <p><span style = "color:red"><strong>谈一谈你对ThreadLocal的理解</strong></span></p>
+<p><code>ThreadLocal</code> 是 Java 提供的<strong>线程本地变量工具类</strong>，用于实现<strong>线程间的数据隔离</strong>，也可理解为线程级别的“共享变量”。</p>
+<blockquote>
+<h3 id="🌟-一句话总结（记住这个）"><a href="#🌟-一句话总结（记住这个）" class="headerlink" title="🌟 一句话总结（记住这个）"></a>🌟 一句话总结（记住这个）</h3><blockquote>
+<p><strong>ThreadLocal 实现线程间变量隔离，让每个线程拥有一份自己的变量副本，常用于解决共享变量的线程安全问题。</strong></p>
+</blockquote>
+<h3 id="📌-附加：ThreadLocal-≠-线程安全"><a href="#📌-附加：ThreadLocal-≠-线程安全" class="headerlink" title="📌 附加：ThreadLocal ≠ 线程安全"></a>📌 附加：ThreadLocal ≠ 线程安全</h3><blockquote>
+<p>ThreadLocal 并不是让对象变“线程安全”，只是让每个线程用自己那份数据，<strong>避免共享</strong>导致的问题。</p>
+</blockquote>
+<h3 id="🚀-作用与优势"><a href="#🚀-作用与优势" class="headerlink" title="🚀 作用与优势"></a>🚀 作用与优势</h3><ul>
+<li><strong>线程隔离</strong>：每个线程持有一份独立变量，互不干扰，解决并发线程对共享资源读写冲突的问题。</li>
+<li><strong>线程内共享</strong>：同一线程中可以在不同方法、组件间共享数据（如事务控制、用户上下文等）。</li>
+</ul>
+<h3 id="🧠-原理说明（核心）"><a href="#🧠-原理说明（核心）" class="headerlink" title="🧠 原理说明（核心）"></a>🧠 原理说明（核心）</h3><p>每个线程内部都维护一个 <code>ThreadLocalMap</code>（它是 Thread 类的成员变量）：</p>
+<ul>
+<li>当调用 <code>threadLocal.set(value)</code> 时：<ul>
+<li>当前线程的 <code>ThreadLocalMap</code> 中以 <code>threadLocal</code> 实例作为 key，<code>value</code> 作为值进行存储。</li>
+</ul>
+</li>
+<li>当调用 <code>threadLocal.get()</code> 时：<ul>
+<li>会从当前线程中以 <code>threadLocal</code> 为 key 查找对应的值。</li>
+</ul>
+</li>
+<li><code>remove()</code> 用于手动移除，防止内存泄漏。</li>
+</ul>
+<p>✅ 本质上：ThreadLocal 并不是把值保存在自己内部，而是保存在当前线程的 <code>ThreadLocalMap</code> 中。</p>
+<h3 id="☢️-内存泄漏问题"><a href="#☢️-内存泄漏问题" class="headerlink" title="☢️ 内存泄漏问题"></a>☢️ 内存泄漏问题</h3><ul>
+<li><code>ThreadLocalMap</code> 中的 key 是 <code>ThreadLocal</code> 的<strong>弱引用</strong>，但 value 是<strong>强引用</strong></li>
+<li>当 ThreadLocal 实例被 GC 回收后，key 变成 null，**<u>value 仍存在，若不手动 remove，就会造成内存泄漏</u>**</li>
+<li><strong>最佳实践：用完一定要调用 <code>remove()</code> 方法清除数据</strong></li>
+</ul>
+</blockquote>
 <blockquote>
 <ul>
 <li>ThreadLocal 可以实现【资源对象】的线程隔离，让每个线程各用各的【资源对象】避免争用引发的线程安全问题</li>
@@ -8541,7 +9261,7 @@ public static void main(String[] args)&#123;
 <li>get() 获取值</li>
 <li>remove() 清除值</li>
 </ul>
-<h6 id="ThreadLocal的实现原理-amp-源码解析"><a href="#ThreadLocal的实现原理-amp-源码解析" class="headerlink" title="ThreadLocal的实现原理 &amp; 源码解析"></a>ThreadLocal的实现原理 &amp; 源码解析</h6><p>ThreadLocal本质来说就是一个线程内部存储类，从而让多个线程只操作自己内部的值，从而实现线程数据隔离<br><img src="https://raw.githubusercontent.com/P-luminary/images/4471cf0ff69616926ff6fab93392d3d9fa5aba32/%E8%B0%88%E4%B8%80%E8%B0%88%E4%BD%A0%E5%AF%B9ThreadLocal%E7%9A%84%E7%90%86%E8%A7%A3.png"></p>
+<h6 id="ThreadLocal的实现原理-amp-源码解析"><a href="#ThreadLocal的实现原理-amp-源码解析" class="headerlink" title="ThreadLocal的实现原理 &amp; 源码解析"></a>ThreadLocal的实现原理 &amp; 源码解析</h6><p>ThreadLocal本质来说就是一个<strong>线程内部存储类</strong>，从而让多个线程只操作自己内部的值，从而实现线程数据隔离<br><img src="https://raw.githubusercontent.com/P-luminary/images/4471cf0ff69616926ff6fab93392d3d9fa5aba32/%E8%B0%88%E4%B8%80%E8%B0%88%E4%BD%A0%E5%AF%B9ThreadLocal%E7%9A%84%E7%90%86%E8%A7%A3.png"></p>
 <h2 id="JVM相关面试题"><a href="#JVM相关面试题" class="headerlink" title="JVM相关面试题"></a>JVM相关面试题</h2><p><span style = "color:red"><strong>什么是JVM？</strong></span></p>
 <p>JVM &#x3D; <code>Java Virtual Machine</code>  是java程序的运行环境<br>JVM是运行在操作系统中的 屏蔽了操作系统的差异</p>
 <p><strong>好处</strong>：</p>
@@ -9157,6 +9877,439 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <ul>
 <li>数据量很大就分库分表</li>
 </ul>
+<blockquote>
+<h4 id="✅-一张图理清：秒杀系统全链路优化流程"><a href="#✅-一张图理清：秒杀系统全链路优化流程" class="headerlink" title="✅ 一张图理清：秒杀系统全链路优化流程"></a>✅ 一张图理清：秒杀系统全链路优化流程</h4><pre><code class="java"> [用户点击秒杀按钮]
+        ↓
+   【前端防刷】
+      - 限制频繁点击
+      - 滑动验证码
+      - 倒计时、按钮控制
+        ↓
+   【网关 &amp; Nginx】
+      - 黑名单拦截（IP、UA）
+      - Sentinel 限流 + 降级 + 熔断
+        ↓
+   【秒杀服务】
+      - 判断秒杀状态、时间、库存是否存在
+      - 生成秒杀Token（防重）
+      - Redis 原子性扣减库存（Lua脚本）
+      - 发送下单消息至 MQ 异步处理
+        ↓
+   【MQ异步削峰】
+      - 持久化队列（RocketMQ / Kafka）
+      - 消费者异步落库
+        ↓
+   【数据库层】
+      - MySQL最终扣减库存 + 创建订单（事务）
+      - 数据库读写分离 / 分库分表
+</code></pre>
+<h2 id="🧩-各模块详细优化方案"><a href="#🧩-各模块详细优化方案" class="headerlink" title="🧩 各模块详细优化方案"></a>🧩 <strong>各模块详细优化方案</strong></h2><h3 id="①-前端层（第一道防线）"><a href="#①-前端层（第一道防线）" class="headerlink" title="① 前端层（第一道防线）"></a>① 前端层（第一道防线）</h3><ul>
+<li><p>✅ <strong>活动页静态化</strong>：部署在 CDN，秒开页面，减少服务器并发压力。</p>
+<blockquote>
+<p><strong>CDN域名</strong>是指通过内容分发网络（CDN）技术加速访问的域名。CDN的全称是<strong>Content Delivery Network</strong>，即内容分发网络。它通过将源站内容分发到分布在全球各地的加速节点，使用户可以从离自己最近的节点获取内容，从而提升访问速度和体验。</p>
+<p>CDN域名的工作原理是将用户的访问请求通过DNS解析，指向最优的CDN节点。如果节点上已有缓存内容，则直接返回给用户；如果没有缓存，则从源站拉取内容并缓存到节点，供后续用户访问。</p>
+</blockquote>
+</li>
+<li><p>✅ <strong>JS 控制按钮状态</strong>：倒计时期间按钮禁用；点击后立即禁用防止重复提交。</p>
+</li>
+<li><p>✅ <strong>防刷机制</strong>：</p>
+<ul>
+<li>滑动验证码（极验、腾讯滑动等）</li>
+<li>限制频繁请求（客户端节流 + 后端拦截）</li>
+<li>秒杀路径动态化（通过接口获取临时随机URL）</li>
+</ul>
+</li>
+</ul>
+<h3 id="②-网关层（第二道防线）"><a href="#②-网关层（第二道防线）" class="headerlink" title="② 网关层（第二道防线）"></a>② 网关层（第二道防线）</h3><ul>
+<li>✅ <strong>Nginx限流</strong> + F5&#x2F;LVS 硬件负载均衡</li>
+<li>✅ <strong>Sentinel限流</strong>：<ul>
+<li>QPS限流、线程数限制</li>
+<li>降级策略（服务不稳定时快速失败）</li>
+</ul>
+</li>
+<li>✅ <strong>灰度发布</strong> + 金丝雀策略防雪崩</li>
+</ul>
+<h3 id="③-服务层（核心逻辑）"><a href="#③-服务层（核心逻辑）" class="headerlink" title="③ 服务层（核心逻辑）"></a>③ 服务层（核心逻辑）</h3><ul>
+<li>✅ <strong>Redis预热商品库存</strong>：<ul>
+<li><code>key: seckill:stock:123 =&gt; 10</code></li>
+</ul>
+</li>
+<li>✅ <strong>Lua脚本保证扣减原子性</strong></li>
+</ul>
+<pre><code class="java">if redis.call(&quot;get&quot;, KEYS[1]) &gt;= tonumber(ARGV[1]) then
+   return redis.call(&quot;decrby&quot;, KEYS[1], ARGV[1])
+else
+   return -1
+end
+</code></pre>
+<ul>
+<li>✅ <strong>Token校验防重</strong>（防止同一用户多次提交）<ul>
+<li>用户下发秒杀Token</li>
+<li>下单时校验 token 是否存在</li>
+</ul>
+</li>
+<li>✅ <strong>幂等性处理</strong>：幂等令牌、Redis标记等手段防止重复下单</li>
+<li>✅ <strong>Redisson分布式锁</strong>（用于控制某些全局状态，如每秒限量）</li>
+</ul>
+<h3 id="④-MQ-消息队列层（削峰填谷）"><a href="#④-MQ-消息队列层（削峰填谷）" class="headerlink" title="④ MQ 消息队列层（削峰填谷）"></a>④ MQ 消息队列层（削峰填谷）</h3><ul>
+<li>✅ 典型架构：RocketMQ &#x2F; RabbitMQ &#x2F; Kafka</li>
+<li>✅ 一进一出，异步下单逻辑<ul>
+<li>消息格式：包含<code>userId</code>, <code>productId</code>, <code>token</code></li>
+</ul>
+</li>
+<li>✅ 消息失败怎么办？<ul>
+<li><strong>死信队列</strong> + 重试机制 + 日志报警</li>
+</ul>
+</li>
+</ul>
+<h3 id="⑤-数据库层（最终一致性）"><a href="#⑤-数据库层（最终一致性）" class="headerlink" title="⑤ 数据库层（最终一致性）"></a>⑤ 数据库层（最终一致性）</h3><ul>
+<li>✅ <strong>分库分表</strong>：<ul>
+<li>订单表按用户ID或时间范围分表</li>
+<li>库存表按商品类型分表</li>
+</ul>
+</li>
+<li>✅ <strong>读写分离</strong>：<ul>
+<li>MySQL主从复制</li>
+<li>下单写入主库，查询走从库</li>
+</ul>
+</li>
+<li>✅ <strong>事务处理</strong>：<ul>
+<li>扣库存 + 创建订单需要事务包裹</li>
+</ul>
+</li>
+<li>✅ <strong>补偿机制</strong>：<ul>
+<li>MQ失败回滚机制 + 自动重试 or 人工介入</li>
+</ul>
+</li>
+</ul>
+<h2 id="🎯-秒杀系统关键点总结（重点记忆）"><a href="#🎯-秒杀系统关键点总结（重点记忆）" class="headerlink" title="🎯 秒杀系统关键点总结（重点记忆）"></a>🎯 秒杀系统关键点总结（重点记忆）</h2><table>
+<thead>
+<tr>
+<th>优化维度</th>
+<th>关键点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>防刷防作弊</td>
+<td>滑动验证码、动态路径、限流、IP黑名单</td>
+</tr>
+<tr>
+<td>限流削峰</td>
+<td>Sentinel、MQ异步下单、排队</td>
+</tr>
+<tr>
+<td>高性能扣减</td>
+<td>Redis + Lua 脚本，原子扣减库存</td>
+</tr>
+<tr>
+<td>数据一致性</td>
+<td>MQ消息可靠投递、事务补偿机制</td>
+</tr>
+<tr>
+<td>分布式扩展</td>
+<td>分库分表、读写分离、动态扩容</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>Token校验、防重、防止超卖</td>
+</tr>
+</tbody></table>
+<p>我将为你详细讲解和设计一个真实的<strong>秒杀系统完整优化方案</strong>，从 Redis 预热、限流、库存扣减、异步下单、订单状态回写等关键步骤一一展开说明，并配上示意代码。</p>
+<hr>
+<h2 id="🔧-一、整体秒杀流程概览图"><a href="#🔧-一、整体秒杀流程概览图" class="headerlink" title="🔧 一、整体秒杀流程概览图"></a>🔧 一、整体秒杀流程概览图</h2><pre><code class="java">用户请求 → 接入层限流 → Redis预扣库存（Lua脚本） → 发送MQ消息 → 异步下单 → 数据库落库 → 回写订单状态
+</code></pre>
+<hr>
+<h2 id="🧱-二、Redis缓存预热（秒杀前的准备工作）"><a href="#🧱-二、Redis缓存预热（秒杀前的准备工作）" class="headerlink" title="🧱 二、Redis缓存预热（秒杀前的准备工作）"></a>🧱 二、Redis缓存预热（秒杀前的准备工作）</h2><blockquote>
+<p>提前将商品库存加载到 Redis，避免高并发时频繁访问数据库。</p>
+</blockquote>
+<pre><code class="java">// Redis结构设计
+// key: seckill:stock:&lt;skuId&gt;
+// val: 商品库存数量
+
+public void preloadSeckillStock(Long skuId, Integer stock) &#123;
+    String key = &quot;seckill:stock:&quot; + skuId;
+    redisTemplate.opsForValue().set(key, stock);
+&#125;
+</code></pre>
+<hr>
+<h2 id="🛡-三、限流-防刷-验签（接入层）"><a href="#🛡-三、限流-防刷-验签（接入层）" class="headerlink" title="🛡 三、限流 + 防刷 + 验签（接入层）"></a>🛡 三、限流 + 防刷 + 验签（接入层）</h2><blockquote>
+<p>使用网关 Sentinel 限流，前端限制点击频率，后端防刷接口做风控。</p>
+</blockquote>
+<pre><code class="java">@GetMapping(&quot;/doSeckill&quot;)
+public ResponseEntity&lt;?&gt; doSeckill(@RequestParam Long skuId) &#123;
+    // 判断是否登录
+    Long userId = getLoginUserId();
+    
+    // 判断是否重复请求（防重）
+    String repeatKey = &quot;seckill:user:&quot; + userId + &quot;:sku:&quot; + skuId;
+    Boolean hasBought = redisTemplate.opsForValue().setIfAbsent(repeatKey, &quot;1&quot;, 5, TimeUnit.MINUTES);
+    if (!hasBought) return ResponseEntity.status(429).body(&quot;请勿重复抢购&quot;);
+
+    // 执行扣库存的 Lua 脚本
+    Long result = redisTemplate.execute(luaScript, Collections.singletonList(&quot;seckill:stock:&quot; + skuId), &quot;1&quot;);
+    if (result == 0L) return ResponseEntity.status(410).body(&quot;库存不足&quot;);
+
+    // 发送消息至 MQ 进行异步处理
+    SeckillMessage msg = new SeckillMessage(userId, skuId);
+    mqTemplate.convertAndSend(&quot;seckill.queue&quot;, msg);
+
+    return ResponseEntity.ok(&quot;下单请求已提交&quot;);
+&#125;
+</code></pre>
+<hr>
+<h2 id="📜-四、Lua脚本操作-Redis（保证原子性）"><a href="#📜-四、Lua脚本操作-Redis（保证原子性）" class="headerlink" title="📜 四、Lua脚本操作 Redis（保证原子性）"></a>📜 四、Lua脚本操作 Redis（保证原子性）</h2><pre><code class="java">-- KEYS[1]: 库存key
+-- ARGV[1]: 扣减数量
+local stock = redis.call(&quot;get&quot;, KEYS[1])
+if tonumber(stock) &gt;= tonumber(ARGV[1]) then
+    return redis.call(&quot;decrby&quot;, KEYS[1], ARGV[1])
+end
+return 0
+</code></pre>
+<hr>
+<h2 id="📦-五、MQ异步消费-创建订单（核心业务）"><a href="#📦-五、MQ异步消费-创建订单（核心业务）" class="headerlink" title="📦 五、MQ异步消费 + 创建订单（核心业务）"></a>📦 五、MQ异步消费 + 创建订单（核心业务）</h2><blockquote>
+<p>用 RabbitMQ、RocketMQ、Kafka 等异步落库下单，减轻主线程压力。</p>
+</blockquote>
+<pre><code class="java">@RabbitListener(queues = &quot;seckill.queue&quot;)
+public void handleSeckill(SeckillMessage msg) &#123;
+    Long userId = msg.getUserId();
+    Long skuId = msg.getSkuId();
+
+    // 检查数据库是否已下单（防止重复下单）
+    boolean exists = orderMapper.existsByUserAndSku(userId, skuId);
+    if (exists) return;
+
+    // 创建订单
+    Order order = new Order();
+    order.setUserId(userId);
+    order.setSkuId(skuId);
+    order.setStatus(&quot;WAIT_PAY&quot;);
+    orderMapper.insert(order);
+&#125;
+</code></pre>
+<hr>
+<h2 id="🧨-六、下单后定时关闭未支付订单（延迟消息）"><a href="#🧨-六、下单后定时关闭未支付订单（延迟消息）" class="headerlink" title="🧨 六、下单后定时关闭未支付订单（延迟消息）"></a>🧨 六、下单后定时关闭未支付订单（延迟消息）</h2><blockquote>
+<p>利用 RabbitMQ 的延迟队列（或用 Redis 的 ZSet+定时任务轮询）。</p>
+</blockquote>
+<pre><code class="java">// 下单后发送延迟消息
+rabbitTemplate.convertAndSend(&quot;order.ttl.exchange&quot;, &quot;order.ttl&quot;, orderId);
+
+// 死信队列处理超时未支付订单
+@RabbitListener(queues = &quot;order.dlx.queue&quot;)
+public void closeOrder(String orderId) &#123;
+    Order order = orderMapper.selectById(orderId);
+    if (&quot;WAIT_PAY&quot;.equals(order.getStatus())) &#123;
+        order.setStatus(&quot;CLOSED&quot;);
+        orderMapper.updateById(order);
+
+        // 回滚库存
+        redisTemplate.opsForValue().increment(&quot;seckill:stock:&quot; + order.getSkuId());
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<h2 id="📊-七、数据一致性考虑"><a href="#📊-七、数据一致性考虑" class="headerlink" title="📊 七、数据一致性考虑"></a>📊 七、数据一致性考虑</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Redis库存扣减成功但消息发送失败</td>
+<td>使用本地事务 + MQ事务消息机制</td>
+</tr>
+<tr>
+<td>订单超时未支付但库存没回滚</td>
+<td>MQ死信队列 + 回滚库存</td>
+</tr>
+<tr>
+<td>秒杀重复下单</td>
+<td>Redis防重 + DB唯一约束</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="✅-八、技术选型建议"><a href="#✅-八、技术选型建议" class="headerlink" title="✅ 八、技术选型建议"></a>✅ 八、技术选型建议</h2><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>缓存</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>消息队列</td>
+<td>RabbitMQ&#x2F;RocketMQ</td>
+</tr>
+<tr>
+<td>限流防刷</td>
+<td>Sentinel、滑动窗口</td>
+</tr>
+<tr>
+<td>延迟任务</td>
+<td>MQ延迟队列、定时任务轮询</td>
+</tr>
+<tr>
+<td>锁</td>
+<td>Redisson 分布式锁</td>
+</tr>
+<tr>
+<td>脚本原子性</td>
+<td>Lua脚本</td>
+</tr>
+</tbody></table>
+<hr>
+<hr>
+<h4 id="你说的很好-我想更进一步了解一下-你说的-Nginx限流-F5-x2F-LVS硬件负载均衡；网关-amp-nginx黑名单拦截-IP、UA-；生成秒杀Token；灰度发布-金丝雀策略"><a href="#你说的很好-我想更进一步了解一下-你说的-Nginx限流-F5-x2F-LVS硬件负载均衡；网关-amp-nginx黑名单拦截-IP、UA-；生成秒杀Token；灰度发布-金丝雀策略" class="headerlink" title="你说的很好 我想更进一步了解一下 你说的 Nginx限流+F5&#x2F;LVS硬件负载均衡；网关&amp;nginx黑名单拦截(IP、UA)；生成秒杀Token；灰度发布+金丝雀策略"></a>你说的很好 我想更进一步了解一下 你说的 Nginx限流+F5&#x2F;LVS硬件负载均衡；网关&amp;nginx黑名单拦截(IP、UA)；生成秒杀Token；灰度发布+金丝雀策略</h4><h2 id="✅-一、Nginx-限流-F5-x2F-LVS-硬件负载均衡"><a href="#✅-一、Nginx-限流-F5-x2F-LVS-硬件负载均衡" class="headerlink" title="✅ 一、Nginx 限流 + F5&#x2F;LVS 硬件负载均衡"></a>✅ 一、Nginx 限流 + F5&#x2F;LVS 硬件负载均衡</h2><h3 id="1-Nginx-限流"><a href="#1-Nginx-限流" class="headerlink" title="1. Nginx 限流"></a>1. Nginx 限流</h3><h4 id="✨目的："><a href="#✨目的：" class="headerlink" title="✨目的："></a>✨目的：</h4><ul>
+<li>限制单位时间的请求数，防止恶意刷接口、瞬间高并发导致服务崩溃。</li>
+</ul>
+<h4 id="✨配置方式："><a href="#✨配置方式：" class="headerlink" title="✨配置方式："></a>✨配置方式：</h4><pre><code>http &#123;
+    limit_req_zone $binary_remote_addr zone=req_limit_per_ip:10m rate=1r/s;
+    ...
+    server &#123;
+        location /seckill &#123;
+            limit_req zone=req_limit_per_ip burst=5 nodelay;
+            proxy_pass http://seckill-server;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="参数解释："><a href="#参数解释：" class="headerlink" title="参数解释："></a>参数解释：</h4><ul>
+<li><code>rate=1r/s</code>：每秒允许一个请求。</li>
+<li><code>burst=5</code>：允许瞬间突发5个请求。</li>
+<li><code>nodelay</code>：立即处理突发请求，不排队。</li>
+</ul>
+<h4 id="✅应用场景："><a href="#✅应用场景：" class="headerlink" title="✅应用场景："></a>✅应用场景：</h4><ul>
+<li>秒杀接口、登录接口、验证码接口等敏感接口的访问频控。</li>
+</ul>
+<hr>
+<h3 id="2-F5-x2F-LVS-硬件负载均衡"><a href="#2-F5-x2F-LVS-硬件负载均衡" class="headerlink" title="2. F5 &#x2F; LVS 硬件负载均衡"></a>2. F5 &#x2F; LVS 硬件负载均衡</h3><h4 id="✨作用："><a href="#✨作用：" class="headerlink" title="✨作用："></a>✨作用：</h4><ul>
+<li>F5&#x2F;LVS 作为物理网络设备层面的高性能负载均衡系统，位于企业最外层（防火墙之后，Nginx之前），进行<strong>四层(TCP&#x2F;UDP)转发</strong>，性能远高于 Nginx。</li>
+</ul>
+<h4 id="✅典型架构："><a href="#✅典型架构：" class="headerlink" title="✅典型架构："></a>✅典型架构：</h4><pre><code>markdown复制编辑             用户请求
+                 ↓
+       ┌────────────────┐
+       │  F5 / LVS  (L4)│
+       └────────────────┘
+                 ↓
+       ┌────────────────┐
+       │   Nginx (L7)    │
+       └────────────────┘
+                 ↓
+            应用服务层
+</code></pre>
+<h4 id="✅优势："><a href="#✅优势：" class="headerlink" title="✅优势："></a>✅优势：</h4><ul>
+<li>性能高、吞吐量大（每秒几十万 QPS）。</li>
+<li>更稳定，更适合企业级大并发业务。</li>
+<li>通常和 Nginx 搭配使用，分别处理 L4 &#x2F; L7 流量调度。</li>
+</ul>
+<hr>
+<h2 id="✅-二、网关-amp-Nginx-黑名单拦截（IP-x2F-UA）"><a href="#✅-二、网关-amp-Nginx-黑名单拦截（IP-x2F-UA）" class="headerlink" title="✅ 二、网关 &amp; Nginx 黑名单拦截（IP&#x2F;UA）"></a>✅ 二、网关 &amp; Nginx 黑名单拦截（IP&#x2F;UA）</h2><h3 id="✅-目标："><a href="#✅-目标：" class="headerlink" title="✅ 目标："></a>✅ 目标：</h3><p>防止恶意攻击、秒杀脚本、爬虫工具参与秒杀。</p>
+<h3 id="1-拦截策略"><a href="#1-拦截策略" class="headerlink" title="1. 拦截策略"></a>1. 拦截策略</h3><ul>
+<li><strong>IP 黑白名单</strong>：将恶意访问源加入黑名单。</li>
+<li><strong>UA 校验</strong>：不允许 curl、httpclient、python 等工具模拟请求。</li>
+<li><strong>访问频率统计</strong>：单位时间内访问频率超过阈值即封禁。</li>
+</ul>
+<h3 id="2-网关层实现（如-SpringCloud-Gateway）"><a href="#2-网关层实现（如-SpringCloud-Gateway）" class="headerlink" title="2. 网关层实现（如 SpringCloud Gateway）"></a>2. 网关层实现（如 SpringCloud Gateway）</h3><pre><code class="java">// 伪代码：过滤器中处理
+if (blackList.contains(ip) || suspiciousUA(ua)) &#123;
+    return 403 Forbidden;
+&#125;
+</code></pre>
+<hr>
+<h2 id="✅-三、生成秒杀Token（防黄牛、刷请求）"><a href="#✅-三、生成秒杀Token（防黄牛、刷请求）" class="headerlink" title="✅ 三、生成秒杀Token（防黄牛、刷请求）"></a>✅ 三、生成秒杀Token（防黄牛、刷请求）</h2><h3 id="✅-核心思想："><a href="#✅-核心思想：" class="headerlink" title="✅ 核心思想："></a>✅ 核心思想：</h3><p><strong>用户先请求一个随机 Token，再带着这个 Token 才能参与秒杀，且只能用一次</strong>。</p>
+<h3 id="✅-实现流程："><a href="#✅-实现流程：" class="headerlink" title="✅ 实现流程："></a>✅ 实现流程：</h3><h4 id="🔁-第一步：获取秒杀Token"><a href="#🔁-第一步：获取秒杀Token" class="headerlink" title="🔁 第一步：获取秒杀Token"></a>🔁 第一步：获取秒杀Token</h4><pre><code class="javascript">GET /seckill/token?productId=123
+Header: Authorization: Bearer 用户登录Token
+</code></pre>
+<p>返回：</p>
+<pre><code class="java">&#123; &quot;token&quot;: &quot;a8729f03-6a22-4cdb-8ad4-e19932cf&quot; &#125;
+</code></pre>
+<blockquote>
+<p>Redis 存储 token → <code>seckill:token:uid:productId -&gt; token</code></p>
+</blockquote>
+<h4 id="🏃-第二步：用户秒杀请求带上Token"><a href="#🏃-第二步：用户秒杀请求带上Token" class="headerlink" title="🏃 第二步：用户秒杀请求带上Token"></a>🏃 第二步：用户秒杀请求带上Token</h4><pre><code class="java">POST /seckill/submit
+Body: &#123; productId: 123, token: &quot;a8729f03-6a22-4cdb-8ad4-e19932cf&quot; &#125;
+</code></pre>
+<h4 id="✅-服务端校验："><a href="#✅-服务端校验：" class="headerlink" title="✅ 服务端校验："></a>✅ 服务端校验：</h4><ul>
+<li>token是否存在；</li>
+<li>token是否属于当前用户；</li>
+<li>校验通过后删除 token（一次性）；</li>
+<li>进入库存扣减逻辑。</li>
+</ul>
+<hr>
+<h2 id="✅-四、灰度发布-金丝雀策略（保障系统稳定性）"><a href="#✅-四、灰度发布-金丝雀策略（保障系统稳定性）" class="headerlink" title="✅ 四、灰度发布 + 金丝雀策略（保障系统稳定性）"></a>✅ 四、灰度发布 + 金丝雀策略（保障系统稳定性）</h2><h3 id="✅-区别："><a href="#✅-区别：" class="headerlink" title="✅ 区别："></a>✅ 区别：</h3><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>灰度发布</td>
+<td>指在小范围（如某些用户&#x2F;机器）上逐步发布新功能</td>
+</tr>
+<tr>
+<td>金丝雀发布</td>
+<td>类似灰度，但更强调监控与回滚能力</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="✅-示例：-1"><a href="#✅-示例：-1" class="headerlink" title="✅ 示例："></a>✅ 示例：</h3><h4 id="1-灰度规则："><a href="#1-灰度规则：" class="headerlink" title="1. 灰度规则："></a>1. 灰度规则：</h4><ul>
+<li>仅对北京地区、特定用户ID段、Android设备开放新功能；</li>
+<li>灰度用户看到的是新接口，其他人访问旧接口。</li>
+</ul>
+<h4 id="2-实现方式："><a href="#2-实现方式：" class="headerlink" title="2. 实现方式："></a>2. 实现方式：</h4><ul>
+<li>在网关中增加灰度判断逻辑，如基于用户ID、设备类型、地理位置等维度；</li>
+<li>配合 Nacos &#x2F; Apollo 实现灰度配置动态下发。</li>
+</ul>
+<pre><code class="java">if (grayUser(userId)) &#123;
+    routeTo(newServiceV2);
+&#125; else &#123;
+    routeTo(oldServiceV1);
+&#125;
+</code></pre>
+<h4 id="3-金丝雀监控："><a href="#3-金丝雀监控：" class="headerlink" title="3. 金丝雀监控："></a>3. 金丝雀监控：</h4><ul>
+<li>接入 Prometheus + Grafana；</li>
+<li>实时监控新版本的接口成功率、响应时间、异常率；</li>
+<li>若指标异常，立即自动或手动回滚。</li>
+</ul>
+<hr>
+<h2 id="🧠-总结：秒杀防护层层递进"><a href="#🧠-总结：秒杀防护层层递进" class="headerlink" title="🧠 总结：秒杀防护层层递进"></a>🧠 总结：秒杀防护层层递进</h2><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>技术 &#x2F; 策略</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>网络层</td>
+<td>F5&#x2F;LVS、Nginx限流</td>
+<td>硬抗高并发</td>
+</tr>
+<tr>
+<td>网关层</td>
+<td>黑名单拦截、UA过滤、灰度&#x2F;金丝雀</td>
+<td>防刷 + 风控</td>
+</tr>
+<tr>
+<td>应用层</td>
+<td>秒杀Token、验证码、人机校验</td>
+<td>精准控制用户行为</td>
+</tr>
+<tr>
+<td>缓存层</td>
+<td>Redis库存控制、Lua原子操作、布隆过滤器</td>
+<td>高性能、数据一致</td>
+</tr>
+<tr>
+<td>后端层</td>
+<td>MQ异步削峰、数据库分库分表</td>
+<td>解耦 + 弹性架构</td>
+</tr>
+</tbody></table>
+</blockquote>
 <p><span style = "color:red"><strong>订单超时自动取消是怎么实现的？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/743d8b7cd78b5a1fe4023554fee8d62726435cb2/%E8%AE%A2%E5%8D%95%E8%B6%85%E6%97%B6%E8%87%AA%E5%8A%A8%E5%8F%96%E6%B6%88.png"></p>
 <h5 id="①-JDK自带的延时队列"><a href="#①-JDK自带的延时队列" class="headerlink" title="① JDK自带的延时队列"></a>① JDK自带的延时队列</h5><p><strong>优点</strong>：简单，不需要借助其他第三方组件，成本低。<br><strong>缺点</strong>：所有超时处理订单都要加入到<code>DelayQueue</code>中，占用内存大，没办法做到分布式处理，之恶能在集群中挑选一台leader专门处理，效率低<br>不适合订单量比较大的</p>
@@ -9171,18 +10324,349 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <blockquote>
 <p>如果对于超时精度比较高，超时时间在24小时内，且不会有峰值压力的场景下，推荐使用RocketMQ的定时消息解决方案<br>在电商业务下，许多订单超时场景都在24小时以上，对于超时精度没那么敏感，并且有海量订单需要批处理，推荐使用基于定时任务的<strong>跑批</strong>解决方案。</p>
 </blockquote>
+<blockquote>
+<h2 id="✅-最佳实践对比表"><a href="#✅-最佳实践对比表" class="headerlink" title="✅ 最佳实践对比表"></a>✅ 最佳实践对比表</h2><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>分布式支持</th>
+<th>精度</th>
+<th>可靠性</th>
+<th>适用场景</th>
+<th>优缺点总结</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DelayQueue</td>
+<td>❌ 否</td>
+<td>秒级</td>
+<td>❌ 低</td>
+<td>单体项目&#x2F;小订单量</td>
+<td>简单、无需中间件，但不支持分布式和高可用</td>
+</tr>
+<tr>
+<td>RocketMQ延时消息</td>
+<td>✅ 是</td>
+<td>秒级</td>
+<td>✅ 高</td>
+<td>秒杀、限时抢购、延迟关闭等</td>
+<td>精度高、支持分布式，但时长限制 &amp; 消息堆积</td>
+</tr>
+<tr>
+<td>Redis过期监听</td>
+<td>✅ 是</td>
+<td>秒级</td>
+<td>❌ 较低</td>
+<td>轻量业务、有兜底机制的场景</td>
+<td>实时、方便，但事件容易丢失，不适合重要任务</td>
+</tr>
+<tr>
+<td>定时任务跑批</td>
+<td>✅ 是</td>
+<td>分钟级</td>
+<td>✅ 高</td>
+<td>电商订单系统、大量订单处理</td>
+<td>稳定、灵活、适合大业务，容忍分钟级延迟</td>
+</tr>
+</tbody></table>
+<h2 id="🔄-常见混合策略推荐"><a href="#🔄-常见混合策略推荐" class="headerlink" title="🔄 常见混合策略推荐"></a>🔄 常见混合策略推荐</h2><ul>
+<li><strong>秒杀业务 &#x2F; 限时订单</strong>：RocketMQ 延时消息为主 + 补偿机制（定时任务兜底）</li>
+<li><strong>电商平台</strong>：定时任务跑批为主 + MQ 异步通知用户（取消成功推送）</li>
+<li><strong>轻量小应用</strong>：Redis 过期监听 + 手动补偿兜底</li>
+<li><strong>单体项目或demo</strong>：DelayQueue 简单可用</li>
+</ul>
+<h2 id="🧠-思考：为什么不用-cron-来做？"><a href="#🧠-思考：为什么不用-cron-来做？" class="headerlink" title="🧠 思考：为什么不用 cron 来做？"></a>🧠 思考：为什么不用 cron 来做？</h2><blockquote>
+<p>cron 固定执行时间点，而订单创建是动态的，<strong>无法精确知道每个订单的30分钟是哪一刻。</strong></p>
+</blockquote>
+<p>举例：</p>
+<ul>
+<li>cron表达式只能写 <code>每隔5分钟扫描</code> 或 <code>每天0点执行</code></li>
+<li>订单创建时间是不确定的 → <strong>用cron不能实时取消30分钟后的每个订单</strong></li>
+</ul>
+<p>所以，动态调度任务（MQ&#x2F;DelayQueue）或带参数处理（定时扫描数据库）更合适。</p>
+</blockquote>
 <p><span style = "color:red"><strong>如何防止重复下单？</strong></span></p>
 <h5 id="方案一：提交订单按钮置灰-防止用户无意点击多次"><a href="#方案一：提交订单按钮置灰-防止用户无意点击多次" class="headerlink" title="方案一：提交订单按钮置灰 [防止用户无意点击多次]"></a>方案一：提交订单按钮置灰 [防止用户无意点击多次]</h5><h5 id="方案二：后端采用redis的setnx-来保证它的唯一幂等性"><a href="#方案二：后端采用redis的setnx-来保证它的唯一幂等性" class="headerlink" title="方案二：后端采用redis的setnx 来保证它的唯一幂等性"></a>方案二：后端采用redis的<span style = "color:red">setnx</span> 来保证它的唯一幂等性</h5><p>setnx：当我们调用setnx来去保存一个key和value的时候，如果这个value没有值的话，那么就会返回<strong>true</strong>保存成功；如果有值就会返回<strong>false</strong> → 保证多次存储只能存储一个值</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/be8debbe9711d790569ea62e3954dca9e6f2937b/%E5%A6%82%E4%BD%95%E9%98%B2%E6%AD%A2%E9%87%8D%E5%A4%8D%E4%B8%8B%E5%8D%95.png"></p>
+<blockquote>
+<h4 id="业务幂等号（如唯一Token机制）"><a href="#业务幂等号（如唯一Token机制）" class="headerlink" title="业务幂等号（如唯一Token机制）"></a>业务幂等号（如唯一Token机制）</h4><ul>
+<li>用户点击下单前，后端下发一个<code>token</code>（存 Redis），用户下单时带上这个 token。</li>
+<li>后端验证 token 是否存在，使用后即删除。</li>
+</ul>
+<pre><code class="java">// 伪代码
+if (redisToken == null || !redisToken.equals(requestToken)) &#123;
+    throw new RuntimeException(&quot;重复请求或非法请求&quot;);
+&#125;
+redisTemplate.delete(redisToken);
+</code></pre>
+<blockquote>
+<p>✅ 优点：</p>
+<ul>
+<li>通用幂等机制，不局限订单；</li>
+<li>可防止表单重复提交、支付回调重复通知等场景；</li>
+</ul>
+<p>✅ 使用场景：</p>
+<ul>
+<li>秒杀下单、提交表单、支付回调。</li>
+</ul>
+</blockquote>
+<hr>
+<h4 id="🔐-方案四：消息队列去重（异步场景）"><a href="#🔐-方案四：消息队列去重（异步场景）" class="headerlink" title="🔐 方案四：消息队列去重（异步场景）"></a>🔐 方案四：消息队列去重（异步场景）</h4><ul>
+<li>使用 RocketMQ 的幂等机制，确保同一消息只消费一次（消费端做去重处理），适用于下单流程是异步的情况。</li>
+</ul>
+<hr>
+<h3 id="✅-三、多手段组合更安全"><a href="#✅-三、多手段组合更安全" class="headerlink" title="✅ 三、多手段组合更安全"></a>✅ <strong>三、多手段组合更安全</strong></h3><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>技术手段</th>
+<th>是否强制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前端</td>
+<td>按钮置灰&#x2F;节流</td>
+<td>否</td>
+</tr>
+<tr>
+<td>应用层</td>
+<td>Redis + setnx 或 Token</td>
+<td>是</td>
+</tr>
+<tr>
+<td>数据层</td>
+<td>唯一约束字段</td>
+<td>是</td>
+</tr>
+<tr>
+<td>异步处理</td>
+<td>MQ消费幂等处理</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="📌-典型实践示意图："><a href="#📌-典型实践示意图：" class="headerlink" title="📌 典型实践示意图："></a>📌 典型实践示意图：</h3><ul>
+<li><strong>用户点击下单</strong> ➜ <strong>获取唯一Token&#x2F;Redis锁</strong> ➜ <strong>请求成功后释放</strong> ➜ <strong>写入订单表时校验唯一性</strong>。</li>
+</ul>
+<hr>
+<h3 id="💡-小贴士："><a href="#💡-小贴士：" class="headerlink" title="💡 小贴士："></a>💡 小贴士：</h3><ul>
+<li>并发高推荐：<strong>Redis方案（+Redisson分布式锁）</strong></li>
+<li>最后兜底：<strong>数据库唯一索引</strong></li>
+<li>支付类、接口幂等推荐：<strong>Token机制</strong></li>
+</ul>
+</blockquote>
 <p><span style = "color:red"><strong>怎么防止刷单？【人肉机刷单！！】</strong></span></p>
-<h5 id="业务风控"><a href="#业务风控" class="headerlink" title="业务风控"></a>业务风控</h5><p>提高羊毛门槛:实名认证、消费门槛、随机优惠<br>限制用户参与、中奖、奖励次数<br>根据用户的历史行为和忠诚度，提供不同层次的优惠，优待忠实用户<br>奖池(优惠券数量)限制上限</p>
+<h5 id="业务风控"><a href="#业务风控" class="headerlink" title="业务风控"></a>业务风控</h5><p>提高羊毛门槛：实名认证、消费门槛、随机优惠<br>限制用户参与、中奖、奖励次数<br>根据用户的历史行为和忠诚度，提供不同层次的优惠，优待忠实用户<br>奖池(优惠券数量)限制上限</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/f3850683ae318970983834aa03ac35168bbf52a8/%E6%80%8E%E4%B9%88%E9%98%B2%E6%AD%A2%E4%BA%BA%E8%82%89%E5%88%B7%E5%8D%95%EF%BC%9F.png"></p>
 <p><span style="color:red"><strong>分布式集群架构下怎么保证并发安全？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/48788978d525bf16e52bb10180e63022de6a5ea3/%E5%88%86%E5%B8%83%E5%BC%8F%E9%9B%86%E7%BE%A4%E6%9E%B6%E6%9E%84%E4%B8%8B%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81%E5%B9%B6%E5%8F%91%E5%AE%89%E5%85%A8.png"></p>
+<blockquote>
+<h3 id="✅-一、为什么分布式架构下更容易出现并发问题？"><a href="#✅-一、为什么分布式架构下更容易出现并发问题？" class="headerlink" title="✅ 一、为什么分布式架构下更容易出现并发问题？"></a>✅ 一、为什么分布式架构下更容易出现并发问题？</h3><p>在单体应用中，所有请求在同一个进程内处理，天然可以用<code>synchronized</code>等方式控制并发。</p>
+<p>而在<strong>分布式集群架构</strong>中：</p>
+<ul>
+<li>请求会打到多个节点 → 本地锁失效</li>
+<li>数据可能分库分表 → 数据不在一个数据库</li>
+<li>多线程 + 多机器 + 多服务 → 并发成倍放大</li>
+</ul>
+<p>所以需要一整套<strong>分布式并发安全</strong>解决方案。</p>
+<h3 id="✅-二、并发安全常见场景"><a href="#✅-二、并发安全常见场景" class="headerlink" title="✅ 二、并发安全常见场景"></a>✅ 二、并发安全常见场景</h3><ul>
+<li>秒杀&#x2F;抢购：多个用户同时抢一件商品</li>
+<li>下单：防止重复下单、超卖</li>
+<li>支付：防止重复支付</li>
+<li>分布式调度：防止定时任务重复执行</li>
+<li>分布式ID生成：避免重复ID</li>
+</ul>
+<h3 id="✅-三、总结：解决并发的“组合拳”"><a href="#✅-三、总结：解决并发的“组合拳”" class="headerlink" title="✅ 三、总结：解决并发的“组合拳”"></a>✅ 三、总结：解决并发的“组合拳”</h3><table>
+<thead>
+<tr>
+<th>组件&#x2F;策略</th>
+<th>主要作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Redis分布式锁</td>
+<td>跨节点并发控制，控制共享资源</td>
+</tr>
+<tr>
+<td>乐观锁（version）</td>
+<td>控制数据库并发更新冲突</td>
+</tr>
+<tr>
+<td>消息队列MQ</td>
+<td>异步削峰，提高系统吞吐</td>
+</tr>
+<tr>
+<td>唯一Token机制</td>
+<td>防止重复提交</td>
+</tr>
+<tr>
+<td>限流 &amp; 黑名单机制</td>
+<td>拦截恶意请求，保护系统</td>
+</tr>
+<tr>
+<td>本地+分布式缓存</td>
+<td>缓解数据库压力，提高响应速度</td>
+</tr>
+<tr>
+<td>灰度发布</td>
+<td>降低风险，平稳上线</td>
+</tr>
+</tbody></table>
+</blockquote>
 <p><span style = "color:red"><strong>让你设计一个扫码登录怎么实现？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/b3bbc19e0da554166000933c31bf749e2f6d3313/%E7%94%9F%E6%88%90%E4%BA%8C%E7%BB%B4%E7%A0%81.png"></p>
 <h6 id="生成二维码"><a href="#生成二维码" class="headerlink" title="生成二维码"></a>生成二维码</h6><p>请求登录页生成二维码，PC端请求后端生成一个二维码，此时在后端就会生成一个全局唯一的二维码ID，主要保存二维码的状态[二维码ID, NEW]，状态设置到Redis设置过期时间，然后把当前的二维码ID返回给前端，然后生成二维码 【前后端都可以生成 → 返回Base64的编码给前端】此时的二维码就绑定了用户的ID让用户扫描。</p>
 <h6 id="扫码"><a href="#扫码" class="headerlink" title="扫码"></a>扫码</h6><p>PC端和后端会建立一个轮询的请求，不断的根据二维码ID去查询二维码状态，一旦状态改变页面也会改变。也可以通过长连接<strong>WebSocket</strong>获取状态 <code>淘宝用的轮询、抖音用的长连接</code>，此时就可以扫码。<br>扫码前保证手机是登录状态 没有登录肯定是不能扫码的，登录后进行扫码就会携带手机端的用户token以及二维码的ID在后端去校验请求Token，如果校验成功就代表手机可以登录，此时可以变更二维码状态为扫描。前端就可以根据这个把页面变为<code>待确认</code>状态</p>
+<blockquote>
+<h2 id="✅-一、整体流程概述"><a href="#✅-一、整体流程概述" class="headerlink" title="✅ 一、整体流程概述"></a>✅ 一、整体流程概述</h2><p><strong>目标：</strong> 用户在 PC 端扫码并登录系统，安全、高效、用户体验好。</p>
+<p><strong>参与者：</strong></p>
+<ul>
+<li>PC 浏览器（Web）</li>
+<li>手机 App（用户已登录）</li>
+<li>后端服务（Web + API）</li>
+<li>Redis（状态存储）</li>
+<li>前端轮询&#x2F;长连接</li>
+</ul>
+<hr>
+<h2 id="🧩-二、关键技术点拆解"><a href="#🧩-二、关键技术点拆解" class="headerlink" title="🧩 二、关键技术点拆解"></a>🧩 二、关键技术点拆解</h2><h3 id="1️⃣-二维码生成（PC端发起）"><a href="#1️⃣-二维码生成（PC端发起）" class="headerlink" title="1️⃣ 二维码生成（PC端发起）"></a>1️⃣ 二维码生成（PC端发起）</h3><ul>
+<li>用户打开 PC 登录页面，请求后端接口 <code>/api/qr/generate</code></li>
+<li>后端逻辑：<ul>
+<li>生成唯一的二维码ID（一般用 UUID、Snowflake 或 Redis Incr）</li>
+<li>创建二维码状态：<code>[qrCodeId: &#123;status: NEW, userId: null&#125;]</code> 存入 Redis，设置过期时间（如：3分钟）</li>
+<li>把 <code>qrCodeId</code> 返回给前端（前端将其转成二维码图像）</li>
+</ul>
+</li>
+</ul>
+<p><strong>二维码状态定义：</strong></p>
+<table>
+<thead>
+<tr>
+<th>状态值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NEW</td>
+<td>二维码已生成，待扫码</td>
+</tr>
+<tr>
+<td>SCANNED</td>
+<td>手机已扫码，待确认</td>
+</tr>
+<tr>
+<td>CONFIRMED</td>
+<td>用户已确认登录</td>
+</tr>
+<tr>
+<td>EXPIRED</td>
+<td>二维码过期</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="2️⃣-轮询-or-WebSocket-监听状态（PC端）"><a href="#2️⃣-轮询-or-WebSocket-监听状态（PC端）" class="headerlink" title="2️⃣ 轮询 or WebSocket 监听状态（PC端）"></a>2️⃣ 轮询 or WebSocket 监听状态（PC端）</h3><ul>
+<li>前端定时调用 <code>/api/qr/status?qrCodeId=xxx</code> 或使用 WebSocket 长连接订阅状态变更。</li>
+<li>后端通过 Redis 获取二维码状态，响应当前状态值给前端；</li>
+<li>前端根据状态更新 UI：<ul>
+<li><code>NEW</code>：显示二维码提示扫码</li>
+<li><code>SCANNED</code>：显示“请确认登录”</li>
+<li><code>CONFIRMED</code>：跳转系统首页</li>
+<li><code>EXPIRED</code>：提示“二维码已失效”</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="3️⃣-手机扫码（App-端发起）"><a href="#3️⃣-手机扫码（App-端发起）" class="headerlink" title="3️⃣ 手机扫码（App 端发起）"></a>3️⃣ 手机扫码（App 端发起）</h3><ul>
+<li>用户打开手机 App，扫码得到 <code>qrCodeId</code></li>
+<li>App 发起请求 <code>/api/qr/scan</code>，携带：<ul>
+<li><code>qrCodeId</code></li>
+<li>当前用户登录 Token（说明谁在扫码）</li>
+</ul>
+</li>
+<li>后端校验 Token 合法性 + 校验二维码状态是否是 <code>NEW</code></li>
+<li>如果校验通过：<ul>
+<li>更新 Redis 状态为 <code>SCANNED</code></li>
+<li>保存扫码用户ID（用于确认登录）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="4️⃣-手机端确认登录（App-端）"><a href="#4️⃣-手机端确认登录（App-端）" class="headerlink" title="4️⃣ 手机端确认登录（App 端）"></a>4️⃣ 手机端确认登录（App 端）</h3><ul>
+<li>用户点击“确认登录”按钮，App 发起请求 <code>/api/qr/confirm</code></li>
+<li>后端再次校验 Token、状态、qrCodeId</li>
+<li>如果合法：<ul>
+<li>更新 Redis 状态为 <code>CONFIRMED</code></li>
+<li>后端为 PC 端生成登录凭证（JWT 或 Session ID）</li>
+<li>可以将 token 写入 Redis，让 PC 端后续使用</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="5️⃣-PC端轮询到-CONFIRMED-状态后"><a href="#5️⃣-PC端轮询到-CONFIRMED-状态后" class="headerlink" title="5️⃣ PC端轮询到 CONFIRMED 状态后"></a>5️⃣ PC端轮询到 CONFIRMED 状态后</h3><ul>
+<li>前端收到 CONFIRMED 状态</li>
+<li>发起请求 <code>/api/qr/login?qrCodeId=xxx</code></li>
+<li>后端从 Redis 中取出对应用户信息</li>
+<li>为 PC 创建 Session 或返回 JWT Token</li>
+<li>登录成功，跳转首页</li>
+</ul>
+<h2 id="🔐-三、安全要点"><a href="#🔐-三、安全要点" class="headerlink" title="🔐 三、安全要点"></a>🔐 三、安全要点</h2><ul>
+<li>二维码应设置过期时间，防止被反复使用</li>
+<li>Token 校验要严谨，确保扫码者是本人</li>
+<li>Redis 里状态更新使用 Lua 脚本或事务 CAS 保证一致性</li>
+<li>后端二维码状态需加密传输或限制频繁请求（防刷）</li>
+</ul>
+<h2 id="🚀-四、技术选型小结"><a href="#🚀-四、技术选型小结" class="headerlink" title="🚀 四、技术选型小结"></a>🚀 四、技术选型小结</h2><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>技术</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>二维码生成</td>
+<td>UUID + Redis</td>
+<td>可快速唯一生成并记录状态</td>
+</tr>
+<tr>
+<td>状态存储</td>
+<td>Redis（带 TTL）</td>
+<td>快速响应，高并发，易过期处理</td>
+</tr>
+<tr>
+<td>实时通知</td>
+<td>轮询 &#x2F; WebSocket</td>
+<td>淘宝用轮询、抖音用 WS</td>
+</tr>
+<tr>
+<td>登录授权</td>
+<td>JWT &#x2F; Session</td>
+<td>生成 PC 端登录凭证</td>
+</tr>
+<tr>
+<td>防刷限流</td>
+<td>接口限流 + 签名校验</td>
+<td>避免恶意轮询&#x2F;伪造请求</td>
+</tr>
+</tbody></table>
+<h2 id="✅-五、流程图（配合讲解）"><a href="#✅-五、流程图（配合讲解）" class="headerlink" title="✅ 五、流程图（配合讲解）"></a>✅ 五、流程图（配合讲解）</h2><pre><code>text复制编辑[PC端]        [后端]                   [App端]
+  |                      |                         |
+  |--&gt; 请求生成二维码 --&gt;|                         |
+  |                      |-- 生成qrCodeId + Redis存储
+  |&lt;-- 返回二维码Base64--|                         |
+  |                      |                         |
+  |==轮询/WS监听状态====&gt;|                         |
+  |                      |                         |
+  |                      |&lt;--扫码携带Token + qrCodeId
+  |                      |--校验后标记为SCANNED     |
+  |&lt;==收到SCANNED状态== |                         |
+  |                      |&lt;--确认登录               |
+  |                      |--更新为CONFIRMED +登录信息
+  |&lt;==收到CONFIRMED==   |                         |
+  |-- 请求登录状态凭证 --&gt;|                         |
+  |&lt;-- 返回JWT/Session--|                         |
+</code></pre>
+<hr>
+</blockquote>
 <p><span style = "color:red"><strong>如何设计分布式日志存储架构？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/38bcadd4a99fd1093a4d7ab6e39c60340bfc73a8/%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%88%86%E5%B8%83%E5%BC%8F%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84.png"></p>
 <p><span style = "color:red"><strong>使用redis出现缓存三兄弟如何解决？</strong></span><del>减轻数据库的压力</del></p>
@@ -9191,12 +10675,246 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <p><span style = "color:red"><strong>如何使用Redis记录用户连续登录了多少天？</strong></span><del>放在数据库里不合适</del></p>
 <p>放在数据库不合适因为你要创建一个表 记录用户哪一天进行了签到 如果用户量很多就会很大的量</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/9db550cabe345faff24a1fccba0d9d0f5e59faf9/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8Redis%E8%AE%B0%E5%BD%95%E7%94%A8%E6%88%B7%E8%BF%9E%E7%BB%AD%E7%99%BB%E5%BD%95%E4%BA%86%E5%A4%9A%E5%B0%91%E5%A4%A9.png"></p>
+<blockquote>
+<p>这个问题其实就是一个<strong>连续签到&#x2F;登录统计</strong>问题，数据库不适合是因为：</p>
+<ul>
+<li>每签到一天就插一行 → 数据量巨大，I&#x2F;O压力大。</li>
+<li>查询连续签到天数复杂，SQL不好写，效率低。</li>
+</ul>
+<p>所以使用 Redis 的 <strong>位图（bitmap）</strong> 来解决，是一种<strong>低存储+高性能</strong>的方案。</p>
+<hr>
+<h3 id="🎯-场景目标"><a href="#🎯-场景目标" class="headerlink" title="🎯 场景目标"></a>🎯 场景目标</h3><p>统计用户<strong>连续登录天数</strong>、<strong>本月第几天登录过</strong>，实现类似：</p>
+<pre><code>复制编辑用户A 7月签到状态 = 01111100010001000（1表示登录，0表示没登录）
+查询当前用户是否今天登录过？
+查询用户本月连续登录天数？
+</code></pre>
+<hr>
+<h3 id="🧠-技术选型：使用-Redis-Bitmap"><a href="#🧠-技术选型：使用-Redis-Bitmap" class="headerlink" title="🧠 技术选型：使用 Redis Bitmap"></a>🧠 技术选型：使用 Redis Bitmap</h3><h4 id="什么是-Bitmap？"><a href="#什么是-Bitmap？" class="headerlink" title="什么是 Bitmap？"></a>什么是 Bitmap？</h4><p>Redis 的 Bitmap 本质上是字符串（<code>String</code> 类型），但你可以对它的每一位 bit 操作：</p>
+<pre><code class="java"># 设置偏移量为 5 的位置为 1（签到）
+SETBIT user:sign:1001:202507 5 1
+
+# 查询偏移量为 5 的位置是否为 1（是否登录）
+GETBIT user:sign:1001:202507 5
+</code></pre>
+<hr>
+<h3 id="✅-实现思路"><a href="#✅-实现思路" class="headerlink" title="✅ 实现思路"></a>✅ 实现思路</h3><h4 id="1-登录-x2F-签到时"><a href="#1-登录-x2F-签到时" class="headerlink" title="1. 登录&#x2F;签到时"></a>1. 登录&#x2F;签到时</h4><pre><code class="java">int offset = today - 1; // 7月19日 → offset = 18，从0开始
+String key = &quot;user:sign:&quot; + userId + &quot;:&quot; + yyyyMM;
+redisTemplate.opsForValue().setBit(key, offset, true);
+</code></pre>
+<h4 id="2-查询某天是否登录"><a href="#2-查询某天是否登录" class="headerlink" title="2. 查询某天是否登录"></a>2. 查询某天是否登录</h4><pre><code class="javascript">Boolean isLogin = redisTemplate.opsForValue().getBit(key, offset);
+</code></pre>
+<h4 id="3-查询本月累计登录多少天"><a href="#3-查询本月累计登录多少天" class="headerlink" title="3. 查询本月累计登录多少天"></a>3. 查询本月累计登录多少天</h4><pre><code class="java">BitCountOptions options = BitCountOptions.defaults();
+Long total = redisTemplate.execute((RedisCallback&lt;Long&gt;) conn -&gt; 
+    conn.bitCount(key.getBytes(), options)
+);
+</code></pre>
+<h4 id="4-查询连续登录天数（重点）"><a href="#4-查询连续登录天数（重点）" class="headerlink" title="4. 查询连续登录天数（重点）"></a>4. 查询连续登录天数（重点）</h4><p>假设今天是第19天，从 offset &#x3D; 18 开始向前看：</p>
+<pre><code class="java">int count = 0;
+for (int i = offset; i &gt;= 0; i--) &#123;
+    if (redisTemplate.opsForValue().getBit(key, i)) &#123;
+        count++;
+    &#125; else &#123;
+        break; // 一旦中断，退出循环
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<h3 id="🚀-优势"><a href="#🚀-优势" class="headerlink" title="🚀 优势"></a>🚀 优势</h3><ul>
+<li>Redis Bitmap 单月只占用 31 bit，超省空间（一个用户一年只用 372 bit ≈ 47 字节）</li>
+<li>查询效率高，O(1)</li>
+<li>写入也快，支持并发</li>
+</ul>
+<hr>
+<h3 id="🔐-注意点"><a href="#🔐-注意点" class="headerlink" title="🔐 注意点"></a>🔐 注意点</h3><ul>
+<li><p><strong>设置过期时间</strong>：避免内存占用过大</p>
+<pre><code class="java">redisTemplate.expire(key, Duration.ofDays(60));
+</code></pre>
+</li>
+<li><p>如果需要“补签”功能，操作相应的 bit 位即可</p>
+</li>
+</ul>
+<h3 id="📌-示例-Redis-数据结构（7月）"><a href="#📌-示例-Redis-数据结构（7月）" class="headerlink" title="📌 示例 Redis 数据结构（7月）"></a>📌 示例 Redis 数据结构（7月）</h3><pre><code class="java">Key: user:sign:1001:202507
+
+Value (bit位)：0111110000000000000000000000000
+日期：1 2 3 4 5 6 7 ... 31
+含义：从左往右，第i位是第i+1天
+</code></pre>
+</blockquote>
 <p><span style = "color:red"><strong>给你一亿个Redis keys统计双方的共同好友？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/a917027faf313dfaee955c52361c8f711309fb43/%E7%BB%99%E4%BD%A0%E4%B8%80%E4%BA%BF%E4%B8%AARedis%20keys%E7%BB%9F%E8%AE%A1%E5%8F%8C%E6%96%B9%E7%9A%84%E5%85%B1%E5%90%8C%E5%A5%BD%E5%8F%8B.png"></p>
+<blockquote>
+<h2 id="🧩-题目解析"><a href="#🧩-题目解析" class="headerlink" title="🧩 题目解析"></a>🧩 题目解析</h2><p>假设：</p>
+<ul>
+<li>每个用户的好友列表存储在 Redis 的 Set 结构中，例如：<br> <code>SADD friends:user1 A B C D</code><br> <code>SADD friends:user2 B C E F</code></li>
+</ul>
+<p>目标：</p>
+<ul>
+<li>快速统计两个人共同的好友，即集合交集数量。</li>
+</ul>
+<hr>
+<h2 id="✅-常规解法：Redis-SINTER-命令"><a href="#✅-常规解法：Redis-SINTER-命令" class="headerlink" title="✅ 常规解法：Redis SINTER 命令"></a>✅ 常规解法：Redis <code>SINTER</code> 命令</h2><p>Redis 支持对多个集合求交集：</p>
+<pre><code class="java">SINTER friends:user1 friends:user2
+</code></pre>
+<p>返回结果即为双方的共同好友。</p>
+<p>如果只要交集数量，可以使用：</p>
+<pre><code class="java">SINTERCARD 2 friends:user1 friends:user2
+</code></pre>
+<p>这是 Redis 7.0 新增的命令，<strong>效率更高</strong>。</p>
+<h2 id="🧠-问题难点：一亿个-keys-怎么办？"><a href="#🧠-问题难点：一亿个-keys-怎么办？" class="headerlink" title="🧠 问题难点：一亿个 keys 怎么办？"></a>🧠 问题难点：一亿个 keys 怎么办？</h2><p>一亿个 keys 说明用户量巨大或好友数量极多，可能涉及以下挑战：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Redis 内存压力</td>
+<td>如果所有好友关系都存在 Redis Set 中，消耗大量内存</td>
+</tr>
+<tr>
+<td>网络 IO 开销</td>
+<td>获取或计算时大量命令交互</td>
+</tr>
+<tr>
+<td>集合元素巨大</td>
+<td>每个 Set 元素多（例如几千好友），单次 <code>SINTER</code> 代价大</td>
+</tr>
+<tr>
+<td>频繁交集操作</td>
+<td>如果这是一个高频功能（如社交推荐），需要高效方案</td>
+</tr>
+</tbody></table>
+<h2 id="🧠-实战建议"><a href="#🧠-实战建议" class="headerlink" title="🧠 实战建议"></a>🧠 实战建议</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>精确共同好友、数量不大</td>
+<td><code>SINTER</code> &#x2F; <code>SINTERCARD</code></td>
+</tr>
+<tr>
+<td>只需估算交集数量</td>
+<td><code>PFCOUNT</code>（HyperLogLog）</td>
+</tr>
+<tr>
+<td>只需交集数量 + 数据量很大</td>
+<td>Bitmap + <code>BITOP</code> + <code>BITCOUNT</code></td>
+</tr>
+<tr>
+<td>数据量超大，追求压缩极致</td>
+<td>Roaring Bitmap、Redis Module</td>
+</tr>
+</tbody></table>
+</blockquote>
 <p><span style = "color:red"><strong>如何做一亿用户实时积分排行榜？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/2be2ea44cfd98cb3669dcc098f4790f2ad0780d1/%E5%A6%82%E4%BD%95%E5%81%9A%E4%B8%80%E4%BA%BF%E7%94%A8%E6%88%B7%E5%AE%9E%E6%97%B6%E7%A7%AF%E5%88%86%E6%8E%92%E8%A1%8C%E6%A6%9C.png"></p>
+<blockquote>
+<p>做“一亿用户实时积分排行榜”时，面临的挑战是：<strong>高并发写入、高频读、排序性能、排行榜分页、内存管理等</strong>。使用传统数据库难以胜任，我们通常结合 <strong>Redis 的 ZSet（有序集合）结构 + 分布式架构</strong> 来高效实现。</p>
+<h4 id="💡-核心思路"><a href="#💡-核心思路" class="headerlink" title="💡 核心思路"></a>💡 核心思路</h4><ul>
+<li>使用 Redis 的 <code>ZSet</code> 存储用户积分（ZSet天然支持有序集合）。</li>
+<li>使用 <strong>用户ID为 member，积分为 score</strong>，自动排序。</li>
+<li>按业务场景设置多个排行榜（<strong>总榜、日榜、周榜</strong>等）。</li>
+<li>使用分片&#x2F;分区 + 多 Redis 实例缓解内存压力。</li>
+</ul>
+<h3 id="🚀-性能优化方案"><a href="#🚀-性能优化方案" class="headerlink" title="🚀 性能优化方案"></a>🚀 性能优化方案</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>高并发写入</td>
+<td>异步批处理写入积分变化（Kafka &#x2F; MQ）</td>
+</tr>
+<tr>
+<td>高并发读榜</td>
+<td>热榜分页结果缓存（Redis 二级缓存）</td>
+</tr>
+<tr>
+<td>大数据量</td>
+<td>分片存储排行榜（按地域&#x2F;业务线）</td>
+</tr>
+<tr>
+<td>数据持久化</td>
+<td>后台定期将 ZSet 持久化至 MySQL（定时备份）</td>
+</tr>
+<tr>
+<td>用户查自己排名</td>
+<td>排名反查缓存 + 异步修正（定时刷新）</td>
+</tr>
+</tbody></table>
+<h3 id="⚙️-分布式架构下的挑战与解决"><a href="#⚙️-分布式架构下的挑战与解决" class="headerlink" title="⚙️ 分布式架构下的挑战与解决"></a>⚙️ 分布式架构下的挑战与解决</h3><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单机内存不足</td>
+<td>Redis 分布式集群 + 按 key 做水平分区</td>
+</tr>
+<tr>
+<td>网络波动</td>
+<td>Redis 哨兵或主从架构容灾</td>
+</tr>
+<tr>
+<td>跨机房</td>
+<td>使用 Kafka MQ 异步同步数据</td>
+</tr>
+<tr>
+<td>并发冲突</td>
+<td>ZINCRBY 原子操作，确保并发安全</td>
+</tr>
+</tbody></table>
+</blockquote>
 <p><span style = "color:red"><strong>内存200M读取1G文件并统计内容重复次数？<del>内存受限时</del></strong></span></p>
 <p>一次性读取肯定会OOM<br>可以根据缓冲区分块读取<br><img src="https://raw.githubusercontent.com/P-luminary/images/f791667943446b731b86a4123b2fc03c812dabf1/%E5%86%85%E5%AD%98200M%E8%AF%BB%E5%8F%961G%E6%96%87%E4%BB%B6%E5%B9%B6%E7%BB%9F%E8%AE%A1%E5%86%85%E5%AE%B9%E9%87%8D%E5%A4%8D%E6%AC%A1%E6%95%B0.png"></p>
+<blockquote>
+<h3 id="📌-方案核心：“分治-磁盘中间结果-再归并统计”"><a href="#📌-方案核心：“分治-磁盘中间结果-再归并统计”" class="headerlink" title="📌 方案核心：“分治 + 磁盘中间结果 + 再归并统计”"></a>📌 方案核心：<strong>“分治 + 磁盘中间结果 + 再归并统计”</strong></h3><hr>
+<h3 id="📍第一步：分片预处理（Hash-分桶）"><a href="#📍第一步：分片预处理（Hash-分桶）" class="headerlink" title="📍第一步：分片预处理（Hash 分桶）"></a>📍第一步：分片预处理（Hash 分桶）</h3><ul>
+<li><p>遍历文件，<strong>每条记录用 hash 函数映射到 N 个临时小文件中</strong>（如 100 个文件）。</p>
+</li>
+<li><p>例如：</p>
+<pre><code>hash(line) % 100 -&gt; 选择第 i 个 bucket_i.txt 写入
+</code></pre>
+</li>
+<li><p>每个桶的数据量 &lt;&lt; 1GB，<strong>避免某一个桶数据过大</strong>（可以动态调节桶数）。</p>
+</li>
+</ul>
+<p>📝 <strong>实现要点</strong>：</p>
+<ul>
+<li>不能直接把 key 存在内存中，而是用 <code>BufferedWriter</code> 把行写入不同的中间文件。</li>
+<li>临时文件名如 <code>bucket_0.txt</code>, <code>bucket_1.txt</code>, …, <code>bucket_99.txt</code>。</li>
+</ul>
+<hr>
+<h3 id="📍第二步：小文件内统计（Map-阶段）"><a href="#📍第二步：小文件内统计（Map-阶段）" class="headerlink" title="📍第二步：小文件内统计（Map 阶段）"></a>📍第二步：小文件内统计（Map 阶段）</h3><ul>
+<li><p>每个小文件都可以用内存加载（一般几十 MB），然后用 <code>Map&lt;String, Integer&gt;</code> 来做频次统计。</p>
+</li>
+<li><p>统计完毕后，<strong>结果写入新的临时文件</strong>，如：</p>
+<pre><code>result_bucket_0.txt:
+word1 -&gt; 5
+word2 -&gt; 3
+...
+</code></pre>
+</li>
+</ul>
+<hr>
+<h3 id="📍第三步：归并所有桶（Reduce-阶段）"><a href="#📍第三步：归并所有桶（Reduce-阶段）" class="headerlink" title="📍第三步：归并所有桶（Reduce 阶段）"></a>📍第三步：归并所有桶（Reduce 阶段）</h3><ul>
+<li>如果需要所有数据的总频率（跨桶汇总），则可以：<ul>
+<li>对所有结果文件做归并统计（Map 合并）。</li>
+<li>比如 <code>word1</code> 在 <code>result_bucket_0.txt</code> 是 5，<code>result_bucket_1.txt</code> 是 2，总共就是 7。</li>
+<li>这一步可再次用 hashmap 缓存 + 写磁盘防止内存爆掉。</li>
+</ul>
+</li>
+</ul>
+<h2 id="📘-总结一句话"><a href="#📘-总结一句话" class="headerlink" title="📘 总结一句话"></a>📘 总结一句话</h2><p><strong>“把大象装进冰箱，需要分步来——分桶写临时文件 → 每桶局部统计 → 全局归并或提取 Top-N。”</strong></p>
+</blockquote>
 <p><span style = "color:red"><strong>查询200条数据耗时200ms，怎么在500ms内查询1000条数据？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/af425172c9777d99374c270ea1bb12daf6c9a886/%E6%9F%A5%E8%AF%A2200%E6%9D%A1%E6%95%B0%E6%8D%AE%E8%80%97%E6%97%B6200ms%EF%BC%8C%E6%80%8E%E4%B9%88%E5%9C%A8500ms%E5%86%85%E6%9F%A5%E8%AF%A21000%E6%9D%A1%E6%95%B0%E6%8D%AE.png"></p>
 <p><span style = "color:red"><strong>SpringBoot如果有百万数据插入怎么优化？</strong></span></p>
@@ -9244,8 +10962,236 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/5c0b61b722ea0ee0990611ae568ee2ca082677ee/SQL%E8%AF%AD%E5%8F%A5%E4%B8%AD%E4%BD%BF%E7%94%A8%E4%BA%86%E5%89%8D%E6%A8%A1%E7%B3%8A%E4%BC%9A%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88.png"></p>
 <p><span style = "color:red"><strong>分库分表id冲突解决方案？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/379b852cebfc3bf8b34e24670994a54443885b21/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8id%E5%86%B2%E7%AA%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png"></p>
+<blockquote>
+<h2 id="✅-解决方案详解"><a href="#✅-解决方案详解" class="headerlink" title="✅ 解决方案详解"></a>✅ 解决方案详解</h2><h3 id="1-数据库主键自增（不推荐）"><a href="#1-数据库主键自增（不推荐）" class="headerlink" title="1. 数据库主键自增（不推荐）"></a>1. <strong>数据库主键自增（不推荐）</strong></h3><ul>
+<li>每个分库或分表自己用数据库的自增主键生成 ID。</li>
+<li>缺点：跨库表合并数据时会重复，<strong>不具备全局唯一性</strong>。</li>
+</ul>
+<hr>
+<h3 id="2-UUID-作为主键"><a href="#2-UUID-作为主键" class="headerlink" title="2. UUID 作为主键"></a>2. <strong>UUID 作为主键</strong></h3><ul>
+<li>使用 Java 的 <code>UUID.randomUUID().toString()</code> 等方式。</li>
+<li>优点：<strong>天然全局唯一</strong>。</li>
+<li>缺点：<ul>
+<li>不适合做主键（无序、冗长，影响数据库索引性能）。</li>
+<li>可读性差，调试困难。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="3-数据库主键段（Segment）模式（推荐）"><a href="#3-数据库主键段（Segment）模式（推荐）" class="headerlink" title="3. 数据库主键段（Segment）模式（推荐）"></a>3. <strong>数据库主键段（Segment）模式（推荐）</strong></h3><ul>
+<li>思路：中心服务维护一张 ID 号段表，为每个业务系统分配一个号段。</li>
+<li>实现：<ul>
+<li>表中记录：<code>biz_tag, max_id, step, version</code></li>
+<li>应用请求号段：<code>SELECT max_id, step FROM id_segment WHERE biz_tag = &#39;order&#39;</code></li>
+<li>然后更新 max_id 为 <code>max_id + step</code></li>
+</ul>
+</li>
+<li>优点：<ul>
+<li>性能高（本地生成，无需每次访问数据库）</li>
+<li>避免重复（由号段控制）</li>
+</ul>
+</li>
+<li>缺点：需要一个中心服务（如美团 Leaf）</li>
+</ul>
+<hr>
+<h3 id="4-雪花算法（Snowflake）"><a href="#4-雪花算法（Snowflake）" class="headerlink" title="4. 雪花算法（Snowflake）"></a>4. <strong>雪花算法（Snowflake）</strong></h3><ul>
+<li><p>Twitter 出品，用于生成 64 位整数 ID。</p>
+</li>
+<li><p>格式如下：</p>
+<pre><code class="java">0 - 41位时间戳 - 10位机器ID - 12位自增序列
+</code></pre>
+</li>
+<li><p>优点：</p>
+<ul>
+<li>单机高性能、趋势递增、可分布式部署</li>
+</ul>
+</li>
+<li><p>缺点：</p>
+<ul>
+<li>依赖机器时钟，<strong>系统时间回拨可能导致重复 ID 或服务挂掉</strong></li>
+<li>需要保证机器 ID 唯一（通常通过配置或 ZooKeeper 分配）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="5-Redis-生成自增-ID"><a href="#5-Redis-生成自增-ID" class="headerlink" title="5. Redis 生成自增 ID"></a>5. <strong>Redis 生成自增 ID</strong></h3><ul>
+<li><p>利用 Redis 的 <code>INCR</code> 命令，生成全局递增 ID：</p>
+<pre><code class="java">INCR order:id
+</code></pre>
+</li>
+<li><p>可配合时间戳、业务前缀等拼接成全局唯一 ID。</p>
+</li>
+<li><p>优点：</p>
+<ul>
+<li>简单、轻量、分布式支持</li>
+</ul>
+</li>
+<li><p>缺点：</p>
+<ul>
+<li>Redis 挂掉或主从切换期间可能丢失或重复</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="🏁-总结推荐"><a href="#🏁-总结推荐" class="headerlink" title="🏁 总结推荐"></a>🏁 总结推荐</h2><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>唯一性</th>
+<th>性能</th>
+<th>实现复杂度</th>
+<th>推荐使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UUID</td>
+<td>✅</td>
+<td>高</td>
+<td>简单</td>
+<td>临时标识、测试用途</td>
+</tr>
+<tr>
+<td>自增主键</td>
+<td>❌</td>
+<td>高</td>
+<td>简单</td>
+<td>单库表内可用</td>
+</tr>
+<tr>
+<td>Segment</td>
+<td>✅</td>
+<td>✅</td>
+<td>中等</td>
+<td>企业级 ID 服务（如 Leaf）</td>
+</tr>
+<tr>
+<td>雪花算法</td>
+<td>✅</td>
+<td>✅</td>
+<td>中等</td>
+<td>分布式高并发业务</td>
+</tr>
+<tr>
+<td>Redis INCR</td>
+<td>✅</td>
+<td>高</td>
+<td>简单</td>
+<td>轻量级全局 ID 需求</td>
+</tr>
+</tbody></table>
+<p>如果你是在<strong>高并发、微服务、分布式环境下</strong>，强烈推荐使用：</p>
+<ul>
+<li>雪花算法 + Redis 搭配</li>
+<li>或引入一个中心 ID 生成服务（如 Leaf、TinyId、美团 UID Generator）</li>
+</ul>
+</blockquote>
 <p><span style = "color:red"><strong>深分页为什么慢，怎么优化？</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/c3a969f374bebb04ca5858c2ab7ef750ac4296af/%E6%B7%B1%E5%88%86%E9%A1%B5%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%2C%E6%80%8E%E4%B9%88%E4%BC%98%E5%8C%96.png"></p>
+<blockquote>
+<h3 id="❓-问题背景：什么是深分页？"><a href="#❓-问题背景：什么是深分页？" class="headerlink" title="❓ 问题背景：什么是深分页？"></a>❓ 问题背景：什么是深分页？</h3><blockquote>
+<p>深分页 &#x3D; 当前页数很大，比如 <code>page=100000 &amp; size=10</code><br> 对应 SQL：</p>
+</blockquote>
+<pre><code>SELECT * FROM table LIMIT 1000000, 10;
+</code></pre>
+<ul>
+<li><code>LIMIT offset, size</code> 这种分页方式，在 <strong>offset 特别大时非常慢</strong>。</li>
+<li>根因：数据库在处理时，<strong>仍然会扫描前面 offset 条记录，然后丢弃它们，仅返回后面的 size 条</strong>。</li>
+</ul>
+<hr>
+<h3 id="🐌-为什么慢？"><a href="#🐌-为什么慢？" class="headerlink" title="🐌 为什么慢？"></a>🐌 为什么慢？</h3><p>数据库执行过程（如MySQL）：</p>
+<pre><code>LIMIT 1000000, 10
+</code></pre>
+<p>数据库内部会：</p>
+<ol>
+<li>先从磁盘&#x2F;缓冲中 <strong>取出前 1000000 条记录</strong>；</li>
+<li>然后只返回第 1000001 ~ 1000010 条；</li>
+<li><strong>前面的全丢了</strong>，但依然耗费 CPU、IO 和内存资源。</li>
+</ol>
+<p>当数据量大时：</p>
+<ul>
+<li>IO开销大（全表扫描）</li>
+<li>CPU开销大（排序、过滤）</li>
+<li>数据库响应延迟高</li>
+</ul>
+<hr>
+<h3 id="🚀-如何优化深分页？"><a href="#🚀-如何优化深分页？" class="headerlink" title="🚀 如何优化深分页？"></a>🚀 如何优化深分页？</h3><h4 id="✅-方案一：使用-覆盖索引"><a href="#✅-方案一：使用-覆盖索引" class="headerlink" title="✅ 方案一：使用 覆盖索引"></a>✅ 方案一：使用 <strong>覆盖索引</strong></h4><pre><code>SELECT id FROM table ORDER BY id LIMIT 1000000, 10;
+</code></pre>
+<p>如果 <code>id</code> 是索引字段，数据库可以直接从索引树上读取，无需回表。</p>
+<p>但这个优化能力有限，适合某些查询字段很少、又刚好有索引的情况。</p>
+<hr>
+<h4 id="✅-方案二：记录上次的游标（Keyset-Pagination）"><a href="#✅-方案二：记录上次的游标（Keyset-Pagination）" class="headerlink" title="✅ 方案二：记录上次的游标（Keyset Pagination）"></a>✅ 方案二：记录上次的游标（<strong>Keyset Pagination</strong>）</h4><blockquote>
+<p>又叫 <strong>基于条件的分页</strong>，避免使用 offset。</p>
+</blockquote>
+<p>例如：</p>
+<pre><code>SELECT * FROM table 
+WHERE id &gt; 上一页最后一条记录id 
+ORDER BY id 
+LIMIT 10;
+</code></pre>
+<p>优点：</p>
+<ul>
+<li>快！数据库利用索引跳过前面的数据</li>
+<li>没有 offset，性能非常稳定</li>
+</ul>
+<p>适用场景：</p>
+<ul>
+<li>id 或时间戳等字段是自增或顺序的</li>
+<li>不要求用户可以跳到任意页，只支持“向前&#x2F;向后翻页”</li>
+</ul>
+<hr>
+<h4 id="✅-方案三：缓存-异步预处理"><a href="#✅-方案三：缓存-异步预处理" class="headerlink" title="✅ 方案三：缓存 + 异步预处理"></a>✅ 方案三：缓存 + 异步预处理</h4><p>对于排行榜、热点数据等：</p>
+<ul>
+<li>查询结果提前生成并缓存（Redis 等）</li>
+<li>用户点页数 → 直接读缓存，避免实时查询</li>
+</ul>
+<hr>
+<h4 id="✅-方案四：使用临时表或中间结果表"><a href="#✅-方案四：使用临时表或中间结果表" class="headerlink" title="✅ 方案四：使用临时表或中间结果表"></a>✅ 方案四：使用临时表或中间结果表</h4><ul>
+<li>查询结果太大 → 先异步存入临时表</li>
+<li>分页从临时表中读取数据（配合游标分页）</li>
+</ul>
+<p>适用于复杂 SQL 查询 + 多表连接</p>
+<hr>
+<h3 id="✅-总结对比"><a href="#✅-总结对比" class="headerlink" title="✅ 总结对比"></a>✅ 总结对比</h3><table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>offset 分页</td>
+<td>简单</td>
+<td>深分页慢</td>
+<td>小数据量</td>
+</tr>
+<tr>
+<td>覆盖索引</td>
+<td>快</td>
+<td>限制大</td>
+<td>查询字段少</td>
+</tr>
+<tr>
+<td>游标分页</td>
+<td>性能高</td>
+<td>不支持跳页</td>
+<td>流式阅读&#x2F;时间线</td>
+</tr>
+<tr>
+<td>缓存分页</td>
+<td>快</td>
+<td>一致性差</td>
+<td>热点排行榜等</td>
+</tr>
+<tr>
+<td>临时表分页</td>
+<td>灵活</td>
+<td>复杂</td>
+<td>大查询分页导出</td>
+</tr>
+</tbody></table>
+</blockquote>
 <p><span style = "color:red"><strong>MySQL的隔离级别实现原理MVCC ？</strong></span></p>
 <ul>
 <li><p>**MVCC ** (Multiversion Concurrency Control) <u>多版本并发控制器</u> </p>
@@ -9259,7 +11205,7 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <h5 id="MD5"><a href="#MD5" class="headerlink" title="MD5"></a>MD5</h5><ul>
 <li>只能加密不可解密 但是它是hash算法 可能会有哈希冲突 至少加密2^128次方才有可能发生<strong>哈希碰撞</strong></li>
 <li>每次生成的密文都一样，不管加密多少次生成的密文都是一样的 可以通过<strong>暴力破解</strong><ul>
-<li>解决暴力破解 就要在里面加<strong>盐</strong> 每次加密 解密 都要加入<strong>盐</strong></li>
+<li><u>解决暴力破解 就要在里面加<strong>盐</strong> 每次加密 解密 都要加入<strong>盐</strong></u></li>
 </ul>
 </li>
 </ul>
@@ -9282,10 +11228,42 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 </ul>
 <p><span style = "color:red"><strong>RestTemplate如何优化连接池</strong></span></p>
 <p>默认是没有连接池的<br>要用框架<code>HTTPClient</code>、<code>OKHTTP</code></p>
+<blockquote>
+<p><strong>RestTemplate</strong> 是Spring框架中用于简化HTTP请求的一个类，它提供了多种方法来处理HTTP请求和响应。RestTemplate可以用于发送GET、POST、PUT、DELETE等HTTP请求，并且可以处理请求头、请求体、URL参数等。</p>
+</blockquote>
 <img src="https://raw.githubusercontent.com/P-luminary/images/6fd3855adcf37a9b9b26fd5173c0b8b9c549724d/RestTemplate%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96%E8%BF%9E%E6%8E%A5%E6%B1%A0.png"  />
 
 <p><span style = "color:red"><strong>Synchronized怎么提升性能</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/a85c2658ee0266db182e0570b1f861ee2933bfa9/Synchronized%E6%80%8E%E4%B9%88%E6%8F%90%E5%8D%87%E6%80%A7%E8%83%BD.png"></p>
+<blockquote>
+<h2 id="🧠-实际开发中如何用好-synchronized？"><a href="#🧠-实际开发中如何用好-synchronized？" class="headerlink" title="🧠 实际开发中如何用好 synchronized？"></a>🧠 实际开发中如何用好 synchronized？</h2><h3 id="✅-尽量减少锁的粒度"><a href="#✅-尽量减少锁的粒度" class="headerlink" title="✅ 尽量减少锁的粒度"></a>✅ 尽量减少锁的粒度</h3><pre><code class="java">// ❌ 锁了整个方法
+public synchronized void update() &#123; ... &#125;
+
+// ✅ 只锁关键代码段
+public void update() &#123;
+    // 非关键代码
+    synchronized (this) &#123;
+        // 只锁关键部分
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<h3 id="✅-使用局部锁对象代替类锁"><a href="#✅-使用局部锁对象代替类锁" class="headerlink" title="✅ 使用局部锁对象代替类锁"></a>✅ 使用局部锁对象代替类锁</h3><pre><code class="java">private final Object lock = new Object();
+
+public void doTask() &#123;
+    synchronized (lock) &#123;
+        // 更细粒度的锁，避免不必要的争用
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<h3 id="✅-使用并发类替代锁（性能更高）"><a href="#✅-使用并发类替代锁（性能更高）" class="headerlink" title="✅ 使用并发类替代锁（性能更高）"></a>✅ 使用并发类替代锁（性能更高）</h3><ul>
+<li><code>ConcurrentHashMap</code></li>
+<li><code>ReadWriteLock</code></li>
+<li><code>ReentrantLock</code></li>
+<li><code>AtomicInteger</code> 等</li>
+</ul>
+</blockquote>
 <p><span style = "color:red"><strong>开发中有没有用到设计模式？怎么用的</strong></span></p>
 <h5 id="策略模式-简单工厂-模板方法"><a href="#策略模式-简单工厂-模板方法" class="headerlink" title="策略模式 + 简单工厂 + 模板方法"></a>策略模式 + 简单工厂 + 模板方法</h5><img src="https://raw.githubusercontent.com/P-luminary/images/16704bb551d4c6a51ba6023f3d9370cbb7d02cc8/%E5%BC%80%E5%8F%91%E4%B8%AD%E6%9C%89%E6%B2%A1%E6%9C%89%E7%94%A8%E5%88%B0%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9F%E6%80%8E%E4%B9%88%E7%94%A8%E7%9A%84.png" style="zoom:150%;" />
 
@@ -9312,7 +11290,7 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
         
         <span class="tag">
             
-            <a href="/tags/面试" style=color:#ffa2c4>
+            <a href="/tags/面试" style=color:#ff7d73>
                 面试
             </a>
         </span>
@@ -12264,7 +14242,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -23291,7 +25269,7 @@ public class BusinessDataVO implements Serializable &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -24212,7 +26190,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#00bcd4>
                 前端
             </a>
         </span>
@@ -43874,7 +45852,7 @@ public class HelloController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -46924,7 +48902,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -47078,7 +49056,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ff7d73>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -49353,7 +51331,7 @@ public class ImoocMallWebMvcConfig implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -52283,7 +54261,7 @@ public class Receiver2 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>

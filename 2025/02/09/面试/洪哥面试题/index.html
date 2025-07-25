@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#ff7d73>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -150,15 +150,15 @@
 </ul>
 <p><strong>怎么确定核心线程数和最大线程数</strong>？</p>
 <h6 id="核心线程数"><a href="#核心线程数" class="headerlink" title="核心线程数"></a>核心线程数</h6><ul>
-<li>CPU密集型任务：如果任务是CPU密集型的，即任务主要是进行计算而不是等待I&#x2F;O操作，核心线程数通常设置为CPU核心数加1。这样可以确保CPU在忙于计算的同时，还有额外的线程来处理可能出现的临时高峰。【纯内存计算 不涉及到网络计算和io计算】<ul>
+<li>CPU密集型任务：如果任务是CPU密集型的，即任务主要是进行计算而不是等待I&#x2F;O操作，核心线程数通常设置为CPU核心数加1。这样可以确保CPU在忙于计算的同时，还有额外的线程来处理可能出现的临时高峰。【纯内存计算 不涉及到网络计算和io计算】【N+1】<ul>
 <li>八个核 创建十个cpu 没意义 因为最多并发只是8，建议保持一致或者+1，<u>减少加入队列和创建队列的开销</u></li>
 <li>先把其当成io密集 因为层级不一样 不断压测去逼近最理想值</li>
 </ul>
 </li>
-<li>I&#x2F;O密集型任务：对于I&#x2F;O密集型任务，由于线程在等待I&#x2F;O操作时会阻塞，因此可以设置更多的核心线程数。一个常用的经验法则是核心线程数设置为CPU核心数的两倍。【线程数越多越好】【压测无限逼近取最合适的线程数】</li>
+<li>I&#x2F;O密集型任务：对于I&#x2F;O密集型任务，由于线程在等待I&#x2F;O操作时会阻塞，因此可以设置更多的核心线程数。一个常用的经验法则是核心线程数设置为CPU核心数的两倍。【线程数越多越好】【压测无限逼近取最合适的线程数】【2N+1】</li>
 </ul>
 <h6 id="最大线程数"><a href="#最大线程数" class="headerlink" title="最大线程数"></a>最大线程数</h6><p>需要一开始创建好线程等着访问来，如果 <u>核心&#x3D;最大</u>，此时没有临时线程</p>
-<h4 id="创建线程有几种方式（必会）"><a href="#创建线程有几种方式（必会）" class="headerlink" title="创建线程有几种方式（必会）"></a>创建线程有几种方式（必会）</h4><p>1.继承Thread类并重写 run 方法创建线程，实现简单但不可以继承其他类<br>2.实现Runnable接口并重写 run 方法。避免了单继承局限性，编程更加灵活，实现解耦。<br>3.实现 Callable接口并重写 call 方法，创建线程。可以获取线程执行结果的返回值，并且可以抛出异常。<br>4.使用线程池创建（使用java.util.concurrent.Executor接口）</p>
+<h4 id="创建线程有几种方式（必会）"><a href="#创建线程有几种方式（必会）" class="headerlink" title="创建线程有几种方式（必会）"></a>创建线程有几种方式（必会）</h4><p>1.<strong>继承</strong> Thread类并重写 run 方法创建线程，实现简单但不可以继承其他类<br>2.<strong>实现</strong> Runnable接口并重写 run 方法。避免了单继承局限性，编程更加灵活，实现解耦。 [无返回值]<br>3.<strong>实现</strong> Callable接口并重写 call 方法，创建线程。可以获取线程执行结果的返回值，并且可以抛出异常。[有返回值]<br>4.使用<strong>线程池</strong>创建（使用java.util.concurrent.Executor接口）</p>
 <ul>
 <li>想获得线程池里的返回结果用什么？<strong>execute + submit</strong></li>
 <li>线程有哪些状态？ java线程有哪些状态？</li>
@@ -234,7 +234,45 @@ public class ThreadCreationExamples &#123;
 <li>变长的线程池</li>
 <li>定时任务的线程池</li>
 </ul>
-<h4 id="java-线程池创建时核心参数-高薪常问"><a href="#java-线程池创建时核心参数-高薪常问" class="headerlink" title="java 线程池创建时核心参数(高薪常问)"></a>java 线程池创建时核心参数(高薪常问)</h4><p>核心线程池大小、线程池创建线程的最大个数(核心+非核心[临时线程])、临时线程存活时间、时间单位、阻塞队列、线程工厂(指定线程池创建线程的命名)、拒绝策略<br><u>线程工厂可以设置创建的属性</u>：<br><strong>守护线程</strong>：主线程(main)一天不死 守护线程不死 [同生共死]<br><strong>非守护线程</strong>：new一个就是 [不是同生共死]</p>
+<h4 id="java-线程池创建时核心参数-高薪常问"><a href="#java-线程池创建时核心参数-高薪常问" class="headerlink" title="java 线程池创建时核心参数(高薪常问)"></a>java 线程池创建时核心参数(高薪常问)</h4><blockquote>
+<h6 id="七大核心参数解释"><a href="#七大核心参数解释" class="headerlink" title="七大核心参数解释"></a><strong>七大核心参数解释</strong></h6><table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>corePoolSize</code></td>
+<td><strong>核心线程数</strong>，线程池常驻的线程数量，即使空闲也不会被销毁（除非 <code>allowCoreThreadTimeOut = true</code>）</td>
+</tr>
+<tr>
+<td><code>maximumPoolSize</code></td>
+<td><strong>最大线程数</strong>，线程池能容纳的最大线程数量（包括核心线程）</td>
+</tr>
+<tr>
+<td><code>keepAliveTime</code></td>
+<td><strong>非核心(临时)线程的存活时间</strong>，超过这个时间，空闲的线程会被回收</td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td><strong>时间单位</strong>，<code>keepAliveTime</code> 的时间单位，如：秒（<code>TimeUnit.SECONDS</code>）</td>
+</tr>
+<tr>
+<td><code>workQueue</code></td>
+<td><strong>任务(阻塞)队列</strong>，用于缓存提交但尚未执行的任务（如：<code>ArrayBlockingQueue</code>、<code>LinkedBlockingQueue</code>）</td>
+</tr>
+<tr>
+<td><code>threadFactory</code></td>
+<td><strong>线程工厂</strong>，用于自定义线程创建（可以设置线程名称、是否为守护线程等）</td>
+</tr>
+<tr>
+<td><code>handler</code></td>
+<td><strong>拒绝策略</strong>，当任务队列已满且线程数量达到最大线程数时的处理方式；(抛不抛异常…)</td>
+</tr>
+</tbody></table>
+</blockquote>
+<p>核心线程池大小、线程池创建线程的最大个数(核心+非核心[临时线程])、临时线程存活时间、时间单位、阻塞队列、线程工厂(指定线程池创建线程的命名)、拒绝策略<br><u>线程工厂可以设置创建的属性</u>：<br><strong>守护线程</strong>：主线程(main)一天不死 守护线程不死 [同生共死]<br><strong>非守护线程</strong>：new一个就是 [不是同生共死]</p>
 <p><u>阻塞队列常用的队列</u>：</p>
 <ol>
 <li><strong>ArrayBlockingQueue</strong>： 基于数组结构的有界阻塞队列，此队列按照先进先出（FIFO）的原则对元素进行排序。创建时需要指定容量。【底层是数组 随机读写的 **时间复杂度O(1)**】<ul>
@@ -253,15 +291,15 @@ public class ThreadCreationExamples &#123;
 </li>
 </ol>
 <h4 id="线程池的应用要有实际的业务场景"><a href="#线程池的应用要有实际的业务场景" class="headerlink" title="线程池的应用要有实际的业务场景"></a>线程池的应用<del>要有实际的业务场景</del></h4><ul>
-<li>异步任务处理：将任务提交到线程池异步执行，而不阻塞主线程</li>
+<li><strong>异步任务处理</strong>：<u>将任务提交到线程池异步执行</u>，而不阻塞主线程</li>
 </ul>
 <blockquote>
 <p>假设我们有一个电商平台，其中一个核心业务是处理用户订单。在订单处理过程中，我们需要执行以下任务：</p>
 <ol>
-<li>验证订单信息（例如：检查库存、验证用户信息等）。</li>
-<li>计算订单金额（包括商品价格、折扣、运费等）。</li>
-<li>生成订单并保存到数据库。</li>
-<li>发送订单确认邮件给用户。</li>
+<li><h6 id="验证订单信息（例如：检查库存、验证用户信息等）。"><a href="#验证订单信息（例如：检查库存、验证用户信息等）。" class="headerlink" title="验证订单信息（例如：检查库存、验证用户信息等）。"></a>验证订单信息（例如：检查库存、验证用户信息等）。</h6></li>
+<li><h6 id="计算订单金额（包括商品价格、折扣、运费等）。"><a href="#计算订单金额（包括商品价格、折扣、运费等）。" class="headerlink" title="计算订单金额（包括商品价格、折扣、运费等）。"></a>计算订单金额（包括商品价格、折扣、运费等）。</h6></li>
+<li><h6 id="生成订单并保存到数据库。"><a href="#生成订单并保存到数据库。" class="headerlink" title="生成订单并保存到数据库。"></a>生成订单并保存到数据库。</h6></li>
+<li><h6 id="发送订单确认邮件给用户。"><a href="#发送订单确认邮件给用户。" class="headerlink" title="发送订单确认邮件给用户。"></a>发送订单确认邮件给用户。</h6></li>
 </ol>
 <p>由于这些任务相对独立，并且处理时间可能较长，我们希望在不影响用户操作的前提下异步执行它们。以下是使用线程池处理这些异步任务的模拟代码：</p>
 <pre><code class="java">import java.util.concurrent.ExecutorService;
@@ -342,9 +380,181 @@ public class ThreadPoolApplication &#123;
         orderService.shutdown();
     &#125;
 &#125;
-
 </code></pre>
 <p>在这个模拟场景中，我们创建了一个 <code>OrderService</code> 类，它包含一个线程池用于异步处理订单的各个步骤。当用户创建订单时，<code>processOrder</code> 方法会将订单处理的各个任务提交到线程池中异步执行。这样，主线程不会被阻塞，可以继续处理其他用户请求或执行其他任务。在所有任务都提交到线程池后，主线程可能会执行其他逻辑，最后调用 <code>shutdown</code> 方法来优雅地关闭线程池。</p>
+<hr>
+<h5 id="线程池执行流程图解"><a href="#线程池执行流程图解" class="headerlink" title="线程池执行流程图解"></a>线程池执行流程图解</h5><p>当你调用：</p>
+<pre><code class="java">executorService.submit(() -&gt; &#123;
+    // 任务逻辑
+&#125;);
+</code></pre>
+<p>实际上背后会触发 <code>ThreadPoolExecutor</code> 的如下处理逻辑：<strong>线程池内部执行流程</strong></p>
+<ol>
+<li><strong>核心线程数未满</strong>：<ul>
+<li>立即创建新线程来处理该任务。</li>
+</ul>
+</li>
+<li><strong>核心线程数已满</strong>，进入下一步：<ul>
+<li>将任务放入任务队列（如 <code>LinkedBlockingQueue</code>）。</li>
+</ul>
+</li>
+<li><strong>任务队列已满</strong>，进入下一步：<ul>
+<li>判断当前线程数是否小于最大线程数：<ul>
+<li>如果小于，创建非核心线程来执行任务；</li>
+<li>如果等于最大线程数，触发 <strong>拒绝策略</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>执行完毕</strong>的线程会回到池中等待下一个任务（如果有），<strong>非核心线程在空闲超时后会被销毁</strong>。</li>
+</ol>
+<h4 id="结合你的业务场景做解析"><a href="#结合你的业务场景做解析" class="headerlink" title="结合你的业务场景做解析"></a>结合你的业务场景做解析</h4><p>你这个订单场景中，共有 <strong>四个异步任务</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>任务名称</th>
+<th>是否必须顺序</th>
+<th>是否耗时</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>①</td>
+<td>验证订单</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>②</td>
+<td>计算金额</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>③</td>
+<td>写入数据库</td>
+<td>否（有依赖）</td>
+<td>是</td>
+</tr>
+<tr>
+<td>④</td>
+<td>发送确认邮件</td>
+<td>否</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>“不一定必须顺序”，是基于<strong>“线程池异步任务” 的并发角度</strong>而言的 —— 如果某些任务之间没有直接依赖关系<strong>，那就可以并发异步执行，提高效率。</strong></p>
+<p>但是你指出了一个关键点：这个场景中每个步骤其实<strong>是有依赖关系</strong>的，这种顺序性是业务逻辑所要求的，<strong>不是线程池可以随意打乱的</strong>！</p>
+</blockquote>
+<p>✅ 这正是线程池最适用的场景：<strong>任务独立 &#x2F; 可并行处理 &#x2F; 需要节省响应时间</strong></p>
+<h3 id="🧠-所以在这个场景中，线程池的正确使用方式应该是："><a href="#🧠-所以在这个场景中，线程池的正确使用方式应该是：" class="headerlink" title="🧠 所以在这个场景中，线程池的正确使用方式应该是："></a>🧠 所以在这个场景中，线程池的<strong>正确使用方式</strong>应该是：</h3><p>我们不能把所有任务都直接丢进线程池 <strong>并发执行</strong>，而应该是：</p>
+<pre><code class="yaml">主线程：
+    1. 验证订单（同步执行）
+    2. 计算金额（同步执行或异步计算后 get() 等待结果）
+    3. 写入数据库（依赖前面两个成功）
+    4. 发送确认邮件（可异步执行）
+</code></pre>
+<p>✅ 其中 <strong>步骤 ④ 发送邮件</strong> 是唯一适合异步执行的 —— 它不影响主流程，可以交给线程池异步去发。</p>
+<p><strong>订单处理是有严格先后顺序依赖的</strong>：</p>
+<ul>
+<li><strong>验证 → 金额 → 入库 → 邮件</strong> 是一条主流程链；</li>
+<li>线程池 <strong>不是用来打乱这个顺序的</strong>，而是用来 <strong>并发执行不影响主流程的附属任务</strong>（如邮件通知、日志、异步推送等）；</li>
+</ul>
+<hr>
+<h4 id="使用线程池的好处："><a href="#使用线程池的好处：" class="headerlink" title="使用线程池的好处："></a><strong>使用线程池的好处：</strong></h4><ul>
+<li>🚀 <strong>提升响应速度</strong>：主线程快速返回（如 UI&#x2F;接口响应），耗时任务交给线程池异步完成。</li>
+<li>✅ <strong>防止线程资源滥用</strong>：相比每个任务都<code>new Thread()</code>，线程池能<strong>重用线程</strong>，避免频繁创建&#x2F;销毁造成资源浪费。</li>
+<li>🔒 <strong>线程复用 + 并发控制</strong>：通过设置 <code>corePoolSize</code> 和 <code>queueCapacity</code> 控制系统负载。</li>
+</ul>
+<pre><code class="java">ExecutorService executorService = new ThreadPoolExecutor(
+    5,                // 核心线程数
+    10,               // 最大线程数
+    60,               // 非核心线程的空闲存活时间
+    TimeUnit.SECONDS,
+    new LinkedBlockingQueue&lt;&gt;(100), // 队列长度
+    Executors.defaultThreadFactory(),
+    new ThreadPoolExecutor.AbortPolicy() // 拒绝策略
+);
+</code></pre>
+<h4 id="🎯-参数如何选择："><a href="#🎯-参数如何选择：" class="headerlink" title="🎯 参数如何选择："></a>🎯 参数如何选择：</h4><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>选型建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>corePoolSize</td>
+<td>可设为CPU核心数或稍高，如 <code>Runtime.getRuntime().availableProcessors()</code></td>
+</tr>
+<tr>
+<td>maximumPoolSize</td>
+<td>视任务复杂度、响应时间等决定，通常为核心数的 2~3 倍 <strong>2N+1</strong></td>
+</tr>
+<tr>
+<td>queueCapacity</td>
+<td>适合使用有限队列（如100），避免OOM</td>
+</tr>
+<tr>
+<td>keepAliveTime</td>
+<td>一般设置 30~60 秒</td>
+</tr>
+<tr>
+<td>拒绝策略</td>
+<td>建议使用 <code>CallerRunsPolicy</code> 或自定义策略</td>
+</tr>
+</tbody></table>
+<h5 id="什么时候不该用线程池？"><a href="#什么时候不该用线程池？" class="headerlink" title="什么时候不该用线程池？"></a>什么时候不该用线程池？</h5><p>虽然线程池非常好，但在这些情况下应该慎用：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>任务轻量、低频</td>
+<td>可直接 new Thread</td>
+</tr>
+<tr>
+<td>任务耗时严重、不确定性高</td>
+<td>可用异步消息队列或限流机制替代</td>
+</tr>
+<tr>
+<td>并发极高，超出系统承载能力</td>
+<td>应加熔断、降级、防抖等保护机制</td>
+</tr>
+</tbody></table>
+<h5 id="总结线程池应用场景"><a href="#总结线程池应用场景" class="headerlink" title="总结线程池应用场景"></a>总结线程池应用场景</h5><table>
+<thead>
+<tr>
+<th>应用场景</th>
+<th>是否推荐</th>
+<th>理由说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>✅ 异步任务</td>
+<td>推荐</td>
+<td>提升响应速度，释放主线程</td>
+</tr>
+<tr>
+<td>✅ 数据汇总</td>
+<td>推荐</td>
+<td>多接口并行调用、加速结果收敛</td>
+</tr>
+<tr>
+<td>✅ 定时批处理任务</td>
+<td>推荐</td>
+<td>比如定时拉取、导入数据、分段分页并发处理等</td>
+</tr>
+<tr>
+<td>❌ 高频IO长耗时任务</td>
+<td>慎用</td>
+<td>应考虑消息队列+异步消费，避免线程被长时间占用</td>
+</tr>
+</tbody></table>
 </blockquote>
 <h4 id="你单独部署过项目吗？"><a href="#你单独部署过项目吗？" class="headerlink" title="你单独部署过项目吗？"></a>你单独部署过项目吗？</h4><p>前端打包ng配置文件<br>git所有人都用 需要拉分支 maven打包后端 包放到远程服务器 java -jar 启动！【不应该有人去做】<br>有专门工具去流水线制作 → <strong>Jenkins</strong>是一个开源的自动化服务器，它可以帮助您实现自动化构建、测试和部署项目   <strong><u>JenKins + docker 做自动化部署</u></strong><br>部署是建立本地的项目再推到服务器</p>
 <blockquote>
@@ -419,7 +629,7 @@ docker run -d --name myapp -p 8080:8080 myapp
 <h4 id="get请求和post请求的区别"><a href="#get请求和post请求的区别" class="headerlink" title="get请求和post请求的区别"></a>get请求和post请求的区别</h4><h6 id="get请求"><a href="#get请求" class="headerlink" title="get请求"></a>get请求</h6><ul>
 <li>请求指定的资源。使用GET的目的是获取数据，</li>
 <li>数据在URL中传输，通过将数据附在<strong>URL</strong>之后，以查询字符串的形式出现</li>
-<li>由于数据在URL中可见，因此安全性较低，敏感数据不应通过过GET请求发送</li>
+<li>由于数据在URL中可见，因此安全性较低，<u>敏感数据不应通过过GET请求发送</u></li>
 <li>URL长度限制通常在<strong>2000个字符</strong>左右，这意味着GET请求能够传输的数据有限</li>
 <li><strong>可以被缓存</strong>，也会被浏览器保存在历史记录中</li>
 <li>常用于<strong>信息查询、数据检索</strong>等操作.</li>
@@ -435,7 +645,173 @@ docker run -d --name myapp -p 8080:8080 myapp
 <p>请求行：请求类型 请求方法 url http版本1.1 老式1.0不支持长连接<br>请求头：key value<br>   <u>常见请求头</u>： 请求数据类型，restful基于json<br><strong>Content-Type</strong>：上传文件不用application 要用 multipart&#x2F;form-data”<br><strong>Host</strong>：指定请求的服务器的域名和端口号。<br><strong>User-Agent</strong>：包含发出请求的用户代理软件信息，通常包括浏览器类型和版本<br>请求体：get请求可以有请求体<br>响应：响应行 响应体 状态码 描述<br>  <u>常见响应头</u>：<strong>Content-Type</strong>：返回数据的格式   <strong>Content-Length</strong>：响应体的长度，以字节为单位</p>
 <p>post请求也可以用问号的形式拼接到浏览器 也可以用路径参数</p>
 <p>很大区别：get一般放在url后面 会展示url和后面参数 会暴露传参隐私  登录接口用post来做 有密码敏感信息<br>表单、密码、长数据用post 不过怕黑客抓包 相对来说安全<br>get请求后面传参的大小限制 理论上没有限制 只是浏览器厂商会有限制<br>get用来查询 post新增提交表单</p>
+<blockquote>
+<p>“GET 和 POST 都是 HTTP 协议中最常用的请求方式，最本质的区别在于数据传输的位置与幂等性，不仅影响安全性和缓存行为，也关系到实际应用场景选择。”</p>
+<h3 id="✅-GET-与-POST-请求的对比总结表"><a href="#✅-GET-与-POST-请求的对比总结表" class="headerlink" title="✅ GET 与 POST 请求的对比总结表"></a>✅ GET 与 POST 请求的对比总结表</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>GET 请求</th>
+<th>POST 请求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>作用</strong></td>
+<td>查询资源（获取数据）</td>
+<td>提交资源（发送数据）</td>
+</tr>
+<tr>
+<td><strong>数据位置</strong></td>
+<td>URL 参数：拼接在 <code>?</code> 后面，如 <code>/user?id=1</code></td>
+<td>请求体：放在 HTTP 请求体中</td>
+</tr>
+<tr>
+<td><strong>是否显示参数</strong></td>
+<td>✅ 显示（暴露在 URL 中，用户可见）</td>
+<td>❌ 不显示（隐藏在 Body 中）</td>
+</tr>
+<tr>
+<td><strong>是否安全</strong></td>
+<td>❌ 不安全（敏感信息容易泄露，如明文密码）</td>
+<td>✅ 相对安全（但也要注意防止抓包等问题）</td>
+</tr>
+<tr>
+<td><strong>参数长度限制</strong></td>
+<td>有限制（由浏览器和服务器限制，一般不超过 2KB）</td>
+<td>理论上无限制（受服务器配置影响）</td>
+</tr>
+<tr>
+<td><strong>是否可缓存</strong></td>
+<td>✅ 可以被缓存</td>
+<td>❌ 默认不可缓存</td>
+</tr>
+<tr>
+<td><strong>是否保留历史记录</strong></td>
+<td>✅ 会被浏览器记录</td>
+<td>❌ 不会记录</td>
+</tr>
+<tr>
+<td><strong>是否能被收藏为书签</strong></td>
+<td>✅ 可以（URL完整）</td>
+<td>❌ 不建议（没有完整 URL 参数）</td>
+</tr>
+<tr>
+<td><strong>应用场景</strong></td>
+<td>查询、检索、列表展示</td>
+<td>提交表单、上传文件、登录、注册</td>
+</tr>
+<tr>
+<td><strong>请求幂等性</strong></td>
+<td>✅ 幂等（多次请求结果一样）</td>
+<td>❌ 不一定幂等（多次提交可能创建多条数据）</td>
+</tr>
+<tr>
+<td><strong>常用请求头</strong></td>
+<td><code>Accept</code>、<code>User-Agent</code>、<code>Host</code>、<code>Authorization</code> 等</td>
+<td>额外使用：<code>Content-Type</code>（如：<code>application/json</code>、<code>multipart/form-data</code>）</td>
+</tr>
+<tr>
+<td><strong>是否可附带请求体</strong></td>
+<td>✅ 理论支持，但不推荐使用，很多服务端框架默认忽略（如 Spring MVC）</td>
+<td>✅ 正常使用请求体（Body）传参</td>
+</tr>
+<tr>
+<td><strong>是否支持路径参数</strong></td>
+<td>✅ 支持，如 <code>/user/1</code></td>
+<td>✅ 同样支持路径参数和 query 参数（但参数多用 Body 传）</td>
+</tr>
+<tr>
+<td><strong>是否可以拼接 ? 参数</strong></td>
+<td>✅ 常用，如 <code>/api?key=123</code></td>
+<td>✅ 也可以 <code>/api?token=abc</code>，但数据主体依然建议放在请求体中</td>
+</tr>
+<tr>
+<td><strong>对缓存友好程度</strong></td>
+<td>✅ 友好，可被浏览器缓存，也可用于 CDN 缓存</td>
+<td>❌ 默认不可缓存（除非通过响应头指定）</td>
+</tr>
+<tr>
+<td><strong>在 RESTful 中常用场景</strong></td>
+<td>获取资源，如 GET <code>/api/users</code></td>
+<td>创建资源，如 POST <code>/api/users</code>，或提交登录等敏感操作</td>
+</tr>
+</tbody></table>
+<h3 id="冷门但常考-amp-实战必备考点"><a href="#冷门但常考-amp-实战必备考点" class="headerlink" title="冷门但常考 &amp; 实战必备考点"></a>冷门但常考 &amp; 实战必备考点</h3><table>
+<thead>
+<tr>
+<th>冷门知识点 &#x2F; 实战经验</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET 请求也可以有请求体</td>
+<td>✅ <strong>HTTP 协议允许</strong>，但很多框架（如 Spring）不解析，默认忽略</td>
+</tr>
+<tr>
+<td>POST 请求也可以拼接 URL 参数</td>
+<td>✅ URL 参数与请求体可同时存在，如：<code>POST /api?type=1</code> + body 传参</td>
+</tr>
+<tr>
+<td>浏览器最大 URL 长度限制</td>
+<td>❗ 通常为 2KB～8KB，<strong>IE 最小</strong>，<strong>Chrome 支持更长</strong></td>
+</tr>
+<tr>
+<td>POST 也可以被缓存</td>
+<td>❌ 默认不会缓存，但可通过 <code>Cache-Control</code> 或自定义缓存策略强制缓存</td>
+</tr>
+<tr>
+<td>GET 请求一般不能上传文件（除非用 Base64 等特殊形式）</td>
+<td>文件上传推荐用 <code>POST + multipart/form-data</code></td>
+</tr>
+<tr>
+<td>登录操作必须用 POST</td>
+<td>因为 GET 暴露用户名&#x2F;密码容易被记录，<strong>敏感数据必须走 POST + HTTPS 加密传输</strong></td>
+</tr>
+<tr>
+<td>GET 请求参数对顺序敏感</td>
+<td>某些框架（如部分网关、签名认证）会对 URL 参数顺序敏感，应注意参数顺序一致</td>
+</tr>
+<tr>
+<td>Content-Type 区别</td>
+<td>- GET 请求常省略或默认 - POST 常设定为： ① application&#x2F;json ② application&#x2F;x-www-form-urlencoded ③ multipart&#x2F;form-data</td>
+</tr>
+<tr>
+<td>GET 请求会被预检（preflight）吗？</td>
+<td>❌ 不会，只有跨域的非简单请求（如 PUT、带自定义头的 POST）才会有 OPTIONS 预检</td>
+</tr>
+</tbody></table>
+</blockquote>
 <h4 id="是否上传过图片"><a href="#是否上传过图片" class="headerlink" title="是否上传过图片"></a>是否上传过图片</h4><p>阿里云是最后存储的<br>完整的上传图片应该：<br><strong>前端</strong>要配合(表单 post提交)  <strong>Content-Type</strong>：上传文件不用application 要用 <strong>multipart&#x2F;form-data</strong>”  同一个请求能边上传图片和文本数据<br><strong>后端</strong>的操作：传到后端controller接收，有一个类multipart 专门接收二进制数据 图片视频等，有很多api → get input stream封装util 调用upload上传。中小型企业都用阿里云oss 因为要考虑容灾 地震 容易数据丢失，要考虑备份→集群，服务器有物理硬件上限(要有运维成本)，文件维护很专业交给专业的人。阿里云的机房在深圳，广州的人访问会比哈尔滨的更快。光纤受物理限制 越长越有损耗。大型运营商在全国各地都有机房，可以智能判断比如哈尔滨的就去访问黑龙江服务器。CSDN内容分发(收费)</p>
+<blockquote>
+<h3 id="🔧-完整的上传流程"><a href="#🔧-完整的上传流程" class="headerlink" title="🔧 完整的上传流程"></a>🔧 完整的上传流程</h3><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前端</td>
+<td>使用 <code>form</code> 表单或 Ajax 上传，<code>Content-Type</code> 设置为 <code>multipart/form-data</code>，支持<strong>同时传文本+文件</strong></td>
+</tr>
+<tr>
+<td>控制器</td>
+<td>Spring Boot 使用 <code>MultipartFile</code> 类型接收上传文件，可使用 <code>.getInputStream()</code> 获取内容流</td>
+</tr>
+<tr>
+<td>上传工具类</td>
+<td>将文件流封装上传到第三方云存储，如阿里云 OSS、七牛云、腾讯云等</td>
+</tr>
+<tr>
+<td>云存储</td>
+<td>云厂商拥有<strong>备份、容灾、集群、分发</strong>等能力，确保数据安全和访问速度</td>
+</tr>
+<tr>
+<td>返回前端</td>
+<td>返回上传后的图片 URL 或文件 ID 等信息</td>
+</tr>
+</tbody></table>
+</blockquote>
 <h4 id="前端传过来的图片怎么设置图片大小-有没有什么办法？"><a href="#前端传过来的图片怎么设置图片大小-有没有什么办法？" class="headerlink" title="前端传过来的图片怎么设置图片大小 有没有什么办法？"></a>前端传过来的图片怎么设置图片大小 有没有什么办法？</h4><p>思考：为什么后端要限制前端图片传的大小？<br>大图片 + 多人上传，首先后端要读到jvm内存再二进制流给到阿里云，同时并发有可能超出OM的java内存大小<br>springboot yml加文件上传大小配置</p>
 <pre><code class="yaml">spring:
   servlet:
@@ -467,6 +843,86 @@ docker run -d --name myapp -p 8080:8080 myapp
 </ul>
 </li>
 </ol>
+<blockquote>
+<h3 id="前端图片大小如何限制？"><a href="#前端图片大小如何限制？" class="headerlink" title="前端图片大小如何限制？"></a>前端图片大小如何限制？</h3><h4 id="✅-原因：避免后端-OOM（内存溢出）"><a href="#✅-原因：避免后端-OOM（内存溢出）" class="headerlink" title="✅ 原因：避免后端 OOM（内存溢出）"></a>✅ 原因：避免后端 OOM（内存溢出）</h4><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>上传前</td>
+<td>浏览器本地可限制图片大小或压缩（前端 UI 限制）</td>
+</tr>
+<tr>
+<td>上传中</td>
+<td>设置 <code>multipart/form-data</code> 协议</td>
+</tr>
+<tr>
+<td>后端接收</td>
+<td>文件先被加载到 JVM 内存，再传给云服务，<strong>大图 + 并发上传 &#x3D; 高内存占用</strong></td>
+</tr>
+<tr>
+<td>限制大小</td>
+<td>避免 OOM，保障服务稳定性</td>
+</tr>
+</tbody></table>
+<h4 id="✅-Spring-Boot-限制配置"><a href="#✅-Spring-Boot-限制配置" class="headerlink" title="✅ Spring Boot 限制配置"></a>✅ Spring Boot 限制配置</h4><pre><code class="java">spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB         # 单个文件最大10MB
+      max-request-size: 20MB      # 整体请求最大20MB（多个文件+字段）
+</code></pre>
+<h3 id="控制器代码示例（Java）"><a href="#控制器代码示例（Java）" class="headerlink" title="控制器代码示例（Java）"></a>控制器代码示例（Java）</h3><pre><code class="java">@PostMapping(&quot;/upload&quot;)
+public String uploadFile(@RequestParam(&quot;file&quot;) MultipartFile file) &#123;
+    if (file.isEmpty()) &#123;
+        return &quot;上传失败，文件为空&quot;;
+    &#125;
+
+    try (InputStream inputStream = file.getInputStream()) &#123;
+        // 上传到阿里云OSS的逻辑
+        String url = ossUtil.upload(inputStream, file.getOriginalFilename());
+        return &quot;上传成功，访问地址：&quot; + url;
+    &#125; catch (IOException e) &#123;
+        e.printStackTrace();
+        return &quot;上传失败：&quot; + e.getMessage();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="冷门但常考的扩展点"><a href="#冷门但常考的扩展点" class="headerlink" title="冷门但常考的扩展点"></a>冷门但常考的扩展点</h3><table>
+<thead>
+<tr>
+<th>知识点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MultipartFile</code> 是什么？</td>
+<td>是 Spring 封装的文件上传类型，内部包含文件名、文件大小、文件流等</td>
+</tr>
+<tr>
+<td>同一请求能传图片+文本？</td>
+<td>✅ 支持，表单中可同时上传 <code>file</code> + 文本字段，如商品名、描述</td>
+</tr>
+<tr>
+<td>阿里云的上传路径建议？</td>
+<td>可使用时间戳+UUID组合路径，如：<code>images/2025/07/abc.jpg</code>，防止重复文件覆盖</td>
+</tr>
+<tr>
+<td>为什么选择 OSS？</td>
+<td>专业、安全、弹性扩展、支持 CDN 分发、支持跨区域访问</td>
+</tr>
+<tr>
+<td>OSS 上传是否走 JVM？</td>
+<td>是的，文件先读入 JVM，再通过 SDK 上传，但也可以优化为<strong>直传（前端直传 OSS）</strong>减少后端压力</td>
+</tr>
+<tr>
+<td>会不会并发导致 OOM？</td>
+<td>是的，尤其是大文件 + 并发上传，若不限制上传大小，极易导致内存溢出</td>
+</tr>
+</tbody></table>
+</blockquote>
 </blockquote>
 <h4 id="你在里面主要负责哪方面的工作？"><a href="#你在里面主要负责哪方面的工作？" class="headerlink" title="你在里面主要负责哪方面的工作？"></a>你在里面主要负责哪方面的工作？</h4><p>我之前负责后端开发 也会参与一部分<strong>设计工作</strong><br>开发完会协助测试 和前端进行联调<br>和组长一起进行测试<br>和前后端的逻辑基本上都是可以的</p>
 <h4 id="上家公司的离职原因，薪资多少，薪资结构"><a href="#上家公司的离职原因，薪资多少，薪资结构" class="headerlink" title="上家公司的离职原因，薪资多少，薪资结构"></a>上家公司的离职原因，薪资多少，薪资结构</h4><p>不要说一些面试官能挑刺的理由<br><del>发展前景？表明上家公司不好</del><br><del>太想进步？表名上家公司提供的技术不好 自己技术不好</del><br>在上家公司我学习了很多 成长了很多，个人发展原因 ，想要涨薪</p>
@@ -487,6 +943,9 @@ docker run -d --name myapp -p 8080:8080 myapp
 <h4 id="Controller和RestController的区别"><a href="#Controller和RestController的区别" class="headerlink" title="Controller和RestController的区别"></a>Controller和RestController的区别</h4><p>@RestController &#x3D; @Controller + @ResponseBody</p>
 <p>@Controller如果要返回JSON&#x2F;XML等格式的数据给客户端，必须显式的使用@ResponseBody注解将返回的对象转换为HTTP响应体内容。<br>@RestController 专门为构建RESTful Web服务设计的控制器。它简化了创建API的过程，因为所有方法默认都会将返回值直接写入HTTP响应体中作为JSON或XML格式的数据。</p>
 <p>@Controller可以声明一个类为一个bean 控制器用<br>@ResponseBody 具体方法和类都可以 不是包装类和字符 都可以自动转成json数据格式 更符合restful风格</p>
+<blockquote>
+<p>“<code>@RestController</code> 是 Spring 为了简化 RESTful 接口开发而推出的复合注解，等价于 <code>@Controller + @ResponseBody</code>。它让我们开发 API 接口时无需再为每个方法添加 <code>@ResponseBody</code>，所有返回值会自动转换为 JSON 或 XML 格式写入响应体，非常适合前后端分离项目。”</p>
+</blockquote>
 <h4 id="在yaml文件中定义了一些参数，该怎么调用"><a href="#在yaml文件中定义了一些参数，该怎么调用" class="headerlink" title="在yaml文件中定义了一些参数，该怎么调用"></a><strong>在yaml文件中定义了一些参数，该怎么调用</strong></h4><ul>
 <li>使用 @Value 注解，这是最直接的方式，适用于简单的属性注入。是bean的注解 <strong>用${key}还可以用#</strong><ul>
 <li><code>$&#123;&#125;</code>：用于注入外部配置文件的值。它告诉Spring需要从环境变量、属性文件、系统属性等地方查找相应的值。</li>
@@ -546,6 +1005,48 @@ public class CustomComponent &#123;
 <li>使用 @ConfigurationProperties 注解，通常会指定一个<strong>前缀</strong>（<strong>prefix</strong>），这个前缀用于指定配置文件中哪些属性应该被绑定到这个 Bean 上。然后确保主应用程序类或某个配置类上有<code>@EnableConfigurationProperties(AppProperties.class)</code> 注解<br><code>@ConfigurationProperties(prefix = &quot;prefix&quot;)</code></li>
 </ul>
 <h4 id="IOC和DI有了解过吗，它们的好处是什么"><a href="#IOC和DI有了解过吗，它们的好处是什么" class="headerlink" title="IOC和DI有了解过吗，它们的好处是什么"></a>IOC和DI有了解过吗，它们的好处是什么</h4><p><span style = "color:red">它们的目的是为了<strong>解耦</strong></span><br>IOC(控制反转)是Spring的两大核心之一，DI(依赖注入)<br>IOC把控制权交给spring容器<br>对象创建好之后 之间会有依赖关系 DI因此而生<br>实现方式：DI通常有四种实现方式</p>
+<blockquote>
+<h3 id="IOC-与-DI-总结对比表"><a href="#IOC-与-DI-总结对比表" class="headerlink" title="IOC 与 DI 总结对比表"></a>IOC 与 DI 总结对比表</h3><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>IOC（控制反转）</th>
+<th>DI（依赖注入）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>含义</td>
+<td>控制权从代码“主动”创建对象，反转给 Spring 容器</td>
+<td>Spring 容器将依赖对象“注入”到目标对象中</td>
+</tr>
+<tr>
+<td>目标</td>
+<td><strong>解耦合</strong>，管理对象生命周期和依赖关系</td>
+<td>实现 IOC 的核心手段，降低模块耦合度</td>
+</tr>
+<tr>
+<td>体现</td>
+<td>Bean 由容器统一创建和维护</td>
+<td>对象的依赖由容器自动提供</td>
+</tr>
+<tr>
+<td>好处</td>
+<td>降低耦合、统一管理对象</td>
+<td>提高可维护性、扩展性、便于测试</td>
+</tr>
+<tr>
+<td>关系</td>
+<td>是一种设计思想</td>
+<td>是实现方式（IOC 的具体实现手段）</td>
+</tr>
+</tbody></table>
+<h3 id="IOC-amp-DI-经典解释"><a href="#IOC-amp-DI-经典解释" class="headerlink" title="IOC &amp; DI 经典解释"></a>IOC &amp; DI 经典解释</h3><ul>
+<li><strong>IOC（控制反转）</strong> 是一种思想，把原来由开发者手动 new 对象的工作交给 Spring 容器来做，实现<strong>对象创建和依赖管理的统一控制</strong>。</li>
+<li><strong>DI（依赖注入）</strong> 是实现 IOC 的一种方式，即通过注解、构造函数等方式，由容器<strong>注入依赖对象</strong>。</li>
+</ul>
+<p>📌 举个栗子：</p>
+<p>类似租房平台，房东提供房子（Bean），中介平台（Spring 容器）统一管理，租客（业务类）不直接找房东，而是由平台分配依赖。</p>
+</blockquote>
 <ul>
 <li><p><strong>属性注入</strong> <del>注解注入</del></p>
 <ul>
@@ -562,20 +1063,91 @@ public class CustomComponent &#123;
 </ul>
 <h6 id="它俩最大的区别是什么？"><a href="#它俩最大的区别是什么？" class="headerlink" title="它俩最大的区别是什么？"></a>它俩最大的区别是什么？</h6><blockquote>
 <p> <code>@Autowired</code> 更倾向于按<strong>类型注入</strong>，如果类型不唯一，则需要指定注入的名称。<br> <code>@Resource</code> 更倾向于按<strong>名称注入</strong>，如果没有指定名称，则尝试按类型注入。<br> 两者的不同在于默认的注入策略和如何处理不唯一的 Bean 定义。</p>
-<p><code>@Autowired</code> 和 <code>@Resource</code> 最大的区别在于它们的默认注入策略和所依赖的注入机制：</p>
+<p> <code>@Autowired</code> 和 <code>@Resource</code> 最大的区别在于它们的默认注入策略和所依赖的注入机制：</p>
 <ol>
-<li><strong>默认注入策略</strong>：<ul>
+<li><strong>默认注入策略</strong>：</li>
+</ol>
+<ul>
 <li><code>@Autowired</code>：默认是按照类型（Type）进行注入的。如果容器中存在多个相同类型的 Bean，则需要通过 <code>@Qualifier</code> 注解指定具体的 Bean 名称，或者通过设置 <code>@Autowired</code> 的 <code>required</code> 属性为 <code>false</code> 来允许没有找到匹配的 Bean 时不抛出异常。</li>
 <li><code>@Resource</code>：默认是按照名称（Name）进行注入的。如果未指定名称，则尝试按类型进行注入。如果容器中存在多个相同类型的 Bean，且没有指定名称，可能会抛出异常。</li>
 </ul>
-</li>
-<li><strong>依赖的注入机制</strong>：<ul>
+<ol start="2">
+<li><strong>依赖的注入机制</strong>：</li>
+</ol>
+<ul>
 <li><code>@Autowired</code>：是 Spring 框架提供的注解，因此它只能用于 Spring 管理的上下文中。</li>
 <li><code>@Resource</code>：是 Java 的扩展包（javax.annotation）提供的注解，它是 JSR-250 规范的一部分，因此可以在任何实现了 JSR-250 规范的容器中使用，不仅限于 Spring。</li>
 </ul>
-</li>
-</ol>
-<p>简而言之，最大的区别在于 <code>@Autowired</code> 更侧重于<strong>类型匹配</strong>，而 <code>@Resource</code> 更侧重于<strong>名称匹配</strong>，并且 <code>@Resource</code> 是 Java 标准的一部分，具有更广泛的适用性。</p>
+<p> 简而言之，最大的区别在于 <code>@Autowired</code> 更侧重于<strong>类型匹配</strong>，而 <code>@Resource</code> 更侧重于<strong>名称匹配</strong>，并且 <code>@Resource</code> 是 Java 标准的一部分，具有更广泛的适用性。</p>
+<h3 id="Autowired-vs-Resource-区别总结表"><a href="#Autowired-vs-Resource-区别总结表" class="headerlink" title="@Autowired vs @Resource 区别总结表"></a>@Autowired vs @Resource 区别总结表</h3><table>
+<thead>
+<tr>
+<th>特性</th>
+<th><code>@Autowired</code></th>
+<th><code>@Resource</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>提供方</td>
+<td>Spring</td>
+<td>JDK（JSR-250）</td>
+</tr>
+<tr>
+<td>默认注入方式</td>
+<td>按类型（byType）</td>
+<td>按名称（byName）</td>
+</tr>
+<tr>
+<td>是否支持按类型注入</td>
+<td>✅ 支持</td>
+<td>✅ 支持（次选）</td>
+</tr>
+<tr>
+<td>是否支持按名称注入</td>
+<td>✅ 需搭配 <code>@Qualifier</code></td>
+<td>✅ 默认</td>
+</tr>
+<tr>
+<td>是否推荐</td>
+<td>✅ 推荐</td>
+<td>⚠️ 部分场景适用</td>
+</tr>
+<tr>
+<td>可用位置</td>
+<td>构造方法、字段、方法</td>
+<td>字段、方法</td>
+</tr>
+<tr>
+<td>是否支持多个构造方法</td>
+<td>❌ 不能多个都加 @Autowired</td>
+<td>❌ 同理</td>
+</tr>
+</tbody></table>
+<h3 id="✅-开发建议"><a href="#✅-开发建议" class="headerlink" title="✅ 开发建议"></a>✅ 开发建议</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>只有一个依赖对象</td>
+<td>优先使用构造器注入，语义清晰</td>
+</tr>
+<tr>
+<td>需要注入多个依赖</td>
+<td>使用字段注入或构造器注入</td>
+</tr>
+<tr>
+<td>对依赖可选性较强</td>
+<td>可考虑 setter 或普通方法注入</td>
+</tr>
+<tr>
+<td>想确保更强约束性</td>
+<td>使用构造器注入（+final属性）</td>
+</tr>
+</tbody></table>
+<p> “IOC 是一种反转控制权的思想，由 Spring 容器来统一管理对象的创建和依赖；而 DI 是实现 IOC 的手段，通过构造器、属性等方式将依赖对象注入到类中。它们的最终目的是为了解耦，提高代码的可维护性和扩展性。开发中常用 <code>@Autowired</code> 和 <code>@Resource</code> 实现属性注入，构造器注入则更具可读性和测试友好性。”</p>
 </blockquote>
 </li>
 <li><p><strong>构造函数注入</strong> [默认生成空参构造方法 若写有参构造原来无参会被覆盖 参数根据类型去找和<code>@Autowired</code>类型一样 可以写多个构造方法 如果去多个构造方法重载会报错 怎么办？加个<code>@Autowired[属性,构造方法,参数]都可加</code> <strong>不可多个方法都加@Autowired</strong>  反射会触发构造方法 @Bean &#x3D;&gt; new ] </p>
@@ -654,7 +1226,7 @@ public class CustomComponent &#123;
 <li>大型外包公司：员工人数可能超过200人。</li>
 </ul>
 <h4 id="HashMap底层原理"><a href="#HashMap底层原理" class="headerlink" title="HashMap底层原理"></a>HashMap底层原理</h4><h5 id="底层数据结构"><a href="#底层数据结构" class="headerlink" title="底层数据结构"></a>底层数据结构</h5><p>jdk1.8之前底层结构是<strong>数组+链表</strong>(key+value)  数据结构通用的[键值对+哈希表的数据结构]<br>jdk1.8以后【数组+链表+红黑树】在解决哈希冲突时有了较大的变化，当<strong>链表长度</strong>大于阈值（默认为<strong>8</strong>）时且<strong>数组长度</strong>大于<strong>64</strong>时，将链表转化为红黑树，以减少搜索时间。扩容时，红黑树拆分成的树的结点数小于等于临界值6个，则退化成链表。后期使用map获取值时，直接找到hash值对应的下标，在进一步判断key是否相同，从而找到对应值。<br>底层的地址运算出来 如果地址不一样计算出来的hashcode不一样，hashcode一般是数字[整数(±或0)] 通过key进行hashcode运算 对<strong>数组长度取模</strong> eg：任何整数去取模10   可以定位到value可以放在哪个桶下面</p>
-<p>hashcode本身不同的对象算出来的hashcde值是相同的怎么办呢？<br>两个value不可能放在同一个桶 这就是<strong>hash冲突</strong>  如果数组长度是8 算出来一个hashcode值是8 和 16 此时取模余数相同这样的情况也是相同。所以此时应该用<strong>拉链法</strong>[小葡萄串]，即使桶一样 可以用指针一个个指，此时的链表是单向链表[linkedlist才是双向链表]。<br>在1.8后指出如果同一个桶的葡萄串太多了，此时要拿出数据，时间复杂度就是O(n)，如果没有很多就是O(1)数组的长度。红黑树的引入是解决链表过长的问题。<br>红黑树是树形的高级数据结构 时间复杂度O(logn)<br>二叉树在某些情况下会退化成链表 右子树永远比根节点大<br>红黑树会旋转自平衡[局部旋转达到平衡] 超过多少层会旋转 不至于退化成链表。</p>
+<p>hashcode本身不同的对象算出来的hashcode值是相同的怎么办呢？<br>两个value不可能放在同一个桶 这就是<strong>hash冲突</strong>  如果数组长度是8 算出来一个hashcode值是8 和 16 此时取模余数相同这样的情况也是相同。所以此时应该用<strong>拉链法</strong>[小葡萄串]，即使桶一样 可以用指针一个个指，此时的链表是单向链表[linkedlist才是双向链表]。<br>在1.8后指出如果同一个桶的葡萄串太多了，此时要拿出数据，时间复杂度就是O(n)，如果没有很多就是O(1)数组的长度。红黑树的引入是解决链表过长的问题。<br>红黑树是树形的高级数据结构 时间复杂度O(logn)<br>二叉树在某些情况下会退化成链表 右子树永远比根节点大<br>红黑树会旋转自平衡[局部旋转达到平衡] 超过多少层会旋转 不至于退化成链表。</p>
 <blockquote>
 <p>拉链法（Chaining）是 Java 的 <code>HashMap</code> 在 JDK 1.8 之前以及之后都使用的一种解决哈希冲突的方法。在 JDK 1.8 之前，<code>HashMap</code> 的实现主要是基于拉链法，即使用链表来解决哈希冲突。当不同的键通过哈希函数计算出相同的哈希码，并且映射到同一个桶（bucket）时，这些键值对将以链表的形式存储在同一个桶中。</p>
 <p>在 JDK 1.8 中，<code>HashMap</code> 的实现进行了改进，当链表的长度超过一定阈值（默认是 8）时，链表会被转换成红黑树。这是为了优化哈希表的性能，特别是当哈希冲突严重时，链表的查询效率会降低到 O(n)，而红黑树可以将查询效率提升到 O(log n)。</p>
@@ -679,10 +1251,10 @@ public class CustomComponent &#123;
 <li><strong>重新着色</strong>：在某些情况下，通过改变节点颜色来维持红黑树的性质。</li>
 </ul>
 <p>通过这些操作，红黑树确保了即使在最坏的情况下，树的高度也不会超过 2log(n+1)，从而保证了 O(log n) 的时间复杂度。</p>
-<p>总结来说，红黑树并不直接解决哈希冲突，而是优化了哈希冲突后的数据结构，使得即使在发生大量哈希冲突的情况下，<code>HashMap</code> 的性能也不会显著下降。</p>
+<p>总结来说，红黑树并不直接解决哈希冲突，而是<strong>优化了哈希冲突后的数据结构</strong>，使得即使在发生大量哈希冲突的情况下，<code>HashMap</code> 的性能也不会显著下降。</p>
 </blockquote>
 <h5 id="扩容机制"><a href="#扩容机制" class="headerlink" title="扩容机制"></a>扩容机制</h5><p>new的初始化 数组为空<br>当第一次put的时候才不会为空 为16<br>扩容因子为什么是0.75？hashmap不仅仅java 其他语言也有这种数据结构 但扩容因子可能不同，是通过大量的数学概率统计出的最好最平衡的值。达到12的时候会扩容成2倍<br>new一个hashmap可以指定数组长度为7 此时数组长度是8【hashmap的长度永远是2的幂次方 比你传入的长度永远大 且 是2的幂次方】 为什么2的幂次方？因为1.7要数组取模 怎么打这个符号 shift+5 &#x3D;&gt; %，1.8之后用了位运算，&gt;&gt;2 &lt;&lt;2 让你的取模运算更快。如果出现hash冲突会拉链 当它的<strong>数组长度</strong>大于64 并且 <strong>链表长度</strong>大于8时，当链表长度小于等于6临界值会变回来【为什么是6？避免频繁切换(离8太近) 链表 ←→ 红黑树[消耗性能]】</p>
-<p>链表1.7之前是头插法 会产生一条首尾相接的死循环【并发情况<del>[但是hashmap线程不安全不会用在并发，要用ConcurrentHashMap]</del>一起put 且 同一个桶】<br>1.8之后是尾插法，并发情况下不会出现cpu飙高，</p>
+<p>链表1.7之前是头插法 会产生一条首尾相接的死循环【并发情况<del>[但是hashmap线程不安全不会用在并发，要用ConcurrentHashMap]</del>一起put 且 同一个桶】<br>1.8之后是尾插法，并发情况下不会出现cpu飙高</p>
 <h5 id="HashSet底层数据结构"><a href="#HashSet底层数据结构" class="headerlink" title="HashSet底层数据结构"></a>HashSet底层数据结构</h5><p><strong>底层是包装了一个hashmap</strong>，无序 key不允许重复  value可重复<br>HashSet单列无序不重复的 key就是那个元素 value就是new了一个无意义的object对象</p>
 <p>ArrayList和LinkedList不是线程安全的 用什么？</p>
 <ul>
@@ -697,6 +1269,96 @@ public class CustomComponent &#123;
 </ul>
 <p>key可以放复合对象，要注意要重写 hashcode()和equals() 如果不重写 new了的两个对象有可能会相同<br><code>&quot;重地&quot;</code> 和 <code>&quot;通话&quot;</code> 。<strong>计算hashcode会比equals更快</strong>，一个对象new出来后hashcode已经计算出来了。equals要比较每个对象值，<strong>所以先判断hashcode 再判断equals</strong>   重写：@Override 用属性里面的hashcode，user里面包含了复杂对象order 此时order也要重写。包装类已经重写了hashcode，要整个对象返回true才为正确的，要层层递进去判断。hashmap重写复杂对象就一定要重写那俩个   ∵ 是比较对象里的属性值<br>list 有序可重复单列<br>map 双列key不能重复value可重复  treemap是有序的<br>set 单列不重复无序 hashset 无序 treeset 有序 </p>
 <p>&#x3D;&#x3D; 值 + 地址值<br>equals 是对象属性值是否一 一相等</p>
+<blockquote>
+<h3 id="hashCode-与-equals-总结对比表"><a href="#hashCode-与-equals-总结对比表" class="headerlink" title="hashCode() 与 equals() 总结对比表"></a><code>hashCode()</code> 与 <code>equals()</code> 总结对比表</h3><table>
+<thead>
+<tr>
+<th>比较项</th>
+<th><code>hashCode()</code></th>
+<th><code>equals()</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>作用</td>
+<td>返回对象的哈希值</td>
+<td>判断两个对象是否“逻辑相等”</td>
+</tr>
+<tr>
+<td>定义位置</td>
+<td><code>Object</code> 类中定义，可被重写</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>默认行为</td>
+<td>返回对象内存地址的整数表示</td>
+<td>比较是否为同一对象（地址）</td>
+</tr>
+<tr>
+<td>需要重写的场景</td>
+<td>自定义对象作为集合的 key（如 <code>HashMap</code>、<code>HashSet</code>）</td>
+<td>自定义对象需要逻辑比较</td>
+</tr>
+<tr>
+<td>是否与对象属性有关</td>
+<td>默认无关，重写后应有关</td>
+<td>重写时应只关心关键属性</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>高效（整型值）</td>
+<td>慢（逐个属性比较）</td>
+</tr>
+</tbody></table>
+<h3 id="二者关系说明（核心规则）"><a href="#二者关系说明（核心规则）" class="headerlink" title="二者关系说明（核心规则）"></a>二者关系说明（核心规则）</h3><table>
+<thead>
+<tr>
+<th>判断</th>
+<th>是否成立</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>equals()</code> 返回 <code>true</code> → <code>hashCode()</code> 必须相等</td>
+<td>✅ 必须成立</td>
+</tr>
+<tr>
+<td><code>hashCode()</code> 相等 → <code>equals()</code> 不一定相等</td>
+<td>⚠️ 可能不成立（<strong>哈希冲突</strong>）</td>
+</tr>
+</tbody></table>
+<p>👉 这就是为什么 <strong>HashMap 在比较 key 时，先比 <code>hashCode()</code>，再比 <code>equals()</code><strong>，为了</strong>提升性能</strong>，也确保<strong>正确性</strong>。</p>
+<pre><code class="java">String s1 = &quot;重地&quot;;
+String s2 = &quot;通话&quot;;
+
+System.out.println(s1.hashCode()); // 输出1179395
+System.out.println(s2.hashCode()); // 输出1179395
+System.out.println(s1.equals(s2)); // false
+</code></pre>
+<p>⚠️ 两个字符串的 <code>hashCode()</code> 相同，但 <code>equals()</code> 不相同，说明它们逻辑上不相等（只是<strong>哈希冲突</strong>）。</p>
+<h3 id="✅-为什么要重写-hashCode-和-equals-？"><a href="#✅-为什么要重写-hashCode-和-equals-？" class="headerlink" title="✅ 为什么要重写 hashCode() 和 equals()？"></a>✅ 为什么要重写 <code>hashCode()</code> 和 <code>equals()</code>？</h3><p>如果你将自定义对象用作集合中的 key（如放入 <code>HashMap</code> 或 <code>HashSet</code>），那么：</p>
+<ul>
+<li>不重写：默认使用地址判断，相同内容的新对象视为不同</li>
+<li>正确重写：按属性判断内容一致性，可识别“逻辑相同”的对象</li>
+</ul>
+<pre><code class="java">public class User &#123;
+    private String name;
+    private int age;
+
+    @Override
+    public boolean equals(Object o) &#123;
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User other = (User) o;
+        return this.age == other.age &amp;&amp; Objects.equals(this.name, other.name);
+    &#125;
+
+    @Override
+    public int hashCode() &#123;
+        return Objects.hash(name, age);
+    &#125;
+&#125;
+</code></pre>
+<p><code>equals()</code> 用于判断两个对象是否逻辑相等，<code>hashCode()</code> 用于加快集合查找效率。在实际开发中，若你要将对象作为 <code>HashMap</code> 或 <code>HashSet</code> 的 key，必须同时重写这两个方法，保证逻辑一致性，避免出现“相等的对象进不了集合”的问题。</p>
+</blockquote>
 <h4 id="HashMap是线程安全的吗"><a href="#HashMap是线程安全的吗" class="headerlink" title="HashMap是线程安全的吗"></a>HashMap是线程安全的吗</h4><p>不安全的，可以使用<strong>ConcurrentHashMap<del>线程安全</del><strong>、Collections.synchronizedMap()、</strong>HashTable</strong><br><strong>线程安全</strong>：多线程对同一个数据进行增删改是否受到影响<br>怎么办？</p>
 <ul>
 <li><p><strong>加锁</strong></p>
@@ -711,7 +1373,7 @@ public class CustomComponent &#123;
 同步机制： 使用适当的同步机制（如synchronized关键字、ReentrantLock等）来保护库存扣减操作，防止并发问题。
 库存检查： 在扣减前，线程需要检查当前分片是否有剩余库存。如果没有，则线程可以终止或进行其他处理。
 </code></pre>
-<p>hashtable不管读写都会用synchronized加锁，并发一起来读都加锁 没必要，所以用了ConcurrentHashMap读不加锁 写加锁。<br>随着时间的推移，<code>Hashtable</code> 已经被认为是遗留代码，现代Java代码更倾向于使用 <code>HashMap</code>（非线程安全）或 <code>ConcurrentHashMap</code>（线程安全）。</p>
+<p>HashTable不管读写都会用synchronized加锁，并发一起来读都加锁 没必要，所以用了<strong>ConcurrentHashMap读不加锁 写加锁</strong>。<br>随着时间的推移，<code>Hashtable</code> 已经被认为是遗留代码，现代Java代码更倾向于使用 <code>HashMap</code>（非线程安全）或 <code>ConcurrentHashMap</code>（线程安全）。</p>
 </li>
 </ul>
 <blockquote>
@@ -758,7 +1420,7 @@ public class ReentrantLockExample &#123;
 &#125;
 </code></pre>
 </blockquote>
-<h4 id="红黑树查询效率高的原因"><a href="#红黑树查询效率高的原因" class="headerlink" title="红黑树查询效率高的原因"></a>红黑树查询效率高的原因</h4><p>红黑树是一种自平衡的二叉搜索树，它通过特定的规则来保持树的平衡，这些规则确保了树的高度大约是log(n)<br>自平衡 局部旋转 </p>
+<h4 id="红黑树查询效率高的原因"><a href="#红黑树查询效率高的原因" class="headerlink" title="红黑树查询效率高的原因"></a>红黑树查询效率高的原因</h4><p>红黑树是一种自平衡的二叉搜索树，它通过特定的规则来保持树的平衡，这些规则确保了树的高度大约是<strong>log(n)</strong><br>自平衡 局部旋转 </p>
 <p>hashMap时间复杂度</p>
 <ul>
 <li>O(1)：不涉及到拉链</li>
@@ -841,6 +1503,76 @@ Spring：
 <li>异常  @AfterThrowing</li>
 <li>环绕  @Around</li>
 </ul>
+<blockquote>
+<h3 id="💬-有没有在项目中使用-AOP？用来做什么？"><a href="#💬-有没有在项目中使用-AOP？用来做什么？" class="headerlink" title="💬 有没有在项目中使用 AOP？用来做什么？"></a>💬 <strong>有没有在项目中使用 AOP？用来做什么？</strong></h3><blockquote>
+<p>有使用，主要应用场景有两个：</p>
+<ul>
+<li>一是 <strong>操作日志记录</strong>：在 Web 项目中，我们通过 AOP 拦截 Controller 层方法，在方法执行后记录操作人、操作类型、接口路径等信息，用于审计和排查问题。</li>
+<li>二是 <strong>数据脱敏处理</strong>：在某些返回值中包含手机号、身份证等敏感字段，通过 AOP 拦截 Service 返回结果，在返回给前端前进行统一脱敏（如：150***8786）。</li>
+</ul>
+</blockquote>
+<pre><code class="java">@Aspect
+@Component
+public class LogAspect &#123;
+
+    // 定义切点，拦截所有 controller 包下的方法
+    @Pointcut(&quot;execution(* com.example.controller..*(..))&quot;)
+    public void controllerPointcut() &#123;&#125;
+
+    // 环绕通知
+    @Around(&quot;controllerPointcut()&quot;)
+    public Object doAround(ProceedingJoinPoint joinPoint) throws Throwable &#123;
+        long start = System.currentTimeMillis();
+        try &#123;
+            return joinPoint.proceed();
+        &#125; finally &#123;
+            long end = System.currentTimeMillis();
+            System.out.println(&quot;接口耗时：&quot; + (end - start) + &quot;ms&quot;);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="🧠-AOP-通知类型简述（答题建议）"><a href="#🧠-AOP-通知类型简述（答题建议）" class="headerlink" title="🧠 AOP 通知类型简述（答题建议）"></a><strong>🧠 AOP 通知类型简述（答题建议）</strong></h3><table>
+<thead>
+<tr>
+<th>通知类型</th>
+<th>注解</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前置通知</td>
+<td><code>@Before</code></td>
+<td>在方法执行前执行</td>
+</tr>
+<tr>
+<td>后置通知</td>
+<td><code>@After</code></td>
+<td>方法执行后（无论成功或异常）</td>
+</tr>
+<tr>
+<td>返回通知</td>
+<td><code>@AfterReturning</code></td>
+<td>方法<strong>成功返回后</strong>执行，可获取返回值</td>
+</tr>
+<tr>
+<td>异常通知</td>
+<td><code>@AfterThrowing</code></td>
+<td>方法抛出异常后执行</td>
+</tr>
+<tr>
+<td>环绕通知</td>
+<td><code>@Around</code></td>
+<td>方法执行前后都可执行，适合统一处理（如 try…finally）</td>
+</tr>
+</tbody></table>
+<h3 id="你在项目中遇到的-AOP-注意事项"><a href="#你在项目中遇到的-AOP-注意事项" class="headerlink" title="你在项目中遇到的 AOP 注意事项"></a><strong>你在项目中遇到的 AOP 注意事项</strong></h3><ul>
+<li>如果你在 AOP 中使用 <code>ThreadLocal</code>（如存储登录用户信息），<strong>一定要在方法执行完后调用 <code>remove()</code> 释放资源</strong>，否则可能造成<strong>内存泄漏</strong>。</li>
+<li>推荐使用 <code>@Around</code> + <code>try-finally</code> 模式，<strong>无论是否抛异常，finally 都能执行</strong>，比如清理上下文。</li>
+<li><code>@AfterReturning</code>：<strong>仅在方法成功返回时执行</strong>，<strong>不会处理异常情况</strong>，这一点面试常考。</li>
+<li>AOP 是基于 <strong>动态代理机制（JDK 或 CGLIB）</strong>，本质是对方法的增强。和拦截器、过滤器最大的不同是：<strong>AOP 不是仅限于 HTTP 请求，可以增强任意 Bean 的任意方法。</strong></li>
+</ul>
+</blockquote>
 <h4 id="你在公司里负责的内容"><a href="#你在公司里负责的内容" class="headerlink" title="你在公司里负责的内容"></a><strong>你在公司里负责的内容</strong></h4><h4 id="想在controller访问完之后，想在aop实现之后再进行操作"><a href="#想在controller访问完之后，想在aop实现之后再进行操作" class="headerlink" title="想在controller访问完之后，想在aop实现之后再进行操作"></a><strong>想在controller访问完之后，想在aop实现之后再进行操作</strong></h4><p>UserThreadLocal 在执行完之后要 remove 出去，抛异常也会执行<br>@After 不管有无异常都会执行<br>@Around 结合try…catch…finally 里也可以达到同样效果</p>
 <blockquote>
 <p><code>@After</code>：这个注解用于定义一个通知（Advice），它在目标方法执行之后执行，无论目标方法执行的结果如何（成功或异常）。</p>
@@ -895,6 +1627,54 @@ public class AroundFinallyAspect &#123;
 对于@AfterReturning注解，它不仅需要在目标方法执行之后执行通知，还需要访问目标方法的返回值。因此，@AfterReturning注解有一个额外的pointcut属性，用于指定切点表达式。此外，@AfterReturning注解还有一个returning属性，用于指定一个参数名，该参数将接收目标方法的返回值
 </code></pre>
 <p>@AfterReturning：在方法执行后返回结果后执行通知。【如果有异常不会处理】</p>
+<blockquote>
+<p>我来帮你<strong>通俗一点梳理这段 AOP 的使用逻辑和运行机制</strong>，你可以类比成“程序在运行到某个点的时候，会自动执行你预设的增强代码”。</p>
+<h2 id="✅-举个例子你就明白了："><a href="#✅-举个例子你就明白了：" class="headerlink" title="✅ 举个例子你就明白了："></a>✅ 举个例子你就明白了：</h2><p>你写了个 Controller：</p>
+<pre><code class="java">@RestController
+public class TestController &#123;
+    @GetMapping(&quot;/hello&quot;)
+    public String hello() &#123;
+        System.out.println(&quot;正在执行业务逻辑&quot;);
+        return &quot;Hello World&quot;;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="⚙️-当你访问-hello，Spring-执行流程如下："><a href="#⚙️-当你访问-hello，Spring-执行流程如下：" class="headerlink" title="⚙️ 当你访问 /hello，Spring 执行流程如下："></a>⚙️ 当你访问 <code>/hello</code>，Spring 执行流程如下：</h3><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1️⃣</td>
+<td>执行你的 AOP 中 <code>@Around</code> 方法（aroundAdvice）</td>
+</tr>
+<tr>
+<td>2️⃣</td>
+<td><code>joinPoint.proceed()</code> 触发目标方法（即 <code>hello()</code>）执行</td>
+</tr>
+<tr>
+<td>3️⃣</td>
+<td>方法返回或抛异常，finally 一定会执行</td>
+</tr>
+<tr>
+<td>4️⃣</td>
+<td>AOP 把最终返回值交回 Spring 继续响应前端</td>
+</tr>
+</tbody></table>
+<h2 id="✅-补充理解：execution-表达式"><a href="#✅-补充理解：execution-表达式" class="headerlink" title="✅ 补充理解：execution 表达式"></a>✅ 补充理解：execution 表达式</h2><p>你这个表达式：</p>
+<pre><code class="java">execution(* com.example.yourpackage.controller..*(..))
+</code></pre>
+<ul>
+<li><code>*</code>：匹配所有返回值类型</li>
+<li><code>com.example.yourpackage.controller..*</code>：匹配该包及子包的所有类</li>
+<li><code>*</code>：匹配所有方法</li>
+<li><code>(..)</code>：匹配任意参数类型和个数</li>
+</ul>
+<p>🧠 所以可以理解成：**”凡是 controller 包下的任何方法，AOP 都要插手”**</p>
+<p>你就是告诉 Spring AOP：“当你运行到这些方法时，先来找我执行一些额外操作”，这就是<strong>切面增强的精髓</strong>。</p>
+</blockquote>
 <h4 id="你们这个项目怎么技术选型的"><a href="#你们这个项目怎么技术选型的" class="headerlink" title="你们这个项目怎么技术选型的"></a>你们这个项目怎么技术选型的</h4><p>我进到项目中很多已经确认下来的 一般由组长确定了</p>
 <h6 id="那你自己怎么想的？-开放性问题"><a href="#那你自己怎么想的？-开放性问题" class="headerlink" title="那你自己怎么想的？[开放性问题]"></a>那你自己怎么想的？[开放性问题]</h6><p>选xxx技术 网上资料&#x2F;备书 比较多可以参考[用的人多]<br>学习成本[框架厉害但上手复杂不好用]<br>社区的活跃度[官网持续更新版本 框架会不断发展]</p>
 <h4 id="你处于后端的什么位置"><a href="#你处于后端的什么位置" class="headerlink" title="你处于后端的什么位置"></a>你处于后端的什么位置</h4><p>初级 中级 高级<br>中级 骨干开发位置[协助组长完成]<br>中高级 完成设计类</p>
@@ -903,7 +1683,7 @@ public class AroundFinallyAspect &#123;
 
 <p>short   可以占两个字节   可以用16位<br>int        可以占四个字节    -21亿 ~ 21亿<br>long     可以占八个字节   天文数字<br>float      可以占四个字节 0.2F&#x2F;f<br>double  可以占八个字节 0.2D&#x2F;d</p>
 <p>float double尽量不要进行运算 ，在Java中进行金钱运算时，应当特别注意浮点数的精度问题，因为浮点数（如<code>float</code>和<code>double</code>）在表示某些数值时可能会丢失精度，这对于需要精确计算的金融计算来说是非常不合适的。</p>
-<p>1.金钱转成分 向下取整<br>2.BigDecimal</p>
+<p>1.金钱转成分 向下取整<br>2.<strong>BigDecimal</strong></p>
 <p>ASCII码占1个字节 → Unicode字符占2个字节【有些汉字存不了】→ UTF-8占1-3个字节[灵活可变]<br>在我们性能中一般走Unicode编码性能更高一点 在网络中&#x2F;存入磁盘Unicode转成ASCII码</p>
 <p>jdk？之后 jdk开始存储大量英文和数字 String类也作了更新 不是基于基本数据类型 而是基于byte数组</p>
 <pre><code class="java">在Java的早期版本中（例如JDK 1.4及之前版本），String类内部确实使用char数组来存储字符串数据。每个char在Java中占用16位（2个字节），这意味着不管存储的是英文字符还是数字，每个字符都会占用2个字节的内存空间。
@@ -1001,32 +1781,164 @@ public class MyService &#123;
 private MyService self; // 注入自身代理实例
 
 public void methodA() &#123;
-  // ... 业务逻辑 ...
+// ... 业务逻辑 ...
 
-  self.methodB(); // 通过代理实例调用，事务注解将生效
+self.methodB(); // 通过代理实例调用，事务注解将生效
 &#125;
 
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public void methodB() &#123;
-  // ... 业务逻辑 ...
+// ... 业务逻辑 ...
 &#125;
 &#125;
 </code></pre>
 <p>NOT_SUPPORTED：用于方法不应该在事务中运行，如果有一个事务在运行，它将被挂起。<br>NEVER：用于方法绝对不应该在事务中运行，如果有一个事务在运行，将抛出异常。<br>NESTED：用于方法应该在嵌套事务中运行，嵌套事务可以独立于外部事务进行提交或回滚</p>
+<h2 id="Spring-事务传播行为对比表"><a href="#Spring-事务传播行为对比表" class="headerlink" title="Spring 事务传播行为对比表"></a>Spring 事务传播行为对比表</h2><table>
+<thead>
+<tr>
+<th><strong>传播行为</strong></th>
+<th><strong>是否加入当前事务</strong></th>
+<th><strong>当前无事务是否新建事务</strong></th>
+<th><strong>当前有事务是否挂起原事务</strong></th>
+<th><strong>常见用途 &#x2F; 场景举例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>REQUIRED</strong>（默认）</td>
+<td>✅加入</td>
+<td>✅新建</td>
+<td>❌不挂起</td>
+<td>大多数业务逻辑，默认即可（如用户下单）</td>
+</tr>
+<tr>
+<td><strong>SUPPORTS</strong></td>
+<td>✅加入</td>
+<td>❌不新建，直接运行</td>
+<td>❌不挂起</td>
+<td>非核心操作，事务可有可无（如查询、打日志、非敏感接口）</td>
+</tr>
+<tr>
+<td><strong>MANDATORY</strong></td>
+<td>✅加入</td>
+<td>❌不新建 → 报错</td>
+<td>❌不挂起</td>
+<td>强依赖事务环境，如在已有事务内强制做某个操作（如审计组件）</td>
+</tr>
+<tr>
+<td><strong>REQUIRES_NEW</strong></td>
+<td>❌不加入</td>
+<td>✅新建</td>
+<td>✅挂起原事务</td>
+<td><strong>日志记录、补偿事务等</strong>。如主逻辑回滚了，日志也必须写入数据库</td>
+</tr>
+<tr>
+<td><strong>NOT_SUPPORTED</strong></td>
+<td>❌不加入</td>
+<td>✅以非事务运行</td>
+<td>✅挂起原事务</td>
+<td>第三方接口调用、不能用事务的场景（如读库压力大，必须立即返回）</td>
+</tr>
+<tr>
+<td><strong>NEVER</strong></td>
+<td>❌不加入</td>
+<td>✅以非事务运行</td>
+<td>❌不挂起 → 如果有事务 → 报错</td>
+<td>严禁事务场景，例如你调用了一个只能在无事务环境下工作的接口</td>
+</tr>
+<tr>
+<td><strong>NESTED</strong></td>
+<td>✅作为嵌套事务</td>
+<td>✅新建（嵌套）</td>
+<td>❌不挂起</td>
+<td>子事务失败可以单独回滚但主事务不影响（例如更新多个模块，一个失败不影响其他）</td>
+</tr>
+</tbody></table>
+<h2 id="🧠-快速记忆技巧"><a href="#🧠-快速记忆技巧" class="headerlink" title="🧠 快速记忆技巧"></a>🧠 快速记忆技巧</h2><table>
+<thead>
+<tr>
+<th>记忆关键词</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>REQUIRED</strong> 就像“我有就用，没有我自己建” → 默认值</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>REQUIRES_NEW</strong> “谁都有我不管，我自己开新号”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>SUPPORTS</strong> “随缘，有就上，没有就裸跑”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>MANDATORY</strong> “必须有事务，没有就不干”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>NOT_SUPPORTED</strong> “你们开会我不参与，我要单干”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>NEVER</strong> “你们别开会，我一开会就炸”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>NESTED</strong> “我是你肚子里的小事务，单独受罚，妈你别哭”</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="💬-示例记忆法（像讲段子一样）："><a href="#💬-示例记忆法（像讲段子一样）：" class="headerlink" title="💬 示例记忆法（像讲段子一样）："></a>💬 示例记忆法（像讲段子一样）：</h2><blockquote>
+<p>老板（事务A）叫你干活（方法B）：</p>
+<ul>
+<li><strong>REQUIRED</strong>：老板已经在开会，我就进来一起开；没会议我就自己组织一个</li>
+<li><strong>REQUIRES_NEW</strong>：我不管老板在不在，我自己重新开一个会（挂起老板的）</li>
+<li><strong>SUPPORTS</strong>：老板开会我就进，不开我就随便干干</li>
+<li><strong>MANDATORY</strong>：老板必须先开会，否则我不干活（抛异常）</li>
+<li><strong>NOT_SUPPORTED</strong>：老板要是开会，我就去抽根烟；不开我才来干活（挂起事务）</li>
+<li><strong>NEVER</strong>：谁开会我跟谁急，我只干没有事务的活</li>
+<li><strong>NESTED</strong>：老板开了会，我在会里又开了一个子会，出了事自己担责不连累老板</li>
+</ul>
+</blockquote>
+<h2 id="✅-重点注意（常考陷阱）"><a href="#✅-重点注意（常考陷阱）" class="headerlink" title="✅ 重点注意（常考陷阱）"></a>✅ 重点注意（常考陷阱）</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>考点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>同一个类中 a() 直接调用 b()（b有事务）</td>
+<td><strong>事务注解失效</strong>！因为 Spring 是基于代理的，自己调自己不走代理！解决：<strong>注入自己 <code>@Autowired private Self self;</code> 然后 <code>self.b()</code></strong></td>
+</tr>
+<tr>
+<td>为什么要用 REQUIRES_NEW？</td>
+<td>防止主事务回滚时影响某些<strong>必须成功的操作</strong>（如操作日志、发送消息）</td>
+</tr>
+<tr>
+<td>NESTED 与 REQUIRES_NEW 区别？</td>
+<td>NESTED 依赖原事务，提交回滚可以局部控制；REQUIRES_NEW 完全独立，互不干扰</td>
+</tr>
+<tr>
+<td>使用 NOT_SUPPORTED&#x2F;NEVER 的典型场景？</td>
+<td>调用第三方接口不允许事务干扰，如防止长事务锁表等问题</td>
+</tr>
+</tbody></table>
 </blockquote>
 <h4 id="用过Spring的事务吗"><a href="#用过Spring的事务吗" class="headerlink" title="用过Spring的事务吗"></a><strong>用过Spring的事务吗</strong></h4><p>一组数据库的增删改操作<br><strong>声明式事务管理</strong>：这是Spring推荐的用法，它通过使用注解（如<code>@Transactional</code>）或基于XML的配置来声明事务边界。底层基于AOP实现动态代理增强方法<br><strong>编程式事务管理</strong>：允许你通过编程的方式直接管理事务，通常使用<code>TransactionTemplate</code>或者直接使用底层的<code>PlatformTransactionManager</code>。</p>
 <blockquote>
-<h4 id="声明式事务管理"><a href="#声明式事务管理" class="headerlink" title="声明式事务管理"></a>声明式事务管理</h4><pre><code class="java">// 你需要在 Spring 配置中启用事务注解支持：
+<h4 id="声明式事务管理（-Transactional）"><a href="#声明式事务管理（-Transactional）" class="headerlink" title="声明式事务管理（@Transactional）"></a>声明式事务管理<del>（@Transactional）</del></h4><pre><code class="java">// 你需要在 Spring 配置中启用事务注解支持：
 @Configuration
 @EnableTransactionManagement
 public class SpringConfig &#123;
 
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) &#123;
-        return new JpaTransactionManager(entityManagerFactory);
-    &#125;
-    
-    // ... 其他配置
+ @Bean
+ public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) &#123;
+     return new JpaTransactionManager(entityManagerFactory);
+ &#125;
+
+ // ... 其他配置
 &#125;
 
 
@@ -1037,23 +1949,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AccountService &#123;
 
-    @Autowired
-    private AccountRepository accountRepository;
+ @Autowired
+ private AccountRepository accountRepository;
 
-    @Transactional
-    public void transferMoney(Long fromAccountId, Long toAccountId, BigDecimal amount) &#123;
-        // 执行转账操作，比如：
-        Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(...);
-        Account toAccount = accountRepository.findById(toAccountId).orElseThrow(...);
-        
-        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
-        toAccount.setBalance(toAccount.getBalance().add(amount));
-        
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-        
-        // 如果这里发生异常，Spring 将回滚事务
-    &#125;
+ @Transactional
+ public void transferMoney(Long fromAccountId, Long toAccountId, BigDecimal amount) &#123;
+     // 执行转账操作，比如：
+     Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(...);
+     Account toAccount = accountRepository.findById(toAccountId).orElseThrow(...);
+
+     fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+     toAccount.setBalance(toAccount.getBalance().add(amount));
+
+     accountRepository.save(fromAccount);
+     accountRepository.save(toAccount);
+
+     // 如果这里发生异常，Spring 将回滚事务
+ &#125;
 &#125;
 </code></pre>
 <h4 id="编程式事务管理"><a href="#编程式事务管理" class="headerlink" title="编程式事务管理"></a>编程式事务管理</h4><pre><code class="java">import org.springframework.beans.factory.annotation.Autowired;
@@ -1065,21 +1977,121 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class AccountService &#123;
 
+ @Autowired
+ private TransactionTemplate transactionTemplate;
+
+ public void transferMoney(Long fromAccountId, Long toAccountId, BigDecimal amount) &#123;
+     transactionTemplate.execute(new TransactionCallbackWithoutResult() &#123;
+         @Override
+         protected void doInTransactionWithoutResult(TransactionStatus status) &#123;
+             try &#123;
+                 // 执行转账操作，与声明式事务管理中的操作相同
+                 // ...
+             &#125; catch (Exception e) &#123;
+                 status.setRollbackOnly(); // 如果发生异常，标记事务回滚
+             &#125;
+         &#125;
+     &#125;);
+ &#125;
+&#125;
+</code></pre>
+<h2 id="✅-一句话理解"><a href="#✅-一句话理解" class="headerlink" title="✅ 一句话理解"></a>✅ 一句话理解</h2><p><strong>Spring事务</strong> &#x3D; 帮你保证一组数据库操作要么全部成功，要么全部失败（ACID）。</p>
+<hr>
+<h2 id="🌟-Spring事务使用方式"><a href="#🌟-Spring事务使用方式" class="headerlink" title="🌟 Spring事务使用方式"></a>🌟 Spring事务使用方式</h2><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>特点</th>
+<th>使用场景举例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>声明式事务</strong>（@Transactional）</td>
+<td>推荐方式，简洁，基于AOP代理增强方法</td>
+<td>99%业务场景，转账、下单、库存扣减</td>
+</tr>
+<tr>
+<td><strong>编程式事务</strong>（TransactionTemplate）</td>
+<td>自己控制事务开始、提交、回滚流程</td>
+<td>特殊场景需要精细控制事务，如代码逻辑复杂、异常处理嵌套</td>
+</tr>
+</tbody></table>
+<h2 id="🎯-实战答题模板"><a href="#🎯-实战答题模板" class="headerlink" title="🎯 实战答题模板"></a>🎯 实战答题模板</h2><p>“在项目中我主要用的是<strong>声明式事务</strong>，通过<code>@Transactional</code>注解来管理事务，通常放在<strong>service层</strong>方法上。比如用户下单时，我需要在一个事务中完成订单生成、库存扣减、用户积分变更，如果中间任何一环失败，整个事务都会自动回滚，确保数据一致性。”</p>
+<p>“我还了解过<strong>编程式事务</strong>，像使用<code>TransactionTemplate</code>手动管理事务边界，适合一些流程比较复杂或需要细粒度事务控制的业务场景。”</p>
+<h3 id="Transactional-注解常用属性："><a href="#Transactional-注解常用属性：" class="headerlink" title="@Transactional 注解常用属性："></a><code>@Transactional</code> 注解常用属性：</h3><table>
+<thead>
+<tr>
+<th>属性</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>propagation</code></td>
+<td>事务的传播行为（REQUIRED&#x2F;REQUIRES_NEW等）</td>
+<td><code>@Transactional(propagation=...)</code></td>
+</tr>
+<tr>
+<td><code>rollbackFor</code></td>
+<td>哪些异常会触发回滚（默认只回滚运行时异常）</td>
+<td><code>@Transactional(rollbackFor=Exception.class)</code></td>
+</tr>
+<tr>
+<td><code>readOnly</code></td>
+<td>是否只读事务，优化性能</td>
+<td><code>@Transactional(readOnly=true)</code></td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td>超时时间，单位：秒</td>
+<td><code>@Transactional(timeout=5)</code></td>
+</tr>
+</tbody></table>
+<h2 id="💥-易错点提示（面试常问）"><a href="#💥-易错点提示（面试常问）" class="headerlink" title="💥 易错点提示（面试常问）"></a>💥 易错点提示（面试常问）</h2><table>
+<thead>
+<tr>
+<th>问题点</th>
+<th>正确做法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>注解加在controller层</strong></td>
+<td>❌ → <code>@Transactional</code>应加在<strong>service层</strong></td>
+</tr>
+<tr>
+<td><strong>方法内自己调用自己</strong></td>
+<td>❌ 事务失效！应通过注入自己调用</td>
+</tr>
+<tr>
+<td><strong>只抛了Exception没加rollbackFor</strong></td>
+<td>默认只回滚RuntimeException</td>
+</tr>
+<tr>
+<td><strong>数据库引擎不是InnoDB</strong></td>
+<td>MySQL需用InnoDB才支持事务</td>
+</tr>
+</tbody></table>
+<h2 id="🔧-小结：项目中事务用法模版"><a href="#🔧-小结：项目中事务用法模版" class="headerlink" title="🔧 小结：项目中事务用法模版"></a>🔧 小结：项目中事务用法模版</h2><pre><code class="java">@Service
+public class OrderService &#123;
+
     @Autowired
-    private TransactionTemplate transactionTemplate;
-    
-    public void transferMoney(Long fromAccountId, Long toAccountId, BigDecimal amount) &#123;
-        transactionTemplate.execute(new TransactionCallbackWithoutResult() &#123;
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) &#123;
-                try &#123;
-                    // 执行转账操作，与声明式事务管理中的操作相同
-                    // ...
-                &#125; catch (Exception e) &#123;
-                    status.setRollbackOnly(); // 如果发生异常，标记事务回滚
-                &#125;
-            &#125;
-        &#125;);
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private StockMapper stockMapper;
+
+    @Transactional(rollbackFor = Exception.class) // 推荐加上 rollbackFor
+    public void createOrder(Order order) &#123;
+        // 1. 创建订单
+        orderMapper.insert(order);
+
+        // 2. 扣减库存
+        stockMapper.deduct(order.getProductId(), order.getQuantity());
+
+        // 3. 模拟异常测试事务回滚
+        // int i = 1 / 0;
+
+        // 4. 插入日志等其他操作...
     &#125;
 &#125;
 </code></pre>
@@ -1584,6 +2596,102 @@ public class PrototypeBean &#123;
 </code></pre>
 <h4 id="SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？"><a href="#SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？" class="headerlink" title="SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？"></a>SQL语句的执行顺序，为什么顺序是这样排的，这样的顺序有什么优势或者好处？</h4><p><code>FROM -&gt; Join -&gt; WHERE -&gt; GROUP BY -&gt; HAVING -&gt; SELECT -&gt; ORDER BY -&gt; limit</code><br>这样的顺序是为了优化查询性能。首先确定数据来源（FROM），然后筛选出满足条件的数据（WHERE），接着进行分组（GROUP BY），在分组的基础上进行进一步筛选（HAVING），然后选择需要的数据（SELECT），最后对结果进行排序（ORDER BY）。这样的顺序可以减少中间结果集的大小，提高查询效率。</p>
 <h6 id="书写顺序"><a href="#书写顺序" class="headerlink" title="书写顺序"></a>书写顺序</h6><p><code>select -&gt; from -&gt; join -&gt; on -&gt; where -&gt; group by -&gt; having -&gt; order by -&gt; limit</code></p>
+<blockquote>
+<h2 id="SQL的“写法顺序”-vs-“执行顺序”"><a href="#SQL的“写法顺序”-vs-“执行顺序”" class="headerlink" title="SQL的“写法顺序” vs “执行顺序”"></a>SQL的“写法顺序” vs “执行顺序”</h2><table>
+<thead>
+<tr>
+<th>书写顺序（你写的时候）</th>
+<th>实际执行顺序（数据库引擎执行时）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SELECT … FROM …</td>
+<td><strong>FROM</strong>（确定数据源）</td>
+</tr>
+<tr>
+<td>[JOIN … ON …]</td>
+<td><strong>JOIN&#x2F;ON</strong>（表连接）</td>
+</tr>
+<tr>
+<td>WHERE …</td>
+<td><strong>WHERE</strong>（行过滤）</td>
+</tr>
+<tr>
+<td>GROUP BY …</td>
+<td><strong>GROUP BY</strong>（分组）</td>
+</tr>
+<tr>
+<td>HAVING …</td>
+<td><strong>HAVING</strong>（组过滤）</td>
+</tr>
+<tr>
+<td>SELECT …</td>
+<td><strong>SELECT</strong>（列筛选&#x2F;表达式）</td>
+</tr>
+<tr>
+<td>ORDER BY …</td>
+<td><strong>ORDER BY</strong>（排序）</td>
+</tr>
+<tr>
+<td>LIMIT …</td>
+<td><strong>LIMIT</strong>（分页&#x2F;截断）</td>
+</tr>
+</tbody></table>
+<h2 id="为什么执行顺序是这样设计的？（核心）"><a href="#为什么执行顺序是这样设计的？（核心）" class="headerlink" title="为什么执行顺序是这样设计的？（核心）"></a>为什么<strong>执行顺序是这样设计的</strong>？（核心）</h2><h3 id="🌟1-先FROM："><a href="#🌟1-先FROM：" class="headerlink" title="🌟1. 先FROM："></a>🌟1. <strong>先FROM</strong>：</h3><p>确定<strong>要操作的表或视图</strong>，这是基础，后面所有步骤都基于这个“数据源”。</p>
+<h3 id="🌟2-JOIN-x2F-ON："><a href="#🌟2-JOIN-x2F-ON：" class="headerlink" title="🌟2. JOIN&#x2F;ON："></a>🌟2. <strong>JOIN&#x2F;ON</strong>：</h3><p>在多个表之间构建连接关系，决定你从这些表中<strong>怎样拼接出一张“临时大表”</strong>。</p>
+<h3 id="🌟3-WHERE："><a href="#🌟3-WHERE：" class="headerlink" title="🌟3. WHERE："></a>🌟3. <strong>WHERE</strong>：</h3><p>在JOIN后对临时表做<strong>行级过滤</strong>，只保留符合条件的记录。<br> 👉 这样可以尽早“减小数据量”，<strong>提升后续处理效率（比如分组）</strong>。</p>
+<h3 id="🌟4-GROUP-BY："><a href="#🌟4-GROUP-BY：" class="headerlink" title="🌟4. GROUP BY："></a>🌟4. <strong>GROUP BY</strong>：</h3><p>基于保留的数据按某个字段做<strong>分组聚合</strong>，如统计、求和等。</p>
+<h3 id="🌟5-HAVING："><a href="#🌟5-HAVING：" class="headerlink" title="🌟5. HAVING："></a>🌟5. <strong>HAVING</strong>：</h3><p>对<strong>聚合后的组</strong>进行筛选（如：只保留总金额 &gt; 1000 的组）。</p>
+<h3 id="🌟6-SELECT："><a href="#🌟6-SELECT：" class="headerlink" title="🌟6. SELECT："></a>🌟6. <strong>SELECT</strong>：</h3><p>选择返回哪些字段，同时也可能包含聚合函数（如 <code>COUNT(*)</code>, <code>SUM()</code>），此时组已经存在了。</p>
+<h3 id="🌟7-ORDER-BY："><a href="#🌟7-ORDER-BY：" class="headerlink" title="🌟7. ORDER BY："></a>🌟7. <strong>ORDER BY</strong>：</h3><p>对最终结果<strong>排序</strong>，这个阶段才有机会看到完整结果。</p>
+<h3 id="🌟8-LIMIT："><a href="#🌟8-LIMIT：" class="headerlink" title="🌟8. LIMIT："></a>🌟8. <strong>LIMIT</strong>：</h3><p>只取前几行，<strong>分页优化</strong>的最后一环，减少结果输出体积</p>
+<pre><code class="mysql">SELECT u.username, SUM(o.amount) AS total_amount
+FROM user u
+JOIN `order` o ON u.id = o.user_id
+WHERE o.status = &#39;paid&#39;
+GROUP BY u.id
+HAVING total_amount &gt; 0
+ORDER BY total_amount DESC
+LIMIT 5;
+</code></pre>
+<h2 id="这样的顺序有什么优势？"><a href="#这样的顺序有什么优势？" class="headerlink" title="这样的顺序有什么优势？"></a>这样的顺序有什么优势？</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>目的&#x2F;优势</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FROM+JOIN</td>
+<td>先构建大数据源结构，作为后续处理基础</td>
+</tr>
+<tr>
+<td>WHERE</td>
+<td>尽早过滤不必要的数据 → <strong>提高性能（减少后续数据量）</strong></td>
+</tr>
+<tr>
+<td>GROUP BY</td>
+<td>只对保留下来的数据做聚合，<strong>提高分组效率</strong></td>
+</tr>
+<tr>
+<td>HAVING</td>
+<td>聚合后再过滤，避免误筛不完整组</td>
+</tr>
+<tr>
+<td>SELECT</td>
+<td>最后选择字段，<strong>保证表达式都合法且数据齐全</strong></td>
+</tr>
+<tr>
+<td>ORDER BY</td>
+<td>排序通常开销大，<strong>放最后执行</strong>最合理</td>
+</tr>
+<tr>
+<td>LIMIT</td>
+<td>控制输出量，<strong>提高响应速度和用户体验</strong></td>
+</tr>
+</tbody></table>
+<h2 id="面试如何回答（建议模板）"><a href="#面试如何回答（建议模板）" class="headerlink" title="面试如何回答（建议模板）"></a>面试如何回答（建议模板）</h2><p>“SQL的执行顺序设计是为了最大限度提升查询效率。先执行FROM和JOIN是因为必须先构建数据源；然后用WHERE尽早过滤行，避免无意义的数据进入分组、排序等更耗性能的阶段；GROUP BY在WHERE过滤后进行，HAVING则是对聚合结果再做筛选；SELECT最后才执行，是因为只有在前面都处理完后，才能确定哪些字段可用；ORDER BY 和 LIMIT是最终结果的加工。这种顺序是数据库执行优化的核心逻辑。”</p>
+</blockquote>
 <h4 id="线上项目发生死锁如何去解决？-我暂时没遇到过→分布式事务上去答"><a href="#线上项目发生死锁如何去解决？-我暂时没遇到过→分布式事务上去答" class="headerlink" title="线上项目发生死锁如何去解决？ 我暂时没遇到过→分布式事务上去答"></a>线上项目发生死锁如何去解决？ <del>我暂时没遇到过→分布式事务上去答</del></h4><p><strong>死锁</strong>：两个线程争夺两个资源的时候  <code>1线程拿到a 想拿b   2线程拿到了b 想拿a</code><br><strong>四个原因</strong>：<u>互斥条件 请求保持 不可剥夺 循环等待</u><br>产生死锁的四个因素 同时满足才会死锁     想要解决死锁 需要打破其中一个原因就行</p>
 <blockquote>
 <ol>
@@ -1619,6 +2727,22 @@ public class PrototypeBean &#123;
 <li><p>查找堆栈跟踪中的”DEADLOCK”关键字。<code>jstack</code>会自动检测死锁并在输出中报告。</p>
 </li>
 </ol>
+<p>我们在生产环境中遇到接口卡住不响应的情况，会先使用 <code>jps</code> 找到目标 Java 进程的 PID，然后用 <code>jstack &lt;PID&gt;</code> 导出线程堆栈日志。我们重点查看是否存在 <code>Found one Java-level deadlock</code> 的提示，并分析具体是哪几个线程锁住了彼此的资源。如果确认是死锁，我们会进一步分析代码逻辑进行解耦或调整加锁顺序。</p>
+<blockquote>
+<p>Found one Java-level deadlock:</p>
+<p>“Thread-1”:<br>  waiting to lock monitor 0x00000000053c3d28 (object 0x000000076b300030, a java.lang.Object),<br>  which is held by “Thread-0”<br>“Thread-0”:<br>  waiting to lock monitor 0x00000000053c3d48 (object 0x000000076b300028, a java.lang.Object),<br>  which is held by “Thread-1”</p>
+<p>Java stack information for the threads listed above:</p>
+<p>Thread-1:<br>  at DeadlockDemo.lambda$main$1(DeadlockDemo.java:20)</p>
+<ul>
+<li>waiting to lock &lt;0x000000076b300030&gt; (a java.lang.Object)</li>
+<li>locked &lt;0x000000076b300028&gt; (a java.lang.Object)</li>
+</ul>
+<p>Thread-0:<br>  at DeadlockDemo.lambda$main$0(DeadlockDemo.java:11)</p>
+<ul>
+<li>waiting to lock &lt;0x000000076b300028&gt; (a java.lang.Object)</li>
+<li>locked &lt;0x000000076b300030&gt; (a java.lang.Object)</li>
+</ul>
+</blockquote>
 </blockquote>
 <h4 id="如果你遇到-新的-技术栈，怎么去解决"><a href="#如果你遇到-新的-技术栈，怎么去解决" class="headerlink" title="如果你遇到(新的)技术栈，怎么去解决?"></a>如果你遇到(新的)技术栈，怎么去解决?</h4><p>【return Previous.notes(NowDay);】</p>
 <h4 id="如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通"><a href="#如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通" class="headerlink" title="如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通?"></a>如果你在实际开发中遇到问题，你怎么去解决，怎么去沟通?</h4><p>首先尝试自己解决问题，通过搜索引擎、官方文档、Debug等。<br>尽可能不让这个问题不出现风险 实在解决不了就向上反馈 寻求帮助 请教上司领导或同事<br>平常和项目经理进行沟通 如果需求评审有些不理解还是会及时沟通 不清楚的一定要及时明确</p>
@@ -1633,16 +2757,78 @@ public class PrototypeBean &#123;
 </li>
 <li><h5 id="（预处理语句参数）："><a href="#（预处理语句参数）：" class="headerlink" title="#{}（预处理语句参数）："></a><code>#&#123;&#125;</code>（预处理语句参数）：</h5><ul>
 <li><code>#&#123;&#125;</code>会创建预处理语句（prepared statement）的参数占位符，并在设置参数时进行适当的转义处理。</li>
-<li>它适用于大部分情况，特别是当参数是用户输入时，可以有效防止SQL注入攻击。</li>
+<li>它适用于大部分情况，特别是当<strong>参数是用户输入</strong>时，可以有效防止SQL注入攻击。</li>
 <li>MyBatis会根据参数的类型自动选择<code>setString</code>、<code>setInt</code>、<code>setDate</code>等预处理语句方法。</li>
 </ul>
 </li>
 <li><h5 id="在大多数情况下，-是更好的选择，因为它提供了以下优势："><a href="#在大多数情况下，-是更好的选择，因为它提供了以下优势：" class="headerlink" title="在大多数情况下，#{}是更好的选择，因为它提供了以下优势："></a>在大多数情况下，<code>#&#123;&#125;</code>是更好的选择，因为它提供了以下优势：</h5><ul>
-<li><strong>安全性</strong>：<code>#&#123;&#125;</code>可以防止SQL注入攻击，因为它会自动转义参数。</li>
+<li><strong>安全性</strong>：<code>#&#123;&#125;</code>可以防止SQL注入攻击，因为它会<strong>自动转义参数</strong>。</li>
 <li><strong>类型处理</strong>：MyBatis会根据参数的实际类型来设置预处理语句的参数，这减少了类型错误的可能性。</li>
 <li><strong>可读性和维护性</strong>：使用<code>#&#123;&#125;</code>可以使SQL语句更加清晰，因为它清楚地标识了参数的位置。</li>
 </ul>
 <p>然而，在某些特定的场景下，如需要动态地指定表名或列名时，<code>$&#123;&#125;</code>是必要的，因为预处理语句</p>
+<blockquote>
+<h3 id="MyBatis-中-和-的区别"><a href="#MyBatis-中-和-的区别" class="headerlink" title="MyBatis 中 #{}和${} 的区别"></a>MyBatis 中 <code>#&#123;&#125;</code>和<code>$&#123;&#125;</code> 的区别</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th><code>#&#123;&#125;</code>（占位符）</th>
+<th><code>$&#123;&#125;</code>（字符串拼接）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>替换方式</td>
+<td>使用 <strong>? 占位符</strong></td>
+<td><strong>字符串直接拼接进SQL</strong></td>
+</tr>
+<tr>
+<td>是否转义</td>
+<td>✅ 自动转义，安全</td>
+<td>❌ 不转义，有SQL注入风险</td>
+</tr>
+<tr>
+<td>使用底层</td>
+<td>JDBC 的 PreparedStatement</td>
+<td>字符串拼接，执行前已成完整SQL</td>
+</tr>
+<tr>
+<td>场景</td>
+<td>传入值如：用户名、ID、价格等参数</td>
+<td>动态表名、列名、排序字段、函数等</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>安全，推荐使用</td>
+<td>不安全，谨慎使用</td>
+</tr>
+<tr>
+<td>类型处理</td>
+<td>✅ 自动处理类型转换</td>
+<td>❌ 不做类型处理，需手动拼接格式</td>
+</tr>
+<tr>
+<td>性能（缓存）</td>
+<td>支持 SQL 缓存</td>
+<td>由于 SQL 变化大，缓存命中低</td>
+</tr>
+</tbody></table>
+<h4 id="正确使用"><a href="#正确使用" class="headerlink" title="正确使用 #{}"></a>正确使用 <code>#&#123;&#125;</code></h4><pre><code class="xml">&lt;select id=&quot;getUser&quot; resultType=&quot;User&quot;&gt;
+  SELECT * FROM users WHERE id = #&#123;userId&#125;
+&lt;/select&gt;
+</code></pre>
+<ul>
+<li>自动转为：<code>SELECT * FROM users WHERE id = ?</code></li>
+<li>安全，可防止 SQL 注入。</li>
+</ul>
+<h4 id="必须使用-的场景（动态表名或列）"><a href="#必须使用-的场景（动态表名或列）" class="headerlink" title="必须使用 ${} 的场景（动态表名或列）"></a>必须使用 <code>$&#123;&#125;</code> 的场景（动态表名或列）</h4><pre><code class="xml">&lt;select id=&quot;selectByColumn&quot; resultType=&quot;User&quot;&gt;
+  SELECT * FROM users WHERE $&#123;columnName&#125; = #&#123;value&#125;
+&lt;/select&gt;
+</code></pre>
+<ul>
+<li>用于：动态字段（如 <code>name</code>、<code>email</code>）查询。</li>
+<li>注意：<code>$&#123;columnName&#125;</code> 可能来自用户输入，<strong>必须白名单校验</strong>，否则容易被 SQL 注入。</li>
+</ul>
+</blockquote>
 </li>
 </ol>
 <h4 id="说一下内连接和外连接的区别"><a href="#说一下内连接和外连接的区别" class="headerlink" title="说一下内连接和外连接的区别"></a>说一下内连接和外连接的区别</h4><p><strong>左外连接（Left Outer Join）</strong>：</p>
@@ -1666,6 +2852,73 @@ public class PrototypeBean &#123;
 <li><strong>性能考虑</strong>：外连接可能会比内连接（Inner Join）更消耗资源，特别是当表很大时。如果可能，尽量使用内连接。</li>
 <li><strong>数据完整性</strong>：如果业务逻辑要求查询结果必须包含某个表的所有记录，那么应该使用相应的外连接。</li>
 </ul>
+<h2 id="内连接-vs-外连接：核心区别总结"><a href="#内连接-vs-外连接：核心区别总结" class="headerlink" title="内连接 vs 外连接：核心区别总结"></a>内连接 vs 外连接：核心区别总结</h2><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>是否保留非匹配行</th>
+<th>NULL 出现在哪一边</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>内连接</strong></td>
+<td>只返回两个表中满足连接条件的<strong>交集部分</strong></td>
+<td>❌</td>
+<td>❌ 不会有 NULL</td>
+</tr>
+<tr>
+<td><strong>左外连接</strong></td>
+<td>保留<strong>左表所有记录</strong>，右表没有匹配的填 NULL</td>
+<td>✅（保留左表）</td>
+<td>右表字段为 NULL</td>
+</tr>
+<tr>
+<td><strong>右外连接</strong></td>
+<td>保留<strong>右表所有记录</strong>，左表没有匹配的填 NULL</td>
+<td>✅（保留右表）</td>
+<td>左表字段为 NULL</td>
+</tr>
+<tr>
+<td><strong>全外连接</strong></td>
+<td>左右两表都保留，不匹配的部分填 NULL（<strong>并集</strong>）</td>
+<td>✅（都保留）</td>
+<td>两边都可能为 NULL</td>
+</tr>
+</tbody></table>
+<h2 id="✅-图示记忆法"><a href="#✅-图示记忆法" class="headerlink" title="✅ 图示记忆法"></a>✅ 图示记忆法</h2><ul>
+<li><code>A</code> 表在左边，<code>B</code> 表在右边：</li>
+</ul>
+<pre><code class="css">    INNER JOIN：     A ∩ B
+    LEFT JOIN：      A ⟕ B
+    RIGHT JOIN：     A ⟖ B
+    FULL JOIN：      A ∪ B
+</code></pre>
+<h2 id="✅-实际应用建议"><a href="#✅-实际应用建议" class="headerlink" title="✅ 实际应用建议"></a>✅ 实际应用建议</h2><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐连接方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>获取匹配数据</td>
+<td>INNER JOIN</td>
+</tr>
+<tr>
+<td><strong>主表必须展示，辅表可无</strong></td>
+<td><strong>LEFT JOIN</strong></td>
+</tr>
+<tr>
+<td>辅表必须展示，主表可无</td>
+<td>RIGHT JOIN</td>
+</tr>
+<tr>
+<td>数据对账&#x2F;差异比对&#x2F;全量汇总</td>
+<td>FULL OUTER JOIN</td>
+</tr>
+</tbody></table>
+<p>内连接只返回满足条件的交集数据，外连接用于保留某一边或两边的所有记录。常用的是左外连接，适合主表为主、辅表为辅的场景。外连接比内连接更全，但性能略低，因此建议根据业务场景合理选择。</p>
 </blockquote>
 <h4 id="自我介绍"><a href="#自我介绍" class="headerlink" title="自我介绍"></a>自我介绍</h4><p>xxx</p>
 <h4 id="你觉得学习我们这些技术最重要的是什么"><a href="#你觉得学习我们这些技术最重要的是什么" class="headerlink" title="你觉得学习我们这些技术最重要的是什么?"></a>你觉得学习我们这些技术最重要的是什么?</h4><p>首先要清楚**<u>这个技术是解决什么领域的问题</u>**，学习技术很多方面都是用来服务业务的，结合实际业务来学习技术融合性会更强</p>
@@ -1705,14 +2958,14 @@ public class PrototypeBean &#123;
     public static void main(String[] args) &#123;
 
         Thread t1 = new Thread(() -&gt; &#123;
-            THREAD_LOCAL.set(&quot;itheima&quot;);
-            getData(&quot;t1&quot;);
+            THREAD_LOCAL.set(&quot;itheima&quot;);// 写入线程本地变量
+            getData(&quot;t1&quot;);// 读取线程本地变量
         &#125;, &quot;t1&quot;);
 
         Thread t2 = new Thread(() -&gt; &#123;
-            THREAD_LOCAL.set(&quot;itcast&quot;);
-            getData(&quot;t2&quot;);
-        &#125;, &quot;t1&quot;);
+            THREAD_LOCAL.set(&quot;itcast&quot;);// 写入线程本地变量
+            getData(&quot;t2&quot;);// 读取线程本地变量
+        &#125;, &quot;t2&quot;);
 
         t1.start();
         t2.start();
@@ -1734,9 +2987,126 @@ t2-itcast
 <h4 id="字符和字符串类型的区别"><a href="#字符和字符串类型的区别" class="headerlink" title="字符和字符串类型的区别"></a>字符和字符串类型的区别</h4><p>字符是基本数据类型 没有null 用单引号<br>字符串是引用数据类型[一个类] 用双引号</p>
 <p><img src="C:\Users\Pluminary\AppData\Roaming\Typora\typora-user-images\image-20250102142357092.png" alt="image-20250102142357092"></p>
 <h4 id="操作字符串的工具类是什么"><a href="#操作字符串的工具类是什么" class="headerlink" title="操作字符串的工具类是什么"></a>操作字符串的工具类是什么</h4><p>apache的common提供的String Utils工具类，hutool也有String Utils</p>
+<blockquote>
+<h2 id="字符串工具类"><a href="#字符串工具类" class="headerlink" title="字符串工具类"></a><strong>字符串工具类</strong></h2><table>
+<thead>
+<tr>
+<th>工具类库</th>
+<th>类名</th>
+<th>说明与特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Apache Commons</td>
+<td><code>StringUtils</code> (<code>org.apache.commons.lang3.StringUtils</code>)</td>
+<td>提供了大量字符串处理方法，如<code>isBlank()</code>、<code>join()</code>、<code>split()</code>、<code>contains()</code>等。非常稳定、功能强大。</td>
+</tr>
+<tr>
+<td>Hutool</td>
+<td><code>StrUtil</code> (<code>cn.hutool.core.util.StrUtil</code>)</td>
+<td>轻量级工具包，功能类似，但更加面向国人开发，API 命名更简洁清晰，如 <code>isBlank()</code>、<code>format()</code>、<code>hide()</code>等。</td>
+</tr>
+<tr>
+<td>Java 自带</td>
+<td><code>String</code> 类和 <code>StringBuilder</code>, <code>StringBuffer</code></td>
+<td>提供基础字符串操作，如 <code>substring()</code>、<code>indexOf()</code>、<code>replace()</code> 等。</td>
+</tr>
+</tbody></table>
+<p><strong>推荐：</strong>开发中可以结合使用 <code>Apache StringUtils</code> 或 <code>Hutool StrUtil</code>，比自己写字符串判断高效且可读性好。</p>
+<h2 id="✅-1-用户注册校验-—-Apache-Commons-StringUtils"><a href="#✅-1-用户注册校验-—-Apache-Commons-StringUtils" class="headerlink" title="✅ 1. 用户注册校验 — Apache Commons StringUtils"></a>✅ <strong>1. 用户注册校验 — Apache Commons <code>StringUtils</code></strong></h2><p><strong>业务背景：</strong> 用户注册时，需要校验用户名和邮箱不能为 null 或空字符串。</p>
+<pre><code class="java">import org.apache.commons.lang3.StringUtils;
+
+public class UserService &#123;
+    public boolean isValidUser(String username, String email) &#123;
+        return StringUtils.isNotBlank(username) &amp;&amp; StringUtils.isNotBlank(email);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="📌-优势说明："><a href="#📌-优势说明：" class="headerlink" title="📌 优势说明："></a>📌 优势说明：</h3><ul>
+<li><code>StringUtils.isNotBlank()</code> 能判断 null、空字符串、全是空格的字符串。</li>
+<li>替代了传统的 <code>&quot;&quot;.equals(x) || x == null || x.trim().length() == 0</code>，简洁高效。</li>
+</ul>
+<hr>
+<h2 id="✅-2-昵称脱敏展示-—-Hutool-StrUtil"><a href="#✅-2-昵称脱敏展示-—-Hutool-StrUtil" class="headerlink" title="✅ 2. 昵称脱敏展示 — Hutool StrUtil"></a>✅ <strong>2. 昵称脱敏展示 — Hutool <code>StrUtil</code></strong></h2><p><strong>业务背景：</strong> 用户中心页面要展示脱敏后的昵称，如 <code>张三丰</code> → <code>张*丰</code>。</p>
+<pre><code class="java">import cn.hutool.core.util.StrUtil;
+
+public class UserUtil &#123;
+    public static String desensitizeName(String name) &#123;
+        return StrUtil.hide(name, 1, name.length() - 1); // 从第2位到倒数第1位隐藏
+    &#125;
+&#125;
+</code></pre>
+<p><strong>输出示例：</strong></p>
+<pre><code class="java">System.out.println(desensitizeName(&quot;张三丰&quot;)); // 张*丰
+</code></pre>
+<h3 id="📌-优势说明：-1"><a href="#📌-优势说明：-1" class="headerlink" title="📌 优势说明："></a>📌 优势说明：</h3><ul>
+<li><code>StrUtil.hide()</code> 非常适合做数据脱敏处理（身份证、手机号等）。</li>
+<li>API 直观易用，无需自己写 substring 拼接逻辑。</li>
+</ul>
+<hr>
+<h2 id="✅-3-SQL拼接或日志打印-—-Java-原生-StringBuilder"><a href="#✅-3-SQL拼接或日志打印-—-Java-原生-StringBuilder" class="headerlink" title="✅ 3. SQL拼接或日志打印 — Java 原生 StringBuilder"></a>✅ <strong>3. SQL拼接或日志打印 — Java 原生 <code>StringBuilder</code></strong></h2><p><strong>业务背景：</strong> 拼接一段复杂 SQL 或多字段日志输出。</p>
+<pre><code class="java">public class LogBuilder &#123;
+    public static String buildLog(String userId, String action, long timestamp) &#123;
+        StringBuilder sb = new StringBuilder();
+        sb.append(&quot;用户ID: &quot;).append(userId)
+          .append(&quot;, 操作: &quot;).append(action)
+          .append(&quot;, 时间: &quot;).append(timestamp);
+        return sb.toString();
+    &#125;
+&#125;
+</code></pre>
+<p><strong>输出：</strong></p>
+<pre><code class="java">用户ID: 123456, 操作: 登录, 时间: 1721559065000
+</code></pre>
+<h3 id="📌-优势说明：-2"><a href="#📌-优势说明：-2" class="headerlink" title="📌 优势说明："></a>📌 优势说明：</h3><ul>
+<li><code>StringBuilder</code> 适合循环中或大量字符串拼接，性能比 <code>+</code> 更优。</li>
+<li>通常用于日志、SQL、通知信息构建等场景。</li>
+</ul>
+</blockquote>
 <h4 id="局部变量和成员变量的区别"><a href="#局部变量和成员变量的区别" class="headerlink" title="局部变量和成员变量的区别"></a>局部变量和成员变量的区别</h4><p><strong>成员变量</strong>是在jvm的<strong>堆</strong><br><strong>局部变量</strong>是在jvm的<strong>栈</strong><br>基本数据类型的引用类型 类在堆<br>基本数据类型的成员变量在堆 非静态在堆 静态变量在方法区<br>引用类型 无论静态还是非静态成员变量都在堆区</p>
 <p>局部变量是在方法或代码块内部声明的变量，其作用域仅限于声明它的方法或代码块<br>局部变量不能被static修饰<br>局部变量必须被初始化才能使用</p>
 <p>成员变量是在类内部声明的变量，其作用域是整个类<br>成员变量可以被static修饰<br>成员变量有默认值</p>
+<pre><code class="java">public class VariableDemo &#123;
+
+    // 成员变量
+    int age = 18;              // 非静态成员变量 -&gt; 堆中
+    static String school = &quot;北大&quot;; // 静态成员变量 -&gt; 方法区中
+
+    public void printInfo() &#123;
+        // 局部变量
+        String name = &quot;小明&quot;;  // 局部变量 -&gt; 栈中
+        int age = 20;          // 局部变量，和成员变量重名（就近原则）
+
+        System.out.println(&quot;局部变量 name：&quot; + name); // 小明
+        System.out.println(&quot;局部变量 age：&quot; + age);   // 20
+        System.out.println(&quot;成员变量 age：&quot; + this.age); // 18（用this访问成员变量）
+        System.out.println(&quot;静态变量 school：&quot; + school); // 北大
+    &#125;
+
+    public static void main(String[] args) &#123;
+        VariableDemo v = new VariableDemo();
+        v.printInfo();
+    &#125;
+&#125;
+------------------------------------------------------------------------
+JVM 内存结构：
+
+方法区（存放类信息、静态变量等）
+└── VariableDemo.class
+     └── static school = &quot;北大&quot;
+
+堆内存（存放对象和非静态成员变量）
+└── v 对象
+     └── age = 18
+
+栈内存（每个线程的栈帧）
+└── main() 栈帧
+     └── v 引用
+
+└── printInfo() 栈帧
+     ├── name = &quot;小明&quot;
+     ├── age = 20 （局部变量）
+</code></pre>
 <h4 id="你编写完代码，写完这个功能后，会进行什么操作呢"><a href="#你编写完代码，写完这个功能后，会进行什么操作呢" class="headerlink" title="你编写完代码，写完这个功能后，会进行什么操作呢"></a>你编写完代码，写完这个功能后，会进行什么操作呢</h4><p>进行<strong>代码审查</strong>，检查代码是否符合编码规范和设计要求。</p>
 <ul>
 <li>进行<strong>单元测试</strong>，确保代码的功能正确无误。</li>
@@ -1759,6 +3129,423 @@ t2-itcast
 <h4 id="有没有做过权限控制，整个系统的权限"><a href="#有没有做过权限控制，整个系统的权限" class="headerlink" title="有没有做过权限控制，整个系统的权限"></a>有没有做过权限控制，整个系统的权限</h4><p>有过 SpringSecurity</p>
 <h6 id="能具体说一下权限控制怎么做？"><a href="#能具体说一下权限控制怎么做？" class="headerlink" title="能具体说一下权限控制怎么做？"></a>能具体说一下权限控制怎么做？</h6><p>使用RBAC模型 不是把用户关联资源 而是中间利用角色间接关联<br><u>用户+角色+资源+用户角色中间表+角色资源中间表<del>多对多</del></u></p>
 <h6 id="SpringSecurity-具体怎么实现"><a href="#SpringSecurity-具体怎么实现" class="headerlink" title="SpringSecurity 具体怎么实现"></a>SpringSecurity 具体怎么实现</h6><p>我的项目是基于JWT的前后端分离的项目，在自定义认证管理器<code>AuthenticationManager</code>认证成功后，生成JWT令牌并返回给前端。前端在随后的请求中携带这个JWT令牌。这时候，我们使用<code>AccessDecisionManager</code>来实现接口的鉴权逻辑，其中包括一个check方法，该方法会校验JWT令牌的有效性。如果校验通过，就去查询数据库以确定用户拥有哪些权限。在用户登录时，其权限信息已经被缓存到Redis中。后续的请求中，我们可以直接从Redis中检索用户的权限信息。如果请求的接口权限与用户缓存中的权限匹配，则放行；如果不匹配，则返回一个友好的错误信息。</p>
+<blockquote>
+<h4 id="✅-有没有做过权限控制？"><a href="#✅-有没有做过权限控制？" class="headerlink" title="✅ 有没有做过权限控制？"></a>✅ <strong>有没有做过权限控制？</strong></h4><p>有，在项目中我用的是 <strong>Spring Security + JWT</strong> 的权限控制方案，整体基于 <strong>RBAC 模型</strong>（基于角色的访问控制）。</p>
+<h4 id="✅-权限模型设计（RBAC）"><a href="#✅-权限模型设计（RBAC）" class="headerlink" title="✅ 权限模型设计（RBAC）"></a>✅ <strong>权限模型设计（RBAC）</strong></h4><p><strong>核心思路：通过“角色”来间接管理用户权限</strong></p>
+<table>
+<thead>
+<tr>
+<th>实体</th>
+<th>关系说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>用户（User）</td>
+<td>关联多个角色（Role）</td>
+</tr>
+<tr>
+<td>角色（Role）</td>
+<td>关联多个权限&#x2F;菜单（Permission）</td>
+</tr>
+<tr>
+<td>权限（Permission）</td>
+<td>描述资源：菜单、接口等</td>
+</tr>
+</tbody></table>
+<p>中间表设计：</p>
+<ul>
+<li>用户角色表（user_role）→ 多对多</li>
+<li>角色权限表（role_permission）→ 多对多</li>
+</ul>
+<h2 id="✅-SpringSecurity-是如何实现的？"><a href="#✅-SpringSecurity-是如何实现的？" class="headerlink" title="✅ SpringSecurity 是如何实现的？"></a>✅ <span style = "color:red"><strong>SpringSecurity 是如何实现的？</strong></span></h2><p>项目是 <strong>前后端分离</strong>，使用的是 <strong>JWT 无状态认证</strong>。</p>
+<h3 id="1️⃣-用户登录认证（AuthenticationManager）"><a href="#1️⃣-用户登录认证（AuthenticationManager）" class="headerlink" title="1️⃣ 用户登录认证（AuthenticationManager）"></a>1️⃣ 用户登录认证（<code>AuthenticationManager</code>）</h3><ul>
+<li>用户登录提交账号密码 → 调用 SpringSecurity 的认证逻辑</li>
+<li>认证通过后，生成 <strong>JWT Token</strong> 返回给前端<del>前端在随后的请求中携带这个JWT令牌</del></li>
+<li>同时把 <strong>用户信息 + 权限信息</strong> 缓存在 Redis 中</li>
+</ul>
+<h3 id="2️⃣-用户请求鉴权（拦截-校验）"><a href="#2️⃣-用户请求鉴权（拦截-校验）" class="headerlink" title="2️⃣ 用户请求鉴权（拦截 + 校验）"></a>2️⃣ 用户请求鉴权（拦截 + 校验）</h3><p>用户每次访问接口都带上 JWT：<del>使用<code>AccessDecisionManager</code>来实现接口的鉴权逻辑，其中包括一个check方法，该方法会校验JWT令牌的有效性</del></p>
+<h4 id="核心流程："><a href="#核心流程：" class="headerlink" title="核心流程："></a>核心流程：</h4><pre><code class="java">请求到来 → JWT过滤器提取Token → 解析用户信息 → 加载权限 → 比对是否有权限 → 放行 or 拦截
+</code></pre>
+<h4 id="具体细节："><a href="#具体细节：" class="headerlink" title="具体细节："></a>具体细节：</h4><ul>
+<li>使用 <strong>自定义过滤器</strong> 替换 <code>UsernamePasswordAuthenticationFilter</code></li>
+<li>Token 中取出用户名 → 去 Redis 中拿权限信息（避免每次都查库）</li>
+<li>使用 <strong><code>AccessDecisionManager</code></strong> 和 <strong><code>SecurityMetadataSource</code></strong> 判断当前接口所需权限是否被用户拥有</li>
+<li>校验成功：放行；校验失败：返回 403 自定义响应（如“无权限访问”）</li>
+</ul>
+<h2 id="✅-为什么使用-Redis-缓存权限？"><a href="#✅-为什么使用-Redis-缓存权限？" class="headerlink" title="✅ 为什么使用 Redis 缓存权限？"></a>✅ <strong>为什么使用 Redis 缓存权限？</strong></h2><ul>
+<li>避免每次请求都去查数据库，提升性能</li>
+<li>实现单点登录、Token失效管理等操作更方便</li>
+<li>权限信息改动 → Redis 也同步更新</li>
+</ul>
+<hr>
+<h2 id="✅-如何定义哪些接口需要权限？"><a href="#✅-如何定义哪些接口需要权限？" class="headerlink" title="✅ 如何定义哪些接口需要权限？"></a>✅ <strong>如何定义哪些接口需要权限？</strong></h2><ul>
+<li>使用 <code>@PreAuthorize(&quot;hasAuthority(&#39;xxx&#39;)&quot;)</code></li>
+<li>或者用自定义权限注解 + AOP 实现</li>
+</ul>
+<hr>
+<h2 id="✅-总结一句话回答"><a href="#✅-总结一句话回答" class="headerlink" title="✅ 总结一句话回答"></a>✅ 总结一句话回答</h2><p>我使用的是基于 <strong>JWT + SpringSecurity</strong> 的权限控制，采用的是 <strong>RBAC 模型</strong>，通过用户角色权限的绑定来控制资源访问。权限信息登录时就缓存到 Redis，提高了性能，接口鉴权用的是自定义的 <code>AccessDecisionManager</code> 来校验 Token 与权限是否匹配，确保接口安全。</p>
+</blockquote>
+<blockquote>
+<h3 id="✅-场景描述：权限精确到按钮级别"><a href="#✅-场景描述：权限精确到按钮级别" class="headerlink" title="✅ 场景描述：权限精确到按钮级别"></a>✅ 场景描述：<span style = "color:red">权限精确到按钮级别</span></h3><p>不仅控制用户能否访问“某个菜单”，还要控制：</p>
+<ul>
+<li>某些用户能看到“编辑”按钮</li>
+<li>某些用户不能看到“删除”按钮</li>
+<li>某些按钮点击后后台要鉴权（如“导出”、“审核”等）</li>
+</ul>
+<h2 id="🧩-一、数据库设计（基于-RBAC-模型）"><a href="#🧩-一、数据库设计（基于-RBAC-模型）" class="headerlink" title="🧩 一、数据库设计（基于 RBAC 模型）"></a>🧩 一、数据库设计（基于 RBAC 模型）</h2><h3 id="1️⃣-表结构设计（核心五张表）"><a href="#1️⃣-表结构设计（核心五张表）" class="headerlink" title="1️⃣ 表结构设计（核心五张表）"></a>1️⃣ 表结构设计（核心五张表）</h3><table>
+<thead>
+<tr>
+<th>表名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user</code></td>
+<td>用户表</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>角色表</td>
+</tr>
+<tr>
+<td><code>permission</code></td>
+<td>权限资源表（菜单、接口、按钮）</td>
+</tr>
+<tr>
+<td><code>user_role</code></td>
+<td>用户与角色的多对多关联</td>
+</tr>
+<tr>
+<td><code>role_permission</code></td>
+<td>角色与权限的多对多关联</td>
+</tr>
+</tbody></table>
+<h3 id="2️⃣-permission-权限表示例（关键）"><a href="#2️⃣-permission-权限表示例（关键）" class="headerlink" title="2️⃣ permission 权限表示例（关键）"></a>2️⃣ <code>permission</code> 权限表示例（关键）</h3><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>主键</td>
+</tr>
+<tr>
+<td>name</td>
+<td>权限名称，例如“删除按钮”</td>
+</tr>
+<tr>
+<td>type</td>
+<td>类型：<code>menu</code>、<code>button</code>、<code>api</code></td>
+</tr>
+<tr>
+<td>perm_code</td>
+<td>权限标识，例如：<code>user:delete</code>、<code>user:edit</code></td>
+</tr>
+<tr>
+<td>parent_id</td>
+<td>上级权限（菜单树结构）</td>
+</tr>
+<tr>
+<td>url &#x2F; path</td>
+<td>前端路由或接口路径</td>
+</tr>
+<tr>
+<td>method</td>
+<td>请求方式：<code>GET/POST/DELETE</code>（接口专用）</td>
+</tr>
+</tbody></table>
+<p>🚨 <strong>重点</strong>：按钮权限是存放在 <code>permission</code> 表里的，只是 <code>type = button</code>，和菜单&#x2F;接口共用一个表。</p>
+<h2 id="🔁-二、后端逻辑处理流程"><a href="#🔁-二、后端逻辑处理流程" class="headerlink" title="🔁 二、后端逻辑处理流程"></a>🔁 二、后端逻辑处理流程</h2><h3 id="1️⃣-用户登录时加载权限"><a href="#1️⃣-用户登录时加载权限" class="headerlink" title="1️⃣ 用户登录时加载权限"></a>1️⃣ 用户登录时加载权限</h3><pre><code class="java">@Override
+public UserDetails loadUserByUsername(String username) &#123;
+    // 1. 查询用户
+    User user = userMapper.selectByUsername(username);
+
+    // 2. 查询权限（按钮 + 接口 + 菜单）
+    List&lt;String&gt; permissionCodes = permissionMapper.getUserPerms(user.getId());
+
+    // 3. 存入 UserDetails
+    return new LoginUser(user, permissionCodes);
+&#125;
+</code></pre>
+<p>✔️ 这些 <code>permissionCodes</code> 会通过 JWT 或 Redis 存起来，后续用来鉴权和前端展示。</p>
+<h3 id="2️⃣-鉴权控制（精确到按钮）"><a href="#2️⃣-鉴权控制（精确到按钮）" class="headerlink" title="2️⃣ 鉴权控制（精确到按钮）"></a>2️⃣ 鉴权控制（精确到按钮）</h3><p>你需要：</p>
+<ul>
+<li><strong>后端校验接口权限</strong>（如调用删除接口必须拥有 <code>user:delete</code> 权限）</li>
+<li><strong>前端展示按钮</strong>要判断是否有权限</li>
+</ul>
+<h4 id="🧷-方法一：接口权限控制（后端）"><a href="#🧷-方法一：接口权限控制（后端）" class="headerlink" title="🧷 方法一：接口权限控制（后端）"></a>🧷 方法一：接口权限控制（后端）</h4><pre><code class="java">@PreAuthorize(&quot;hasAuthority(&#39;user:delete&#39;)&quot;) // ★★★★
+@DeleteMapping(&quot;/user/delete/&#123;id&#125;&quot;)
+public void deleteUser(@PathVariable Long id) &#123;
+    // 业务逻辑
+&#125;
+</code></pre>
+<blockquote>
+<p>✔️ 只有拥有 <code>user:delete</code> 权限的用户才能调用这个接口。</p>
+</blockquote>
+<hr>
+<h4 id="🧷-方法二：按钮权限控制（前端）"><a href="#🧷-方法二：按钮权限控制（前端）" class="headerlink" title="🧷 方法二：按钮权限控制（前端）"></a>🧷 方法二：按钮权限控制（前端）</h4><pre><code class="vue">&lt;!-- Vue 示例 --&gt;
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;el-button v-if=&quot;hasPermission(&#39;user:edit&#39;)&quot;&gt;编辑&lt;/el-button&gt;
+    &lt;el-button v-if=&quot;hasPermission(&#39;user:delete&#39;)&quot;&gt;删除&lt;/el-button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<pre><code class="js">// 权限判断函数
+export function hasPermission(code) &#123;
+  const perms = JSON.parse(localStorage.getItem(&quot;userPerms&quot;)) || [];
+  return perms.includes(code);
+&#125;
+</code></pre>
+<h5 id="🛠-三、JWT-Redis-权限缓存方案（提高性能）"><a href="#🛠-三、JWT-Redis-权限缓存方案（提高性能）" class="headerlink" title="🛠 三、JWT + Redis 权限缓存方案（提高性能）"></a>🛠 三、JWT + Redis 权限缓存方案（提高性能）</h5><h5 id="登录成功后："><a href="#登录成功后：" class="headerlink" title="登录成功后："></a>登录成功后：</h5><pre><code class="java">// 登录成功后：
+String token = jwtUtil.generateToken(userId);
+
+// Redis缓存用户权限
+redis.set(&quot;login:&quot; + userId, JSON.stringify(LoginUser对象)) // 包括 permissionCodes
+
+// 返回token给前端
+</code></pre>
+<h5 id="鉴权过滤器："><a href="#鉴权过滤器：" class="headerlink" title="鉴权过滤器："></a>鉴权过滤器：</h5><pre><code class="java">// Token过滤器从请求头获取token → 从Redis读取用户权限 → 设置SecurityContext
+</code></pre>
+<hr>
+<h5 id="📐-四、权限结构如何传给前端？"><a href="#📐-四、权限结构如何传给前端？" class="headerlink" title="📐 四、权限结构如何传给前端？"></a>📐 四、权限结构如何传给前端？</h5><h3 id="示例："><a href="#示例：" class="headerlink" title="示例："></a>示例：</h3><pre><code class="json">[
+  &#123;
+    &quot;menuName&quot;: &quot;用户管理&quot;,
+    &quot;path&quot;: &quot;/user&quot;,
+    &quot;children&quot;: [
+      &#123;
+        &quot;menuName&quot;: &quot;用户列表&quot;,
+        &quot;path&quot;: &quot;/user/list&quot;,
+        &quot;permissions&quot;: [&quot;user:add&quot;, &quot;user:delete&quot;, &quot;user:edit&quot;]
+      &#125;
+    ]
+  &#125;
+]
+</code></pre>
+<p>前端根据这些 <code>permissions</code> 控制按钮显示。</p>
+<hr>
+<h2 id="✅-总结一句话回答："><a href="#✅-总结一句话回答：" class="headerlink" title="✅ 总结一句话回答："></a>✅ 总结一句话回答：</h2><p>在项目中我们实现了<strong>精确到按钮级别的权限控制</strong>。使用 RBAC 模型统一管理“菜单、接口、按钮权限”，后端统一校验权限（用 Spring Security 的 <code>@PreAuthorize</code>），前端根据用户权限码动态控制按钮的显示，用户权限在登录时就加载并缓存到 Redis + JWT 中，实现了性能与安全的平衡。</p>
+<h2 id="✅-真实项目中常见补充点（面试必问）"><a href="#✅-真实项目中常见补充点（面试必问）" class="headerlink" title="✅ 真实项目中常见补充点（面试必问）"></a>✅ 真实项目中常见补充点（面试必问）</h2><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解答</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前端怎么知道自己有哪些权限？</td>
+<td>登录后从后端返回权限码数组，如 <code>[&quot;user:add&quot;, &quot;user:delete&quot;]</code>，存在 Vuex &#x2F; Pinia 或 localStorage 中</td>
+</tr>
+<tr>
+<td>权限更新了怎么办？</td>
+<td>更新用户角色后，同时刷新 Redis 缓存或设置 token 过期时间较短</td>
+</tr>
+<tr>
+<td>一个按钮需要多个权限怎么办？</td>
+<td><code>v-if=&quot;hasPermission(&#39;user:add&#39;) &amp;&amp; hasPermission(&#39;user:export&#39;)&quot;</code></td>
+</tr>
+</tbody></table>
+<h4 id="我想要你详细讲一下-数据库的那张权限表-帮我模拟一些字段和数据-实现达到按钮级别"><a href="#我想要你详细讲一下-数据库的那张权限表-帮我模拟一些字段和数据-实现达到按钮级别" class="headerlink" title="我想要你详细讲一下 数据库的那张权限表 帮我模拟一些字段和数据 实现达到按钮级别"></a><span style = "color:blue">我想要你详细讲一下 数据库的那张权限表 帮我模拟一些字段和数据 实现达到按钮级别</span></h4><p>我们就来详细 <strong>模拟一张完整的权限表（<code>permission</code>）</strong>，并：</p>
+<ol>
+<li>定义它的字段含义</li>
+<li>填入一些真实的示例数据（<strong>精确到按钮级别</strong>）</li>
+<li>分析如何建立菜单树、按钮权限和接口权限之间的关系</li>
+<li>说明这些数据在前后端中如何使用</li>
+</ol>
+<h2 id="🧩-一、权限表（permission）字段设计"><a href="#🧩-一、权限表（permission）字段设计" class="headerlink" title="🧩 一、权限表（permission）字段设计"></a>🧩 一、权限表（<code>permission</code>）字段设计</h2><table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>类型</th>
+<th>示例值</th>
+<th>含义说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>BIGINT</td>
+<td><code>1001</code></td>
+<td>权限唯一标识（长整型，通常是雪花ID）</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>VARCHAR</td>
+<td><code>&quot;用户管理&quot;</code></td>
+<td>权限名称（菜单&#x2F;按钮&#x2F;接口名称）</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>VARCHAR</td>
+<td><code>&quot;menu&quot;</code> &#x2F; <code>&quot;button&quot;</code> &#x2F; <code>&quot;api&quot;</code></td>
+<td>权限类型，支持菜单、按钮、接口</td>
+</tr>
+<tr>
+<td><code>parent_id</code></td>
+<td>BIGINT</td>
+<td><code>0</code> &#x2F; <code>1001</code> &#x2F; <code>1002</code></td>
+<td>上级ID（0 表示顶级）</td>
+</tr>
+<tr>
+<td><code>perm_code</code></td>
+<td>VARCHAR</td>
+<td><code>&quot;user:list&quot;</code> &#x2F; <code>&quot;user:delete&quot;</code></td>
+<td>权限标识，用于校验</td>
+</tr>
+<tr>
+<td><code>url</code> &#x2F; <code>path</code></td>
+<td>VARCHAR</td>
+<td><code>&quot;/user/list&quot;</code> &#x2F; <code>&quot;/api/user/delete&quot;</code></td>
+<td>前端路由或后台接口地址</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td>VARCHAR</td>
+<td><code>&quot;GET&quot;</code> &#x2F; <code>&quot;POST&quot;</code> &#x2F; <code>&quot;DELETE&quot;</code></td>
+<td>请求方式（用于接口）</td>
+</tr>
+<tr>
+<td><code>sort</code></td>
+<td>INT</td>
+<td><code>1</code> &#x2F; <code>2</code> &#x2F; <code>3</code></td>
+<td>排序字段</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>TINYINT</td>
+<td><code>1</code></td>
+<td>启用状态：1启用、0禁用</td>
+</tr>
+<tr>
+<td><code>visible</code></td>
+<td>TINYINT</td>
+<td><code>1</code></td>
+<td>是否前端可见（按钮用）</td>
+</tr>
+</tbody></table>
+<h2 id="📌-二、模拟真实权限表数据（示例）"><a href="#📌-二、模拟真实权限表数据（示例）" class="headerlink" title="📌 二、模拟真实权限表数据（示例）"></a>📌 二、模拟真实权限表数据（示例）</h2><p>假设我们有一个系统模块叫“用户管理”，有一个菜单和三个按钮：</p>
+<ul>
+<li>用户管理（菜单）</li>
+<li>查询用户（按钮）</li>
+<li>编辑用户（按钮）</li>
+<li>删除用户（按钮）</li>
+</ul>
+<p>我们再加上一个接口权限作为后台控制。【这里<strong>id</strong>和<strong>parent_id</strong>很重要】</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>type</th>
+<th>parent_id</th>
+<th>perm_code</th>
+<th>path</th>
+<th>method</th>
+<th>visible</th>
+<th>sort</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1000</td>
+<td>用户管理</td>
+<td><code>menu</code></td>
+<td>0</td>
+<td><code>user:root</code></td>
+<td><code>/user</code></td>
+<td>null</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1001</td>
+<td>用户列表</td>
+<td><code>menu</code></td>
+<td>1000</td>
+<td><code>user:list</code></td>
+<td><code>/user/list</code></td>
+<td>null</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1002</td>
+<td>查询按钮</td>
+<td><code>button</code></td>
+<td>1001</td>
+<td><code>user:query</code></td>
+<td>null</td>
+<td>null</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1003</td>
+<td>编辑按钮</td>
+<td><code>button</code></td>
+<td>1001</td>
+<td><code>user:edit</code></td>
+<td>null</td>
+<td>null</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>1004</td>
+<td>删除按钮</td>
+<td><code>button</code></td>
+<td>1001</td>
+<td><code>user:delete</code></td>
+<td>null</td>
+<td>null</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>1005</td>
+<td>删除用户API</td>
+<td><code>api</code></td>
+<td>1001</td>
+<td><code>user:delete</code></td>
+<td><code>/api/user/delete</code></td>
+<td>DELETE</td>
+<td>0</td>
+<td>4</td>
+</tr>
+</tbody></table>
+<h2 id="🧠-三、说明和作用分析"><a href="#🧠-三、说明和作用分析" class="headerlink" title="🧠 三、说明和作用分析"></a>🧠 三、说明和作用分析</h2><h3 id="1️⃣-type-menu"><a href="#1️⃣-type-menu" class="headerlink" title="1️⃣ type = menu"></a>1️⃣ <code>type = menu</code></h3><ul>
+<li>表示是<strong>页面菜单节点</strong></li>
+<li>前端构建菜单树的依据</li>
+<li>有<code>path</code>字段，用于前端路由匹配</li>
+</ul>
+<h3 id="2️⃣-type-button"><a href="#2️⃣-type-button" class="headerlink" title="2️⃣ type = button"></a>2️⃣ <code>type = button</code></h3><ul>
+<li>表示按钮级别权限</li>
+<li><strong>前端判断按钮显隐</strong>时使用：</li>
+</ul>
+<pre><code class="js">hasPermission(&#39;user:delete&#39;) ? 显示删除按钮 : 不显示
+</code></pre>
+<h3 id="3️⃣-type-api"><a href="#3️⃣-type-api" class="headerlink" title="3️⃣ type = api"></a>3️⃣ <code>type = api</code></h3><ul>
+<li>表示后台接口权限</li>
+<li>由 Spring Security + <code>@PreAuthorize(&quot;hasAuthority(&#39;user:delete&#39;)&quot;)</code> 控制接口是否放行</li>
+</ul>
+<h3 id="4️⃣-perm-code"><a href="#4️⃣-perm-code" class="headerlink" title="4️⃣ perm_code"></a>4️⃣ <code>perm_code</code></h3><ul>
+<li>每一个权限都有一个唯一 <code>perm_code</code>，即权限码</li>
+<li>按钮和API**可以共用一个 <code>perm_code</code>**，代表前后端权限打通</li>
+</ul>
+<h2 id="🧾-附：完整表结构建表SQL"><a href="#🧾-附：完整表结构建表SQL" class="headerlink" title="🧾 附：完整表结构建表SQL"></a>🧾 附：完整表结构建表SQL</h2><pre><code class="sql">CREATE TABLE `permission` (
+  `id` BIGINT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `type` VARCHAR(20) NOT NULL COMMENT &#39;menu, button, api&#39;,
+  `parent_id` BIGINT DEFAULT 0,
+  `perm_code` VARCHAR(100),
+  `path` VARCHAR(200),
+  `method` VARCHAR(10),
+  `visible` TINYINT DEFAULT 1,
+  `sort` INT DEFAULT 1,
+  `status` TINYINT DEFAULT 1
+);
+</code></pre>
+</blockquote>
 <h4 id="线程池有哪些状态，这些状态是怎么进行转换的"><a href="#线程池有哪些状态，这些状态是怎么进行转换的" class="headerlink" title="线程池有哪些状态，这些状态是怎么进行转换的"></a>线程池有哪些状态，这些状态是怎么进行转换的</h4><p>线程池有以下几种状态：</p>
 <ul>
 <li>RUNNING：线程池正常运行，可以接受新的任务和处理任务队列中的任务。</li>
@@ -1778,9 +3565,9 @@ t2-itcast
 <h4 id="说一下怎么使用多线程？"><a href="#说一下怎么使用多线程？" class="headerlink" title="说一下怎么使用多线程？"></a>说一下怎么使用多线程？</h4><ul>
 <li><p>继承Thread类，并重写run()方法。</p>
 </li>
-<li><p>实现Runnable接口，并将实现类传递给Thread对象。</p>
+<li><p>实现Runnable接口，并将实现类传递给Thread对象。【无返回值】</p>
 </li>
-<li><p>实现Callable接口，实现<code>call()</code>方法</p>
+<li><p>实现Callable接口，实现<code>call()</code>方法【有返回值】</p>
 </li>
 <li><p>使用Executor框架，如ExecutorService和ThreadPoolExecutor来管理线程池。</p>
 </li>
@@ -1794,8 +3581,8 @@ t2-itcast
 <li>终止（Terminated）：线程执行完成或因异常而终止。</li>
 </ul>
 <h6 id="怎么把线程杀死-终止"><a href="#怎么把线程杀死-终止" class="headerlink" title="怎么把线程杀死 终止"></a>怎么把线程杀死 终止</h6><p><strong>stop</strong>()方法[暴力方法]    <strong>interrupt</strong>()方法[优雅关闭线程]    正常回收</p>
-<h4 id="乐观锁和悲观锁的区别"><a href="#乐观锁和悲观锁的区别" class="headerlink" title="乐观锁和悲观锁的区别"></a>乐观锁和悲观锁的区别</h4><p>乐观锁：读多写少 线程执行时间相差较大  并发不太激烈</p>
-<p>悲观锁：写多读少 线程执行时间相差不大 竞争激烈 并发锁多</p>
+<h4 id="乐观锁和悲观锁的区别"><a href="#乐观锁和悲观锁的区别" class="headerlink" title="乐观锁和悲观锁的区别"></a>乐观锁和悲观锁的区别</h4><p>乐观锁：<strong>读多写少</strong> 线程执行时间相差较大  并发不太激烈</p>
+<p>悲观锁：<strong>写多读少</strong> 线程执行时间相差不大 竞争激烈 并发锁多</p>
 <p>加锁的时机不一样，<br>悲观锁：没改数据的时候先加锁 比较明显利用底层操作系统api实现<br>乐观锁：在改数据的时候才加锁 依靠底层的硬件</p>
 <p><strong>java层面</strong>：<code>synchronized  ReentrantLock</code></p>
 <p><strong>数据库层面</strong>：<br>悲观锁：select for update是mysql的的实现<br>乐观锁：JUC Java Util Concurrent）是Java并发工具包</p>
@@ -1804,6 +3591,42 @@ t2-itcast
 </blockquote>
 <p>乐观锁要读取目前旧的值再将新设置的值以及旧的值比较 如果相同 就把新的值更新 如果不相同 就把旧的值重新提取 因为在这期间有人读取了这个数据跟我之前不一样(底层api 要调用两个 一个旧的值 一个新的值)。一般乐观锁是结合自旋 类于while(true)直到读到为止 <code>要设计次数后再报错</code></p>
 <p>要更新数据库某个值 把旧的值读出来 想更新银行里的余额<br>这是<strong>典型的ABA问题</strong>：<u>要用<strong>时间戳</strong>或<strong>自增版本号</strong>去做</u></p>
+<blockquote>
+<h2 id="🔒-各种锁对比表格"><a href="#🔒-各种锁对比表格" class="headerlink" title="🔒 各种锁对比表格"></a>🔒 各种锁对比表格</h2><table>
+<thead>
+<tr>
+<th>锁类型</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>乐观锁（version）</td>
+<td>冲突少、性能优先</td>
+<td>无阻塞、效率高</td>
+<td>有冲突时需重试，自旋成本高</td>
+</tr>
+<tr>
+<td>悲观锁（for update）</td>
+<td>冲突多、安全性要求高</td>
+<td>强一致性</td>
+<td>并发性能差，可能导致死锁</td>
+</tr>
+<tr>
+<td>分布式锁（Redis&#x2F;Redisson）</td>
+<td>多服务&#x2F;微服务场景</td>
+<td>支持跨节点资源锁定</td>
+<td>实现复杂，依赖中间件</td>
+</tr>
+<tr>
+<td>本地锁（synchronized&#x2F;Lock）</td>
+<td>单服务场景</td>
+<td>实现简单</td>
+<td>无法跨JVM，分布式无效</td>
+</tr>
+</tbody></table>
+</blockquote>
 <h4 id="Stream流的使用及常用API"><a href="#Stream流的使用及常用API" class="headerlink" title="Stream流的使用及常用API"></a>Stream流的使用及常用API</h4><p>Stream是Java 8中引入的一种新特性，用于简化数据处理和操作。它可以用来解决集合循环遍历处理的问题。在此之前用循环来代替</p>
 <blockquote>
 <h3 id="基础Stream操作"><a href="#基础Stream操作" class="headerlink" title="基础Stream操作"></a>基础Stream操作</h3><ul>
@@ -1827,10 +3650,496 @@ t2-itcast
 <li><code>findFirst</code>: 返回第一个元素。</li>
 <li><code>findAny</code>: 返回当前流中的任意元素。</li>
 </ul>
+<h3 id="🧩-场景-1：筛选出余额大于1000的用户列表（filter）"><a href="#🧩-场景-1：筛选出余额大于1000的用户列表（filter）" class="headerlink" title="🧩 场景 1：筛选出余额大于1000的用户列表（filter）"></a>🧩 场景 1：筛选出余额大于1000的用户列表（<code>filter</code>）</h3><pre><code class="java">List&lt;User&gt; richUsers = userList.stream()
+    .filter(user -&gt; user.getBalance().compareTo(BigDecimal.valueOf(1000)) &gt; 0)
+    .collect(Collectors.toList());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>filter</code> 用来“过滤”，留下满足条件的用户。</p>
+<hr>
+<h3 id="🧩-场景-2：获取所有用户名组成的新列表（map）"><a href="#🧩-场景-2：获取所有用户名组成的新列表（map）" class="headerlink" title="🧩 场景 2：获取所有用户名组成的新列表（map）"></a>🧩 场景 2：获取所有用户名组成的新列表（<code>map</code>）</h3><pre><code class="java">List&lt;String&gt; usernameList = userList.stream()
+    .map(User::getUsername)
+    .collect(Collectors.toList());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>map</code> 是映射，通常是将对象转换成某个字段或新结构。</p>
+<hr>
+<h3 id="🧩-场景-3：对订单按金额排序（sorted）"><a href="#🧩-场景-3：对订单按金额排序（sorted）" class="headerlink" title="🧩 场景 3：对订单按金额排序（sorted）"></a>🧩 场景 3：对订单按金额排序（<code>sorted</code>）</h3><pre><code class="java">List&lt;Order&gt; sortedOrders = orderList.stream()
+    .sorted(Comparator.comparing(Order::getAmount))
+    .collect(Collectors.toList());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>sorted</code> 用于排序，自定义排序字段。</p>
+<hr>
+<h3 id="🧩-场景-4：统计多少个订单金额大于1000（filter-count）"><a href="#🧩-场景-4：统计多少个订单金额大于1000（filter-count）" class="headerlink" title="🧩 场景 4：统计多少个订单金额大于1000（filter + count）"></a>🧩 场景 4：统计多少个订单金额大于1000（<code>filter + count</code>）</h3><pre><code class="java">long highValueOrderCount = orderList.stream()
+    .filter(order -&gt; order.getAmount().compareTo(BigDecimal.valueOf(1000)) &gt; 0)
+    .count();
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>count()</code> 是终止操作，直接返回数量。</p>
+<hr>
+<h3 id="🧩-场景-5：判断是否有用户未激活（anyMatch）"><a href="#🧩-场景-5：判断是否有用户未激活（anyMatch）" class="headerlink" title="🧩 场景 5：判断是否有用户未激活（anyMatch）"></a>🧩 场景 5：判断是否有用户未激活（<code>anyMatch</code>）</h3><pre><code class="java">boolean hasInactive = userList.stream()
+    .anyMatch(user -&gt; !user.isActive());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>anyMatch</code> 检查<strong>是否存在</strong>一个满足条件的元素。</p>
+<hr>
+<h3 id="🧩-场景-6：求所有订单的总金额（map-reduce）"><a href="#🧩-场景-6：求所有订单的总金额（map-reduce）" class="headerlink" title="🧩 场景 6：求所有订单的总金额（map + reduce）"></a>🧩 场景 6：求所有订单的总金额（<code>map + reduce</code>）</h3><pre><code class="java">BigDecimal totalAmount = orderList.stream()
+    .map(Order::getAmount)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>reduce</code> 是归约，把多个值合成一个值。</p>
+<hr>
+<h3 id="🧩-场景-7：跳过前5条，取后5条（skip-limit）"><a href="#🧩-场景-7：跳过前5条，取后5条（skip-limit）" class="headerlink" title="🧩 场景 7：跳过前5条，取后5条（skip + limit）"></a>🧩 场景 7：跳过前5条，取后5条（<code>skip + limit</code>）</h3><pre><code class="java">List&lt;Order&gt; lastFive = orderList.stream()
+    .skip(orderList.size() - 5)
+    .limit(5)
+    .collect(Collectors.toList());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> 用于分页、滚动加载的典型场景。</p>
+<hr>
+<h3 id="🧩-场景-8：分组统计——按用户ID分组他们的订单（collect-Collectors-groupingBy-）"><a href="#🧩-场景-8：分组统计——按用户ID分组他们的订单（collect-Collectors-groupingBy-）" class="headerlink" title="🧩 场景 8：分组统计——按用户ID分组他们的订单（collect(Collectors.groupingBy)）"></a>🧩 场景 8：分组统计——按用户ID分组他们的订单（<code>collect(Collectors.groupingBy)</code>）</h3><pre><code class="java">Map&lt;Long, List&lt;Order&gt;&gt; ordersByUser = orderList.stream()
+    .collect(Collectors.groupingBy(Order::getUserId));
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>groupingBy</code> 是分组聚合操作。</p>
+<hr>
+<h3 id="🧩-场景-9：提取用户ID组成-Set-去重（map-collect-Collectors-toSet-）"><a href="#🧩-场景-9：提取用户ID组成-Set-去重（map-collect-Collectors-toSet-）" class="headerlink" title="🧩 场景 9：提取用户ID组成 Set 去重（map + collect(Collectors.toSet())）"></a>🧩 场景 9：提取用户ID组成 Set 去重（<code>map + collect(Collectors.toSet())</code>）</h3><pre><code class="java">Set&lt;Long&gt; userIds = userList.stream()
+    .map(User::getId)
+    .collect(Collectors.toSet());
+</code></pre>
+<p>✅ <strong>重点理解：</strong> 利用 <code>Set</code> 实现自动去重。</p>
+<hr>
+<h3 id="🧩-场景-10：查找第一个未发货订单（filter-findFirst）"><a href="#🧩-场景-10：查找第一个未发货订单（filter-findFirst）" class="headerlink" title="🧩 场景 10：查找第一个未发货订单（filter + findFirst）"></a>🧩 场景 10：查找第一个未发货订单（<code>filter + findFirst</code>）</h3><pre><code class="java">Optional&lt;Order&gt; firstUnshipped = orderList.stream()
+    .filter(order -&gt; !order.isShipped())
+    .findFirst();
+</code></pre>
+<p>✅ <strong>重点理解：</strong> <code>findFirst()</code> 返回的是 <code>Optional&lt;T&gt;</code>，避免空指针。</p>
+<hr>
+<h3 id="✅-总结表：常用-Stream-操作一图读懂"><a href="#✅-总结表：常用-Stream-操作一图读懂" class="headerlink" title="✅ 总结表：常用 Stream 操作一图读懂"></a>✅ 总结表：常用 Stream 操作一图读懂</h3><table>
+<thead>
+<tr>
+<th>操作方法</th>
+<th>功能说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>filter()</code></td>
+<td>过滤数据</td>
+<td><code>filter(u -&gt; u.age &gt; 18)</code></td>
+</tr>
+<tr>
+<td><code>map()</code></td>
+<td>映射转换</td>
+<td><code>map(User::getId)</code></td>
+</tr>
+<tr>
+<td><code>sorted()</code></td>
+<td>排序</td>
+<td><code>sorted(Comparator.comparing())</code></td>
+</tr>
+<tr>
+<td><code>limit()</code></td>
+<td>限制返回个数</td>
+<td><code>limit(10)</code></td>
+</tr>
+<tr>
+<td><code>skip()</code></td>
+<td>跳过前面几个</td>
+<td><code>skip(5)</code></td>
+</tr>
+<tr>
+<td><code>collect()</code></td>
+<td>收集结果</td>
+<td><code>collect(Collectors.toList())</code></td>
+</tr>
+<tr>
+<td><code>count()</code></td>
+<td>计数</td>
+<td><code>.count()</code></td>
+</tr>
+<tr>
+<td><code>anyMatch()</code></td>
+<td>是否有任意一个满足</td>
+<td><code>anyMatch(u -&gt; !u.active)</code></td>
+</tr>
+<tr>
+<td><code>allMatch()</code></td>
+<td>所有都满足</td>
+<td><code>allMatch(u -&gt; u.age &gt; 0)</code></td>
+</tr>
+<tr>
+<td><code>reduce()</code></td>
+<td>累积求和等</td>
+<td><code>reduce(0, Integer::sum)</code></td>
+</tr>
+<tr>
+<td><code>findFirst()</code></td>
+<td>返回第一个</td>
+<td><code>findFirst()</code></td>
+</tr>
+</tbody></table>
+</blockquote>
+<h4 id="总结一下lambdaquerywrapper-和-querywrapper的区别-还有他们各自的真实场景"><a href="#总结一下lambdaquerywrapper-和-querywrapper的区别-还有他们各自的真实场景" class="headerlink" title="总结一下lambdaquerywrapper 和 querywrapper的区别 还有他们各自的真实场景"></a><span style = "color:red">总结一下lambdaquerywrapper 和 querywrapper的区别 还有他们各自的真实场景</span></h4><blockquote>
+<h3 id="✅-一句话区分："><a href="#✅-一句话区分：" class="headerlink" title="✅ 一句话区分："></a>✅ 一句话区分：</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>特点</th>
+<th>使用方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>QueryWrapper</code></td>
+<td>通过 <strong>字段名字符串</strong> 构造条件</td>
+<td><code>.eq(&quot;username&quot;, &quot;Tom&quot;)</code></td>
+</tr>
+<tr>
+<td><code>LambdaQueryWrapper</code></td>
+<td>通过 <strong>方法引用（安全）</strong> 构造条件</td>
+<td><code>.eq(User::getUsername, &quot;Tom&quot;)</code></td>
+</tr>
+</tbody></table>
+<h2 id="✳️-1-QueryWrapper：字段名写字符串的方式"><a href="#✳️-1-QueryWrapper：字段名写字符串的方式" class="headerlink" title="✳️ 1. QueryWrapper：字段名写字符串的方式"></a>✳️ 1. <code>QueryWrapper</code>：字段名写字符串的方式</h2><h3 id="✅-特点："><a href="#✅-特点：" class="headerlink" title="✅ 特点："></a>✅ 特点：</h3><ul>
+<li>字段名用字符串传入，如 <code>&quot;username&quot;</code>。</li>
+<li>使用简单、灵活、直观。</li>
+<li><strong>但容易拼写错误，且不支持字段重构（字段名变了不会报错）</strong>。</li>
+</ul>
+<h3 id="✅-示例："><a href="#✅-示例：" class="headerlink" title="✅ 示例："></a>✅ 示例：</h3><pre><code class="java">QueryWrapper&lt;User&gt; wrapper = new QueryWrapper&lt;&gt;();
+wrapper.eq(&quot;username&quot;, &quot;Tom&quot;)
+       .ge(&quot;age&quot;, 18)
+       .like(&quot;email&quot;, &quot;@gmail.com&quot;);
+
+List&lt;User&gt; list = userMapper.selectList(wrapper);
+</code></pre>
+<h3 id="✅-适用场景："><a href="#✅-适用场景：" class="headerlink" title="✅ 适用场景："></a>✅ 适用场景：</h3><ul>
+<li>快速写 Demo、测试。</li>
+<li>字段是动态传入的（如：前端传字段名）——需要用字符串拼字段名。</li>
+<li>表字段不会频繁变动。</li>
+</ul>
+<hr>
+<h2 id="✳️-2-LambdaQueryWrapper：方法引用式，更安全！"><a href="#✳️-2-LambdaQueryWrapper：方法引用式，更安全！" class="headerlink" title="✳️ 2. LambdaQueryWrapper：方法引用式，更安全！"></a>✳️ 2. <code>LambdaQueryWrapper</code>：方法引用式，更安全！</h2><h3 id="✅-特点：-1"><a href="#✅-特点：-1" class="headerlink" title="✅ 特点："></a>✅ 特点：</h3><ul>
+<li>使用 <strong>方法引用</strong>（如 <code>User::getUsername</code>），可以避免拼写错误。</li>
+<li>编译时检查字段名，重命名字段 IDE 可自动修改引用。</li>
+<li>更加 <strong>类型安全、可维护</strong>。</li>
+</ul>
+<h3 id="✅-示例：-1"><a href="#✅-示例：-1" class="headerlink" title="✅ 示例："></a>✅ 示例：</h3><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.eq(User::getUsername, &quot;Tom&quot;)
+       .ge(User::getAge, 18)
+       .like(User::getEmail, &quot;@gmail.com&quot;);
+
+List&lt;User&gt; list = userMapper.selectList(wrapper);
+</code></pre>
+<h3 id="✅-适用场景：-1"><a href="#✅-适用场景：-1" class="headerlink" title="✅ 适用场景："></a>✅ 适用场景：</h3><ul>
+<li>实际项目开发中推荐优先使用。</li>
+<li>字段会变，怕忘改地方。</li>
+<li>追求代码规范、可读性和安全性。</li>
+</ul>
+<h2 id="🔍-场景对比总结："><a href="#🔍-场景对比总结：" class="headerlink" title="🔍 场景对比总结："></a>🔍 场景对比总结：</h2><table>
+<thead>
+<tr>
+<th>需求&#x2F;场景</th>
+<th>推荐使用</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字段名是前端传过来的字符串</td>
+<td><code>QueryWrapper</code></td>
+<td>字段名只能动态拼接</td>
+</tr>
+<tr>
+<td>普通查询（写死字段名）</td>
+<td><code>LambdaQueryWrapper</code></td>
+<td>编译器校验字段名，防止拼写错误</td>
+</tr>
+<tr>
+<td>想快速测试或写 Demo</td>
+<td><code>QueryWrapper</code></td>
+<td>简洁方便</td>
+</tr>
+<tr>
+<td>表结构变动频繁、重构频繁</td>
+<td><code>LambdaQueryWrapper</code></td>
+<td>字段引用会被 IDE 识别</td>
+</tr>
+</tbody></table>
+</blockquote>
+<h4 id="LambdaQueryWrapper真实场景"><a href="#LambdaQueryWrapper真实场景" class="headerlink" title="LambdaQueryWrapper真实场景"></a><span style = "color:red"><code>LambdaQueryWrapper</code>真实场景</span></h4><blockquote>
+<h2 id="✅-场景一：精确查询：查某个用户是否存在"><a href="#✅-场景一：精确查询：查某个用户是否存在" class="headerlink" title="✅ 场景一：精确查询：查某个用户是否存在"></a>✅ 场景一：<strong>精确查询：查某个用户是否存在</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.eq(User::getUsername, &quot;admin&quot;);
+
+User user = userMapper.selectOne(wrapper);
+</code></pre>
+<blockquote>
+<p>说明：判断用户名为 admin 的用户是否存在。<code>eq</code> 表示等于。</p>
+</blockquote>
+<hr>
+<h2 id="✅-场景二：范围查询：查年龄在-18-30-岁之间的用户"><a href="#✅-场景二：范围查询：查年龄在-18-30-岁之间的用户" class="headerlink" title="✅ 场景二：范围查询：查年龄在 18~30 岁之间的用户"></a>✅ 场景二：<strong>范围查询：查年龄在 18~30 岁之间的用户</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.between(User::getAge, 18, 30);
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<blockquote>
+<p>说明：<code>between</code> 等价于 <code>age &gt;= 18 AND age &lt;= 30</code></p>
+</blockquote>
+<hr>
+<h2 id="✅-场景三：模糊查询：查邮箱包含“-gmail”的用户"><a href="#✅-场景三：模糊查询：查邮箱包含“-gmail”的用户" class="headerlink" title="✅ 场景三：模糊查询：查邮箱包含“@gmail”的用户"></a>✅ 场景三：<strong>模糊查询：查邮箱包含“@gmail”的用户</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.like(User::getEmail, &quot;@gmail&quot;);
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<blockquote>
+<pre><code>like` 相当于 SQL 中的 `LIKE &#39;%xxx%&#39;
+</code></pre>
+</blockquote>
+<hr>
+<h2 id="✅-场景四：多条件查询：查-username-为-tom，且状态为启用"><a href="#✅-场景四：多条件查询：查-username-为-tom，且状态为启用" class="headerlink" title="✅ 场景四：多条件查询：查 username 为 tom，且状态为启用"></a>✅ 场景四：<strong>多条件查询：查 username 为 tom，且状态为启用</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.eq(User::getUsername, &quot;tom&quot;)
+       .eq(User::getStatus, 1); // 1 代表启用
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<hr>
+<h2 id="✅-场景五：动态查询：某些参数可为空，不传就不作为查询条件"><a href="#✅-场景五：动态查询：某些参数可为空，不传就不作为查询条件" class="headerlink" title="✅ 场景五：动态查询：某些参数可为空，不传就不作为查询条件"></a>✅ 场景五：<strong>动态查询：某些参数可为空，不传就不作为查询条件</strong></h2><pre><code class="java">String username = &quot;tom&quot;;
+Integer age = null;
+
+LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.eq(StringUtils.isNotBlank(username), User::getUsername, username)
+       .eq(age != null, User::getAge, age);
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<blockquote>
+<p>⭐ 动态条件拼接是 MyBatis-Plus 的一大特色：<strong>条件为 true 才拼入 SQL</strong></p>
+</blockquote>
+<hr>
+<h2 id="✅-场景六：排序查询：按注册时间倒序"><a href="#✅-场景六：排序查询：按注册时间倒序" class="headerlink" title="✅ 场景六：排序查询：按注册时间倒序"></a>✅ 场景六：<strong>排序查询：按注册时间倒序</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.orderByDesc(User::getCreateTime);
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<hr>
+<h2 id="✅-场景七：分页查询-条件筛选"><a href="#✅-场景七：分页查询-条件筛选" class="headerlink" title="✅ 场景七：分页查询 + 条件筛选"></a>✅ 场景七：<strong>分页查询 + 条件筛选</strong></h2><pre><code class="java">Page&lt;User&gt; page = new Page&lt;&gt;(1, 10); // 第1页，每页10条
+
+LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.like(User::getUsername, &quot;张&quot;)
+       .ge(User::getAge, 18);
+
+IPage&lt;User&gt; userPage = userMapper.selectPage(page, wrapper);
+</code></pre>
+<blockquote>
+<p><code>selectPage</code> 返回分页对象 <code>IPage</code>，包含总条数、总页数、当前页数据。</p>
+</blockquote>
+<hr>
+<h2 id="✅-场景八：统计某状态下的用户数量"><a href="#✅-场景八：统计某状态下的用户数量" class="headerlink" title="✅ 场景八：统计某状态下的用户数量"></a>✅ 场景八：<strong>统计某状态下的用户数量</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.eq(User::getStatus, 1);
+
+Long count = userMapper.selectCount(wrapper);
+</code></pre>
+<hr>
+<h2 id="✅-场景九：只查指定列：查所有用户名和邮箱"><a href="#✅-场景九：只查指定列：查所有用户名和邮箱" class="headerlink" title="✅ 场景九：只查指定列：查所有用户名和邮箱"></a>✅ 场景九：<strong>只查指定列：查所有用户名和邮箱</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.select(User::getUsername, User::getEmail);
+
+List&lt;User&gt; users = userMapper.selectList(wrapper);
+</code></pre>
+<hr>
+<h2 id="✅-场景十：删除某个年龄段的用户（慎用！）"><a href="#✅-场景十：删除某个年龄段的用户（慎用！）" class="headerlink" title="✅ 场景十：删除某个年龄段的用户（慎用！）"></a>✅ 场景十：<strong>删除某个年龄段的用户（慎用！）</strong></h2><pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+wrapper.lt(User::getAge, 10); // 年龄小于10岁
+
+userMapper.delete(wrapper);
+</code></pre>
+<h2 id="🧠-总结你可以记住几个关键词："><a href="#🧠-总结你可以记住几个关键词：" class="headerlink" title="🧠 总结你可以记住几个关键词："></a>🧠 总结你可以记住几个关键词：</h2><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>eq</code> &#x2F; <code>ne</code></td>
+<td>等于 &#x2F; 不等于</td>
+</tr>
+<tr>
+<td><code>like</code> &#x2F; <code>notLike</code></td>
+<td>模糊匹配</td>
+</tr>
+<tr>
+<td><code>gt</code> &#x2F; <code>ge</code></td>
+<td>大于 &#x2F; 大于等于</td>
+</tr>
+<tr>
+<td><code>lt</code> &#x2F; <code>le</code></td>
+<td>小于 &#x2F; 小于等于</td>
+</tr>
+<tr>
+<td><code>between</code></td>
+<td>范围查询</td>
+</tr>
+<tr>
+<td><code>in</code> &#x2F; <code>notIn</code></td>
+<td>集合查询</td>
+</tr>
+<tr>
+<td><code>isNull</code> &#x2F; <code>isNotNull</code></td>
+<td>判空</td>
+</tr>
+<tr>
+<td><code>orderByAsc</code> &#x2F; <code>orderByDesc</code></td>
+<td>排序</td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td>指定返回字段</td>
+</tr>
+<tr>
+<td><code>last</code></td>
+<td>拼接SQL片段，比如分页的 <code>limit</code></td>
+</tr>
+</tbody></table>
+<h2 id="挑战高级复杂场景"><a href="#挑战高级复杂场景" class="headerlink" title="挑战高级复杂场景"></a><span style = "color:blue">挑战高级复杂场景</span></h2><h2 id="🧩-场景设定：后台用户综合筛选"><a href="#🧩-场景设定：后台用户综合筛选" class="headerlink" title="🧩 场景设定：后台用户综合筛选"></a>🧩 场景设定：后台用户综合筛选</h2><p>你是某后台系统开发人员，领导提出了一个用户综合查询需求：</p>
+<blockquote>
+<p>“我要你查出所有<strong>状态正常</strong>的用户（status&#x3D;1），要求他们的：</p>
+<ul>
+<li>昵称中包含”超”</li>
+<li>年龄在 20 到 30 岁之间</li>
+<li>注册时间要大于某个时间点（比如 2023-01-01）</li>
+<li>邮箱不能为 null</li>
+<li>并且用户类型不能是 admin</li>
+<li>用户ID必须在某一批导入的 id 集合中</li>
+<li>最后按照注册时间降序、年龄升序排序</li>
+<li>返回分页数据，每页10条，只查 <code>id</code>, <code>nickname</code>, <code>email</code>, <code>createTime</code> 字段。”</li>
+</ul>
+</blockquote>
+<pre><code class="java">LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;&gt;();
+
+wrapper
+    .eq(User::getStatus, 1)                         // 状态正常
+    .like(User::getNickname, &quot;超&quot;)                  // 昵称模糊匹配
+    .between(User::getAge, 20, 30)                  // 年龄在20~30之间
+    .gt(User::getCreateTime, LocalDate.of(2023, 1, 1)) // 注册时间大于2023-01-01
+    .isNotNull(User::getEmail)                     // 邮箱不为null
+    .ne(User::getUserType, &quot;admin&quot;)                // 类型不能是admin
+    .in(User::getId, idList)                       // id必须在给定集合中
+    .orderByDesc(User::getCreateTime)              // 注册时间降序
+    .orderByAsc(User::getAge)                      // 年龄升序
+    .select(User::getId, User::getNickname, User::getEmail, User::getCreateTime); // 只查这几个字段
+</code></pre>
+<h3 id="✅-配合分页使用："><a href="#✅-配合分页使用：" class="headerlink" title="✅ 配合分页使用："></a>✅ 配合分页使用：</h3><pre><code class="java">Page&lt;User&gt; page = new Page&lt;&gt;(1, 10); // 第1页，每页10条
+IPage&lt;User&gt; result = userMapper.selectPage(page, wrapper);
+</code></pre>
+<h2 id="🧩-变种考点：动态条件拼接"><a href="#🧩-变种考点：动态条件拼接" class="headerlink" title="🧩 变种考点：动态条件拼接"></a>🧩 变种考点：动态条件拼接</h2><p>比如昵称可能为空，idList可能为空，我们加上动态判断：</p>
+<pre><code class="java">wrapper
+    .eq(User::getStatus, 1)
+    .like(StringUtils.isNotBlank(nickname), User::getNickname, nickname)
+    .between(minAge != null &amp;&amp; maxAge != null, User::getAge, minAge, maxAge)
+    .in(CollectionUtil.isNotEmpty(idList), User::getId, idList);
+</code></pre>
+<p><strong>LambdaQueryWrapper 是最适合在真实业务中构建动态、复杂、类型安全 SQL 的利器</strong>，配合 Stream、分页、动态参数、条件拼接，几乎能满足所有后台 CRUD 需求。</p>
 </blockquote>
 <h4 id="项目中具体用到哪些设计模式"><a href="#项目中具体用到哪些设计模式" class="headerlink" title="项目中具体用到哪些设计模式"></a>项目中具体用到哪些<span style = "color:red">设计模式</span></h4><p><del><strong>单例模式</strong>：确保一个类只有一个实例，例如配置文件管理器。</del>[<u>Spring原本设计好的</u>]<br><strong><u>工厂模式</u><strong>：创建对象时无需指定具体的类，例如日志工厂。<br><strong>观察者模式</strong>：当一个对象状态发生改变时，</strong>所有依赖于它的对象</strong>都得到通知并自动更新，例如事件监听。<br>**<u>策略模式</u>**：定义一系列算法，将每个算法封装起来，并使它们可以互换，例如支付策略。<br><strong>模板方法模式</strong>：在项目中，我有一些具有相同操作步骤但具体实现不同的算法，我使用了模板方法模式来定义这些步骤的骨架，将具体的步骤实现留给子类。任链模式的目的是将请求的发送者和接收者解耦，从而使得多个对象都有机会处理请求，将这些对象连成一条链，并沿着这条链传递请求，直到有一个对象处理它为止。<br><strong>责任链模式</strong>：它允许将请求沿着处理者链进行发送。收到请求后，每个处理者都有机会对请求进行处理，或者将其传递给链上的下一个处理者。这样，请求就能在一系列处理者中传递，直到有一个处理者对其进行处理为止。    </p>
 <p>1.<u>递归方式</u> ：在递归模式中，每个处理者内部调用下一个处理者的处理方法。如果当前处理者无法处理请求，它会直接调用下一个处理者的处理方法。这种方式通常是通过<strong>递归调用</strong>来实现的<br>2.<u>迭代模式</u>：在迭代模式中，处理者链被构建为一个线性结构，每个处理者都有一个指向下一个处理者的引用。请求从链的第一个处理者开始，依次传递给下一个处理者，直到找到能够处理该请求的处理者为止。这种方式通常是通过循环迭代来实现的<br><strong>代理模式</strong>：为了控制对远程服务的访问，我使用了代理模式。代理负责处理所有与服务对象的交互，并在必要时进行延迟加载。</p>
 <p>在我的项目中结合<strong>工厂模式</strong>和<strong>策略模式</strong>来设计登录接口时，我们可以将登录验证的逻辑抽象为一个策略接口，并为每种登录方式（如：用户名密码登录、手机验证码登录、社交账号登录等）实现具体的策略类。工厂类则负责创建并管理这些策略对象</p>
+<blockquote>
+<h3 id="🧠-一句话理解每个模式（先记关键词）"><a href="#🧠-一句话理解每个模式（先记关键词）" class="headerlink" title="🧠 一句话理解每个模式（先记关键词）"></a>🧠 一句话理解每个模式（先记关键词）</h3><table>
+<thead>
+<tr>
+<th>模式名</th>
+<th>核心关键词</th>
+<th>常用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>单例模式</strong></td>
+<td>只创建一次，全局唯一</td>
+<td>Spring 中的 Bean、配置类</td>
+</tr>
+<tr>
+<td><strong>工厂模式</strong></td>
+<td>创建对象不关心具体类</td>
+<td>日志、支付、解析器、登录类型等</td>
+</tr>
+<tr>
+<td><strong>策略模式</strong></td>
+<td>多种行为自由切换，面向接口</td>
+<td>登录方式、支付方式、算法切换</td>
+</tr>
+<tr>
+<td><strong>模板方法模式</strong></td>
+<td>公共流程固定，步骤个别实现</td>
+<td>钩子函数、抽象类调用子类流程</td>
+</tr>
+<tr>
+<td><strong>责任链模式</strong></td>
+<td>多个处理器按顺序处理请求</td>
+<td>参数校验链、日志链、权限校验链</td>
+</tr>
+<tr>
+<td><strong>观察者模式</strong></td>
+<td>一变多变，通知机制</td>
+<td>事件总线、消息订阅、MQ监听</td>
+</tr>
+<tr>
+<td><strong>代理模式</strong></td>
+<td>中间人控制访问&#x2F;增强</td>
+<td>RPC远程调用、权限控制、缓存等</td>
+</tr>
+</tbody></table>
+<h3 id="📦-实战分类-项目应用"><a href="#📦-实战分类-项目应用" class="headerlink" title="📦 实战分类 + 项目应用"></a>📦 实战分类 + 项目应用</h3><h4 id="1️⃣-行为型模式"><a href="#1️⃣-行为型模式" class="headerlink" title="1️⃣ 行为型模式"></a>1️⃣ <strong>行为型模式</strong></h4><h5 id="✅-策略模式（Strategy）【最常考🔥】"><a href="#✅-策略模式（Strategy）【最常考🔥】" class="headerlink" title="✅ 策略模式（Strategy）【最常考🔥】"></a>✅ 策略模式（Strategy）【最常考🔥】</h5><ul>
+<li><strong>特点</strong>：行为可切换</li>
+<li><strong>场景</strong>：多个登录方式（手机号 &#x2F; 密码 &#x2F; 第三方登录）</li>
+<li><strong>怎么用</strong>：<ul>
+<li>定义统一接口 <code>LoginStrategy</code></li>
+<li>编写不同策略类 <code>PhoneLoginStrategy</code>、<code>PwdLoginStrategy</code></li>
+<li>用工厂或Map封装，接收一个登录类型参数调用 <code>.doLogin()</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="✅-责任链模式（Chain-of-Responsibility）"><a href="#✅-责任链模式（Chain-of-Responsibility）" class="headerlink" title="✅ 责任链模式（Chain of Responsibility）"></a>✅ 责任链模式（Chain of Responsibility）</h5><ul>
+<li><strong>特点</strong>：多个处理器一个接一个处理</li>
+<li><strong>场景</strong>：表单参数校验、下单流程、审批流程</li>
+<li><strong>递归 or 迭代实现</strong>：<ul>
+<li>迭代：List + for循环</li>
+<li>递归：一个 Handler 内部 <code>next.handle(request)</code></li>
+</ul>
+</li>
+</ul>
+<h5 id="✅-模板方法模式（Template-Method）"><a href="#✅-模板方法模式（Template-Method）" class="headerlink" title="✅ 模板方法模式（Template Method）"></a>✅ 模板方法模式（Template Method）</h5><ul>
+<li><strong>特点</strong>：父类定义算法框架，子类实现步骤</li>
+<li><strong>场景</strong>：支付流程、通知发送（短信&#x2F;微信）</li>
+<li><strong>怎么用</strong>：<ul>
+<li>抽象类定义 <code>checkParams</code>、<code>buildRequest</code>、<code>send</code></li>
+<li>子类实现这些步骤</li>
+</ul>
+</li>
+</ul>
+<h5 id="✅-观察者模式（Observer）"><a href="#✅-观察者模式（Observer）" class="headerlink" title="✅ 观察者模式（Observer）"></a>✅ 观察者模式（Observer）</h5><ul>
+<li><strong>特点</strong>：一个变化通知多个订阅者</li>
+<li><strong>场景</strong>：MQ消费后触发多个事件、发布文章后通知关注者</li>
+<li><strong>怎么用</strong>：<ul>
+<li>Spring 的 <code>@EventListener</code></li>
+<li>Guava EventBus &#x2F; Disruptor</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="2️⃣-创建型模式"><a href="#2️⃣-创建型模式" class="headerlink" title="2️⃣ 创建型模式"></a>2️⃣ <strong>创建型模式</strong></h4><h5 id="✅-工厂模式（Factory）"><a href="#✅-工厂模式（Factory）" class="headerlink" title="✅ 工厂模式（Factory）"></a>✅ 工厂模式（Factory）</h5><ul>
+<li><strong>特点</strong>：创建对象解耦</li>
+<li><strong>场景</strong>：创建不同类型的策略类、构建不同报文体</li>
+<li><strong>怎么用</strong>：<ul>
+<li>定义工厂类，根据参数 new 不同类或从 map 中 get</li>
+</ul>
+</li>
+</ul>
+<h5 id="✅-单例模式（Singleton）"><a href="#✅-单例模式（Singleton）" class="headerlink" title="✅ 单例模式（Singleton）"></a>✅ 单例模式（Singleton）</h5><ul>
+<li><strong>特点</strong>：只创建一个对象，节省资源</li>
+<li><strong>场景</strong>：配置类、工具类、缓存类、Spring 默认就是单例</li>
+</ul>
+<hr>
+<h4 id="3️⃣-结构型模式"><a href="#3️⃣-结构型模式" class="headerlink" title="3️⃣ 结构型模式"></a>3️⃣ <strong>结构型模式</strong></h4><h5 id="✅-代理模式（Proxy）"><a href="#✅-代理模式（Proxy）" class="headerlink" title="✅ 代理模式（Proxy）"></a>✅ 代理模式（Proxy）</h5><ul>
+<li><strong>特点</strong>：给目标对象加一层控制</li>
+<li><strong>场景</strong>：权限控制、RPC远程调用、限流、缓存</li>
+<li><strong>怎么用</strong>：<ul>
+<li>JDK动态代理、CGLIB</li>
+<li>Spring AOP就是代理模式（加日志、权限等）</li>
+</ul>
+</li>
+</ul>
+<h5 id="行为有策略，流程靠责任；骨架定模板，通知用观察；对象建工厂，中间靠代理，唯一单实例。"><a href="#行为有策略，流程靠责任；骨架定模板，通知用观察；对象建工厂，中间靠代理，唯一单实例。" class="headerlink" title="行为有策略，流程靠责任；骨架定模板，通知用观察；对象建工厂，中间靠代理，唯一单实例。"></a><span style = "color:blue">行为有策略，流程靠责任；骨架定模板，通知用观察；对象建工厂，中间靠代理，唯一单实例。</span></h5></blockquote>
 <h6 id="思考一个问题：哪些方式创建单例模式？"><a href="#思考一个问题：哪些方式创建单例模式？" class="headerlink" title="思考一个问题：哪些方式创建单例模式？"></a>思考一个问题：哪些方式创建单例模式？</h6><blockquote>
 <h3 id="1-懒汉式，线程不安全"><a href="#1-懒汉式，线程不安全" class="headerlink" title="1. 懒汉式，线程不安全"></a>1. 懒汉式，线程不安全</h3><p>这种方式在类加载时不初始化。在需要的时候才创建对象，节约资源。</p>
 <pre><code>public class Singleton &#123;
@@ -1934,6 +4243,70 @@ t2-itcast
 </ul>
 </blockquote>
 <p>MVCC底层是多版本并发控制 但底层并不怎么了解</p>
+<blockquote>
+<h3 id="🧩-二、锁的判断依据"><a href="#🧩-二、锁的判断依据" class="headerlink" title="🧩 二、锁的判断依据"></a>🧩 二、锁的判断依据</h3><table>
+<thead>
+<tr>
+<th>操作类型</th>
+<th>是否使用索引？</th>
+<th>锁类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>INSERT</code></td>
+<td>和是否冲突有关</td>
+<td>行锁或表锁</td>
+<td>INSERT默认加<strong>意向排他锁 + 行锁</strong>，唯一索引冲突时加锁更复杂</td>
+</tr>
+<tr>
+<td><strong><code>UPDATE</code></strong></td>
+<td><strong><code>WHERE</code>使用了索引</strong></td>
+<td><strong>行锁（推荐）</strong></td>
+<td>命中索引范围 → 行锁；可并发更新不同数据行</td>
+</tr>
+<tr>
+<td><code>UPDATE</code></td>
+<td><code>WHERE</code>没用索引</td>
+<td>表锁（不推荐）</td>
+<td>扫描全表找目标 → 表锁；阻塞性大</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td>和 UPDATE 类似</td>
+<td>同上</td>
+<td>删除符合条件的行，和更新逻辑一样</td>
+</tr>
+<tr>
+<td><code>SELECT</code></td>
+<td>普通查询</td>
+<td>无锁（MVCC）</td>
+<td>读不加锁，靠快照版本</td>
+</tr>
+<tr>
+<td><code>SELECT ... for update</code></td>
+<td>使用索引？</td>
+<td>行锁或表锁</td>
+<td>强制加锁，依赖索引判断行锁&#x2F;表锁</td>
+</tr>
+</tbody></table>
+<h3 id="ABA-问题（乐观锁延申）"><a href="#ABA-问题（乐观锁延申）" class="headerlink" title="ABA 问题（乐观锁延申）"></a>ABA 问题（乐观锁延申）</h3><p>你前面说得对，在<strong>并发高场景</strong>中，即使数据值一样也不能认为没变，这就是<strong>ABA问题</strong>：</p>
+<ul>
+<li>A线程读了版本为1的数据，准备更新</li>
+<li>B线程将数据从A改为B，又改回A，版本号变了</li>
+<li>A线程再更新时发现版本不一致，避免了误操作！</li>
+</ul>
+<p>解决方式就是：</p>
+<ul>
+<li>使用 <code>version</code> 字段 + 乐观锁更新 <code>WHERE version = ?</code></li>
+<li>如果更新失败，重试或提示失败（可加重试次数）</li>
+</ul>
+<p>在MySQL中是否加行锁还是表锁，取决于是否命中了索引。</p>
+<ul>
+<li>对于 <code>UPDATE</code> &#x2F; <code>DELETE</code> 等 DML 语句，如果 <code>WHERE</code> 条件命中索引，InnoDB 会加<strong>行锁</strong>；</li>
+<li>如果未命中索引，则会加<strong>表锁</strong>，以保证操作的原子性和一致性。<br> 插入 <code>INSERT</code> 一般是对 B+ 树页加意向锁和插入位置加锁，如果涉及唯一索引校验也会加锁。<br> 对于并发控制，MySQL采用MVCC机制来实现非阻塞读写，在读时不加锁而是使用快照版本。<br> 如果业务涉及乐观锁防止并发更新错误，还可以通过版本号控制来避免ABA问题。</li>
+</ul>
+</blockquote>
 <h4 id="深拷贝和浅拷贝的区别？"><a href="#深拷贝和浅拷贝的区别？" class="headerlink" title="深拷贝和浅拷贝的区别？"></a>深拷贝和浅拷贝的区别？</h4><p><strong>浅拷贝</strong>：只复制对象的<strong>基本数据类型</strong>和<strong>引用类型地址</strong>，不复制引用类型指向的对象。如果原对象和浅拷贝对象中的一个改变了引用类型，另一个也会受到影响。旧对象改变新对象也会改变。<br><strong>深拷贝</strong>：创建一个新的对象，并复制对象的所有字段，包括基本数据类型和引用类型指向的对象。原对象和深拷贝对象之间不会相互影响。旧对象改变新对象不会改变<br>  Java是值传递 </p>
 <h6 id="如何实现深拷贝？数组不需要重写【体现了原型设计模式】"><a href="#如何实现深拷贝？数组不需要重写【体现了原型设计模式】" class="headerlink" title="如何实现深拷贝？数组不需要重写【体现了原型设计模式】"></a>如何实现深拷贝？<del>数组不需要重写</del>【体现了<code>原型设计模式</code>】</h6><ul>
 <li><p>实现<strong>Cloneable接口</strong>并重写<strong>clone</strong>方法 会调用构造方法</p>
@@ -1970,6 +4343,44 @@ public class Address implements Cloneable &#123;
 <ul>
 <li>通过<strong>序列化</strong><del>对象转二进制</del>和<strong>反序列化</strong><del>二进制转对象</del>。这种方式不需要实现<code>Cloneable</code>接口，但你的类需要实现<code>Serializable</code>接口。反序列化不会调用构造方法</li>
 </ul>
+<blockquote>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>浅拷贝</th>
+<th>深拷贝</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基本数据类型</td>
+<td>复制值</td>
+<td>复制值</td>
+</tr>
+<tr>
+<td>引用类型</td>
+<td>复制<strong>引用地址</strong>，指向同一对象</td>
+<td>复制<strong>引用所指向的对象</strong>，<strong>开辟新内存空间</strong></td>
+</tr>
+<tr>
+<td>是否影响原对象</td>
+<td>会影响（共享引用）</td>
+<td>不会影响（各自独立）</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>快，开销小</td>
+<td>慢，递归复制所有对象</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>数据不变或只读场景</td>
+<td>数据完全隔离、需要独立副本场景</td>
+</tr>
+</tbody></table>
+<p>在Java中，浅拷贝仅复制对象的基本类型值和引用类型地址，因此多个对象可能共享同一引用，一方修改会影响另一方；而深拷贝则会递归复制所有引用对象，完全隔离副本。</p>
+<p>通常浅拷贝使用 <code>super.clone()</code> 即可，而深拷贝需要实现 <code>Cloneable</code> 接口 + 手动对每一个引用类型递归克隆，或使用序列化方案更为简洁。深拷贝体现了原型设计模式的思想，适合于需要保留对象快照、撤销功能、缓存隔离等场景。</p>
+</blockquote>
 <h4 id="开启线程的时候为什么用的是thread-start方法："><a href="#开启线程的时候为什么用的是thread-start方法：" class="headerlink" title="开启线程的时候为什么用的是thread.start方法："></a>开启线程的时候为什么用的是thread.start方法：</h4><p>thread.start()方法用于<strong>启动一个新线程</strong>，并执行<strong>该线程</strong>的run()方法。调用start()方法后，线程会被放入线程调度队列，等待CPU调度执行。</p>
 <p>直接调用run()方法，并<strong>不会启动</strong>一个新线程，而是在当前线程中执行run()方法，这不符合多线程编程的目的。使用start()方法可以确保线程并发执行，提高程序的性能和响应速度。</p>
 <p>java没权限开启一个线程 要调用底层的操作系统 在JVM的底层实现中，会有相应的本地（C或C++）方法来处理线程的创建和管理</p>
@@ -2122,14 +4533,14 @@ public class OrderProcessingSystem &#123;
         return sessionId;
     &#125;
 </code></pre>
-<h4 id="微服务之间如何调用？"><a href="#微服务之间如何调用？" class="headerlink" title="微服务之间如何调用？"></a>微服务之间如何调用？</h4><p>通过注册中心去协调的<br>首先是有三个重要的概念，<strong>服务消费者</strong>，<strong>注册中心</strong>，<strong>服务提供者</strong>提供者在第一次会把自己的信息注册到注册中心中，比如ip端口，服务功能等消费者需要到注册中心来寻找服务进行消费，<strong>在服务消费者第一次请求的时候会拉取服务提供者的信息，注册中心会把提供者的实例列表给到消费者供消费者选择，使用负载均衡来选择服务</strong>，默认为轮询，还有加权轮询，随机。<strong>同时服务消费者还会定时去注册中心拉取服务提供者的信息</strong></p>
+<h4 id="微服务之间如何调用？"><a href="#微服务之间如何调用？" class="headerlink" title="微服务之间如何调用？"></a>微服务之间如何调用？</h4><p>通过注册中心去协调的<br>首先是有三个重要的概念，<strong>服务消费者</strong>，<strong>注册中心</strong>，<strong>服务提供者</strong>在第一次会把自己的信息注册到注册中心中，比如ip端口，服务功能等消费者需要到注册中心来寻找服务进行消费，<strong>在服务消费者第一次请求的时候会拉取服务提供者的信息，注册中心会把提供者的实例列表给到消费者供消费者选择，使用负载均衡来选择服务</strong>，默认为轮询，还有加权轮询，随机。<strong>同时服务消费者还会定时去注册中心拉取服务提供者的信息</strong></p>
 <h6 id="如果我们的服务挂掉了怎么办"><a href="#如果我们的服务挂掉了怎么办" class="headerlink" title="如果我们的服务挂掉了怎么办?"></a>如果我们的服务挂掉了怎么办?</h6><p>服务提供者会每隔一段时间去向注册中心报告自己的状态[发送心跳ping 30s&#x2F;次 共90s]，如果没有向注册中心报告状态，那么这个时候注册中心会认为服务提供者已经宕机，同时会推送到我们的服务消费者，这个服务提供者已经宕机</p>
 <h4 id="微服务的五大组件"><a href="#微服务的五大组件" class="headerlink" title="微服务的五大组件"></a>微服务的五大组件</h4><ol>
 <li><strong>服务注册与发现</strong>：如Eureka<del>已过时</del>、<strong>Nacos</strong>、Consul，用于服务的注册和发现。</li>
 <li><strong>配置管理</strong>：如Spring Cloud Config、<strong>OpenFeign</strong> 用于集中管理服务的配置。</li>
 </ol>
 <p><code>Feign是一个声明式的Web服务客户端（Web服务客户端就是Http客户端），让编写Web服务客户端变得非常容易，只需创建一个接口并在接口上添加注解即可。</code></p>
-<p>&#96;&#96;OpenFeign是Spring Cloud 在Feign的基础上支持了SpringMVC的注解，如@RequesMapping等等。OpenFeign的@FeignClient可以解析SpringMVC的@RequestMapping注解下的接口，并通过动态代理的方式产生实现类，实现类中做负载均衡并调用其他服务。&#96;</p>
+<p><span style = "color:red"><code>OpenFeign是Spring Cloud 在Feign的基础上支持了SpringMVC的注解，如@RequesMapping等等。OpenFeign的@FeignClient可以解析SpringMVC的@RequestMapping注解下的接口，并通过【动态代理】的方式产生实现类，实现类中做负载均衡并调用其他服务。</code></span></p>
 <pre><code class="java">@FeignClient(name = &quot;feignTestService&quot;, url = &quot;http://localhost/8001&quot;)
 public interface FeignTestService &#123;
 &#125;
@@ -2146,7 +4557,7 @@ public interface PaymentFeignService&#123;
 
 第一步：导入OpenFeign的依赖
 
-第二步：启动类需要添加@EnableFeignClients
+第二步：启动类需要添加 【@EnableFeignClients】
     
 第三步：提供者的接口
 @RestController
@@ -2300,7 +4711,7 @@ public interface FeignTestService &#123;
 <h6 id="为什么会降低吞吐量？"><a href="#为什么会降低吞吐量？" class="headerlink" title="为什么会降低吞吐量？"></a>为什么会降低吞吐量？</h6><ol>
 <li><strong>维护等待队列</strong>：公平锁为了保证按照请求锁的顺序来获取锁，必须维护一个有序的等待队列。这意味着每次有线程请求锁或者释放锁时，都需要进行额外的操作来管理这个队列，这会增加开销。</li>
 <li><strong>上下文切换开销</strong>：当锁被释放时，公平锁需要唤醒等待队列中的第一个线程。这个过程涉及到线程的上下文切换，上下文切换是有成本的，因为它涉及到保存和恢复线程的状态。</li>
-<li><strong>减少并发机会</strong>：由于公平锁要求先来先得，即使锁被释放，后请求锁的线程即使处于可运行状态，也必须等待前面的线程先执行。这可能会减少并发执行的机会，从而降低吞吐量。</li>
+<li><strong>减少并发机会</strong>：由于公平锁要求先来先得，即使锁被释放后请求锁的线程即使处于可运行状态，也必须等待前面的线程先执行。这可能会减少并发执行的机会，从而降低吞吐量。</li>
 <li><strong>增加延迟</strong>：公平锁可能会增加线程获取锁的平均等待时间，因为每个线程都必须等待前一个线程完成。这种延迟可能会导致系统整体性能下降。</li>
 </ol>
 </blockquote>
@@ -2344,7 +4755,7 @@ synchronized不会严格地保证公平性，因为它允许锁的“重入”�
 </ul>
 <p><img src="C:\Users\Pluminary\AppData\Roaming\Typora\typora-user-images\image-20250206094925513.png" alt="image-20250206094925513"></p>
 <h4 id="OpenFeign的底层原理"><a href="#OpenFeign的底层原理" class="headerlink" title="OpenFeign的底层原理"></a>OpenFeign的底层原理</h4><p>OpenFeign 实现了简洁、声明式的 HTTP 请求调用，并且与 Spring Cloud 集成后能提供更多的功能如负载均衡等</p>
-<p><strong>动态代理</strong>： OpenFeign 使用 Java 动态代理技术，基于接口创建代理类，代理类会自动发起 HTTP 请求。你定义的接口方法会映射到 HTTP 请求上，OpenFeign 会根据注解（如 <code>@RequestMapping</code>, <code>@GetMapping</code> 等）来构建请求。</p>
+<p><strong>动态代理</strong>： OpenFeign 使用 Java **<u>动态代理技术</u>**，基于接口创建代理类，代理类会自动发起 HTTP 请求。你定义的接口方法会映射到 HTTP 请求上，OpenFeign 会根据注解（如 <code>@RequestMapping</code>, <code>@GetMapping</code> 等）来构建请求。</p>
 <p><strong>注解解析</strong>： OpenFeign 会解析接口方法上的注解，构造 HTTP 请求的 URL、请求方法类型（GET、POST 等），以及请求体和请求头等信息。</p>
 <p><strong>请求拦截和处理</strong>： 在请求发起之前，OpenFeign 允许通过拦截器（<code>RequestInterceptor</code>）来修改请求，比如设置请求头、参数等。</p>
 <p><strong>负载均衡与容错</strong>： 如果与 Spring Cloud 一起使用，OpenFeign 会集成 Ribbon（负载均衡）和 Hystrix（容错），使得服务调用更加健壮和可靠。</p>
@@ -3011,7 +5422,219 @@ MyISAM：通常占用更少的存储空间，因为它不需要存储这些额�
 <li>在业务方法开始时，Seata会拦截业务SQL，记录业务数据在执行前后的镜像，生成行锁。</li>
 <li>如果一阶段 prepare 成功，则二阶段进行 commit，直接提交事务；如果 prepare 失败，则执行 rollback，利用之前保存的数据镜像回滚到执行前的状态。</li>
 </ul>
-<h4 id="项目中哪里用到MQ，用来干什么？"><a href="#项目中哪里用到MQ，用来干什么？" class="headerlink" title="项目中哪里用到MQ，用来干什么？"></a><strong>项目中哪里用到MQ，用来干什么？</strong></h4><p>异步发优惠卷 + 积分 [用户对于实时性要求不是很高]</p>
+<blockquote>
+<h2 id="面试答题模板：项目中如何解决分布式事务问题"><a href="#面试答题模板：项目中如何解决分布式事务问题" class="headerlink" title="面试答题模板：项目中如何解决分布式事务问题"></a>面试答题模板：项目中如何解决分布式事务问题</h2><h3 id="1-在哪些地方遇到分布式事务？"><a href="#1-在哪些地方遇到分布式事务？" class="headerlink" title="1. 在哪些地方遇到分布式事务？"></a>1. <strong>在哪些地方遇到分布式事务？</strong></h3><blockquote>
+<p>在项目中，当一个操作需要<strong>同时修改多个服务或数据库中的数据</strong>时，就涉及到分布式事务。</p>
+<p>举个例子，比如：</p>
+<ul>
+<li>用户下单时，同时需要更新<strong>订单服务</strong>、<strong>库存服务</strong>、<strong>账户服务</strong></li>
+<li>秒杀系统中，用户提交订单 → 扣减库存 → 支付 → 发货，这些服务彼此独立，不能直接使用本地事务</li>
+<li>使用了微服务架构（Spring Cloud 或 Dubbo），服务之间通过 RPC 或 MQ 通信</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="2-为什么不能用本地事务？"><a href="#2-为什么不能用本地事务？" class="headerlink" title="2. 为什么不能用本地事务？"></a>2. <strong>为什么不能用本地事务？</strong></h3><blockquote>
+<p>因为每个服务有独立的数据源和事务管理器，Spring 或数据库事务不能跨 JVM、不能跨库。使用 <code>@Transactional</code> 只对一个服务内部有效。</p>
+</blockquote>
+<hr>
+<h3 id="3-怎么解决的？你项目中用的什么方式？"><a href="#3-怎么解决的？你项目中用的什么方式？" class="headerlink" title="3. 怎么解决的？你项目中用的什么方式？"></a>3. <strong>怎么解决的？你项目中用的什么方式？</strong></h3><blockquote>
+<p>我们使用了 <strong>Seata</strong> 分布式事务框架，配合 <strong>MySQL + Nacos 注册中心 + Spring Cloud Alibaba</strong>。</p>
+</blockquote>
+<h4 id="✅-主要使用的是-AT-模式："><a href="#✅-主要使用的是-AT-模式：" class="headerlink" title="✅ 主要使用的是 AT 模式："></a>✅ 主要使用的是 <strong>AT 模式</strong>：</h4><ul>
+<li><strong>一阶段（try）</strong>：执行业务逻辑（如插入订单、扣库存），Seata 会自动代理数据源，记录<strong>前镜像</strong>和<strong>后镜像</strong>，并生成全局锁，挂起全局事务。</li>
+<li><strong>二阶段 commit</strong>：如果所有子事务都执行成功，Seata 释放资源，数据自动提交。</li>
+<li><strong>二阶段 rollback</strong>：如果其中一个失败，Seata 会根据前镜像自动回滚其他操作。</li>
+</ul>
+</blockquote>
+<h4 id="项目中哪里用到MQ，用来干什么？"><a href="#项目中哪里用到MQ，用来干什么？" class="headerlink" title="项目中哪里用到MQ，用来干什么？"></a><strong>项目中哪里用到MQ，用来干什么？</strong></h4><blockquote>
+<h3 id="使用-MQ-的主要场景"><a href="#使用-MQ-的主要场景" class="headerlink" title="使用 MQ 的主要场景"></a>使用 MQ 的主要场景</h3><p>我们项目中使用了 MQ 来实现一些<strong>异步解耦、流量削峰、延迟处理</strong>的需求，典型场景包括：</p>
+<ul>
+<li><strong>下单成功后异步发放优惠券和积分</strong></li>
+<li><strong>订单支付成功后通知物流发货</strong></li>
+<li><strong>延迟关闭未支付订单（延迟队列）</strong></li>
+</ul>
+<h3 id="具体业务流程（订单-积分-优惠券）"><a href="#具体业务流程（订单-积分-优惠券）" class="headerlink" title="具体业务流程（订单 + 积分 + 优惠券）"></a>具体业务流程（订单 + 积分 + 优惠券）</h3><h4 id="📦-用户下单-→-支付成功-→-MQ-异步通知："><a href="#📦-用户下单-→-支付成功-→-MQ-异步通知：" class="headerlink" title="📦 用户下单 → 支付成功 → MQ 异步通知："></a>📦 用户下单 → 支付成功 → MQ 异步通知：</h4><ol>
+<li><p>用户提交订单，订单服务创建订单。</p>
+</li>
+<li><p>用户完成支付，<strong>订单服务更新订单状态为“已支付”</strong>。</p>
+</li>
+<li><p>然后将订单信息封装成消息，发送到多个 Topic：</p>
+<pre><code class="json">&#123;
+  &quot;orderId&quot;: &quot;123456789&quot;,
+  &quot;userId&quot;: &quot;user123&quot;,
+  &quot;status&quot;: &quot;PAID&quot;
+&#125;
+</code></pre>
+<ul>
+<li>发给 <code>coupon_topic</code>：异步发放优惠券</li>
+<li>发给 <code>point_topic</code>：异步发放积分</li>
+<li>发给 <code>logistics_topic</code>：异步准备发货</li>
+</ul>
+</li>
+</ol>
+<h3 id="为什么使用-MQ？"><a href="#为什么使用-MQ？" class="headerlink" title="为什么使用 MQ？"></a>为什么使用 MQ？</h3><table>
+<thead>
+<tr>
+<th>目的</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>解耦服务</strong></td>
+<td>各个服务（积分&#x2F;优惠券&#x2F;物流）独立开发部署，订单服务只需发送消息，不关心接收者</td>
+</tr>
+<tr>
+<td><strong>异步处理</strong></td>
+<td>订单服务快速响应用户请求，提升用户体验</td>
+</tr>
+<tr>
+<td><strong>流量削峰</strong></td>
+<td>高并发秒杀场景中，通过 MQ 缓冲请求，避免库存服务被直接打爆</td>
+</tr>
+<tr>
+<td><strong>延迟处理</strong></td>
+<td>通过延迟消息机制实现“30分钟未支付自动关闭订单”等功能</td>
+</tr>
+</tbody></table>
+<h3 id="示例：异步发放积分与优惠券"><a href="#示例：异步发放积分与优惠券" class="headerlink" title="示例：异步发放积分与优惠券"></a>示例：异步发放积分与优惠券</h3><h4 id="🛠-技术栈"><a href="#🛠-技术栈" class="headerlink" title="🛠 技术栈"></a>🛠 技术栈</h4><ul>
+<li>消息中间件：RocketMQ &#x2F; RabbitMQ &#x2F; Kafka（我使用的是 RocketMQ）</li>
+<li>消息格式：JSON</li>
+<li>发送方式：异步发送 <code>sendAsync</code> 或可靠发送 <code>sendSync</code></li>
+</ul>
+<h4 id="👇-示例代码："><a href="#👇-示例代码：" class="headerlink" title="👇 示例代码："></a>👇 示例代码：</h4><p><strong>订单服务 - 发送消息</strong></p>
+<pre><code class="java">OrderMessage message = new OrderMessage(orderId, userId, &quot;PAID&quot;);
+rocketMQTemplate.syncSend(&quot;point_topic&quot;, message);
+rocketMQTemplate.syncSend(&quot;coupon_topic&quot;, message);
+</code></pre>
+<p><strong>积分服务 - 监听消息</strong></p>
+<pre><code class="java">@RocketMQMessageListener(topic = &quot;point_topic&quot;, consumerGroup = &quot;point_group&quot;)
+public class PointConsumer implements RocketMQListener&lt;OrderMessage&gt; &#123;
+    public void onMessage(OrderMessage msg) &#123;
+        pointService.addPoint(msg.getUserId(), 100);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="延迟队列：关闭未支付订单"><a href="#延迟队列：关闭未支付订单" class="headerlink" title="延迟队列：关闭未支付订单"></a>延迟队列：关闭未支付订单</h3><ul>
+<li>下单成功但未支付时，发送一条延迟消息到 <code>order_timeout_topic</code>，延迟30分钟。</li>
+<li>消费时判断订单状态是否已支付，未支付则关闭订单并恢复库存。</li>
+</ul>
+<pre><code class="java">Message message = MessageBuilder.withPayload(orderId)
+    .setHeader(MessageConst.PROPERTY_DELAY_TIME_LEVEL, 16) // 延迟30分钟
+    .build();
+rocketMQTemplate.syncSend(&quot;order_timeout_topic&quot;, message);
+</code></pre>
+<hr>
+<hr>
+<h5 id="问：mq发送的消息-那怎么样才是对接到了真正的业务代码-比如我30分钟没付款-那就给我关闭未支付订单-我这里是mq不只是发送消息的吗-又怎么能触碰到真实的调用关闭未支付订单的那个业务逻辑代码呢？"><a href="#问：mq发送的消息-那怎么样才是对接到了真正的业务代码-比如我30分钟没付款-那就给我关闭未支付订单-我这里是mq不只是发送消息的吗-又怎么能触碰到真实的调用关闭未支付订单的那个业务逻辑代码呢？" class="headerlink" title="问：mq发送的消息 那怎么样才是对接到了真正的业务代码 比如我30分钟没付款 那就给我关闭未支付订单 我这里是mq不只是发送消息的吗 又怎么能触碰到真实的调用关闭未支付订单的那个业务逻辑代码呢？"></a><span style = "color:blue">问：mq发送的消息 那怎么样才是对接到了真正的业务代码 比如我30分钟没付款 那就给我关闭未支付订单 我这里是mq不只是发送消息的吗 又怎么能触碰到真实的调用关闭未支付订单的那个业务逻辑代码呢？</span></h5><h2 id="✅-所以完整流程如下："><a href="#✅-所以完整流程如下：" class="headerlink" title="✅ 所以完整流程如下："></a>✅ 所以完整流程如下：</h2><h3 id="场景：30分钟内未支付-→-自动关闭订单（延迟队列）"><a href="#场景：30分钟内未支付-→-自动关闭订单（延迟队列）" class="headerlink" title="场景：30分钟内未支付 → 自动关闭订单（延迟队列）"></a>场景：30分钟内未支付 → 自动关闭订单（延迟队列）</h3><hr>
+<h3 id="✅-1-下单成功-→-发一条延迟消息-到-MQ"><a href="#✅-1-下单成功-→-发一条延迟消息-到-MQ" class="headerlink" title="✅ 1. 下单成功 → 发一条延迟消息 到 MQ"></a>✅ 1. 下单成功 → 发一条<strong>延迟消息</strong> 到 MQ</h3><p>这一步由<strong>订单服务</strong>完成，它只是<strong>把订单ID封装成消息，发到某个延迟Topic</strong>，比如 <code>order_timeout_topic</code>。</p>
+<pre><code class="java">Message&lt;String&gt; message = MessageBuilder.withPayload(orderId)
+    .setHeader(MessageConst.PROPERTY_DELAY_TIME_LEVEL, 16) // 延迟30分钟
+    .build();
+
+rocketMQTemplate.syncSend(&quot;order_timeout_topic&quot;, message);
+</code></pre>
+<h3 id="✅-2-等待30分钟，消息达到时间被投递-→-触发消费者"><a href="#✅-2-等待30分钟，消息达到时间被投递-→-触发消费者" class="headerlink" title="✅ 2. 等待30分钟，消息达到时间被投递 → 触发消费者"></a>✅ 2. 等待30分钟，消息达到时间被投递 → <strong>触发消费者</strong></h3><p>这一步由<strong>你自己写的消费者类</strong>完成。</p>
+<pre><code class="java">@RocketMQMessageListener(
+    topic = &quot;order_timeout_topic&quot;, 
+    consumerGroup = &quot;order_timeout_group&quot;
+)
+@Component
+public class OrderTimeoutConsumer implements RocketMQListener&lt;String&gt; &#123;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Override
+    public void onMessage(String orderId) &#123;
+        // ✅ 真正的业务逻辑调用就在这里
+        orderService.closeUnpaidOrder(orderId);
+    &#125;
+&#125;
+</code></pre>
+<h3 id="✅-3-消费者接收到消息，调用你的真实业务代码："><a href="#✅-3-消费者接收到消息，调用你的真实业务代码：" class="headerlink" title="✅ 3. 消费者接收到消息，调用你的真实业务代码："></a>✅ 3. 消费者接收到消息，<strong>调用你的真实业务代码</strong>：</h3><pre><code class="java">public void closeUnpaidOrder(String orderId) &#123;
+    Order order = orderMapper.selectById(orderId);
+    
+    // ✅ 校验状态：只有未支付才关闭
+    if (&quot;UNPAID&quot;.equals(order.getStatus())) &#123;
+        // 更新订单状态为“已关闭”
+        order.setStatus(&quot;CLOSED&quot;);
+        orderMapper.updateById(order);
+
+        // 回滚库存（如果之前预扣了库存）
+        stockService.rollbackStock(order.getItems());
+
+        log.info(&quot;订单 &#123;&#125; 已超时未支付，自动关闭&quot;, orderId);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="✅-总结一句话："><a href="#✅-总结一句话：" class="headerlink" title="✅ 总结一句话："></a>✅ 总结一句话：</h2><blockquote>
+<p><strong>MQ 只是“消息的搬运工”</strong>，但你要写消费者类（<code>RocketMQListener</code> &#x2F; <code>@RabbitListener</code> &#x2F; <code>KafkaListener</code>），<strong>在 <code>onMessage()</code> 方法中调用你的业务代码</strong>，才算真正“对接了业务逻辑”。</p>
+</blockquote>
+<hr>
+<h3 id="📌-这样你就能实现："><a href="#📌-这样你就能实现：" class="headerlink" title="📌 这样你就能实现："></a>📌 这样你就能实现：</h3><ul>
+<li>下单时发送一条“30分钟后的提醒消息”</li>
+<li>30分钟后，消息被自动投递</li>
+<li>消费者接收消息</li>
+<li>消费者去执行你写好的“关闭订单”逻辑</li>
+</ul>
+<h3 id="✅-你写的业务代码只是“收到通知之后”执行"><a href="#✅-你写的业务代码只是“收到通知之后”执行" class="headerlink" title="✅ 你写的业务代码只是“收到通知之后”执行"></a>✅ <strong>你写的业务代码只是“收到通知之后”执行</strong></h3><h3 id="❗是-MQ-延迟队列在背后帮你等待-30-分钟"><a href="#❗是-MQ-延迟队列在背后帮你等待-30-分钟" class="headerlink" title="❗是 MQ 延迟队列在背后帮你等待 30 分钟"></a>❗<strong>是 MQ 延迟队列在背后帮你等待 30 分钟</strong></h3><h2 id="🔁-两种“定时任务”的方式对比"><a href="#🔁-两种“定时任务”的方式对比" class="headerlink" title="🔁 两种“定时任务”的方式对比"></a>🔁 两种“定时任务”的方式对比</h2><table>
+<thead>
+<tr>
+<th>实现方式</th>
+<th>谁来等待30分钟？</th>
+<th>缺点</th>
+<th>优点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>定时任务 Cron</strong></td>
+<td>你写一个 <code>@Scheduled</code> 每隔1分钟轮询数据库</td>
+<td>数据多了会导致 <strong>扫描性能差</strong>，且 <strong>不精确</strong></td>
+<td>简单、直观</td>
+</tr>
+<tr>
+<td><strong>MQ 延迟队列</strong></td>
+<td><strong>MQ自动等待30分钟后投递消息</strong></td>
+<td>要配合消息系统、消费者写法略复杂</td>
+<td>精准、性能高、无感知、无需数据库轮询</td>
+</tr>
+</tbody></table>
+<h2 id="🧩-真实执行流程再解释一遍"><a href="#🧩-真实执行流程再解释一遍" class="headerlink" title="🧩 真实执行流程再解释一遍"></a>🧩 真实执行流程再解释一遍</h2><h3 id="🔵-用户下单成功"><a href="#🔵-用户下单成功" class="headerlink" title="🔵 用户下单成功"></a>🔵 用户下单成功</h3><p>业务代码执行完后做两件事：</p>
+<ol>
+<li>把订单状态写入数据库：<code>UNPAID</code></li>
+<li>向 MQ 发一条“延迟30分钟”的消息，内容是订单ID</li>
+</ol>
+<hr>
+<h3 id="🟡-MQ-延迟队列（如-RocketMQ）"><a href="#🟡-MQ-延迟队列（如-RocketMQ）" class="headerlink" title="🟡 MQ 延迟队列（如 RocketMQ）"></a>🟡 MQ 延迟队列（如 RocketMQ）</h3><p>你设置了：</p>
+<pre><code>.setHeader(MessageConst.PROPERTY_DELAY_TIME_LEVEL, 16); // 表示延迟30分钟
+</code></pre>
+<p>MQ 会帮你缓存这条消息，<strong>不会立即投递！</strong></p>
+<hr>
+<h3 id="🔴-等到-30-分钟后，MQ-才把这条消息交给你写的消费者类（比如-OrderTimeoutConsumer）"><a href="#🔴-等到-30-分钟后，MQ-才把这条消息交给你写的消费者类（比如-OrderTimeoutConsumer）" class="headerlink" title="🔴 等到 30 分钟后，MQ 才把这条消息交给你写的消费者类（比如 OrderTimeoutConsumer）"></a>🔴 等到 30 分钟后，MQ 才把这条消息交给你写的消费者类（比如 <code>OrderTimeoutConsumer</code>）</h3><p>你的消费者代码才会被执行：</p>
+<pre><code class="java">public void onMessage(String orderId) &#123;
+    orderService.closeUnpaidOrder(orderId);
+&#125;
+</code></pre>
+<p>此时才会调用你写的业务逻辑代码，<strong>检查订单是否已支付，如果没支付，就自动关闭</strong></p>
+<h2 id="✅-为什么不用-Scheduled-？"><a href="#✅-为什么不用-Scheduled-？" class="headerlink" title="✅ 为什么不用 @Scheduled ？"></a>✅ 为什么不用 <code>@Scheduled</code> ？</h2><p>你当然<strong>可以用定时任务</strong>，比如：</p>
+<pre><code class="java">@Scheduled(cron = &quot;0 */1 * * * ?&quot;)
+public void scanUnpaidOrders() &#123;
+    // 每1分钟检查一次数据库里状态为 UNPAID 且超过30分钟的订单
+&#125;
+</code></pre>
+<h3 id="❗但是问题是："><a href="#❗但是问题是：" class="headerlink" title="❗但是问题是："></a>❗但是问题是：</h3><ul>
+<li>每次都要 <strong>扫整个表</strong> 或者一部分数据，性能差</li>
+<li>不能做到<strong>秒级准确执行</strong>（可能要等1分钟才触发）</li>
+<li>高并发系统（像电商、秒杀）<strong>根本扛不住频繁轮询</strong></li>
+</ul>
+<h2 id="✅-为什么用-MQ-延迟消息是最佳选择？"><a href="#✅-为什么用-MQ-延迟消息是最佳选择？" class="headerlink" title="✅ 为什么用 MQ 延迟消息是最佳选择？"></a>✅ 为什么用 MQ 延迟消息是最佳选择？</h2><ul>
+<li><strong>MQ自己维护延时，精确到秒级</strong></li>
+<li><strong>不依赖数据库定时轮询</strong></li>
+<li><strong>一条消息就是一笔订单，到时间再投递，性能高</strong></li>
+<li><strong>和核心业务逻辑完全解耦</strong></li>
+</ul>
+</blockquote>
+<p>异步发优惠卷 + 积分 [用户对于实时性要求不是很高]</p>
 <ul>
 <li><h5 id="使用MQ的场景：订单处理"><a href="#使用MQ的场景：订单处理" class="headerlink" title="使用MQ的场景：订单处理"></a>使用MQ的场景：订单处理</h5><h5 id="具体场景"><a href="#具体场景" class="headerlink" title="具体场景"></a>具体场景</h5><p>当用户在电子商务平台上成功下单后，订单服务需要执行以下操作：</p>
 <ol>
@@ -3244,7 +5867,7 @@ MyISAM：通常占用更少的存储空间，因为它不需要存储这些额�
 </ol>
 <h4 id="四大引用分别是什么，代表什么意思？"><a href="#四大引用分别是什么，代表什么意思？" class="headerlink" title="四大引用分别是什么，代表什么意思？"></a>四大引用分别是什么，代表什么意思？</h4><p><strong>强引用</strong>：只要所有 GC Roots 能找到，就不会被回收。<br><strong>软引用</strong>：需要配合<code>SoftReference</code>使用，当垃圾多次回收，<strong>内存依然不够</strong>时候会回收软引用对象<br><strong>弱引用</strong>：需要配合<code>WeakReference</code>使用，<strong>只要进行了垃圾回收</strong>，就会把引用对象回收<br><strong>虚引用</strong>：必须配合引用队列使用，被引用对象回收时，会将虚引用入队由 <code>Reference Handler</code> 线程调用虚引用相关方法释放直接内存</p>
 <p>● 强引用指的就是代码中普遍存在的赋值方式，比如A 但是不a &#x3D; new A()这种。强引用关联的对象，永远不会被GC回收。<br>● 软引用可以用SoftReference来描述，指的是那些有用是必须要的对象。系统在发生内存溢出前会对这类引用的对象进行回收。<br>● 弱引用可以用WeakReference来描述，他的强度比软引用更低一点，只要进行了垃圾回收，就会把引用对象回收。<br>● 虚引用他必须和ReferenceQueue一起使用，必须配合引用队列使用，被引用对象回收时，<br>会将虚引用入队由 <code>Reference Handler</code> 线程调用虚引用相关方法释放直接内存。</p>
-<h4 id="什么是内存溢出？什么是内存泄露？"><a href="#什么是内存溢出？什么是内存泄露？" class="headerlink" title="什么是内存溢出？什么是内存泄露？"></a>什么是内存溢出？什么是内存泄露？</h4><p><strong>内存溢出</strong>：内存溢出是指程序在申请内存时，没有足够的内存空间供其使用，导致所需要的内存超出了系统所能提供的最大内存。【会先进行一次GC实在不够就OOM 堆\栈(递归过多,局部变量过多)\方法区都有可能发生内存溢出】<br><strong>内存泄露</strong><del>ThreadLocal会导致</del>：内存泄露是指程序中已分配的内存由于某种原因未能释放，即使在不再需要这些内存的情况下，它们仍然保持分配状态，导致可用内存逐渐减少</p>
+<h4 id="什么是内存溢出？什么是内存泄露？"><a href="#什么是内存溢出？什么是内存泄露？" class="headerlink" title="什么是内存溢出？什么是内存泄露？"></a>什么是内存溢出？什么是内存泄露？</h4><p><strong>内存溢出</strong>：内存溢出是指程序在申请内存时，没有足够的内存空间供其使用，导致所需要的内存超出了系统所能提供的最大内存。【会先进行一次GC实在不够就OOM 堆\栈(递归过多,局部变量过多)\方法区都有可能发生内存溢出】<br><strong>内存泄露</strong><del>ThreadLocal会导致(未及时释放)</del>：内存泄露是指程序中已分配的内存由于某种原因未能释放，即使在不再需要这些内存的情况下，它们仍然保持分配状态，导致可用内存逐渐减少</p>
 <h4 id="你的项目中出现过内存泄漏吗？你是怎么排查并且解决的？"><a href="#你的项目中出现过内存泄漏吗？你是怎么排查并且解决的？" class="headerlink" title="你的项目中出现过内存泄漏吗？你是怎么排查并且解决的？"></a>你的项目中出现过内存泄漏吗？你是怎么排查并且解决的？</h4><p>有的，内存泄漏通常是指堆内存，通常是指一些大对象不被回收的情况<br>1、通过jmap或设置jvm参数获取堆内存快照dump<br>2、通过工具，VisualVM去分析dump文件，VisualVM可以加载离线的dump文件<br>3、通过查看堆信息的情况，可以大概定位内存溢出是哪行代码出了问题<br>4、找到对应的代码，通过阅读上下文的情况，进行修复即可</p>
 <p>异常的祖先是：<code>Throwable</code></p>
 <h4 id="怎么解决cpu飙高"><a href="#怎么解决cpu飙高" class="headerlink" title="怎么解决cpu飙高"></a>怎么解决cpu飙高</h4><p>使用top命令查看占用cpu的情况<br>通过top命令查看后，可以查看是哪一个进程占用cpu较高<br>使用ps命令查看进程中的线程信息<br>使用jstack命令查看进程中哪些线程出现了问题，最终定位问题</p>
