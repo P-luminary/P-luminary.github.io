@@ -133,6 +133,173 @@
 
 <div class="post">
 
+    <a href="/2025/08/12/运维/Appium/">
+        <h2>
+            Appium
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2025/8/12
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h3 id="测试方面"><a href="#测试方面" class="headerlink" title="测试方面"></a>测试方面</h3><ul>
+<li>功能测试</li>
+<li>安装卸载测试</li>
+<li>升级测试</li>
+<li>兼容性测试[不同机型 系统]</li>
+<li>网络切换，中断测试</li>
+<li>横竖屏切换</li>
+<li>健壮性</li>
+</ul>
+<h3 id="测试环境的搭建"><a href="#测试环境的搭建" class="headerlink" title="测试环境的搭建"></a>测试环境的搭建</h3><h6 id="需要配置的环境："><a href="#需要配置的环境：" class="headerlink" title="需要配置的环境："></a>需要配置的环境：</h6><ul>
+<li>java jdk java环境</li>
+<li>Android sdk 安卓环境</li>
+<li>python环境<ul>
+<li>第三库：appium</li>
+</ul>
+</li>
+<li>使用真机或模拟器进行测试【夜神模拟器】</li>
+</ul>
+<h4 id="环境搭建验证测试"><a href="#环境搭建验证测试" class="headerlink" title="环境搭建验证测试"></a>环境搭建验证测试</h4><p>模拟器或真机</p>
+<p>在cmd中输入 <code>adb devices</code> 会返回ip地址和端口号<br>获取系统版本号输入 <code>adb shell getprop ro.build.version.release</code><br>获取虚拟器里的app名称 <code>adb shell dumpsys window windows | findstr mFocusedApp</code></p>
+<blockquote>
+<p>{c361382 u0 com.android.settings&#x2F;.Settings t9}}}  &#x2F;.后面是界面的名字    u0后 &#x2F;.前是app名称</p>
+</blockquote>
+<pre><code class="python">from appium import webdriver
+
+# 配置手机连接的参数信息
+# 参数信息都是以键值对的方式进行连接
+desired_caps = &#123;&#125;
+
+# 设备的名称
+desired_caps[&quot;deviceName&quot;] = &quot;127.0.0.1:62001&quot;
+
+# 系统
+desired_caps[&quot;platformName&quot;] = &quot;Android&quot;
+
+# 系统版本号
+desired_caps[&quot;platformVersion&quot;] = &quot;7.1.2&quot;
+
+# 启动的app名称
+## com.android.settings
+desired_caps[&quot;appPackage&quot;] = &quot;com.android.settings&quot;
+
+# 启动的app界面：.Settings
+desired_caps[&quot;appActivity&quot;] = &quot;.Settings&quot;
+
+# print(desired_caps)
+
+# 发送链接  用的appium的端口  用关键字传参
+driver = webdriver.Remote(&quot;http://127.0.0.1:4723/wd/hub&quot;,desired_capabilities = desired_caps)
+
+time.sleep(5)
+driver.quit()
+...
+...
+</code></pre>
+<h3 id="app自动化测试的流程"><a href="#app自动化测试的流程" class="headerlink" title="app自动化测试的流程"></a>app自动化测试的流程</h3><h6 id="①-首先明确项目的核心模块"><a href="#①-首先明确项目的核心模块" class="headerlink" title="① 首先明确项目的核心模块"></a>① 首先明确项目的核心模块</h6><ul>
+<li><strong>注册登录</strong></li>
+<li><strong>阅读文章</strong></li>
+<li><strong>搜索内容</strong></li>
+<li><strong>发布评论</strong></li>
+<li><strong>关注订阅</strong></li>
+<li><strong>私信聊天</strong></li>
+<li><strong>点赞等等</strong></li>
+</ul>
+<h6 id="②-设计用例脚本"><a href="#②-设计用例脚本" class="headerlink" title="② 设计用例脚本"></a>② 设计用例脚本</h6><p>分析用例执行的步骤</p>
+<ul>
+<li>进入app首页</li>
+<li>点击我的界面</li>
+<li>点击登录&#x2F;注册</li>
+<li>点击使用邮箱登录&#x2F;注册</li>
+<li>输入邮箱号</li>
+<li>输入密码</li>
+<li>点击登录</li>
+<li>登录成功&#x2F;失败</li>
+<li>进行断言</li>
+</ul>
+<h5 id="自动截取虚拟器上界面的图片查看详情"><a href="#自动截取虚拟器上界面的图片查看详情" class="headerlink" title="自动截取虚拟器上界面的图片查看详情"></a>自动截取虚拟器上界面的图片查看详情</h5><p><code>D:\android_sdk_test\tools\uiautomatorviewer.bat</code></p>
+<p><span style = "color:red">若两个 <code>resource-id</code> 定位是一样的那么就需要手写XPATH【resource-id必须唯一！！】</span></p>
+<pre><code class="mysql"># 两个斜杠是代表当前界面所有的元素  增加个文本标识
+driver.find_element(By.XPATH,&#39;//*[@text=&quot;我的&quot;]&#39;).click()
+# 点击登录/注册
+driver.find_element(By.ID,&#39;io.manong.developerdaily:id/login_btn&#39;).click()
+# 点击使用邮箱登录/注册   这里有报错是因为代码执行很快 但界面有延迟 需要加等待
+time.sleep(2)
+driver.find_element(By.ID,&#39;io.manong.developerdaily:id/btn_email&#39;).click()
+
+# 输入邮箱号
+time.sleep(2)
+driver.find_element(By.ID,&#39;io.manong.developerdaily:id/edt_email&#39;).send_keys(&quot;zzz@qq.com&quot;)
+# 输入密码
+driver.find_element(By.ID,&#39;io.manong.developerdaily:id/edt_email&#39;).send_keys(&quot;123123&quot;)
+# 点击登录
+driver.find_element(By.XPATH,&#39;//*[@text=&quot;登录&quot;]&#39;).click()
+# 用户名是tata
+name_text = driver.find_element(By.XPATH,&#39;io.manong.developerdaily:id/nav_tv_name&#39;).click()
+if name_text == &quot;tata&quot;:
+    print(&quot;登录成功&quot;)
+
+# - 登录成功/失败
+# - 进行断言
+assert name_text == &quot;tata&quot;
+...
+...
+</code></pre>
+<p>若换了一个模块要重新截图 选取不同的app界面<br><span style = "color:red">这些用例测试属于<strong>冒烟测试</strong>的过程</span></p>
+<blockquote>
+<p><strong>Allure</strong>是一款灵活、轻量级的多语言测试报告工具，旨在生成美观且易于阅读的测试报告。它由Qameta Software团队开源，支持多种测试框架，如Pytest和TestNG等。Allure不仅可以快速查看测试结果，还能帮助团队成员清晰了解测试过程中的缺陷和问题。通过Allure，用户可以轻松集成测试用例，并生成统一格式的报告，提升测试的可读性和有效性。 </p>
+</blockquote>
+<h3 id="总结梳理"><a href="#总结梳理" class="headerlink" title="总结梳理"></a>总结梳理</h3><h6 id="核心业务流程梳理"><a href="#核心业务流程梳理" class="headerlink" title="核心业务流程梳理"></a>核心业务流程梳理</h6><ul>
+<li>需求分析</li>
+<li>设计用例脚本</li>
+<li>编写自动化测试脚本</li>
+<li>执行脚本</li>
+<li>断言</li>
+<li></li>
+</ul>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/运维" style=color:#1bccbc>
+                运维
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2025/08/12/运维/Appium/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2025/07/16/运维/AI_Linux运维/">
         <h2>
             AI_Linux运维
@@ -559,7 +726,7 @@ export CLASSPATH=$JAVA_HOME/lib:$CLASSPATH
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -762,6 +929,79 @@ public class MvcConfiguration implements WebMvcConfigurer &#123;
     &quot;eval_duration&quot;: 802000000
 &#125;
 </code></pre>
+<h2 id="LLM、FunctionCalling、RAG通俗讲解"><a href="#LLM、FunctionCalling、RAG通俗讲解" class="headerlink" title="LLM、FunctionCalling、RAG通俗讲解"></a><span style = "color:red">LLM、FunctionCalling、RAG通俗讲解</span></h2><blockquote>
+<h2 id="🧠-一、LLM-是什么？"><a href="#🧠-一、LLM-是什么？" class="headerlink" title="🧠 一、LLM 是什么？"></a>🧠 一、LLM 是什么？</h2><p>LLM 是 “<strong>Large Language Model</strong>” 的缩写，中文叫“<strong>大语言模型</strong>”，比如你正在用的 ChatGPT 就是一个 LLM。</p>
+<h3 id="🌰-举个例子："><a href="#🌰-举个例子：" class="headerlink" title="🌰 举个例子："></a>🌰 举个例子：</h3><p>你输入一句话：“我明天要去北京，天气怎么样？”</p>
+<p>LLM 会理解你的意思，然后给你一个像人说话一样的回答，比如：“明天北京晴天，气温25度，适合出行。”</p>
+<h3 id="✅-它能做的事情有很多，比如："><a href="#✅-它能做的事情有很多，比如：" class="headerlink" title="✅ 它能做的事情有很多，比如："></a>✅ 它能做的事情有很多，比如：</h3><ul>
+<li>回答问题</li>
+<li>写文章</li>
+<li>翻译语言</li>
+<li>总结文本</li>
+<li>写代码……</li>
+</ul>
+<p>它的能力来自：<strong>训练了海量的文本数据</strong>，并通过预测“下一个词”来生成自然语言。</p>
+<hr>
+<h2 id="🧩-二、Function-Calling-是什么？"><a href="#🧩-二、Function-Calling-是什么？" class="headerlink" title="🧩 二、Function Calling 是什么？"></a>🧩 二、Function Calling 是什么？</h2><p>Function Calling（函数调用）是 LLM 的一个增强能力，让它在回答问题时<strong>不光是“说”，还能“做”事</strong>。</p>
+<h3 id="🌰-举个例子：-1"><a href="#🌰-举个例子：-1" class="headerlink" title="🌰 举个例子："></a>🌰 举个例子：</h3><p>你说：“帮我查一下明天北京的天气。”</p>
+<p>过去 LLM 只能“猜”一个答案。但如果它具备 <strong>Function Calling</strong> 能力，它就可以：</p>
+<ol>
+<li><strong>调用一个真实的天气查询函数</strong>（比如访问天气API）</li>
+<li>得到真实的天气数据（比如：晴 25°C）</li>
+<li>再把这个数据生成一句话告诉你。</li>
+</ol>
+<h3 id="✅-通俗对比："><a href="#✅-通俗对比：" class="headerlink" title="✅ 通俗对比："></a>✅ 通俗对比：</h3><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>以前的 LLM</td>
+<td>会说话的人，但手不能动</td>
+</tr>
+<tr>
+<td>支持 Function Calling 的 LLM</td>
+<td>会说话的人，还能操作电脑帮你查资料、订票、做计算</td>
+</tr>
+</tbody></table>
+<h2 id="🧠-总结一下"><a href="#🧠-总结一下" class="headerlink" title="🧠 总结一下"></a>🧠 总结一下</h2><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>LLM</strong></td>
+<td>一个超级聪明、会说话的 AI（像 ChatGPT）</td>
+</tr>
+<tr>
+<td><strong>Function Calling</strong></td>
+<td>让这个 AI 不只是“说话”，还能“调用工具”帮你完成任务</td>
+</tr>
+</tbody></table>
+<hr>
+<hr>
+<h2 id="🧠-一、RAG-是什么？"><a href="#🧠-一、RAG-是什么？" class="headerlink" title="🧠 一、RAG 是什么？"></a>🧠 一、RAG 是什么？</h2><p>RAG 是 “<strong>Retrieval-Augmented Generation</strong>” 的缩写，中文叫 “<strong>检索增强生成</strong>”。</p>
+<p>它是一种让 LLM（大语言模型）更聪明的方式 —— <strong>把外部知识喂给它，然后让它生成答案。</strong></p>
+<h3 id="📚-为什么需要-RAG？"><a href="#📚-为什么需要-RAG？" class="headerlink" title="📚 为什么需要 RAG？"></a>📚 为什么需要 RAG？</h3><p>LLM 虽然很厉害，但它的“知识”都是<strong>训练时学的</strong>，不能实时更新。<br> 比如它不知道你公司内部的数据、你昨天写的文档、你自己的笔记……</p>
+<p>这时候，<strong>RAG就登场了</strong>！</p>
+<h2 id="🧩-二、RAG-的核心思想（通俗理解）"><a href="#🧩-二、RAG-的核心思想（通俗理解）" class="headerlink" title="🧩 二、RAG 的核心思想（通俗理解）"></a>🧩 二、RAG 的核心思想（通俗理解）</h2><h3 id="📦-它其实分两步："><a href="#📦-它其实分两步：" class="headerlink" title="📦 它其实分两步："></a>📦 它其实分两步：</h3><h4 id="第一步：Retrieval（检索）"><a href="#第一步：Retrieval（检索）" class="headerlink" title="第一步：Retrieval（检索）"></a>第一步：Retrieval（检索）</h4><p>从你提供的“知识库”里，把和问题相关的内容找出来。</p>
+<p>比如：</p>
+<blockquote>
+<p>问题是：“Java中线程池的工作原理？”</p>
+<p>检索模块会从你知识库中找出：“Java线程池使用Executor框架，分为核心线程数、最大线程数、队列……”这类内容。</p>
+</blockquote>
+<h4 id="第二步：Generation（生成）"><a href="#第二步：Generation（生成）" class="headerlink" title="第二步：Generation（生成）"></a>第二步：Generation（生成）</h4><p>然后把上面找出来的内容，<strong>交给 LLM，让它根据这些内容生成答案。</strong></p>
+<h2 id="🌰-举个通俗例子："><a href="#🌰-举个通俗例子：" class="headerlink" title="🌰 举个通俗例子："></a>🌰 举个通俗例子：</h2><p>你问 ChatGPT：“我们公司明天几点开会？”</p>
+<h3 id="普通-LLM："><a href="#普通-LLM：" class="headerlink" title="普通 LLM："></a>普通 LLM：</h3><p>“我不知道你们公司是谁，也不知道你们的会议安排。”</p>
+<h3 id="RAG-模式下："><a href="#RAG-模式下：" class="headerlink" title="RAG 模式下："></a>RAG 模式下：</h3><ol>
+<li>检索模块：去你公司知识库、日历、OA 系统查找，发现你部门明天有个会议，9点。</li>
+<li>然后 LLM 用这个信息说：“你们公司明天早上 9 点有个部门会议。”</li>
+</ol>
+</blockquote>
 <h4 id="AI应用开发技术框架"><a href="#AI应用开发技术框架" class="headerlink" title="AI应用开发技术框架"></a>AI应用开发技术框架</h4><h5 id="PARF"><a href="#PARF" class="headerlink" title="PARF"></a>PARF</h5><ul>
 <li><strong>纯Prompt问答</strong>：利用大模型的推理能力，通过Prompt提问来完成业务</li>
 <li><strong>Agent + Function Calling</strong>：AI拆解任务，调用业务端提供的接口实现复杂业务</li>
@@ -1495,6 +1735,92 @@ public class MessageVO &#123;
 <p>配置环境变量的API在 <code>Edit configuration</code>里面 右上角的<code>Modify iotions</code> → <code>Environment variables: OPENAI_API_KEY=xxxx</code></p>
 <h3 id="智能客服Function-calling"><a href="#智能客服Function-calling" class="headerlink" title="智能客服Function-calling"></a>智能客服<del>Function-calling</del></h3><p>需求：为黑马程序员实现一个24小时在线的AI智能客服，可以为学员咨询黑马的培训课程，帮用户预约线下课程试听。</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/b9f527b232945c46b65c0e531317dbbe026db0a4/%E6%99%BA%E8%83%BD%E5%AE%A2%E6%9C%8D%E6%B5%81%E7%A8%8B.png"></p>
+<blockquote>
+<h2 id="🧠-一句话理解："><a href="#🧠-一句话理解：" class="headerlink" title="🧠 一句话理解："></a>🧠 一句话理解：</h2><blockquote>
+<p><code>@Tool</code> 就是告诉 LLM：“这个方法你可以调用，它是一个工具！”</p>
+</blockquote>
+<hr>
+<h2 id="📦-所属概念背景：Function-Calling"><a href="#📦-所属概念背景：Function-Calling" class="headerlink" title="📦 所属概念背景：Function Calling"></a>📦 所属概念背景：Function Calling</h2><p>在 Function Calling 中，LLM 能调用“函数”或“工具”来完成任务，比如查天气、算账、发邮件。<br> 但 LLM 本身不知道你有哪些函数，它需要你明确告诉它：</p>
+<ul>
+<li>哪些方法可以被调用？</li>
+<li>这些方法的名字、参数、用途是什么？</li>
+</ul>
+<p>这时候 —— 就需要 <code>@Tool</code> 注解来“标记”你愿意暴露给 LLM 的方法。</p>
+<hr>
+<h2 id="🛠️-二、-Tool-是什么？"><a href="#🛠️-二、-Tool-是什么？" class="headerlink" title="🛠️ 二、@Tool 是什么？"></a>🛠️ 二、@Tool 是什么？</h2><h3 id="✅-这是-Spring-AI-中提供的一个注解，用来："><a href="#✅-这是-Spring-AI-中提供的一个注解，用来：" class="headerlink" title="✅ 这是 Spring AI 中提供的一个注解，用来："></a>✅ 这是 Spring AI 中提供的一个注解，用来：</h3><ul>
+<li><strong>声明某个方法为 AI 工具</strong></li>
+<li>允许被 LLM 在会话中自动调用（通过 Function Calling）</li>
+</ul>
+<hr>
+<h2 id="🌰-举个通俗的例子："><a href="#🌰-举个通俗的例子：" class="headerlink" title="🌰 举个通俗的例子："></a>🌰 举个通俗的例子：</h2><p>你写了个方法：</p>
+<pre><code class="java">@Tool(name = &quot;getWeather&quot;, description = &quot;获取城市天气&quot;)
+public String getWeather(String city) &#123;
+    return &quot;晴 26°C&quot;;
+&#125;
+</code></pre>
+<p>你加了 <code>@Tool</code>，LLM 就能知道：</p>
+<ul>
+<li>方法名是 <code>getWeather</code></li>
+<li>需要一个参数：城市名</li>
+<li>功能描述是“获取城市天气”</li>
+</ul>
+<p>然后当用户说：“查一下北京的天气”，LLM 就会判断可以调用这个 <code>getWeather(&quot;北京&quot;)</code> 方法！</p>
+<hr>
+<h2 id="🔧-如果不加-Tool-会怎样？"><a href="#🔧-如果不加-Tool-会怎样？" class="headerlink" title="🔧 如果不加 @Tool 会怎样？"></a>🔧 如果不加 @Tool 会怎样？</h2><p>LLM 根本不知道你这个方法存在，它也不会去调用。</p>
+<p>就像一个黑箱里的函数，没有“暴露出来”，也就没办法自动调用。</p>
+<hr>
+<h2 id="✅-小结一下："><a href="#✅-小结一下：" class="headerlink" title="✅ 小结一下："></a>✅ 小结一下：</h2><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@Tool</code> 注解</td>
+<td>告诉 LLM：“这是我提供的工具&#x2F;方法，你可以在对话里用它”</td>
+</tr>
+<tr>
+<td>有什么用</td>
+<td>实现 Function Calling，允许 LLM 动态调用你的 Java 方法</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>比如：查天气、查数据库、发通知、调用业务接口等</td>
+</tr>
+<tr>
+<td>本质上</td>
+<td>把 Java 方法暴露为“AI可调用的插件”</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="🧩-拓展提示（如果你在项目里用）："><a href="#🧩-拓展提示（如果你在项目里用）：" class="headerlink" title="🧩 拓展提示（如果你在项目里用）："></a>🧩 拓展提示（如果你在项目里用）：</h2><p>Spring AI 在运行时会扫描 <code>@Tool</code> 注解的方法，然后自动注册成工具供 LLM 使用。你也可以组合使用 <code>@AiFunction</code> &#x2F; <code>@AiMessageMapping</code> 等一起构建完整的会话处理系统。</p>
+<hr>
+<h2 id="🧠-一句话理解-ToolParam"><a href="#🧠-一句话理解-ToolParam" class="headerlink" title="🧠 一句话理解 @ToolParam"></a>🧠 一句话理解 <code>@ToolParam</code></h2><blockquote>
+<p><code>@ToolParam</code> 用来告诉大语言模型（LLM）：<br> ✅ 这个字段是可以作为工具方法的“参数”，并且附带“描述”和“是否必填”等信息。</p>
+</blockquote>
+<p>就像是你在为 AI 写一个 API 的参数文档，AI 会根据这些元信息理解并构造参数，然后调用你的方法。</p>
+<hr>
+<h2 id="📦-注解来源"><a href="#📦-注解来源" class="headerlink" title="📦 注解来源"></a>📦 注解来源</h2><pre><code class="java">import org.springframework.ai.tool.annotation.ToolParam;
+</code></pre>
+<p>这是 <strong>Spring AI</strong> 框架中专为 <strong>Function Calling 工具方法参数解析</strong> 提供的注解。</p>
+<hr>
+<h2 id="🔍-每个字段的讲解："><a href="#🔍-每个字段的讲解：" class="headerlink" title="🔍 每个字段的讲解："></a>🔍 每个字段的讲解：</h2><pre><code class="java">@ToolParam(required = false, description = &quot;课程类型：编程、设计、自媒体、其它&quot;)
+private String type;
+</code></pre>
+<ul>
+<li><code>required = false</code>：不是必填项，AI 可以选择性提供</li>
+<li><code>description = ...</code>：告诉 AI 这是“课程类型”，并且有哪些值是常见的</li>
+</ul>
+<p>这个信息最终会被用来生成 AI 可调用函数的“参数定义”。</p>
+<hr>
+<pre><code>java复制编辑@ToolParam(required = false, description = &quot;学历要求：0-无、1-初中、2-高中、3-大专、4-本科及本科以上&quot;)
+private Integer edu;
+</code></pre>
+<ul>
+<li>AI 能理解：这个字段接受整数类型，0~4 表示不同学历</li>
+</ul>
+</blockquote>
 <h3 id="基础CRUD"><a href="#基础CRUD" class="headerlink" title="基础CRUD"></a>基础CRUD</h3><h5 id="准备数据库表"><a href="#准备数据库表" class="headerlink" title="准备数据库表"></a>准备数据库表</h5><pre><code class="yaml">-- 导出 itheima 的数据库结构
 DROP DATABASE IF EXISTS `itheima`;
 CREATE DATABASE IF NOT EXISTS `itheima`;
@@ -1700,7 +2026,24 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
+// （来自 Lombok）  控制是否调用父类的 equals() 和 hashCode()
+/*
+📌 举例说明：
+如果你的类继承了某个基类：
+public class School extends BaseEntity
+如果 callSuper = true，比较时会连 BaseEntity 的字段也一块比；
+如果 false（如当前这样），只比较 School 自己的字段。
+*/
+@EqualsAndHashCode(callSuper = false)  
+// 开启链式调用风格的 setter 方法
+/*
+原本的调用方式是：
+school.setName(&quot;东校区&quot;);
+school.setCity(&quot;北京&quot;);
+
+加上这个注解后，你可以这样写：
+school.setName(&quot;东校区&quot;).setCity(&quot;北京&quot;); // 连起来写
+*/
 @Accessors(chain = true)
 @TableName(&quot;course_reservation&quot;)
 public class CourseReservation implements Serializable &#123;
@@ -2306,6 +2649,61 @@ class AiDemoApplicationTests &#123;
 
 &#125;
 </code></pre>
+<blockquote>
+<h2 id="🧠-一、什么是“向量化”？"><a href="#🧠-一、什么是“向量化”？" class="headerlink" title="🧠 一、什么是“向量化”？"></a>🧠 一、什么是“向量化”？</h2><p>通俗解释：</p>
+<blockquote>
+<p>把一句人类语言（如：“全球冲突”）转换成一个 <strong>数字数组（float[]）</strong>，这个数组可以用于数学运算，比如比较两句话有多相似。</p>
+</blockquote>
+<p>背后用的是 <strong>OpenAI 的 embedding 模型</strong>（如 <code>text-embedding-3-small</code>），它可以把文本转成固定维度的向量（比如 1536 维的数组）。</p>
+<hr>
+<h2 id="🛠-二、如何做到向量化？看关键代码："><a href="#🛠-二、如何做到向量化？看关键代码：" class="headerlink" title="🛠 二、如何做到向量化？看关键代码："></a>🛠 二、如何做到向量化？看关键代码：</h2><pre><code>java复制编辑@Autowired
+private OpenAiEmbeddingModel embeddingModel;
+</code></pre>
+<h3 id="✅-这个是-Spring-AI-提供的封装："><a href="#✅-这个是-Spring-AI-提供的封装：" class="headerlink" title="✅ 这个是 Spring AI 提供的封装："></a>✅ 这个是 Spring AI 提供的封装：</h3><ul>
+<li><code>OpenAiEmbeddingModel</code> 是 Spring AI 提供的一个组件，内置了 OpenAI 的嵌入模型调用逻辑。</li>
+<li>实际上它会调用 OpenAI API（如：<code>/v1/embeddings</code>），将文本变成向量。</li>
+</ul>
+<p>Spring 会自动帮你完成：</p>
+<ul>
+<li>构建 HTTP 请求</li>
+<li>携带 API 密钥</li>
+<li>接收嵌入向量返回值</li>
+<li>转成 Java 中的 <code>float[]</code> 数组</li>
+</ul>
+<hr>
+<h3 id="🧪-代码详细讲解如下："><a href="#🧪-代码详细讲解如下：" class="headerlink" title="🧪 代码详细讲解如下："></a>🧪 代码详细讲解如下：</h3><h4 id="1-向量化单个查询文本"><a href="#1-向量化单个查询文本" class="headerlink" title="1. 向量化单个查询文本"></a>1. 向量化单个查询文本</h4><pre><code class="java">String query = &quot;global conflicts&quot;;
+float[] queryVector = embeddingModel.embed(query);
+</code></pre>
+<ul>
+<li><p>这行代码背后会调用 OpenAI embedding 接口，把 <code>&quot;global conflicts&quot;</code> 变成一个向量，比如：</p>
+<pre><code class="java">queryVector = [0.123f, 0.456f, ..., 0.789f] // 共1536个 float
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>⚙️ 底层请求类似：</p>
+</blockquote>
+<pre><code class="java">POST /v1/embeddings
+&#123;
+  &quot;input&quot;: &quot;global conflicts&quot;,
+  &quot;model&quot;: &quot;text-embedding-3-small&quot;
+&#125;
+</code></pre>
+<hr>
+<h4 id="2-向量化多个文本"><a href="#2-向量化多个文本" class="headerlink" title="2. 向量化多个文本"></a>2. 向量化多个文本</h4><pre><code class="java">List&lt;float[]&gt; textVectors = embeddingModel.embed(Arrays.asList(texts));
+</code></pre>
+<ul>
+<li>一次性把多个中文文本转成向量。</li>
+<li>返回的是 <code>List&lt;float[]&gt;</code>，每个文本对应一个向量数组。</li>
+</ul>
+<p>例如：</p>
+<pre><code class="java">texts[0] -&gt; 向量：[0.234f, 0.891f, ...]
+texts[1] -&gt; 向量：[0.111f, 0.456f, ...]
+</code></pre>
+<ul>
+<li><strong>批量处理的好处</strong>：效率更高，减少 API 调用次数。</li>
+</ul>
+</blockquote>
 <p><strong>注意</strong>： 运行单元测试通用需要配置OPENAI_API_KEY的环境变量</p>
 <p>首先，点击单元测试左侧运行按钮：………运行结果：</p>
 <pre><code class="Bash">0.0
@@ -2329,7 +2727,8 @@ class AiDemoApplicationTests &#123;
 <p>现在，利用向量大模型就可以帮助我们比较文本相似度。</p>
 <p>但是新的问题来了：向量模型是帮我们生成向量的，如此庞大的知识库，谁来帮我们从中<strong>比较和检索数据</strong>呢？</p>
 <p>这就需要用到<strong>向量数据库</strong>了。</p>
-<h4 id="4-1-3-向量数据库"><a href="#4-1-3-向量数据库" class="headerlink" title="4.1.3.向量数据库"></a>4.1.3.向量数据库</h4><p>向量数据库的主要作用有两个：</p>
+<h4 id="4-1-3-向量数据库"><a href="#4-1-3-向量数据库" class="headerlink" title="4.1.3.向量数据库"></a>4.1.3.向量数据库</h4><p>主流一线的向量数据库【Milvus】功能全面，支持向量+结构化查询、GPU加速，国内社区活跃</p>
+<p>向量数据库的主要作用有两个：</p>
 <ul>
 <li>存储向量数据</li>
 <li>基于相似度检索数据</li>
@@ -3015,7 +3414,7 @@ public class ChatController &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#00bcd4>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -5437,7 +5836,7 @@ public String chat(@RequestBody String prompt) &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -12179,7 +12578,7 @@ spec:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#ff7d73>
                 后端
             </a>
         </span>
@@ -13025,7 +13424,7 @@ plt.show()
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ffa2c4>
                 AI
             </a>
         </span>
@@ -13150,7 +13549,7 @@ for i in range(6):                     # 6次竞猜
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -14256,7 +14655,7 @@ function runComponent() &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -14264,971 +14663,6 @@ function runComponent() &#123;
     </div>
 
     <a href="/2025/03/19/AI/RAGFlow代理组件技术/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2025/03/07/AI/RAGFlow工具技术文档/">
-        <h2>
-            RAGFlow工具技术文档
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2025/3/7
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h4 id="RAGFlow代理组件的核心"><a href="#RAGFlow代理组件的核心" class="headerlink" title="RAGFlow代理组件的核心"></a>RAGFlow代理组件的核心</h4><ul>
-<li><strong>集成外部数据源</strong>：通过检索模块来继承外部知识库、数据库、文档等内容，增强模型的回答能力</li>
-<li><strong>生成式任务处理</strong>：利用模型生成的能力，基于用户的查询返回自然语言的回答</li>
-<li><strong>模块化</strong>：RAGFlow支持灵活的模块化设计，可以通过配置和集成不同的组件来满足特定的需求</li>
-</ul>
-<h4 id="RAGFlow代理组件"><a href="#RAGFlow代理组件" class="headerlink" title="RAGFlow代理组件"></a>RAGFlow代理组件</h4><p>RAGFlow 的代理组件是其架构中的核心部分，负责管理与<strong>外部数据源</strong>和<strong>生成模型</strong>的交互。代理组件不仅可以从不同的外部数据源中获取知识，还能将检索到的信息与生成模型结合，从而生成更加准确的回答。</p>
-<h4 id="代理组件的功能"><a href="#代理组件的功能" class="headerlink" title="代理组件的功能"></a>代理组件的功能</h4><ul>
-<li><strong>数据检索</strong>：代理组件会从多个外部数据源（如数据库、文档、API等）进行数据检索，获取与用户查询相关的信息。</li>
-<li><strong>生成模型的调用</strong>：将检索到的信息与生成模型结合，通过生成模型提供一个流畅且准确的答案。</li>
-<li><strong>多源数据融合</strong>：在生成回答时，代理组件能够处理多来源的数据，并将其融合成最终的答案。</li>
-</ul>
-<h3 id="组件-→-web-x2F-src-x2F-utils-待定"><a href="#组件-→-web-x2F-src-x2F-utils-待定" class="headerlink" title="组件 → web&#x2F;src&#x2F;utils  *待定"></a>组件 → <u>web&#x2F;src&#x2F;utils</u>  *待定</h3><p><strong>组件前端交互中心</strong>：<code>web/src/utils/api.ts</code><br>它定义了一些与“画布”相关的 API 接口地址，用于与后端进行通信。通过这些接口，前端应用可以进行不同操作，如获取模板、操作画布、调试等</p>
-<blockquote>
-<p><strong>listTemplates</strong>: 用于获取所有画布模板的列表，发送请求到 <code>/canvas/templates</code>。<br><strong>listCanvas</strong>: 获取画布列表的接口，发送请求到 <code>/canvas/list</code></p>
-</blockquote>
-<h4 id="Begin组件"><a href="#Begin组件" class="headerlink" title="Begin组件"></a>Begin组件</h4><p><strong>Begin</strong> 组件设置开场问候语或接受用户的输入。当您创建代理时，它会自动填充到画布上，无论是从模板还是从头开始（从空白模板）。工作流程中应该只有一个 <strong>Begin</strong> 组件。</p>
-<blockquote>
-<p><code>api/ragflow/web/src/locales/zh.ts</code><br>……<br><strong>setAnOpenerInitial</strong>: <code>你好！ 我是你的助理，有什么可以帮到你的吗？</code>,</p>
-</blockquote>
-<p><strong>静态消息</strong>: <code>/v1/canvas/set</code><br><strong>生成问答、问题优化、问题类型、关键词</strong>：<code>/v1/llm/list</code><br><strong>知识检索</strong>：<code>/v1/llm/list</code> + <code>/v1/kb/list</code></p>
-<p>以**问题优化 **(RewriteQuestion:MoodyCrabsPeel) 为例：</p>
-<hr>
-<h6 id="后端内容"><a href="#后端内容" class="headerlink" title="后端内容"></a>后端内容</h6><p><strong>知识检索</strong>：<code>Retrieval</code>        路径→<code>agent/component/retrieval.py</code></p>
-<pre><code class="python"># 记录日志
-import logging
-# 抽象基类模块
-from abc import ABC
-# 用于数据处理，尤其是处理数据框（DataFrame）
-import pandas as pd
-# 从数据库相关模块导入 LLMType，这个可能是用来定义 LLM（语言模型）类型的枚举
-from api.db import LLMType
-# 从数据库服务模块中导入，分别用于知识库服务和 LLM 配置的封装
-from api.db.services.knowledgebase_service import KnowledgebaseService
-from api.db.services.llm_service import LLMBundle
-# 加载应用程序的设置
-from api import settings
-# 基础组件类，用于构建此组件的父类
-from agent.component.base import ComponentBase, ComponentParamBase
-# 从标签模块中导入，用于对查询进行标记
-from rag.app.tag import label_question
-
-
-class RetrievalParam(ComponentParamBase):
-
-    &quot;&quot;&quot;
-    Define the Retrieval component parameters.
-    &quot;&quot;&quot;
-    def __init__(self):
-        super().__init__()
-        # 相似度阈值
-        self.similarity_threshold = 0.2
-        # 关键字相似度的权重
-        self.keywords_similarity_weight = 0.5
-        # 检索时返回的结果数
-        self.top_n = 8
-        # 在检索时考虑的最大数量
-        self.top_k = 1024
-        # 知识库的 ID 列表
-        self.kb_ids = []
-        # 重新排序模型的 ID (可能为空)
-        self.rerank_id = &quot;&quot;
-        # 当没有找到任何结果时的响应文本
-        self.empty_response = &quot;&quot;
-#### check_decimal_float???
-   # check()：对参数进行验证，确保相似度阈值和权重为有效的小数，且 top_n 是正数。
-    def check(self):
-        # &quot;相似性阈值&quot;
-        self.check_decimal_float(self.similarity_threshold, &quot;[Retrieval] Similarity threshold&quot;)
-        # &quot;关键词相似度权重&quot;
-        self.check_decimal_float(self.keywords_similarity_weight, &quot;[Retrieval] Keyword similarity weight&quot;)
-        self.check_positive_number(self.top_n, &quot;[Retrieval] Top N&quot;)
-
-# Retrieval 类继承自 ComponentBase 和 ABC（抽象基类）
-# 表示这是一个组件，并实现了抽象方法
-class Retrieval(ComponentBase, ABC):
-    component_name = &quot;Retrieval&quot;
-
-##### history, **kwargs???
-    # _run为核心方法 
-# query输入查询内容 包括&#39;content&#39;键 提取第一个内容项 将查询内容转换为字符串
-    def _run(self, history, **kwargs):
-        query = self.get_input()
-        query = str(query[&quot;content&quot;][0]) if &quot;content&quot; in query else &quot;&quot;
-    # 从知识库服务中获取指定 ID 的知识库。如果没有找到相关的知识库，返回空的响应。
-        kbs = KnowledgebaseService.get_by_ids(self._param.kb_ids)
-        if not kbs:
-            return Retrieval.be_output(&quot;&quot;)
-# 获取所有知识库的嵌入模型 ID（embd_id），确保所有知识库使用相同的嵌入模型。
-# 如果使用的嵌入模型不一致，抛出异常
-        embd_nms = list(set([kb.embd_id for kb in kbs]))
-        assert len(embd_nms) == 1, &quot;Knowledge bases use different embedding models.&quot;
-
-##### LLMBundle???
-# 创建 LLMBundle 实例来封装嵌入模型，使用画布的租户 ID 和嵌入模型的 ID 配置嵌入模型，并设置到画布
-        embd_mdl = LLMBundle(self._canvas.get_tenant_id(), LLMType.EMBEDDING, embd_nms[0])
-        self._canvas.set_embedding_model(embd_nms[0])
-
-   # 若提供了 rerank_id，则加载重新排序的模型
-        rerank_mdl = None
-        if self._param.rerank_id:
-            rerank_mdl = LLMBundle(kbs[0].tenant_id, LLMType.RERANK, self._param.rerank_id)
-
-  # 使用 settings.retrievaler.retrieval 方法执行知识检索操作，传入查询和各种配置参数
-# query:用户查询   embd_mdl:嵌入模型    其他参数包括知识库 ID、相似度阈值、关键词相似度权重等
-        kbinfos = settings.retrievaler.retrieval(query, embd_mdl, kbs[0].tenant_id, self._param.kb_ids,
-                                        1, self._param.top_n,
-                                        self._param.similarity_threshold, 1 - self._param.keywords_similarity_weight,
-                                        aggs=False, rerank_mdl=rerank_mdl,
-                                        rank_feature=label_question(query, kbs))
-# 如果检索结果为空（没有找到相关内容），则返回空响应
-# 如果设置了 empty_response，则在响应中返回该内容。
-        if not kbinfos[&quot;chunks&quot;]:
-            df = Retrieval.be_output(&quot;&quot;)
-            if self._param.empty_response and self._param.empty_response.strip():
-                df[&quot;empty_response&quot;] = self._param.empty_response
-            return df
-&#39;&#39;&#39;
-如果有检索结果，将结果转换为 Pandas 的 DataFrame 格式。
-将 content_with_weight 重命名为 content，然后删除 content_with_weight 列。
-输出调试日志，记录查询和检索结果。
-&#39;&#39;&#39;
-        df = pd.DataFrame(kbinfos[&quot;chunks&quot;])
-        df[&quot;content&quot;] = df[&quot;content_with_weight&quot;]
-        del df[&quot;content_with_weight&quot;]
-        logging.debug(&quot;&#123;&#125; &#123;&#125;&quot;.format(query, df))
-        return df
-</code></pre>
-<blockquote>
-<p>如果你需要一个 <strong>定制的代理组件</strong>，我可以基于这个 <code>Retrieval</code> 组件的架构，为你设计一个类似的组件，满足你的特定需求。</p>
-<p>你可以告诉我：</p>
-<ol>
-<li><strong>代理组件的具体用途</strong>（比如：请求转发、智能路由、流量控制、负载均衡、身份验证等）。</li>
-<li><strong>需要支持的参数</strong>（比如：代理地址、超时时间、认证方式等）。</li>
-<li><strong>核心功能</strong>（比如：日志记录、请求缓存、故障恢复等）。</li>
-<li><strong>集成的其他服务</strong>（比如：Redis、RabbitMQ、数据库等）。</li>
-</ol>
-<p>如果你希望它遵循 <code>ComponentBase</code> 组件框架，我可以按照该模式来实现，让它可以与现有系统无缝对接！</p>
-</blockquote>
-<h6 id="下面的是引用的重要方法上一个代码块里的"><a href="#下面的是引用的重要方法上一个代码块里的" class="headerlink" title="下面的是引用的重要方法上一个代码块里的"></a>下面的是引用的重要方法<del>上一个代码块里的</del></h6><p><code>retrieval.py</code> → <code>base.py</code></p>
-<pre><code class="python">**kwargs 允许调用 _run() 方法时 传入任意数量的额外参数，即使这些参数没有在方法签名中显式列出#上方代码索引：#### check_decimal_float???
-# check()：对参数进行验证，确保【相似度阈值】和【权重】为有效的小数，且 top_n 是正数。
-    def check(self):
-        # &quot;相似性阈值&quot;
-        self.check_decimal_float(self.similarity_threshold, &quot;[Retrieval] Similarity threshold&quot;)
-        # &quot;关键词相似度权重&quot;
-        self.check_decimal_float(self.keywords_similarity_weight, &quot;[Retrieval] Keyword similarity weight&quot;)
-        self.check_positive_number(self.top_n, &quot;[Retrieval] Top N&quot;)
----------------------------  ☆ 上方代码块片段 ☆  ---------------------------
-
-# 校验检索相关参数的合法性
-# 这是一个 静态方法，用于校验参数 param 是否是 0 到 1 之间的浮点数或整数
-
-&#39;&#39;&#39;
-校验逻辑：
-param 必须是 float 或 int 类型（不允许 str、list 等）。
-param 需要在 [0, 1] 之间，否则抛出 ValueError 异常，并在错误信息中包含 descr 描述。
-&#39;&#39;&#39;
-# 这里为什么是0-1 不能超过1？ 如果 similarity_threshold = 1.2，会触发 check_decimal_float 的异常抛出，提示超出 [0,1] 范围。而且在前端的拖拉中也只会是0~1之间。因为这些参数代表 归一化（normalized）后的比例或权重，它们的值通常不能超过 1
-# 【0表示示完全相同】
-    @staticmethod
-    def check_decimal_float(param, descr):
-        if type(param).__name__ not in [&quot;float&quot;, &quot;int&quot;] or param &lt; 0 or param &gt; 1:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; not supported, should be a float number in range [0, 1]&quot;.format(
-                    param
-                )
-            )
-&#39;&#39;&#39;
-这里为什么要用 @staticmethod？
-1. 避免创建对象，提高效率 👉 由于静态方法不依赖实体属性或方法，因此可以直接通过类调用，而不必创建对象
-2. 代码组织清晰 👉 适用于逻辑独立的方法，可以让代码更容易读、更结构化
-3. 防止修改实例状态 👉 由于静态方法不能访问self，因此不会修改实例的状态，保证了方法的纯函数特征
--------- -------- -------- 结合代码解析 -------- -------- -------- 
-4. 这个方法 不访问实例变量，它只 检查参数 是否符合 0~1 之间的范围
-5. 适用于 工具方法，属于 数据验证逻辑，不依赖 self
-6. 可以直接通过类调用：
-Retrieval.check_decimal_float(0.8, &quot;Threshold&quot;)  # 正常
-Retrieval.check_decimal_float(1.2, &quot;Threshold&quot;)  # 抛出 ValueError
-&#39;&#39;&#39;
-==========================================================================
-#上方代码索引：##### history, **kwargs???
-    def _run(self, history, **kwargs):
-        query = self.get_input()
-        query = str(query[&quot;content&quot;][0]) if &quot;content&quot; in query else &quot;&quot;
-        ......
-# 讲解重点：【**kwargs】
-# [**kwargs] 允许调用 _run() 方法时 传入任意数量的额外参数，即使这些参数没有在方法签名中显式列出 比如：👇
-    _run(self, history, user_id=123, debug=True, mode=&quot;fast&quot;)
-# 在 _run() 方法内部，这些参数可以通过 kwargs[&quot;user_id&quot;]、kwargs[&quot;debug&quot;] 访问，但 当前代码里没有使用 kwargs，所以它只是用来兼容可能的扩展。
-&#39;&#39;&#39;
-目前 **kwargs 没有被使用，它的作用是：
-
-扩展性：可以传递额外的参数而不修改函数签名
-兼容性：允许不同调用方传递不同的参数，而 _run() 仍能正常运行
-适用场景：未来需要额外参数
-目前 **kwargs 只是 占位符，但它提供了未来扩展的可能性
-&#39;&#39;&#39;
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="center">特征</th>
-<th align="center">普通方法(self)</th>
-<th align="center">静态方法(@staticmethod)</th>
-<th align="center">类方法(@classmethod)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">依赖实例(self)</td>
-<td align="center">√</td>
-<td align="center">×</td>
-<td align="center">×</td>
-</tr>
-<tr>
-<td align="center">依赖类(cls)</td>
-<td align="center">×</td>
-<td align="center">×</td>
-<td align="center">√</td>
-</tr>
-<tr>
-<td align="center">访问实例变量</td>
-<td align="center">√</td>
-<td align="center">×</td>
-<td align="center">×</td>
-</tr>
-<tr>
-<td align="center">访问类变量</td>
-<td align="center">√</td>
-<td align="center">×</td>
-<td align="center">√</td>
-</tr>
-<tr>
-<td align="center">适用于</td>
-<td align="center">需要访问实例</td>
-<td align="center">工具方法、验证方法</td>
-<td align="center">需要修改类变量</td>
-</tr>
-</tbody></table>
-<p><code>retrieval.py</code> → </p>
-<hr>
-<hr>
-<hr>
-<h6 id="让我们再来看一个案例"><a href="#让我们再来看一个案例" class="headerlink" title="让我们再来看一个案例"></a><span style="color:green">让我们再来看一个案例</span></h6><p><strong>百度翻译</strong>：<code>baidufanyi.py</code>      路径 → <code>agent/component/baidufanyi.py</code></p>
-<pre><code class="python"># 
-import random
-# 抽象基类模块 用于定义组件的基类
-from abc import ABC
-# 用于发送 HTTP 请求，与 百度翻译 API 交互
-import requests
-# 基础组件类，于构建此组件的父类，定义组件的基本结构和参数。
-from agent.component.base import ComponentBase, ComponentParamBase
-# 用于生成百度翻译 API 请求签名（加密哈希）
-from hashlib import md5
-
-# 百度翻译组件的参数定义类 继承ComponentParamBase
-class BaiduFanyiParam(ComponentParamBase):
-    &quot;&quot;&quot;
-    Define the BaiduFanyi component parameters.
-    &quot;&quot;&quot;
-
-    def __init__(self):
-        super().__init__()
-   # appid 和 secret_key 是百度翻译 API 的 身份验证 信息（需要在百度翻译开放平台获取）
-        self.appid = &quot;xxx&quot;
-        self.secret_key = &quot;xxx&quot;
-   # translate：普通翻译   fieldtranslate：专业领域翻译
-        self.trans_type = &#39;translate&#39;
-        self.parameters = []
-   # source_lang 翻译的源语言   target_lang 翻译的目标语言
-        self.source_lang = &#39;auto&#39;
-        self.target_lang = &#39;auto&#39;
-   # domain 如果使用专业领域翻译，需指定领域（如 finance 表示 金融 领域）
-        self.domain = &#39;finance&#39;
-# 检查参数合法性
-    def check(self):
-    # check_empty()：确保 appid 和 secret_key 不能为空。
-        self.check_empty(self.appid, &quot;BaiduFanyi APPID&quot;)
-        self.check_empty(self.secret_key, &quot;BaiduFanyi Secret Key&quot;)
-# check_valid_value()：确保 trans_type、source_lang、target_lang、domain 的值在合法选项之内
-        self.check_valid_value(self.trans_type, &quot;Translate type&quot;, [&#39;translate&#39;, &#39;fieldtranslate&#39;])
-# 以下是列举各种语言
-        self.check_valid_value(self.source_lang, &quot;Source language&quot;,
-                               [&#39;auto&#39;, &#39;zh&#39;, &#39;en&#39;, &#39;yue&#39;, &#39;wyw&#39;, &#39;jp&#39;, &#39;kor&#39;, &#39;fra&#39;, &#39;spa&#39;, &#39;th&#39;, &#39;ara&#39;, &#39;ru&#39;, &#39;pt&#39;,
-                                &#39;de&#39;, &#39;it&#39;, &#39;el&#39;, &#39;nl&#39;, &#39;pl&#39;, &#39;bul&#39;, &#39;est&#39;, &#39;dan&#39;, &#39;fin&#39;, &#39;cs&#39;, &#39;rom&#39;, &#39;slo&#39;, &#39;swe&#39;,
-                                &#39;hu&#39;, &#39;cht&#39;, &#39;vie&#39;])
-        self.check_valid_value(self.target_lang, &quot;Target language&quot;,
-                               [&#39;auto&#39;, &#39;zh&#39;, &#39;en&#39;, &#39;yue&#39;, &#39;wyw&#39;, &#39;jp&#39;, &#39;kor&#39;, &#39;fra&#39;, &#39;spa&#39;, &#39;th&#39;, &#39;ara&#39;, &#39;ru&#39;, &#39;pt&#39;,
-                                &#39;de&#39;, &#39;it&#39;, &#39;el&#39;, &#39;nl&#39;, &#39;pl&#39;, &#39;bul&#39;, &#39;est&#39;, &#39;dan&#39;, &#39;fin&#39;, &#39;cs&#39;, &#39;rom&#39;, &#39;slo&#39;, &#39;swe&#39;,
-                                &#39;hu&#39;, &#39;cht&#39;, &#39;vie&#39;])
-# 以下是列举不同专业领域
-        self.check_valid_value(self.domain, &quot;Translate field&quot;,
-                               [&#39;it&#39;, &#39;finance&#39;, &#39;machinery&#39;, &#39;senimed&#39;, &#39;novel&#39;, &#39;academic&#39;, &#39;aerospace&#39;, &#39;wiki&#39;,
-                                &#39;news&#39;, &#39;law&#39;, &#39;contract&#39;])
-
-# 继承ComponentBase和ABC
-class BaiduFanyi(ComponentBase, ABC):
- # 定义组件名称在系统内唯一标识该组件
-    component_name = &quot;BaiduFanyi&quot;
-    # _run()是组件的 核心执行函数，用于处理翻译请求。
-# **kwargs：可以让函数更加灵活，因为它可以接受任意数量的命名参数
-# 在函数内部，kwargs 是一个字典，包含了所有传递给函数的额外命名参数。
-    def _run(self, history, **kwargs):
-&#39;&#39;&#39;
-self.get_input() 获取输入内容。
-如果 content 存在，则用 - 连接多个内容（拼接成单个字符串）。
-如果 ans 为空，直接返回 &quot;&quot;
-&#39;&#39;&#39;
-        ans = self.get_input()
-        ans = &quot; - &quot;.join(ans[&quot;content&quot;]) if &quot;content&quot; in ans else &quot;&quot;
-        if not ans:
-            return BaiduFanyi.be_output(&quot;&quot;)
-
-        try:
-&#39;&#39;&#39;
-source_lang 和 target_lang：来源和目标语言。
-appid：百度翻译 API 的 应用 ID。
-salt：随机数（百度 API 需要此参数）。
-secret_key：百度 API 的 密钥
-&#39;&#39;&#39;
-            source_lang = self._param.source_lang
-            target_lang = self._param.target_lang
-            appid = self._param.appid
-            salt = random.randint(32768, 65536)
-            secret_key = self._param.secret_key
--------------------------- ☆ 普通翻译API请求 ☆ --------------------------
-            if self._param.trans_type == &#39;translate&#39;:
-            # md5签名，防止请求被篡改
-                sign = md5((appid + ans + salt + secret_key).encode(&#39;utf-8&#39;)).hexdigest()
-     # 发送 HTTP POST 请求 访问 百度翻译 API
-                url = &#39;http://api.fanyi.baidu.com/api/trans/vip/translate?&#39; + &#39;q=&#39; + ans + &#39;&amp;from=&#39; + source_lang + &#39;&amp;to=&#39; + target_lang + &#39;&amp;appid=&#39; + appid + &#39;&amp;salt=&#39; + salt + &#39;&amp;sign=&#39; + sign
-                headers = &#123;&quot;Content-Type&quot;: &quot;application/x-www-form-urlencoded&quot;&#125;
-            # 解析返回结果
-                response = requests.post(url=url, headers=headers).json()
-
-                if response.get(&#39;error_code&#39;):
-                    BaiduFanyi.be_output(&quot;**Error**:&quot; + response[&#39;error_msg&#39;])
-
-                return BaiduFanyi.be_output(response[&#39;trans_result&#39;][0][&#39;dst&#39;])
--------------------------- ★ 专业翻译API请求 ★ --------------------------
-            elif self._param.trans_type == &#39;fieldtranslate&#39;:
-                domain = self._param.domain
-                sign = md5((appid + ans + salt + domain + secret_key).encode(&#39;utf-8&#39;)).hexdigest()
-                url = &#39;http://api.fanyi.baidu.com/api/trans/vip/fieldtranslate?&#39; + &#39;q=&#39; + ans + &#39;&amp;from=&#39; + source_lang + &#39;&amp;to=&#39; + target_lang + &#39;&amp;appid=&#39; + appid + &#39;&amp;salt=&#39; + salt + &#39;&amp;domain=&#39; + domain + &#39;&amp;sign=&#39; + sign
-                headers = &#123;&quot;Content-Type&quot;: &quot;application/x-www-form-urlencoded&quot;&#125;
-                response = requests.post(url=url, headers=headers).json()
-
-                if response.get(&#39;error_code&#39;):
-                    BaiduFanyi.be_output(&quot;**Error**:&quot; + response[&#39;error_msg&#39;])
-
-                return BaiduFanyi.be_output(response[&#39;trans_result&#39;][0][&#39;dst&#39;])
-        # 捕获 所有异常，防止程序崩溃
-        except Exception as e:
-            BaiduFanyi.be_output(&quot;**Error**:&quot; + str(e))
-</code></pre>
-<h3 id="深层次研究"><a href="#深层次研究" class="headerlink" title="深层次研究"></a><strong>深层次研究</strong></h3><p><code>from agent.component.base import ComponentBase, ComponentParamBase</code></p>
-<p>主要用于处理、更新、验证和警告组件参数，适用于那些需要动态配置、递归嵌套结构且要求高可扩展性的系统</p>
-<pre><code class="python">class ComponentParamBase(ABC):
-    def __init__(self):
-        # 初始化输出变量名
-        self.output_var_name = &quot;output&quot;
-        # 初始化消息历史窗口大小
-        self.message_history_window_size = 22
-        # 初始化查询参数
-        self.query = []
-        # 初始化输入参数
-        self.inputs = []
-        # 初始化调试输入参数
-        self.debug_inputs = []
-    # 设置组件的名称，并返回当前对象，支持链式调用
-    def set_name(self, name: str):
-        self._name = name
-        return self
-
-    # 抽象方法 子类必须实现 它的目的是检查参数是否有效
-    def check(self):
-        raise NotImplementedError(&quot;Parameter Object should be checked.&quot;)
-
-    # 类方法 用于检查类是否具有某个属性 _DEPRECATED_PARAMS 如果没有 则初始化一个空的集合
-    @classmethod
-    def _get_or_init_deprecated_params_set(cls):
-        if not hasattr(cls, _DEPRECATED_PARAMS):
-            setattr(cls, _DEPRECATED_PARAMS, set())
-        return getattr(cls, _DEPRECATED_PARAMS)
-    # 用于检查和初始化实例的已废弃参数集合
-    def _get_or_init_feeded_deprecated_params_set(self, conf=None):
-        if not hasattr(self, _FEEDED_DEPRECATED_PARAMS):
-            if conf is None:
-                setattr(self, _FEEDED_DEPRECATED_PARAMS, set())
-            else:
-                setattr(
-                    self,
-                    _FEEDED_DEPRECATED_PARAMS,
-                    set(conf[_FEEDED_DEPRECATED_PARAMS]),
-                )
-        return getattr(self, _FEEDED_DEPRECATED_PARAMS)
-    # 用于检查和初始化实例的已废弃参数集合
-    def _get_or_init_user_feeded_params_set(self, conf=None):
-        if not hasattr(self, _USER_FEEDED_PARAMS):
-            if conf is None:
-                setattr(self, _USER_FEEDED_PARAMS, set())
-            else:
-                setattr(self, _USER_FEEDED_PARAMS, set(conf[_USER_FEEDED_PARAMS]))
-        return getattr(self, _USER_FEEDED_PARAMS)
-    # 返回用户提供的参数
-    def get_user_feeded(self):
-        return self._get_or_init_user_feeded_params_set()
-    # 返回已废弃的参数集合
-    def get_feeded_deprecated_params(self):
-        return self._get_or_init_feeded_deprecated_params_set()
-    
-    # @装饰器 定义了 _deprecated_params_set 属性 它返回已废弃的参数集合
-    @property
-    def _deprecated_params_set(self):
-        return &#123;name: True for name in self.get_feeded_deprecated_params()&#125;
-    
-    # 将对象转换为 JSON 字符串
-    def __str__(self):
-        return json.dumps(self.as_dict(), ensure_ascii=False)
-
-    # 递归地将对象的属性转换成字典 适用于将对象序列化为 JSON 或进行其他操作
-    def as_dict(self):
-        def _recursive_convert_obj_to_dict(obj):
-            ret_dict = &#123;&#125;
-            for attr_name in list(obj.__dict__):
-                if attr_name in [_FEEDED_DEPRECATED_PARAMS, _DEPRECATED_PARAMS, _USER_FEEDED_PARAMS, _IS_RAW_CONF]:
-                    continue
-                # get attr
-                attr = getattr(obj, attr_name)
-                if isinstance(attr, pd.DataFrame):
-                    ret_dict[attr_name] = attr.to_dict()
-                    continue
-                if attr and type(attr).__name__ not in dir(builtins):
-                    ret_dict[attr_name] = _recursive_convert_obj_to_dict(attr)
-                else:
-                    ret_dict[attr_name] = attr
-
-            return ret_dict
-
-        return _recursive_convert_obj_to_dict(self)
-
-    # 用于更新对象的参数，并根据传入的配置进行修改 它处理递归更新参数、检查冗余属性等
-    def update(self, conf, allow_redundant=False):
-        update_from_raw_conf = conf.get(_IS_RAW_CONF, True)
-        if update_from_raw_conf:
-            deprecated_params_set = self._get_or_init_deprecated_params_set()
-            feeded_deprecated_params_set = (
-                self._get_or_init_feeded_deprecated_params_set()
-            )
-            user_feeded_params_set = self._get_or_init_user_feeded_params_set()
-            setattr(self, _IS_RAW_CONF, False)
-        else:
-            feeded_deprecated_params_set = (
-                self._get_or_init_feeded_deprecated_params_set(conf)
-            )
-            user_feeded_params_set = self._get_or_init_user_feeded_params_set(conf)
-
-        def _recursive_update_param(param, config, depth, prefix):
-            if depth &gt; settings.PARAM_MAXDEPTH:
-                raise ValueError(&quot;Param define nesting too deep!!!, can not parse it&quot;)
-
-            inst_variables = param.__dict__
-            redundant_attrs = []
-            for config_key, config_value in config.items():
-                # redundant attr
-                if config_key not in inst_variables:
-                    if not update_from_raw_conf and config_key.startswith(&quot;_&quot;):
-                        setattr(param, config_key, config_value)
-                    else:
-                        setattr(param, config_key, config_value)
-                        # redundant_attrs.append(config_key)
-                    continue
-
-                full_config_key = f&quot;&#123;prefix&#125;&#123;config_key&#125;&quot;
-
-                if update_from_raw_conf:
-                    # add user feeded params
-                    user_feeded_params_set.add(full_config_key)
-
-                    # update user feeded deprecated param set
-                    if full_config_key in deprecated_params_set:
-                        feeded_deprecated_params_set.add(full_config_key)
-
-                # supported attr
-                attr = getattr(param, config_key)
-                if type(attr).__name__ in dir(builtins) or attr is None:
-                    setattr(param, config_key, config_value)
-
-                else:
-                    # recursive set obj attr
-                    sub_params = _recursive_update_param(
-                        attr, config_value, depth + 1, prefix=f&quot;&#123;prefix&#125;&#123;config_key&#125;.&quot;
-                    )
-                    setattr(param, config_key, sub_params)
-
-            if not allow_redundant and redundant_attrs:
-                raise ValueError(
-                    f&quot;cpn `&#123;getattr(self, &#39;_name&#39;, type(self))&#125;` has redundant parameters: `&#123;[redundant_attrs]&#125;`&quot;
-                )
-
-            return param
-
-        return _recursive_update_param(param=self, config=conf, depth=0, prefix=&quot;&quot;)
-
-    # 用于提取所有非内置类型的属性 递归地遍历对象的属性
-    def extract_not_builtin(self):
-        def _get_not_builtin_types(obj):
-            ret_dict = &#123;&#125;
-            for variable in obj.__dict__:
-                attr = getattr(obj, variable)
-                if attr and type(attr).__name__ not in dir(builtins):
-                    ret_dict[variable] = _get_not_builtin_types(attr)
-
-            return ret_dict
-
-        return _get_not_builtin_types(self)
-    
-    # validate 方法用于验证对象的参数是否符合预定义的规则 规则存储在 JSON 文件中
-    def validate(self):
-        self.builtin_types = dir(builtins)
-        self.func = &#123;
-            &quot;ge&quot;: self._greater_equal_than,
-            &quot;le&quot;: self._less_equal_than,
-            &quot;in&quot;: self._in,
-            &quot;not_in&quot;: self._not_in,
-            &quot;range&quot;: self._range,
-        &#125;
-        home_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-        param_validation_path_prefix = home_dir + &quot;/param_validation/&quot;
-
-        param_name = type(self).__name__
-        param_validation_path = &quot;/&quot;.join(
-            [param_validation_path_prefix, param_name + &quot;.json&quot;]
-        )
-
-        validation_json = None
-
-        try:
-            with open(param_validation_path, &quot;r&quot;) as fin:
-                validation_json = json.loads(fin.read())
-        except BaseException:
-            return
-
-        self._validate_param(self, validation_json)
-
-    def _validate_param(self, param_obj, validation_json):
-        default_section = type(param_obj).__name__
-        var_list = param_obj.__dict__
-
-        for variable in var_list:
-            attr = getattr(param_obj, variable)
-
-            if type(attr).__name__ in self.builtin_types or attr is None:
-                if variable not in validation_json:
-                    continue
-
-                validation_dict = validation_json[default_section][variable]
-                value = getattr(param_obj, variable)
-                value_legal = False
-
-                for op_type in validation_dict:
-                    if self.func[op_type](value, validation_dict[op_type]):
-                        value_legal = True
-                        break
-
-                if not value_legal:
-                    raise ValueError(
-                        &quot;Plase check runtime conf, &#123;&#125; = &#123;&#125; does not match user-parameter restriction&quot;.format(
-                            variable, value
-                        )
-                    )
-
-            elif variable in validation_json:
-                self._validate_param(attr, validation_json)
-
-    # 用于验证参数的类型和范围 确保符合预期          
-    @staticmethod
-    def check_string(param, descr):
-        if type(param).__name__ not in [&quot;str&quot;]:
-            raise ValueError(
-                descr + &quot; &#123;&#125; not supported, should be string type&quot;.format(param)
-            )
-
-    @staticmethod
-    def check_empty(param, descr):
-        if not param:
-            raise ValueError(
-                descr + &quot; does not support empty value.&quot;
-            )
-
-    @staticmethod
-    def check_positive_integer(param, descr):
-        if type(param).__name__ not in [&quot;int&quot;, &quot;long&quot;] or param &lt;= 0:
-            raise ValueError(
-                descr + &quot; &#123;&#125; not supported, should be positive integer&quot;.format(param)
-            )
-
-    @staticmethod
-    def check_positive_number(param, descr):
-        if type(param).__name__ not in [&quot;float&quot;, &quot;int&quot;, &quot;long&quot;] or param &lt;= 0:
-            raise ValueError(
-                descr + &quot; &#123;&#125; not supported, should be positive numeric&quot;.format(param)
-            )
-
-    @staticmethod
-    def check_nonnegative_number(param, descr):
-        if type(param).__name__ not in [&quot;float&quot;, &quot;int&quot;, &quot;long&quot;] or param &lt; 0:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; not supported, should be non-negative numeric&quot;.format(param)
-            )
-
-    @staticmethod
-    def check_decimal_float(param, descr):
-        if type(param).__name__ not in [&quot;float&quot;, &quot;int&quot;] or param &lt; 0 or param &gt; 1:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; not supported, should be a float number in range [0, 1]&quot;.format(
-                    param
-                )
-            )
-
-    @staticmethod
-    def check_boolean(param, descr):
-        if type(param).__name__ != &quot;bool&quot;:
-            raise ValueError(
-                descr + &quot; &#123;&#125; not supported, should be bool type&quot;.format(param)
-            )
-
-    @staticmethod
-    def check_open_unit_interval(param, descr):
-        if type(param).__name__ not in [&quot;float&quot;] or param &lt;= 0 or param &gt;= 1:
-            raise ValueError(
-                descr + &quot; should be a numeric number between 0 and 1 exclusively&quot;
-            )
-
-    @staticmethod
-    def check_valid_value(param, descr, valid_values):
-        if param not in valid_values:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; is not supported, it should be in &#123;&#125;&quot;.format(param, valid_values)
-            )
-
-    @staticmethod
-    def check_defined_type(param, descr, types):
-        if type(param).__name__ not in types:
-            raise ValueError(
-                descr + &quot; &#123;&#125; not supported, should be one of &#123;&#125;&quot;.format(param, types)
-            )
-
-    @staticmethod
-    def check_and_change_lower(param, valid_list, descr=&quot;&quot;):
-        if type(param).__name__ != &quot;str&quot;:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; not supported, should be one of &#123;&#125;&quot;.format(param, valid_list)
-            )
-
-        lower_param = param.lower()
-        if lower_param in valid_list:
-            return lower_param
-        else:
-            raise ValueError(
-                descr
-                + &quot; &#123;&#125; not supported, should be one of &#123;&#125;&quot;.format(param, valid_list)
-            )
-
-    @staticmethod
-    def _greater_equal_than(value, limit):
-        return value &gt;= limit - settings.FLOAT_ZERO
-
-    @staticmethod
-    def _less_equal_than(value, limit):
-        return value &lt;= limit + settings.FLOAT_ZERO
-
-    @staticmethod
-    def _range(value, ranges):
-        in_range = False
-        for left_limit, right_limit in ranges:
-            if (
-                    left_limit - settings.FLOAT_ZERO
-                    &lt;= value
-                    &lt;= right_limit + settings.FLOAT_ZERO
-            ):
-                in_range = True
-                break
-
-        return in_range
-
-    @staticmethod
-    def _in(value, right_value_list):
-        return value in right_value_list
-
-    @staticmethod
-    def _not_in(value, wrong_value_list):
-        return value not in wrong_value_list
-
-    def _warn_deprecated_param(self, param_name, descr):
-        if self._deprecated_params_set.get(param_name):
-            logging.warning(
-                f&quot;&#123;descr&#125; &#123;param_name&#125; is deprecated and ignored in this version.&quot;
-            )
-
-    def _warn_to_deprecate_param(self, param_name, descr, new_param):
-        if self._deprecated_params_set.get(param_name):
-            logging.warning(
-                f&quot;&#123;descr&#125; &#123;param_name&#125; will be deprecated in future release; &quot;
-                f&quot;please use &#123;new_param&#125; instead.&quot;
-            )
-            return True
-        return False
-</code></pre>
-<h5 id="这里运用到json-为什么要用json？"><a href="#这里运用到json-为什么要用json？" class="headerlink" title="这里运用到json 为什么要用json？"></a>这里运用到json 为什么要用json？</h5><ul>
-<li><strong>方便序列化</strong>：<code>json.dumps()</code>将对象转换为JSON字符串，可以轻松地保存或传输对象数据。</li>
-<li><strong>方便调试和展示</strong>：在 <code>__str__</code> 方法中返回 JSON 字符串，可以方便地查看对象的内容。尤其是在调试过程中，直接打印出对象的 JSON 格式可以帮助开发人员快速查看对象的状态及其内部数据结构</li>
-<li><strong>与大模型交互</strong>：当涉及到与大语言模型（如 GPT）或其他机器学习模型的交互时，JSON 格式的数据通常是标准的输入和输出格式。将对象转为 JSON 字符串，能够更容易地将数据传递给模型进行处理或分析，模型通常会接受 JSON 格式的数据进行训练或推理。</li>
-</ul>
-<h5 id="如何去运用？"><a href="#如何去运用？" class="headerlink" title="如何去运用？"></a>如何去运用？</h5><ul>
-<li><strong>数据交换</strong>：可以将这个 JSON 字符串用作 API 请求或响应的数据格式。例如，你可以将这个对象作为 HTTP 请求的 body 发送，或者从网络中获取 JSON 格式的数据，然后解析回对象。</li>
-<li><strong>持久化存储</strong>：如果你需要将对象数据持久化到数据库或文件系统，JSON 是一个很好的存储格式。例如，将对象数据存储在文件中或数据库表的 JSON 类型字段中，便于未来读取和操作。</li>
-<li><strong>配置和参数更新</strong>：<code>update</code> 方法中接收到的 <code>conf</code> 参数实际上是一个字典对象，它通过递归的方式更新对象的属性。如果你将对象序列化为 JSON 格式后，可以将 JSON 作为配置文件传递给应用，应用根据该配置动态调整其行为。这使得系统更加灵活和可配置。</li>
-<li><strong>验证与校验</strong>：<code>validate</code> 方法利用存储在 JSON 文件中的规则对对象进行参数验证，这是一种常见的方式来确保输入的数据符合特定的格式或限制。可以通过动态加载配置文件来验证对象的数据，保证数据的合法性。</li>
-</ul>
-<p>怎么和大模型交互 json是以什么规范 是否让机器更好的理解？</p>
-<h2 id="如果自己开发了一个代理组件后如何去融入呢？"><a href="#如果自己开发了一个代理组件后如何去融入呢？" class="headerlink" title="如果自己开发了一个代理组件后如何去融入呢？"></a><span style="color:blue">如果自己开发了一个代理组件后如何去融入呢？</span></h2><h4 id="index-tsx"><a href="#index-tsx" class="headerlink" title="index.tsx"></a><span style = "color:red"><strong>index.tsx</strong></span></h4><p>路径<code>web/src/pages/flow/form/baidu-fanyi-form/index.tsx</code> </p>
-<p><code>BaiduFanyiForm</code> 是一个用于配置百度翻译（Baidu Fanyi）接口参数的表单组件。该组件基于 Ant Design (<code>antd</code>) 的 <code>Form</code> 组件，允许用户输入翻译所需的 <strong>AppID、密钥、翻译类型、领域、源语言和目标语言</strong>。</p>
-<pre><code class="tsx">// useTranslate(&#39;flow&#39;)：自定义 Hook，提供国际化翻译能力
-import &#123; useTranslate &#125; from &#39;@/hooks/common-hooks&#39;;
-// Form, Input, Select：Ant Design 表单组件
-import &#123; Form, Input, Select &#125; from &#39;antd&#39;;
-// useMemo：优化计算、提高性能，避免不必要的重新计算
-import &#123; useMemo &#125; from &#39;react&#39;;
-// 从 constant 中引入翻译领域和语言选项
-import &#123;
-  BaiduFanyiDomainOptions,
-  BaiduFanyiSourceLangOptions,
-&#125; from &#39;../../constant&#39;;
-// 表单组件的类型定义，包含 onValuesChange, form, node 等参数
-import &#123; IOperatorForm &#125; from &#39;../../interface&#39;;
-// 动态输入组件，可能用于变量替换
-import DynamicInputVariable from &#39;../components/dynamic-input-variable&#39;;
-
-/*
-生成 trans_type（翻译类型）的 Select 选项：
-translate：普通翻译
-fieldtranslate：专业领域翻译
-选项的 label 通过 t() 进行国际化翻译。
-*/
-const BaiduFanyiForm = (&#123; onValuesChange, form, node &#125;: IOperatorForm) =&gt; &#123;
-  const &#123; t &#125; = useTranslate(&#39;flow&#39;);
-  const options = useMemo(() =&gt; &#123;
-    return [&#39;translate&#39;, &#39;fieldtranslate&#39;].map((x) =&gt; (&#123;
-      value: x,
-      label: t(`baiduSecretKeyOptions.$&#123;x&#125;`),
-    &#125;));
-  &#125;, [t]);
-// 生成 领域翻译 选项（如医学、法律等）
-  const baiduFanyiOptions = useMemo(() =&gt; &#123;
-    return BaiduFanyiDomainOptions.map((x) =&gt; (&#123;
-      value: x,
-      label: t(`baiduDomainOptions.$&#123;x&#125;`),
-    &#125;));
-  &#125;, [t]);
-// 源语言（source_lang）和 目标语言（target_lang）
-  const baiduFanyiSourceLangOptions = useMemo(() =&gt; &#123;
-    return BaiduFanyiSourceLangOptions.map((x) =&gt; (&#123;
-      value: x,
-      label: t(`baiduSourceLangOptions.$&#123;x&#125;`),
-    &#125;));
-  &#125;, [t]);
-
-  return (
-    &lt;Form
-      name=&quot;basic&quot; //表单名称
-      autoComplete=&quot;off&quot; //关闭自动填充
-      form=&#123;form&#125; //绑定 Ant Design 表单实例，允许动态设置表单值
-      onValuesChange=&#123;onValuesChange&#125; //表单值变更时触发外部回调
-      layout=&#123;&#39;vertical&#39;&#125;
-    &gt;
-          &lt;!-- 允许用户输入 AppID 和 密钥，用于身份验证 --&gt;
-      &lt;DynamicInputVariable node=&#123;node&#125;&gt;&lt;/DynamicInputVariable&gt;
-      &lt;Form.Item label=&#123;t(&#39;appid&#39;)&#125; name=&#123;&#39;appid&#39;&#125;&gt;
-        &lt;Input&gt;&lt;/Input&gt;
-      &lt;/Form.Item&gt;
-      &lt;Form.Item label=&#123;t(&#39;secretKey&#39;)&#125; name=&#123;&#39;secret_key&#39;&#125;&gt;
-        &lt;Input&gt;&lt;/Input&gt;
-      &lt;/Form.Item&gt;
-          &lt;!-- 翻译类型 --&gt;
-      &lt;Form.Item label=&#123;t(&#39;transType&#39;)&#125; name=&#123;&#39;trans_type&#39;&#125;&gt;
-        &lt;Select options=&#123;options&#125;&gt;&lt;/Select&gt;
-      &lt;/Form.Item&gt;
-          &lt;!-- 领域翻译 仅在 fieldtranslate 选中时显示 --&gt;
-  &lt;!-- dependencies=&#123;[&#39;model_type&#39;]&#125;：监听 model_type 字段的变化 --&gt;
-      &lt;Form.Item noStyle dependencies=&#123;[&#39;model_type&#39;]&#125;&gt;
-        &#123;(&#123; getFieldValue &#125;) =&gt;
-          getFieldValue(&#39;trans_type&#39;) === &#39;fieldtranslate&#39; &amp;&amp; (
-            &lt;Form.Item label=&#123;t(&#39;domain&#39;)&#125; name=&#123;&#39;domain&#39;&#125;&gt;
-              &lt;Select options=&#123;baiduFanyiOptions&#125;&gt;&lt;/Select&gt;
-            &lt;/Form.Item&gt;
-          )
-        &#125;
-      &lt;/Form.Item&gt;
-      &lt;Form.Item label=&#123;t(&#39;sourceLang&#39;)&#125; name=&#123;&#39;source_lang&#39;&#125;&gt;
-        &lt;Select options=&#123;baiduFanyiSourceLangOptions&#125;&gt;&lt;/Select&gt;
-      &lt;/Form.Item&gt;
-      &lt;Form.Item label=&#123;t(&#39;targetLang&#39;)&#125; name=&#123;&#39;target_lang&#39;&#125;&gt;
-        &lt;Select options=&#123;baiduFanyiSourceLangOptions&#125;&gt;&lt;/Select&gt;
-      &lt;/Form.Item&gt;
-    &lt;/Form&gt;
-  );
-&#125;;
-export default BaiduFanyiForm;
-</code></pre>
-<p><code>BaiduFanyiForm</code> 组件是百度翻译 API 参数的前端配置表单，支持动态交互（如 <code>trans_type</code> 选择 <code>fieldtranslate</code> 时动态显示 <code>domain</code> 选项）。该组件用于某个流程（flow）系统，允许用户输入翻译 API 相关信息，并提供 <strong>国际化支持</strong>（<code>useTranslate()</code>）</p>
-<hr>
-<hr>
-<h4 id="init-py"><a href="#init-py" class="headerlink" title="_ _ init _ _.py"></a><span style = "color:red">_ _ init _ _.py</span></h4><p>首先在 <code>agent/component/__init__.py</code> 在组件同级目录下有一个<code>__init__.py</code><br>它的主要作用是**<u>导入并管理各种组件</u><strong>，这些组件用于</strong><u>数据处理、信息检索、翻译、SQL执行、财经数据获取</u>等**不同功能。其中的重要代码:</p>
-<pre><code class="python"># import importlib：用于动态导入模块（在 component_class 方法中使用）
-# 这些组件分布在 agent.component 模块下，提供不同的功能
-
-&#39;&#39;&#39;
-该函数用于动态加载组件，通过 importlib.import_module(&quot;agent.component&quot;) 导入 agent.component 模块，然后使用 getattr(m, class_name) 获取类，从而返回对应的组件类。
-&#39;&#39;&#39;
-def component_class(class_name):
-    m = importlib.import_module(&quot;agent.component&quot;)
-    c = getattr(m, class_name)
-    return c
-
-&#39;&#39;&#39;
-__all__ 列表：指定模块对外暴露的所有组件
-使其成为 from module import * 时可以被访问的对象。
-&#39;&#39;&#39;
-__all__ = [
-    &quot;GitHub&quot;,
-    &quot;GitHubParam&quot;,
-    &quot;BaiduFanyi&quot;,
-    &quot;BaiduFanyiParam&quot;,
-]
-</code></pre>
-<h4 id="web-x2F-src-x2F-pages-x2F-flow-x2F-flow-drawer-x2F-index-tsx"><a href="#web-x2F-src-x2F-pages-x2F-flow-x2F-flow-drawer-x2F-index-tsx" class="headerlink" title="web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;flow-drawer&#x2F;index.tsx"></a><span style = "color:red">web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;flow-drawer&#x2F;index.tsx</span></h4><p>在<code>web/src/pages/flow/flow-drawer/index.tsx</code>里有这样一行代码<br><code>import BaiduFanyiForm from &#39;../form/baidu-fanyi-form&#39;;</code><br>该文件 <code>index.tsx</code> 主要用于**表单抽屉组件 (<code>FormDrawer</code>)**，用于在 UI 中展示不同操作节点的表单，并支持编辑、调试等功能。</p>
-<h5 id="代码功能概览"><a href="#代码功能概览" class="headerlink" title="代码功能概览"></a><strong>代码功能概览</strong></h5><p> 🔹 <strong>动态渲染不同的表单组件</strong>（<code>BaiduFanyiForm</code> 等）<br> 🔹 <strong>支持不同类型的操作节点（Operator）</strong>（如 <code>BaiduFanyi</code>, <code>Google</code>, <code>Generate</code> 等）<br> 🔹 <strong>提供表单输入交互，并支持单步调试</strong><br> 🔹 <strong>使用 <code>Drawer</code> 组件作为侧边栏弹出窗口</strong></p>
-<h4 id="★-组件导入"><a href="#★-组件导入" class="headerlink" title="★ 组件导入"></a>★ 组件导入</h4><pre><code class="python">import &#123; Drawer, Flex, Form, Input &#125; from &#39;antd&#39;;
-import &#123; get, isPlainObject, lowerFirst &#125; from &#39;lodash&#39;;
-import &#123; Play &#125; from &#39;lucide-react&#39;;
-import &#123; CloseOutlined &#125; from &#39;@ant-design/icons&#39;;
-...
-</code></pre>
-<p>📌 <strong>作用</strong>：引入 <strong>Ant Design</strong> 组件（<code>Drawer</code>、<code>Form</code>、<code>Input</code>）、<code>lodash</code> 工具库以及 <code>Play</code>（调试按钮）、<code>CloseOutlined</code>（关闭按钮）。</p>
-<h4 id="★-引入表单组件"><a href="#★-引入表单组件" class="headerlink" title="★ 引入表单组件"></a>★ 引入表单组件</h4><pre><code class="python"># 当然不能忘了我们的百度翻译
-import BaiduFanyiForm from &#39;../form/baidu-fanyi-form&#39;;
-import GoogleForm from &#39;../form/google-form&#39;;
-import GenerateForm from &#39;../form/generate-form&#39;;
-import RetrievalForm from &#39;../form/retrieval-form&#39;;
-...
-</code></pre>
-<p>📌 <strong>作用</strong>：引入 <code>BaiduFanyiForm</code> 组件，该组件用于百度翻译的表单交互。</p>
-<p>✅ 这些表单组件用于不同的 <code>Operator</code> 操作，例如：</p>
-<ul>
-<li><code>BaiduFanyiForm</code> → <strong>百度翻译表单</strong></li>
-<li><code>GoogleForm</code> → <strong>Google 搜索表单</strong></li>
-<li><code>GenerateForm</code> → <strong>文本生成表单</strong></li>
-<li><code>RetrievalForm</code> → <strong>信息检索表单</strong></li>
-</ul>
-<h4 id="★-FormMap-操作类型与表6单组件的映射"><a href="#★-FormMap-操作类型与表6单组件的映射" class="headerlink" title="★ FormMap(操作类型与表6单组件的映射)"></a>★ FormMap(操作类型与表6单组件的映射)</h4><pre><code class="python">const FormMap = &#123;
-  [Operator.BaiduFanyi]: BaiduFanyiForm,
-  [Operator.Google]: GoogleForm,
-  [Operator.Generate]: GenerateForm,
-  [Operator.Retrieval]: RetrievalForm,
-&#125;;
-</code></pre>
-<p>📌 <strong>作用</strong>：<br> ✅ <strong>动态匹配</strong> <code>Operator</code>（操作类型）与 <strong>对应表单组件</strong><br> ✅ <strong>当 <code>Operator</code> 为 <code>BaiduFanyi</code> 时，渲染 <code>BaiduFanyiForm</code></strong><br> ✅ <strong>可以扩展不同的表单类型</strong></p>
-<h4 id="☆-FormDrawer组件"><a href="#☆-FormDrawer组件" class="headerlink" title="☆ FormDrawer组件"></a>☆ FormDrawer组件</h4><pre><code class="python">const FormDrawer = (&#123; visible, hideModal, node, singleDebugDrawerVisible, hideSingleDebugDrawer, showSingleDebugDrawer &#125;: IModalProps&lt;any&gt; &amp; IProps) =&gt; &#123;
-</code></pre>
-<p>📌 <strong>作用</strong>：<code>FormDrawer</code> 是一个 <strong>表单抽屉组件</strong>，用于展示不同类型的表单。</p>
-<h4 id="☆-动态渲染表单"><a href="#☆-动态渲染表单" class="headerlink" title="☆ 动态渲染表单"></a>☆ 动态渲染表单</h4><pre><code class="python">const OperatorForm = FormMap[operatorName] ?? EmptyContent;
-</code></pre>
-<p>📌 <strong>作用</strong>： ✅ <strong>根据 <code>Operator</code>（操作类型）选择对应的表单组件</strong><br> ✅ 如果 <code>Operator</code> 不在 <code>FormMap</code> 中，则显示 <code>EmptyContent</code>（空组件）</p>
-<h4 id="☆-处理表单数据"><a href="#☆-处理表单数据" class="headerlink" title="☆ 处理表单数据"></a>☆ 处理表单数据</h4><pre><code class="python">useEffect(() =&gt; &#123;
-  if (visible) &#123;
-    form.resetFields();
-    form.setFieldsValue(node?.data?.form);
-  &#125;
-&#125;, [visible, form, node?.data?.form]);
-</code></pre>
-<p>📌 <strong>作用</strong>： ✅ <strong>当抽屉可见时，重置表单并填充数据</strong><br> ✅ <strong>如果 <code>Operator</code> 是 <code>Categorize</code>，则特殊处理分类数据</strong></p>
-<h4 id="☆-侧边栏-Drawer"><a href="#☆-侧边栏-Drawer" class="headerlink" title="☆ 侧边栏 (Drawer)"></a>☆ 侧边栏 (<code>Drawer</code>)</h4><pre><code class="python">&lt;Drawer
-  title=&#123;
-    &lt;Flex&gt;
-      &lt;OperatorIcon name=&#123;operatorName&#125; /&gt;
-      &lt;Input value=&#123;name&#125; onChange=&#123;handleNameChange&#125; /&gt;
-      &lt;Play onClick=&#123;showSingleDebugDrawer&#125; /&gt;
-      &lt;CloseOutlined onClick=&#123;hideModal&#125; /&gt;
-    &lt;/Flex&gt;
-  &#125;
-  open=&#123;visible&#125;
-&gt;
-  &lt;OperatorForm onValuesChange=&#123;handleValuesChange&#125; form=&#123;form&#125; node=&#123;node&#125; /&gt;
-&lt;/Drawer&gt;
-</code></pre>
-<p>📌 <strong>作用</strong>： ✅ <strong>标题区域包含操作图标、输入框、调试按钮、关闭按钮</strong><br> ✅ <strong>使用 <code>OperatorForm</code> 组件渲染表单</strong><br> ✅ <strong>点击 <code>Play</code> 按钮打开调试模式</strong></p>
-<hr>
-<p>★ ★ <u>总结一下<code>BaiduFanyiForm</code>相关逻辑</u> ★ ★<br>在 <code>index.tsx</code> 里，<code>BaiduFanyiForm</code> 被注册到 <code>FormMap</code>，然后通过 <code>FormDrawer</code> 组件</p>
-<p>🚀 <strong>如何渲染 <code>BaiduFanyiForm</code>？</strong></p>
-<ol>
-<li><code>Operator.BaiduFanyi</code> 触发 <code>BaiduFanyiForm</code></li>
-<li><code>FormDrawer</code> 组件动态匹配 <code>FormMap[Operator.BaiduFanyi]</code></li>
-<li><code>BaiduFanyiForm</code> 渲染在 <code>Drawer</code> 中</li>
-</ol>
-<p>📌 <strong>结论</strong>： ✅ <strong><code>BaiduFanyiForm</code> 只是众多表单组件之一，专门用于百度翻译的功能</strong><br> ✅ <strong><code>index.tsx</code> 主要是表单的动态加载器，统一管理所有 <code>Operator</code> 类型</strong><br> ✅ <strong><code>FormDrawer</code> 负责 UI 渲染、数据填充、调试交互等</strong></p>
-<hr>
-<p>① <span style = "color:red">agent&#x2F;component&#x2F;baidufanyi.py</span> 【后端代码】<br>② <span style = "color:red">agent&#x2F;component&#x2F;_ _ init _ _.py</span>  【初始化】<br>③ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;flow-drawer&#x2F;index.tsx【表单抽屉组件 UI展示】<br>④ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;form&#x2F;baidu-fanyi-form&#x2F;index.tsx 【提供用户界面让用户能配置并提交参数】<br>⑤ web&#x2F;src&#x2F;pages&#x2F;flow&#x2F;constant.tsx 【定义一个应用程序中使用的各种图标、常量、枚举、接口、状态和函数】<br>⑥ web&#x2F;src&#x2F;locales&#x2F;zh.ts 【把所有要显示的搞到zh.ts中(前端组件描述)】<br>⑦ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;constant.tsx【引入组件所需的各种图标、以及操作项的样式、初始值、语言等】<br>⑧ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;form-sheet&#x2F;use-form-config-map.tsx 【表单配置映射、配置不同操作对应表单组件】<br>⑨ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;form&#x2F;baidu-fanyi-form&#x2F;index.tsx 【构建配置表单 】<br>⑩ web&#x2F;src&#x2F;pages&#x2F;agent&#x2F;hooks.tsx 【管理图形界面流程图 各种钩子 → 建数据处理流程】</p>
-<hr>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/ddce11cf6c74dc31448ce098d9509fc9e2cbc2e2/RAGFlow%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E7%BB%84%E4%BB%B6%E6%B5%81%E7%A8%8B.jpg"></p>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/AI" style=color:#879cff>
-                AI
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2025/03/07/AI/RAGFlow工具技术文档/ " class="go-post">
         阅读全文
     </a>
 </div>

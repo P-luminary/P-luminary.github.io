@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/面试" style=color:#879cff>
+                <a href="/tags/面试" style=color:#1bccbc>
                     面试
                 </a>
             </span>
@@ -186,7 +186,15 @@
 雪崩大量过期key，过期时间要随机。
 面试必考三兄弟，可用限流来保底。
 </code></pre>
-<h6 id="redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性"><a href="#redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性" class="headerlink" title="redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)"></a><span style = "color:red">redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)</span></h6><p><strong>写</strong>先插入数据库<br><u><strong>更新</strong>先更新数据库 更新数据库成功但redis不成功 影响不大 因为后面会有过期删除 最终会一致，更新mysql后缓存可以删除也可以修改</u><br><u>更新完数据库直接删除缓存了  有过期时间兜底 最终会保持一致 我们项目中对数据敏感性一致性不高 我们追求实时性</u><br><u>如果是最终保持一致性的就MQ 我们对实时性不高 对数据敏感性 一致性高</u><br><strong>删除</strong>问题不大 哪里都行！<br>读多写少的可以上缓存<br>mysql保存购物车表 但是再页面操作的时候 只操作redis 用<strong>mq</strong>给到消费者修改或<strong>定时任务</strong> 更新数据到mysql，MQ问题：我们对数据实时性要求不高 只需要保存最终一致性就行</p>
+<h6 id="redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性"><a href="#redis作为缓存，mysql的数据如何与redis进行同步呢？-双写一致性" class="headerlink" title="redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)"></a><span style = "color:red">redis作为缓存，mysql的数据如何与redis进行同步呢？(双写一致性)</span></h6><blockquote>
+<h3 id="✅-二、Redis-和-MySQL-不一致会发生什么？"><a href="#✅-二、Redis-和-MySQL-不一致会发生什么？" class="headerlink" title="✅ 二、Redis 和 MySQL 不一致会发生什么？"></a>✅ <strong>二、Redis 和 MySQL 不一致会发生什么？</strong></h3><h4 id="如果同步失败，会出现："><a href="#如果同步失败，会出现：" class="headerlink" title="如果同步失败，会出现："></a>如果同步失败，会出现：</h4><ul>
+<li><strong>缓存中的数据是脏的</strong>（脏读）</li>
+<li><strong>缓存中没有数据，但数据库中有</strong>（缓存穿透）</li>
+<li><strong>数据库更新了，但 Redis 仍是旧值</strong>（一致性问题）</li>
+<li><strong>并发写操作丢失最新值</strong>（写丢失）</li>
+</ul>
+</blockquote>
+<p><strong>写</strong>先插入数据库<br><u><strong>更新</strong>先更新数据库 更新数据库成功但redis不成功 影响不大 因为后面会有过期删除 最终会一致，更新mysql后缓存可以删除也可以修改</u><br><u>更新完数据库直接删除缓存了  有过期时间兜底 最终会保持一致 我们项目中对数据敏感性一致性不高 我们追求实时性</u><br><u>如果是最终保持一致性的就MQ 我们对实时性不高 对数据敏感性 一致性高</u><br><strong>删除</strong>问题不大 哪里都行！<br>读多写少的可以上缓存<br>mysql保存购物车表 但是再页面操作的时候 只操作redis 用<strong>mq</strong>给到消费者修改或<strong>定时任务</strong> 更新数据到mysql，MQ问题：我们对数据实时性要求不高 只需要保存最终一致性就行</p>
 <p><strong>你如果只写redis 万一丢了数据怎么办</strong>？<br>购物车丢点订单无影响 数据安全性要求不太高 mysql尽量不要搞购物车的表 都在redis的表 丢就丢了呗。<br>或者异步同步&#x2F;定时任务<br>实时性要求 安全性要求 → MySQL<br>电商一般数据库和mysql都要存 → 读多写少</p>
 <p><strong>一定、一定、一定要设置前提，介绍自己的业务背景</strong> (一致性要求高？允许延迟一致？)</p>
 <blockquote>
@@ -227,12 +235,76 @@
 </ul>
 </li>
 </ul>
+<blockquote>
+<h2 id="✅-为什么会出现-Redis-和-MySQL-数据不一致？"><a href="#✅-为什么会出现-Redis-和-MySQL-数据不一致？" class="headerlink" title="✅ 为什么会出现 Redis 和 MySQL 数据不一致？"></a>✅ 为什么会出现 Redis 和 MySQL 数据不一致？</h2><p>Redis 是<strong>缓存</strong>，MySQL 是<strong>数据库</strong>，它们的数据生命周期不同，导致在更新时会出现以下几种情况：</p>
+<hr>
+<h3 id="💥-情况1：先更新数据库，再删除缓存（常见写法）"><a href="#💥-情况1：先更新数据库，再删除缓存（常见写法）" class="headerlink" title="💥 情况1：先更新数据库，再删除缓存（常见写法）"></a>💥 情况1：先更新数据库，再删除缓存（常见写法）</h3><pre><code>update DB
+delete cache
+</code></pre>
+<ul>
+<li>假设刚执行完 <code>update DB</code>，还没来得及 <code>delete cache</code>，此时某个<strong>高并发请求</strong>进来：<ul>
+<li>它先查缓存，发现是旧数据；</li>
+<li>然后返回了错误的数据；</li>
+<li>后续即使删了缓存，已经晚了。</li>
+</ul>
+</li>
+</ul>
+<p>这就是：<strong>缓存未及时失效，读取到了脏数据</strong>。</p>
+<hr>
+<h3 id="💥-情况2：先删除缓存，再更新数据库"><a href="#💥-情况2：先删除缓存，再更新数据库" class="headerlink" title="💥 情况2：先删除缓存，再更新数据库"></a>💥 情况2：先删除缓存，再更新数据库</h3><pre><code>delete cache
+update DB
+</code></pre>
+<ul>
+<li>这个时候如果并发查询线程来得很快：<ul>
+<li>缓存刚被删，查询请求就查不到；</li>
+<li>就会穿透查数据库，查到旧数据；</li>
+<li>然后<strong>又把旧数据写入了 Redis</strong>，覆盖了更新后的数据！</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="💥-情况3：缓存过期后查询数据库，正好遇到更新未完成"><a href="#💥-情况3：缓存过期后查询数据库，正好遇到更新未完成" class="headerlink" title="💥 情况3：缓存过期后查询数据库，正好遇到更新未完成"></a>💥 情况3：缓存过期后查询数据库，正好遇到更新未完成</h3><pre><code>Redis key 过期
+查询数据库返回旧数据
+写入 Redis（错的数据被缓存）
+</code></pre>
+<p>这就是<strong>缓存击穿 + 数据同步延迟</strong>的问题。</p>
+<hr>
+<h2 id="✅-数据为什么会“丢”？需要同步吗？"><a href="#✅-数据为什么会“丢”？需要同步吗？" class="headerlink" title="✅ 数据为什么会“丢”？需要同步吗？"></a>✅ 数据为什么会“丢”？需要同步吗？</h2><p>Redis 是内存数据库，<strong>不具备强一致性保障</strong>，以下情况会导致“看起来丢数据”：</p>
+<ol>
+<li><strong>更新了数据库，但缓存没更新&#x2F;没删除</strong></li>
+<li><strong>缓存提前过期，重新加载了旧数据</strong></li>
+<li><strong>Redis 重启，缓存丢失</strong></li>
+<li><strong>并发穿透，旧数据反复写入缓存</strong></li>
+<li><strong>程序异常，缓存更新&#x2F;删除逻辑没执行</strong></li>
+</ol>
+<h2 id="✅-怎么保证-Redis-和-MySQL-的一致性？"><a href="#✅-怎么保证-Redis-和-MySQL-的一致性？" class="headerlink" title="✅ 怎么保证 Redis 和 MySQL 的一致性？"></a>✅ 怎么保证 Redis 和 MySQL 的一致性？</h2><p>这就是我们说的：<strong>缓存与数据库双写一致性问题</strong>，常见策略如下：</p>
+<h3 id="1️⃣-读写操作采用延迟双删策略（推荐）"><a href="#1️⃣-读写操作采用延迟双删策略（推荐）" class="headerlink" title="1️⃣ 读写操作采用延迟双删策略（推荐）"></a>1️⃣ 读写操作采用延迟双删策略（推荐）</h3><pre><code>update DB
+delete Redis
+sleep 500ms
+delete Redis again
+</code></pre>
+<ul>
+<li>延迟双删可以尽可能避免并发查询旧缓存的情况。</li>
+</ul>
+<h3 id="2️⃣-加分布式锁"><a href="#2️⃣-加分布式锁" class="headerlink" title="2️⃣ 加分布式锁"></a>2️⃣ 加分布式锁</h3><ul>
+<li>给关键资源加锁，串行化更新操作，避免并发穿透。</li>
+</ul>
+<h3 id="3️⃣-异步更新缓存（利用消息队列）"><a href="#3️⃣-异步更新缓存（利用消息队列）" class="headerlink" title="3️⃣ 异步更新缓存（利用消息队列）"></a>3️⃣ 异步更新缓存（利用消息队列）</h3><ul>
+<li>变更数据后，发送消息通知缓存异步刷新。</li>
+</ul>
+<h3 id="4️⃣-设置合理的缓存-TTL-定时刷新"><a href="#4️⃣-设置合理的缓存-TTL-定时刷新" class="headerlink" title="4️⃣ 设置合理的缓存 TTL + 定时刷新"></a>4️⃣ 设置合理的缓存 TTL + 定时刷新</h3><ul>
+<li>防止长期过期数据驻留，降低不一致几率。</li>
+</ul>
+<h3 id="5️⃣-不缓存非热点数据"><a href="#5️⃣-不缓存非热点数据" class="headerlink" title="5️⃣ 不缓存非热点数据"></a>5️⃣ 不缓存非热点数据</h3><ul>
+<li>某些冷门数据没必要缓存，避免无谓一致性维护。</li>
+</ul>
+</blockquote>
 <h6 id="Redis作为缓存，数据的持久化是怎么做的？"><a href="#Redis作为缓存，数据的持久化是怎么做的？" class="headerlink" title="Redis作为缓存，数据的持久化是怎么做的？"></a><span style = "color:red">Redis作为缓存，数据的持久化是怎么做的？</span></h6><p><strong>Redis持久化</strong>：RDB全称Redis Database Backup file(Redis数据备份文件)，也被叫做Redis数据快照，简单来说就是<u>把内存中的所有数据都记录到磁盘中</u>。当Redis实例故障重启后，从磁盘读取快照文件，数据恢复。</p>
 <pre><code class="mysql">[root@localhost ~]# redis-cli
 127.0.0.1:6379&gt; save          #由Redis主进程来执行RDB，会阻塞所有命令
 ok
 
-127.0.0.1:6379&gt; bgsave        #开启子进程执行RDB，避免主进程受到影响
+127.0.0.1:6379&gt; bgsave        #开 启子进程执行RDB，避免主进程受到影响
 Background saving started
 </code></pre>
 <p>Redis内部有触发RDB的机制，可以在redis.conf文件中找到，格式如下：</p>
@@ -241,7 +313,7 @@ save 900 1
 save 300 10
 save 60 10000
 </code></pre>
-<p>&#x3D;&#x3D;<strong>RDB的执行原理？</strong>&#x3D;&#x3D;<del>数据完整性高用RDB</del></p>
+<p>&#x3D;&#x3D;<strong>RDB的执行原理？</strong>&#x3D;&#x3D;<del>数据完整性高用RDB</del><br><del>save就是直接让主线程去执行</del></p>
 <p><strong><u>bgsave开始时会fork主进程得到子进程，子进程共享主进程的内存数据，完成fork后读取内存数据并写入RDB文件</u></strong></p>
 <blockquote>
 <p>在LInux中主进程并无法直接读取物理内存，它只能通过虚拟内存去读。因此有<strong>页表</strong>(记录虚拟地址与物理地址的映射关系)去执行操作 同时 主进程也会fork(复制页表) 成为一个新的子进程(携带页表) → 写新RDB文件替换旧的RDB文件 → 磁盘</p>
@@ -295,7 +367,7 @@ appendfsync no
 <td align="center">可靠性较差，可能丢失大量数据</td>
 </tr>
 </tbody></table>
-<p>因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但<strong>只有最后一次写操作才有意义</strong>。<u>通过执行<code>bgrewriteaof</code>命令，可以让AOF文件执行重读功能，用最少的命令达到相同效</u>果</p>
+<p>因为是记录命令，AOF文件会比RDB文件大的多。而且AOF会记录对同一个key的多次写操作，但<strong>只有最后一次写操作才有意义</strong>。<u>通过执行<code>bgrewriteaof</code>命令，可以让AOF文件执行重读功能，用最少的命令达到相同效</u>果<del>这是AOF文件越来越大的处理方式</del></p>
 <p>Redis会在出发阈值时自动重写AOF文件。阈值也可以在redis.conf中配置</p>
 <pre><code class="mysql"># AOF文件比上次文件 增多超过多少百分比则触发重写
 auto-aof-rewrite-percentage 100
@@ -314,7 +386,7 @@ auto-aof-rewrite-min-size 64mb
 </thead>
 <tbody><tr>
 <td align="center">持久化方式</td>
-<td align="center">定时对整个内存做快照哦</td>
+<td align="center">定时对整个内存做快照</td>
 <td align="center">记录每一次执行的命令</td>
 </tr>
 <tr>
@@ -3140,6 +3212,54 @@ sendToSkywalking(traceId, methodName, cost);
 <blockquote>
 <p>● 简历上写的微服务，只要是发生了多个服务之间的<strong>写操作</strong>，都需要进行分布式事务控制</p>
 <p>● 描述项目中采用的哪种方案(seataMQ)<br>⚪ seata的XA模式，CP，需要互相等待各个分支事务提交，可以保证强一致性，性能差 (<span style = "color:red"><strong>银行业务</strong></span> )<br>⚪ seata的AT模式，AP，底层使用undolog 实现，性能好 (<span style = "color:red"><strong>互联网业务</strong></span> )<br>⚪ seata的TCC模式，AP，性能较好，不过需要人工编码实现 (<span style = "color:red"><strong>银行业务</strong></span> )<br>⚪ MQ模式实现分布式事务，在A服务写数据的时候，需要在同一个事务内发送消息到另外一个事务异步，性能最好 (<span style = "color:red"><strong>互联网业务</strong></span> )</p>
+<h3 id="✅-你的理解：Seata-的-XA-≈-CP，AT-≈-AP？"><a href="#✅-你的理解：Seata-的-XA-≈-CP，AT-≈-AP？" class="headerlink" title="✅ 你的理解：Seata 的 XA ≈ CP，AT ≈ AP？"></a>✅ 你的理解：<strong>Seata 的 XA ≈ CP，AT ≈ AP？</strong></h3><h4 id="Seata-是实现，CAP-是原则"><a href="#Seata-是实现，CAP-是原则" class="headerlink" title="Seata 是实现，CAP 是原则"></a>Seata 是实现，CAP 是原则</h4><p>你这样理解<strong>有一定道理</strong>，但这两者并不是等价关系。<br>Seata 是一种“<strong>解决分布式事务问题的技术方案</strong>”，目的是确保多个数据库操作的一致性，属于 <strong>CAP 中的一致性实现策略之一</strong>，但不能反过来说它就是 CAP 的实现。</p>
+<table>
+<thead>
+<tr>
+<th>对比</th>
+<th><strong>Seata XA &#x2F; AT 模式</strong></th>
+<th><strong>CAP 理论中的 CP &#x2F; AP</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本质</td>
+<td>一种<strong>分布式事务协议实现</strong></td>
+<td>一种<strong>分布式系统权衡模型</strong></td>
+</tr>
+<tr>
+<td>关注点</td>
+<td>一致性、事务原子性</td>
+<td>可用性 vs 一致性 vs 分区容忍性</td>
+</tr>
+<tr>
+<td>使用背景</td>
+<td>数据库操作级别的事务控制</td>
+<td>整个分布式系统的架构设计选择</td>
+</tr>
+</tbody></table>
+<h2 id="🟢-Seata-为什么要设计成-XA、AT-两种模式？"><a href="#🟢-Seata-为什么要设计成-XA、AT-两种模式？" class="headerlink" title="🟢 Seata 为什么要设计成 XA、AT 两种模式？"></a>🟢 Seata 为什么要设计成 XA、AT 两种模式？</h2><p>因为不同的业务场景对性能 vs 一致性 的需求不同，Seata 提供了“可插拔”式的事务解决方案：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>一致性</th>
+<th>性能</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>XA模式（两阶段提交）</strong></td>
+<td>强一致性</td>
+<td>性能差、资源占用多</td>
+<td>接近传统分布式事务，事务期间资源锁定</td>
+</tr>
+<tr>
+<td><strong>AT模式（自动补偿）</strong></td>
+<td>最终一致性</td>
+<td>性能好</td>
+<td>非侵入，靠 Undo Log 回滚操作，适用于大部分业务场景</td>
+</tr>
+</tbody></table>
 </blockquote>
 <ul>
 <li>Seata框架(XA、AT、TCC)</li>
@@ -3150,6 +3270,9 @@ sendToSkywalking(traceId, methodName, cost);
 <li><strong>TM</strong>(Transaction Manager) - <strong>事务管理器</strong>：定义全局事务的范围、开启全局事务、提交或回滚全局事务</li>
 <li><strong>RM</strong>(Resource Manager) - <strong>资源管理器</strong>：管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚</li>
 </ul>
+<blockquote>
+<p>Seata 的 XA 和 AT 确实在一致性与可用性方面体现了 CAP 的设计权衡，但它并不是 CAP 的实现，而是面向分布式事务的一种<strong>可插拔事务解决方案</strong>。Seata 架构之所以独立，是因为它提供了统一的事务协调服务，支持多种协议（XA&#x2F;AT&#x2F;TCC&#x2F;SAGA），以满足不同业务场景对一致性和性能的需求，这在真实的微服务架构中非常关键。</p>
+</blockquote>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/30dd6983ec4340d3f3f4118f3d5ccf89e4199555/XA%2CAT%2CTCC.png"></p>
 <p><span style = "color:red"><strong>分布式服务的<u>接口幂等性</u>如何设计？</strong></span></p>
 <blockquote>
@@ -3406,6 +3529,60 @@ public ReturnT&lt;String&gt; execute(ShardingContext context) &#123;
 <tr>
 <td>为什么不用 @Scheduled？</td>
 <td>@Scheduled 适用于单体项目，不能解决多实例下重复执行问题；XXL-Job 支持分布式调度、管理界面、执行日志等</td>
+</tr>
+</tbody></table>
+<h2 id="✅-详细对比分析：SpringTask-vs-XXL-Job"><a href="#✅-详细对比分析：SpringTask-vs-XXL-Job" class="headerlink" title="✅ 详细对比分析：SpringTask vs XXL-Job"></a>✅ 详细对比分析：SpringTask vs XXL-Job</h2><table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th><strong>SpringTask</strong></th>
+<th><strong>XXL-Job</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>定位</strong></td>
+<td>本地轻量级定时调度工具</td>
+<td>分布式定时任务调度平台</td>
+</tr>
+<tr>
+<td><strong>部署方式</strong></td>
+<td>内嵌在应用中（@Scheduled）</td>
+<td>独立部署调度中心 + 执行器</td>
+</tr>
+<tr>
+<td><strong>集群支持</strong></td>
+<td>不支持，单实例任务</td>
+<td>支持分布式执行和 failover</td>
+</tr>
+<tr>
+<td><strong>任务失效恢复</strong></td>
+<td>无（如服务挂了任务丢）</td>
+<td>支持失败重试 + 调度日志记录</td>
+</tr>
+<tr>
+<td><strong>任务管理</strong></td>
+<td>无可视化界面</td>
+<td>Web 界面管理、动态配置任务</td>
+</tr>
+<tr>
+<td><strong>任务执行方式</strong></td>
+<td>方法注解 + 固定周期</td>
+<td>支持 Bean 调用、Shell、HTTP、RPC 等</td>
+</tr>
+<tr>
+<td><strong>执行结果监控</strong></td>
+<td>无</td>
+<td>有日志管理、失败报警、状态追踪</td>
+</tr>
+<tr>
+<td><strong>调度策略</strong></td>
+<td>固定时间（cron）</td>
+<td>cron、分片广播、失败重试、手动触发等</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>简单、稳定的定时逻辑，如定期清理缓存</td>
+<td>多任务调度、跨服务控制、任务分发、分片执行、手动补偿等复杂场景</td>
 </tr>
 </tbody></table>
 </blockquote>
@@ -4760,7 +4937,7 @@ public ArrayList(int initialCapacity) &#123;
 </li>
 <li><p>查找(未知索引)：ArrayList需要遍历，链表也需要遍历，时间复杂度都是O(n)</p>
 </li>
-<li><p><strong>新增</strong>和<strong>删除</strong>【查询多用<code>ArrayList</code>；插入&#x2F;删除多用<code>LinkedList</code>】</p>
+<li><p><strong>新增</strong>和<strong>删除</strong>【查询多用<code>ArrayList</code>；插入&#x2F;删除多用<code>Linked</code>】</p>
 <ul>
 <li>ArrayList 尾部插入和删除，时间复杂度是O(1)；其他部分增删需要挪动数组，时间复杂度是O(n)</li>
 <li>LinkedList 头尾节点增删时间复杂度是O(1)，其他都需要遍历链表，时间复杂度是O(n)</li>
@@ -6566,8 +6743,8 @@ public static void main(String[] args)&#123;
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/420de72ff7c225960e7aff5d59f20c14e93ecb0a/%E4%BB%80%E4%B9%88%E6%98%AF%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88.png"></p>
 <p><span style = "color:red"><strong>能不能解释一下方法区</strong></span></p>
 <ul>
-<li>方法区(Method Area)是各个线程<strong>共享的内存区域</strong></li>
-<li>主要存储类的信息、运行时常量池</li>
+<li><span style = "color:blue">方法区(Method Area)是<u>各个线程</u> <strong>共享的内存区域</strong></span></li>
+<li><span style = "color:blue">主要存储类的信息、运行时常量池</span></li>
 <li>虚拟机启动的时候创建，关闭虚拟机时释放</li>
 <li>如果方法区域中的内存无法满足分配请求，则会抛出<code>OutOfMemoryError: Metaspace</code></li>
 </ul>
@@ -6575,7 +6752,7 @@ public static void main(String[] args)&#123;
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/dea620655b2b4c7234ba3b2f4fcedbf76a0bb9a8/%E8%A7%A3%E9%87%8A%E4%B8%80%E4%B8%8B%E6%96%B9%E6%B3%95%E5%8C%BA.png"></p>
 <p><span style = "color:red"><strong>你听过直接内存吗？</strong></span></p>
 <p><strong>直接内存</strong>：并不属于JVM中的内存结构，不由JVM进行管理。是虚拟机的系统内存，常见于NIO操作时，用于数据缓冲区，它分配回收成本较高，但读写能力高。[平时的是BIO]</p>
-<p>直接内存并不属于JVM中的内存结构，不由VM进行管理。是虚拟机的系统内存常见于 NIO 操作时，用于数据缓冲区，分配回收成本较高，但读写性能高，不受 JVM 内存回收管理</p>
+<p>直接内存并不属于JVM中的内存结构，不由VM进行管理。<strong>是虚拟机的系统内存常见于 NIO 操作时，用于数据缓冲区</strong>，分配回收成本较高，但读写性能高，不受 JVM 内存回收管理</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/5823b0e711a3e4029e411438f0a85468af5dfa3f/%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98.png"></p>
 <p><span style = "color:red"><strong>什么是类加载器，类加载器有哪些？</strong></span></p>
 <h6 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h6><p>JVM只会运行二进制文件，类加载器的作用就是将<strong>字节码文件加载到JVM中</strong>，从而让Java程序能够启动起来</p>
@@ -6739,7 +6916,7 @@ PhantomReference phantomReference = new PhantomReference(user, queue);
 <p><span style = "color:red"><strong>JVM调优的参数可以在哪里设置？</strong></span></p>
 <ul>
 <li><p><code>war包</code>部署在<code>tomcat</code>中设置</p>
-<p>修改 <code>TOMCAT_HOME/bin/catalina.sh</code> 文件<br><code>D:\apache-tomcat-8.5.93\bin\catalina.sh</code></p>
+<p>修改 <code>TOMCAT_HOME/bin/catalina.sh</code> 文件<br><code>D:\apache-tomcat-8.5.93\bin\catalina.sh</code>【卡特琳娜】</p>
 <pre><code class="mysql"># OS specific support.  $var _must_ be set to either true or false.
 JAVA_OPTS=&quot;-Xms512m -Xmx1024m&quot;
 cygwin=false
@@ -6932,7 +7109,7 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <p>责任链模式：为了避免请求发送者与多个请求处理者耦合在一起，将所有请求的处理者通过前一对象记住其下一个对象的引用而连成一条链；当有请求发生时，可将请求沿着这条链传递，直到有对象处理它为止。</p>
 <ul>
 <li><strong>抽象处理者(Handler)角色</strong>：定义一个处理请求的接口，包含抽象处理方法和一个后继连接。</li>
-<li><strong>具体处理者(Concrete Handler)角色</strong>：实现抽象处理者的处理方法，判断能否处理本次请求，如果可以处理请求则处理，否则将该请求转给它的后继者。</li>
+<li><strong>具体处理者(Concreate Handler)角色</strong>：实现抽象处理者的处理方法，判断能否处理本次请求，如果可以处理请求则处理，否则将该请求转给它的后继者。</li>
 <li><strong>客户类(Cient)角色</strong>：创建处理链，并向链头的具体处理者对象提交请求，它不关心处理细节和请求的传递过程。</li>
 </ul>
 <p><span style = "color:blue"><strong>举一反三</strong></span></p>
@@ -6942,6 +7119,140 @@ jmap -dump:format=b,file=heap.hprof pid 【只有在项目运行时候才可以�
 <li>简易流程审批</li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/c73c212f673d69975c55ad134b045e433a6f1e23/%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F2.png"></p>
+<blockquote>
+<h3 id="区分责任链模式和策略模式-在if的情况下"><a href="#区分责任链模式和策略模式-在if的情况下" class="headerlink" title="区分责任链模式和策略模式 在if的情况下"></a>区分<strong>责任链模式</strong>和<strong>策略模式</strong> 在if的情况下</h3><h2 id="✅-一句话区分"><a href="#✅-一句话区分" class="headerlink" title="✅ 一句话区分"></a>✅ 一句话区分</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>一句话理解</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>策略模式</strong></td>
+<td><strong>多种方案中选一个</strong>执行（if 就是“选择谁”）</td>
+</tr>
+<tr>
+<td><strong>责任链模式</strong></td>
+<td><strong>多个处理器</strong>依次尝试处理（if 是“要不要接着传下去”）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="👀-从-if-角度看"><a href="#👀-从-if-角度看" class="headerlink" title="👀 从 if 角度看"></a>👀 从 if 角度看</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>if 的含义</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>策略模式</td>
+<td>选择哪个处理逻辑（<strong>只执行一个</strong>）</td>
+<td>一旦匹配执行完毕，不再走其他</td>
+</tr>
+<tr>
+<td>责任链模式</td>
+<td>是否要处理或继续传递（<strong>可能多个都执行</strong>）</td>
+<td>可以处理多个，也可以提前终止</td>
+</tr>
+</tbody></table>
+<h2 id="🎯-场景类比（超级形象）"><a href="#🎯-场景类比（超级形象）" class="headerlink" title="🎯 场景类比（超级形象）"></a>🎯 场景类比（超级形象）</h2><h3 id="📦-策略模式："><a href="#📦-策略模式：" class="headerlink" title="📦 策略模式："></a>📦 策略模式：</h3><blockquote>
+<p>像点菜：你从多个菜中选择一个最合适的吃<br> 🔁 选择一个策略就完事</p>
+</blockquote>
+<pre><code class="java">if (type == &quot;微信&quot;) &#123;
+   payWithWeChat();
+&#125; else if (type == &quot;支付宝&quot;) &#123;
+   payWithAliPay();
+&#125;
+</code></pre>
+<ul>
+<li><strong>策略模式核心</strong>：同一个接口，不同实现类，运行时选择哪个</li>
+</ul>
+<hr>
+<h3 id="🛠️-责任链模式："><a href="#🛠️-责任链模式：" class="headerlink" title="🛠️ 责任链模式："></a>🛠️ 责任链模式：</h3><blockquote>
+<p>像审批流程：你写了个请假单，先经理签字 → 主管签字 → HR签字<br> 🔁 每个人看一下自己要不要处理，处理完能不能往下传</p>
+</blockquote>
+<pre><code class="java">if (金额 &lt;= 1000) &#123;
+   主管处理
+   return
+&#125;
+if (金额 &lt;= 5000) &#123;
+   经理处理
+   return
+&#125;
+HR处理
+</code></pre>
+<ul>
+<li><strong>责任链核心</strong>：链式传递，一个接一个处理（可中断）</li>
+</ul>
+<h2 id="✅-示例代码对比"><a href="#✅-示例代码对比" class="headerlink" title="✅ 示例代码对比"></a>✅ 示例代码对比</h2><h3 id="🧪-策略模式（支付选择）"><a href="#🧪-策略模式（支付选择）" class="headerlink" title="🧪 策略模式（支付选择）"></a>🧪 策略模式（支付选择）</h3><pre><code class="java">public interface PayStrategy &#123;
+    void pay();
+&#125;
+
+public class WeChatPay implements PayStrategy &#123;
+    public void pay() &#123; System.out.println(&quot;微信支付&quot;); &#125;
+&#125;
+
+public class AliPay implements PayStrategy &#123;
+    public void pay() &#123; System.out.println(&quot;支付宝支付&quot;); &#125;
+&#125;
+
+// 使用
+PayStrategy strategy;
+if (&quot;wechat&quot;.equals(type)) &#123;
+    strategy = new WeChatPay();
+&#125; else &#123;
+    strategy = new AliPay();
+&#125;
+strategy.pay();
+</code></pre>
+<p>✔️ 选择一个策略类并执行，<code>if</code> 只是为了<strong>选哪一个</strong></p>
+<hr>
+<h3 id="🧪-责任链模式（审批流程）"><a href="#🧪-责任链模式（审批流程）" class="headerlink" title="🧪 责任链模式（审批流程）"></a>🧪 责任链模式（审批流程）</h3><pre><code class="java">public abstract class Approver &#123;
+    protected Approver next;
+
+    public void setNext(Approver next) &#123;
+        this.next = next;
+    &#125;
+
+    public abstract void process(int amount);
+&#125;
+
+public class Manager extends Approver &#123;
+    public void process(int amount) &#123;
+        if (amount &lt;= 1000) &#123;
+            System.out.println(&quot;Manager approved&quot;);
+        &#125; else if (next != null) &#123;
+            next.process(amount);
+        &#125;
+    &#125;
+&#125;
+
+public class Director extends Approver &#123;
+    public void process(int amount) &#123;
+        if (amount &lt;= 5000) &#123;
+            System.out.println(&quot;Director approved&quot;);
+        &#125; else if (next != null) &#123;
+            next.process(amount);
+        &#125;
+    &#125;
+&#125;
+
+// 链式构建
+Manager m = new Manager();
+Director d = new Director();
+m.setNext(d);
+
+// 发起请求
+m.process(3000);
+</code></pre>
+<p>✔️ 多个处理器按顺序尝试，<code>if</code> 是为了<strong>决定自己是否处理</strong>，并可能<strong>往下传递</strong></p>
+<p> <strong>if 语句长得一样</strong>，但目的不同：</p>
+<ul>
+<li>策略 if 是“选哪一个”</li>
+<li>责任链 if 是“要不要传下去”</li>
+</ul>
+</blockquote>
 <h3 id="常见技术场景题"><a href="#常见技术场景题" class="headerlink" title="常见技术场景题"></a><span style = "color:red">常见技术场景题</span></h3><h6 id="单点登录这块怎么实现的？"><a href="#单点登录这块怎么实现的？" class="headerlink" title="单点登录这块怎么实现的？"></a><span style = "color:red">单点登录这块怎么实现的？</span></h6><p>单点登录的英文名：Single Sign On (<strong>SSO</strong>)，只需要登录一次，就可以访问所有信任的应用系统</p>
 <p>① 先解释什么是单点登录：单点登录的英文名叫做:Single SignOn(简称SSO)<br>② 介绍自己项目中涉及到的单点登录(即使没涉及过，也可以说实现的思路)<br>③ 介绍单点登录的解决方案，以JWT为例<br>    用户访问其他系统，会在网关判断token是否有效<br>    如果token无效则会返回401(认证失败)前端跳转到登录页面<br>    用户发送登录请求，返回浏览器一个token，浏览器把token保存到cookie<br>    再去访问其他服务的时候，都需要携带token，由网关统一验证后路由到目标服务</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/b3389992651a50673831641a3ae5dd61aa8e344a/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%BF%99%E5%9D%97%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0%E7%9A%84.png"></p>
@@ -8447,6 +8758,42 @@ LIMIT 10;
 </tbody></table>
 </blockquote>
 <p><span style = "color:red"><strong>MySQL的隔离级别实现原理MVCC ？</strong></span></p>
+<p>核心：<strong>隐藏字段 + Undo Log + ReadView</strong></p>
+<blockquote>
+<h3 id="🔸-1-每行记录都有两个隐藏字段："><a href="#🔸-1-每行记录都有两个隐藏字段：" class="headerlink" title="🔸 1. 每行记录都有两个隐藏字段："></a>🔸 1. 每行记录都有两个隐藏字段：</h3><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>trx_id</code>（创建事务ID）</td>
+<td>表示创建该版本的事务 ID</td>
+</tr>
+<tr>
+<td><code>roll_pointer</code>（回滚指针）</td>
+<td>指向 Undo Log（历史版本）的位置</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="🔸-2-Undo-Log（回滚日志）"><a href="#🔸-2-Undo-Log（回滚日志）" class="headerlink" title="🔸 2. Undo Log（回滚日志）"></a>🔸 2. Undo Log（回滚日志）</h3><ul>
+<li>用于记录数据修改前的<strong>旧版本数据</strong></li>
+<li>当有读请求（快照读）时，就通过 <code>roll_pointer</code> 访问历史版本</li>
+<li>写操作失败或回滚，也依赖 Undo Log 恢复数据</li>
+</ul>
+<hr>
+<h3 id="🔸-3-ReadView（读视图）"><a href="#🔸-3-ReadView（读视图）" class="headerlink" title="🔸 3. ReadView（读视图）"></a>🔸 3. ReadView（读视图）</h3><ul>
+<li>当事务开启时，会创建一个 ReadView（可见性判断工具）</li>
+<li>包含当前活跃事务 ID 列表、最小事务ID、最大事务ID</li>
+<li>判断规则：<ul>
+<li>如果行的创建事务ID &lt; ReadView 中最小事务ID → 可见</li>
+<li>如果在活跃事务列表中 → 不可见</li>
+<li>如果创建事务ID &gt; 当前事务ID → 不可见（未来数据）</li>
+</ul>
+</li>
+</ul>
+</blockquote>
 <ul>
 <li><p>**MVCC ** (Multiversion Concurrency Control) <u>多版本并发控制器</u> </p>
 <p>它是事务隔离级别的无锁的实现方式，用于提高事务的并发性能</p>

@@ -133,6 +133,367 @@
 
 <div class="post">
 
+    <a href="/2022/03/29/语法/HumanResource_JDBC_Case/">
+        <h2>
+            HumanResource_JDBC_Case
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/3/29
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h3 id="HumanResourceApplication"><a href="#HumanResourceApplication" class="headerlink" title="HumanResourceApplication"></a>HumanResourceApplication</h3><pre><code class="java">package jdbc.hrapp.command;
+
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class HumanResourceApplication &#123;
+    public static void main(String[] args) throws SQLException, ClassNotFoundException &#123;
+        System.out.println(&quot;1-查询部门员工&quot;);
+        System.out.println(&quot;2-办理员工入职&quot;);
+        System.out.println(&quot;3-更新员工薪资&quot;);
+        System.out.println(&quot;4-员工离职手续&quot;);
+        System.out.println(&quot;5-分页查询员工数据&quot;);
+        System.out.println(&quot;请选择功能&quot;);
+        Scanner in = new Scanner(System.in);
+        Integer cmd = in.nextInt();
+        Command command = null;
+        switch (cmd)&#123;
+            case 1://查询部门员工
+                command = new PstmtQueryCommand();
+                command.execute();
+                break;
+            case 2://办理员工入职
+                command = new InsertCommand();
+                command.execute();
+                break;
+            case 3://更新员工薪资
+                command = new UpdateCommand();
+                command.execute();
+                break;
+            case 4://离职员工
+                command = new DeleteCommand();
+                command.execute();
+                break;
+            case 5://分页查询员工数据
+                command = new PaginationCommand();
+                command.execute();
+                break;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="PstmtQueryCommand-查询部门员工"><a href="#PstmtQueryCommand-查询部门员工" class="headerlink" title="PstmtQueryCommand(查询部门员工)"></a>PstmtQueryCommand(查询部门员工)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class PstmtQueryCommand implements Command&#123;
+
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        System.out.println(&quot;请输入部门名称: &quot;);
+        Scanner in = new Scanner(System.in);
+        String pdname = in.next();
+        Connection conn = null; //放外面可扩大生命周期
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try &#123;
+            //1. 加载并注册侧JDBC驱动
+            Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;);
+
+            //2. 创建数据库连接
+            conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/imooc?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;&amp;allowPublicKeyRetrieval=true&quot;,&quot;root&quot;,&quot;root&quot;);
+
+            //3. 创建Statement对象
+            String sql = &quot;select * from employee where dname=? and eno &gt; ?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1,pdname);
+            pstmt.setInt(2,3100);
+
+            //结果集
+            rs = pstmt.executeQuery();
+
+            //4. 遍历查询结果
+            //rs.next() 返回布尔值，代表是否存在下一条记录
+            //如果有，返回true，同时结果集提取下一条记录
+            //如果没有，返回false，循环就会停止
+            while(rs.next())&#123;
+               Integer eno = rs.getInt(1);//JDBC中字段索引从1开始，而不是0
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String dname = rs.getString(&quot;dname&quot;);
+                System.out.println(dname + &quot;-&quot; + eno + &quot;-&quot; + ename + &quot;-&quot; + salary);
+            &#125;
+
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally&#123;
+            if(rs != null)&#123;
+                rs.close();
+            &#125;
+            if(pstmt != null)&#123;
+                pstmt.close();
+            &#125;
+            if(conn != null &amp;&amp; !conn.isClosed())&#123;
+                conn.close();
+            &#125;
+            //5. 关闭连接，释放资源
+            conn.close();
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="InsertCommand-办理员工入职"><a href="#InsertCommand-办理员工入职" class="headerlink" title="InsertCommand(办理员工入职)"></a>InsertCommand(办理员工入职)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Scanner;
+
+/**
+ * 新增员工数据
+ */
+public class InsertCommand implements Command &#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工姓名: &quot;);
+        String ename = in.next();
+        System.out.println(&quot;请输入员工薪资: &quot;);
+        Float salary = in.nextFloat();
+        System.out.println(&quot;请输入隶属部门: &quot;);
+        String dname = in.next();
+        System.out.println(&quot;请输入入职日期: &quot;);
+        String strHiredate = in.next();
+        //String到java.sql.Date分为两步：
+
+        //1、String转为java.util.Date
+        java.util.Date udHiredate = null;
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);
+        try &#123;
+            udHiredate = sdf.parse(strHiredate);
+        &#125; catch (ParseException e) &#123;
+            e.printStackTrace();
+        &#125;
+
+        //2、java.util.Date转为java.sql.Date
+        long time = udHiredate.getTime();//获取自1970年到现在的毫秒数
+        java.sql.Date sdHiredate = new java.sql.Date(time);
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            //引用DbUtils类的置入方法
+            conn = DbUtils.getConnection();
+            //1、参数化的写操作
+            String sql = &quot;insert into employee(eno,ename,salary,dname,hiredate) values(?,?,?,?,?)&quot;;
+            //2、对这些参数进行赋值
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1,eno);
+            pstmt.setString(2,ename);
+            pstmt.setFloat(3,salary);
+            pstmt.setString(4,dname);
+            pstmt.setDate(5,sdHiredate);//java.sql.Date
+            //3、对所有写操作进行更新
+            int cnt = pstmt.executeUpdate();//所有写操作都使用executeUpdate
+            System.out.println(&quot;cnt: &quot; + cnt);
+            System.out.println(ename + &quot;员工入职手续已办理&quot;);
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125;finally&#123;
+            DbUtils.closeConnection(null, pstmt, conn);
+        &#125;
+
+    &#125;
+&#125;
+</code></pre>
+<h4 id="UpdateCommand-更新员工薪资"><a href="#UpdateCommand-更新员工薪资" class="headerlink" title="UpdateCommand(更新员工薪资)"></a>UpdateCommand(更新员工薪资)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class UpdateCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+        System.out.println(&quot;请输入员工新的薪资&quot;);
+        float salary = in.nextFloat();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;update employee set salary =? where eno=?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setFloat(1,salary);
+            pstmt.setInt(2,eno);
+            int cnt = pstmt.executeUpdate();
+            if(cnt == 1)&#123;
+                System.out.println(&quot;员工薪资调整完毕&quot;);
+            &#125;else &#123;
+                System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="DeleteCommand-离职员工"><a href="#DeleteCommand-离职员工" class="headerlink" title="DeleteCommand(离职员工)"></a>DeleteCommand(离职员工)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DeleteCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入员工编号: &quot;);
+        int eno = in.nextInt();
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try &#123;
+            conn = DbUtils.getConnection();
+            String sql = &quot;delete from employee where eno =?&quot;;
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setFloat(1,eno);
+            int cnt = pstmt.executeUpdate();
+            if(cnt == 1)&#123;
+                System.out.println(&quot;员工离职手续已完成&quot;);
+            &#125;else &#123;
+                System.out.println(&quot;未找到&quot; + eno + &quot;编号员工数据&quot;);
+            &#125;
+        &#125; catch (ClassNotFoundException e) &#123;
+            e.printStackTrace();
+        &#125; catch (SQLException e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(null,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h4 id="PaginationCommand-分页查询员工数据"><a href="#PaginationCommand-分页查询员工数据" class="headerlink" title="PaginationCommand(分页查询员工数据)"></a>PaginationCommand(分页查询员工数据)</h4><pre><code class="java">package jdbc.hrapp.command;
+
+import jdbc.common.DbUtils;
+import jdbc.hrapp.entily.Employee;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * 分页查询员工数据
+ */
+public class PaginationCommand implements Command&#123;
+    @Override
+    public void execute() throws ClassNotFoundException, SQLException &#123;
+        Scanner in = new Scanner(System.in);
+        System.out.println(&quot;请输入页号：&quot;);
+        int page = in.nextInt();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        //List每条里面都是Employee实体对象
+        List&lt;Employee&gt; list = new ArrayList();
+        try &#123;
+            conn = DbUtils.getConnection();//从可变参数向后取10个参数
+            String sql = &quot;select * from employee limit ?,10&quot;;
+            pstmt = conn.prepareStatement(sql); //第一页位置从0~9
+            pstmt.setInt(1,(page - 1) * 10);
+            rs = pstmt.executeQuery();
+            while(rs.next())&#123;
+                Integer eno = rs.getInt(&quot;eno&quot;);
+                String ename = rs.getString(&quot;ename&quot;);
+                Float salary = rs.getFloat(&quot;salary&quot;);
+                String danme = rs.getString(&quot;dname&quot;);
+                Date hiredate  = rs.getDate(&quot;hiredate&quot;);
+                //每产生一个就封装为employee对象
+                Employee emp = new Employee();
+                emp.setEno(eno);
+                emp.setEname(ename);
+                emp.setSalary(salary);
+                emp.setDname(danme);
+                emp.setHiredate(hiredate);
+                list.add(emp);
+            &#125;
+            System.out.println(list.size());
+        &#125; catch (Exception e) &#123;
+            e.printStackTrace();
+        &#125; finally &#123;
+            DbUtils.closeConnection(rs,pstmt,conn);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/语法" style=color:#ffa2c4>
+                语法
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2022/03/29/语法/HumanResource_JDBC_Case/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2022/03/29/语法/标准JDBC操作五步骤/">
         <h2>
             标准JDBC操作五步骤 + 自动提交事务
@@ -456,7 +817,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/语法" style=color:#1bccbc>
+            <a href="/tags/语法" style=color:#ff7d73>
                 语法
             </a>
         </span>
@@ -608,7 +969,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#879cff>
+            <a href="/tags/英语" style=color:#ffa2c4>
                 英语
             </a>
         </span>
@@ -708,7 +1069,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#00bcd4>
                 英语
             </a>
         </span>
@@ -1105,7 +1466,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/英语" style=color:#ffa2c4>
+            <a href="/tags/英语" style=color:#1bccbc>
                 英语
             </a>
         </span>
@@ -1174,7 +1535,7 @@ public class DbUtilsSample &#123;
         
         <span class="tag">
             
-            <a href="/tags/破解" style=color:#00bcd4>
+            <a href="/tags/破解" style=color:#ffa2c4>
                 破解
             </a>
         </span>
@@ -1387,7 +1748,7 @@ return 0;
         
         <span class="tag">
             
-            <a href="/tags/竞赛/算法" style=color:#00bcd4>
+            <a href="/tags/竞赛/算法" style=color:#ff7d73>
                 竞赛/算法
             </a>
         </span>
@@ -1588,175 +1949,6 @@ int main()&#123;
     </div>
 
     <a href="/2022/03/25/语法/MarkDown语法/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2022/03/25/竞赛-算法/PTA技巧/">
-        <h2>
-            PTA技巧
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2022/3/25
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h3 id="时间优化-（写好的代码有测试点运行超时-可以暂时放下-不要浪费时间）"><a href="#时间优化-（写好的代码有测试点运行超时-可以暂时放下-不要浪费时间）" class="headerlink" title="时间优化:（写好的代码有测试点运行超时, 可以暂时放下, 不要浪费时间）"></a>时间优化:（写好的代码有测试点运行超时, 可以暂时放下, 不要浪费时间）</h3><ol>
-<li><p>如果出现运行超时考虑是否因为<strong>非法输入</strong>导致死循环</p>
-</li>
-<li><p>尽量创建全局变量(创建一次，后面赋值)，不要重复创建临时变量</p>
-</li>
-<li><p>尽量使用scanf，printf，而不使用<del>cin，cout</del> (C++的IO存在缓存(可取消))</p>
-</li>
-</ol>
-<pre><code class="c++">#include &lt;bits/stdc++.h&gt; //万能头
-using namespace std;
-→→→    ios::sync_with_stdio(false); ←←←
-→→→    cin.tie(0);cout.tie(0);    ←←←
-</code></pre>
-<ol start="4">
-<li>使用引用访问容器中的元素(遍历，排序&#x3D;&#x3D;&gt;<u>增强型for循环</u>)</li>
-</ol>
-<pre><code class="c++">vector&lt;int&gt; vc&#123;0,1,2,3&#125;;
-for(int&amp; i : vc)
-    cout &lt;&lt; i;
-</code></pre>
-<ol start="5">
-<li><p>使用unordered_map，unordered_set替换map，set可以提升效率(注意改头文件)</p>
-</li>
-<li><p>为了实现排序功能，尽量使用sort对数组排序，而不要依赖与map和set的自动排序(map，set结构庞大)</p>
-</li>
-<li><p>一般递归算法都比较慢，深搜(DFS)可以通过剪枝优化，并查集可以进行路径压缩提升效率。</p>
-</li>
-</ol>
-<hr>
-<h3 id="时间优化"><a href="#时间优化" class="headerlink" title="时间优化:"></a>时间优化:</h3><ol>
-<li><p>为了方便函数调用，可以都用全局变量(但这是个<em>坏习惯</em>)</p>
-</li>
-<li><p>不确定数据多少的情况，不一定非要用动态数组，可以直接根据题目给的数据范围定义一个较大的数组（大小应大于题目所给的范围），一般情况下不会出现内存超限 [数组大小别超过10^8，二维数组不能超过array(10000)(10000)]</p>
-</li>
-<li><p><strong>答案错误</strong>很有可能是漏了题目的<u>关键信息</u></p>
-</li>
-<li><p><strong>格式错误</strong>是因为排版跟题目要求不同，可能<u>多空格或空行</u></p>
-</li>
-<li><p><strong>段错误</strong>是因为非法访问才会导致，一般情况下是因为<u>数组访问越界</u></p>
-</li>
-<li><p><strong>涉及到除法的</strong>要考虑除数不能为0，一般会有一个测试点</p>
-</li>
-<li><p><strong>图论问题</strong>用深搜可以得到大部分的分</p>
-</li>
-<li><p>选取<strong>适当的结构</strong>(容器)可以让思路更清晰</p>
-</li>
-<li><p>熟悉编译器的调试功能(Debug)可以更快找出bug</p>
-</li>
-</ol>
-<hr>
-<h3 id="必备知识："><a href="#必备知识：" class="headerlink" title="必备知识："></a>必备知识：</h3><p>​    数据结构与算法：</p>
-<ol>
-<li><p>树：二叉树的遍历方式，平衡二叉树的建树过程，根据两种遍历来建树</p>
-</li>
-<li><p>图：深搜，广（层）搜，并查集<a target="_blank" rel="noopener" href="https://www.cnblogs.com/xzxl/p/7226557.html">（推荐博客）</a>。</p>
-</li>
-<li><p>堆：堆结构，建堆过程（堆排序）。</p>
-</li>
-<li><p>链表：根据结点连接链表（一般通过结构体进行模拟）。</p>
-</li>
-<li><p>排序：熟悉快排和归并排序的排序过程</p>
-</li>
-</ol>
-<h3 id="常用库、函数-黑科技"><a href="#常用库、函数-黑科技" class="headerlink" title="常用库、函数(黑科技)"></a>常用库、函数(黑科技)</h3><h6 id="容器、字符串处理、lambda表达式、自定义排序、类型转换、数值边界、数学函数、auto关键字、堆、常用功能函数-查找-计数-倒序"><a href="#容器、字符串处理、lambda表达式、自定义排序、类型转换、数值边界、数学函数、auto关键字、堆、常用功能函数-查找-计数-倒序" class="headerlink" title="容器、字符串处理、lambda表达式、自定义排序、类型转换、数值边界、数学函数、auto关键字、堆、常用功能函数(查找 计数 倒序)"></a><em>容器、字符串处理、lambda表达式、自定义排序、类型转换、数值边界、数学函数、auto关键字、堆、常用功能函数(查找 计数 倒序)</em></h6><table>
-<thead>
-<tr>
-<th>知识点</th>
-<th>说明</th>
-<th>推荐博客</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>string容器</td>
-<td>封装了一些对字符串的常用操作</td>
-<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_40946921/article/details/104836507">C++ String详解</a></td>
-</tr>
-<tr>
-<td>regex正则表达式</td>
-<td>使用正则表达式来替换、查找字符串</td>
-<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_34802416/article/details/79307102">C++ 正则表达式</a></td>
-</tr>
-<tr>
-<td>stirngstream字符串IO类</td>
-<td>使用字符串来进行IO操作</td>
-<td><a target="_blank" rel="noopener" href="https://www.cnblogs.com/wuchanming/p/3906176.html">C++ stringstream</a></td>
-</tr>
-<tr>
-<td>常用字符处理函数</td>
-<td>isdigit(char ch)</td>
-<td></td>
-</tr>
-</tbody></table>
-<ol>
-<li><p>sort函数排序，自定义结构体比较方式</p>
-</li>
-<li><p>STL标准库list，vector，queue，stack，map，set</p>
-</li>
-<li><p>数组(容器)倒序</p>
-<ol>
-<li>倒序函数: void reverse(typename begin, typename end);</li>
-<li>利用反向迭代器倒序(构造new string)</li>
-</ol>
-</li>
-<li><p>auto关键字</p>
-</li>
-<li><p>find函数</p>
-</li>
-</ol>
-<pre><code class="c++">string str; // string类函数:未找到返回string::npos
-if(str.find(&quot;substr&quot;) != string::npos);
-    //......
-set&lt;int&gt; st;
-if(st.find(0) != st.end()); //set、map成员函数: 未找到返回尾迭代器
-    //......
-vector&lt;int&gt; vc;
-if(find(vc.begin(),vc.end(),0) != vc.end()); //序列式容器可以通过algorithm库中的find
-    //......
-</code></pre>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/竞赛/算法" style=color:#879cff>
-                竞赛/算法
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2022/03/25/竞赛-算法/PTA技巧/ " class="go-post">
         阅读全文
     </a>
 </div>
