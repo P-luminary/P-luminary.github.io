@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/运维" style=color:#879cff>
+                <a href="/tags/运维" style=color:#ffa2c4>
                     运维
                 </a>
             </span>
@@ -159,7 +159,10 @@
 <blockquote>
 <p>{c361382 u0 com.android.settings&#x2F;.Settings t9}}}  &#x2F;.后面是界面的名字    u0后 &#x2F;.前是app名称</p>
 </blockquote>
-<pre><code class="python">from appium import webdriver
+<pre><code class="python">import time
+
+from appium import webdriver
+from selenium.webdriver.common.by import by  #【利用by自动获取信息】
 
 # 配置手机连接的参数信息
 # 参数信息都是以键值对的方式进行连接
@@ -214,7 +217,8 @@ driver.quit()
 </ul>
 <h5 id="自动截取虚拟器上界面的图片查看详情"><a href="#自动截取虚拟器上界面的图片查看详情" class="headerlink" title="自动截取虚拟器上界面的图片查看详情"></a>自动截取虚拟器上界面的图片查看详情</h5><p><code>D:\android_sdk_test\tools\uiautomatorviewer.bat</code></p>
 <p><span style = "color:red">若两个 <code>resource-id</code> 定位是一样的那么就需要手写XPATH【resource-id必须唯一！！】</span></p>
-<pre><code class="mysql"># 两个斜杠是代表当前界面所有的元素  增加个文本标识
+<pre><code class="mysql">####### 这些都是线性脚本！！！
+# 两个斜杠是代表当前界面所有的元素  增加个文本标识
 driver.find_element(By.XPATH,&#39;//*[@text=&quot;我的&quot;]&#39;).click()
 # 点击登录/注册
 driver.find_element(By.ID,&#39;io.manong.developerdaily:id/login_btn&#39;).click()
@@ -230,13 +234,19 @@ driver.find_element(By.ID,&#39;io.manong.developerdaily:id/edt_email&#39;).send_
 # 点击登录
 driver.find_element(By.XPATH,&#39;//*[@text=&quot;登录&quot;]&#39;).click()
 # 用户名是tata
+try:
 name_text = driver.find_element(By.XPATH,&#39;io.manong.developerdaily:id/nav_tv_name&#39;).click()
 if name_text == &quot;tata&quot;:
     print(&quot;登录成功&quot;)
 
 # - 登录成功/失败
 # - 进行断言
-assert name_text == &quot;tata&quot;
+    assert name_text == &quot;tata&quot;
+except:
+    login_failed_msg = driver.find_element(By.XPATH,&#39;io.manong.developerdaily:id/forgot&#39;).click()
+    print(&quot;登录失败&quot;)
+    assert login_failed_msg == &quot;忘了密码？点此找回&quot;
+time.sleep(5)
 ...
 ...
 </code></pre>
@@ -247,12 +257,150 @@ assert name_text == &quot;tata&quot;
 <h3 id="总结梳理"><a href="#总结梳理" class="headerlink" title="总结梳理"></a>总结梳理</h3><h6 id="核心业务流程梳理"><a href="#核心业务流程梳理" class="headerlink" title="核心业务流程梳理"></a>核心业务流程梳理</h6><ul>
 <li>需求分析</li>
 <li>设计用例脚本</li>
-<li>编写自动化测试脚本</li>
-<li>执行脚本</li>
-<li>断言</li>
-<li></li>
+<li><strong>编写自动化测试脚本</strong><ul>
+<li>将冒烟测试的脚本进行深度封装和模式设计<ul>
+<li>选择设计模式：<ul>
+<li>POM设计模式</li>
+<li>KDT设计模式</li>
 </ul>
+</li>
+<li>引入测试框架pytest结合设计模式进行深度封装</li>
+<li>执行过程中进行日志信息的记录log</li>
+<li>执行完成之后自动化完成测试报告allure</li>
+<li>持续集成Jenkins</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>脚本维护以及迭代更新</li>
+</ul>
+<p>app自动化测试的核心技能点：</p>
+<p><span style = "color:red"><strong>Python + Appium + pytest + parametrize + csv + pom + log + Allure + Jenkins</strong></span></p>
+<h3 id="项目梳理及描述"><a href="#项目梳理及描述" class="headerlink" title="项目梳理及描述"></a>项目梳理及描述</h3><p><span style = "color:blue">脚本执行的时候会直接发送给Appium服务器 执行py代码后 在Appium会执行许多<strong>adb</strong>的命令 再去控制手机 完成自动化测试</span>【线性模块 正反例要跑通噢】</p>
+<p>站在项目已经完成雏形的基础上，进行项目梳理和总结</p>
+<ul>
+<li><p>整个项目中的文件解析</p>
+<ul>
+<li>每个文件包和模块具体的使用规范</li>
+</ul>
+</li>
+<li><p>整个项目中的模块与文件之间的联系</p>
+<ul>
+<li>各个模块及包之间的导入使用</li>
+</ul>
+</li>
+<li><p>整体从项目完成之后的角度触发去讲解项目搭建流程以及使用规范</p>
+<ul>
+<li><p><strong>搭建app自动化测试环境</strong>：</p>
+<ul>
+<li>安卓sdk</li>
+<li>java的sdk</li>
+<li>安装appium</li>
+<li>使用真机或者安装手机模拟器</li>
+<li>安装第三方库：Appium-Python-Client</li>
+</ul>
+</li>
+<li><p><strong>编写自动化的用例线性脚本</strong></p>
+<ul>
+<li><p>新建一个项目</p>
+</li>
+<li><p>创建一个script脚本包</p>
+<ul>
+<li><p>梳理核心业务模块和功能</p>
+<ul>
+<li>登录</li>
+<li>注册</li>
+<li>点赞评论收藏</li>
+<li>发布文章</li>
+<li>浏览文章</li>
+<li>…</li>
+</ul>
+</li>
+<li><p>创建py模型进行线性脚本编写</p>
+<ul>
+<li>通过核心业务流程模块梳理出线性脚本的执行步骤</li>
+<li>然后通过编写自动化用例脚本执行完成第一轮正反例的<strong>冒烟测试</strong><ul>
+<li>梳理被操作元素以及具体操作方法</li>
+<li>执行正反例之后进行断言</li>
+<li>保证自动化用例的准确性</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>若是那种本身图标没有id 没有任何标志的 比如点赞，收藏，评论 就可以直接通过<strong>坐标去定位</strong>【要考虑分辨率和坐标以及机型】<br>回归测试一般只需要正例脚本！！！</p>
+<ul>
+<li><p><strong>选择设计模式pom</strong></p>
+<ul>
+<li>封装<ul>
+<li>一个类就是一个流程用例或者一个界面</li>
+<li>将界面中需要被操作的每一个元素封装成类属性</li>
+<li>将界面中需要被执行的用例步骤定义成一个实例方法</li>
+</ul>
+</li>
+<li>使用<ul>
+<li>创建页面类对象</li>
+<li>通过对象调用方法执行用例步骤脚本</li>
+<li>获取实际结果进行断言</li>
+</ul>
+</li>
+<li>整个页面封装</li>
+<li>将线性文件进行封装</li>
+</ul>
+</li>
+<li><p><strong>引入测试框架结合用例执行以及管理</strong></p>
+<ul>
+<li>用例进行综合管理</li>
+<li>使用参数化进行数据驱动测试：</li>
+</ul>
+<pre><code class="python">@pytest.mark.parametrize(&quot;user_email, password, t_a_f&quot;,[
+    [&quot; &quot;, &quot;123123&quot;, False],
+    [&quot;123@qq.com&quot;, &quot;123123&quot;, True],
+    ...
+])
+</code></pre>
+<ul>
+<li>一般情况在用例执行之前讲参数化使用的实参进行读取使用<ul>
+<li>数据量比较多的情况下会使用不同的文件格式存储数据<ul>
+<li>Csv</li>
+<li>text</li>
+<li>Excel</li>
+<li>yaml</li>
+<li>JSON</li>
+<li>…</li>
+</ul>
+</li>
+<li>数据驱动测试主要核心就是在用例设计的过程中，把所有用例需要的正反例数据进行保存</li>
+<li>然后再使用的时候进行读取自动化操作用例完成脚本内容</li>
+<li><strong>日志信息的记录</strong></li>
+<li><strong>缺陷报告的生成</strong></li>
+<li><strong>持续集成的处理</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>单独执行某个用例<code>(venv) D:\app_project&gt;pytest -vsk test_login</code><br>有很多其他的需要保持登录的情况下进行测试 ↓</p>
+<pre><code class="python"># 点赞评论及收藏
+def test_like_comment_collect(go_login):
+    # 创建页面类对象
+    l_c_l_page = LikeCommentCollectPage(go_login)
+    # 通过对象调用方法执行用例步骤
+    l_c_l_page.execute_cases()
+    
+# 发布文章
+def test_publish_article(go_login):...
 
+# 浏览文章
+def test_browse_article(go_login):...
+</code></pre>
+<h2 id="Pywinauto基本介绍"><a href="#Pywinauto基本介绍" class="headerlink" title="Pywinauto基本介绍"></a>Pywinauto基本介绍</h2>
     </div>
 
     
