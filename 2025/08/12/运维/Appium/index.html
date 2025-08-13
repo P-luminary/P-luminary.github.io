@@ -336,7 +336,7 @@ time.sleep(5)
 </ul>
 <p>若是那种本身图标没有id 没有任何标志的 比如点赞，收藏，评论 就可以直接通过<strong>坐标去定位</strong>【要考虑分辨率和坐标以及机型】<br>回归测试一般只需要正例脚本！！！</p>
 <ul>
-<li><p><strong>选择设计模式pom</strong></p>
+<li><p><strong>选择设计模式pom</strong>【Page Object Model页面对象模型的简称】</p>
 <ul>
 <li>封装<ul>
 <li>一个类就是一个流程用例或者一个界面</li>
@@ -378,12 +378,15 @@ time.sleep(5)
 </li>
 <li>数据驱动测试主要核心就是在用例设计的过程中，把所有用例需要的正反例数据进行保存</li>
 <li>然后再使用的时候进行读取自动化操作用例完成脚本内容</li>
-<li><strong>日志信息的记录</strong></li>
-<li><strong>缺陷报告的生成</strong></li>
-<li><strong>持续集成的处理</strong></li>
 </ul>
 </li>
 </ul>
+</li>
+<li><p><strong>日志信息的记录</strong></p>
+</li>
+<li><p><strong>缺陷报告的生成</strong></p>
+</li>
+<li><p><strong>持续集成的处理</strong></p>
 </li>
 </ul>
 <p>单独执行某个用例<code>(venv) D:\app_project&gt;pytest -vsk test_login</code><br>有很多其他的需要保持登录的情况下进行测试 ↓</p>
@@ -400,7 +403,60 @@ def test_publish_article(go_login):...
 # 浏览文章
 def test_browse_article(go_login):...
 </code></pre>
-<h2 id="Pywinauto基本介绍"><a href="#Pywinauto基本介绍" class="headerlink" title="Pywinauto基本介绍"></a>Pywinauto基本介绍</h2>
+<h2 id="Pywinauto基本介绍【基本解决找不到元素问题】"><a href="#Pywinauto基本介绍【基本解决找不到元素问题】" class="headerlink" title="Pywinauto基本介绍【基本解决找不到元素问题】"></a>Pywinauto基本介绍【基本解决找不到元素问题】</h2><p>主要用于自动化图形用户界面，他提供了一组功能丰富的工具和方法，能够模拟用户的各种操作:点击，输入，文本，选择菜单栏等等…从而实现对Windows应用程序的自动化控制</p>
+<h5 id="pywinauto的基本特性"><a href="#pywinauto的基本特性" class="headerlink" title="pywinauto的基本特性"></a>pywinauto的基本特性</h5><ul>
+<li>支持跨平台</li>
+<li>强大的GUI自动化功能【用户交互图形界面】</li>
+<li>简单易用</li>
+<li>支持多种应用程序的类型</li>
+<li>丰富的文档和社区支持</li>
+<li>支持多种GUI框架</li>
+<li>图像识别和模糊匹配</li>
+</ul>
+<h5 id="pywinauto应用场景"><a href="#pywinauto应用场景" class="headerlink" title="pywinauto应用场景"></a>pywinauto应用场景</h5><ul>
+<li>自动化测试</li>
+<li>ui自动化测试</li>
+<li>数据录入和处理</li>
+<li>窗口管理</li>
+<li>…</li>
+</ul>
+<h5 id="pywinauto的安装和使用"><a href="#pywinauto的安装和使用" class="headerlink" title="pywinauto的安装和使用"></a>pywinauto的安装和使用</h5><p>需要安装第三方库依赖：pywinauto<br>安装命令：【pycharm可以在某个项目下安装】<br><code>pip install pywinauto</code><br>可以用<code>pip list</code>查看是否安装好了 pywinauto</p>
+<h3 id="pywinauto基本使用"><a href="#pywinauto基本使用" class="headerlink" title="pywinauto基本使用"></a>pywinauto基本使用</h3><p>案例：使用pywinauto编写自动化脚本，完成记事本的基本操作<br><strong>操作流程：</strong></p>
+<ul>
+<li>打开记事本</li>
+<li>点击帮助（关于记事本）</li>
+<li>点击确定</li>
+<li>输入内容</li>
+<li>点击关闭记事本</li>
+<li>点击不保存</li>
+</ul>
+<pre><code class="python"># 导包
+from pywinauto.application import Application
+
+# 启动记事本  backend=&#39;uia&#39;意思是连接记事本的后端是什么类型
+# app = Application(backend=&#39;uia&#39;).start(&#39;notepad.exe&#39;)
+app = Application(backend=&#39;win32&#39;).start(&#39;notepad.exe&#39;)
+
+# 点击帮助（关于记事本） 使用快捷键完成打开关于记事本的信息  %是Alt符号  H:h  A:a
+app.Notepad.type_keys(&#39;%HA&#39;, pause=1)
+
+# 点击确定  re正则匹配
+dlg = app.window(title_re=&#39;关于记事本&#39;)
+ # 获取窗口的界面元素信息  【关于记事本的元素架构】
+dlg.print_control_identifiers()
+ #  点击    不直接调用click是要运用鼠标真实的模拟
+time.sleep(1)
+dlg[&#39;确定Button&#39;].click_input()
+
+# 输入内容
+app.Notepad.type_keys(&#39;xx教育&#39;)
+# 点击关闭记事本
+ # 菜单栏选择 -&gt;表示子菜单
+app.Notepad.menu_select(&quot;文件(&amp;F)-&gt;退出(&amp;X)&quot;)
+# 点击不保存
+app.window(title_re=&#39;记事本&#39;).window(title_re=&#39;不保存&#39;).cli
+</code></pre>
+<h6 id="桌面化元素定位工具：UISpy-exe【层级树】、inspect-exe"><a href="#桌面化元素定位工具：UISpy-exe【层级树】、inspect-exe" class="headerlink" title="桌面化元素定位工具：UISpy.exe【层级树】、inspect.exe"></a>桌面化元素定位工具：UISpy.exe【层级树】、inspect.exe</h6>
     </div>
 
     
