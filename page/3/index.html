@@ -133,6 +133,1840 @@
 
 <div class="post">
 
+    <a href="/2024/11/23/后端/MyBatisPlus/">
+        <h2>
+            MyBatisPlus
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2024/11/23
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <p><a target="_blank" rel="noopener" href="https://www.baomidou.com/">MyBatis-Plus</a><br><a target="_blank" rel="noopener" href="https://www.baomidou.com/introduce/">简介 | MyBatis-Plus</a></p>
+<h5 id="引入MybatisPlus起步依赖写依赖-认爸爸"><a href="#引入MybatisPlus起步依赖写依赖-认爸爸" class="headerlink" title="引入MybatisPlus起步依赖写依赖+认爸爸"></a>引入MybatisPlus起步依赖<del>写依赖+认爸爸</del></h5><ul>
+<li>MyBatisPlus官方提供了starter，其中集成了Mybatis和MybatisPlus的所有功能，并且实现了自动装配效果。因此我们可以用MybatisPlus的starter代替Mybatis的starter：</li>
+</ul>
+<pre><code class="xml">&lt;!--MybatisPlus--&gt;
+&lt;dependency&gt;    
+    &lt;groupId&gt;com.baomidou&lt;/groupId&gt;    
+    &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt; 
+    &lt;version&gt;3.5.3.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<ul>
+<li>自定义的Mapper继承MybatisPlus提供的<code>BaseMapper</code>接口</li>
+</ul>
+<pre><code class="java">public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+&#125;
+</code></pre>
+<pre><code class="java">UserMapper.java
+
+public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+</code></pre>
+<pre><code class="xml">UserMapper.xml
+
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;&gt;
+&lt;mapper namespace=&quot;com.itheima.mp.mapper.UserMapper&quot;&gt;
+
+&lt;/mapper&gt;
+</code></pre>
+<h3 id="常用注解"><a href="#常用注解" class="headerlink" title="常用注解"></a>常用注解</h3><ul>
+<li><code>@TableName</code>：用来指定表名</li>
+<li><code>@Tableld</code>：用来指定表中的主键字段信息<ul>
+<li><code>IdType枚举</code>：<ul>
+<li><strong>AUTO</strong>：数据库自增长</li>
+<li><strong>INPUT</strong>：通过set方法自行输入</li>
+<li><em>ASSIGN_ID</em>：<u>分配ID 默认实现类是</u><code>雪花算法</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>@TableField</code>：用来指定表中的普通字段信息<del>默认驼峰转下划线，不一致需要改</del><ul>
+<li>成员变量名与数据库字段名不一致</li>
+<li><u>成员变量名是以<strong>is开头</strong>，且是<strong>布尔值</strong></u><del>isMarried</del></li>
+<li>成员变量名与数据库关键字冲突<del>order</del></li>
+<li>成员变量不是数据库字段<del>address</del>，要标记不存在不然会默认数据库字段</li>
+</ul>
+</li>
+</ul>
+<pre><code class="java">@Data
+public class User &#123;
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Long id;
+    
+    @TableField(&quot;username&quot;)
+    private String name;
+
+    @TableField(&quot;is_married&quot;)
+    private Boolean isMarried;  // is经过反射会默认变成变量名Married
+    
+    @TableField(&quot;`order`&quot;)
+    private Integer order;
+    
+    @TableField(exist = false)
+    private String address;
+......
+&#125;
+</code></pre>
+<p>此时如果数据库的表名是：<code>tb_user</code> 就需要用到 <code>@TableName</code> 了</p>
+<pre><code class="mysql">数据库名：tb_user (用户表)
+#  名称
+1  id
+2  username
+3  is_married
+4  order
+</code></pre>
+<h3 id="常见配置"><a href="#常见配置" class="headerlink" title="常见配置"></a>常见配置</h3><p><code>MyBatisPlus</code>的配置项继承了MyBatis原生配置和一些自己特有的配置<br>MP更擅长单表的增删改查，如果是多表还是推荐用xml</p>
+<pre><code class="yaml">mybatis:
+  mapper-locations: classpath*:mapper/*.xml # Mapper.xml文件地址，默认值
+  type-aliases-package: com.itheima.po # 别名扫描包
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名自动映射
+    cache-enabled: false # 是否开启二级缓存
+  global-config:
+    db-config:
+      id-type: assign_id # id为雪花算法生成
+      update-strategy: not_null # 更新策略：只更新非空字段 类似于动态sql
+</code></pre>
+<p><span style="color:red"><strong>MyBatisPlus使用的基本流程</strong></span></p>
+<ul>
+<li>引入起步依赖</li>
+<li>自定义Mapper基础BaseMapper</li>
+<li>在实体类上添加注释声明 表信息</li>
+<li>在application.yml中根据需要添加配置</li>
+</ul>
+<h3 id="核心功能—条件构造器"><a href="#核心功能—条件构造器" class="headerlink" title="核心功能—条件构造器"></a>核心功能—条件构造器</h3><h6 id="条件构造器"><a href="#条件构造器" class="headerlink" title="条件构造器"></a>条件构造器</h6><p><img src="https://raw.githubusercontent.com/P-luminary/images/3b9a3950642e32ab3182e3aae6cd2ba50c25f42f/MyBatisPlus%E7%9B%B8%E5%85%B3%E6%8E%A5%E5%8F%A3%E5%88%97%E8%A1%A8.jpg"></p>
+<p><code>MyBatisPlus</code>支持各种复杂的<code>where</code>条件，满足日常开发的所有需求</p>
+<ul>
+<li>查询出名字中带o的，存款大于等于1000元的人的id、username、info、balance字段</li>
+</ul>
+<pre><code class="mysql"># 原始SQL：
+SELECT id,username,info,balance
+FROM user
+WHERE username LIKE ? AND balance &gt;= ?
+</code></pre>
+<pre><code class="java">// MyBatisPlus：
+@Test
+    void testQueryWrapper()&#123;
+        // 1.构建查询条件
+        QueryWrapper&lt;User&gt; wrapper = new QueryWrapper&lt;User&gt;()
+                .select(&quot;id&quot;, &quot;username&quot;, &quot;phone&quot;)
+                .like(&quot;username&quot;, &quot;o&quot;)
+                .ge(&quot;balance&quot;, 1000);
+        // 2.查询
+        List&lt;User&gt; users = userMapper.selectList(wrapper);
+        users.forEach(System.out::println);
+    &#125;
+</code></pre>
+<pre><code class="java">// MyBatisPlus Lambda编码格式(解决硬编码)：
+ @Test
+    void testLambdaQueryWrapper()&#123;
+        // 1.构建查询条件
+        LambdaQueryWrapper&lt;User&gt; wrapper = new LambdaQueryWrapper&lt;User&gt;()
+                // 利用反射 解决字符串硬编码
+                .select(User::getId, User::getUsername, User::getPhone)
+                .like(User::getUsername, &quot;o&quot;)
+                .ge(User::getBalance, 1000);
+        // 2.查询
+        List&lt;User&gt; users = userMapper.selectList(wrapper);
+        users.forEach(System.out::println);
+    &#125;
+
+-------------------------------------------------------------------------
+@Test
+void testLambdaQueryWrapperWithQueryWrapper()&#123;
+    // 1. 构建查询条件
+    QueryWrapper&lt;User&gt; queryWrapper = new QueryWrapper&lt;User&gt;();
+    LambdaQueryWrapper&lt;User&gt; wrapper = queryWrapper.lambda()
+            .select(User::getId, User::getUsername, User::getPhone)
+            .like(User::getUsername, &quot;o&quot;)
+            .ge(User::getBalance, 1000);
+
+    // 2. 查询
+    List&lt;User&gt; users = userMapper.selectList(wrapper);
+    users.forEach(System.out::println);
+&#125;
+</code></pre>
+<ul>
+<li>更新用户名为jack的用户的余额为2000</li>
+</ul>
+<pre><code class="mysql"># 原始SQL：
+UPDATE user
+    SET balance = 2000
+    WHERE (username = &quot;jack&quot;)
+</code></pre>
+<pre><code class="java">// MyBatisPlus：
+@Test
+    void testUpdateByQueryWrapper()&#123;
+        // 1.要更新的数据
+        User user = new User();
+        user.setBalance(2000);
+        // 2.更新的条件
+        QueryWrapper&lt;User&gt; wrapper = new QueryWrapper&lt;User&gt;().eq(&quot;username&quot;, &quot;jack&quot;);
+        // 3.执行更新
+        userMapper.update(user, wrapper);
+    &#125;
+</code></pre>
+<ul>
+<li>更新id为1，2，4的用户的余额，扣200</li>
+</ul>
+<pre><code class="mysql"># 原始SQL：
+UPDATE user
+    SET balance = balance - 200
+    WHERE id in (1,2,4)
+</code></pre>
+<pre><code class="java">// MyBatisPlus：
+@Test
+    void testUpdateWrapper()&#123;
+        List&lt;Long&gt; ids = List.of(1L, 2L, 4L);
+        UpdateWrapper&lt;User&gt; wrapper = new UpdateWrapper&lt;User&gt;()
+                .setSql(&quot;balance = balance - 100&quot;)
+                .in(&quot;id&quot;, ids);
+        userMapper.update(null, wrapper);
+    &#125;
+</code></pre>
+<h5 id="条件构造器的用法："><a href="#条件构造器的用法：" class="headerlink" title="条件构造器的用法："></a>条件构造器的用法：</h5><ul>
+<li><p>QueryWrapper和LambdaQueryWrapper通常用来构建select、delete、update的where条件部分</p>
+</li>
+<li><p>UpdateWrapper和LambdaUpdateWrapper通常只有在set语句比较特殊才使用</p>
+</li>
+<li><p>尽量使用LambdaQueryWrapper和LambdaUpdateWrapper，避免硬编码</p>
+</li>
+</ul>
+<h3 id="4-字段映射与表名映射"><a href="#4-字段映射与表名映射" class="headerlink" title="4. 字段映射与表名映射"></a>4. 字段映射与表名映射</h3><h4 id="4-1-问题一：表字段与编码属性设计不同步"><a href="#4-1-问题一：表字段与编码属性设计不同步" class="headerlink" title="4.1 问题一：表字段与编码属性设计不同步"></a>4.1 问题一：表字段与编码属性设计不同步</h4><ul>
+<li>在模型类属性上方，使用**@TableField**属性注解，通过&#x3D;&#x3D;<strong>value</strong>&#x3D;&#x3D;属性，设置当前属性对应的数据库表中的字段关系。</li>
+</ul>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\1683796001750.png" alt="1683796001750"></p>
+<h4 id="4-2-问题二：编码中添加了数据库中未定义的属性"><a href="#4-2-问题二：编码中添加了数据库中未定义的属性" class="headerlink" title="4.2 问题二：编码中添加了数据库中未定义的属性"></a>4.2 问题二：编码中添加了数据库中未定义的属性</h4><ul>
+<li>在模型类属性上方，使用**@TableField<strong>注解，通过</strong>&#x3D;&#x3D;exist&#x3D;&#x3D;**属性，设置属性在数据库表字段中是否存在，默认为true。</li>
+</ul>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\exist.png" alt="1683796121907"></p>
+<h4 id="4-3-问题三：表名与编码开发设计不同步"><a href="#4-3-问题三：表名与编码开发设计不同步" class="headerlink" title="4.3 问题三：表名与编码开发设计不同步"></a>4.3 问题三：表名与编码开发设计不同步</h4><ul>
+<li>在<u><strong>模型类</strong></u>上方，使用**@TableName<strong>注解，通过</strong>&#x3D;&#x3D;value&#x3D;&#x3D;**属性，设置当前类对应的数据库表名称。</li>
+</ul>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\table.png" alt="1683798660359"></p>
+<h2 id="四、主键生成策略"><a href="#四、主键生成策略" class="headerlink" title="四、主键生成策略"></a>四、主键生成策略</h2><p>id主键生成的策略有哪几种方式？</p>
+<p>不同的表应用不同的id生成策略</p>
+<ul>
+<li>日志：自增（1,2,3,4，……）</li>
+<li>购物订单：特殊规则（FQ23948AK3843）</li>
+<li>外卖单：关联地区日期等信息（10 04 20200314 34 91）</li>
+<li>关系表：可省略id</li>
+<li>……</li>
+</ul>
+<h3 id="1-id生成策略控制（-TableId注解）"><a href="#1-id生成策略控制（-TableId注解）" class="headerlink" title="1 id生成策略控制（@TableId注解）"></a>1 id生成策略控制（@TableId注解）</h3><p>雪花算法：<code>@TableId(type= IdType.ASSIGN_ID)</code><br><code>ASSIGN_UUID</code>是趋势递增<br>用了<code>分库分表</code>就不能用默认的id自增了 要用雪花算法</p>
+<ul>
+<li><p>名称：@TableId</p>
+</li>
+<li><p>类型：<strong>属性注解</strong></p>
+</li>
+<li><p>位置：模型类中用于表示主键的属性定义上方</p>
+</li>
+<li><p>作用：设置当前类中主键属性的生成策略</p>
+</li>
+<li><p>相关属性</p>
+<p>​    <strong>type</strong>：设置主键属性的生成策略，值参照IdType枚举值</p>
+<p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\image-20210801192449901.png" alt="image-20210801192449901"></p>
+</li>
+</ul>
+<h3 id="2-全局策略配置"><a href="#2-全局策略配置" class="headerlink" title="2 全局策略配置"></a>2 全局策略配置</h3><pre><code class="yml">mybatis-plus:
+  global-config:
+    db-config:
+      id-type: assign_id #全局设置主键id策略
+      table-prefix: tbl_  #表名前缀设置
+</code></pre>
+<h5 id="id生成策略全局配置"><a href="#id生成策略全局配置" class="headerlink" title="id生成策略全局配置"></a>id生成策略全局配置</h5><p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\image-20210801183128266.png" alt="image-20210801183128266"></p>
+<h5 id="表名前缀全局配置"><a href="#表名前缀全局配置" class="headerlink" title="表名前缀全局配置"></a>表名前缀全局配置</h5><p><img src="E:\广州黑马JavaEE就业198期—洪哥\mybatis-plus\讲义\md\assets\image-20210801183157694.png" alt="image-20210801183157694"></p>
+<h3 id="自定义SQL"><a href="#自定义SQL" class="headerlink" title="自定义SQL"></a>自定义SQL</h3><p>我们可以利用MyBatisPlus的Wrapper来**<u>构造复杂的where条件</u>**，然后自己定义SQL语句中剩下的部分。</p>
+<h6 id="将id在指定范围的用户-1-2-4-的余额扣减指定值"><a href="#将id在指定范围的用户-1-2-4-的余额扣减指定值" class="headerlink" title="将id在指定范围的用户(1,2,4)的余额扣减指定值"></a>将id在指定范围的用户(1,2,4)的余额扣减指定值</h6><pre><code class="sql">&lt;update id = &quot;updateBalanceByIds&quot;&gt;
+    UPDATE user
+    SET balance = balance - #&#123;amount&#125;
+    WHERE id IN
+    &lt;foreach collection=&quot;ids&quot; separator=&quot;,&quot; item=&quot;id&quot; open=&quot;(&quot; close=&quot;)&quot;&gt;
+    #&#123;id&#125;
+    &lt;/foreach&gt;
+&lt;/update&gt;
+</code></pre>
+<ul>
+<li>基于Wrapper构建where条件</li>
+</ul>
+<pre><code class="java">// 1.更新条件
+  List&lt;Long&gt; ids = List.of(1L, 2L, 4L);
+  int amount = 200;
+// 2.定义条件
+  QueryWrapper&lt;User&gt; wrapper = new QueryWrapper&lt;User&gt;().in(User::getId, ids);
+// 3.调用自定义SQL方法
+  userMapper.updateBalanceByIds(wrapper, amount);
+</code></pre>
+<ul>
+<li>在mapper方法参数中用Param注解声明wrapper变量名称，<strong>必须是ew</strong></li>
+</ul>
+<pre><code class="java">void updateBalanceByIds(@Param(Constants.WRAPPER) QueryWrapper&lt;User&gt; wrapper, @Param(&quot;amount&quot;) int amount);
+</code></pre>
+<ul>
+<li>自定义SQL，并使用Wrapper条件</li>
+</ul>
+<pre><code class="xml">&lt;update id=&quot;updateBalanceByIds&quot;&gt;
+        update user
+        set balance = balance - #&#123;amount&#125; $&#123;ew.customSqlSegment&#125;
+    &lt;/update&gt;
+</code></pre>
+<h3 id="IService接口基本用法"><a href="#IService接口基本用法" class="headerlink" title="IService接口基本用法"></a>IService接口基本用法</h3><img src="https://raw.githubusercontent.com/P-luminary/images/d025a67eaeb98c3eb9725d71e36e36b6516b2b7d/IService%E6%8E%A5%E5%8F%A3%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95.jpg" style="zoom:150%;" />
+
+<ul>
+<li>自定义Service接口继承IService接口</li>
+</ul>
+<pre><code class="java">package com.itheima.mp.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.itheima.mp.domain.po.User;
+
+public interface IUserService extends IService&lt;User&gt; &#123;
+
+&#125;
+</code></pre>
+<ul>
+<li>自定义Service实现类，实现自定义接口并继承ServiceImpl类</li>
+</ul>
+<pre><code class="java">package com.itheima.mp.service.impl.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.mp.domain.po.User;
+import com.itheima.mp.mapper.UserMapper;
+import com.itheima.mp.service.impl.IUserService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements IUserService &#123;
+
+&#125;
+</code></pre>
+<ul>
+<li>搞了个测试类<code>@Test</code></li>
+</ul>
+<pre><code class="java">package com.itheima.mp.service.impl;
+
+import com.itheima.mp.domain.po.User;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+@SpringBootTest
+class IUserServiceTest &#123;
+    @Autowired
+    private IUserService userService;
+
+    @Test
+    void testSaveUser() &#123;
+        User user = new User();
+        user.setId(5L);
+        user.setUsername(&quot;Lucy&quot;);
+        user.setPassword(&quot;123&quot;);
+        user.setPhone(&quot;18688990011&quot;);
+        user.setBalance(200);
+        user.setInfo(&quot;&#123;\&quot;age\&quot;: 24, \&quot;intro\&quot;: \&quot;英文老师\&quot;, \&quot;gender\&quot;: \&quot;female\&quot;&#125;&quot;);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+        userService.save(user);
+    &#125;
+    @Test
+    void testQuery()&#123;
+        List&lt;User&gt; users = userService.listByIds(Arrays.asList(1L, 2L, 3L));
+        users.forEach(System.out::println);
+    &#125;
+
+&#125;
+</code></pre>
+<h3 id="IService开发基础业务接口"><a href="#IService开发基础业务接口" class="headerlink" title="IService开发基础业务接口"></a>IService开发基础业务接口</h3><ul>
+<li>基于Restful风格实现下面的接口：<br>飞书文档说明：(<a target="_blank" rel="noopener" href="https://b11et3un53m.feishu.cn/wiki/PsyawI04ei2FQykqfcPcmd7Dnsc">https://b11et3un53m.feishu.cn/wiki/PsyawI04ei2FQykqfcPcmd7Dnsc</a>)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>编号</strong></th>
+<th align="left"><strong>接口</strong></th>
+<th align="left"><strong>请求方式</strong></th>
+<th align="left"><strong>请求路径</strong></th>
+<th><strong>请求参数</strong></th>
+<th><strong>返回值</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">1</td>
+<td align="left">新增用户</td>
+<td align="left">POST</td>
+<td align="left">&#x2F;users</td>
+<td>用户表单实体</td>
+<td>无</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="left">删除用户</td>
+<td align="left">DELETE</td>
+<td align="left">&#x2F;users&#x2F;{id}</td>
+<td>用户id</td>
+<td>无</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="left">根据id查询用户</td>
+<td align="left">GET</td>
+<td align="left">&#x2F;users&#x2F;{id}</td>
+<td>用户id</td>
+<td>用户VO</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="left">根据id批量查询</td>
+<td align="left">GET</td>
+<td align="left">&#x2F;users</td>
+<td>用户id集合</td>
+<td>用户VO集合</td>
+</tr>
+<tr>
+<td align="left">5</td>
+<td align="left">根据id扣减余额</td>
+<td align="left">PUT</td>
+<td align="left">&#x2F;users&#x2F;{id}&#x2F;deduction&#x2F;{money}</td>
+<td>•用户id  •扣减金额</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/thinkingandworkinghard/p/10482929.html">解决在IDEA 的Maven下 出现 Cannot access in offline mode 问题 - Doyourself! - 博客园</a></p>
+<p><a target="_blank" rel="noopener" href="http://localhost:8080/doc.html">管理接口文档</a></p>
+<pre><code class="java">UserController.java
+package com.itheima.mp.controller;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.itheima.mp.domain.po.User;
+
+import com.itheima.mp.domain.dto.UserFormDTO;
+
+import com.itheima.mp.domain.vo.UserVO;
+import com.itheima.mp.service.IUserService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Api(tags = &quot;用户管理接口&quot;)
+@RequiredArgsConstructor
+@RestController
+@RequestMapping(&quot;users&quot;)
+public class UserController &#123;
+
+    private final IUserService userService;
+
+    @PostMapping
+    @ApiOperation(&quot;新增用户&quot;)
+    public void saveUser(@RequestBody UserFormDTO userFormDTO) &#123;
+        // 1.转换DTO为PO
+        User user = BeanUtil.copyProperties(userFormDTO, User.class);
+        // 2.新增
+        userService.save(user);
+    &#125;
+
+    @DeleteMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;删除用户&quot;)
+    public void removeUserById(@PathVariable(&quot;id&quot;) Long userId) &#123;
+        userService.removeById(userId);
+    &#125;
+
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询用户&quot;)
+    public UserVO queryUserById(@PathVariable(&quot;id&quot;) Long userId) &#123;
+        // 1.查询用户
+        User user = userService.getById(userId);
+        // 2.处理vo
+        return BeanUtil.copyProperties(user, UserVO.class);
+    &#125;
+
+    @GetMapping
+    @ApiOperation(&quot;根据id集合查询用户&quot;)
+    public List&lt;UserVO&gt; queryUserByIds(@RequestParam(&quot;ids&quot;) List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+        List&lt;User&gt; users = userService.listByIds(ids);
+        // 2.处理vo
+        return BeanUtil.copyToList(users, UserVO.class);
+    &#125;
+
+    @PutMapping(&quot;&#123;id&#125;/deduction/&#123;money&#125;&quot;)
+    @ApiOperation(&quot;扣减用户余额&quot;)
+    public void deductBalance(@ApiParam(&quot;用户id&quot;) @PathVariable(&quot;id&quot;) Long id, @ApiParam(&quot;扣减的金额&quot;) @PathVariable(&quot;money&quot;) Integer money) &#123;
+        userService.deductBalance(id, money);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserFormDTO.java
+package com.itheima.mp.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户表单实体&quot;)
+public class UserFormDTO &#123;
+
+    @ApiModelProperty(&quot;id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;密码&quot;)
+    private String password;
+
+    @ApiModelProperty(&quot;注册手机号&quot;)
+    private String phone;
+
+    @ApiModelProperty(&quot;详细信息，JSON风格&quot;)
+    private String info;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+&#125;
+</code></pre>
+<pre><code class="java">UserQuery.java
+package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery &#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+package com.itheima.mp.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.mp.domain.po.User;
+import com.itheima.mp.mapper.UserMapper;
+import com.itheima.mp.service.IUserService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements IUserService &#123;
+    @Override
+    public void deductBalance(Long id, Integer money) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        // 2.判断用户状态
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 3.判断用户余额
+        if (user.getBalance() &lt; money) &#123;
+            throw new RuntimeException(&quot;用户余额不足&quot;);
+        &#125;
+        // 4.扣减余额
+        baseMapper.deductMoneyById(id, money);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.mp.mapper;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
+import com.itheima.mp.domain.po.User;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
+
+public interface UserMapper extends BaseMapper&lt;User&gt; &#123;
+
+    List&lt;User&gt; queryUserByIds(@Param(&quot;ids&quot;) List&lt;Long&gt; ids);
+
+    void updateBalanceByIds(@Param(Constants.WRAPPER) QueryWrapper&lt;User&gt; wrapper, @Param(&quot;amount&quot;) int amount);
+
+    @Update(&quot;UPDATE user SET balance = balance - #&#123;money&#125; WHERE id = #&#123;id&#125;&quot;)
+    void deductMoneyById(Long id, Integer money);
+&#125;
+</code></pre>
+<h3 id="Iservice的Lambda方法"><a href="#Iservice的Lambda方法" class="headerlink" title="Iservice的Lambda方法"></a>Iservice的Lambda方法</h3><h6 id="需求：实现一个根据复杂条件查询用户的接口，查询条件如下："><a href="#需求：实现一个根据复杂条件查询用户的接口，查询条件如下：" class="headerlink" title="需求：实现一个根据复杂条件查询用户的接口，查询条件如下："></a>需求：实现一个根据复杂条件查询用户的接口，查询条件如下：</h6><p><strong>name</strong>：用户名关键字，可以为空<br><strong>status</strong>：用户状态，可以为空<br><strong>minBalance</strong>：最小余额，可以为空<br><strong>maxBalance</strong>：最大余额，可以为空</p>
+<pre><code class="mysql">&lt;select id=&quot;queryUsers&quot; resultType=&quot;com.itheima.mp.domain.po.User&quot;&gt;
+    SELECT *
+    FROM tb_user
+    &lt;where&gt;
+        &lt;if test=&quot;name != null&quot;&gt;
+            AND username LIKE CONCAT(&#39;%&#39;, #&#123;name&#125;, &#39;%&#39;)
+        &lt;/if&gt;
+        &lt;if test=&quot;status != null&quot;&gt;
+            AND `status` = #&#123;status&#125;
+        &lt;/if&gt;
+        &lt;if test=&quot;minBalance != null and maxBalance != null&quot;&gt;
+            AND balance BETWEEN #&#123;minBalance&#125; AND #&#123;maxBalance&#125;
+        &lt;/if&gt;
+    &lt;/where&gt;
+&lt;/select&gt;
+</code></pre>
+<h6 id="UserQuery-java"><a href="#UserQuery-java" class="headerlink" title="UserQuery.java"></a>UserQuery.java</h6><pre><code class="java">package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery &#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<h6 id="UserController-java"><a href="#UserController-java" class="headerlink" title="UserController.java"></a>UserController.java</h6><pre><code class="java">    @ApiOperation(&quot;根据复杂条件查询用户接口&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public List&lt;UserVO&gt; queryUsers(UserQuery query) &#123;
+        // 1.查询用户PO
+        List&lt;User&gt; users = userService.queryUsers(query.getName(), query.getStatus(), query.getMinBalance(), query.getMaxBalance());
+        // 2.把po拷贝到vo
+        return BeanUtil.copyToList(users, UserVO.class);
+    &#125;
+</code></pre>
+<h6 id="IUserService-java"><a href="#IUserService-java" class="headerlink" title="IUserService.java"></a>IUserService.java</h6><pre><code class="java">package com.itheima.mp.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.itheima.mp.domain.po.User;
+
+import java.util.List;
+
+public interface IUserService extends IService&lt;User&gt; &#123;
+    void deductBalance(Long id, Integer money);
+
+    List&lt;User&gt; queryUsers(String name, Integer status, Integer minBalance, Integer maxBalance);
+&#125;
+</code></pre>
+<h6 id="UserServiceImpl-java"><a href="#UserServiceImpl-java" class="headerlink" title="UserServiceImpl.java"></a>UserServiceImpl.java</h6><pre><code class="java">package com.itheima.mp.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.mp.domain.po.User;
+import com.itheima.mp.mapper.UserMapper;
+import com.itheima.mp.service.IUserService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements IUserService &#123;
+   @Override
+    public List&lt;User&gt; queryUsers(String name, Integer status, Integer minBalance, Integer maxBalance) &#123;
+        return lambdaQuery()
+                .like(name!=null, User::getUsername,name)
+                .eq(status!=null, User::getStatus,status)
+                .gt(minBalance!=null, User::getBalance,minBalance) // 大于
+                .lt(maxBalance!=null, User::getBalance,maxBalance) // 小于
+                .list();
+    &#125;
+&#125;
+</code></pre>
+<h3 id="IService的Lambda更新LambdaUpdate-、LambdaQuery"><a href="#IService的Lambda更新LambdaUpdate-、LambdaQuery" class="headerlink" title="IService的Lambda更新LambdaUpdate()、LambdaQuery()"></a>IService的Lambda更新<del>LambdaUpdate()、LambdaQuery()</del></h3><h6 id="改造根据id修改用户余额的接口，要求如下"><a href="#改造根据id修改用户余额的接口，要求如下" class="headerlink" title="改造根据id修改用户余额的接口，要求如下"></a>改造根据id修改用户余额的接口，要求如下</h6><ul>
+<li><p>完成对用户状态校验</p>
+</li>
+<li><p>完成对用户余额校验</p>
+</li>
+<li><p>如果扣减后余额为0，则将用户status修改为冻结状态 (2)</p>
+<h6 id="UserController-java-1"><a href="#UserController-java-1" class="headerlink" title="UserController.java"></a>UserController.java</h6></li>
+</ul>
+<pre><code class="java"> @PutMapping(&quot;&#123;id&#125;/deduction/&#123;money&#125;&quot;)
+    @ApiOperation(&quot;扣减用户余额&quot;)
+    public void deductBalance(@ApiParam(&quot;用户id&quot;) @PathVariable(&quot;id&quot;) Long id, @ApiParam(&quot;扣减的金额&quot;) @PathVariable(&quot;money&quot;) Integer money) &#123;
+        userService.deductBalance(id, money);
+    &#125;
+</code></pre>
+<h6 id="UserServiceImpl-java-1"><a href="#UserServiceImpl-java-1" class="headerlink" title="UserServiceImpl.java"></a>UserServiceImpl.java</h6><pre><code class="java"> @Override
+    public void deductBalance(Long id, Integer money) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        // 2.判断用户状态
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 3.判断用户余额
+        if (user.getBalance() &lt; money) &#123;
+            throw new RuntimeException(&quot;用户余额不足&quot;);
+        &#125;
+        // 4.扣减余额 update tb_user set balance = balance - ?
+        int remainBalance = user.getBalance() - money;
+        lambdaUpdate()
+                .set(User::getBalance, remainBalance)
+                .set(remainBalance == 0,User::getStatus, 2)
+                .eq(User::getId, id)
+                .eq(User::getBalance, user.getBalance()) // 乐观锁
+                .update();
+    &#125;
+</code></pre>
+<h3 id="IService的批量新增"><a href="#IService的批量新增" class="headerlink" title="IService的批量新增"></a>IService的批量新增</h3><h6 id="批量插入10万条用户数据，并作出对比："><a href="#批量插入10万条用户数据，并作出对比：" class="headerlink" title="批量插入10万条用户数据，并作出对比："></a>批量插入10万条用户数据，并作出对比：</h6><ul>
+<li>普通for循环插入<del>4分钟</del></li>
+<li><strong>IService的批量插入</strong><del>30秒</del></li>
+<li>开启<strong>rewriteBatchedStatements&#x3D;true</strong>参数【6秒】<del>重写Statement语句，在application.yaml的sql中url拼接</del></li>
+</ul>
+<pre><code class="java">Test  com/itheima/mp/service/IUserServiceTest.java
+@Test
+    void testSaveOneByOne() &#123;
+        long b = System.currentTimeMillis();
+        for (int i = 1; i &lt;= 100000; i++) &#123;
+            userService.save(buildUser(i));
+        &#125;
+        long e = System.currentTimeMillis();
+        System.out.println(&quot;耗时：&quot; + (e - b));
+    &#125;
+
+    private User buildUser(int i) &#123;
+        User user = new User();
+        user.setUsername(&quot;user_&quot; + i);
+        user.setPassword(&quot;123&quot;);
+        user.setPhone(&quot;&quot; + (18688190000L + i));
+        user.setBalance(2000);
+        user.setInfo(&quot;&#123;\&quot;age\&quot;: 24, \&quot;intro\&quot;: \&quot;英文老师\&quot;, \&quot;gender\&quot;: \&quot;female\&quot;&#125;&quot;);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(user.getCreateTime());
+        return user;
+    &#125;
+</code></pre>
+<h6 id="MyBatisPlus的批处理"><a href="#MyBatisPlus的批处理" class="headerlink" title="MyBatisPlus的批处理"></a>MyBatisPlus的批处理</h6><pre><code class="java">@Test
+void testSaveBatch() &#123;
+    // 准备10万条数据
+    List&lt;User&gt; list = new ArrayList&lt;&gt;(1000);
+    long b = System.currentTimeMillis();
+    for (int i = 1; i &lt;= 100000; i++) &#123;
+        list.add(buildUser(i));
+        // 每1000条批量插入一次
+        if (i % 1000 == 0) &#123;
+            userService.saveBatch(list);
+            list.clear();
+        &#125;
+    &#125;
+    long e = System.currentTimeMillis();
+    System.out.println(&quot;耗时：&quot; + (e - b));
+&#125;
+</code></pre>
+<p>可以看到使用了批处理以后，比逐条新增效率提高了10倍左右，性能还是不错的。</p>
+<p>可以发现其实<code>MybatisPlus</code>的批处理是基于<code>PrepareStatement</code>的预编译模式，然后批量提交，最终在数据库执行时还是会有多条insert语句，逐条插入数据。SQL类似这样：</p>
+<pre><code class="SQL">Preparing: INSERT INTO user ( username, password, phone, info, balance, create_time, update_time ) VALUES ( ?, ?, ?, ?, ?, ?, ? )
+Parameters: user_1, 123, 18688190001, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+Parameters: user_2, 123, 18688190002, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+Parameters: user_3, 123, 18688190003, &quot;&quot;, 2000, 2023-07-01, 2023-07-01
+</code></pre>
+<p>而如果想要得到最佳性能，最好是将多条SQL合并为一条，像这样：</p>
+<pre><code class="SQL">INSERT INTO user ( username, password, phone, info, balance, create_time, update_time )
+VALUES 
+(user_1, 123, 18688190001, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_2, 123, 18688190002, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_3, 123, 18688190003, &quot;&quot;, 2000, 2023-07-01, 2023-07-01),
+(user_4, 123, 18688190004, &quot;&quot;, 2000, 2023-07-01, 2023-07-01);
+</code></pre>
+<p>该怎么做呢？</p>
+<p>MySQL的客户端连接参数中有这样的一个参数：<code>rewriteBatchedStatements</code>。顾名思义，就是重写批处理的<code>statement</code>语句。参考文档：</p>
+<p><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements</a></p>
+<p>这个参数的默认值是false，我们需要修改连接参数，将其配置为true</p>
+<p>修改项目中的application.yml文件，在jdbc的url后面添加参数<code>&amp;rewriteBatchedStatements=true</code>:</p>
+<pre><code class="YAML">spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/mp?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;serverTimezone=Asia/Shanghai&amp;rewriteBatchedStatements=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: MySQL123
+</code></pre>
+<h3 id="扩展功能-——-代码生成器生成代码的代码"><a href="#扩展功能-——-代码生成器生成代码的代码" class="headerlink" title="扩展功能 —— 代码生成器生成代码的代码"></a>扩展功能 —— 代码生成器<del>生成代码的代码</del></h3><h2 id="3-1-代码生成"><a href="#3-1-代码生成" class="headerlink" title="3.1 代码生成"></a><strong>3.1 代码生成</strong></h2><p>在使用MybatisPlus以后，基础的<code>Mapper</code>、<code>Service</code>、<code>PO</code>代码相对固定，重复编写也比较麻烦。因此MybatisPlus官方提供了代码生成器根据数据库表结构生成<code>PO</code>、<code>Mapper</code>、<code>Service</code>等相关代码。只不过代码生成器同样要编码使用，也很麻烦。</p>
+<p>这里推荐大家使用一款<code>MybatisPlus</code>的插件，它可以基于图形化界面完成<code>MybatisPlus</code>的代码生成，非常简单。</p>
+<h3 id="3-1-1-安装插件"><a href="#3-1-1-安装插件" class="headerlink" title="3.1.1.安装插件"></a><strong>3.1.1.安装插件</strong></h3><p>在<code>Idea</code>的plugins市场中搜索并安装<code>MyBatisPlus</code>插件：</p>
+<p>然后重启你的Idea即可使用。</p>
+<h3 id="3-1-2-使用"><a href="#3-1-2-使用" class="headerlink" title="3.1.2.使用"></a><strong>3.1.2.使用</strong></h3><p>刚好数据库中还有一张address表尚未生成对应的实体和mapper等基础代码。我们利用插件生成一下。 首先需要配置数据库地址，在Idea顶部菜单中，找到<code>other</code>，选择<code>Config Database</code>：</p>
+<p>点击OK保存。</p>
+<p>然后再次点击Idea顶部菜单中的other，然后选择<code>Code Generator</code>:</p>
+<p>在弹出的表单中填写信息：</p>
+<p><img src="https://b11et3un53m.feishu.cn/space/api/box/stream/download/asynccode/?code=NzY1ZmEzNjMxODM4NjkzMjUzZDkxMGY1NDdlZjUzNmRfMjQweXV3NE1lRmpkWGNzcU5pOGxyMW1yaGoxNmtJamZfVG9rZW46WlRqemI4SGVjb080VWp4Sko0ZWNZR2lTbnRoXzE3MzI0MTU0NDQ6MTczMjQxOTA0NF9WNA" alt="img"></p>
+<p>最终，代码自动生成到指定的位置了：</p>
+<h3 id="扩展功能-——-DB静态工具两个Service相互注入"><a href="#扩展功能-——-DB静态工具两个Service相互注入" class="headerlink" title="扩展功能 —— DB静态工具两个Service相互注入"></a>扩展功能 —— DB静态工具<del>两个Service相互注入</del></h3><ul>
+<li>改造根据id查询用户的接口，查询用户的同时<del>user表</del>，查询出用户对应的所有地址<del>address表</del></li>
+<li>改造根据id批量查询用户的接口，查询用户的同时，查询出用户对应的所有地址</li>
+<li>实现根据用户id查询收货地址功能，需要验证用户状态，冻结用户抛出异常(练习)</li>
+</ul>
+<h2 id="3-2-静态工具"><a href="#3-2-静态工具" class="headerlink" title="3.2.静态工具"></a><strong>3.2.静态工具</strong></h2><p><img src="https://raw.githubusercontent.com/P-luminary/images/76848ff08a98edaf6d5d07285cd76e50f42e7c5b/DB%E9%9D%99%E6%80%81%E5%B7%A5%E5%85%B7.jpg"></p>
+<p>有的时候Service之间也会相互调用，为了避免出现循环依赖问题，MybatisPlus提供一个静态工具类：<code>Db</code>，其中的一些静态方法与<code>IService</code>中方法签名基本一致，也可以帮助我们实现CRUD功能：</p>
+<pre><code class="java">UserController.java
+    @GetMapping(&quot;/&#123;id&#125;&quot;)
+    @ApiOperation(&quot;根据id查询用户&quot;)
+    public UserVO queryUserById(@PathVariable(&quot;id&quot;) Long id) &#123;
+        // 1.查询用户
+//        User user = userService.getById(userId);
+        // 2.处理vo
+        return userService.queryUserAndAddressById(id);
+    &#125;
+</code></pre>
+<pre><code class="java">IUserService.java
+public interface IUserService extends IService&lt;User&gt; &#123;
+    UserVO queryUserAndAddressById(Long id);
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public UserVO queryUserAndAddressById(Long id) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        if (user == null || user.getStatus() == 2) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 2.查询方法
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class)
+                .eq(Address::getUserId, id).list();
+        // 3.封装VO
+        // 3.1 转User的PO为VO
+        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        if (CollUtil.isEmpty(addresses)) &#123;
+           userVO.setAddresses(BeanUtil.copyToList(addresses, AddressVO.class));
+        &#125;
+        return userVO;
+    &#125;
+</code></pre>
+<h3 id="扩展功能—DB静态工具-练习"><a href="#扩展功能—DB静态工具-练习" class="headerlink" title="扩展功能—DB静态工具(练习)"></a>扩展功能—DB静态工具(练习)</h3><pre><code class="java">UserController.java
+@GetMapping
+    @ApiOperation(&quot;根据id集合查询用户&quot;)
+    public List&lt;UserVO&gt; queryUserByIds(@RequestParam(&quot;ids&quot;) List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+//        List&lt;User&gt; users = userService.listByIds(ids);
+        // 2.处理vo
+        return userService.queryUserAndAddressByIds(ids);
+    &#125;
+</code></pre>
+<pre><code class="java">IUserService.java
+public interface IUserService extends IService&lt;User&gt; &#123;
+    List&lt;UserVO&gt; queryUserAndAddressByIds(List&lt;Long&gt; ids);
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public List&lt;UserVO&gt; queryUserAndAddressByIds(List&lt;Long&gt; ids) &#123;
+        // 1.查询用户
+        List&lt;User&gt; users = listByIds(ids);
+        if (CollUtil.isEmpty(users)) &#123;
+            return Collections.emptyList();
+        &#125;
+        // 2.查询地址
+        // 2.1 获取用户id集合
+        List&lt;Long&gt; userIds = users.stream().map(User::getId).collect(Collectors.toList());
+        // 2.2 根据用户id查询地址 这是全部地址
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class).in(Address::getUserId, userIds).list();
+        // 2.3 转换地址VO
+        List&lt;AddressVO&gt; addressVOList = BeanUtil.copyToList(addresses, AddressVO.class);
+        // 2.4 梳理地址集合分组处理，分类整理，相同用户放入一个集合(组)中
+        Map&lt;Long, List&lt;AddressVO&gt;&gt; addressMap = new HashMap&lt;&gt;(0);
+        if (CollUtil.isNotEmpty(addressVOList))&#123;
+            addressMap = addressVOList.stream().collect(Collectors.groupingBy(AddressVO::getUserId));
+        &#125;
+        // 3.转换VO返回
+        List&lt;UserVO&gt; list = new ArrayList&lt;&gt;(users.size());
+        for (User user : users) &#123;
+            // 3.1 转换User的Po为VO
+            UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+            list.add(userVO);
+
+            // 3.2 转换地址VO
+            userVO.setAddresses(addressMap.get(user.getId()));
+        &#125;
+        return null;
+    &#125;
+</code></pre>
+<h3 id="扩展功能—逻辑删除要在数据库里面创建一个deleted表"><a href="#扩展功能—逻辑删除要在数据库里面创建一个deleted表" class="headerlink" title="扩展功能—逻辑删除要在数据库里面创建一个deleted表"></a>扩展功能—逻辑删除<del>要在数据库里面创建一个deleted表</del></h3><h6 id="订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息"><a href="#订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息" class="headerlink" title="订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息"></a>订单不进行真实删除，一旦采用逻辑删除其他都不能用，需要添加配置信息</h6><p><strong>逻辑删除</strong>就是基于代码逻辑模拟删除效果，但并不会真正删除数据。思路如下：</p>
+<ul>
+<li>在表中添加一个字段标记数据是否被删除</li>
+<li>当删除数据时把标记置为1</li>
+<li>查询时只查询标记为0的数据</li>
+</ul>
+<p>例如逻辑删除字段为deleted：</p>
+<p>• 删除操作：</p>
+<pre><code class="mysql"># 是0才删除 是1就不用删除 所以用AND
+UPDATE user SET deleted = 1 WHERE id = 1 AND deleted = 0
+</code></pre>
+<p>• 查询操作：</p>
+<pre><code class="mysql"># 查询未删除的数据
+SELECT * FROM user WHERE deleted = 0
+</code></pre>
+<h5 id="逻辑删除"><a href="#逻辑删除" class="headerlink" title="逻辑删除"></a>逻辑删除</h5><p><strong>MybatisPlus</strong>提供了逻辑删除功能，无需改变方法调用的方式，而是在底层帮我们自动修改CRUD的语句。我们要做的就是在application.yaml文件中配置逻辑删除的字段名称和值即可：</p>
+<pre><code class="yaml">mybatis-plus: 
+  global-config:    
+   db-config:
+    logic-delete-field: flag # 全局逻辑删除的实体字段名，字段类型可以是boolean、integer
+    logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+    logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+</code></pre>
+<h6 id="逻辑删除本身也有自己的问题，比如："><a href="#逻辑删除本身也有自己的问题，比如：" class="headerlink" title="逻辑删除本身也有自己的问题，比如："></a>逻辑删除本身也有自己的问题，比如：</h6><p>• 会导致数据库表垃圾数据越来越多，影响查询效率<br>• SQL中全都需要对逻辑删除字段做判断，影响查询效率</p>
+<p>因此，我不太推荐采用逻辑删除功能，如果数据不能删除，可以采用把数据迁移到其它表的办法。</p>
+<h3 id="扩展功能—枚举处理器"><a href="#扩展功能—枚举处理器" class="headerlink" title="扩展功能—枚举处理器"></a>扩展功能—枚举处理器</h3><p>像这种字段我们一般会定义一个枚举，做业务判断的时候就可以直接基于枚举做比较。但是我们数据库采用的是<code>int</code>类型，对应的PO也是<code>Integer</code>。因此业务操作时必须手动把<code>枚举</code>与<code>Integer</code>转换，非常麻烦。</p>
+<p>因此，MybatisPlus提供了一个处理枚举的类型转换器，可以帮我们<strong>把枚举类型与数据库类型自动转换</strong>。</p>
+<h3 id="3-3-1-定义枚举"><a href="#3-3-1-定义枚举" class="headerlink" title="3.3.1.定义枚举"></a><strong>3.3.1.定义枚举</strong></h3><p>我们定义一个用户状态的枚举：</p>
+<pre><code class="java">User.java //使用枚举类型
+// 使用状态(1正常 2冻结)
+private UserStatus status;
+</code></pre>
+<p>要让<code>MybatisPlus</code>处理枚举与数据库类型自动转换，我们必须告诉<code>MybatisPlus</code>，枚举中的哪个字段的值作为数据库值。 <code>MybatisPlus</code>提供了<code>@EnumValue</code>注解来标记枚举属性：</p>
+<pre><code class="java">package com.itheima.mp.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import lombok.Getter;
+
+@Getter
+public enum UserStatus &#123;
+    NORMAL(1, &quot;正常&quot;),
+    FREEZE(2, &quot;冻结&quot;)
+    ;
+    @EnumValue
+    private final int value;
+    private final String desc;
+
+    UserStatus(int value, String desc) &#123;
+        this.value = value;
+        this.desc = desc;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="3-3-2-配置枚举处理器MP增加了Enum和JSON处理器"><a href="#3-3-2-配置枚举处理器MP增加了Enum和JSON处理器" class="headerlink" title="3.3.2.配置枚举处理器MP增加了Enum和JSON处理器"></a>3.3.2.配置枚举处理器<del>MP增加了Enum和JSON处理器</del></h3><p>在application.yaml文件中添加配置：</p>
+<pre><code class="YAML">mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+</code></pre>
+<pre><code class="java">UserVO.java
+package com.itheima.mp.domain.vo;
+
+import com.itheima.mp.enums.UserStatus;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@ApiModel(description = &quot;用户VO实体&quot;)
+public class UserVO &#123;
+
+    @ApiModelProperty(&quot;用户id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;详细信息&quot;)
+    private String info;
+
+    @ApiModelProperty(&quot;使用状态（1正常 2冻结）&quot;)
+    private UserStatus status;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+
+    @ApiModelProperty(&quot;用户的收货地址&quot;)
+    private List&lt;AddressVO&gt; addresses;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+ @Override
+    public UserVO queryUserAndAddressById(Long id) &#123;
+        // 1.查询用户
+        User user = getById(id);
+        if (user == null || user.getStatus() == UserStatus.FREEZE) &#123;
+            throw new RuntimeException(&quot;用户状态异常&quot;);
+        &#125;
+        // 2.查询方法
+        List&lt;Address&gt; addresses = Db.lambdaQuery(Address.class)
+                .eq(Address::getUserId, id).list();
+        // 3.封装VO
+        // 3.1 转User的PO为VO
+        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        if (CollUtil.isEmpty(addresses)) &#123;
+           userVO.setAddresses(BeanUtil.copyToList(addresses, AddressVO.class));
+        &#125;
+        return userVO;
+    &#125;
+</code></pre>
+<h6 id="想要前端返回正常还是冻结-JsonValue"><a href="#想要前端返回正常还是冻结-JsonValue" class="headerlink" title="想要前端返回正常还是冻结  @JsonValue"></a>想要前端返回正常还是冻结 <code> @JsonValue</code></h6><pre><code class="java">package com.itheima.mp.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
+
+@Getter
+public enum UserStatus &#123;
+    NORMAL(1, &quot;正常&quot;),
+    FREEZE(2, &quot;冻结&quot;)
+    ;
+    @EnumValue
+    private final int value;
+    @JsonValue
+    private final String desc;
+
+    UserStatus(int value, String desc) &#123;
+        this.value = value;
+        this.desc = desc;
+    &#125;
+&#125;
+</code></pre>
+<h3 id="扩展功能—JSON处理器AbstractJsonTypeHandler"><a href="#扩展功能—JSON处理器AbstractJsonTypeHandler" class="headerlink" title="扩展功能—JSON处理器AbstractJsonTypeHandler"></a>扩展功能—JSON处理器<del>AbstractJsonTypeHandler</del></h3><p>数据库中user表中有一个json类型的字段</p>
+<blockquote>
+<p><strong>名称   数据类型      注释</strong><br>info    JSON            详细信息<br>。。。。。。。。。。。。</p>
+<p>JSON：<br>{ “age”:20,<br>“intro”: “”青年”,<br>“gender”:”male”}</p>
+</blockquote>
+<p>这样一来，我们要读取info中的属性时就非常不方便。如果要方便获取，info的类型最好是一个<code>Map</code>或者实体类。</p>
+<p>而一旦我们把<code>info</code>改为<code>对象</code>类型，就需要在写入数据库时手动转为<code>String</code>，再读取数据库时，手动转换为<code>对象</code>，这会非常麻烦。</p>
+<p>因此MybatisPlus提供了很多特殊类型字段的类型处理器，解决特殊字段类型与数据库类型转换的问题。例如处理JSON就可以使用<code>JacksonTypeHandler</code>处理器。</p>
+<h6 id="接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器："><a href="#接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器：" class="headerlink" title="接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器："></a>接下来，将User类的info字段修改为UserInfo类型，并声明类型处理器：</h6><p><code>@TableField(typeHandler = JacksonTypeHandler.class)</code> 定义类型处理器<br><code>@TableName(value = &quot;user&quot;, autoResultMap = true)</code></p>
+<pre><code class="java">User.java
+@Data
+@TableName(value = &quot;user&quot;, autoResultMap = true)
+public class User &#123;
+
+    /**
+     * 用户id
+     */
+    @TableId(value = &quot;id&quot;, type = IdType.AUTO)
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 详细信息
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private UserInfo info;
+&#125;
+</code></pre>
+<pre><code class="java">UserVO.java
+package com.itheima.mp.domain.vo;
+
+import com.itheima.mp.domain.po.UserInfo;
+import com.itheima.mp.enums.UserStatus;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@ApiModel(description = &quot;用户VO实体&quot;)
+public class UserVO &#123;
+
+    @ApiModelProperty(&quot;用户id&quot;)
+    private Long id;
+
+    @ApiModelProperty(&quot;用户名&quot;)
+    private String username;
+
+    @ApiModelProperty(&quot;详细信息&quot;)
+    private UserInfo info;
+
+    @ApiModelProperty(&quot;使用状态（1正常 2冻结）&quot;)
+    private UserStatus status;
+
+    @ApiModelProperty(&quot;账户余额&quot;)
+    private Integer balance;
+
+    @ApiModelProperty(&quot;用户的收货地址&quot;)
+    private List&lt;AddressVO&gt; addresses;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.mp.domain.po;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor(staticName = &quot;of&quot;)
+public class UserInfo &#123;
+    private Integer age;
+    private String intro;
+    private String gender;
+    // 添加静态方法 of
+    public static UserInfo of(Integer age, String intro, String gender) &#123;
+        return new UserInfo(age, intro, gender);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserMapperTest.java
+@SpringBootTest
+class UserMapperTest &#123;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    void testInsert() &#123;
+        User user = new User();
+        user.setId(5L);
+        user.setUsername(&quot;Lucy&quot;);
+        user.setPassword(&quot;123&quot;);
+        user.setPhone(&quot;18688990011&quot;);
+        user.setBalance(200);
+        user.setInfo(UserInfo.of(14, &quot;英文老师&quot;, &quot;female&quot;));
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.insert(user);
+    &#125;
+</code></pre>
+<h3 id="插件功能—分页插件基本用法"><a href="#插件功能—分页插件基本用法" class="headerlink" title="插件功能—分页插件基本用法"></a>插件功能—分页插件基本用法</h3><p>MyBatisPlus提供的内置拦截器有下面这些：</p>
+<table>
+<thead>
+<tr>
+<th><strong>序号</strong></th>
+<th><strong>拦截器</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>TenantLineInnerInterceptor</td>
+<td>多租户插件</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DynamicTableNameInnerInterceptor</td>
+<td>动态表名插件</td>
+</tr>
+<tr>
+<td>3</td>
+<td>PaginationInnerInterceptor</td>
+<td>分页插件</td>
+</tr>
+<tr>
+<td>4</td>
+<td>OptimisticLockerInnerInterceptor</td>
+<td>乐观锁插件</td>
+</tr>
+<tr>
+<td>5</td>
+<td>IllegalSQLInnerInterceptor</td>
+<td>SQL性能规范插件，检测并拦截垃圾SQL</td>
+</tr>
+<tr>
+<td>6</td>
+<td>BlockAttackInnerInterceptor</td>
+<td>防止全表更新和删除的插件</td>
+</tr>
+</tbody></table>
+<h6 id="首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】"><a href="#首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】" class="headerlink" title="首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】"></a>首先，要在配置类中注册MyBatisPlus的核心插件，同时添加分页插件：【总拦截器】</h6><pre><code class="java">@Configuration
+public class MybatisConfig &#123;
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() &#123;
+        // 1. 初始化核心插件
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        // 2. 添加分页插件
+        PaginationInnerInterceptor pageInterceptor = new PaginationInnerInterceptor(DbType.MYSQL);
+        pageInterceptor.setMaxLimit(1000L); // 设置分页上限
+        interceptor.addInnerInterceptor(pageInterceptor);
+        return interceptor;
+    &#125;
+&#125;
+</code></pre>
+<h6 id="接着，就可以使用分页的API了：-IService里面就有"><a href="#接着，就可以使用分页的API了：-IService里面就有" class="headerlink" title="接着，就可以使用分页的API了：[IService里面就有]"></a>接着，就可以使用分页的API了：[IService里面就有]</h6><pre><code class="java">@Test
+    void testPageQuery() &#123;
+        // 1. 查询
+        int pageNo = 1, pageSize = 5;
+        // 1.1. 分页参数
+        Page&lt;User&gt; page = Page.of(pageNo, pageSize);
+        // 1.2. 排序参数, 通过OrderItem来指定
+        page.addOrder(new OrderItem(&quot;balance&quot;, true));
+        // 先按balance排序 再按id排序
+        page.addOrder(new OrderItem(&quot;id&quot;, true));
+        // 1.3. 分页查询
+        Page&lt;User&gt; p = userService.page(page);
+        // 2. 总条数
+        System.out.println(&quot;total = &quot; + p.getTotal());
+        // 3. 总页数
+        System.out.println(&quot;pages = &quot; + p.getPages());
+        // 4. 分页数据
+        List&lt;User&gt; records = p.getRecords();
+        records.forEach(System.out::println);
+    &#125;
+</code></pre>
+<h3 id="插件功能—通用分页实体"><a href="#插件功能—通用分页实体" class="headerlink" title="插件功能—通用分页实体"></a>插件功能—通用分页实体</h3><h6 id="遵循下面的接口规范，编写一个UserController接口，实现User的分页查询"><a href="#遵循下面的接口规范，编写一个UserController接口，实现User的分页查询" class="headerlink" title="遵循下面的接口规范，编写一个UserController接口，实现User的分页查询"></a>遵循下面的接口规范，编写一个UserController接口，实现User的分页查询</h6><table>
+<thead>
+<tr>
+<th><strong>参数</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>请求方式</td>
+<td>GET</td>
+</tr>
+<tr>
+<td>请求路径</td>
+<td>&#x2F;users&#x2F;page</td>
+</tr>
+<tr>
+<td>请求参数</td>
+<td>“pageNo”: 1<br/>“pageSize”: 5<br/>“sortBy”: “balance”<br/>“isAsc”: false<br/>“name”: “jack”<br/>“status”: 1</td>
+</tr>
+<tr>
+<td>返回值</td>
+<td>“total”: 1005<br/>“pages”: 201<br/>“list”: 包含两个元素的数组，每个元素都是一个对象，包含以下键值对：<br/>“id”: 1 或 2<br/>“username”: “Jack” 或 “Rose”<br/>“info”: 包含以下键值对的对象：<br/>“age”: 21 或 20<br/>“gender”: “male” 或 “female”<br/>“intro”: “佛系青年” 或 “文艺青年”<br/>“status”: “正常” 或 “冻结”<br/>“balance”: 2000 或 1000</td>
+</tr>
+<tr>
+<td>特殊说明</td>
+<td>如果排序字段为空，默认按照更新时间排序  •排序字段不为空，则按照排序字段排序</td>
+</tr>
+</tbody></table>
+<h6 id="准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】"><a href="#准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】" class="headerlink" title="准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】"></a>准备一下请求参数和实体【封装成xxxQuery，若只返回前端则VO，给其他使用则DTO】</h6><p><code>写一个 【统一的分页条件】 和 【统一的分页结果】</code></p>
+<pre><code class="java">com/itheima/mp/domain/query/UserQuery.java
+// 要记得继承哦
+package com.itheima.mp.domain.query;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;用户查询条件实体&quot;)
+public class UserQuery extends PageQuery&#123;
+    @ApiModelProperty(&quot;用户名关键字&quot;)
+    private String name;
+    @ApiModelProperty(&quot;用户状态：1-正常，2-冻结&quot;)
+    private Integer status;
+    @ApiModelProperty(&quot;余额最小值&quot;)
+    private Integer minBalance;
+    @ApiModelProperty(&quot;余额最大值&quot;)
+    private Integer maxBalance;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/query/PageQuery.java
+package com.itheima.mp.domain.query;
+
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;分页查询实体&quot;)
+public class PageQuery &#123;
+    @ApiModelProperty(&quot;页码&quot;)
+    private Integer pageNo;
+    @ApiModelProperty(&quot;页码个数&quot;)
+    private Integer pageSize;
+    @ApiModelProperty(&quot;排序字段&quot;)
+    private String sortBy;
+    @ApiModelProperty(&quot;是否升序&quot;)
+    private Boolean isAsc;
+
+    public &lt;T&gt;  Page&lt;T&gt; toMpPage(OrderItem ... orders)&#123;
+        // 1.分页条件
+        Page&lt;T&gt; p = Page.of(pageNo, pageSize);
+        // 2.排序条件
+        // 2.1.先看前端有没有传排序字段
+        if (sortBy != null) &#123;
+            p.addOrder(new OrderItem(sortBy, isAsc));
+            return p;
+        &#125;
+        // 2.2.再看有没有手动指定排序字段
+        if(orders != null)&#123;
+            p.addOrder(orders);
+        &#125;
+        return p;
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPage(String defaultSortBy, boolean isAsc)&#123;
+        return this.toMpPage(new OrderItem(defaultSortBy, isAsc));
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByCreateTimeDesc() &#123;
+        return toMpPage(&quot;create_time&quot;, false);
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByUpdateTimeDesc() &#123;
+        return toMpPage(&quot;update_time&quot;, false);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/dto/PageDTO.java
+package com.itheima.mp.domain.dto;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Data
+@ApiModel(description = &quot;分页结果&quot;)
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageDTO&lt;V&gt; &#123;
+    @ApiModelProperty(&quot;总条数&quot;)
+    private Long total;
+    @ApiModelProperty(&quot;总页数&quot;)
+    private Long pages;
+    @ApiModelProperty(&quot;集合&quot;)
+    private List&lt;V&gt; list;
+
+    /**
+     * 返回空分页结果
+     * @param p MybatisPlus的分页结果
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; empty(Page&lt;P&gt; p)&#123;
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), Collections.emptyList());
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果
+     * @param p MybatisPlus的分页结果
+     * @param voClass 目标VO类型的字节码
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Class&lt;V&gt; voClass) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = BeanUtil.copyToList(records, voClass);
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果，允许用户自定义PO到VO的转换方式
+     * @param p MybatisPlus的分页结果
+     * @param convertor PO到VO的转换函数
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Function&lt;P, V&gt; convertor) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = records.stream().map(convertor).collect(Collectors.toList());
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+&#125;
+</code></pre>
+<hr>
+<pre><code class="java">com/itheima/mp/controller/UserController.java
+@ApiOperation(&quot;根据复杂条件查询用户接口&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public List&lt;UserVO&gt; queryUsers(UserQuery query) &#123;
+        return (List&lt;UserVO&gt;) userService.queryUsersPage(query);
+    &#125;
+</code></pre>
+<pre><code class="java">// 如果你想在字符串中表示一个大于号，
+你可以直接输入 &gt;，或者使用HTML实体 &amp;gt; 
+小于号可以使用 &lt; 或者 &amp;lt;，
+等于号可以使用 = 或者 &amp;equals
+</code></pre>
+<h3 id="插件功能—通用分页实体与MP转换"><a href="#插件功能—通用分页实体与MP转换" class="headerlink" title="插件功能—通用分页实体与MP转换"></a>插件功能—通用分页实体与MP转换</h3><p>需求：</p>
+<ul>
+<li>在PageQuery中定义方法，将PageQuery对象转为MyBatisPlus中的Page对象</li>
+<li>在PageDTO中定义方法，将MyBatisPlus中的Page结果转为PageDTO结果</li>
+</ul>
+<h6 id="最好直接封装通用部分"><a href="#最好直接封装通用部分" class="headerlink" title="最好直接封装通用部分"></a>最好直接封装通用部分</h6><h5 id="封装查询"><a href="#封装查询" class="headerlink" title="封装查询"></a>封装查询</h5><pre><code class="java"> @Override
+    public PageDTO&lt;UserVO&gt; queryUsersPage(UserQuery query) &#123;
+        String name = query.getName();
+        Integer status = query.getStatus();
+        // 1.构建查询条件
+        // 1.1 分页条件
+        Page&lt;User&gt; page = Page.of(query.getPageNo(), query.getPageSize());
+        // 1.2 排序条件
+        if (StrUtil.isNotBlank(query.getSortBy())) &#123;
+            // 不为空
+            page.addOrder(new OrderItem(query.getSortBy(), query.getIsAsc()));
+        &#125;else &#123;
+            // 为空，默认按照更新时间排序
+            page.addOrder(new OrderItem(&quot;update_time&quot;, false));
+        &#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/query/PageQuery.java
+package com.itheima.mp.domain.query;
+
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = &quot;分页查询实体&quot;)
+public class PageQuery &#123;
+    @ApiModelProperty(&quot;页码&quot;)
+    private Integer pageNo;
+    @ApiModelProperty(&quot;页码个数&quot;)
+    private Integer pageSize;
+    @ApiModelProperty(&quot;排序字段&quot;)
+    private String sortBy;
+    @ApiModelProperty(&quot;是否升序&quot;)
+    private Boolean isAsc;
+
+    public &lt;T&gt;  Page&lt;T&gt; toMpPage(OrderItem ... orders)&#123;
+        // 1.分页条件
+        Page&lt;T&gt; p = Page.of(pageNo, pageSize);
+        // 2.排序条件
+        // 2.1.先看前端有没有传排序字段
+        if (sortBy != null) &#123;
+            p.addOrder(new OrderItem(sortBy, isAsc));
+            return p;
+        &#125;
+        // 2.2.再看有没有手动指定排序字段
+        if(orders != null)&#123;
+            p.addOrder(orders);
+        &#125;
+        return p;
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPage(String defaultSortBy, boolean isAsc)&#123;
+        return this.toMpPage(new OrderItem(defaultSortBy, isAsc));
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByCreateTimeDesc() &#123;
+        return toMpPage(&quot;create_time&quot;, false);
+    &#125;
+
+    public &lt;T&gt; Page&lt;T&gt; toMpPageDefaultSortByUpdateTimeDesc() &#123;
+        return toMpPage(&quot;update_time&quot;, false);
+    &#125;
+&#125;
+</code></pre>
+<h5 id="封装结果"><a href="#封装结果" class="headerlink" title="封装结果"></a>封装结果</h5><pre><code class="java">// 3.封装VO结果
+        PageDTO&lt;UserVO&gt; dto = new PageDTO&lt;&gt;();
+        // 3.1 总条数
+        dto.setTotal(p.getTotal());
+        // 3.2 总页数
+        dto.setPages(p.getPages());
+        // 3.3 当前页数据
+        List&lt;User&gt; records = p.getRecords();
+        if (CollUtil.isEmpty(records)) &#123;
+            dto.setList(Collections.emptyList());
+            return dto;
+        &#125;
+        // 3.4 拷贝user的VO
+        dto.setList(BeanUtil.copyToList(records, UserVO.class));
+        // 4.返回
+        return dto;
+    &#125;
+</code></pre>
+<pre><code class="java">com/itheima/mp/domain/dto/PageDTO.java
+package com.itheima.mp.domain.dto;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Data
+@ApiModel(description = &quot;分页结果&quot;)
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageDTO&lt;V&gt; &#123;
+    @ApiModelProperty(&quot;总条数&quot;)
+    private Long total;
+    @ApiModelProperty(&quot;总页数&quot;)
+    private Long pages;
+    @ApiModelProperty(&quot;集合&quot;)
+    private List&lt;V&gt; list;
+
+    /**
+     * 返回空分页结果
+     * @param p MybatisPlus的分页结果
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; empty(Page&lt;P&gt; p)&#123;
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), Collections.emptyList());
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果
+     * @param p MybatisPlus的分页结果
+     * @param voClass 目标VO类型的字节码
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Class&lt;V&gt; voClass) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = BeanUtil.copyToList(records, voClass);
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+
+    /**
+     * 将MybatisPlus分页结果转为 VO分页结果，允许用户自定义PO到VO的转换方式
+     * @param p MybatisPlus的分页结果
+     * @param convertor PO到VO的转换函数
+     * @param &lt;V&gt; 目标VO类型
+     * @param &lt;P&gt; 原始PO类型
+     * @return VO的分页对象
+     */
+    public static &lt;V, P&gt; PageDTO&lt;V&gt; of(Page&lt;P&gt; p, Function&lt;P, V&gt; convertor) &#123;
+        // 1.非空校验
+        List&lt;P&gt; records = p.getRecords();
+        if (records == null || records.size() &lt;= 0) &#123;
+            // 无数据，返回空结果
+            return empty(p);
+        &#125;
+        // 2.数据转换
+        List&lt;V&gt; vos = records.stream().map(convertor).collect(Collectors.toList());
+        // 3.封装返回
+        return new PageDTO&lt;&gt;(p.getTotal(), p.getPages(), vos);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">UserServiceImpl.java
+@Override
+    public PageDTO&lt;UserVO&gt; queryUsersPage(UserQuery query) &#123;
+        String name = query.getName();
+        Integer status = query.getStatus();
+        // 1.构建查询条件
+        // 1.1 分页条件
+        Page&lt;User&gt; page = query.toMpPageDefaultSortByUpdateTimeDesc();
+        // 2. 分页查询
+        Page&lt;User&gt; p = lambdaQuery()
+                .like(name != null, User::getUsername, name)
+                .eq(status != null, User::getStatus, status)
+                .page(page);
+        // 3. 封装VO结果
+//        return PageDTO.of(p, UserVO.class); 属性转换 ↓
+        return PageDTO.of(p, user -&gt; &#123;
+            // 1.拷贝基础属性
+            UserVO vo = BeanUtil.copyProperties(user, UserVO.class);
+            // 2.处理特殊逻辑 密码加**
+            vo.setUsername(vo.getUsername().substring(0, vo.getUsername().length()-2)+&quot;**&quot;);
+            return vo;
+        &#125;);
+    &#125;
+</code></pre>
+<hr>
+<hr>
+<hr>
+<h3 id="tilas-all-成功案例"><a href="#tilas-all-成功案例" class="headerlink" title="tilas-all 成功案例"></a>tilas-all 成功案例</h3><pre><code class="java">package com.itheima.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class GenderStatisticsDTO &#123;
+    private String name;
+    private Integer value;
+
+&#125;
+==================================================
+package com.itheima.domain.dto;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@TableName(&quot;emp&quot;)
+public class JobStatisticsDTO &#123;
+    private List&lt;String&gt; jobList;
+    private List&lt;Long&gt; dataList;
+&#125;
+</code></pre>
+<pre><code class="java">package com.itheima.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.itheima.domain.dto.CombinedStatisticsDTO;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.pojo.Emp;
+
+import java.util.List;
+
+public interface ReportService extends IService&lt;Emp&gt; &#123;
+    List&lt;GenderStatisticsDTO&gt; getGenderStatistics(); // 获取性别统计信息
+    JobStatisticsDTO getJobStatistics(); // 获取职位统计信息
+&#125;
+
+
+//    CombinedStatisticsDTO getCombinedStatistics();
+</code></pre>
+<pre><code class="java">com/itheima/controller/ReportController.java
+package com.itheima.controller;
+
+import com.itheima.domain.dto.CombinedStatisticsDTO;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.pojo.Result;
+import com.itheima.service.ReportService;
+import io.swagger.annotations.Api;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@Api(tags = &quot;报表统计接口&quot;)
+@RestController
+@RequestMapping(&quot;/report&quot;)
+@RequiredArgsConstructor
+public class ReportController &#123;
+
+    private final ReportService reportService;
+
+    // 获取合并后的统计信息
+//    @GetMapping(&quot;/statistics&quot;)
+//    public Result&lt;CombinedStatisticsDTO&gt; getStatistics() &#123;
+//        CombinedStatisticsDTO combinedStatistics = reportService.getCombinedStatistics();
+//        return Result.success(combinedStatistics);
+//    &#125;
+
+    // 获取员工性别统计信息
+    @GetMapping(&quot;/empGenderData&quot;)
+    public Result&lt;List&lt;GenderStatisticsDTO&gt;&gt; getEmployeeGenderStatistics() &#123;
+        List&lt;GenderStatisticsDTO&gt; genderStatistics = reportService.getGenderStatistics();
+        return Result.success(genderStatistics);
+    &#125;
+
+    // 获取员工职位统计信息
+    @GetMapping(&quot;/empJobData&quot;)
+    public Result&lt;JobStatisticsDTO&gt; getEmployeeJobStatistics() &#123;
+        JobStatisticsDTO jobStatistics = reportService.getJobStatistics();
+        return Result.success(jobStatistics);
+    &#125;
+&#125;
+</code></pre>
+<pre><code class="java">com/itheima/service/impl/ReportServiceImpl.java
+package com.itheima.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.domain.dto.GenderStatisticsDTO;
+import com.itheima.domain.dto.JobStatisticsDTO;
+import com.itheima.mapper.ReportMapper;
+import com.itheima.pojo.Emp;
+import com.itheima.service.ReportService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class ReportServiceImpl extends ServiceImpl&lt;ReportMapper, Emp&gt; implements ReportService &#123;
+
+    private final ReportMapper reportMapper;
+
+    @Autowired
+    public ReportServiceImpl(ReportMapper reportMapper) &#123;
+        this.reportMapper = reportMapper;
+    &#125;
+
+    // 获取员工职位统计信息
+    @Override
+    public JobStatisticsDTO getJobStatistics() &#123;
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+
+        // 修改查询字段，注意这里你仍然需要写正确的字段名
+        wrapper.select(&quot;CASE job WHEN 1 THEN &#39;班主任&#39; WHEN 2 THEN &#39;讲师&#39; WHEN 3 THEN &#39;学工主管&#39; WHEN 4 THEN &#39;校研主管&#39; WHEN 5 THEN &#39;咨询师&#39; ELSE &#39;其他&#39; END AS 职位&quot;,
+                        &quot;COUNT(*) AS 数量&quot;)
+                .groupBy(&quot;job&quot;);
+
+        // 通过 selectMaps 执行查询
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 创建两个列表来存储职位和数量
+        List&lt;String&gt; jobTitles = new ArrayList&lt;&gt;();
+        List&lt;Long&gt; counts = new ArrayList&lt;&gt;();
+
+        // 遍历查询结果并填充列表
+        for (Map&lt;String, Object&gt; stat : statistics) &#123;
+            jobTitles.add((String) stat.get(&quot;职位&quot;));
+            counts.add((Long) stat.get(&quot;数量&quot;));
+        &#125;
+
+        // 返回JobStatisticsDTO对象，传入两个列表
+        return new JobStatisticsDTO(jobTitles, counts);
+    &#125;
+
+    // 获取员工性别统计信息
+    @Override
+    public List&lt;GenderStatisticsDTO&gt; getGenderStatistics() &#123;
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+        wrapper.select(&quot;gender&quot;, &quot;COUNT(gender) AS value&quot;)
+                .groupBy(&quot;gender&quot;);
+
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 转换为 GenderStatisticsDTO
+        return statistics.stream()
+                .map(stat -&gt; &#123;
+                    String genderName = &quot;1&quot;.equals(String.valueOf(stat.get(&quot;gender&quot;))) ? &quot;男性员工&quot; : &quot;女性员工&quot;;
+                    int count = ((Number) stat.get(&quot;value&quot;)).intValue();
+                    return new GenderStatisticsDTO(genderName, count);
+                &#125;)
+                .collect(Collectors.toList());
+    &#125;
+&#125;
+</code></pre>
+<h6 id="上面的获取员工职位属性已修改为高级版本"><a href="#上面的获取员工职位属性已修改为高级版本" class="headerlink" title="上面的获取员工职位属性已修改为高级版本"></a>上面的获取员工职位属性已修改为高级版本</h6><pre><code class="java">// 获取员工职位统计信息
+    @Override
+    public JobStatisticsDTO getJobStatistics() &#123;
+        // 1. 构建查询条件
+        QueryWrapper&lt;Emp&gt; wrapper = new QueryWrapper&lt;&gt;();
+        wrapper.select(&quot;job&quot;, &quot;COUNT(*) AS count&quot;)
+                .groupBy(&quot;job&quot;);
+
+        // 2. 查询数据
+        List&lt;Map&lt;String, Object&gt;&gt; statistics = reportMapper.selectMaps(wrapper);
+
+        // 如果返回结果为 null 或为空列表，返回默认对象
+        if (statistics == null || statistics.isEmpty()) &#123;
+            return new JobStatisticsDTO(new ArrayList&lt;&gt;(), new ArrayList&lt;&gt;());
+        &#125;
+
+        // 3. 转换结果：处理 `null` 值和字段映射
+        List&lt;String&gt; jobTitles = new ArrayList&lt;&gt;();
+        List&lt;Long&gt; counts = new ArrayList&lt;&gt;();
+
+        for (Map&lt;String, Object&gt; stat : statistics) &#123;
+            if (stat == null) &#123;
+                continue; // 跳过 null 数据
+            &#125;
+
+            // 使用 `getOrDefault` 方法，确保不会返回 null
+            Integer jobCode = (Integer) stat.getOrDefault(&quot;job&quot;, -1);
+            Long count = stat.get(&quot;count&quot;) == null ? 0L : ((Number) stat.get(&quot;count&quot;)).longValue();
+
+            // 如果 jobCode 是 -1 或其他无效值，则视为“其他”
+            String jobTitle = switch (jobCode) &#123;
+                case 1 -&gt; &quot;班主任&quot;;
+                case 2 -&gt; &quot;讲师&quot;;
+                case 3 -&gt; &quot;学工主管&quot;;
+                case 4 -&gt; &quot;校研主管&quot;;
+                case 5 -&gt; &quot;咨询师&quot;;
+                default -&gt; &quot;其他&quot;;
+            &#125;;
+
+            jobTitles.add(jobTitle);
+            counts.add(count);
+        &#125;
+
+        // 返回封装好的 DTO 对象
+        return new JobStatisticsDTO(jobTitles, counts);
+    &#125;
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#ffa2c4>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2024/11/23/后端/MyBatisPlus/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2024/11/22/后端/Stream模板+Lambda常用+@注释+常用方法模板集合/">
         <h2>
             Stream模板+Lambda常用+@注释+常用方法模板集合
@@ -758,7 +2592,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -919,7 +2753,7 @@ public class TestStringToIntMap &#123;
         
         <span class="tag">
             
-            <a href="/tags/攻略" style=color:#ff7d73>
+            <a href="/tags/攻略" style=color:#879cff>
                 攻略
             </a>
         </span>
@@ -12437,7 +14271,7 @@ public void doTask() &#123;
         
         <span class="tag">
             
-            <a href="/tags/面试" style=color:#00bcd4>
+            <a href="/tags/面试" style=color:#ff7d73>
                 面试
             </a>
         </span>
@@ -15389,7 +17223,7 @@ public class LoginController &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -26416,7 +28250,7 @@ public class BusinessDataVO implements Serializable &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -27337,7 +29171,7 @@ Element UI的CSS和JS资源：需要在HTML文件的&lt;head&gt;中引入Element
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#879cff>
+            <a href="/tags/前端" style=color:#ffa2c4>
                 前端
             </a>
         </span>
@@ -50049,7 +51883,7 @@ public enum Singleton8 &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ffa2c4>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -50057,160 +51891,6 @@ public enum Singleton8 &#123;
     </div>
 
     <a href="/2024/05/04/后端/Zookeeper-Dubbo应用与面试/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2024/04/17/英语/2024万能论据/">
-        <h2>
-            2024万能论据
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2024/4/17
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h2 id="健康"><a href="#健康" class="headerlink" title="健康"></a>健康</h2><pre><code class="java">1.sth contribute to one&#39;s health by giving sb some physical exercise.
-  某物能有助于身体健康通过给某人一些身体锻炼
-2.sth is harmful to/bad for/detrimental to health.
-  某物对健康有害
-3.sth exert great pressure on sb.
-  某物给某人施加重压
-4.sb may become more solitary and even suffer from certain mental illness.
-  某人可能变得孤僻甚至产生某些心理疾病
-5.Exercise can enhance immune function.
-  锻炼可以增强免疫力
-6.adopt a healthy and meaningful life style.
-  采取一个健康和有意义的生活方式
-7.release pressure.
-  ★减压 
-</code></pre>
-<h2 id="乐趣"><a href="#乐趣" class="headerlink" title="乐趣"></a>乐趣</h2><pre><code class="java">1.sth will make ones&#39;s life more enjoyable. That is to say, sth can add color to the dull routine of everyday life.
-  某物可以使某人的生活更加有乐趣，也就是说，某物为每天枯燥的生活增添了一些色彩
-2.sth have become the foucus of one&#39;s life and the source of one&#39;s happiness and contentment.
-  某物已成为某人生活的中心和快乐的来源
-</code></pre>
-<h2 id="能力"><a href="#能力" class="headerlink" title="能力"></a>能力</h2><pre><code class="java">1.equip sb with the ability to do sth.
-  ★使某人拥有做某事的能力
-2.be competent enough to do sth.
-  ★有能力做某事
-3.tell the useful information from the useless one.
-  ★从无用信息中挑出有用信息
-4.sth will provide sb with more opportunities to develop one’s interpersonal skills, which may put them in a favorable position in the future job markets.
-  某事会使某人有更多机会发展人际交往能力，而这对他（们）未来找工作是非常有好处的
-5.By doing sth, sb can not only improve one’s academic studies, but gain many abilities which he will never be able to get from the textbooks.
-  通过做某事，某人不仅能够提高他们的专业能力，而且能获得从课本上得不到的能力
-6.tap one&#39;s potential.
-  ★开发潜能
-7.sth will help people foster one&#39;s independence.
-  某物帮助某人培养独立
-8.help strengthen one&#39;s sense of responsibility.
-  ★帮助加强某人的责任感
-9.achieve one&#39;s goal.
-  ★达成某人的目标
-10.learn from mistake.
-  ★吸取教训
-11.surmount difficulities
-  ★战胜困难
-</code></pre>
-<h3 id="交流"><a href="#交流" class="headerlink" title="交流"></a>交流</h3><pre><code class="java">1.develop and cultivate character and interpersonal skills.
-  ★培养性格和人际交往的能力
-2.make eye contact.
-  ★做眼神交流
-3.live only in the virtual world.
-  ★仅仅生活在虚拟世界
-4.hinder communication.
-  ★阻碍沟通
-5.The over-dependence on mobile phones can harm the relationship among friends and family.
-  过度依赖手机会伤害朋友以及家人的关系
-6.At dinner tables, instead of chatting and laughing with each other, many people choose to chat with other friends online.
-  在饭桌前，人们不是相互聊天谈笑，而是选择和朋友在网上聊天
-7.Many people have become over-dependent on the Internet and neglected face-to-face communication.
-  很多人变得太依赖网络并且忽略了面对面交流。
-8.The Internet enables more effective communication in some situations, but over-dependence on it actually pulls people apart.
-  网络在一些情况下使交流更有效，但是过度依赖它实际是人们更疏远
-</code></pre>
-<h3 id="知识"><a href="#知识" class="headerlink" title="知识"></a>知识</h3><pre><code class="java">1.Little by little, our knowledge will be well enriched, and our horizons will be greatly broadened.
-  逐渐的，我们的知识会得到增加，我们的视野将会大大的拓宽
-2.reduce study load 
-  ★减轻学习负担
-3.sth can broaden people&#39;s minds to the extent which may not be reached previously.
-  某物可以扩大人们的视野到一个之前不能到达的程度
-</code></pre>
-<h3 id="方便"><a href="#方便" class="headerlink" title="方便"></a>方便</h3><pre><code class="java">1.sth can save sb a great deal of time, so sb would be able to concentrate more time and energy on one&#39;s academic work.
-  某物能节省大量时间，这会使某人有更多的时间和精力放在学习上
-2.sth have brought people great convenience in doing sth.
-  某物在人们做某事时带来了巨大的方便
-3.There is no denying that sth have greatly enhanced work/study efficiency.
-  毋庸置疑，某物很大的提升了工作/学习效率
-</code></pre>
-<h3 id="经济"><a href="#经济" class="headerlink" title="经济"></a>经济</h3><pre><code class="java">1.relieve one&#39;s families&#39; financial burden to some extent.
-  这在一定基础上可以缓解某人家庭的经济负担
-2.The welfare and salary have been improved greatly.
-  福利和收入得到了巨大的提升
-3.Money is so indispensable in people’s lives that without it no material comforts or well-being can be guaranteed.
-  钱在生活中必不可少，没有了钱，也就谈不上物质享受和幸福了
-4.Money doesn&#39;t necessarily ensure happiness or well-being. 
-  钱不一定能保证幸福
-5.can afford the huge cost of sth.
-  ★能够承担某物的高额
-6.bring huge economic loss to sb.
-  ★给某人带来巨大经济损失
-</code></pre>
-<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><pre><code class="java">1.sth pose a great threat to one&#39;s safety.
-  某物对某人的安全造成巨大威胁
-2.ensure the safety of sb. 
-  ★确保某人的安全
-3.sth add to the safety of sth.
-  某物增加了某事的安全
-4.food safety.
-  ★食品安全
-</code></pre>
-<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><pre><code class="java">1.To balance economic growth with environmental protection is highly important.
-  权衡经济发展和环境保护是高度重要的
-2.We all should bear in mind that environmental protection is everybody&#39;s duty.
-  我们都应该记住环境保护使每个人的职责
-3.sth help to build harmonious cooperation and effective communication, which helps to create a pleasant working atmosphere.
-  某事帮助建立和谐的合作关系和有效的沟通，这将帮助建立一个愉快的工作氛围
-</code></pre>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/英语" style=color:#879cff>
-                英语
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2024/04/17/英语/2024万能论据/ " class="go-post">
         阅读全文
     </a>
 </div>

@@ -133,6 +133,335 @@
 
 <div class="post">
 
+    <a href="/2022/08/14/前端/仿真计算器/">
+        <h2>
+            仿真计算器
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2022/8/14
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <h1 id="仿真计算器"><a href="#仿真计算器" class="headerlink" title="仿真计算器"></a>仿真计算器</h1><p>名称：<strong>仿windows计算器</strong> </p>
+<p>功能：</p>
+<ul>
+<li>实现单击按钮录入数字</li>
+<li>实现基础四则运算功能，并添加必要的异常处理，例如，除数为0</li>
+<li>实现小数点功能并添加异常处理：小数点只能出现一次</li>
+<li>实现正负号功能</li>
+<li>实现退位功能，已经是最后一位时，显示框显示为零</li>
+<li>清屏功能</li>
+</ul>
+<p>使用的知识点：</p>
+<ul>
+<li>利用大量的自定义函数实现业务逻辑</li>
+<li>灵活运用事件及事件处理</li>
+<li>培养异常处理的编程方法</li>
+<li>培养并实践利用不同思路实现编程</li>
+</ul>
+<p>综合练习的目的：</p>
+<ul>
+<li>将css、html和js有效的进行技术组合，实现业务功能</li>
+<li>锻炼和培养编程思想，解决问题的能力和方法</li>
+<li>锻炼和培养多种编程思路，完成预先设定的目标</li>
+</ul>
+<hr>
+<p>&lt; body onload&#x3D;”ff2()” &gt; <!--页面刷新、打开、加载时执行onload--></p>
+<p>function init()  <!--初始化init--></p>
+<blockquote>
+<p><strong>isNaN</strong>()<br>一个函数接收一个参数，该参数可以是任意类型，而 函数会帮我们确定这个参数是否”不是数值”；isNaN()在接收到一个值之后，会尝试将这个值转换为数值，如果能转换成功则返回false，否则返回true</p>
+</blockquote>
+<blockquote>
+<p><strong><u><span style = "color : red">添加js的时候 不要忘了三个地方</span></u></strong><br>① &lt; head &gt;中的引用<br><strong>&lt; script type&#x3D;”text&#x2F;javascript” src&#x3D;”mooc.js”&gt;&lt; &#x2F;script&gt;</strong></p>
+<p>② body内要引用自动化加载<br><strong>&lt; body onload&#x3D;”init(),init_mooc()” &gt;</strong></p>
+<p>③ id一定要提名<br><strong>&lt; input type&#x3D;”button” value&#x3D;”m” name&#x3D;”” id&#x3D;”imooc”&#x2F;&gt;</strong></p>
+</blockquote>
+<pre><code class="java">☆☆低级写法☆☆
+&lt;body&gt;
+  &lt;input type=&quot;button&quot; value=&quot;点我&quot; id=&quot;btn1&quot; onlick=&quot;ff1()&quot;
+&lt;/body&gt;
+
+function ff1()&#123;
+    alter(&quot;我是ff1的输出结果&quot;)
+&#125;
+--------------------------------------------------
+★★高级写法★★
+&lt;body onload=&quot;ff1(),ff2()&quot;&gt;  自动初始化 加载 页面刷新
+  &lt;input type=&quot;button&quot; value=&quot;点我&quot; id=&quot;btn1&quot;&gt;
+  &lt;input type=&quot;button&quot; value=&quot;test2&quot; id=&quot;btn2&quot;&gt;
+&lt;/body&gt;
+
+function ff2()&#123;
+    document.getElementById(&quot;btn1&quot;).onclick = funciton()&#123;
+        alter(&quot;我是ff2的输出结果&quot;);
+    &#125;
+&#125;  
+</code></pre>
+<hr>
+<h2 id="calc-html"><a href="#calc-html" class="headerlink" title="calc.html"></a>calc.html</h2><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;&lt;/title&gt;
+ &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;calc.css&quot; /&gt;
+ &lt;script type=&quot;text/javascript&quot; src=&quot;calc.js&quot;&gt;&lt;/script&gt;
+ &lt;script type=&quot;text/javascript&quot; src=&quot;imooc.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload=&quot;init(),init_mooc()&quot;&gt; 初始化 加载 页面刷新
+    &lt;div id=&quot;div1&quot;&gt;
+        &lt;form action=&quot;&quot;&gt;
+        &lt;div id=&quot;div2&quot;&gt;
+            &lt;input type=&quot;text&quot; name=&quot;num&quot; id=&quot;num&quot; /&gt;
+        &lt;/div&gt;
+        &lt;div id=&quot;div3&quot;&gt;
+            &lt;input type=&quot;button&quot; value=&quot;c&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;←&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;+/-&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;/&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;1&quot; name=&quot;&quot; id=&quot;n1&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;2&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;3&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;*&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;4&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;5&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;6&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;-&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;7&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;8&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;9&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;+&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;0&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;.&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;=&quot; name=&quot;&quot; id=&quot;&quot; /&gt;
+            &lt;input type=&quot;button&quot; value=&quot;m&quot; name=&quot;&quot; id=&quot;imooc&quot; /&gt;
+        &lt;/div&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+&lt;/body&gt; 
+&lt;/html&gt;
+</code></pre>
+<h2 id="calc-css"><a href="#calc-css" class="headerlink" title="calc.css"></a>calc.css</h2><pre><code class="css">*&#123;
+    margin: 0px;
+    padding: 0px;
+&#125; //全意是：引用了这个定义的所有控件的内外边距都为0 不使用默认间距 使用自定义
+div&#123;
+    width: 170px;
+&#125;
+#div1&#123;
+    top: 60px;
+    left: 100px;
+    position: absolute;
+&#125;
+input[type=&quot;button&quot;]&#123;
+    width: 30px;
+    margin-right: 5px;
+    margin-top: 5px;
+&#125;
+input[type=&quot;text&quot;]&#123;
+    width: 147px;
+    text-align: right;
+    background-color: white;
+    border: 1px solid; 
+    padding-right: 5px;
+/* content-box 延伸 border-box 用已存在的空间增加边距 */
+    box-sizing: border-box;
+&#125;
+/* 浮动的伪类 */
+input[type=&quot;button&quot;]:hover&#123;
+    background-color: red;
+    border: 1px solid; 
+&#125;
+</code></pre>
+<h2 id="calc-js"><a href="#calc-js" class="headerlink" title="calc.js"></a>calc.js</h2><pre><code class="js">function init()&#123;
+    var num = document.getElementById(&quot;num&quot;); //得到文本框本身
+    num.value=0;
+    num.disabled=&quot;disabled&quot;; //禁用文本框输入
+/*  var n1 = document.getElementById(&quot;n1&quot;); 
+    n1.onclick=function()&#123;
+        alert(&quot;123&quot;); &#125; */
+    //获取所有的input
+    var objButton = document.getElementsByTagName(&quot;input&quot;);
+    var btn_num1;
+    var fh;    //符号
+    for(var i=0;i&lt;objButton.length;i++)&#123;
+        objButton[i].onclick=function()&#123;
+        if(isNumber(this.value))&#123;
+//文本框以前的值+单击的数字 此时前面的num.value是上面的document
+            // num.value=(num.value+this.value)*1;
+            if(isNull(num.value))&#123;
+                num.value=this.value;
+            &#125;else&#123;
+                num.value=num.value+this.value;
+            &#125;
+        &#125;else&#123;
+            // alert(&quot;fei&quot;);
+            var btn_num=this.value;
+            switch (btn_num)&#123;
+                case &quot;+&quot;: //↓ psrseInt(整数)转换为Number(整数+小数)
+                    btn_num1=Number(num.value);
+                    num.value=null;
+                    fh=&quot;+&quot;;
+                break;
+                case &quot;-&quot;:
+                    btn_num1=Number(num.value);
+                    num.value=null;
+                    fh=&quot;-&quot;;
+                    break;
+                case &quot;*&quot;:
+                    btn_num1=Number(num.value);
+                    num.value=null;
+                    fh=&quot;*&quot;;
+                    break;
+                case &quot;/&quot;:
+                    btn_num1=Number(num.value);
+                    num.value=null;
+                    fh=&quot;/&quot;;
+                    break;
+                case &quot;.&quot;: //只能单击一次
+                    num.value=dec_number(num.value);
+                    break;
+                case &quot;←&quot;:
+                    num.value=back(num.value);
+                    break;
+                case &quot;c&quot;:
+                    num.value=&quot;0&quot;;
+                    break;
+                case &quot;+/-&quot;:
+                    num.value=sign(num.value);
+                    break;
+                case &quot;=&quot;:
+                    switch(fh)&#123;
+                        case &quot;+&quot;:
+                          num.value=btn_num1+num.value*1;
+                        break;
+                        case &quot;-&quot;:
+                          num.value=btn_num1-num.value*1;
+                        break;
+                        case &quot;*&quot;:
+                          num.value=btn_num1*num.value*1;
+                        break;
+                        case &quot;/&quot;:
+                        //文本框内容默认为字符类型
+                            if(Number(num.value)==0)&#123;
+                                alert(&quot;除数不能为0&quot;);
+                                num.value=0;
+                            &#125;else&#123;
+                                num.value=btn_num1/num.value*1;
+                            &#125;
+                        break;
+                    &#125;
+                    break;
+            &#125;
+        &#125;//用匿名函数给每个按钮进行事件添加
+    //this单击是谁就是谁 objButton[i]]
+        &#125;
+    &#125;
+&#125;
+//正负号
+function sign(n)&#123;
+    if(n.indexOf(&quot;-&quot;)==-1)&#123;
+        n=&quot;-&quot;+n;
+    &#125;else&#123;//从非第一个字符开始
+        n=n.substr(1,n.length);
+    &#125;
+    // n=Number(n)*-1;
+    return n;
+&#125;
+//退位键
+function back(n)&#123;//退位键
+    /*if(!isNull(n))&#123;//如果不等于空
+        n=n.substr(0,n.length-1);//字符串截取到总长度减一
+    &#125;else&#123;
+        n=0;
+    &#125;*/
+    n=n.substr(0,n.length-1);
+    if(isNull(n))&#123;
+        n=0;
+    &#125;
+    return n;
+&#125;
+//小数点
+function dec_number(n)&#123; //indexof 查找某一个字符是否存在[不存在返回-1
+  if (n.indexOf(&quot;.&quot;)==-1)&#123; //小数点不存在
+      n = n + &quot;.&quot;;
+  &#125;
+  return n;
+&#125;
+//验证文本框是否为空或者0
+function isNull(n)&#123;
+    if(n==&quot;0&quot; || n.length==0)&#123;
+        return true;
+    &#125;else&#123;
+        return false;
+    &#125;
+&#125;
+function isNumber(n)&#123;
+//isNaN不能转换为数字:true；可以转换成数字是false
+    if(isNaN(n)==false)&#123;
+        return true;//参数n是数字
+    &#125;else&#123;
+        return false;//参数n不是数字
+    &#125;
+//或者return !isNaN(n); 
+//如果n是数字 isNaN为false
+&#125;
+/*
+    function num_1_click()&#123;
+    var num = document.getElementById(&quot;num&quot;);
+    var n = num.value;
+    // if(n==&quot;0&quot;)&#123;n=&quot;1&quot;;&#125;
+    //else&#123;n=n+&quot;1&quot;&#125;;//字符串拼接
+    n=n+&quot;1&quot;;//↓↓ *1 影式转换成数值 然后前导零省略
+    document.getElementById(&quot;num&quot;).value=n*1;
+*/
+</code></pre>
+<h2 id="imooc-js-m键的跳转"><a href="#imooc-js-m键的跳转" class="headerlink" title="imooc.js [m键的跳转]"></a>imooc.js [m键的跳转]</h2><pre><code class="js">function init_mooc()&#123;
+    document.getElementById(&quot;imooc&quot;).onclick=function()&#123;
+        window.location.href=&quot;http://www.imooc.com&quot;;
+    &#125;
+&#125;
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/前端" style=color:#1bccbc>
+                前端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2022/08/14/前端/仿真计算器/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2022/08/12/前端/JavaScript/">
         <h2>
             JavaScript
@@ -630,7 +959,7 @@ function checkInterest1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ff7d73>
+            <a href="/tags/前端" style=color:#00bcd4>
                 前端
             </a>
         </span>
@@ -1138,7 +1467,7 @@ function checkInterest1()&#123;
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#00bcd4>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -2034,7 +2363,7 @@ float: right;
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#00bcd4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -2473,7 +2802,7 @@ rowspan=&quot;&quot;是上下合并,&quot;&quot;中填写的是合并表格的�
         
         <span class="tag">
             
-            <a href="/tags/前端" style=color:#ffa2c4>
+            <a href="/tags/前端" style=color:#879cff>
                 前端
             </a>
         </span>
@@ -3056,7 +3385,7 @@ rowspan=&quot;&quot;是上下合并,&quot;&quot;中填写的是合并表格的�
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#ffa2c4>
                 政治
             </a>
         </span>
@@ -3478,7 +3807,7 @@ rowspan=&quot;&quot;是上下合并,&quot;&quot;中填写的是合并表格的�
         
         <span class="tag">
             
-            <a href="/tags/政治" style=color:#879cff>
+            <a href="/tags/政治" style=color:#1bccbc>
                 政治
             </a>
         </span>
@@ -4122,7 +4451,7 @@ rowspan=&quot;&quot;是上下合并,&quot;&quot;中填写的是合并表格的�
         
         <span class="tag">
             
-            <a href="/tags/数学" style=color:#1bccbc>
+            <a href="/tags/数学" style=color:#ff7d73>
                 数学
             </a>
         </span>
@@ -4370,7 +4699,7 @@ public class GamePanel extends JFrame &#123;
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#1bccbc>
+            <a href="/tags/后端" style=color:#00bcd4>
                 后端
             </a>
         </span>
@@ -4378,878 +4707,6 @@ public class GamePanel extends JFrame &#123;
     </div>
 
     <a href="/2022/07/11/后端/TankWar/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2022/07/03/计算机/计算机基础概论、进制转换、中文字符/">
-        <h2>
-            计算机基础概论、进制转换、中文字符
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2022/7/3
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h1 id="计算机基础概论"><a href="#计算机基础概论" class="headerlink" title="计算机基础概论"></a>计算机基础概论</h1><p><strong>题型</strong>：单选题、多选题、判断题、填空题、简答题、分析题、操作题、综合应用题</p>
-<h4 id="信息"><a href="#信息" class="headerlink" title="信息"></a>信息</h4><ul>
-<li><p><strong>信息是在自然界、人类社会和人类思维活动中普遍存在的一切物质和事物的属性</strong></p>
-</li>
-<li><p><strong>香农</strong>是<u>信息论</u>的创始人：信息是用来消除不确定性的东西</p>
-</li>
-<li><p>信息的单位是：<strong>bit</strong></p>
-</li>
-<li><p>信息的特征：普遍性、时效性、共享性、价值相对性、载体依附性等</p>
-</li>
-</ul>
-<h4 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h4><ul>
-<li><strong>数据是指存储在某种媒体上可以加以鉴别的符号资料</strong></li>
-<li>数据的分类：<strong>数值</strong>(正负号)和<strong>非数值数据</strong>(文字、图像、声音、动画、视频等)</li>
-</ul>
-<h4 id="信息与数据的关系"><a href="#信息与数据的关系" class="headerlink" title="信息与数据的关系"></a>信息与数据的关系</h4><ul>
-<li><strong>数据是信息的<span style = "color : red">具体表现形式</span>，是信息的载体，而信息是对数据进行加工后得到的结果，信息是数据的逻辑意义</strong></li>
-<li>信息的符号化就是数据，数据是信息的具体表现形式</li>
-<li>判断题：有信息一定有数据(√)  有数据一定有信息(×)   ∵信息的载体是数据   而数据有些是垃圾数据则不一定有信息</li>
-</ul>
-<p>一定有数据 有数据一定</p>
-<h4 id="信息技术"><a href="#信息技术" class="headerlink" title="信息技术"></a>信息技术</h4><ul>
-<li><strong>IT(Information Technology)：信息技术是指人们获取、存储、传递、处理、开发和利用信息资源的相关技术</strong></li>
-<li>目前被人们称为3C(Communication、Co6mputer、Control)认证技术的是指(<strong>通信技术</strong>、<strong>计算机技术</strong>和<strong>控制技术</strong>)</li>
-<li>信息技术的组成：计算机技术(核心)、通信技术(支柱)、微电子技术(基础)、网络技术和传感技术</li>
-<li>信息技术的发展趋势：现代信息技术的发展趋势可概括为：数字化、多媒体化、高速度、网络化、宽频带、智能化</li>
-</ul>
-<h4 id="信息社会"><a href="#信息社会" class="headerlink" title="信息社会"></a>信息社会</h4><ul>
-<li>继工业化社会以后，以信息活动为社会发展的基本活动的新兴社会形态</li>
-<li><strong>信息、物质、能量</strong>构成世界三大资源，网络成为人们生活的基础条件</li>
-</ul>
-<h4 id="计算机文化"><a href="#计算机文化" class="headerlink" title="计算机文化"></a>计算机文化</h4><ul>
-<li>人类文化发展的四个里程碑：<strong>语言的产生、文字的使用、印刷术的文明、计算机文化</strong></li>
-<li>计算机文化的真正内涵：一个人经过文化教育后所具有的能力由传统的读,写,算上升到新的高度–具有计算机信息处理能力</li>
-</ul>
-<h4 id="计算机的概念与发展"><a href="#计算机的概念与发展" class="headerlink" title="计算机的概念与发展"></a>计算机的概念与发展</h4><ul>
-<li><p>计算机概念：计算机也称之为电脑，是一种具有<strong>计算功能</strong>、<strong>记忆功能</strong>、<strong>逻辑判断</strong>功能的机器设备。它能<strong>接收数据</strong>，<strong>保留数据</strong>，按照预定的程序对<strong>数据进行处理</strong>，并提供和保存处理结果</p>
-</li>
-<li><h4 id="计算机发展"><a href="#计算机发展" class="headerlink" title="计算机发展"></a>计算机发展</h4><ul>
-<li><strong>算盘</strong>：公元六世纪左右，十进制的计算工具，算盘被称为计算机，算盘不是计数工具，而是执行珠算口诀指令的计算工具。缺点是容易出错，依赖人力限制了运算速度</li>
-<li>**帕斯卡计算器(补九码)**：1642年发明可进行加法和减法运算(自动)</li>
-<li>**莱布尼兹(传教)**：1671年发明可进行四则运算的机器，来解决进位的问题；发明了二进制</li>
-<li><strong>巴贝奇</strong>：19世纪，英国数学家查尔斯·巴贝奇最先提出通用数学计算机的基本设计思想。1822年设计了一台“差分机”。1832年，开始设计一种基于计算自动化的程序控制的“分析机”，提出几乎是完整的计算机设计方案，被称为<strong>“计算机之父”</strong>(机械的)(通用计算机之父)<ul>
-<li>(查尔斯<strong>巴贝奇</strong>于1834年设计的分析机)是现代通用计算机的雏形</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><h4 id="电子计算机的诞生-ENIAC-电子数字积分计算机"><a href="#电子计算机的诞生-ENIAC-电子数字积分计算机" class="headerlink" title="电子计算机的诞生(ENIAC:电子数字积分计算机)"></a>电子计算机的诞生(ENIAC:电子数字积分计算机)</h4><ul>
-<li>ENIAC：Electronic Numerical Integrator And Computer</li>
-<li><strong>第一台真正意义上的电子计算机</strong></li>
-<li><u><strong>诞生于1946.2.14美国宾夕法尼亚大学</strong></u></li>
-<li><strong>人物：莫克利、艾克特、冯·诺依曼</strong></li>
-<li>特点：1、<strong>采用十进制</strong>  2、<strong>使用电子管</strong>  3、无键盘，鼠标等输入设备，不存储程序  4、<strong>应用领域：科学计算</strong>  5、<strong>运算速度5000次&#x2F;s加法</strong>  6、不是冯·诺依曼机</li>
-</ul>
-</li>
-<li><h4 id="计算机历史人物"><a href="#计算机历史人物" class="headerlink" title="计算机历史人物"></a>计算机历史人物</h4><ul>
-<li><p><u><strong>巴贝奇</strong></u>：英国数学家，差分机，分析机，有时候被称为<u><strong>(机械)计算机之父</strong></u></p>
-</li>
-<li><p>莱布尼兹：德国数学家，解决进位的莱布尼兹轮，发明了二进制</p>
-</li>
-<li><p>布尔：英国数学家，布尔运算，逻辑TRUE对应1，逻辑FALSE对应0</p>
-</li>
-<li><p>香农：美国数学家，信息论创始人，信息论之父，</p>
-<ul>
-<li>信息的定义：信息时能够用来消除不确定性的东西，提出“信息熵”符号逻辑和开关理论</li>
-</ul>
-</li>
-<li><h4 id="艾伦·图灵"><a href="#艾伦·图灵" class="headerlink" title="艾伦·图灵"></a>艾伦·图灵</h4><ul>
-<li><strong>Alan Turing, 英国数学家，计算机科学家之父，人工智能之父</strong></li>
-<li><strong>图灵机</strong>(<u>一种模型，并非真正计算机</u>)(是由图灵在1936年提出的，它是一种精确的通用计算机<strong>模型</strong>，能模拟实际计算机的所有计算行为)奠定了课计算理论的基础<ul>
-<li>现代计算机的功能不可能超过图灵机</li>
-<li>图灵机不能计算的问题，现代计算机也不可能计算</li>
-<li>只有图灵机能解决的计算问题，实际计算机才能解决</li>
-</ul>
-</li>
-<li>图灵测试：由艾伦·麦席森·图灵发明</li>
-<li>图灵奖：计算机界的诺贝尔奖，由美国计算机协会(ACM)于1966年设立</li>
-</ul>
-</li>
-<li><h4 id="冯·诺依曼-美籍匈牙利科学家"><a href="#冯·诺依曼-美籍匈牙利科学家" class="headerlink" title="冯·诺依曼[美籍匈牙利科学家]"></a>冯·诺依曼[美籍匈牙利科学家]</h4><ul>
-<li><p><strong>公认的电子计算机之父</strong></p>
-</li>
-<li><p>冯·诺依曼工作原理(计算机<strong>五大</strong>硬件、存储程序、程序控制、计算机内部采用<strong>二进制</strong>)</p>
-</li>
-<li><p>EDVAC(第一台提出冯·诺依曼原理概念的计算机)</p>
-</li>
-<li><p>硬件系统 二进制 程序存储和程序控制</p>
-<p>@@ E<strong>NI</strong>AC E<strong>DV</strong>AC 你！打我！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="计算机发展分代"><a href="#计算机发展分代" class="headerlink" title="计算机发展分代"></a>计算机发展分代</h4><ul>
-<li>几个第一(&#x3D;&#x3D;<u>第一<strong>代</strong>计算机为二进制</u>  <u>第一<strong>台</strong>计算机为十进制</u>&#x3D;&#x3D;)<ul>
-<li>世界上<strong>第一台</strong>电子计算机 ENIAC<del>十进制</del>(↑电子计算机的诞生)，占地170平米，篮球场是420平米，占地面积约为半个篮球场<ul>
-<li>ENIAC是世界上第一台电子计算机在美国发明的</li>
-<li>ENIAC不是存储程序控制的计算机</li>
-<li>世界上第一台投入运行的具有存储程序控制的计算机是英国人设计并制造的<strong>EDSAC</strong> 【EDVAC抢先注册】</li>
-</ul>
-</li>
-<li>第一台<strong>冯·诺依曼机</strong><ul>
-<li>名称：EDSAC</li>
-<li>时间：1949年5月6日</li>
-<li>人物：英国剑桥大学教授莫里斯·威尔克斯</li>
-<li>意义：是世界上第一台实际运行的存储程序式电子计算机</li>
-<li>以EDVAC为蓝本，抢先</li>
-</ul>
-</li>
-<li>第一台<strong>商用电子计算机</strong><ul>
-<li>名称：UNIVAC-1</li>
-<li>第一台商用计算机是1951年产的(UNIVAC-1)</li>
-<li>开发者：莫克利和艾克特，1951年</li>
-<li>用途：第一台卖给了美国人口普查部用于人口普查，标志着计算机进入了商业应用时代，标志着计算机时代的真正开始，计算机从此由实验室走向社会</li>
-</ul>
-</li>
-<li>中国第一台每秒钟运算一亿次以上的<strong>“银河-1号句型计算机”</strong> 1983年，速度：每秒1亿次</li>
-<li><strong>神威·太湖之光</strong> 第一位(<strong>3,168万亿</strong>次每秒)，<strong>天河二号</strong> 第二位</li>
-</ul>
-</li>
-</ul>
-<p><strong><u>电晶集成大(灶)</u></strong></p>
-<table>
-<thead>
-<tr>
-<th>年代</th>
-<th>名称</th>
-<th>元器件</th>
-<th>存储器</th>
-<th>语言</th>
-<th>应用领域</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>第一代(1946-1956)</td>
-<td>电子管计算机</td>
-<td>电子管</td>
-<td>水银延迟线、磁鼓、纸袋、卡片</td>
-<td>机器、汇编语言</td>
-<td>科学计算</td>
-</tr>
-<tr>
-<td><strong>第二代(1956-1964)</strong></td>
-<td>晶体管计算机</td>
-<td>晶体管</td>
-<td><strong>磁芯磁盘磁带</strong></td>
-<td><strong>高</strong>级程序设计语言</td>
-<td>数据处理</td>
-</tr>
-<tr>
-<td>第三代(1964-1971)</td>
-<td>中、小集成电路计算机</td>
-<td>集电路</td>
-<td>半导体</td>
-<td><strong>操作系统</strong>会话语言</td>
-<td>各个领域</td>
-</tr>
-<tr>
-<td>第四代(1971-至今)</td>
-<td><strong>大规模或超大规模集成电路</strong>计算机[微型计算机]</td>
-<td>超集路</td>
-<td>高度集成半导体(微处理器为核心的微型计算机)</td>
-<td>面向对象设计语言</td>
-<td>网络时代</td>
-</tr>
-<tr>
-<td>新一代计算机</td>
-<td>未来计算机</td>
-<td>量光子</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody></table>
-<h4 id="计算机特点及分类"><a href="#计算机特点及分类" class="headerlink" title="计算机特点及分类"></a>计算机特点及分类</h4><ul>
-<li>计算机特点<ul>
-<li>运算速度快</li>
-<li>计算精度高</li>
-<li>存储容量大</li>
-<li>具有逻辑判断能力</li>
-<li>工作自动化</li>
-<li>通用性强</li>
-</ul>
-</li>
-<li>计算机分类<ul>
-<li>根据<span style = "color : red"><strong>处理的对象</strong></span>划分【你的对象是个<strong>魔术混合鸡</strong>】<ul>
-<li><strong>模拟计算机：</strong>处理模拟数据，速度快但不精确，通用性差</li>
-<li><strong>数字计算机：</strong>处理数字数据，精度高，存储容量大，通用性强</li>
-<li><strong>混合计算机：</strong>处理数学数据和模拟数据</li>
-</ul>
-</li>
-<li>根据<span style = "color : red"><strong>计算机的用途</strong></span>划分【专通】<ul>
-<li><strong>通用计算机</strong>[家用]：解决一般问题，实用性强，如科学计算、数据处理和过程控制</li>
-<li><strong>专用计算机</strong>：用于解决某一特定方面的问题，配有专门开发的软件和硬件，用于<u>自动化控制、工业仪表和军事领域</u></li>
-<li>以应用为中心，软件代码小，高度自动化，响应速度快</li>
-</ul>
-</li>
-<li>根据<span style = "color : red"><strong>计算机的规模</strong></span>划分<ul>
-<li>巨型机：超级计算机，常用数值计算<ul>
-<li>特点：运算速度快、存储容量大结构复杂，价格昂贵</li>
-<li>应用领域：气象、军事、航空航天</li>
-</ul>
-</li>
-<li>大型机：金融、证券等大中型企业数据处理或网络服务器</li>
-<li>小型机：中小企业、学校等</li>
-<li>微型机：个人计算机PC，主要用在办公和家庭，是目前发展最快，应用最广泛的一种计算机，**<u>运算速度快，计算精度高，记忆能力强，存储能量大，具有逻辑判断能力，数据化程度高</u>。体积小，价格便宜，软件丰富，功能齐全**</li>
-<li>工作站：具有较强的数据运算以及图像处理能力，配备多个CPU和高分辨率的大屏幕，主要面向专业应用领域：工程计算、动画制作、科学研究、软件开发、模拟仿真等</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="计算机的应用领域"><a href="#计算机的应用领域" class="headerlink" title="计算机的应用领域"></a>计算机的应用领域</h4><ul>
-<li><strong><u>科学计算</u><strong>：科学和工程中的</strong><u>数值计算，天气预报、军事国防、航空航天</u></strong><br><em>世界上第一代电子计算机主要用于<strong>科学计算</strong></em></li>
-<li><strong><u>信息管理</u><strong>：以计算机基础对大量数据进行加工处理，形成有用的信息，是非数值形式的数据处理，广泛应用于</strong><u>办公自动化、事物处理</u><em>*等<br>*计算机应用最广泛的领域是**信息管理</em></strong></li>
-<li><strong><u>过程控制</u><strong>：用计算机及时采集监测数据，按最佳值迅速对控制对象进行自动控制或自动调节，广泛应用在</strong><u>冶金，石油，化工，水电，机械和航天等部门</u></strong></li>
-<li>人工智能</li>
-<li>计算机网络与通信</li>
-<li><strong>计算机辅助系统</strong><ul>
-<li><u><strong>CAD计算机辅助设计</strong></u> [Computer Assisted Design]</li>
-<li><strong>CAA计算辅助分析</strong> [Computer Assisted Analysis]</li>
-<li><u><strong>CAM计算机辅助制造</strong></u> [Computer Assisted Manufacturing]</li>
-<li>&#x3D;&#x3D;<u><strong>CBE计算机辅助教育</strong></u> [Computer Based Education]&#x3D;&#x3D;</li>
-<li><u><strong>CAI计算机辅助教学</strong></u> [Computer Assisted Instruction<del>指导</del>]</li>
-<li><strong>CMI计算机管理教学</strong> [Computer management Instruction<del>指导</del>]</li>
-<li><strong>CAT计算机辅助测试</strong> [Computer Assisted Testing]</li>
-<li><u><strong>CIMS计算机集成制造系统</strong></u> [Computer Integrated Manufacturing System]</li>
-</ul>
-</li>
-<li>人工智能：AI又称机器智能，主要研究智能机器所执行的通常与人类有关的功能：判断-推理<ul>
-<li>考点：人工智能不可能取代人类</li>
-</ul>
-</li>
-<li>计算机网络域通信</li>
-<li>多媒体技术应用系统</li>
-<li>嵌入式系统：以应用为中心，以计算机技术为基础，软硬件灵活变化以适应所嵌入的应用系统，用于专用计算机系统中，主要用于军事和航空航天，逐步适用于工业控制、仪器仪表</li>
-</ul>
-<h4 id="计算机发展趋势-居委-会-网之多"><a href="#计算机发展趋势-居委-会-网之多" class="headerlink" title="计算机发展趋势(居委[会]网之多)"></a>计算机发展趋势(<u>居委[会]网之多</u>)</h4><ul>
-<li><strong>巨型化</strong>：功能上的超级计算机</li>
-<li><strong>微型化</strong>：体积上的可穿戴式设备</li>
-<li><strong>网络化</strong>：计算机网络</li>
-<li><strong>智能化</strong>：具有模拟人的感觉和思维过程的能力，人工智能</li>
-<li><strong>多媒体化</strong></li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/master/data/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E6%A6%82%E8%AE%BA1.jpg"></p>
-<img src="https://raw.githubusercontent.com/P-luminary/images/master/data/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E6%A6%82%E8%AE%BA2.jpg" style="zoom:170%;" />
-
-<hr>
-<hr>
-<h1 id="进制及进制转换"><a href="#进制及进制转换" class="headerlink" title="进制及进制转换"></a>进制及进制转换</h1><ul>
-<li><p>进制的概念：用进位的原则进行计数成为进位计数制，简称进制</p>
-</li>
-<li><p>和进制有关的概念(**十进制 **&#x3D;&gt; <span style = "color : red"><strong>D</strong></span>)</p>
-<ul>
-<li>**<u>数码</u>**：一组来表示某种数制的符号，比如二进制的0和1</li>
-<li><strong>基数</strong>：数制所使用的数码个数，常用R表示，称为R进制<ul>
-<li><strong>R&#x3D;10</strong>，最小值0 ~ 最大值R-1</li>
-</ul>
-</li>
-<li><strong>位权</strong>：数码在不同位置上的权值(123 &#x3D; &gt; 1×10^3-1^ +  2×10^2-1^ + 3×10^1-1^ )</li>
-<li>逢十进1 借一当十</li>
-<li>写法格式：238D(十进制)</li>
-</ul>
-</li>
-<li><p>(<strong>二进制</strong> &#x3D;&gt; <span style = "color : red"><strong>B</strong></span>）</p>
-<ul>
-<li>数码：0,1</li>
-<li>基数：R&#x3D;2</li>
-<li>位权：1,2,4,8,16,32,64,128,256,512,1024…</li>
-<li>运算规则：逢2进1，借1当2</li>
-<li>写法格式：101B或(101)$_2$</li>
-<li>《易经》八卦，莱布尼兹二进制，布尔，香农，冯·诺依曼</li>
-<li>优点：电路简单，容易物理实现；工作稳定可靠；二进制运算简单；逻辑性强</li>
-</ul>
-</li>
-<li><p>(<strong>八进制</strong> &#x3D;&gt; <span style = "color : red"><strong>O,8</strong></span>)</p>
-<ul>
-<li>数码：0 ~ 8-1进制</li>
-<li>基数：R&#x3D;8</li>
-<li>位权：R^n-1^,1，8,64……</li>
-<li>写法格式：207O或者(207)$_8$</li>
-<li>运算规则：逢8进1，借1当8</li>
-</ul>
-</li>
-<li><p>(<strong>十六进制</strong> &#x3D;&gt; <span style = "color : red"><strong>H</strong></span>)</p>
-<ul>
-<li>数码：0 ~ 16-1进制(<strong>0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F</strong>)</li>
-<li>基数：R&#x3D;16</li>
-<li>位权：1,16,256…</li>
-<li>写法举例：AB7<strong>H</strong>  或 12(B)^16^</li>
-<li>运算规则：逢16进1(1 + F &#x3D; 1 + 15 &#x3D; 10)，借1当16</li>
-</ul>
-<p>(1<strong>A</strong> + 1 &#x3D; 1<strong>B</strong>)、(<em>1</em>A<strong>H</strong> &#x3D; <em><strong>1×16^1^</strong></em> + A×16^0^ &#x3D; 16+10 &#x3D; 26<strong>D</strong>)</p>
-<p><strong><u>10进制的一零是10，8进制的一零是8，2进制的一零是2，16进制的一零是16</u></strong></p>
-</li>
-<li><p><strong>进制转换</strong></p>
-<ul>
-<li><strong><u><em>任意进制转十进制</em></u></strong> ：按位权展开，再按照十进制的计算规则计算</li>
-</ul>
-<p>111.1B &#x3D; 1×2^2^+1×2^1^+1×2^0^+<strong>1×2^-1^</strong>  </p>
-<p><em>1</em>FC.4H &#x3D; <em><strong>1×16^2^</strong></em>+15×16^1^+12×16^0^+<strong>4×16^-1^</strong> &#x3D; 508.25<strong>D</strong></p>
-<ul>
-<li><strong>十进制转任意进制</strong><ul>
-<li>整数部分：除基取余倒着连</li>
-<li>小数部分：乘基取整顺着连(<strong>若取出后需要减去，直到小数部分乘尽</strong>)</li>
-<li>注意“乘不尽”现象，一般题目会告知精确到几位(<strong>十进制</strong>都能精确的转换为<strong>二进制</strong> <strong>×</strong>‘可能乘积乘不尽’)</li>
-<li><strong>十进制四舍五入、八进制三舍四入、十六进制七舍八入</strong></li>
-</ul>
-</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/9a911e35e774154ba112f1c2197bbbbbfc4c9ab8/data/2%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2.jpg"> </p>
-<ul>
-<li><strong>十进制转十六进制</strong><ul>
-<li>十进制47.6875转十六进制是(2F,BH) <u>转换方法同上↑</u></li>
-</ul>
-</li>
-<li>二、八、十六进制互相转换</li>
-</ul>
-</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/8b6a4243a03095d265f136f772786718e3f5e77d/data/%E8%BF%9B%E5%88%B6%E4%BA%92%E8%BD%AC%E8%A7%84%E5%88%99.jpg"></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/a82aa729176ac2f92a055ba9184c3fff557d839c/data/%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%9A%84%E7%AE%97%E6%9C%AF%2B%E9%80%BB%E8%BE%91%E8%A7%84%E5%88%99.jpg"></p>
-<ul>
-<li><h3 id="进制转换练习题"><a href="#进制转换练习题" class="headerlink" title="进制转换练习题"></a>进制转换练习题</h3></li>
-</ul>
-<p>快速转换<br>@@ 字符的ASCII码十进制值为71，则其十六进制为( )<br>快速根据位权凑：$16^2$&#x3D;256     $16^1$&#x3D;16    $16^0$&#x3D;1<br>71＜256 ∴肯定有2个16进制的位权就够了 __ __  ∴ <u>4 7</u> &#x3D;&gt;$16^4$ + $16^7$ &#x3D; 64 + 7 &#x3D; 71</p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/32832db491b9212f3132f9b7c2e7aee87a4f47e5/data/%E7%9B%B8%E4%BA%92%E8%BD%AC%E6%8D%A2%E8%BF%9B%E5%88%B6%E6%8A%80%E5%B7%A7.jpg"></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/47a8d1f56be7fecb6833e7148e70968577f02204/data/%E9%AB%98%E7%BA%A7%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2%E9%A2%98.jpg"></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/eaccfed61d8a5a83b4da683a3fee7117a81c6d2d/data/4d459561b6dd1971bd06999a6e1cf64.jpg"></p>
-<ul>
-<li><p><strong>异或运算口诀</strong>：<u><strong>相同为0，不同为1</strong></u></p>
-</li>
-<li><p><span style = "color : red">8 4 2 1 ($_2$)      49 7 1($_7$) <strong>熟悉后也可以套位权 或 短除法</strong></span></p>
-</li>
-<li><p>任何数转十进制都是<strong>位权展开</strong></p>
-</li>
-<li><p>对于R进制来说，每一位上可以有 (<u>R</u>) 种可能，二进制每一位有0和1两种可能，十进制数每一位可以有0~9十种可能</p>
-</li>
-<li><p>8000 - 1 &#x3D; 7FFF(借1当16【<strong>F</strong>】)</p>
-</li>
-<li><p>有的十进制小数不能精确转换为二进制小数**(√)  比如：0.2**</p>
-</li>
-<li><p>1GB &#x3D; 2^10^MB，1MB &#x3D; 2^10^KB </p>
-</li>
-<li><p><strong>8000H &#x3D; 8×16^3^D</strong></p>
-</li>
-<li><p><img src="https://raw.githubusercontent.com/P-luminary/images/e19e77d06a65b96da637bf8ec0f976691104f336/data/%E8%BF%9B%E5%88%B6%E9%A2%981.jpg"></p>
-</li>
-</ul>
-<h3 id="数据存储单位及计算机中数值的表示"><a href="#数据存储单位及计算机中数值的表示" class="headerlink" title="数据存储单位及计算机中数值的表示"></a>数据存储单位及计算机中数值的表示</h3><h4 id="数据存储单位换算"><a href="#数据存储单位换算" class="headerlink" title="数据存储单位换算"></a>数据存储单位换算</h4><p>计算机中的数据都要占用不同的二进制位，为了便于表示数据量的多少，引入数据单位的概念</p>
-<ul>
-<li><p><strong>位</strong>(bit [binary digit的缩写])，也称为比特，简记为b，是计算机存储数据的最小单位</p>
-<ul>
-<li>一个二进制位只能表示0或1，要想表示更大的数，就要把更多的位组合起来，每增加一位，所能表示的数就增大一倍。</li>
-<li>带宽，传输速率，Mbps兆位每秒 100Mbps(100兆字节，1个字节等于8位) &#x3D;&gt; 除8 &#x3D; 12.5</li>
-</ul>
-</li>
-<li><p><strong>字节</strong>(Byte，简记为B，1B&#x3D;8bit，计算机存储数据的基本单位)</p>
-<ul>
-<li>微机的存储器是由一个存储单元构成的，每个存储单元大小就是一个字节，所以存储容器大小也是以字节数衡量</li>
-<li><span style = "color : red">单位换算(b→1bit，1B &#x3D; 8b)</span><ul>
-<li>1<strong>Bytes</strong> &#x3D; 8bit</li>
-<li>1KB&#x3D;$2^{10}B$&#x3D;$$1024B$$</li>
-<li>1MB&#x3D;$2^{10}KB$&#x3D;$$1024KB$$&#x3D;$2^{20}B$</li>
-<li>1GB&#x3D;$2^{10}MB$&#x3D;$$1024MB$$&#x3D;$2^{30}B$</li>
-<li>1TB&#x3D;$$2^{10}GB$$&#x3D;$$1024GB$$&#x3D;$$2^{40}B$$</li>
-<li>1PB&#x3D;$$1024TB$$</li>
-<li>b B kb MB GB TB PB</li>
-<li>硬盘生产商是以1GB&#x3D;1000MB标注的，计算机内部是1GB&#x3D;1024MB</li>
-</ul>
-</li>
-</ul>
-<p>@@ <u>1KB等于1000个比特 (×)</u></p>
-</li>
-<li><p><strong>字</strong>(<strong>Word，计算机处理数据时，<u>CPU通过数据总线一次存取、加工和传送的数据称为字</u></strong>)</p>
-<ul>
-<li><strong>字长，计算机的运算部件能同时处理的二进制数据的位数称为字长，1个字位数就是字长</strong></li>
-<li>字长是衡量计算机<strong>性能</strong>的一个重要指标，&#x3D;&#x3D;<strong>字长越长，速度越快，精度越高</strong>&#x3D;&#x3D;</li>
-<li>不同微处理器的字节是不同的，常见的微处理器字长由8位、16位、32位和64位</li>
-<li><strong>“64位的电脑”是指计算机CPU字长是64位</strong></li>
-<li>63位字长的CPU必须配合支持64位的软件才能达到最佳效果，字长的性能受软件系统的约束</li>
-</ul>
-</li>
-</ul>
-<h4 id="计算机中数值的表示—整数-定点数"><a href="#计算机中数值的表示—整数-定点数" class="headerlink" title="计算机中数值的表示—整数(定点数)"></a>计算机中数值的表示—整数(定点数)</h4><h5 id="数值在计算机中如何表示和计算？"><a href="#数值在计算机中如何表示和计算？" class="headerlink" title="数值在计算机中如何表示和计算？"></a>数值在计算机中如何表示和计算？</h5><p>1、数值分为：整数 + 小数</p>
-<p>2、计算机中要解决整数和小数在计算机中如何表示的问题—<strong>原码、反码、补码</strong></p>
-<p>3、计算机要解决编码后的数值如何进行计算的问题—<strong>补码</strong></p>
-<p>定位数：小数点的位置固定，如996.007 —常规计数</p>
-<p>浮点数：小数点的位置不固定，如9.96007*$10^2$ —科学计数法</p>
-<ul>
-<li><span style = "color : red"><strong>无符号数</strong></span>(整个机器字长的全部二进制位均表示数值位，不存在符号位)</li>
-</ul>
-<p>表示范围：如—&gt; 8位二进制数，有$2^8$种状态</p>
-<p><u>0000 0000 ~ 1111 1111</u></p>
-<p>​                0 ~ 255 &#x3D; $2^8-1$</p>
-<p><span style = "color : blue"><strong>n位无符号整数表达范围是：0 ~ $2^n-1$</strong>    [注意：下面的是有<strong>原码</strong>的前提]</span></p>
-<p>@@ 能用<strong>8</strong>位无符号二进制数表示的是(199) ∵ 0 ~ $2^8-1$ &#x3D;&gt; <strong>0 ~ 255</strong> </p>
-<p>@@ 表示0<del>512范围内的无符号整数，需要的二进制位数至少是(<strong>10</strong>) ∵ n&#x3D;9时 <u>0</del>(512-1)</u></p>
-<ul>
-<li><p><strong>有符号数</strong>(把符号位数值化了的数称为机器数。最高位表示符号位，0表示正，1表示负，其余位是数值位)</p>
-<p>&#x3D;&#x3D;最高位<strong>0表示正</strong>，最高位<strong>1表示负</strong>&#x3D;&#x3D;</p>
-<p>+9 &#x3D; **<span style = "color : red">0</span>**000 1001 &#x3D;&gt; +0001001</p>
-<p>-9 &#x3D;  **<span style = "color : red">1</span>**000 1001 &#x3D;&gt; -0001001</p>
-<ul>
-<li>机器数代表的数字，称为<strong>真值</strong></li>
-<li><span style = "color : red">考点：原码、反码、补码的相互转换</span></li>
-<li><span style = "color : red">计算机是采用补码形式数值存储和数值运算的</span></li>
-<li><span style = "color : red">表示范围</span></li>
-</ul>
-</li>
-</ul>
-<h4 id="2、原码、反码、补码及其相互转换"><a href="#2、原码、反码、补码及其相互转换" class="headerlink" title="2、原码、反码、补码及其相互转换"></a>2、原码、反码、补码及其相互转换</h4><ul>
-<li><p><em>负数</em></p>
-<ul>
-<li><p><strong>原码</strong></p>
-<ul>
-<li>+9 &#x3D; **<span style = "color : red">0</span>**000 1001</li>
-<li>-9 &#x3D;  **<span style = "color : red">1</span>**000 1001 </li>
-<li>Min → 1111 1111 &#x3D; —127    </li>
-<li>Max → 0111 1111 &#x3D; +127</li>
-<li>缺点：0有两种表示方式：+0&#x3D;00000000    -0&#x3D;10000000[零的二义性给机器判断带来了麻烦] ****</li>
-<li><strong><span style = "color : orange">原码的数值0有两种表示方式 +0 -0</span></strong></li>
-</ul>
-<p>比如：1-2&#x3D;-3 → ∵ +1+(-2) → +1 -&gt; 0000 000$1_原$  ;  -2 -&gt; 1000 001$0_原$  </p>
-<p>∴ 0000 0001 + 1000 0010 &#x3D; 1000 001$1_原$ &#x3D; -3</p>
-<p>为了解决这个问题，科学家使用补码</p>
-<p>-33的原码是 *<u><strong>1</strong>010 0001</u>* 反码是 <u><strong>1</strong>101 1110</u></p>
-</li>
-<li><p><strong>反码</strong></p>
-<ul>
-<li>原码的符号位不变，其余位取相反得到 </li>
-<li>反码存在的意义就是为了由原码计算补码方便</li>
-</ul>
-</li>
-<li><p><strong>补码</strong></p>
-<ul>
-<li>反码+1得到</li>
-<li>优点</li>
-</ul>
-<p>1、<span style = "color : orange"><strong>在补码表示中，0有唯一的编码</strong> </span>0 &#x3D; 0000 0000</p>
-<p>2、用10000000表示 -128，比原码可多表示一个编码</p>
-<p>3、利用补码可以方便地进行运算</p>
-<ul>
-<li><strong>补码适合运算，解决了计算机减法的问题</strong>    例如 +1-2&#x3D;?</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/cc1dad3239ab71c96619abccf4e76a649f54cd21/data/%E8%B4%9F%E6%95%B0%E7%9A%84%E5%8E%9F%E3%80%81%E5%8F%8D%E3%80%81%E8%A1%A5%E7%9B%B8%E4%BA%92%E8%BD%AC%E6%8D%A2.jpg"></p>
-<ul>
-<li><em>正数</em><ul>
-<li><strong>原码&#x3D;反码&#x3D;补码</strong></li>
-</ul>
-</li>
-</ul>
-<p>补码进行 <strong>加法</strong> 运算：<u>符号位</u><strong>参与运算</strong></p>
-<p>☆☆ <strong><span style = "color : green">正数：正数的原码、反码、补码都一样</span></strong> ☆☆</p>
-<p>☆☆ <strong><span style = "color : green">负数：负数将原码的符号位保持不变，数值位各位取反再末位加1，就可以将原码转换为补码</span></strong> ☆☆</p>
-<p>@@ 机器中用数值表示的是<strong>原码+反码+补码</strong>，ASCII码西文字符：abcd…</p>
-<p>@@ <span style = "color : red">1000 100$1_原$ → 1111 011$0_反$ → 1111 011$1_补$</span></p>
-<p>@@ <u>求1-2的原码是</u>：1000 000$1_原$ </p>
-<p>​    +1 &#x3D; 0000 000$1_原$ &#x3D; 0000 000$1_补$</p>
-<p>​    +2 &#x3D; 1000 001$0_原$ &#x3D; 1111 110$1_反$ &#x3D; 1111 111$0_补$</p>
-<p>0000 000$1_补$ +  1111 111$0_补$ &#x3D;<strong><span style = "color : red">1</span></strong> 1111 111$1_补$  <u>“最前面的溢出数**’1’**进行舍弃”</u></p>
-<p>1111 111$1_补$  &#x3D; 1111 111$0_反$ &#x3D; 1000 000$1_原$ &#x3D; -1</p>
-<p>@@ 在计算机内部，机器数(<u>原码、反码、补码</u>)的最高位为1表示该数为负数 (√)</p>
-<p>最高位<strong>0表示正</strong>，最高位<strong>1表示负</strong></p>
-<p>@@ 8位二进制数值编码中，十进制“**-**9”的原码是(<strong>1</strong>000 1001)</p>
-<p>@@   -2 -&gt; 1000 001$0_原$  &#x3D;  1111 110$1_反$ &#x3D; 1111 111$0_补$ &#x3D;&gt; 255 - 1 &#x3D; 254</p>
-<p>所以！！！ -2 也 意味着等于 +254</p>
-<p>@@ 负数-5在计算机中的补码是 ？</p>
-<p><u><em><strong>直接从原码变补码、补码变原码</strong></em></u>  <span style = "color : red"><strong>口诀：从右向左复制，直到有1被赋值 其余取相反(<u>符号位 &#x3D;&gt; 第一位不变</u>)</strong></span></p>
-<p>-5 &#x3D; 1000 010$1_原$  &#x3D; 1111 101$1_补$</p>
-<h3 id="表示范围"><a href="#表示范围" class="headerlink" title="表示范围"></a><strong>表示范围</strong></h3><ul>
-<li><span style = "color : blue">原码和反码   <strong>-2$^{(n-1)}+1$  ~  +2$^{(n-1)}-1$</strong></span><ul>
-<li>1B 原码反码范围[-127, +127]</li>
-<li>2B 原码反码范围是[-32767, +32767]</li>
-</ul>
-</li>
-<li><span style = "color : blue">补码               <strong>-2$^{(n-1)}$  ~  +2$^{(n-1)}-1$</strong></span><ul>
-<li>1B 补码范围[-128, +127]</li>
-<li>2B 补码范围[-32768, +32767]</li>
-</ul>
-</li>
-</ul>
-<p>用<strong>原码</strong>表示的<strong>7</strong>位有符号二进制整数的取值范围是(<strong>-63 — +63</strong>)  <strong>-2$^{(n-1)}+1$  ~  +2$^{(n-1)}-1$</strong></p>
-<h4 id="3、浮点数"><a href="#3、浮点数" class="headerlink" title="3、浮点数"></a>3、浮点数</h4><ul>
-<li>浮点数<ul>
-<li>[组成]<ul>
-<li>阶码：用定点整数表示，阶码的位数确定了数的范围</li>
-<li>数符(+-)：占1位</li>
-<li>基数：<strong>基数是隐含的</strong></li>
-<li>尾数：小数点右边的位[用定点小数表示；尾数所占的位数确定了位的精度；规定尾数的最高位为1，通过阶码来调整]</li>
-</ul>
-</li>
-<li>[分类]<ul>
-<li>单精度浮点数：占32位，26.5作为单精度浮点数在计算机中的表示</li>
-<li>双精度浮点数：占64位</li>
-<li>考点：双精度浮点数表示的数的范围和精度比单精度浮点数大</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>@@ 计算机中，<u>浮点数</u>由两部分组成，它们是(<strong>阶码部分 和 尾数部分</strong>)</p>
-<p>@@ 浮点数之所以能表示很大或很小的数，是因为使用了(<strong>阶码</strong> -&gt; 科学计数法)</p>
-<p>@@ 在浮点数中，尾数的位数确定了位的精度，阶码的位数确定了数的范围。</p>
-<p>@@ 用4个字节表示的浮点数<u>11111110</u>&#x3D;&gt; 2$^{—??} $[2的负多少次方]    <u>11010000 00000000 00000000</u>&#x3D;&gt; —______[负的多少]  ∴<strong>阶码和尾数都为负</strong></p>
-<ul>
-<li><u>0.110101[尾数]</u> × $2^{+5}[阶码]$</li>
-</ul>
-<h4 id="4、BCD码"><a href="#4、BCD码" class="headerlink" title="4、BCD码"></a>4、BCD码</h4><p>二进制：0，1       —计算机采用的方式</p>
-<p>十进制：0,1,2,3,4,5,6,7,8,9         —科学计数法</p>
-<p>BCD码：一 一对应，快速转换，且精确</p>
-<h3 id="8421-BCD码映射关系"><a href="#8421-BCD码映射关系" class="headerlink" title="8421 BCD码映射关系"></a>8421 BCD码映射关系</h3><table>
-<thead>
-<tr>
-<th align="center">0</th>
-<th align="center">1</th>
-<th align="center">2</th>
-<th align="center">3</th>
-<th align="center">4</th>
-<th align="center">5</th>
-<th align="center">6</th>
-<th align="center">7</th>
-<th align="center">8</th>
-<th align="center">9</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">0000</td>
-<td align="center">0001</td>
-<td align="center">0010</td>
-<td align="center">0011</td>
-<td align="center">0100</td>
-<td align="center">0101</td>
-<td align="center">0110</td>
-<td align="center">0111</td>
-<td align="center">1000</td>
-<td align="center">1001</td>
-</tr>
-</tbody></table>
-<p>十进制：    5        +        8        &#x3D;        13            +0110(加6修正)</p>
-<p>8421码:   0101            1000    &#x3D;      1101</p>
-<hr>
-<p>@@ BCD又称为2-10码，是利用四位二进制数表示一位十进制数</p>
-<p>@@ 在浮点表示方法中，<strong>基数</strong>是隐含的</p>
-<p>@@ 原码的数值0有两种表达方式，补码的数值0有一种表达方式</p>
-<p>@@ **[负数]**将原码的符号位保持不变，数值位各位取反再末位加1，就可以将原码转换为补码(前提要说明是正负数[正数是一样的])</p>
-<p>@@ 用原码表示的7位有符号二进制整数的取值范围是(-63 ~ +63) [最小是111 1111B；最大是011 1111B]</p>
-<p>@@ X&#x3D;(-1000101)2的反码表示&#x3D;&gt; <strong>10111010</strong> [最高位符号位 用1表示负数] [<u><em><strong>直接从原码变补码、补码变原码</strong></em></u>  <span style = "color : red"><strong>口诀：从右向左复制，直到有1被赋值 其余取相反(符号位 &#x3D;&gt; 第一位不变)</strong></span>]</p>
-<p>@@ 若某带符号整数的8位二进制补码为 11110001，则该整数对应的十进制数是( 1000 1111 &#x3D; &gt; 注意第一个1是负号！！不要算入数字总和**-15**)    只有原码才可以转十进制 </p>
-<p>@@ 最高位可溢出！！ 若8位进制数 结果出来了9位，最高一位溢出省略</p>
-<p>@@ <strong><u>内存单元 &#x3D;&gt; 补码</u></strong> <span style = "color : blue"><u>原码和反码</u>   <strong>-2$^{(n-1)}+1$  ~  +2$^{(n-1)}-1$</strong></span>      <span style = "color : blue"><u>补码</u>               <strong>-2$^{(n-1)}$  ~  +2$^{(n-1)}-1$</strong></span></p>
-<p>@@ 在用<u><strong>原码</strong>表示整数“0”时，有“000…00” 和 “1000…00”两种表示形式</u>，而<u>在<strong>补码</strong>表示法中，整数”0”只有一种表示形式</u></p>
-<p>@@ 通常对一个整数的补码求补码，就会得到该数的原码</p>
-<p>@@ <span style = "color : red">正数的 <strong><u>原码&#x3D;反码&#x3D;补码</u></strong></span></p>
-<p>@@ “64位计算机”是指计算机的<strong>字长</strong>其越长，计算机运算精度越高</p>
-<hr>
-<hr>
-<h1 id="西文字符在计算机中的表示—ASCII码"><a href="#西文字符在计算机中的表示—ASCII码" class="headerlink" title="西文字符在计算机中的表示—ASCII码"></a>西文字符在计算机中的表示—ASCII码</h1><h3 id="7位码-标准ASCII码-美国标准信息交换代码"><a href="#7位码-标准ASCII码-美国标准信息交换代码" class="headerlink" title="(7位码)标准ASCII码 (美国标准信息交换代码)"></a>(7位码)标准ASCII码 (<u>美国标准信息交换代码</u>)</h3><p><u><strong>American Standard Code for Information Interchange</strong></u></p>
-<p>概念：ASCII是国际通用的信息交换标准代码</p>
-<p>范围：从0000 0000B到0111 1111B共可表示<strong>128个字符</strong> 【0-127】 <u>最高位是0的128个</u></p>
-<h5 id="存储：7位ASCII码，存储占1个字符，实际使用7位，最高位为0"><a href="#存储：7位ASCII码，存储占1个字符，实际使用7位，最高位为0" class="headerlink" title="存储：7位ASCII码，存储占1个字符，实际使用7位，最高位为0"></a>存储：7位ASCII码，存储占1个字符，实际使用7位，最高位为0</h5><h5 id="可打印-不是所有ASCII字符都可以打印的，-x3D-x3D-控制字符不是打印字符-x3D-x3D"><a href="#可打印-不是所有ASCII字符都可以打印的，-x3D-x3D-控制字符不是打印字符-x3D-x3D" class="headerlink" title="可打印 [不是所有ASCII字符都可以打印的，&#x3D;&#x3D;控制字符不是打印字符&#x3D;&#x3D;]"></a>可打印 [<u>不是所有ASCII字符都可以打印的，&#x3D;&#x3D;控制字符不是打印字符&#x3D;&#x3D;</u>]</h5><p><u>[控制符：LF（换行）、CR（回车）、FF（换页）、DEL（删除）、BS（退格)、BEL（振铃）等；通讯专用字符：SOH（文头）、EOT（文尾）、ACK（确认）等]</u></p>
-<h5 id="标准ASCII码比较规律"><a href="#标准ASCII码比较规律" class="headerlink" title="标准ASCII码比较规律"></a>标准ASCII码比较规律</h5><ul>
-<li>数字字符(0-9)、大写字母(A-Z)、小写字母(a-z)分别连续编码</li>
-<li>空格符       32D (20H)</li>
-<li>数字字符0 48D (30H)</li>
-<li>数字字符9 57D (39H)</li>
-<li>大写数字A 65D (41H)</li>
-<li>小写数字a 97D (61H)</li>
-<li>控制字符 &lt; 打印字符     </li>
-<li>小写英文字母的编码-大写英文字母的编码&#x3D;32</li>
-</ul>
-<h5 id="标准ASCII码表"><a href="#标准ASCII码表" class="headerlink" title="标准ASCII码表"></a>标准ASCII码表</h5><p>**<span style = "color : red">【65 A    97 a    48 0】</span>**如果你要遛我(A&#x3D;&gt;65)就去(a&#x3D;&gt;97)死吧(0&#x3D;&gt;48)</p>
-<p><u>竖着＋横着 &#x3D; 二进制</u> </p>
-<p><u>1字节 &#x3D; 8bit</u>    <u>1KB &#x3D; 1024 * 8bit</u></p>
-<p><img src="https://raw.githubusercontent.com/P-luminary/images/46ce555c8849ef651ffbf1e841a1f1b366c11144/data/ASCII%E8%A1%A8.jpg"></p>
-<h3 id="8位码-扩展ASCII码-最高位是1-扩展码-x2F-汉字-需要连续两个开头1"><a href="#8位码-扩展ASCII码-最高位是1-扩展码-x2F-汉字-需要连续两个开头1" class="headerlink" title="(8位码)扩展ASCII码[最高位是1 扩展码&#x2F;汉字(需要连续两个开头1)]"></a>(8位码)扩展ASCII码[最高位是1 扩展码&#x2F;汉字(需要连续两个开头1)]</h3><p>8位ASCII码，占用1个字节，最高位为1</p>
-<p>范围：使用1000 0000B ~ 1111 1111B，表示其他的西文字符 <u>最高位是1的128个</u></p>
-<p><strong>中文字符最高位也是1，扩展ASCII和GB2312-80的区别在于中文字符是两个连续字节最高位都是1</strong></p>
-<hr>
-<p>@@ 在ASCII码中，存储5个西文字符的编码需要<strong>5</strong>个字节。 每一个编码占用1个字节</p>
-<p>@@ 一个ASCII码在计算机中占用1个字节</p>
-<p>&#x3D;&#x3D;@@ 键盘上每个按键对应<strong>唯一</strong>的一个ASCII码 <strong>(×)</strong>&#x3D;&#x3D;</p>
-<p>@@ 先高四位编码，后低四位编码。已知一个数在ASCII码表中的坐标是(2,4)，则其ASCII值为(66 -&gt; B)</p>
-<p><strong>2 &#x3D;&gt; 0010    4 &#x3D;&gt; 0100           0100是高四位，0010是低四位</strong></p>
-<p>@@ 采用ASCII编码，最多能表示128个字符 <strong>(×)</strong>    应该是采用<u><strong>7位的标准的</strong>ASCII编码</u></p>
-<p>@@ 一个ASCII码占据<strong>1</strong>个字节</p>
-<p>@@ ASCII码表中字符’C’的编码1000011，则字符’G’的编码为**<u>1000111</u>**</p>
-<p>C  D  E  F  G  &#x3D;&gt; C到G &#x3D;&gt; 1000011 + 100 &#x3D; 1000111</p>
-<p>1  2  3  4   5  &#x3D;&gt; 1+4&#x3D;5</p>
-<p><strong><span style = "color : red">@@ 已知字母G的ASCII码对应的十六进制数为47H，则字母J的ASCII码对应的十六进制数为( )</span></strong></p>
-<p>G H I J &#x3D;&gt; G到J &#x3D;&gt; 47H + 3 &#x3D; 4<strong>A</strong>H (十六进制加法 只有到了才进，不然可以用字母表示 A&#x3D;10)</p>
-<p>1 2 3 4 &#x3D;&gt; 1+3&#x3D;4</p>
-<p>@@ 按照ASCII码值从大到小排列顺序 <strong>小写 &gt; 大写 &gt; 数字 &gt; 空格<del>ASCII：32</del></strong></p>
-<p>@@ 1个字符在存储的时候占用1个字节B</p>
-<p>@@ 字符的ASCII码十进制值为71，则其十六进制为( )</p>
-<p>快速根据位权凑：$16^2$&#x3D;256     $16^1$&#x3D;16    $16^0$&#x3D;1</p>
-<p>71＜256 ∴肯定有2个16进制的位权就够了 __ __  ∴ <u>4 7</u> &#x3D;&gt;$16^4$ + $16^7$ &#x3D; 64 + 7 &#x3D; 71</p>
-<p>@@ ASCII码表中，根据码值从小到大：<strong>空格 &lt; 0-9 &lt; 大写字母 &lt; 小写字母</strong></p>
-<p>@@ ASCII码分为<strong>7位码[标准] 和8位码[扩展]</strong></p>
-<p>@@ 指令与数据在计算机内是以ASCII码进行存储的 <strong>(×)</strong>    <u><strong>指令与数据在计算机内是以2进制数存储的</strong></u></p>
-<p>@@ 二进制数0011 1001，若它为ASCII码[<u><strong>十进制值为</strong>：57；<strong>表示</strong>的(<em>字符</em> )十进制为：9</u>]</p>
-<p>@@ 标准ASCII码可表示128个不同的字符，其中不可打印<del>控制符</del>字符{不可显示}有(<strong>33</strong>)个，可打印字符(<strong>95</strong>)个</p>
-<p>@@ 根据ASCII编码原理，现在要对50个字符进行编码[表示]，至少需要(<strong>6</strong>)个二进制位 </p>
-<p>解：$2^n$ ≥ 50 解得 n &#x3D; 6。<strong>存储</strong>50个字符，需要50个<strong>字节</strong> [存50条电话，需要50个位置]</p>
-<p>@@ 在计算机中一个<strong>字节</strong>可以表示( <u>2位十六进制数、一个ASCII码、256种状态</u> )</p>
-<p>2位十六进制数：00 ~ FF &#x3D;&gt; 0000 0000 ~ 1111 1111 </p>
-<p> <strong>一个字节表示0~255</strong> ：这个简单首先理解到在内存中数据是用十六进制保存的 也就是说 00-FF </p>
-<p>00转成十进制就是 0    FF转成十进制就是 255    所以就是 0-255</p>
-<p>@@ 用ASCII 码可以表示汉字 <strong>(×)</strong> <u>它是表示西文字符的</u></p>
-<blockquote>
-<p>一个汉字在计算机中占两个字节的位置 西文字符中的ASCII码表示西文字符是，用的是7位的ASCII码，为了在计算机中存储，最高位（第八位）默认为0，所以可以表示2的7次方个不同的字符；扩展的ASCII码，使用的第八位，不在默认为0，所以最多可以表示2的8次方个字符</p>
-</blockquote>
-<p>@@ 按照ASCII码编码规则，数字符号’0’ - ‘9’的编码值为 <strong>十六进制数30-39</strong></p>
-<p>‘0’ ~ ‘9’ &#x3D;&gt; 48 ~ 57 &#x3D;&gt; 30H ~ 39H</p>
-<p>@@ 世界上使用最普遍的字符编码是(ASCII)码，在西文字符中使用最普遍的是(标准ASCII)码</p>
-<hr>
-<h1 id="中文字符在计算机中的表示"><a href="#中文字符在计算机中的表示" class="headerlink" title="中文字符在计算机中的表示"></a>中文字符在计算机中的表示</h1><p>汉字编码：采用一种科学可行的方法，为每个汉字编写一个唯一的代码，以便计算机辨认、接收和处理。</p>
-<p>中文字符处理的基本流程：<strong>输入码 → 交换码 → 机内码 → 地址码 → 输出码</strong></p>
-<h4 id="汉字的编码："><a href="#汉字的编码：" class="headerlink" title="汉字的编码："></a>汉字的编码：</h4><ul>
-<li><strong>音码</strong>：主要以汉语拼音为基础的编码方案 如：<u>微软拼音、搜狗拼音</u>；特点：重码多、单字输入慢，掌握容易</li>
-<li><strong>形码</strong>：根据汉字的字形进行的编码 如：<u>五笔字型</u>；特点：重码少，单字输入比较快，但学习和掌握困难</li>
-<li><strong>音形结合码</strong>：自然码；特点：将音形结合起来，减少重码率，提高输入速度</li>
-<li><strong>流水码</strong>：区位码输入法  区位码输入法是一字一码，优点是无重码</li>
-</ul>
-<h4 id="输入码-外码-：-特点"><a href="#输入码-外码-：-特点" class="headerlink" title="输入码(外码)：[特点]"></a>输入码(外码)：[特点]</h4><ul>
-<li>利用键盘输入汉字时对汉字的编码</li>
-<li>输入码不是唯一的，因为有音码、形码、音形结合码等不同的输入码</li>
-</ul>
-<h4 id="机内码：-GB2312-80"><a href="#机内码：-GB2312-80" class="headerlink" title="机内码：[GB2312-80]"></a>机内码：[GB2312-80]</h4><ul>
-<li>真正的计算机内部用来存储和处理汉字信息的代码</li>
-</ul>
-<p><strong>区码 01<del>94    国标码 2121H</del>7E7E    内码 A1A1~FEFE</strong><img src="https://raw.githubusercontent.com/P-luminary/images/de7464658d6f6af9cfc15041a87d0a2be5b45d51/data/%E5%86%85%E7%A0%81%E3%80%81%E5%9B%BD%E9%99%85%E7%A0%81%E3%80%81%E5%8C%BA%E4%BD%8D%E7%A0%81.png"></p>
-<p>【十六进制】<u>国标码 &#x3D; 区位码 + 20；内码 &#x3D; 国标码 + 80；</u><u><strong>内码 &#x3D; 区位码 + 80H</strong></u> &#x3D;&gt; 十六进制的值大于A0   [<strong><u>大到小 -&gt; 内<del>+80</del>国<del>+20</del>区<del>区位码十进制要转换成十六进制</del>[从右到左] &#x3D;&gt; 内个蛆</u></strong> ]   &#x3D;&#x3D;<strong>区位码是十进制数D、国标码是十六进制H、机内码是十六进制H</strong>&#x3D;&#x3D;</p>
-<p>@@ 汉字在计算机内部采用的是<strong>机内码</strong>  注意：不是国标码！！！</p>
-<p>@@ 存储一个汉字的机内码需要<strong>2</strong>个字节</p>
-<p>@@ 国标码GB2312-80是国家制定的<u>汉字<strong>交换码</strong></u>标准</p>
-<p>@@ 五笔型输入码属于<strong>形码</strong></p>
-<p>@@ 数值：补码；西文字符：ASCII码。指令和数据在计算机内部都是以<u>二进制</u>形式存储的</p>
-<p>@@ 若已知一汉字的国标码是<strong>5E38H</strong>，其机内码是 <strong><u>DEB8</u></strong></p>
-<p>5E + 80 &#x3D;&gt; DE    38H + 80H &#x3D;&gt; B8H </p>
-<p>对于GB2312来说：<strong>当某字节的最高位为1时，必须和下一个最高位同样为1的字节结合起来代表一个汉字</strong></p>
-<p>@@ <strong>[一个汉字的机内码] 汉字的编码 ≥ A1</strong>    在内存中若汉字以GB2312的内码表示，已知存储了6个字节的字符串，其十六进制内容依次为：6AH、<span style = "color : blue"><strong>B1H、D2H</strong></span>、53H、<span style = "color : blue"><strong>C8H、B4H</strong></span>，这个字符串中有**( 2 )**个汉字</p>
-<p>@@ 在GB2312中，汉字的国际交换码为该汉字的<strong>区号</strong>和<strong>位号</strong>分别加32之后得到的二进制代码</p>
-<p>@@ 汉字内码的每个字节的最高位是1，不同字体的字形描述信息存放在不同字库中。</p>
-<h4 id="考点1：区位码是十进制数D、国标码是十六进制H、机内码是十六进制H"><a href="#考点1：区位码是十进制数D、国标码是十六进制H、机内码是十六进制H" class="headerlink" title="考点1：区位码是十进制数D、国标码是十六进制H、机内码是十六进制H"></a>考点1：区位码是十进制数D、国标码是十六进制H、机内码是十六进制H</h4><h4 id="考点2：区位码转国标码，先将区位码的高字节、低字节分别由十进制D转换为十六机制H，再分别＋20H，就是国标码H"><a href="#考点2：区位码转国标码，先将区位码的高字节、低字节分别由十进制D转换为十六机制H，再分别＋20H，就是国标码H" class="headerlink" title="考点2：区位码转国标码，先将区位码的高字节、低字节分别由十进制D转换为十六机制H，再分别＋20H，就是国标码H"></a><span style = "color : red">考点2：区位码转国标码，先将区位码的高字节、低字节分别由十进制D转换为十六机制H，再分别＋20H，就是国标码H</span></h4><h4 id="考点3：国际码转机内码，国标码的高字节、低字节分别-80H，就得到机内码"><a href="#考点3：国际码转机内码，国标码的高字节、低字节分别-80H，就得到机内码" class="headerlink" title="考点3：国际码转机内码，国标码的高字节、低字节分别+80H，就得到机内码"></a>考点3：国际码转机内码，国标码的高字节、低字节分别+80H，就得到机内码</h4><h4 id="考点4：区位码转机内码，先将区位码的高字节、低字节分别由十进制D转换为十六进制H，再分别-A0H，得到机内码"><a href="#考点4：区位码转机内码，先将区位码的高字节、低字节分别由十进制D转换为十六进制H，再分别-A0H，得到机内码" class="headerlink" title="考点4：区位码转机内码，先将区位码的高字节、低字节分别由十进制D转换为十六进制H，再分别+A0H，得到机内码"></a><span style = "color : red">考点4：区位码转机内码，先将区位码的高字节、低字节分别由十进制D转换为十六进制H，再分别+A0H，得到机内码</span></h4><table>
-<thead>
-<tr>
-<th>汉字</th>
-<th>区位码(10进制)</th>
-<th>国标码(16进制)</th>
-<th>机内码(16进制)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>中</td>
-<td><strong>5448</strong></td>
-<td>5650</td>
-<td>D6D0</td>
-</tr>
-<tr>
-<td>国</td>
-<td>2590</td>
-<td>397A</td>
-<td><strong>B9FA</strong></td>
-</tr>
-<tr>
-<td>梦</td>
-<td>3546</td>
-<td><strong>434E</strong></td>
-<td>C3CE</td>
-</tr>
-</tbody></table>
-<ul>
-<li>54D -&gt; 36H + 20 &#x3D; 56H + 80 &#x3D; D6</li>
-<li>48D -&gt; 30H + 20 &#x3D; 50H + 80 &#x3D; D0</li>
-</ul>
-<blockquote>
-<p>快速转换<br>@@ 字符的ASCII码十进制值为71，则其十六进制为( )<br>快速根据位权凑：$16^2$&#x3D;256     $16^1$&#x3D;16    $16^0$&#x3D;1<br>71＜256 ∴肯定有2个16进制的位权就够了 __ __  ∴ <u>4 7</u> &#x3D;&gt;$16^4$ + $16^7$ &#x3D; 64 + 7 &#x3D; 71</p>
-</blockquote>
-<h2 id="GB2312-80"><a href="#GB2312-80" class="headerlink" title="GB2312-80"></a>GB2312-80</h2><h5 id="一共7445个，一级汉字3755个"><a href="#一共7445个，一级汉字3755个" class="headerlink" title="一共7445个，一级汉字3755个"></a>一共7445个，一级汉字3755个</h5><p>国际码，全称：《信息交换汉字编码字符集–基本集》</p>
-<p>时间：1980年发布，1981年实施，我国第一个汉字编码字符集标准</p>
-<p>区位码：全部国际汉字及符号放在94个区、每区94个位的矩阵中，区码范围是01-94、位码范围是01-94，区码和位码组合在一起，区码居高位、位码居底位，形成“区位码”</p>
-<h4 id="考点1：区位码是十进制数表示的"><a href="#考点1：区位码是十进制数表示的" class="headerlink" title="考点1：区位码是十进制数表示的"></a>考点1：区位码是十进制数表示的</h4><h4 id="考点2：每个汉字或汉字字符都有唯一的区位码与之对应"><a href="#考点2：每个汉字或汉字字符都有唯一的区位码与之对应" class="headerlink" title="考点2：每个汉字或汉字字符都有唯一的区位码与之对应"></a>考点2：每个汉字或汉字字符都有唯一的区位码与之对应</h4><h4 id="考点3：区位码是两个字符，区码一个字符，位码一个字符"><a href="#考点3：区位码是两个字符，区码一个字符，位码一个字符" class="headerlink" title="考点3：区位码是两个字符，区码一个字符，位码一个字符"></a>考点3：区位码是两个字符，区码一个字符，位码一个字符</h4><h4 id="考点：区位码、国际码相互转换。"><a href="#考点：区位码、国际码相互转换。" class="headerlink" title="考点：区位码、国际码相互转换。"></a>考点：区位码、国际码相互转换。</h4><p>把十进制的区位码转换成十六机制，再加上2020H就得到国际码</p>
-<h4 id="考点：国标码GB2312是一种交换码"><a href="#考点：国标码GB2312是一种交换码" class="headerlink" title="考点：国标码GB2312是一种交换码"></a>考点：国标码GB2312是一种交换码</h4><h4 id="考点：国际码是两个字节，每个字节的最高位是0"><a href="#考点：国际码是两个字节，每个字节的最高位是0" class="headerlink" title="考点：国际码是两个字节，每个字节的最高位是0"></a>考点：国际码是两个字节，每个字节的最高位是0</h4><h4 id="考点：国际码GB2312使用十六进制表示-16bit"><a href="#考点：国际码GB2312使用十六进制表示-16bit" class="headerlink" title="考点：国际码GB2312使用十六进制表示 16bit"></a>考点：国际码GB2312使用十六进制表示 16bit</h4><h4 id="考点：中文字符国际码的取值范围是2121H-7E7EH"><a href="#考点：中文字符国际码的取值范围是2121H-7E7EH" class="headerlink" title="考点：中文字符国际码的取值范围是2121H ~ 7E7EH"></a>考点：中文字符国际码的取值范围是2121H ~ 7E7EH</h4><p><u>@@ <strong>为了</strong>解决GB2312码[国标码]和ASCII码的冲突问题，我们把国标码的最高位设置为（<strong>1</strong>），称之为（<strong>机内码</strong>[异性国标码]）</u></p>
-<h2 id="GBK"><a href="#GBK" class="headerlink" title="GBK"></a>GBK</h2><p>全称：《汉字内码扩展规范》时间：1995年制订</p>
-<p>两个字节表示一个汉字，向下兼容GB2312和BIG5</p>
-<p>收录了21886个符号，包括21003个汉字和883个其他符号</p>
-<h2 id="GB18030"><a href="#GB18030" class="headerlink" title="GB18030"></a>GB18030</h2><p>时间：2000、2005年制订，两个版本</p>
-<p>全称：《信息技术中文编码字符集》</p>
-<p>特点：可变长编码，采用单字节、双字节和四字节三种方式对字符编码</p>
-<p>收录了70000多个符号</p>
-<h2 id="BIG5"><a href="#BIG5" class="headerlink" title="BIG5"></a>BIG5</h2><p>属性：港澳台地区使用的繁体字编码方案</p>
-<p>两个字节表示一个汉字</p>
-<p>13053个繁体字</p>
-<h2 id="Unicode"><a href="#Unicode" class="headerlink" title="Unicode"></a>Unicode</h2><p>中文名：统一码、万国码    时间：1994年公布</p>
-<p>使用两个字节或四个字节表示一个字符 UCS </p>
-<p>Unicode编码方案 <strong>UTF-8、UTF-16、UTF-32</strong></p>
-<p>能表示<strong>20000以上的汉字数量</strong></p>
-<h3 id="乱码的问题"><a href="#乱码的问题" class="headerlink" title="乱码的问题"></a>乱码的问题</h3><p>乱码的原因：使用一种交换码编辑文档，如果对方机器里使用的是另一种不兼容的交换码就会乱码</p>
-<p>乱码的解决：统一使用通用的Unicode编码，或者选择安装使用同一种交换码</p>
-<h3 id="中文字符在计算机中的表示–输出码"><a href="#中文字符在计算机中的表示–输出码" class="headerlink" title="中文字符在计算机中的表示–输出码"></a>中文字符在计算机中的表示–输出码</h3><p>又叫汉字字形码，有叫汉字字模，用于汉字在显示屏或打印机输出</p>
-<ul>
-<li><h4 id="点阵字"><a href="#点阵字" class="headerlink" title="点阵字"></a>点阵字</h4></li>
-</ul>
-<p>使用n*n的点阵表示一个汉字的行形状，每个点使用一位二进制表示，0和1组成</p>
-<p>根据输出汉字的要求不同，点阵的多少也不同，简易型汉字16 * 16点阵，提高型汉字24 * 24点阵、32 * 32点阵、48 * 48点阵</p>
-<p><strong>点阵规模愈大，字形愈清晰美观，所占存储空间愈大</strong> <u>1字节 &#x3D; 8bit</u>    如：16*16点阵汉字，每个汉字占用16 * 16 &#x2F; 8 &#x3D; 32B  故占32个字节</p>
-<p>字库：字模点阵占用空间太大，不作为机内存储，只用来构成“字库”。字库中存放了每个汉字的点阵代码，需要显示输出时，检索字库，输出字模点阵，得到字形。</p>
-<p><strong>考点</strong>：<u>汉字的字库属于输出码(字形码)，不是机内码</u></p>
-<p>&#x3D;&#x3D;<strong>考点</strong>：有100个24 * 24点阵汉字，所占存储空间是多少？ <strong>100 * 24 * 24 &#x2F; 8 &#x3D; 7200B</strong>&#x3D;&#x3D;</p>
-<ul>
-<li><h4 id="矢量字"><a href="#矢量字" class="headerlink" title="矢量字"></a>矢量字</h4></li>
-</ul>
-<p>矢量字体(Vector font)中每一个字形是通过数学曲线来描述的，它包含了字形边界上的关键点，连线的导数信息等，字体的渲染引擎通过读取这些数学矢量，然后进行一定的数学运算来进行渲染。<br>字体实际尺寸可以任意缩放而不变形、变色，显示效果与大小和分辨率无关，因此可产生高质量的汉字输出</p>
-<p>矢量字体主要包括Type1 . TrueType、OpenType等几类。<br>厂商：北大方正、makefont等</p>
-<ul>
-<li><h4 id="点阵字和矢量字的区别"><a href="#点阵字和矢量字的区别" class="headerlink" title="点阵字和矢量字的区别"></a>点阵字和矢量字的区别</h4></li>
-</ul>
-<p>@@ 每个汉字具有唯一的内码，外码不唯一</p>
-<p>@@ 存储一个32 * 32 点阵汉字字型信息的字节数是(<strong>128B</strong>)</p>
-<p>@@ 中文字符集中，包含汉字数量最多的是<strong>GBK</strong>     ∵ UTF-8不是专门的中文字符集</p>
-<p>@@ <strong>GB18030</strong> 包含汉字数量最多</p>
-<hr>
-<p>@@ 中文字符的范围是A1A1H到FEFEH，汉字机内码的取值范围是B0A1H ~ F7FEH</p>
-<p>@@ 汉字系统中汉字字库里存放的是汉字的<strong>字形码</strong></p>
-<p>@@ 不同汉字的机内码长度是相同的 都是2个字节</p>
-<p>@@ 区位码输入法的最大优点是<strong>一字一码，无重码</strong></p>
-<p>@@ 在计算机内部用机内码而不用国标码表示汉字的原因是<strong>有些情况下，国际码有可能造成误解</strong></p>
-<p>@@ **一个汉字的机内码与它的国标码之间的差是8080H **，国标码5E38H -&gt; 机内码 5E38H + 8080H &#x3D;&gt; DEB8H</p>
-<p>@@ [上方考点2] 已知汉字”家”的区位码是2850，则其国标码是(<strong>3C52H</strong>) <strong>28</strong>D -&gt; <u><strong>1C</strong>H -&gt; +20H</u> &#x3D;&gt; 3CH</p>
-<p>@@ 汉字的国标码由两个字节组成，每个字节的取值均在十进制<strong>33-126</strong>  ∵范围是2121H-7E7E，<u>21 -&gt; 2×16+1 &#x3D;33</u>，<u>7E -&gt; 7×16+14&#x3D;126</u> &#x3D;&gt; <em><strong>33 ~ 126</strong></em></p>
-<p>@@ 一个汉字的机内码与国标码之间的差别是<strong>前者各字节的最高二进制位的值均为1，而后者均为0</strong></p>
-<p>@@ 若存储500个32 * 32 点阵的汉字字模信息，则需要的存储容量是<strong>64kb</strong> ∵ 500×32×32 &#x2F; 8 <em>(<u>1字节 &#x3D; 8bit</u>)</em> ×1024&#x3D; 64KB</p>
-<p>@@ 存储800个24 × 24点阵汉字字形所需的存储容量是( 24 × 24 × 800 )<strong>位</strong> [&#x3D;&#x3D;位的话不除以8，如果问字节B 就要除以8&#x3D;&#x3D;]</p>
-<p>@@ 计算机处理汉字时，在<u>输入、存储、和显示阶段</u>所使用的编码是<strong>输入码、机内码、字形码</strong></p>
-<p>@@ 根据汉字国标码GB2312-80的规定，一级汉字的排列顺序是按照<strong>汉字拼音字母</strong>，二级的汉字排列顺序是按照<strong>偏旁部首</strong></p>
-<p><u>@@ <strong>为了</strong>解决GB2312码[国标码]和ASCII码的冲突问题，我们把国标码的最高位设置为（<strong>1</strong>），称之为（<strong>机内码</strong>[异性国标码]）</u></p>
-<p>@@ 点阵属于字形码，输入码包括<strong>括音码、形码、音形结合码、流水码</strong></p>
-<p>@@ 汉字国标码每一个字节的取值范围是<strong>2121H - 7E7EH</strong></p>
-<p>@@ 汉字输入码包括<strong>音码、形码、音形结合码、流水码</strong></p>
-<p>@@ 相同的汉字通过不同的输入方式外码不同，<strong>内码相同</strong></p>
-<p>@@ 存储400个24×24的点阵汉字字形所需的存储容量是<strong>28.125</strong>kb ；400×24×24 &#x2F; 8 × 1024 &#x3D; 28.125</p>
-<p>@@ <strong>寄存器</strong>用来临时存放参加运算的数据和运算得到的中间结果 </p>
-<p>@@ <u>CPU通过数据总线一次存取、加工和传送的数据称为<strong>字</strong>。</u></p>
-<p>@@ 计算机的运算部件能同时处理的二进制数据的位数称为<strong>字长</strong>。</p>
-<p>@@ 汉字字形码实际上就是用来将汉字显示到屏幕上或打印到纸上所需要的图形数据。<u><em>汉字字形码记录汉字的外形</em></u>，是汉字的<strong>输出形式</strong></p>
-<p>@@ ASCII码是一种西文机内码，**<u>一个字符的ASCII码占用的存储空间为1B</u>**</p>
-<p>@@ 记录汉字字形通常由两种方法：<strong>点阵法</strong>和<strong>矢量法</strong>，分别对应两种字形编码：<strong>点阵码</strong>和<strong>矢量码</strong></p>
-<p>@@ CPU中用于暂时存放操作数和中间运算结果的是<strong>累加器</strong></p>
-<p>@@ CPU中，加法运算是由**算术逻辑部件(运算器)**完成的</p>
-<p>@@ 不同的CPU其具有的机器指令不同，因此，必须与可兼容的芯片组匹配。</p>
-<p>@@ CPU是计算机中不可缺少的组成部分，它包含几十个甚至更多寄存器，用来<strong>临时存放等待处理数据</strong>，也担负着运行系统软件和应用软件的任务。尽管采用各种技术措施后PC机的主存速度有了很大的提高，但与CPU相比仍有较大差距，为了解决主存速度不能完全跟上CPU速度这一矛盾，PC机采用了高速缓存存储器Cache。常用的CPU由一个处理器组成，但是为了提高计算机的速度，CPU也可以由2个、10个甚至几百个几千个处理器组成 </p>
-<p>@@ CPU由<strong>运算器</strong>和<strong>控制器</strong>组成</p>
-<p>@@ 字长是计算机一次所能处理的实际位数长度，字长是衡量计算性能的一个重要指标。字长一般是8的倍数</p>
-<p>@@ 某显示器的分辨率设置为1024 × 768，其含义是<u><strong>横向点数 × 纵向点数</strong></u></p>
-<p>@@ <u>第一台<strong>电子计算机</strong></u>采用的<strong>十进制</strong>，没有采用存储程序思想</p>
-<p>@@ 未配置任何软件的叫<strong>裸机</strong></p>
-<p>@@ 中央处理器：<strong>控制器和运算器</strong></p>
-<p>@@ 磁盘采用的是<strong>磁存储原理</strong>；光盘采用的是<strong>激光存储原理</strong></p>
-<p>@@ 汉字<strong>内码</strong>是真正的计算机内部用来存储和处理汉字信息的语言</p>
-<p>@@ 微型计算机的<strong>显示系统</strong>指的是<u><strong>显示器+显示适配器(显示卡)</strong></u></p>
-<p>@@ ENIAC没有今天的鼠标和键盘，人们**<u>只能通过扳动片面化大面板上的无数开关向计算机输入信息</u>**</p>
-<p>@@<span style = "color : red"> <u>字节是存储信息的基本单位。bit是<strong>信息量单位</strong></u></span></p>
-<p>@@ ASCII称为<strong>美国标准信息交换码</strong></p>
-<p>@@ 每一个十进制<strong>整数</strong>都可以精确地转换为二进制整数形式，十进制<strong>小数</strong>转换为二进制方法为乘积取整，顺序排列，<strong>有可能出现循环的情况，不能精确转换 &#x3D;&gt; 十进制小数0.1转换为二进制就会出现不能精确转换的情况</strong></p>
-<p>@@ 用于解决某一问题的<u>一个指令序列</u>称为<strong>程序</strong>，<em>所有程序的集合</em>称为<strong>计算机指令系统</strong></p>
-<p>@@ MIPS是计算机的<strong>运算速度</strong>单位，计算机的主频单位是Hz赫兹</p>
-<p>@@ ASCII码是美国信息交换标准代码，它的每个字符用一个字节表示</p>
-<p>@@ 世界上第一代电子计算机主要用于<strong>科学计算</strong></p>
-<p>@@ CPU从RAM中既可以读出信息又可以写入信息，但断电后所存的信息就会丢失</p>
-<p>@@ 将磁盘上的信息调入内存时，信息写入内存储器的<strong>RAM</strong></p>
-<p>@@ 外部设备与总线和微处理器链接的接口电路称为<strong>适配器</strong></p>
-<p>@@ 把时间上连续的模拟信号转变为时间上不连续的数字信号，这个取点的过程称之为<strong>采样</strong></p>
-<p>@@ 计算机的算法具有<strong>有穷性、确定性、可行性</strong>的性质</p>
-<p>@@ 在一个非零无符号二进制整数之后去掉一个0，则此数的值为原数的<strong>1 &#x2F; 2</strong>倍</p>
-<p>@@ 设内存储器的容量为1MB, 若首地址的十六进制表示为00000，则末地址的十六进制 表示为FFFF</p>
-<p>@@ 字的位数叫<strong>字长</strong>，它是计算机一次可处理的二进制数的位数，是衡量计算机性能的一个重要指标</p>
-<p>@@ <strong>指令</strong>由一串二进制码组成，包括<strong>操作码</strong>和<strong>地址码</strong>两部分</p>
-<p>@@ 高级语言可以分为两类：<strong>编译型</strong>和<strong>解释型</strong></p>
-<p>@@ <strong>软件</strong>是指计算机运行所需的程序，数据和有关文档的总和</p>
-<p>@@ 存储器由成千上万个存储单元构成，每个存储单元都有唯一的编号，称为存储单元的<strong>地址</strong></p>
-<p>@@ 存储程序工作原理的基本思想是存储程序和<strong>程序控制</strong></p>
-<p>@@ <strong>汉字机内码</strong>是计算机内处理汉字信息时所用的汉字代码</p>
-<p>@@ **<u>数码</u>**：一组来表示某种数制的符号，比如二进制的0和1    <strong>基数</strong>：数制所使用的数码个数，常用R表示，称为R进制</p>
-<p>@@ 在计算机内一切信息存取、传输都是以<strong>二进制</strong>形式进行的集合。</p>
-<p>@@ 一个中文字符是2个字节 2Byte&#x3D;2*8bit</p>
-<p>@@ 微型计算机的特点：运算速度快，计算精度高，记忆能力强，存储能量大，具有逻辑判断能力，数据化程度高</p>
-<p>@@ 云计算是分布式计算技术的一种，最基本的概念是透过网络将庞大的计算机处理程序自动划分成若干个小的程序，再由多部服务器组成的庞大系统，经搜寻、计算分析之后同将处理结果回传给用户。[大的分成小的分给多个主机，同时完成 ]</p>
-<p>@@ 1个字节 可以表示 2位十六进制 2位八进制</p>
-<p>@@ 合并后居中(居中)、合并单元格(只合并 在最左)、跨越合并(一行一行的)</p>
-<p>@@ 有10个盘面，每个划分出1024条磁道，每条磁道划分出2048个扇区，求硬盘空间 &#x3D; 10 *1024 * 2048 * 512 &#x3D; 10GB [盘面要×2]</p>
-<p>@@ 硬盘中每个磁道中一个扇区的存储容量是512Byte</p>
-<p>@@ 真值：是计算机内部的编码形式 </p>
-<p>@@ 操作系统的异步性是指程序的<strong>不确定性</strong>；共享性是指计算机中资源能够被多个程序使用</p>
-<p>@@ 计算机指令的执行过程分为<strong>取指令、分析指令和执行指令</strong></p>
-<p>@@ CPU单位时间内一次处理的二进制位数称为<strong>字长</strong></p>
-<p>@@ M ASCII：77    m&#x3D;77+32&#x3D;109</p>
-<p>@@ 一个ASCII码占用 1字节<br> 一个汉字机内码占用2字节<br>一个字节可以表示2十六进制位</p>
-<blockquote>
-<p><strong><u>与同1(张雨桐是1)    或11(喝11)</u></strong><br>与(&amp;)(逻辑乘) 运算 0&amp;0&#x3D;0, 1&amp;0&#x3D;0, 1&amp;1&#x3D;1<br>或(|)(逻辑加) 运算 0|0&#x3D;0, 0|1&#x3D;1, 1|1&#x3D;1<br>非(<del>) 运算 非运算即取反运算 1变0, 0变1<br>异或(^)</del>相同为0，不同为1~ 运算 0^0&#x3D;0, 0^1&#x3D;1, 1^1&#x3D;0</p>
-</blockquote>
-<p>@@ 数值∈[0,R-1]</p>
-<hr>
-<p><strong><span style = "color :red">2023.3.14计算机题目</span></strong></p>
-<p>UPS不断供电系统(电池)<br>A盘 B盘用于古代的软盘<br>@@ 把连续的模拟信号按照一定的频率进行采样，得到一系列有限的<strong>离散值</strong><br>@@ 存储载体 + 传输载体<br>@@ 存储器Cache：解决cpu和内存之间速度不匹配<br>@@ 从快到慢：寄存器、Cache、RAM、硬盘、U盘<br>@@ ROM只读存储器、PROM可编程只读存储器、EPROM擦除…<br>@@ MIPS运算速度<br>@@ 数据和信息关系，先有数据，再获取信息；文字图形图形视频 -&gt; 信息；<br>@@  世界上第一款 商用计算机<br>@@ 计算机采用二进制的原因：<strong>①电路简单 ②简化运算 ③可靠性 ④逻辑性 ⑤通用性</strong><br>@@ 冯诺依曼体系的设计思想：程序存储和程序控制<br>@@ 利用区位码输入汉字时，输入<strong>十六进制</strong><del>题目给出不用转换</del>代码”10 23 24 19”<br>&#x3D;&#x3D;① 输入了 <u>2</u> 个汉字<del>一个字节可表示2位十六机制</del>[10,23,24,19四个字节]，共用了 <u>4</u> 个字节&#x3D;&#x3D;<br>② 填写出小李输入的汉字在计算机内部的存储形式<br>已知区位码 1023, 2419，求 机内码十六进制 &#x3D;&gt; AOAO AOAO &#x3D;&gt; BOC3 C4B9<br>[<strong><u>大到小 -&gt; 内<del>+80</del>国<del>+20</del>区<del>区位码十进制要转换成十六进制</del>[从右到左] &#x3D;&gt; 内个蛆</u></strong> ]</p>
-<blockquote>
-<p>机内码 取值范围 AOAO-FEFE<del>H</del><br>① 西文字符 ASCII码 (标准 扩展) 【复习】大小排序<del>(在Excel内不区分大小写)</del><br>② 整数 采用 补码<br>正整数 原、反、补相同<br>负整数 补 是符号不变，原码取反＋1<br>③ 汉字 采用 机内码 &#x3D; 区位码 + 2020H + 8080H [要注意10进制转换16进制]<br>④ 浮点 采用 阶 和 尾</p>
-</blockquote>
-<p>+0.377 × $10^8$     +是阶符 8是码  0.377尾数 10-&gt;R是基数  8是指数</p>
-<blockquote>
-<p>指数是范围 尾数是精度</p>
-</blockquote>
-<p>@@ 虚拟地址是<strong>用户编程可使用的地址</strong><br>@@ 操作系统通过<strong>逻辑设备名<del>中断号识别I&#x2F;O设备</del></strong><br>@@ <strong>网桥</strong>就是交换机<br>@@ 文件有<strong>只读</strong>属性指的是 文件中的内容被保护，文件可以被删除，移动，保护<br>@@ 内存中数据进入高速缓存 再进入硬盘；硬盘中的数据；<del>[CPU到Cache 内存到CPU]？？</del><br>硬盘内部是磁盘到柱头 外部磁盘缓存 -&gt;系统总线<br>外部：高速缓存 再进入内存<br>内部：硬盘的磁头到硬盘的高速缓存 [硬盘内外之间有自己的高速缓存]</p>
-<hr>
-<h4 id="铭升练习册填空题"><a href="#铭升练习册填空题" class="headerlink" title="铭升练习册填空题"></a>铭升练习册填空题</h4><p>@@ 基本ASCII码包括<strong>128</strong>个不同的字符<br>@@ 不少微机软件的安装程序都具有相同的文件名，Windows系统也如此，其<strong>安装程序</strong>的文件名一般为<strong>Setup.exe</strong><br>@@ 用24 × 24点阵的汉字字模存储汉字，每个汉字需要<strong>72</strong>字节 24×24÷8<br>@@ CPU的性能指标中，CPU的时钟频率称为<strong>主频</strong><br>@@ 微型计算机中最大最重要的一块继承电路板称为<strong>主板</strong><br>@@ 光盘的读写设备是光盘<strong>驱动器</strong><br>@@ 计算机的工作原理可以概括为<strong>存储程序</strong>和<strong>程序控制</strong><br>@@ 指令的执行过程包括<strong>取指令、分析指令</strong>和<strong>执行指令</strong><br>@@ 输入设备、输出设备和外存储器合称为<strong>外设</strong><br>@@ 存储器被划分为多个存储单元，每个存储单元都被赋予一个唯一的编号，这个编号被称为存储单元的<strong>地址</strong><br>@@ 在Windows中，应用程序中”编辑(E)”菜单，可用<strong>Alt+E</strong><br>@@ 每当运行一个Windows的应用程序，系统都会在<strong>任务栏</strong>上增加一个按钮<br>@@ 若想调整音量的音量大小，可用双击任务栏上的<strong>音量</strong><br>@@ 在win7中，<strong>磁盘清理</strong>程序通过删除无用文件来帮助释放硬盘驱动器的空间；<strong>磁盘碎片整理</strong>整理程序重新安排计算机硬盘上的文件、程序以及未使用的空间。以便程序运行得更快，文件打开得更快<br>@@ 按<strong>Alt+F4</strong>键可以关闭窗口或退出应用程序；如果某个应用程序不再相应用户的操作可以同时按ctrl+shift+esc<br>@@ 若想删除某个输入法可以选择”<strong>控制面板</strong>“中的<strong>区域和语言</strong>选项<br>@@ 在资源管理器窗口中，显示资料的方式有：**(超大,大,中,小)图标、平铺、列表、内容、详细信息**<br>@@ Windows的<strong>回收站</strong>是<strong>硬盘</strong>中的一块区域<br>@@ 按<strong>Alt+PrintScreen</strong>键可以复制活动窗口的图形到剪贴板<br>@@ 用于解析<strong>域名</strong>的协议是DNS<br>@@ 将文件从FTP服务器传输到客户机的过程称为<strong>下载</strong><br>@@ 网址<strong><a target="_blank" rel="noopener" href="http://www.pku.edu.cn/">www.pku.edu.cn</a></strong>中pku.edu.cn是在Internet中注册的<strong>域名</strong><br>@@ 一般拨号入网，是指通过<strong>公用电话系统</strong><del>PSTN</del>与Internet服务器连接<br>@@ 提供不可靠传输的传输层协议是<strong>UDP</strong><br>@@ Internet主要由四大部分组成，其中包括<strong>路由器、主机、信息资源、通信线路</strong><br>@@ 构成局域网的基本构件有<strong>PC机、传输媒体、网卡<del>(网络适配器)</del>、网络连接设备、网络操作系统</strong><br>@@ 被称为最早的网络是<strong>ARPAnet</strong>网<br>@@ 开放系统互联参考模型简称<strong>OSI</strong>参考模型<br>@@ 开放系统互联参考模型<strong>OSI&#x2F;RM</strong><br>@@ 中继器&#x3D;集线器：放大信号；<br>网桥&#x3D;交换机：寻址、存储、转发；<br>网关&#x3D;路由器：分组交换<br>@@ Hub的中文名称是<strong>集线器</strong><br>@@ <strong>双绞线</strong>可以分为<strong>屏蔽<del>抗电磁干扰强</del><strong>和</strong>非屏蔽</strong>两类<br>@@ 在OSI参考模型中，物理层传送数据的单位是<strong>比特</strong><br>@@ 广域网中广泛使用的信息交换技术是<strong>分组交换</strong>技术<br>@@ 根据宽带来分，计算机网络可分为<strong>宽带网</strong>和<strong>基带网<del>PC发出来的未经过调制的原始信号</del></strong><br>@@ 网络中数据传输形式有<strong>线路、报文、分组交换</strong><br>@@ 计算机指令的合集成为<strong>程序</strong><br>@@ 把源程序翻译后的机器语言程序叫做<strong>目标程序</strong><br>@@ 多媒体技术的基本特征主要有<strong>多维性、集成性、交互性</strong><br>@@ word域代码和域结果，按<strong>Shift+F9</strong>键可以实现相互切换<br>@@ word中，图片插入有两种方式：<strong>嵌入方式</strong>和<strong>链接方式</strong><br>@@ 在Excel中，若只需打印工作表的一部分数据时，应先<strong>选定打印区域</strong><br>@@ 所谓<strong>文件</strong>是指逻辑上具有完整意义的信息资源<strong>程序和数据</strong>的集合<br>@@ 窗口转换<strong>Alt+Tab</strong>或<strong>Alt+Esc</strong><br>@@ MS-DOS是微软公司开发的<strong>磁盘</strong>操作系统，是一种在个人计算机上使用的命令行界面操作系统<br>@@ windows支持的文件系统有<strong>FAT16、FAT32</strong>和<strong>NIFS</strong><br>@@ Internet是全球最具有影响力的计算机互联网，也是世界范围最重要的<strong>信息资源网</strong><br>@@ 任务管理器有两大功能：一是显示当前打开的应用程序、<strong>进程</strong>、CPU和内存资源消耗情况<br>@@ 标准ASCII码是用<strong>7</strong>位二进制位来表示128个字符<br>@@ 每个汉字的机内码需要用<strong>2</strong>个字节来表示<br>@@ 标准ASCII码是用<strong>7</strong>位二进制进行编码<br>@@ 在计算机中，对既有整数部分又有小数部分的实数，使用<strong>浮点数</strong>表示<br>@@ 文件是一组<strong>按一定格式记录在外存中的一组相关信息的集合</strong><br>@@ Excel是<strong>电子表格</strong>应用程序<br>@@ 计算机内部件传输信息的公共通路称为总线，一次传输信息的位数称为总线的<strong>宽度</strong><br>@@ 数据总线宽度：决定了<strong>字长</strong>；    地址总线宽度：决定了访问内存的<strong>容量</strong><br>@@ 某台主机属于国内企业系统，其域名应以<strong>com.cn</strong>结尾<br>@@ GIF LZW是运用了无损压缩算法 但是有损压缩<br>@@ 分布式 是 大任务划成任务；分时 是 轮流使用主机资源<br>@@ 一个进程 包括了 多个线程；资源分配是按进程；资源调度是按线程<br>@@ IPV6采用冒号十六进制 IPV4采用点份十进制<br>@@ 快捷方式是指针<br>@@ 卸载程序会修改注册表；注册表存储着文件与程序的关联关系<br>@@ 文件处理软件属于应用软件<br>@@ 用户控制等在文件 选项中<br>@@ 视图选项卡：新建窗口、拆分窗口 &#x3D;&gt; 在多个窗口中编辑一个文档<br>@@ 拆分 将窗口拆分成 上下 两个部分，方便编辑长篇文档<br>@@ 在一个窗口的结果中，显示在所有的窗口中，像任何情况下，只能有一个编译窗口<br>@@ 文件菜单下显示 最近打开过的文档的快捷方式；视图菜单 切换窗口：显示所有当前打开的文档，可选择 活动文档<br>@@ 单间头 双箭头<br>@@ 导入图片有两种方式：<strong>文件导入</strong> + <strong>剪贴板导入</strong><br>@@ 连击两次工具条中的斜体按钮，则这句话的字符格式不改变<br>@@ 默认的整篇文档叫<strong>节</strong><br>@@ word中建立的表格都是<strong>绘制</strong>的表格<br>@@ 图形对象可以同时添加阴影效果和三维效果<br>@@ 灰色不可用 黑色可用<br>@@ 工作表是工作簿的基本构造块<br>@@ 文件 信息 <strong>保护工作簿</strong> 命令：保护工作簿<br>“<strong>结构</strong>“：增加、移动、删除、重命名工作表<br>“<strong>窗口</strong>“：工作簿窗口的大小和位置<br>@@ 保留最近的24次内容<br>@@ 演示文稿不是幻灯片 演示文档由幻灯片组成<br>@@ 幻灯片可以设置页脚[可插入日期和时间]<br>@@ 幻灯片中对象的效果可以自定义<br>@@ 幻灯片打包时连同播放软件一起打包<br>@@ PPT可以插入EXCEL表格 用链接<br>@@ 多媒体技术中使用数字化技术，与模拟方式相比<strong>经济，造价低</strong><br>@@ 软件发展的三个阶段：第一阶段最初运用于科学与工程计算，使用低级语言编制程序；第二阶段先高级程序语言编制程序，并产生了操作系统和数据库管理系统；20世纪80年代初期，出现了”软件危机”。第三阶段为适应开发大型软件的需要，提出了”软件工程”<br>@@ 网关：运行在路由器中的 协议转换软件 称路由器为网关<br>@@ 黑客或病毒攻击<br>@@ 最大化和还原不能同时出现<br>@@ LWZ使用了无损压缩技术<br>@@ CD-ROM一般即指光存储介质，也指CD-ROM驱动器<br>@@ 最多显示50个最近打开的文档<br>@@ RSA不对称加密 DES算法属于加密技术的对称加密<br>@@ ASCII码是<strong>7</strong>位二进制编码<br>@@ H字母是48H  J是4AH<br>@@ 磁盘分区<strong>NTSF</strong><br>@@ 计算机的存储器由千千万万个小单元组成，小单元是1位二进制<br>@@  Alt <strong>交替换挡键</strong><br>@@ Alt+回车 可以打开属性对话框<br>@@ 计算机科学的奠基人<strong>图灵</strong><br>@@ 某次数据传输共传输了10000000字节数据，其中有50bit出错，其中误码率为<br>50&#x2F;(10000000×8)&#x3D;6.25×10$^{-7}$<br>@@ 数据&#x3D;信息+冗余数据<br>@@ 空格 逻辑与 +     -  逻辑非    |逻辑或<br>@@ 二八十六转十进制 都可以用按位权展开<br>@@ 服务器作用：管理网络资源，提供网络服务<br>@@ Win7里不允许更改<strong>网络图标</strong><br>@@ 硬盘使用前先分区 再格式化<br>@@ 数字相同 进制越小 数值越小<br>@@ 有符号的值取值范围  0 11111<del>大</del> - 1 00000<del>小</del><br>@@ 无符号的值取值范围 0 00000    -  1 11111<br>@@ 一个字符的ASCII，占用二进制数的位数是<strong>8</strong>位<br>@@ 一个字符的ASCII编码，占用二进制位数是<strong>7</strong>位<br>@@ 文本框默认浮于文字上方<br>@@ 计算机的通用性使其可以求解不同的算术和逻辑问题，这主要取决于计算机的<strong>可编程性</strong><br>@@ 一个<strong>有符号</strong>的整数，用一个字节的二进制表示其内容分别是10100000 &#x3D; -41 和 11010111 &#x3D; -96<br>@@ 打开任务管理器，在窗口中，<strong>进程</strong>选项卡提供进程信息，<strong>性能</strong>选项卡提供CPU和内存利用率，<strong>联网</strong>选项卡提供了网络使用率和状态信息，<strong>用户</strong>选项卡显示了登录用户信息</p>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/计算机" style=color:#1bccbc>
-                计算机
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2022/07/03/计算机/计算机基础概论、进制转换、中文字符/ " class="go-post">
         阅读全文
     </a>
 </div>
