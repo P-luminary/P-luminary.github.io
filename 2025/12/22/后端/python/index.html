@@ -1228,6 +1228,189 @@ dict.fromkeys(seq[,default])
 <td>{}或set()</td>
 </tr>
 </tbody></table>
+<h3 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h3><ul>
+<li>直观理解，带名字的代码块</li>
+<li>将完成某一块功能的代码抽取出来，取一个名字，就是函数。如果以后再要完成这个功能的时候，就不需要再编写整体代码了，直接通过名字去调用函数即可。</li>
+</ul>
+<pre><code class="python">案例：打印两次2x3的*
+&#39;&#39;&#39;
+    该案例演示了函数的抽取以及调用
+    打印如下图形
+        ***
+        ***
+        -------
+        ***
+        ***
+&#39;&#39;&#39;
+# 定义一个函数,该函数完成打印输出2*3 &quot;*&quot;的功能
+def printStar() :
+    &#39;&#39;&#39;
+        这是对函数功能的说明
+    &#39;&#39;&#39;
+    row = 2
+    while row &gt; 0 :
+        print(&quot;*&quot; * 3)
+        row -= 1
+
+# 调用函数
+printStar()
+print(&quot;-&quot; * 20)
+printStar()
+</code></pre>
+<p>（1）注意：</p>
+<ul>
+<li>函数必须先定义再调用</li>
+<li>函数在定义的时候只是告诉解释器我定义了一个这样的函数，可以完成某些功能，但是这个时候函数还没有执行，需要调用函数后，才会执行。</li>
+</ul>
+<h4 id="函数的定义"><a href="#函数的定义" class="headerlink" title="函数的定义"></a>函数的定义</h4><p><strong>语法：</strong></p>
+<pre><code class="python">def 函数名(参数列表)
+     函数体
+    [return]
+
+说明：
+       &quot;def&quot; 是定义函数的关键字
+#   函数名：程序员自己定义的，需要遵循标识符的命名规范
+    函数名后，跟着一对小括号，里面放的是参数列表
+        参数，函数执行的时候需要依赖的值
+        参数可以有多个，多个参数之间用逗号分隔
+        如果没有参数，小括号不能省略
+    用：结束函数的声明
+    函数具体完成的功能在函数体中实现，需要进行缩进
+    通过return关键字将函数执行的结果返回给调用者【可以不加，默认返回值是None】 
+--------------------------------------------------------------------
+def print_star():
+    num = 2
+    while num &gt; 0:
+        print(&quot;*&quot; * 3)
+        num -= 1
+print_star()
+print(&quot;-&quot; * 30)
+print_star()
+</code></pre>
+<h5 id="函数的形参和实参"><a href="#函数的形参和实参" class="headerlink" title="函数的形参和实参"></a>函数的形参和实参</h5><p>在函数的提供者定义函数时候，声明的参数称之为形式参数<br><code>def print_star(rows,clos):</code><br>在函数的调用者调用函数的时候，传递的参数称之为实际参数<br><code>print_star(100,3)</code></p>
+<p>注意：在函数声明的时候，并没有给形式参数分配内容空间，只是做了一个占位<br>在调用的时候，会将实参的地址引用赋值给形参</p>
+<pre><code class="python"># 原始方法
+def print_star_1():
+    num = 2
+    while num &gt; 0:
+        print(&quot;*&quot; * 3)
+        num -= 1
+
+def print_star_2():
+    num = 1
+    while num &gt; 0:
+        print(&quot;*&quot; * 6)
+        num -= 1
+        
+print_star_1()
+print(&quot;~&quot; * 30)
+print_star_2()
+
+------------------------------
+
+# 抽取函数（加参数）
+def print_star(rows,clos):
+    while rows &gt; 0:
+        print(&quot;*&quot; * clos)
+        rows -= 1
+
+print_star(2,3)
+------------------------------
+***
+***
+</code></pre>
+<h4 id="赋值操作情况说明"><a href="#赋值操作情况说明" class="headerlink" title="赋值操作情况说明"></a>赋值操作情况说明</h4><h5 id="对于参数传递的是可变数据类型"><a href="#对于参数传递的是可变数据类型" class="headerlink" title="对于参数传递的是可变数据类型"></a>对于参数传递的是可变数据类型</h5><p><code>var1 *= 2</code> 使用了原地址<br><code>var1 = var1 * 2</code> 开辟了新的空间</p>
+<h4 id="参数传递的形式【-a是要传元组-val1-val2-、-a是要传字典-key-val-】"><a href="#参数传递的形式【-a是要传元组-val1-val2-、-a是要传字典-key-val-】" class="headerlink" title="参数传递的形式【*a是要传元组(val1,val2)、**a是要传字典{key,val}】"></a>参数传递的形式【<code>*a是要传元组(val1,val2)、**a是要传字典&#123;key,val&#125;</code>】</h4><ul>
+<li><p>必须参数【参数个数和顺序要一致 通过位置进行赋值】</p>
+</li>
+<li><p>关键字参数【传递实参的时候要带名称且一致，位置可以不一致】</p>
+</li>
+<li><p>默认值参数【在定义参数的时候，可以给参数指定默认值；形参数量可以和实参数量不一致，不传参则默认值】</p>
+</li>
+<li><p>不定长参数</p>
+<ul>
+<li><p>【<code>def 函数名([普通参数], *不定长参数名, [普通参数2])</code>】调用时，普通参数1是按照位置进行匹配的；普通参数2按照关键字进行匹配；处理不定长参数时，使用<strong>元组</strong>进行处理</p>
+<pre><code class="python">def func(num,*args,plu):
+    print(num)
+    print(args)
+    print(plu)
+func(3, 2,1,1,1,1, plu = 666)
+-------------------------
+3
+(2, 1, 1, 1, 1)
+666
+</code></pre>
+</li>
+<li><p>【<code>def 函数名([普通参数], **不定长参数名)</code>】调用时，普通参数1是按照位置进行匹配的；不定长参数后面不允许出现其他的参数；处理不定长参数时，使用<strong>字典</strong>{key:value}进行处理</p>
+<pre><code class="python">def func(num,**args):
+    print(num)
+    print(args)
+func(300, a = 1,b =2 ,c = 3,d = 4)
+-------------------------
+300
+&#123;&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3, &#39;d&#39;: 4&#125;
+</code></pre>
+<pre><code class="python">def func(**args):
+    print(arg)
+func(**&#123;&quot;name&quot;:&quot;zs&quot;,&quot;age&quot;:18&#125;)
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<p>不定长参数可以在形参前面加”*”【定义的是元组】</p>
+<pre><code class="python">def func(num,*args):
+    print(num)
+    print(args)
+func(3, 2,1,1,1,1)
+</code></pre>
+<p>（1）<strong>注意：</strong></p>
+<p>Ø 加了星号 * 的参数会以元组(tuple)的形式导入，存放所有未命名的变量参数。</p>
+<p>Ø 如果形参中出现了不定长参数，那么在调用函数的时候，先通过位置进行必须参数的匹配，然后不定长参数后面的参数必须通过关键字参数匹配</p>
+<p>Ø 如果不定长的参数后面还有参数,必须通过关键字参数传参</p>
+<pre><code class="python">def func(num,*args):
+    print(num)
+    print(args)
+func(3, 2,1,1,1,1, num1 = 300)
+</code></pre>
+<p>Ø 还有一种就是参数带两个星号 **的可变长参数，基本语法如下：</p>
+<pre><code class="python">def 函数名([普通参数,] **var_args_dict ):
+   函数体
+</code></pre>
+<p>加了两个星号 ** 的参数会以字典的形式导入，后面就不能再有其他参数了</p>
+<pre><code class="python">&#39;&#39;&#39;
+    该案例演示了函数调用时的不定长参数
+&#39;&#39;&#39;
+def printInfo(num,**vardict):
+    print(num)
+    print(vardict)
+    # return
+
+printInfo(10,key1 = 20,key2 = 30)
+printInfo(10,a = 20,b = 30)
+</code></pre>
+<h4 id="解包传参"><a href="#解包传参" class="headerlink" title="解包传参"></a>解包传参</h4><p>若函数的形参是定长参数，可以通过 * 和 ** 对列表、元组、字典等解包传参。</p>
+<pre><code class="python">def func(a, b, c):
+    return a + b + c
+tuple11 = (1, 2, 3)
+print(func(*tuple11))
+
+# 字典中key的名称和参数名必须一致
+dict1 = &#123;&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3&#125;
+print(func(**dict1))
+
+---------------------------------
+6
+6
+
+#若是直接 print(a,b,c) =&gt; 1,2,3
+</code></pre>
+<h4 id="强制使用位置传参或关键字参数"><a href="#强制使用位置传参或关键字参数" class="headerlink" title="强制使用位置传参或关键字参数"></a>强制使用位置传参或关键字参数</h4><p>&#x2F; 前的参数必须使用位置传参，* 后的参数必须用关键字传参。</p>
+<pre><code class="python">def f(a, b, /, c, d, *, e, f):
+    print(a, b, c, d, e, f)
+
+f(1, 2, 3, d=4, e=5, f=6) 
+</code></pre>
 
     </div>
 
@@ -1243,7 +1426,7 @@ dict.fromkeys(seq[,default])
 <footer id="footer">
     <div class="footer-wrap">
         <div>
-            © 2018 - 2025 P-luminary
+            © 2018 - 2026 P-luminary
             <span class="footer-icon">
                 <a-icon type="flag" theme="filled" /></span>
             @Asuna
