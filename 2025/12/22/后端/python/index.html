@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#1bccbc>
+                <a href="/tags/后端" style=color:#ff7d73>
                     后端
                 </a>
             </span>
@@ -1410,6 +1410,518 @@ print(func(**dict1))
     print(a, b, c, d, e, f)
 
 f(1, 2, 3, d=4, e=5, f=6) 
+</code></pre>
+<h4 id="浅拷贝"><a href="#浅拷贝" class="headerlink" title="浅拷贝"></a>浅拷贝</h4><pre><code class="python">&quot;&quot;&quot;
+    通过函数修改列表中元素的练习题
+    需求：要函数对列表进行处理，又不希望函数修改原列表
+    例如：
+        有一个列表，list[1,2,3,[100,200,300]]
+        定义一个函数，向列表中的子列表后追加一个新的元素400 =&gt; list[1,2,3,[100,200,300,400]]
+&quot;&quot;&quot;
+def change_list(m_list):
+    print(f&quot;函数内修改列表前列表地址：&#123;id(m_list)&#125;,列表中的元素:&#123;m_list&#125;&quot;)
+    m_list[3].append(400)
+    print(f&quot;函数内修改列表前列表地址：&#123;id(m_list)&#125;,列表中的元素:&#123;m_list&#125;&quot;)
+
+list1 = [1,2,3,[100,200,300]]
+print(f&quot;函数外列表地址：&#123;id(list1)&#125;,列表中的元素:&#123;list1&#125;&quot;)
+list2 = list1.copy()
+print(id(list2))
+print(id(list1))
+change_list(list1)
+print(f&quot;函数外调用函数后列表地址：&#123;id(list1)&#125;,列表中的元素:&#123;list1&#125;&quot;)
+
+#浅拷贝
+# list2 = list1.copy()
+#深拷贝
+# list2 = copy.deepcopy(list1)
+-----------------------------------------------
+函数外列表地址：2259355396224,列表中的元素:[1, 2, 3, [100, 200, 300]]
+2259354860416
+2259355396224
+函数内修改列表前列表地址：2259355396224,列表中的元素:[1, 2, 3, [100, 200, 300]]
+函数内修改列表前列表地址：2259355396224,列表中的元素:[1, 2, 3, [100, 200, 300, 400]]
+函数外调用函数后列表地址：2259355396224,列表中的元素:[1, 2, 3, [100, 200, 300, 400]]
+</code></pre>
+<h4 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h4><p>在程序开发中，有时候希望一个函数执行结束后，告诉调用者一个结果，以便调用者针对具体的结果做后续的处理。返回值就是函数完成工作后，给调用者的一个结果</p>
+<p>Ø 在函数中使用 return 关键字可以返回结果 ，并结束正在执行的函数</p>
+<p>Ø 如果return后面跟[表达式]，在结束函数的同时向调用方返回一个表达式。</p>
+<p>Ø 如果仅仅是return关键字，后面没有加内容，函数执行返回调用方None。</p>
+<p>Ø 调用函数一方，可以使用变量来接收函数的返回结果</p>
+<p>（1）不带表达式的 <strong>return</strong> 语句，返回 <strong>None</strong>。</p>
+<pre><code class="python">def f(a, b, c):
+    pass
+    return
+
+print(f(1, 2, 3))  # None
+</code></pre>
+<p>（2）函数中如果没有 <strong>return</strong> 语句，在函数运行结束后也会返回 <strong>None</strong>。</p>
+<pre><code class="python">def f(a, b, c):
+    pass
+
+print(f(1, 2, 3))  # None
+</code></pre>
+<p>（3）用变量接收返回结果</p>
+<pre><code class="python">def add(num1,num2) :
+    &#39;&#39;&#39;求两个数的和&#39;&#39;&#39;
+    sum1 = num1 + num2
+    return sum1
+
+res = add(10,20)
+print(&quot;两个数的和为:&quot; ,res)
+</code></pre>
+<p>（4）<strong>return</strong> 语句可以返回多个值，多个值会放在一个元组中。</p>
+<pre><code class="python">def f(a, b, c):
+    return a, b, c, [a, b, c]
+print(f(1, 2, 3))  # (1, 2, 3, [1, 2, 3])
+</code></pre>
+<h4 id="什么是闭包【可以延长局部变量的生命周期-】"><a href="#什么是闭包【可以延长局部变量的生命周期-】" class="headerlink" title="什么是闭包【可以延长局部变量的生命周期 】"></a><strong>什么是闭包</strong>【可以延长局部变量的生命周期 】</h4><p>当调用的函数执行完毕后，函数内的变量就会被销毁。但有时希望在调用函数后函数内的数据能够保存下来重复使用，这时候可以用到闭包。闭包可以避免使用全局值，并提供某种形式的数据隐藏。</p>
+<p>构建闭包的条件：</p>
+<p>Ø 外部函数内定义一个内部函数。</p>
+<p>Ø 内部函数用到外部函数中的变量。</p>
+<p>Ø 外部函数将内部函数作为返回值。</p>
+<pre><code class="python"># 构建闭包
+def linear(a, b):
+    def inner(x):
+        return a * x + b
+
+    return inner
+
+y1 = linear(1, 1)
+print(y1)  # &lt;function linear.&lt;locals&gt;.inner at 0x00000291279D19E0&gt;
+print(y1(5))  # 6
+</code></pre>
+<p>将调用 linear() 后返回的函数对象赋值给 y1，虽然 linear() 函数已经执行完毕，但是我们调用 y1() 时，y1() 仍然记得 linear() 中 a 和 b 的值。</p>
+<h4 id="查看闭包中的值"><a href="#查看闭包中的值" class="headerlink" title="查看闭包中的值"></a><strong>查看闭包中的值</strong></h4><p>所有函数对象都有一个 <strong><strong>closure</strong></strong> 属性，如果它是一个闭包函数，则该属性返回单元格对象的元组。</p>
+<pre><code class="python">def linear(a, b):
+    def inner(x):
+        return a * x + b
+
+    return inner
+
+y1 = linear(1, 2)
+objects = y1.__closure__
+print(objects)
+print(objects[0].cell_contents)  # 1
+print(objects[1].cell_contents)  # 2
+</code></pre>
+<h4 id="全局变量和局部变量"><a href="#全局变量和局部变量" class="headerlink" title="全局变量和局部变量"></a>全局变量和局部变量</h4><p>全局变量-作用于整个模块<br>局部变量-作用于当前函数<br>在局部作用域内，如果给变量进行赋值操作，会将遍历当做局部变量进行处理</p>
+<pre><code class="python">&#39;&#39;&#39;
+    该案例演示了全局变量和局部变量
+&#39;&#39;&#39;
+sum = 0 # 这是一个全局变量
+
+def add(num1,num2) :
+    sum = num1 + num2 # 这是一个局部变量
+    print(&quot;函数内局部变量的值:&quot;,sum,id(sum))
+    return sum
+
+add(10,20)
+# print(num1) # num1访问不到
+print(&quot;函数外全局变量:&quot;,sum,id(sum))
+</code></pre>
+<p><code>_global和nonlocal关键字</code></p>
+<h5 id="global"><a href="#global" class="headerlink" title="_global"></a>_global</h5><p>在函数内使用 <strong>global</strong> 声明全局变量<br>函数内使用 <strong>global</strong> 声明全局变量后，可以修改全局变量。</p>
+<pre><code class="python">var1 = 10
+def func():
+    # 声明：当前在局部作用域中使用全局的变量 var1
+    global var1
+    var1 = 20
+    print(f&quot;局部作用域中的var1=&#123;var1, id(var1)&#125;&quot;)
+func()
+print(f&quot;全局作用域中的var1=&#123;var1, id(var1)&#125;&quot;)
+
+----------------------------------------
+局部作用域中的var1=(20, 2091892605776)
+全局作用域中的var1=(20, 2091892605776)
+
+
+
+list1 = [1,2,3]
+def func():
+    # 声明：当前在局部作用域中使用全局的变量 var1
+    list1[0] = 100
+    print(f&quot;局部作用域中的var1=&#123;list1, id(list1)&#125;&quot;)
+func()
+print(f&quot;全局作用域中的var1=&#123;list1, id(list1)&#125;&quot;)
+-----------------------------------------
+局部作用域中的var1=([100, 2, 3], 1992346097088)
+全局作用域中的var1=([100, 2, 3], 1992346097088)
+</code></pre>
+<h5 id="nonlocal"><a href="#nonlocal" class="headerlink" title="nonlocal"></a>nonlocal</h5><p><strong>nonlocal</strong> 也用作内部作用域修改外部作用域的变量的场景，不过此时外部作用域不是全局作用域而是嵌套作用域。</p>
+<pre><code class="python">def outer():
+    var1 = 10
+    def inner():
+        nonlocal var1
+        var1 = 20
+        print(f&quot;局部作用域中的var1=&#123;var1, id(var1)&#125;&quot;)
+    inner()
+    print(f&quot;嵌套作用域中的var1=&#123;var1, id(var1)&#125;&quot;)
+outer()
+------------------------------------------
+局部作用域中的var1=(20, 1769305604944)
+嵌套作用域中的var1=(20, 1769305604944)
+</code></pre>
+<h4 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h4><p>递归是一种逻辑思想，将一个大工作分为逐渐减小的小工作，比如说一个和尚要搬50块石头，他想，只要先搬走49块，那剩下的一块就能搬完了，然后考虑那49块，只要先搬走48块，那剩下的一块就能搬完了……，递归是一种思想，只不过在程序中，就是依靠函数嵌套这个特性来实现了</p>
+<p><strong>本质：</strong>递归调用就是在函数体中又调用了函数本身</p>
+<h4 id="匿名函数的定义"><a href="#匿名函数的定义" class="headerlink" title="匿名函数的定义"></a>匿名函数的定义</h4><p><strong>匿名函数</strong></p>
+<p><strong>语法</strong></p>
+<p>Python使用 <span style = "color:red"><strong>lambda</strong></span> 来定义匿名函数，所谓匿名，指其不用 <strong>def</strong> 的标准形式定义函数。</p>
+<p><code>lambda 参数列表: 表达式</code></p>
+<p>Ø lambda 只是一个表达式，函数体比def简单很多。<br>Ø lambda的主体是一个表达式，而不是一个代码块，所以仅仅能在lambda表达式中封装有限的逻辑进去。<br>Ø lambda函数拥有自己的命名空间，且不能访问自己参数列表之外或全局命名空间里的参数。</p>
+<h5 id="普通函数传参"><a href="#普通函数传参" class="headerlink" title="普通函数传参"></a>普通函数传参</h5><pre><code class="python">def operator(a, b):
+    return a + b
+def function(a, b, operator):
+    return operator(a, b)
+print(function(1, 2, operator))
+</code></pre>
+<h5 id="匿名函数传参"><a href="#匿名函数传参" class="headerlink" title="匿名函数传参"></a>匿名函数传参</h5><pre><code class="python">def function(a, b, operator):
+    return operator(a, b)
+print(function(1, 2, lambda x, y: x + y))
+</code></pre>
+<h4 id="匿名函数作为内置函数的参数"><a href="#匿名函数作为内置函数的参数" class="headerlink" title="匿名函数作为内置函数的参数"></a>匿名函数作为内置函数的参数</h4><p>可以将匿名函数与常用的内置参数搭配使用。</p>
+<ul>
+<li><strong>sorted()</strong></li>
+</ul>
+<pre><code class="python">#有三名学生的姓名和年龄，按年龄排序。
+student_list = [&#123;&quot;name&quot;: &quot;zhang3&quot;, &quot;age&quot;: 36&#125;, &#123;&quot;name&quot;: &quot;li4&quot;, &quot;age&quot;: 14&#125;, &#123;&quot;name&quot;: &quot;wang5&quot;, &quot;age&quot;: 27&#125;]
+print(sorted(student_list, key=lambda x: x[&quot;age&quot;]))
+-----------------------------------------------------
+student_list.sort(key= lambda stu: stu[&quot;age&quot;])
+print(student_list)
+-----------------------------------------------------
+def getKey(std):
+    return std[&quot;age&quot;]
+student_list.sort(key=getKey)
+print(student_list)
+</code></pre>
+<ul>
+<li><strong>map</strong>()</li>
+</ul>
+<pre><code class="python">map() #函数对序列中元素逐一处理。
+map_result = map(lambda x: x * x, [0, 1, 3, 7, 9])
+print(list(map_result))  # [0, 1, 9, 49, 81]
+----------------------------------------------------
+list1 = [1,2,3,4,5,6,7,8,9,10]
+print(list(map(lambda item: item * item, list1)))
+</code></pre>
+<ul>
+<li><strong>filter</strong>()</li>
+</ul>
+<pre><code class="python">filter() #函数对序列中元素过滤。
+filter_result = filter(lambda x: x &gt;= 0, [-0, -1, -3, 7, 9])
+print(list(filter_result))  # [0, 7, 9]
+</code></pre>
+<ul>
+<li><strong>reduce()</strong></li>
+</ul>
+<pre><code class="python">reduce() #函数对序列中元素进行累积。
+from functools import reduce
+
+reduce_result = reduce(lambda x, y: x * y, [1, 2, 3, 4, 5])
+print(reduce_result)  # 120
+</code></pre>
+<h4 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h4><p><strong>文件的基本概念</strong></p>
+<p>在计算机中，文件是存储在磁盘上的数据集合。文件可以包含各种类型的数据，如文本、图像、音频、视频或程序代码。</p>
+<p>文件系统通过文件名和文件路径来定位和管理文件。文件名通常包含文件的名称和扩展名，扩展名用于表示文件的类型（例如 <strong>.txt</strong> 表示文本文件，**.jpg** 表示图像文件）。文件路径可以是绝对路径（从文件系统的根目录开始）或相对路径（相对于当前工作目录）。</p>
+<p>在编写程序的时候，数据是以二进制的形式存储在内存的，将数据写到磁盘文件的过程称之为持久化。</p>
+<h4 id="文件的分类"><a href="#文件的分类" class="headerlink" title="文件的分类"></a><strong>文件的分类</strong></h4><p><strong>1）纯文本文件</strong></p>
+<p>有统一的编码，可以被看做存储在磁盘上的长字符串。</p>
+<p>纯文本文件编码格式常见的有ASCII、ISO-8859-1、GB2312、GBK、UTF-8、UTF-16等。</p>
+<p><strong>2）二进制文件</strong></p>
+<p>没有统一的字符编码，直接由0与1组成。</p>
+<p>如图片文件（jpg、png），视频文件（avi）等。</p>
+<h4 id="文件的打开与关闭"><a href="#文件的打开与关闭" class="headerlink" title="文件的打开与关闭"></a>文件的打开与关闭</h4><p><strong>1）打开文件</strong></p>
+<p>使用 <strong>open()</strong> 打开或创建文件，该方法执行完毕之后返回的是一个file对象。</p>
+<h6 id="常用形式"><a href="#常用形式" class="headerlink" title="常用形式"></a>常用形式</h6><pre><code class="python">open(文件名, 模式)
+f = open(&quot;test.txt&quot;, &quot;w&quot;)
+</code></pre>
+<pre><code class="python">模式       说明
+r        读写方式：只读，文件若不存在会报错。默认此模式
+w        读写方式：写入，写入前清空原有数据。文件不存在会创建文件
+a        读写方式：追加写入，在原有数据后追加，文件不存在会创建文件
+x        读写方式：创建新文件并写入，文件若已存在会报错
+b        编码方式：以二进制打开。一般用于非文本文件如图片等
+t        编码方式：以文本模式打开，默认此模式
++        能读能写
+</code></pre>
+<p><strong>2）完整形式</strong></p>
+<pre><code class="python">open(
+    file,  # 文件路径   ★★★★★★★★★
+    mode=&quot;r&quot;,  # 文件打开模式
+    buffering=-1,  # 缓冲
+    encoding=None,  # 文本编码方式，一般用utf8  ★★★★★★★★★
+    errors=None,  # 报错级别
+    newline=None,  # 区分换行符
+    closefd=True,  # 传入的file参数类型
+    opener=None,  # 设置自定义开启器，开启器的返回值必须是一个打开的文件描述符
+)
+</code></pre>
+<p><strong>3）关闭文件</strong></p>
+<pre><code class="python">f.close()
+</code></pre>
+<h4 id="读写数据"><a href="#读写数据" class="headerlink" title="读写数据"></a>读写数据</h4><pre><code class="python">&quot;&quot;&quot;
+    该案例演示了读写文件操作
+&quot;&quot;&quot;
+
+&quot;&quot;&quot;
+
+# 向文件中写入数据
+# 打开文件（建立程序和文件之间的通道）
+f = open(&quot;test.txt&quot;,&quot;w&quot;)
+
+# 向文件中写入数据
+f.write(&quot;hello world\n&quot;)
+f.write(&quot;nihao python\n&quot;)
+
+# 关闭和文件之间的建立的通道
+f.close()
+&quot;&quot;&quot;
+# 从文件中读取数据
+# 打开文件（建立程序和文件之间的通道）
+f = open(&quot;test.txt&quot;,&quot;r&quot;)
+# 从文件中读取数据   read() 默认读取所有数据
+# print(f.read())
+# 从文件中读取指定的字节大小数据
+# print(f.read(5))
+# print(f.read(8))
+
+# 读取一行数据
+# print(f.readline())
+# print(f.readline())
+
+# 读取所有行
+print(f.readlines())
+
+# 关闭和文件之间的建立的通道
+f.close()
+</code></pre>
+<p>1）<strong>read</strong></p>
+<p><strong>read([size])</strong> 可以从文件中读取数据，size 表示要从文件中读取的数据的长度（单位是字节），如果没有传入 size 则读取文件中所有的数据。</p>
+<pre><code class="python"># 打开文件
+f = open(&quot;test.txt&quot;, &quot;rt&quot;)
+# 读取文件所有数据 
+print(f.read())
+# 关闭文件
+f.close()
+print(&quot;-&quot;*20)
+f = open(&quot;test.txt&quot;, &quot;rt&quot;)
+# 读取文件5个字节数据
+print(f.read(5))
+print(f.read(8))
+f.close()
+</code></pre>
+<p>2）<strong>readline</strong></p>
+<p><strong>readline([size])</strong> 可以从文件中读取整行数据，也可以通过 size 设置读取数据的长度。</p>
+<pre><code class="python">f = open(&quot;test.txt&quot;, &quot;rt&quot;)
+print(f.readline())
+print(f.readline(1))
+print(f.readline(1))
+f.close()
+</code></pre>
+<p>3）<strong>readlines</strong></p>
+<p><strong>readlines([size])</strong> 读取所有行并返回列表，若给定 size&gt;0，返回总和大约为 size 字节的行， 实际读取值可能比 size 大。</p>
+<pre><code class="python">f = open(&quot;test.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;)
+print(f.readlines())
+f.close()
+</code></pre>
+<h5 id="常用函数-2"><a href="#常用函数-2" class="headerlink" title="常用函数"></a>常用函数</h5><pre><code class="python">函数    说明
+# 移动偏移量并返回新的绝对位置
+file.seek(offset[,from])    。
+offset：移动的字节数，如果是负数表示从倒数第几位开始。
+from：从哪个位置开始移动；0为开头，1为当前位置，2为末尾。from不为0时需使用&#39;b&#39;二进制模式打开文件。
+# 返回当前偏移量
+file.tell()
+# 从开头开始截断文件为size个字符，无size表示从当前位置截断。windows系统下的换行大小2个字符
+file.truncate([size])    
+# 将序列中字符串写入文件，需要自己加入换行符
+file.writelines(seq)    
+# 如果可以读取文件则返回True
+file.readable()    
+# 如果可以写入文件则返回True
+file.writeable()    
+# 如果文件支持随机访问则返回True
+file.seekable()    
+# 重命名文件
+os.rename(old,new)
+# 删除文件
+os.remove(file)
+# 创建目录，不支持递归创建
+os.mkdir(dir)
+# 递归创建目录
+os.makedirs(dir)    
+# 获取当前路径
+os.getcwd()    
+# 进入指定目录
+os.chdir(dir)
+# 获取目录下文件和目录列表
+os.listdir(dir)    
+# 删除空目录
+os.rmdir(dir)    
+# 递归删除空目录
+os.removedirs(dir)    
+# 将相对路径转换为绝对路径
+os.path.abspath(path)    
+# 获取路径中的文件名部分
+os.path.basename(path)    
+# 获取路径中的目录部分
+os.path.dirname(path)    
+# 拼接多个路径，自动处理路径分隔符
+os.path.join(*paths)    
+# 将路径分割为目录和文件名的元组
+os.path.split(path)    
+# 将路径分割为文件名和扩展名的元组
+os.path.splitext(path)    
+# 判断路径是否存在
+os.path.exists(path)    
+# 判断路径是否为文件
+os.path.isfile(path)    
+# 判断路径是否为目录
+os.path.isdir(path)    
+# 获取文件的大小，以字节为单位
+os.path.getsize(path)    
+# 获取文件的最后访问时间
+os.path.getatime(path)    
+# 获取文件的最后修改时间
+os.path.getmtime(path)    
+</code></pre>
+<h4 id="图片拷贝"><a href="#图片拷贝" class="headerlink" title="图片拷贝"></a>图片拷贝</h4><pre><code class="python">def file_copy(source_file_path, dest_file_path):
+    # 打开源文件
+    source_file = open(source_file_path, &#39;rb&#39;)
+    # 从源文件中读取数据
+    content = source_file.read()
+    # 打开目标文件
+    dest_file = open(dest_file_path, &#39;wb&#39;)
+    # 将内容写到目标文件
+    dest_file.write(content)
+    # 关闭源文件
+    source_file.close()
+    # 关闭目标文件
+    dest_file.close()
+file_copy(&quot;c:\\Users\\Pluminary\\Desktop\\HouDuan\\22.png&quot;,&quot;c:\\Users\\Pluminary\\Desktop\\HouDuan\\echos\\11.png&quot;)
+</code></pre>
+<h5 id="图片拷贝优化-不要一次性读取完，要指定读取字节"><a href="#图片拷贝优化-不要一次性读取完，要指定读取字节" class="headerlink" title="图片拷贝优化[不要一次性读取完，要指定读取字节]"></a>图片拷贝优化[不要一次性读取完，要指定读取字节]</h5><pre><code class="python">def file_copy(source_file_path, dest_file_path):
+    # 打开源文件
+    source_file = open(source_file_path, &#39;rb&#39;)
+    # 打开目标文件
+    dest_file = open(dest_file_path, &#39;wb&#39;)
+
+    # 从源文件中读取数据
+    content = source_file.read(1024)
+
+    # 将内容写到目标文件
+    while content:
+        dest_file.write(content)
+        content = source_file.read(1024)
+    # 关闭源文件
+    source_file.close()
+    # 关闭目标文件
+    dest_file.close()
+file_copy(&quot;c:\\Users\\Pluminary\\Desktop\\HouDuan\\22.png&quot;,&quot;c:\\Users\\Pluminary\\Desktop\\HouDuan\\echos\\1.png&quot;)
+</code></pre>
+<h4 id="面向对象之类和对象"><a href="#面向对象之类和对象" class="headerlink" title="面向对象之类和对象"></a><span style="color:red">面向对象之类和对象</span></h4><p>面向过程编程（Procedural Programming）和面向对象编程（OOP）是两种不同的编程范式，它们在软件开发中都有广泛的应用。</p>
+<p>Python是一种混合型的语言，既支持面向过程的编程，也支持面向对象的编程。</p>
+<p>面向过程的编程是一种以过程为中心的编程方式，主要关注解决问题的步骤，并将这些步骤写成函数或方法。</p>
+<p>面向对象的编程是一种以对象为中心的编程方式，主要关注在解决问题的过程中涉及哪些对象以及这些对象如何交互</p>
+<pre><code class="python">&quot;&quot;&quot;
+    该案例对比面向过程变成、面向函数式编程、面向对象编程
+
+    准备做3道菜，通过程序描述出每道菜的做菜流程
+    东北大拉皮
+    东北大乱炖
+    锅包肉
+
+    *的意思是：可能要拌多种食物
+&quot;&quot;&quot;
+
+# 面向对象的编程
+class 菜:
+    def __init__(self,name):
+        self.name = name
+
+    def 洗(self,clm):
+        print(f&quot;&#123;self.name&#125;洗&#123;clm&#125;&quot;)
+
+    def 切(self,clm):
+        print(f&quot;&#123;self.name&#125;切&#123;clm&#125;&quot;)
+
+    def 拌(self,*clm):
+        print(f&quot;&#123;self.name&#125;拌&#123;clm&#125;&quot;)
+
+    def 炖(self,*clm):
+        print(f&quot;&#123;self.name&#125;炖&#123;clm&#125;&quot;)
+
+    def 炸(self,clm):
+        print(f&quot;&#123;self.name&#125;炸&#123;clm&#125;&quot;)
+
+    def 上菜(self):
+        print(f&quot;&#123;self.name&#125;上菜&quot;)
+        
+# dlp是面向对象的对象
+dlp = 菜(&quot;东北大拉皮&quot;)
+dlp.洗(&quot;黄瓜&quot;)
+dlp.洗(&quot;拉皮&quot;)
+dlp.切(&quot;黄瓜&quot;)
+dlp.拌(&quot;黄瓜&quot;,&quot;拉皮&quot;,&quot;调料&quot;)
+dlp.上菜()
+
+
+&quot;&quot;&quot;
+面向函数的编程方式
+def 东北大拉皮(func):
+    洗(&quot;黄瓜&quot;)
+    洗(&quot;拉皮&quot;)
+    切(&quot;黄瓜&quot;)
+    拌(&quot;黄瓜&quot;, &quot;拉皮&quot;, &quot;调料&quot;)
+    上菜(&quot;东北大拉皮&quot;)
+
+def 东北大乱炖():
+    洗(&quot;白菜&quot;)
+    洗(&quot;豆角&quot;)
+    洗(&quot;土豆&quot;)
+    切(&quot;肉&quot;)
+    炖(&quot;白菜&quot;, &quot;土豆&quot;, &quot;豆角&quot;, &quot;肉&quot;, &quot;玉米&quot;, &quot;粉条&quot;, &quot;调料&quot;)
+    上菜(&quot;东北大乱炖&quot;)
+
+def 小酥肉():
+    洗(&quot;肉&quot;)
+    切(&quot;肉&quot;)
+    拌(&quot;肉&quot;, &quot;淀粉&quot;)
+    炸(&quot;肉&quot;)
+    上菜(&quot;小酥肉&quot;)
+    print(&quot;~&quot; * 30)
+东北大拉皮()
+东北大乱炖()
+小酥肉()
+&quot;&quot;&quot;
+
+
+&quot;&quot;&quot;
+    面向过程的编程方式
+        适合一些简单的流程和步骤，如果业务比较复杂，不太合适
+# 东北大拉皮
+洗(&quot;黄瓜&quot;)
+洗(&quot;拉皮&quot;)
+切(&quot;黄瓜&quot;)
+拌(&quot;黄瓜&quot;,&quot;拉皮&quot;,&quot;调料&quot;)
+上菜(&quot;东北大拉皮&quot;)
+print(&quot;~&quot;*30)
+# 东北大乱炖
+洗(&quot;白菜&quot;)
+洗(&quot;豆角&quot;)
+洗(&quot;土豆&quot;)
+切(&quot;肉&quot;)
+炖(&quot;白菜&quot;,&quot;土豆&quot;,&quot;豆角&quot;,&quot;肉&quot;,&quot;玉米&quot;,&quot;粉条&quot;,&quot;调料&quot;)
+上菜(&quot;东北大乱炖&quot;)
+print(&quot;~&quot;*30)
+# 小酥肉
+洗(&quot;肉&quot;)
+切(&quot;肉&quot;)
+拌(&quot;肉&quot;,&quot;淀粉&quot;)
+炸(&quot;肉&quot;)
+上菜(&quot;小酥肉&quot;)
+print(&quot;~&quot;*30)
+&quot;&quot;&quot;
 </code></pre>
 
     </div>
