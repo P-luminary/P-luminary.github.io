@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/后端" style=color:#00bcd4>
+                <a href="/tags/后端" style=color:#879cff>
                     后端
                 </a>
             </span>
@@ -1923,7 +1923,436 @@ print(&quot;~&quot;*30)
 print(&quot;~&quot;*30)
 &quot;&quot;&quot;
 </code></pre>
+<h4 id="类和对象的概念"><a href="#类和对象的概念" class="headerlink" title="类和对象的概念"></a>类和对象的概念</h4><p>类是大量对象共性的抽象</p>
+<ul>
+<li>有什么——属性</li>
+<li>能做什么——方法</li>
+</ul>
+<p>在程序中，类是创建对象的模板<br>类是客观事物在人脑中的主观反应</p>
+<p>对象在自然界中，只要是客观存在事物都是（万物皆对象）<br>类是抽象的，对象是具体的</p>
+<p>类的组成</p>
+<ul>
+<li>class类名：</li>
+<li>属性<ul>
+<li>类属性</li>
+<li>实例属性</li>
+</ul>
+</li>
+<li>方法<ul>
+<li>类方法</li>
+<li>实例方法</li>
+<li>静态方法</li>
+<li>特殊方法(魔法方法)</li>
+</ul>
+</li>
+</ul>
+<h4 id="定义类"><a href="#定义类" class="headerlink" title="定义类"></a>定义类</h4><p><strong>1）语法</strong></p>
+<pre><code class="python">class 类名:
+  &quot;&quot;&quot;类说明文档&quot;&quot;&quot;
+  类体
+</code></pre>
+<p>类名一般使用大驼峰命名法。<br>类体中可以包含类属性（也叫类变量）、方法、实例属性（也叫实例变量）等。</p>
+<pre><code class="python">&quot;&quot;&quot;
+    该案例演示了简单的类的定义以及对象的创建
+&quot;&quot;&quot;
 
+# 定义一个学生类
+class Student:
+    &#39;&#39;&#39;这是一个学生类&#39;&#39;&#39;
+    # 类属性   所有类的实例共享的
+    school = &quot;atguigu&quot;
+
+    # 在创建学生对象（实例）的时候，会自动调用的方法
+    def __init__(self, name, age):
+        # 定义实例属性   每个实例属性是独立的，相互不影响
+        self.name = name
+        self.age = age
+
+    # 实例方法  方法第一个参数是self，表示当前实例对象
+    # 对象.方法() 调用当前方法的时候，会将当前对象自身作为参数传递给方法
+    def play_game(self):
+        print(f&quot;&#123;self.age&#125;岁的&#123;self.name&#125;正在专注的玩着游戏&quot;)
+
+    def study(self):
+        print(f&quot;&#123;self.age&#125;岁的&#123;self.name&#125;正在有一搭没一搭的学着&quot;)
+
+    def video(self):
+        print(f&quot;&#123;self.age&#125;岁的&#123;self.name&#125;正在录着视频&quot;)
+
+# 通过类这个模板创建当前类的实例(对象)
+mzl = Student(&quot;mzl&quot;,23)
+print(mzl.name)
+print(mzl.age)
+print(mzl.school)
+mzl.video()
+
+dgd = Student(&quot;dgd&quot;, 23)
+print(dgd.name)
+print(dgd.age)
+print(mzl.school)
+dgd.study()
+</code></pre>
+<h4 id="类的定义以及类的操作"><a href="#类的定义以及类的操作" class="headerlink" title="类的定义以及类的操作"></a>类的定义以及类的操作</h4><h6 id="成员引用"><a href="#成员引用" class="headerlink" title="成员引用"></a>成员引用</h6><p><code>类名.成员名</code><br><strong>案例：</strong></p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;
+
+    def __init__(self):
+        self.age = 0
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+    def drink(self):
+        print(&quot;drinking...&quot;)
+---------------------------------------------------------------
+home = Person.home  # 获取一个字符串 这里是通过类
+eat_function = Person.eat  # 获取一个函数对象
+doc = Person.__doc__  # 获取类的说明文档
+
+print(home)  # earth
+print(eat_function)  # &lt;function Person.eat at 0x00000232C8230F40&gt;
+print(doc)  # 人的类
+-----------------------------或者-------------------------------
+p = Person()  # 创建一个对象
+print(p.home)  # earth    这里是通过对象
+print(p.age)  # 0
+p.eat()  # eating...
+p.drink()  # drinking...
+</code></pre>
+<h3 id="init"><a href="#init" class="headerlink" title="_ _ init() _ _"></a><span style = "color:red"><strong>_ _ init() _ _</strong></span></h3><p><code>__init__() 方法的调用时机在实例（通过 [__new__()](#object.__new__)）被创建之后，返回调用者之前。一般用于初始化一些数据。当类定义了 __init__() 方法后，在类实例化的时候会自动调用 __init__() 方法。也可以向 __init__() 方法中传参。</code></p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+p = Person(&quot;张三&quot;)  # 创建一个对象
+print(p.name)  # 张三
+</code></pre>
+<h3 id="self-作为实例传参"><a href="#self-作为实例传参" class="headerlink" title="self 作为实例传参"></a><span style = "color:red"><strong>self 作为实例传参</strong></span></h3><p><strong>self</strong>代表类的实例自身。调用实例方法时，实例对象会作为第一个参数被传入。因此，我们调用p.eat()时就相当于调用了Person.eat(p)。<br>在<code>__init__</code>方法以及其他的实例方法中，第一个参数都是self<br>self是一个约定俗成的名字，一般不需要我们去关心，可以通过self去调用当前类中其他实例属性或方法；<code>__init__</code>不能又返回值只能是None</p>
+<pre><code class="python">class Student:
+    def __init__(self,name,age):
+        self.name=name
+        self.age=age
+    def eat(self):
+        print(&quot;eating&quot;)
+    def study(self):
+        print(&quot;studying&quot;)
+    def study_eat(self):
+        self.eat()
+        self.study()
+zsf = Student(&quot;zsf&quot;,18)
+zsf.study_eat()
+-------------------------------
+eating
+studying
+</code></pre>
+<h4 id="类属性"><a href="#类属性" class="headerlink" title="类属性"></a>类属性</h4><p><u>类属性也叫类变量，在类中方法外面进行定义</u><br>类中所有的实例共享这个类属性</p>
+<p>1）通过 <code>类名.属性名</code> 或 <code>实例名.属性名</code> 访问</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    home = &quot;earth&quot;  # 定义类属性
+print(Person.home)  # 通过类名访问类属性
+
+p1 = Person()  # 创建一个实例对象
+print(p1.home)  # 通过实例名访问类属性，(如果实例没有覆盖这个类属性的值)
+</code></pre>
+<p>2）通过 <code>类名.属性名</code> 添加与修改类属性</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+Person.home = &quot;earth&quot;  # 添加类属性
+print(Person.home)  # earth
+
+Person.home = &quot;mars&quot;  # 修改类属性
+print(Person.home)  # mars
+</code></pre>
+<p>若使用 实例名.属性名 则会创建或修改实例属性，因此不建议类属性和实例属性同名</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    home = &quot;earth&quot;
+p1 = Person()
+p2 = Person()
+print(Person.home)  # earth
+print(p1.home)  # earth
+print(p2.home)  # earth
+
+print(&quot;通过 类名.属性名 修改 类属性&quot;)
+Person.home = &quot;mars&quot;
+print(Person.home)  # mars
+print(p1.home)  # mars
+print(p2.home)  # mars
+
+print(&quot;通过 实例名.属性名 会创建 实例属性&quot;)
+p1.home = &quot;venus&quot;
+print(Person.home)  # mars
+print(p1.home)  # venus
+print(p2.home)  # mars
+</code></pre>
+<p>3）所有该类的实例共享同一个类属性</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    home = &quot;earth&quot;  # 定义类属性，所有实例共享
+
+p1 = Person()  # 创建一个实例对象
+p2 = Person()  # 创建另一个实例对象
+
+print(p1.home)  # earth
+print(p2.home)  # earth
+Person.home = &quot;mars&quot;  # 修改类属性
+print(p1.home)  # mars
+print(p2.home)  # mars
+</code></pre>
+<h4 id="实例属性"><a href="#实例属性" class="headerlink" title="实例属性"></a>实例属性</h4><p>也叫实例变量。在类方法中定义的属性。通过 <code>self.属性名</code>定义。</p>
+<p>1）通过<code>实例名.属性名</code> 访问</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    def __init__(self, name, age):
+        self.name = name  # 定义实例属性
+        self.age = age  # 定义实例属性
+
+p1 = Person(&quot;张三&quot;, 18)  # 创建一个实例对象
+print(p1.name, p1.age)  # 张三 18
+
+p2 = Person(&quot;李四&quot;, 81)  # 创建一个实例对象
+print(p2.name, p2.age)  # 李四 81
+
+print(Person.name)  # 报错
+</code></pre>
+<p>2）通过 <code>实例名.属性名</code> 添加与修改实例属性<br>只是对当前的实例添加 对其他的没有影响</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    pass
+p1 = Person()  # 创建一个实例对象
+p1.name = &quot;张三&quot;  # 添加实例属性
+p1.age = 18  # 添加实例属性
+print(p1.name, p1.age)  # 张三 18
+
+p1.age = 25  # 修改实例属性
+print(p1.name, p1.age)  # 张三 25
+</code></pre>
+<p>3）每个实例独有一份实例属性</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    def __init__(self, name):
+        self.name = name  # 定义实例属性
+        self.age = 0  # 定义实例属性
+
+p1 = Person(&quot;张三&quot;)  # 创建一个实例对象
+print(p1.name, p1.age)  # 张三 0
+p1.age = 18  # 修改p1的age属性
+print(p1.name, p1.age)  # 张三 18
+
+p2 = Person(&quot;李四&quot;)  # 创建另一个实例对象
+print(p2.name, p2.age)  # 李四 0
+</code></pre>
+<h4 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h4><p>Python的类中有三种方法：实例方法、静态方法、类方法</p>
+<h4 id="实例方法"><a href="#实例方法" class="headerlink" title="实例方法"></a>实例方法</h4><p>Ø 实例方法在类中定义，第一个参数为self，代表实例本身。<br>Ø 实例方法只能被实例对象调用。<br>Ø 可以访问实例属性、类属性、类方法。</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+    def instance_method(self):
+        print(self.name, self.home, Person.home)
+
+p = Person(&quot;张三&quot;)
+p.instance_method()  # 张三 earth earth，此时p中没有home实例属性，会去查找home类属性
+Person.home = &quot;venus&quot;  # 修改类属性
+p.home = &quot;mars&quot;  # 定义实例属性
+p.instance_method()  # 张三 mars venus
+</code></pre>
+<h4 id="类方法"><a href="#类方法" class="headerlink" title="类方法"></a>类方法</h4><p>Ø 类方法在类中通过 @classmethod 定义，第一个参数为cls，代表类本身。<br>Ø 类方法可以被类和实例对象调用。<br>Ø 可以访问类属性。</p>
+<p>在不创建实例的情况下调用，通过类名直接调用，非常方便，适合一些和类整体相关的操作。</p>
+<h4 id="静态方法"><a href="#静态方法" class="headerlink" title="静态方法"></a>静态方法</h4><p>Ø 静态方法在类中通过 @staticmethod 定义<br>Ø 不访问实例属性或类属性，只依赖于传入的参数<br>Ø 可以通过类名或实例调用，但它不会访问类或实例的内部信息，更像是一个工具函数，只是为了方便组织代码，把它放在了类里面。</p>
+<pre><code class="python">&quot;&quot;&quot;
+    该案例演示了方法
+&quot;&quot;&quot;
+import types
+
+
+def drink(self):
+    print(&quot;drinking&quot;)
+
+class Student:
+    &quot;&quot;&quot;这是一个学生类&quot;&quot;&quot;
+    school = &quot;atguigu&quot;
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    # 实例方法
+    def eat(self):
+        print(self.school)
+        print(self.name)
+        print(self.age)
+
+    # 类方法
+    @classmethod
+    def get_info(cls):
+        print(cls.school)
+        print(cls.__doc__)
+
+zwj = Student(&quot;zwj&quot;,30)
+# zwj.eat()
+# zwj.get_info()
+# Student.get_info()
+
+# zwj.drink = drink
+# zwj.drink()
+
+# Student.drink = drink
+# zwj.drink()
+# Student.drink(zwj)
+
+zcs = Student(&quot;zcs&quot;,50)
+
+zcs.drink = types.MethodType(drink, zcs)
+zcs.drink()
+
+Student.get_info()
+
+
+&quot;&quot;&quot;
+class MathUtil:
+    @staticmethod  # 不加是用不了的
+    def add(a, b):
+        return a + b
+print(MathUtil.add(10, 20))
+&quot;&quot;&quot;
+-----------------------------------
+drinking
+atguigu
+这是一个学生类
+</code></pre>
+<h4 id="特殊方法"><a href="#特殊方法" class="headerlink" title="特殊方法"></a>特殊方法</h4><p>方法名中有两个前缀下划线和两个后缀下划线的方法为特殊方法，也叫魔法方法。上文提到的 <code>__init__()</code>就是一个特殊方法。这些方法会在进行特定的操作时自动被调用。</p>
+<pre><code class="python">几个常见的特殊方法：
+
+1）__new__()
+对象实例化时第一个调用的方法。
+
+2）__init__()
+类的初始化方法。
+
+3）__del__()
+    对象的销毁器，定义了当对象被垃圾回收时的行为。使用 del xxx 时不会主动调用 __del__() ，除非此时引用计数==0。
+    
+4）__str__()
+定义了对类的实例调用 str() 时的行为。
+
+5）__repr__()
+定义对类的实例调用 repr() 时的行为。 str() 和 repr() 最主要的差别在于目标用户。 repr() 的作用是产生机器可读的输出（大部分情况下，其输出可以作为有效的Python代码），而 str() 则产生人类可读的输出。
+
+6）__getattribute__()
+属性访问拦截器，定义了属性被访问前的操作。
+</code></pre>
+<h3 id="动态添加属性与方法"><a href="#动态添加属性与方法" class="headerlink" title="动态添加属性与方法"></a>动态添加属性与方法</h3><h4 id="动态给对象添加属性"><a href="#动态给对象添加属性" class="headerlink" title="动态给对象添加属性"></a>动态给对象添加属性</h4><pre><code class="python">class Person:
+    def __init__(self, name=None):
+        self.name = name
+
+p = Person(&quot;张三&quot;)
+print(p.name)  # 张三
+
+p.age = 18
+print(p.age)  # 18
+</code></pre>
+<h4 id="动态给类添加属性"><a href="#动态给类添加属性" class="headerlink" title="动态给类添加属性"></a><strong>动态给类添加属性</strong></h4><pre><code class="python">class Person:
+    def __init__(self, name=None):
+        self.name = name
+
+p = Person(&quot;张三&quot;)
+print(p.name)  # 张三
+
+Person.age = 0
+print(p.age)  # 0
+</code></pre>
+<h4 id="动态给对象添加方法"><a href="#动态给对象添加方法" class="headerlink" title="动态给对象添加方法"></a>动态给对象添加方法</h4><h5 id="1）添加普通方法"><a href="#1）添加普通方法" class="headerlink" title="1）添加普通方法"></a>1）添加普通方法</h5><pre><code class="python">class Person:
+    def __init__(self, name=None):
+        self.name = name
+
+def eat():
+    print(&quot;吃饭&quot;)
+
+p = Person(&quot;张三&quot;)
+p.eat = eat
+p.eat()  # 吃饭
+</code></pre>
+<h5 id="2）添加实例方法"><a href="#2）添加实例方法" class="headerlink" title="2）添加实例方法"></a>2）添加实例方法</h5><p>给对象添加的实例方法只绑定在当前对象上，不对其他对象生效，而且需要传入 self 参数。需要使用 types.MethodType(方法名，实例对象) 来添加实例方法。</p>
+<pre><code class="python">import types
+
+class Person:
+    def __init__(self, name=None):
+        self.name = name
+
+def eat(self):
+    print(f&quot;&#123;self.name&#125;在吃饭&quot;)
+
+p = Person(&quot;张三&quot;)
+p.eat = types.MethodType(eat, p)
+p.eat()  # 张三在吃饭
+</code></pre>
+<h4 id="动态给类添加方法"><a href="#动态给类添加方法" class="headerlink" title="动态给类添加方法"></a>动态给类添加方法</h4><p>给类添加的方法对它的所有对象都生效，添加类方法需要传入 cls 参数，添加静态方法则不需要。</p>
+<pre><code class="python">class Person:
+    home = &quot;earth&quot;
+
+    def __init__(self, name=None):
+        self.name = name
+
+# 定义类方法
+@classmethod
+def come_from(cls):
+    print(f&quot;来自&#123;cls.home&#125;&quot;)
+
+# 定义静态方法
+@staticmethod
+def static_function():
+    print(&quot;static function&quot;)
+
+Person.come_from = come_from
+Person.come_from()  # 来自earth
+
+Person.static_function = static_function
+Person.static_function()  # static function
+</code></pre>
+<h4 id="动态删除属性与方法"><a href="#动态删除属性与方法" class="headerlink" title="动态删除属性与方法"></a>动态删除属性与方法</h4><p>Ø <strong>del</strong> 对象**.**属性名<br>Ø <strong>delattr</strong>(对象，属性名)</p>
+<h4 id="slots-限制实例属性与实例方法"><a href="#slots-限制实例属性与实例方法" class="headerlink" title="__slots__限制实例属性与实例方法"></a><code>__slots__</code>限制实例属性与实例方法</h4><p>Python允许在定义类的时候，定义一个特殊的 <code>__slots__</code>变量，来限制该类的实例能添加的属性。使用<code>__slots__</code>可以限制添加实例属性和实例方法，但类属性、类方法和静态方法还可以添加。<code>__slots__</code>仅对当前类生效，对其子类无效。</p>
+<pre><code class="python">import types
+
+class Person:
+    __slots__ = (&quot;name&quot;, &quot;age&quot;, &quot;eat&quot;)
+
+    def __init__(self, name=None):
+        self.name = name
+
+def eat(self):
+    print(f&quot;&#123;self.name&#125;在吃饭&quot;)
+
+def drink(self):
+    print(f&quot;&#123;self.name&#125;在喝水&quot;)
+
+p = Person(&quot;张三&quot;)
+
+# 添加实例属性
+p.age = 10
+print(p.age)  # 10
+
+# 添加实例方法
+p.eat = types.MethodType(eat, p)
+p.eat()  # 张三在吃饭
+
+# 添加实例属性
+p.weight = 100  # AttributeError: &#39;Person&#39; object has no attribute &#39;weight&#39;
+
+# 添加实例方法
+p.drink = type.MethodType(drink, p)  # AttributeError: type object &#39;type&#39; has no attribute &#39;MethodType&#39;
+</code></pre>
+<h3 id="面向对象之三大特性"><a href="#面向对象之三大特性" class="headerlink" title="面向对象之三大特性"></a>面向对象之三大特性</h3>
     </div>
 
     
