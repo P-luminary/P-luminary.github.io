@@ -2352,7 +2352,927 @@ p.weight = 100  # AttributeError: &#39;Person&#39; object has no attribute &#39
 # 添加实例方法
 p.drink = type.MethodType(drink, p)  # AttributeError: type object &#39;type&#39; has no attribute &#39;MethodType&#39;
 </code></pre>
-<h3 id="面向对象之三大特性"><a href="#面向对象之三大特性" class="headerlink" title="面向对象之三大特性"></a>面向对象之三大特性</h3>
+<h3 id="面向对象的三大特征"><a href="#面向对象的三大特征" class="headerlink" title="面向对象的三大特征"></a>面向对象的三大特征</h3><h5 id="封装"><a href="#封装" class="headerlink" title="封装"></a>封装</h5><ul>
+<li>成员私有化</li>
+<li>在类中定义的成员，只能在类中被访问，类的外部访问不到</li>
+<li>有些类中的成员不想被子类继承，也可以进行私有化</li>
+</ul>
+<h5 id="继承"><a href="#继承" class="headerlink" title="继承"></a>继承</h5><ul>
+<li>子类可以继承父类的非私有成员，当然子类也可以定义自己特有的方法，也可以对父类的方法进行重写</li>
+</ul>
+<h5 id="多态"><a href="#多态" class="headerlink" title="多态"></a>多态</h5><ul>
+<li>一个对象的多种形态</li>
+</ul>
+<p><strong>私有化</strong></p>
+<p>有时为了限制属性和方法只能在类内访问，外部无法访问；或父类中某些属性和方法不希望被子类继承。可以将其私有化。</p>
+<p>不想被访问的话 前面要加个下划线<code>home = &quot;earth&quot;</code> &#x3D;&gt; <code>_home = &quot;earth&quot;</code></p>
+<h6 id="1）单下划线：非公开API"><a href="#1）单下划线：非公开API" class="headerlink" title="1）单下划线：非公开API"></a>1）单下划线：非公开API</h6><p>大多数Python代码都遵循这样一个约定：有一个前缀下划线的变量或方法应被视为非公开的API，例如 <strong>_var1</strong>。这种约定不具有强制力。</p>
+<pre><code class="python">class Person:
+    _home = &quot;earth&quot;
+
+    def __init__(self):
+        self.name = &quot;John&quot;
+        self.age = 25
+    def _eat(self):
+        print(&quot;I&#39;m eating&quot;)
+
+print(Person._home)
+zsf = Person()
+print(zsf.age)
+</code></pre>
+<h6 id="2）双下划线：名称改写"><a href="#2）双下划线：名称改写" class="headerlink" title="2）双下划线：名称改写"></a>2）双下划线：名称改写</h6><p><span style = "color:red"><strong>有两个前缀下划线，并至多一个后缀下划线的标识符</strong></span>，例如 <strong>__x</strong>，会被改写为 <strong>_类名__x</strong>。只有在类内部可以通过 <strong>__x</strong> 访问，其他地方无法访问或只能通过 <strong>_类名__x</strong> 访问。</p>
+<pre><code class="python">class Person:
+    __home = &quot;earth&quot;
+
+    # 修改构造函数接受name和age参数
+    def __init__(self, name=&quot;John&quot;, age=25):
+        self.name = name
+        self.age = age
+
+    # 将方法改为公共方法，去掉双下划线
+    def eat(self):
+        print(self.__home)
+        print(&quot;I&#39;m eating&quot;)
+    def eat_1(self):
+        print(self.__home)
+        print(&quot;I&#39;m \n&quot;)
+        self.eat()
+
+zsf = Person(&quot;zsf&quot;, 18) 
+zsf.eat()  # 可以正常调用
+zsf.eat_1()  # 可以正常调用
+------------------------------
+earth
+I&#39;m eating
+earth
+I&#39;m 
+
+earth
+I&#39;m eating
+</code></pre>
+<h5 id="成员私有化本质"><a href="#成员私有化本质" class="headerlink" title="成员私有化本质"></a>成员私有化本质</h5><p>如果成员以双下划线开头，名字会被改写，改为<code>_类名__成员名</code></p>
+<pre><code class="python">class Person:
+    __home = &quot;earth&quot;
+
+    # 修改构造函数接受name和age参数
+    def __init__(self, name=&quot;John&quot;, age=25):
+        self.__name = name
+        self.__age = age
+
+    # 将方法改为公共方法，去掉双下划线
+    def eat(self):
+        print(self.__home)
+        print(&quot;I&#39;m eating&quot;)
+    def eat_1(self):
+        print(self.__home)
+        print(&quot;I&#39;m \n&quot;)
+        self.eat()
+
+zsf = Person(&quot;zsf&quot;, 18)
+print(zsf._Person__name)
+print(zsf._Person__age)
+-----------------------------
+zsf
+18
+</code></pre>
+<h3 id="property用法"><a href="#property用法" class="headerlink" title="@property用法"></a><span style = "color:red">@property用法</span></h3><p><strong>1）方法转换为属性</strong></p>
+<p>可通过@property装饰器将一个方法转换为属性来调用。转换后可直接使用 <code>.方法名</code> 来使用，而无需使用<code>.方法名() </code>。</p>
+<pre><code class="python">class Person:
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def eat(self):
+        print(f&quot;&#123;self.name&#125; is eating...&quot;)
+
+p = Person(&quot;张三&quot;)
+p.eat   # 张三 is eating...
+</code></pre>
+<p><strong>2）只读属性</strong></p>
+<p>将方法名设置为去掉双下划线的私有属性名，方法中返回私有属性。</p>
+<pre><code class="python">class Person:
+
+    def __init__(self, name):
+        self.__name = name
+
+    @property
+    def name(self):
+        return self.__name
+
+p = Person(&quot;张三&quot;)
+print(p.name)  # 张三
+p.name = &quot;李四&quot;  # 报错
+</code></pre>
+<p><strong>3）读写属性</strong></p>
+<p>将方法名设置为去掉双下划线的私有属性名，使用 属性名<code>.setter</code> 装饰。</p>
+<pre><code class="python">class Person:
+
+    def __init__(self, name):
+        self.__name = name
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
+p = Person(&quot;张三&quot;)
+print(p.name)  # 张三
+
+p.name = &quot;李四&quot;
+print(p.name)  # 李四
+</code></pre>
+<p>也可以在写方法中设置一些拦截条件来规范私有属性的写入。</p>
+<pre><code class="python">class Person:
+
+    def __init__(self, name):
+        self.__name = name
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        if name == &quot;李四&quot;:
+            print(&quot;不许叫李四&quot;)
+        else:
+            self.__name = name
+
+p = Person(&quot;张三&quot;)
+print(p.name)  # 张三
+
+p.name = &quot;李四&quot;  # 提示 “不许叫李四”
+print(p.name)  # 张三
+
+p.name = &quot;王五&quot;
+print(p.name)  # 王五
+</code></pre>
+<h4 id="‘信用卡’-封装案例"><a href="#‘信用卡’-封装案例" class="headerlink" title="‘信用卡’ 封装案例"></a><span style = "color:red">‘信用卡’ 封装案例</span></h4><pre><code class="python">&quot;&quot;&quot;
+    封装信用卡类设计案例
+&quot;&quot;&quot;
+class CreditCard:
+    def __init__(self, name):
+        self.name = name
+        self.__password = None
+        self.__balance = 0  # 初始化为0
+
+    @property
+    def password(self):
+        return self.__password
+
+    @password.setter
+    def password(self, password):
+        if password != &quot;888888&quot;:
+            print(&quot;密码错误&quot;)
+        else:
+            print(&quot;密码正确&quot;)
+        self.__password = password
+
+    @property
+    def balance(self):
+        return self.__balance
+
+    @balance.setter
+    def balance(self, balance):
+        # 确保balance是数字类型
+        try:
+            balance = float(balance)  # 转换为数字类型
+            if balance &lt; 0:
+                print(&quot;余额不足&quot;)
+            else:
+                print(f&quot;&#123;self.name&#125;存款成功&quot;)  # 修改提示信息
+            self.__balance = balance
+        except (ValueError, TypeError):
+            print(&quot;余额必须是数字&quot;)
+
+c1 = CreditCard(&quot;张三&quot;)
+
+c1.password = &quot;666666&quot;
+c1.balance = 888888  # 传入数字而不是字符串
+print(f&quot;当前余额: &#123;c1.balance&#125;&quot;)
+
+
+----------------------------------------------------
+密码错误
+张三存款成功
+当前余额: 888888.0
+</code></pre>
+<h3 id="单继承"><a href="#单继承" class="headerlink" title="单继承"></a>单继承</h3><p>子类（派生类）继承父类（基类）中的属性和方法，实现代码重用。子类可以新增自己特有的方法，也可以重写父类的方法。子类不能继承父类的私有属性和私有方法，因为存在名称改写。</p>
+<h6 id="语法-1"><a href="#语法-1" class="headerlink" title="语法"></a>语法</h6><pre><code class="python">class 父类:
+    pass
+class 子类(父类):
+    pass
+</code></pre>
+<h6 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;  # 定义类属性
+
+    def __init__(self, name):
+        self.name = name  # 定义实例属性
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+class YellowRace(Person):
+    &quot;&quot;&quot;黄种人&quot;&quot;&quot;
+
+    color = &quot;yellow&quot;  # 定义类属性
+
+class WhiteRace(Person):
+    &quot;&quot;&quot;白种人&quot;&quot;&quot;
+
+    color = &quot;white&quot;  # 定义类属性
+
+class BlackRace(Person):
+    &quot;&quot;&quot;黑种人&quot;&quot;&quot;
+
+    color = &quot;black&quot;  # 定义类属性
+
+y1 = YellowRace(&quot;张三&quot;)
+print(y1.home)  # earth
+print(y1.color)  # yellow
+print(y1.name)  # 张三
+y1.eat()  # eating...
+
+w1 = WhiteRace(&quot;李四&quot;)
+print(w1.home)  # earth
+print(w1.color)  # white
+print(w1.name)  # 李四
+w1.eat()  # eating...
+
+b1 = BlackRace(&quot;王五&quot;)
+print(b1.home)  # earth
+print(b1.color)  # black
+print(b1.name)  # 王五
+b1.eat()  # eating...
+</code></pre>
+<h3 id="多继承"><a href="#多继承" class="headerlink" title="多继承"></a><strong>多继承</strong></h3><p>一个子类可以同时调多个父类；调用方法时先在子类中查找，若不存在则从左到右依次查找父类中是否包含方法。</p>
+<p><strong>1）语法</strong></p>
+<pre><code class="python">class 类名(父类1, 父类2, ...):
+    类体
+</code></pre>
+<p><strong>2）案例</strong></p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+class YellowRace(Person):
+    &quot;&quot;&quot;黄种人&quot;&quot;&quot;
+
+    color = &quot;yellow&quot;
+
+    def run(self):
+        print(&quot;runing...&quot;)
+
+class Student(Person):
+    &quot;&quot;&quot;学生&quot;&quot;&quot;
+
+    def __init__(self, name, grade):
+        self.name = name
+        self.grade = grade
+
+    def study(self):
+        print(&quot;studying...&quot;)
+
+class ChineseStudent(Student, YellowRace):  # 继承了Student和YellowRace
+    &quot;&quot;&quot;中国学生&quot;&quot;&quot;
+
+    country = &quot;中国&quot;
+
+y1 = ChineseStudent(&quot;张三&quot;, &quot;三年级&quot;)
+print(y1.home, y1.color, y1.country, y1.name, y1.grade)
+y1.eat()
+y1.run()
+y1.study()
+</code></pre>
+<h3 id="复用父类方法"><a href="#复用父类方法" class="headerlink" title="复用父类方法"></a>复用父类方法</h3><p>子类可以在类中使用 <code>super().方法名() </code>或 <code>父类名.方法名() </code>来调用父类的方法。<br>调用方法时先在子类中查找，若不存在则从左到右依次查找多个父类中是否包含方法</p>
+<p><strong>1）super().方法名()</strong></p>
+<p><span style = "color:red">这里要注意 <strong><u>方法1</u></strong> 和 <strong><u>方法2</u></strong></span></p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+class YellowRace(Person):
+    &quot;&quot;&quot;黄种人&quot;&quot;&quot;
+
+    color = &quot;yellow&quot;
+
+    def run(self):
+        print(&quot;runing...&quot;)
+
+class Student(Person):
+    &quot;&quot;&quot;学生&quot;&quot;&quot;
+
+    def __init__(self, name, grade):
+        # 调用父类中的方法
+      # super().__init__(name) ### 方式1：通过super().父类方法调用
+        self.name = name
+        self.grade = grade
+
+    def study(self):
+        print(&quot;先吃再学&quot;)
+      # Person.eat(self)       ### 方法2：通过父类名.父类方法名(self)
+        super().eat()  # 子类中调用父类的方法
+        print(&quot;studying...&quot;)
+
+class ChineseStudent(Student, YellowRace):  # 继承了Student和YellowRace
+    &quot;&quot;&quot;中国学生&quot;&quot;&quot;
+
+    country = &quot;中国&quot;
+
+y1 = ChineseStudent(&quot;张三&quot;, &quot;三年级&quot;)
+print(y1.home, y1.color, y1.country, y1.name, y1.grade)
+y1.study()
+</code></pre>
+<h3 id="方法解析顺序"><a href="#方法解析顺序" class="headerlink" title="方法解析顺序"></a><strong>方法解析顺序</strong></h3><p>方法解析顺序（mro—Method Resolution Order）。可使用 类名.<strong>mro</strong> 访问类的继承链来查看方法解析顺序。</p>
+<pre><code class="python">class Person:
+    &quot;&quot;&quot;人的类&quot;&quot;&quot;
+
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+class YellowRace(Person):
+    &quot;&quot;&quot;黄种人&quot;&quot;&quot;
+
+    color = &quot;yellow&quot;
+
+    def run(self):
+        print(&quot;runing...&quot;)
+
+class Student(Person):
+    &quot;&quot;&quot;学生&quot;&quot;&quot;
+
+    def __init__(self, name, grade):
+        self.name = name
+        self.grade = grade
+
+    def study(self):
+        print(&quot;先吃再学&quot;)
+        Person.eat(self)
+        print(&quot;studying...&quot;)
+
+class ChineseStudent(Student, YellowRace):
+    &quot;&quot;&quot;中国学生&quot;&quot;&quot;
+
+    country = &quot;中国&quot;
+
+y1 = ChineseStudent(&quot;张三&quot;, &quot;三年级&quot;)
+print(
+    ChineseStudent.__mro__
+)  
+-----------------------------------------------------------
+# (&lt;class &#39;__main__.ChineseStudent&#39;&gt;, &lt;class &#39;__main__.Student&#39;&gt;, &lt;class &#39;__main__.YellowRace&#39;&gt;, &lt;class &#39;__main__.Person&#39;&gt;, &lt;class &#39;object&#39;&gt;)
+</code></pre>
+<h4 id="方法重写"><a href="#方法重写" class="headerlink" title="方法重写"></a><strong>方法重写</strong></h4><p>在子类中定义与父类方法重名的方法，调用时会调用子类中重写的方法</p>
+<pre><code class="python">class Person:
+
+    home = &quot;earth&quot;
+
+    def __init__(self, name):
+        self.name = name
+
+    def eat(self):
+        print(&quot;eating...&quot;)
+
+class Chinese(Person):
+
+    color = &quot;yellow&quot;
+
+    # 重写父类方法
+    def eat(self):
+        print(&quot;用筷子吃&quot;)
+
+y1 = Chinese(&quot;张三&quot;)
+y1.eat()
+</code></pre>
+<p>注意：子类重写 <strong><code>__init__()</code></strong> 并调用时，不会执行父类的 <strong><code>__init__()</code></strong> 方法。如有必要，需在子类 <strong><code>__init__()</code></strong> 中使用 <strong><code>super().__init__()</code></strong> 来调用父类的 <strong><code>__init__()</code></strong> 方法<strong>。</strong></p>
+<pre><code class="python">class Person:
+
+    def __init__(self, name):
+        self.name = name
+
+class Chinese(Person):
+
+    def __init__(self, name, area):
+        super().__init__(name)  # 调用父类的__init__()
+        self.area = area
+
+y1 = Chinese(&quot;张三&quot;, &quot;北京&quot;)
+print(y1.name, y1.area)
+</code></pre>
+<h4 id="多态-1"><a href="#多态-1" class="headerlink" title="多态"></a><strong>多态</strong></h4><p>同一事物在不同场景下呈现不同状态。<br>多态应用在方法的返回值上</p>
+<pre><code class="python">class Animal:
+    def go(self):
+        pass
+
+class Dog(Animal):
+    def go(self):
+        print(&quot;跑&quot;)
+
+class Fish(Animal):
+    def go(self):
+        print(&quot;游&quot;)
+
+class Bird(Animal):
+    def go(self):
+        print(&quot;飞&quot;)
+
+def go(animal):
+    animal.go()  # 将不同的实例传入，执行不同的方法
+
+dog = Dog()
+fish = Fish()
+bird = Bird()
+go(dog)
+go(fish)
+go(bird)
+</code></pre>
+<pre><code class="python">class Bird:
+    def __init__(self, name):
+        self.name = name
+
+
+class Fish:
+    def __init__(self, name):
+        self.name = name
+
+
+class Dog:
+    def __init__(self, name):
+        self.name = name
+
+
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def call(self, flag):
+        ani = None
+        # 将字符串转换为整数进行匹配
+        flag_int = int(flag) if isinstance(flag, str) else flag
+        match flag_int:
+            case 1:
+                ani = Bird(&#39;Bird&#39;)
+            case 2:
+                ani = Fish(&#39;Fish&#39;)
+            case 3:
+                ani = Dog(&#39;Dog&#39;)
+        return ani
+
+
+wf = Person(&quot;wf&quot;, 20)
+ani = wf.call(&#39;3&#39;)  # 传入字符串 &#39;3&#39;
+print(ani.name)  # 输出: Dog
+</code></pre>
+<h3 id="愤怒的小鸟案例说明"><a href="#愤怒的小鸟案例说明" class="headerlink" title="愤怒的小鸟案例说明"></a><span style = "color:red">愤怒的小鸟案例说明</span></h3><pre><code class="python">class 类&#123;
+    属性
+        类属性
+        实例属性
+    方法
+        类方法
+        静态方法
+        实例方法
+        魔法方法
+&#125;
+</code></pre>
+<p>1.1 <strong>游戏背景</strong></p>
+<p>在这个模拟的愤怒的小鸟游戏世界里，绿色的小猪偷走了小鸟们的蛋，这引发了小鸟们的愤怒，它们决定展开反击。每只小鸟都具有独特的颜色，并且各自拥有不同的技能，玩家需要操控这些小鸟，利用它们的技能去攻击小猪们建造的各种障碍物，从而达成击败小猪、夺回鸟蛋的目标。</p>
+<h3 id="1-2-类的设计思路"><a href="#1-2-类的设计思路" class="headerlink" title="1.2 类的设计思路"></a>1.2 <strong>类的设计思路</strong></h3><h4 id="1-2-1-Birds-基类"><a href="#1-2-1-Birds-基类" class="headerlink" title="1.2.1 Birds 基类"></a>1.2.1 <strong>Birds 基类</strong></h4><p><strong>1）设计目的</strong></p>
+<p>作为所有小鸟类的基类，它定义了小鸟的通用属性和行为，为后续具体小鸟类的扩展提供基础框架，体现了面向对象编程中的抽象和封装思想。</p>
+<p><strong>2）</strong>属性设计</p>
+<p>name：用于标识每只小鸟的名称，方便区分不同个体。</p>
+<p>color：代表小鸟的颜色，这是小鸟的一个显著特征，在游戏中可以对应不同类型的小鸟。</p>
+<p>skill_description：描述小鸟所具备的独特技能，让玩家了解每只小鸟的特殊能力。</p>
+<p><strong>3）</strong>方法设计</p>
+<p>fly()：描述小鸟飞行的基本动作，是小鸟在游戏中的常见行为，所有子类都可以重写该方法来展示不同的飞行特点。</p>
+<p>call()：模拟小鸟发出叫声的行为，同样可以被子类重写以体现不同小鸟的叫声差异。</p>
+<p>use_skill()：用于触发小鸟的特殊技能，展示小鸟使用技能的情况，子类可以根据自身技能特点进行相应实现。</p>
+<h4 id="1-1-1-具体小鸟子类（RedBirds、YellowBirds、BlueBirds）"><a href="#1-1-1-具体小鸟子类（RedBirds、YellowBirds、BlueBirds）" class="headerlink" title="1.1.1 具体小鸟子类（RedBirds、YellowBirds、BlueBirds）"></a>1.1.1 <strong>具体小鸟子类（RedBirds、YellowBirds、BlueBirds）</strong></h4><p><strong>1）</strong>设计目的</p>
+<p>继承自 Birds 基类，每个子类代表一种特定颜色的小鸟，它们在继承基类属性和方法的基础上，重写部分方法以展示不同小鸟的独特行为和技能，体现了面向对象编程中的继承和多态思想。</p>
+<p><strong>2）</strong>属性设计</p>
+<p>通过调用基类的 <strong>init</strong> 方法，初始化各自的 name、color 和 skill_description 属性，确保每只小鸟都有自己的独特标识和技能。</p>
+<p><strong>3）</strong>方法设计</p>
+<p>fly()：重写基类的 fly() 方法，展示不同小鸟的飞行特点，如红鸟以稳定速度飞行，黄鸟快速飞行，蓝鸟优雅飞行。</p>
+<p>call()：重写基类的 call() 方法，模拟不同小鸟的叫声，增加游戏的趣味性。</p>
+<h4 id="1-1-2-Obstacle-类"><a href="#1-1-2-Obstacle-类" class="headerlink" title="1.1.2 Obstacle 类"></a>1.1.2 <strong>Obstacle 类</strong></h4><p><strong>1）</strong>设计目的</p>
+<p>代表游戏中的障碍物，如木头堡垒、石头塔楼等，负责处理障碍物被小鸟攻击的逻辑，与小鸟类进行交互，体现了面向对象编程中的对象交互和封装思想。</p>
+<p><strong>2）</strong>属性设计</p>
+<p>name：标识障碍物的名称，方便区分不同类型的障碍物。</p>
+<p>strength：表示障碍物的强度，即它能够承受的伤害值，当强度降为 0 时，障碍物被摧毁。</p>
+<p><strong>3）</strong>方法设计</p>
+<p>be_attacked(bird)：模拟障碍物被小鸟攻击的过程，根据小鸟的类型计算伤害，并更新障碍物的强度，同时输出攻击和受损信息，让玩家了解游戏进展。</p>
+<p>1.1 <strong>方法设计思路</strong></p>
+<p>1.1.1 <strong>Birds 类的方法</strong></p>
+<p><strong>1）fly()</strong></p>
+<p>作为通用的飞行方法，提供了小鸟飞行的基本描述，子类可以根据自身特点进行个性化实现，以体现不同小鸟的飞行风格。</p>
+<p><strong>2）call()</strong></p>
+<p>模拟小鸟发出叫声的行为，为游戏增加生动性，子类可以重写该方法来展示不同小鸟的叫声特点。</p>
+<p><strong>3）use_skill()</strong></p>
+<p>用于触发小鸟的特殊技能，通过输出技能描述，让玩家了解小鸟使用技能的情况，不同子类可以根据自身技能进行不同的实现。</p>
+<p>1.1.2 <strong>具体小鸟子类的方法</strong></p>
+<p>fly() 和 call()：重写基类的方法，根据不同小鸟的特点进行个性化实现，展示不同小鸟的飞行和叫声差异，体现了多态性。</p>
+<p>1.1.3 <strong>Obstacle 类的方法</strong></p>
+<p>be_attacked(bird)：接收一个小鸟对象作为参数，根据小鸟的类型计算伤害，并更新障碍物的强度。通过判断障碍物的强度是否小于等于 0，输出障碍物是否被摧毁的信息，实现了障碍物与小鸟之间的交互逻辑。</p>
+<p>通过这样的类和方法设计，整个游戏模拟程序具有良好的扩展性和可维护性，方便后续添加更多类型的小鸟和障碍物，以及实现更复杂的游戏逻辑。</p>
+<h5 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h5><pre><code class="python"># 定义鸟类基类
+class Birds:
+    def __init__(self, name, color, skill_description):
+        self.name = name
+        self.color = color
+        self.skill_description = skill_description
+
+    def fly(self):
+        print(f&quot;&#123;self.name&#125; 正在飞行...&quot;)
+
+    def call(self):
+        print(f&quot;&#123;self.name&#125; 发出叫声...&quot;)
+
+    def use_skill(self):
+        print(f&quot;&#123;self.name&#125; 使用了技能：&#123;self.skill_description&#125;&quot;)
+
+# 定义红鸟子类
+class RedBirds(Birds):
+    def __init__(self):
+        super().__init__(&quot;红火&quot;, &quot;红色&quot;, &quot;撞击前方障碍物，造成大量伤害&quot;)
+
+    def fly(self):
+        print(&quot;红火以稳定的速度向前飞行...&quot;)
+
+    def call(self):
+        print(&quot;红火发出 &#39;wei呀....&#39; 的叫声&quot;)
+
+# 定义黄鸟子类
+class YellowBirds(Birds):
+    def __init__(self):
+        super().__init__(&quot;小黄&quot;, &quot;黄色&quot;, &quot;瞬间加速，穿透薄障碍物&quot;)
+
+    def fly(self):
+        print(&quot;小黄快速向前飞行...&quot;)
+
+    def call(self):
+        print(&quot;小黄发出 &#39;啾啾啾....&#39; 的叫声&quot;)
+
+# 定义蓝鸟子类
+class BlueBirds(Birds):
+    def __init__(self):
+        super().__init__(&quot;小蓝&quot;, &quot;蓝色&quot;, &quot;分裂成三只小鸟，分散攻击&quot;)
+
+    def fly(self):
+        print(&quot;小蓝优雅地向前飞行...&quot;)
+
+    def call(self):
+        print(&quot;小蓝发出 &#39;叽叽叽....&#39; 的叫声&quot;)
+
+# 定义障碍物类
+class Obstacle:
+    def __init__(self, name, strength):
+        self.name = name
+        self.strength = strength
+
+    def be_attacked(self, bird):
+        print(f&quot;&#123;bird.name&#125; 冲向了 &#123;self.name&#125;&quot;)
+        bird.use_skill()
+        # isinstance判断当前对象是否属于xx的类型
+        if isinstance(bird, RedBirds):
+            damage = 80
+        elif isinstance(bird, YellowBirds):
+            damage = 50
+        elif isinstance(bird, BlueBirds):
+            damage = 30 * 3  # 分裂成三只，每只造成 30 点伤害
+        self.strength -= damage
+        if self.strength &lt;= 0:
+            print(f&quot;&#123;self.name&#125; 被摧毁了！&quot;)
+        else:
+            print(f&quot;&#123;self.name&#125; 还剩余 &#123;self.strength&#125; 点强度&quot;)
+
+# 模拟游戏过程
+if __name__ == &quot;__main__&quot;:
+    # 创建不同颜色的小鸟
+    red_bird = RedBirds()
+    yellow_bird = YellowBirds()
+    blue_bird = BlueBirds()
+
+    # 创建障碍物
+    obstacle1 = Obstacle(&quot;木头堡垒&quot;, 100)
+    obstacle2 = Obstacle(&quot;石头塔楼&quot;, 200)
+
+    # 红鸟攻击木头堡垒
+    obstacle1.be_attacked(red_bird)
+
+    # 黄鸟攻击石头塔楼
+    obstacle2.be_attacked(yellow_bird)
+
+    # 蓝鸟攻击石头塔楼
+    obstacle2.be_attacked(blue_bird)
+</code></pre>
+<h3 id="异常处理基础语法"><a href="#异常处理基础语法" class="headerlink" title="异常处理基础语法"></a>异常处理基础语法</h3><h4 id="1-1-异常介绍"><a href="#1-1-异常介绍" class="headerlink" title="1.1 异常介绍"></a>1.1 <strong>异常介绍</strong></h4><p>Python是一门解释型语言，只有在程序运行后才会执行语法检查。所以，只有在运行或测试程序时，才会真正知道该程序能不能正常运行。</p>
+<p>Python有两种错误很容易辨认：语法错误和异常。</p>
+<h4 id="1-1-1-语法错误"><a href="#1-1-1-语法错误" class="headerlink" title="1.1.1 语法错误"></a>1.1.1 <strong>语法错误</strong></h4><p>程序解析时遇到的错误。</p>
+<p>例如以下程序，因缺少 <strong>:</strong> 而出现语法错误。</p>
+<pre><code class="python">while True print(1)
+#     while True print(1)
+#                ^^^^^
+# SyntaxError: invalid syntax
+</code></pre>
+<h4 id="11-1-2-异常"><a href="#11-1-2-异常" class="headerlink" title="11.1.2 异常"></a>11.1.2 <strong>异常</strong></h4><p> Python 程序的语法是正确的，在运行它的时候，也有可能发生错误。运行期检测到的错误被称为异常。</p>
+<p>例如以下程序，因变量名未找到而引发NameError。</p>
+<pre><code class="python">print(var1)
+#     print(var1)
+#           ^^^^
+# NameError: name &#39;var1&#39; is not defined. Did you mean: &#39;vars&#39;?
+</code></pre>
+<p>大多数的异常都不会被程序处理，都以错误信息的形式打印出来，错误信息的前面部分显示了异常发生的上下文，并以调用栈的形式显示具体信息。</p>
+<h4 id="11-2-异常处理"><a href="#11-2-异常处理" class="headerlink" title="11.2 异常处理"></a>11.2 <strong>异常处理</strong></h4><p>对异常进行处理并不是将错误规避了，而是当程序运行的时候，出现错误的时候提供解决方案，不终止程序，可以让程序继续执行。</p>
+<h4 id="11-2-1-try-except"><a href="#11-2-1-try-except" class="headerlink" title="11.2.1 try except"></a>11.2.1 <strong>try except</strong></h4><p>可以使用 <strong>try except</strong> 语句来捕获异常并处理。</p>
+<h6 id="语法-2"><a href="#语法-2" class="headerlink" title="语法"></a>语法</h6><pre><code class="python">try:
+    可能发生异常的代码
+except:
+    异常处理的代码
+</code></pre>
+<p>Ø 如果没有发生异常，程序会忽略<strong>except</strong>中的代码，继续向下执行。<br>Ø 如果发生了异常，会忽略<strong>try</strong>中剩余代码，执行<strong>except</strong>中的代码。<br>Ø 程序异常处理后的其他代码会正常执行</p>
+<h6 id="案例-1"><a href="#案例-1" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">try:
+    result = 3 / 1
+    print(&quot;没有发生异常&quot;)
+except:
+    print(&quot;发生异常了&quot;)
+print(&quot;End&quot;)
+</code></pre>
+<h4 id="11-2-2-捕获指定类型的异常以及获取异常描述信息"><a href="#11-2-2-捕获指定类型的异常以及获取异常描述信息" class="headerlink" title="11.2.2 捕获指定类型的异常以及获取异常描述信息"></a>11.2.2 <strong>捕获指定类型的异常以及获取异常描述信息</strong></h4><p>在打印出来的异常信息中，冒号之前是异常类型,冒号之后是异常描述信息</p>
+<pre><code class="python"># NameError: name &#39;a&#39; is not defined
+# NameError: 冒号之前是异常类型
+# : name &#39;a&#39; is not defined 冒号之后是异常描述信息
+print(a)
+</code></pre>
+<p>如果出现的异常不是我们指定的类型中的其中一个，我们在程序中想对不同类型的异常进行不同的处理，并在处理异常的时候，要获取异常信息，我们可以通过如下方式。</p>
+<h6 id="语法【as是起别名】"><a href="#语法【as是起别名】" class="headerlink" title="语法【as是起别名】"></a>语法【as是起别名】</h6><pre><code class="python">try:
+    可能发生异常的代码
+except 异常类型1 as 变量名1:
+    异常处理的代码
+except 异常类型2 as 变量名2:
+异常处理的代码
+except(异常类型3, 异常类型4, 异常类型5) as 变量名3:
+异常处理的代码
+except:
+异常处理的代码
+</code></pre>
+<p>Ø 如果没有发生异常，程序会忽略<strong>except</strong>中的代码，继续向下执行。<br>Ø 如果发生了异常，会忽略<strong>try</strong>中剩余代码，根据异常类型匹配到相应的 <strong>except</strong> 并执行其中的代码。<br>Ø 如果发生了异常，且异常类型无法和任何<strong>except</strong>匹配，异常将向外传递。<br>Ø 一个<strong>except</strong>可以同时处理多个异常，将这些异常放在一个元组中。<br>Ø 最后一个 <strong>except</strong> 可以忽略异常类型，它将被作为通配符使用。</p>
+<h6 id="案例-2"><a href="#案例-2" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">try:
+    result = 3 / 0
+    print(&quot;发生异常了&quot;)
+except ZeroDivisionError as e:
+    print(e)
+except (RuntimeError, TypeError, NameError) as e:
+    print(e)
+except:
+    print(&quot;Unexpected error&quot;)
+print(&quot;End&quot;)
+</code></pre>
+<h4 id="else关键字"><a href="#else关键字" class="headerlink" title="else关键字"></a>else关键字</h4><p>可选地将<strong>else</strong>放在所有<strong>except</strong>之后。如果<strong>try</strong>中代码没有发生异常，将执行 <strong>else</strong> 中的代码。</p>
+<pre><code class="python">try:
+    可能发生异常的代码
+except 异常类型1 as 变量名1:
+    异常处理的代码
+except 异常类型2 as 变量名2:
+    异常处理的代码
+else:
+    没有异常时执行的代码
+</code></pre>
+<h6 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h6><p>Ø 从执行效果上说，将代码放到else块和直接放到try块中是一样的。<br>Ø 将try正常执行完毕而没有引发任何异常后被执行的代码放到else中。提供了一种清晰的逻辑区分，将正常情况的代码与异常处理代码分开，使代码更易于理解和维护，有助于代码的可读性和可维护性。<br>Ø 例如，你希望在try块中有些操作执行成功后，再执行其它代码，那就可以把代码放到else语句块中。</p>
+<h6 id="案例-3"><a href="#案例-3" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">try:
+    result = x / y
+except ZeroDivisionError:
+    print(&quot;除数不能为零！&quot;)
+else:
+    print(f&quot;结果是: &#123;result&#125;&quot;)
+</code></pre>
+<h4 id="finally关键字"><a href="#finally关键字" class="headerlink" title="finally关键字"></a>finally关键字</h4><p>可选地，放在最后。无论是否发生异常都会执行的代码，通常用于执行一些必须要进行的清理操作，例如关闭文件、释放资源（如网络连接、数据库连接、锁等），即使在执行 try 块中的代码时出现了异常，也能保证这些操作得以完成。</p>
+<h6 id="语法-3"><a href="#语法-3" class="headerlink" title="语法"></a>语法</h6><pre><code class="python">try:
+    可能发生异常的代码
+except 异常类型1 as 变量名1:
+    异常处理的代码
+except 异常类型2 as 变量名2:
+    异常处理的代码
+else:
+    没有异常时执行的代码
+finally:
+    无论是否发生异常都会执行的代码
+</code></pre>
+<h6 id="说明-1"><a href="#说明-1" class="headerlink" title="说明"></a>说明</h6><p>Ø 如果从执行效果上说，大部分场景，将代码放到finally语句和放到try-except块外效果是一样的。<br>Ø finally 语句块是 try-except 结构的一部分，它确保了无论 try 块中是否发生异常，也无论 except 块是否被执行，其中的代码都会被执行<br>Ø 直接放在try-except结构外面的代码只会在try-except结构正常执行完毕后才会执行，如果在try块中出现异常且没有被except块捕获，或者在except块中出现了新的异常导致程序终止，那么这部分代码将不会被执行。</p>
+<h6 id="案例-4"><a href="#案例-4" class="headerlink" title="案例"></a>案例</h6><pre><code class="python"># try:
+#     result = 3 / 0
+# except ZeroDivisionError as e:
+#     print(e)
+# else:
+#     print(result)
+# finally:
+#     print(&quot;finally&quot;)
+# print(&quot;End&quot;)
+#输出结果：
+# division by zero
+# finally
+# End
+try:
+    result = 3 / 0
+except NameError as e:
+    print(e)
+else:
+    print(result)
+finally:
+    print(&quot;finally&quot;)
+</code></pre>
+<h4 id="raise"><a href="#raise" class="headerlink" title="raise"></a><strong>raise</strong></h4><p>当你想要在代码中明确表示发生了错误或异常情况时，可以使用 <strong>raise</strong> 来抛出异常。这可以帮助你在满足某些条件时停止程序的正常执行，并将控制权转移到异常处理部分。</p>
+<h6 id="语法-4"><a href="#语法-4" class="headerlink" title="语法"></a>语法</h6><pre><code class="python">raise 异常类型(&quot;异常描述&quot;)
+</code></pre>
+<h6 id="案例-5"><a href="#案例-5" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">def int_add(x, y):
+    if isinstance(x, int) and isinstance(y, int):
+        return x + y
+    else:
+        raise TypeError(&quot;参数类型错误&quot;)
+
+print(int_add(1, 2))  # 3
+print(int_add(&quot;1&quot;, &quot;2&quot;))  # TypeError: 参数类型错误
+</code></pre>
+<h4 id="assert断言"><a href="#assert断言" class="headerlink" title="assert断言"></a>assert断言</h4><p><strong>assert</strong>用于判断一个表达式，在表达式条件为<strong>False</strong>的时候触发异常，常用于调试程序。</p>
+<h6 id="语法-5"><a href="#语法-5" class="headerlink" title="语法"></a>语法</h6><pre><code class="python">assert 表达式 [,异常描述]
+#等价于
+if not 表达式:
+    raise AssertionError([异常描述])
+</code></pre>
+<h6 id="案例-6"><a href="#案例-6" class="headerlink" title="案例"></a>案例</h6><pre><code class="python">def int_add(x, y):
+    assert isinstance(x, int) and isinstance(y, int), &quot;参数类型错误&quot;
+    return x + y
+
+print(int_add(1, 2))  # 3
+print(int_add(&quot;1&quot;, &quot;2&quot;))  # AssertionError: 参数类型错误
+</code></pre>
+<h4 id="自定义异常"><a href="#自定义异常" class="headerlink" title="自定义异常"></a>自定义异常</h4><p>通过直接或者间接继承<strong>Exception</strong>类来创建自己的异常。例如：</p>
+<pre><code class="python">class MyError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+try:
+    raise MyError(1)
+except MyError as e:
+    print(&quot;触发自定义异常:&quot;, e.value)
+</code></pre>
+<h4 id="异常的传递"><a href="#异常的传递" class="headerlink" title="异常的传递"></a>异常的传递</h4><p>当存在 <strong>try</strong> 嵌套或函数嵌套时，若内层出现了异常且在内层无法处理，会将异常一层一层向外传递，直到异常被处理或程序报错。</p>
+<pre><code class="python">try:
+    try:
+        try:
+            print(1 / 0)
+        except NameError as e:
+            print(&quot;第三层&quot;, e)
+    except TypeError as e:
+        print(&quot;第二层&quot;, e)
+except Exception as e:
+    print(&quot;第一层&quot;, type(e), e)
+# 第一层 &lt;class &#39;ZeroDivisionError&#39;&gt; division by zero
+</code></pre>
+<h4 id="with关键字"><a href="#with关键字" class="headerlink" title="with关键字"></a>with关键字</h4><p>Python中的<strong>with</strong>语句用于异常处理，封装了<strong>try except finally</strong>编码范式，提供了一种简洁的方式来确保资源的正确获取和释放，同时处理可能发生的异常，提高了易用性。使代码更清晰、更具可读性，简化了文件流等公共资源的管理。</p>
+<h6 id="语法：-2"><a href="#语法：-2" class="headerlink" title="语法："></a>语法：</h6><pre><code class="python">with expression as variable:
+    # 代码块
+</code></pre>
+<h6 id="说明："><a href="#说明：" class="headerlink" title="说明："></a>说明：</h6><ul>
+<li><code>expression</code>：通常是一个对象或函数调用，该对象需要是一个上下文管理器，即实现了<code>__enter__</code>和<code>__exit__</code>方法</li>
+<li><code>variable</code>：是可选的，用于存储expression的<code>__enter__</code>方法的返回值</li>
+</ul>
+<h6 id="工作原理："><a href="#工作原理：" class="headerlink" title="工作原理："></a>工作原理：</h6><p>Ø 使用 with 关键字系统会自动调用 f.close() 方法， with 的作用等效于 try finally 语句。</p>
+<p>Ø 当执行with语句时，会调用expression对象的__enter__方法。</p>
+<p>Ø <strong>enter</strong> 方法的返回值可以被存储在 variable 中（如果有），以供 with 代码块中使用。</p>
+<p>Ø 然后执行 with 语句内部的代码块。</p>
+<p>Ø 无论在代码块中是否发生异常，都会调用 expression 对象的__exit__ 方法，以确保资源的释放或清理工作，这类似于 try-except-finally 中的 finally 子句。</p>
+<h6 id="案例：打开一个文件并向其中写入内容，验证出现异常后文件是否正常关闭"><a href="#案例：打开一个文件并向其中写入内容，验证出现异常后文件是否正常关闭" class="headerlink" title="案例：打开一个文件并向其中写入内容，验证出现异常后文件是否正常关闭"></a>案例：打开一个文件并向其中写入内容，验证出现异常后文件是否正常关闭</h6><pre><code class="python">1）常规方式
+try:
+    file = open(&quot;test.txt&quot;, &quot;w&quot;)
+    file.write(a)
+    file.close()
+finally:
+    print(&quot;文件是否关闭：&quot;, file.closed)  # 文件是否关闭： False
+    
+    
+2）使用 try finally
+try:
+    file = open(&quot;test.txt&quot;, &quot;w&quot;)
+    try:
+        file.write(a)
+    finally:
+        file.close()
+finally:
+    print(&quot;文件是否关闭：&quot;, file.closed)  # 文件是否关闭： True
+    
+    
+3）使用 with    # file是取的别名
+try:
+    with open(&quot;test.txt&quot;, &quot;w&quot;) as file:
+        file.write(a)
+finally:
+print(&quot;文件是否关闭：&quot;, file.closed)  # 文件是否关闭： True
+</code></pre>
+<h4 id="Python常见异常"><a href="#Python常见异常" class="headerlink" title="Python常见异常"></a>Python常见异常</h4><h4 id="异常基类"><a href="#异常基类" class="headerlink" title="异常基类"></a>异常基类</h4><table>
+<thead>
+<tr>
+<th><em><strong>*异常*</strong></em></th>
+<th><em><strong>*说明*</strong></em></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em><strong>*BaseException*</strong></em></td>
+<td>所有内置异常的基类。它不应该被用户自定义类直接继承（这种情况请使用<a href="#Exception">Exception</a>）。</td>
+</tr>
+<tr>
+<td><em><strong>*Exception*</strong></em></td>
+<td>所有内置的非系统退出类异常都派生自此类。所有用户自定义异常也应当派生自此类。</td>
+</tr>
+<tr>
+<td><em><strong>*ArithmeticError*</strong></em></td>
+<td>此基类用于派生针对各种算术类错误而引发的内置异常：<a href="#OverflowError">OverflowError</a>, <a href="#ZeroDivisionError">ZeroDivisionError</a>, <a href="#FloatingPointError">FloatingPointError</a>。</td>
+</tr>
+<tr>
+<td><em><strong>*BufferError*</strong></em></td>
+<td>当与<a href="#bufferobjects">缓冲区</a>相关的操作无法执行时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*LookupError*</strong></em></td>
+<td>此基类用于派生当映射或序列所使用的键或索引无效时引发的异常：<a href="#IndexError">IndexError</a>, <a href="#KeyError">KeyError</a>。这可以通过 <a href="#codecs.lookup">codecs.lookup()</a> 来直接引发。</td>
+</tr>
+</tbody></table>
+<h4 id="具体异常"><a href="#具体异常" class="headerlink" title="具体异常"></a>具体异常</h4><table>
+<thead>
+<tr>
+<th><em><strong>*异常*</strong></em></th>
+<th><em><strong>*说明*</strong></em></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em><strong>*AssertionError*</strong></em></td>
+<td>当 <a href="#assert">assert</a> 语句失败时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*AttributeError*</strong></em></td>
+<td>当属性引用或赋值失败时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*IndexError*</strong></em></td>
+<td>当序列抽取超出范围时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*KeyError*</strong></em></td>
+<td>当在现有键集合中找不到指定的映射（字典）键时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*KeyboardInterrupt*</strong></em></td>
+<td>当用户按下中断键 (通常为 Control-C 或 Delete) 时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*MemoryError*</strong></em></td>
+<td>当一个操作耗尽内存但情况仍可（通过删除一些对象）进行挽救时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*NameError*</strong></em></td>
+<td>当某个局部或全局名称未找到时将被引发。</td>
+</tr>
+<tr>
+<td><em><strong>*OSError*</strong></em></td>
+<td>此异常在一个系统函数返回系统相关的错误时将被引发，此类错误包括 I&#x2F;O 操作失败例如 文件未找到 或 磁盘已满 等。</td>
+</tr>
+<tr>
+<td><em><strong>*SyntaxError*</strong></em></td>
+<td>当解析器遇到语法错误时引发。</td>
+</tr>
+<tr>
+<td><em><strong>*TypeError*</strong></em></td>
+<td>当一个操作或函数被应用于类型不适当的对象时将被引发。</td>
+</tr>
+</tbody></table>
+
     </div>
 
     
