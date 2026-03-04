@@ -133,6 +133,684 @@
 
 <div class="post">
 
+    <a href="/2026/03/04/后端/go/">
+        <h2>
+            go
+        </h2>
+    </a>
+
+    <div class="category-and-date">
+
+        
+
+        <span class="date">
+            <span class="icon">
+                <a-icon type="calendar" theme="filled" />
+            </span>
+            2026/3/4
+        </span>
+
+    </div>
+
+    <div class="excerpt">
+        <div class="content" v-pre>
+            
+            
+            <p>你核心想知道的是：Go 里的 Channel（通道）到底有啥用、实际开发中怎么落地？我用新手能懂的话讲透 ——<strong>Channel 是 Go 实现 goroutine（协程）间通信的核心工具，也是 “并发安全” 的关键，实际开发中只要写并发逻辑（比如后端接口、任务池、消息队列），几乎必用 Channel</strong>。</p>
+<h3 id="1-先给核心结论"><a href="#1-先给核心结论" class="headerlink" title="1. 先给核心结论"></a>1. 先给核心结论</h3><ul>
+<li><strong>Channel 的本质</strong>：goroutine 之间的 “管道”，专门用来安全地传递数据（比如数字、结构体、指针），同时自带 “同步阻塞” 特性；</li>
+<li><strong>核心作用</strong>：解决多 goroutine 间的 “通信” 和 “同步” 问题，替代其他语言的 “锁 + 共享变量”，是 Go“不要通过共享内存通信，要通过通信共享内存” 哲学的核心；</li>
+<li><strong>使用频率</strong>：极高 —— 后端开发中处理并发请求、异步任务、限流、消息传递等场景，Channel 都是标配。</li>
+</ul>
+<h3 id="2-先搞懂：为什么需要-Channel？（没有-Channel-会怎样？）"><a href="#2-先搞懂：为什么需要-Channel？（没有-Channel-会怎样？）" class="headerlink" title="2. 先搞懂：为什么需要 Channel？（没有 Channel 会怎样？）"></a>2. 先搞懂：为什么需要 Channel？（没有 Channel 会怎样？）</h3><p>先看一个 “不用 Channel” 的并发问题，对比就能懂 Channel 的价值：</p>
+<h4 id="❶-无-Channel：共享变量-锁（麻烦、易出错）"><a href="#❶-无-Channel：共享变量-锁（麻烦、易出错）" class="headerlink" title="❶ 无 Channel：共享变量 + 锁（麻烦、易出错）"></a>❶ 无 Channel：共享变量 + 锁（麻烦、易出错）</h4><p>多个 goroutine 修改同一个变量，必须加锁，否则会出现数据竞争：</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;sync&quot;
+)
+
+var count int
+var lock sync.Mutex // 必须加锁
+
+func add(wg *sync.WaitGroup) &#123;
+    lock.Lock()   // 加锁
+    count++
+    lock.Unlock() // 解锁
+    wg.Done()
+&#125;
+
+func main() &#123;
+    var wg sync.WaitGroup
+    for i := 0; i &lt; 1000; i++ &#123;
+        wg.Add(1)
+        go add(&amp;wg)
+    &#125;
+    wg.Wait()
+    fmt.Println(count) // 输出1000（加锁才正确）
+&#125;
+</code></pre>
+<p>这种写法不仅要手动管理锁，还容易因漏解锁 &#x2F; 锁顺序出错导致死锁。</p>
+<h4 id="❷-有-Channel：通信替代共享内存（简洁、安全）"><a href="#❷-有-Channel：通信替代共享内存（简洁、安全）" class="headerlink" title="❷ 有 Channel：通信替代共享内存（简洁、安全）"></a>❷ 有 Channel：通信替代共享内存（简洁、安全）</h4><p>用 Channel 传递数据，天然并发安全，无需加锁：</p>
+<pre><code class="go">package main
+
+import &quot;fmt&quot;
+
+func add(ch chan int, wg *sync.WaitGroup) &#123;
+    ch &lt;- 1 // 往通道里发数据
+    wg.Done()
+&#125;
+
+func main() &#123;
+    ch := make(chan int, 1000)
+    var wg sync.WaitGroup
+
+    // 启动1000个goroutine发数据
+    for i := 0; i &lt; 1000; i++ &#123;
+        wg.Add(1)
+        go add(ch, &amp;wg)
+    &#125;
+    wg.Wait()
+    close(ch) // 发完数据关闭通道
+
+    // 统计总数
+    count := 0
+    for v := range ch &#123; // 遍历通道接收数据
+        count += v
+    &#125;
+    fmt.Println(count) // 输出1000（天然安全）
+&#125;
+</code></pre>
+<p>Channel 帮我们规避了锁的所有坑，代码更简洁、更安全。</p>
+<h3 id="3-Channel-的核心用途（实际开发中都这么用）"><a href="#3-Channel-的核心用途（实际开发中都这么用）" class="headerlink" title="3. Channel 的核心用途（实际开发中都这么用）"></a>3. Channel 的核心用途（实际开发中都这么用）</h3><h4 id="场景-1：goroutine-间传递数据（最基础）"><a href="#场景-1：goroutine-间传递数据（最基础）" class="headerlink" title="场景 1：goroutine 间传递数据（最基础）"></a>场景 1：goroutine 间传递数据（最基础）</h4><p>比如后端接口中，主 goroutine 处理请求，子 goroutine 查数据库，用 Channel 返回结果：</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;time&quot;
+)
+
+// 模拟查数据库
+func queryDB(id int, ch chan string) &#123;
+    time.Sleep(100 * time.Millisecond) // 模拟耗时
+    ch &lt;- fmt.Sprintf(&quot;用户%d的信息&quot;, id) // 把结果发回通道
+&#125;
+
+func main() &#123;
+    ch := make(chan string)
+    // 启动goroutine异步查库
+    go queryDB(100, ch)
+
+    // 主goroutine做其他事（比如处理请求参数）
+    fmt.Println(&quot;处理其他逻辑...&quot;)
+
+    // 接收数据库查询结果（阻塞直到有数据）
+    res := &lt;-ch
+    fmt.Println(&quot;查询结果：&quot;, res) // 输出：查询结果：用户100的信息
+    close(ch)
+&#125;
+</code></pre>
+<h4 id="场景-2：控制并发数（后端高频）"><a href="#场景-2：控制并发数（后端高频）" class="headerlink" title="场景 2：控制并发数（后端高频）"></a>场景 2：控制并发数（后端高频）</h4><p>比如接口限流、任务池控制最大并发量（避免打满 CPU &#x2F; 数据库）：</p>
+<pre><code class="go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;sync&quot;
+    &quot;time&quot;
+)
+
+func task(id int, ch chan struct&#123;&#125;, wg *sync.WaitGroup) &#123;
+    defer wg.Done()
+    ch &lt;- struct&#123;&#125;&#123;&#125; // 占用一个并发位（空结构体不占内存）
+    defer func() &#123; &lt;-ch &#125;() // 释放并发位
+
+    // 模拟任务耗时
+    time.Sleep(500 * time.Millisecond)
+    fmt.Printf(&quot;完成任务%d\n&quot;, id)
+&#125;
+
+func main() &#123;
+    maxConcurrent := 3 // 最大并发数3
+    ch := make(chan struct&#123;&#125;, maxConcurrent)
+    var wg sync.WaitGroup
+
+    // 启动10个任务，但最多同时执行3个
+    for i := 1; i &lt;= 10; i++ &#123;
+        wg.Add(1)
+        go task(i, ch, &amp;wg)
+    &#125;
+    wg.Wait()
+    close(ch)
+    fmt.Println(&quot;所有任务完成&quot;)
+&#125;
+</code></pre>
+<p>这个场景在后端处理批量任务（比如批量导出、批量更新）时几乎每天都用。</p>
+<h4 id="场景-3：等待-goroutine-完成（替代-WaitGroup）"><a href="#场景-3：等待-goroutine-完成（替代-WaitGroup）" class="headerlink" title="场景 3：等待 goroutine 完成（替代 WaitGroup）"></a>场景 3：等待 goroutine 完成（替代 WaitGroup）</h4><p>用带缓冲的 Channel 接收所有 goroutine 的完成信号，实现同步：</p>
+<pre><code class="go">package main
+
+import &quot;fmt&quot;
+
+func worker(id int, ch chan bool) &#123;
+    fmt.Printf(&quot;工作协程%d完成\n&quot;, id)
+    ch &lt;- true // 发送完成信号
+&#125;
+
+func main() &#123;
+    ch := make(chan bool, 5) // 5个协程，缓冲5
+
+    // 启动5个协程
+    for i := 1; i &lt;= 5; i++ &#123;
+        go worker(i, ch)
+    &#125;
+
+    // 等待所有协程完成
+    for i := 1; i &lt;= 5; i++ &#123;
+        &lt;-ch // 接收完成信号，阻塞直到有数据
+    &#125;
+    close(ch)
+    fmt.Println(&quot;所有协程都完成了&quot;)
+&#125;
+</code></pre>
+<h4 id="场景-4：单向通道（约束代码，更安全）"><a href="#场景-4：单向通道（约束代码，更安全）" class="headerlink" title="场景 4：单向通道（约束代码，更安全）"></a>场景 4：单向通道（约束代码，更安全）</h4><p>实际开发中，为了避免误操作（比如往只读通道发数据），会定义单向通道：</p>
+<pre><code class="go">package main
+
+import &quot;fmt&quot;
+
+// 只写通道：只能往里面发数据
+func sendData(ch chan&lt;- int) &#123;
+    ch &lt;- 10
+    ch &lt;- 20
+    close(ch)
+    // ch &lt;- 30 // 关闭后发数据会panic
+&#125;
+
+// 只读通道：只能从里面读数据
+func readData(ch &lt;-chan int) &#123;
+    for v := range ch &#123;
+        fmt.Println(&quot;收到数据：&quot;, v)
+    &#125;
+&#125;
+
+func main() &#123;
+    ch := make(chan int)
+    go sendData(ch)
+    readData(ch)
+&#125;
+</code></pre>
+<p>这种写法能让代码意图更清晰，编译器也能帮你检查错误（比如往只读通道发数据会直接报错）。</p>
+<h3 id="4-Channel-的关键注意事项（避坑）"><a href="#4-Channel-的关键注意事项（避坑）" class="headerlink" title="4. Channel 的关键注意事项（避坑）"></a>4. Channel 的关键注意事项（避坑）</h3><ul>
+<li><p><strong>必须关闭通道吗？</strong>：只有 “接收方需要遍历通道（for range）” 时才需要关，否则不用（比如只接收一次数据）；关闭已关闭的通道会 panic；</p>
+</li>
+<li><p>缓冲通道 vs 无缓冲通道</p>
+<ul>
+<li>无缓冲：<code>make(chan int)</code>，发数据会阻塞直到有接收方，适合同步通信；</li>
+<li>有缓冲：<code>make(chan int, 10)</code>，缓冲区满了才阻塞，适合异步通信；</li>
+</ul>
+<p>避免死锁</p>
+<ul>
+<li>单 goroutine 往无缓冲通道发数据，没有接收方 → 死锁；</li>
+<li>接收已关闭的通道 → 返回零值，不会阻塞；</li>
+</ul>
+<p>select+channel</p>
+<p>：后端高频用法，用于多通道监听（比如超时控制）：</p>
+<pre><code class="go">// 超时控制示例
+select &#123;
+case res := &lt;-ch:
+    fmt.Println(&quot;成功：&quot;, res)
+case &lt;-time.After(2 * time.Second):
+    fmt.Println(&quot;超时了&quot;)
+&#125;
+</code></pre>
+</li>
+</ul>
+<h3 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h3><ol>
+<li><p><strong>Channel 的核心价值</strong>：实现 goroutine 间安全通信 + 同步，替代锁和共享内存，是 Go 并发编程的核心；</p>
+</li>
+<li><p>实际开发场景</p>
+<p>：</p>
+<ul>
+<li>基础：goroutine 间传递数据；</li>
+<li>高频：控制并发数、异步任务结果返回、超时控制；</li>
+<li>进阶：实现消息队列、任务池、限流等；</li>
+</ul>
+</li>
+<li><p><strong>核心原则</strong>：“通信共享内存” 而非 “共享内存通信”，用 Channel 让并发代码更简洁、更安全。</p>
+</li>
+</ol>
+<p>简单记：<strong>只要写 Go 的并发逻辑，就用 Channel 来做 goroutine 之间的交互，这是 Go 最地道的写法</strong></p>
+<hr>
+<p>你想深入理解 Go 语言中的<strong>类型断言</strong>，我会用通俗易懂的方式帮你拆解这个知识点，结合你给出的示例讲清楚它的作用、用法和核心逻辑。</p>
+<h3 id="一、先搞懂：类型断言到底是干嘛的？"><a href="#一、先搞懂：类型断言到底是干嘛的？" class="headerlink" title="一、先搞懂：类型断言到底是干嘛的？"></a>一、先搞懂：类型断言到底是干嘛的？</h3><p>Go 中的接口（比如 <code>interface&#123;&#125;</code>，空接口）可以存放任意类型的值，但我们拿到这个接口变量后，往往需要知道它<strong>实际存的是什么类型</strong>，并把它转回具体类型来使用 —— 这个 “拆包” 的过程就是<strong>类型断言</strong>。</p>
+<p>你可以把空接口 <code>interface&#123;&#125;</code> 想象成一个 “万能快递箱”，能装任何东西（字符串、数字、结构体等），但开箱前你不知道里面是啥；类型断言就是 “开箱检查”：确认里面是你想要的东西（比如字符串），并把它取出来。</p>
+<h3 id="二、核心语法拆解"><a href="#二、核心语法拆解" class="headerlink" title="二、核心语法拆解"></a>二、核心语法拆解</h3><p>你给出的语法 <code>value.(T)</code> 是最常用的形式，拆解如下：</p>
+<ul>
+<li><code>value</code>：必须是<strong>接口类型</strong>的变量（比如示例中的 <code>i interface&#123;&#125;</code>）；</li>
+<li><code>T</code>：你想要转换的<strong>具体类型</strong>（比如示例中的 <code>string</code>）；</li>
+<li>返回值：<ol>
+<li>第一个值：转换后的具体类型值（比如示例中的 <code>str</code>）；</li>
+<li>第二个值（<code>ok</code>）：布尔值，<code>true</code> 表示断言成功，<code>false</code> 表示失败（类型不匹配）。</li>
+</ol>
+</li>
+</ul>
+<h3 id="四、扩展：类型断言的常见场景"><a href="#四、扩展：类型断言的常见场景" class="headerlink" title="四、扩展：类型断言的常见场景"></a>四、扩展：类型断言的常见场景</h3><p>比如你有一个函数接收空接口参数，需要根据不同类型做不同处理：</p>
+<pre><code class="go">func printType(v interface&#123;&#125;) &#123;
+    switch t := v.(type) &#123; // 这里是 type switch，特殊的类型断言
+    case string:
+        fmt.Printf(&quot;这是字符串：%s\n&quot;, t)
+    case int:
+        fmt.Printf(&quot;这是整数：%d\n&quot;, t)
+    default:
+        fmt.Printf(&quot;未知类型：%T\n&quot;, t)
+    &#125;
+&#125;
+
+func main() &#123;
+    printType(&quot;Go语言&quot;) // 输出：这是字符串：Go语言
+    printType(666)      // 输出：这是整数：666
+    printType(3.14)     // 输出：未知类型：float64
+&#125;
+</code></pre>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li>类型断言的核心是<strong>把接口类型转回具体类型</strong>，语法是 <code>value.(T)</code>；</li>
+<li>推荐使用 <code>val, ok := value.(T)</code> 的安全写法，避免 panic；</li>
+<li>空接口 <code>interface&#123;&#125;</code> 是类型断言的最常用场景，用于处理 “任意类型” 的变量。</li>
+</ol>
+<h3 id="一、为什么不直接赋值？"><a href="#一、为什么不直接赋值？" class="headerlink" title="一、为什么不直接赋值？"></a>一、为什么不直接赋值？</h3><p>你觉得 “绕一圈”，是因为这个示例为了演示做了简化（故意把字符串塞进空接口再取出来），但<strong>实际场景中，我们根本不知道接口变量里存的是什么类型</strong>，这时候类型断言才体现价值。</p>
+<p>举个贴近实际的例子：</p>
+<p>假设你写了一个函数，需要接收 “任意类型” 的参数（比如用户输入、第三方接口返回的数据），你没法提前确定它是字符串、数字还是其他类型，这时候就必须用类型断言来 “识别 + 转换”：</p>
+<pre><code class="go">// 处理任意类型的输入
+func processInput(input interface&#123;&#125;) &#123;
+    // 你不知道调用者传过来的是 string、int 还是 bool
+    // 必须先断言，才能确定类型并处理
+    str, ok := input.(string)
+    if ok &#123;
+        fmt.Println(&quot;处理字符串：&quot;, str)
+    &#125; else &#123;
+        num, ok := input.(int)
+        if ok &#123;
+            fmt.Println(&quot;处理数字：&quot;, num * 2)
+        &#125; else &#123;
+            fmt.Println(&quot;不支持的类型&quot;)
+        &#125;
+    &#125;
+&#125;
+
+func main() &#123;
+    processInput(&quot;Hello&quot;)  // 输出：处理字符串：Hello
+    processInput(100)      // 输出：处理数字：200
+    processInput(true)     // 输出：不支持的类型
+&#125;
+</code></pre>
+<p>这个例子里，<code>input</code> 是空接口，能接收任何类型，但你要对不同类型做不同逻辑（字符串直接打印、数字乘 2），<strong>必须先通过类型断言确定它的实际类型</strong>，根本没法 “直接赋值”—— 因为你提前不知道传进来的是什么。</p>
+<p>而你最初的示例，只是为了教学简化，故意把字符串塞进空接口再断言，看起来 “没必要”，但实际开发中，空接口的内容往往是 “未知的”，这时候断言就是唯一的办法。</p>
+<h3 id="二、和-Java-的类型检测是不是类似？"><a href="#二、和-Java-的类型检测是不是类似？" class="headerlink" title="二、和 Java 的类型检测是不是类似？"></a>二、和 Java 的类型检测是不是类似？</h3><p>是的！Go 的类型断言，和 Java 里的<strong>类型检查 + 类型转换</strong>几乎是同一个逻辑，对应关系非常清晰：</p>
+<table>
+<thead>
+<tr>
+<th align="center">Go 类型断言</th>
+<th align="center">Java 等效写法</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><code>str, ok := i.(string)</code></td>
+<td align="center"><code>if (i instanceof String) &#123; String str = (String)i; &#125;</code></td>
+<td align="center">安全检测 + 转换，不报错</td>
+</tr>
+<tr>
+<td align="center"><code>str := i.(string)</code></td>
+<td align="center"><code>String str = (String)i;</code></td>
+<td align="center">强制转换，类型不对会崩溃</td>
+</tr>
+<tr>
+<td align="center"><code>switch t := i.(type)</code></td>
+<td align="center"><code>if (i instanceof String) &#123;&#125; else if (i instanceof Integer) &#123;&#125;</code></td>
+<td align="center">多类型分支检测</td>
+</tr>
+</tbody></table>
+<p>简单说：Go 的类型断言 &#x3D; Java 的 <code>instanceof</code>（类型检测） + 强制类型转换，是 “检测 + 转换” 二合一的操作。</p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><ol>
+<li>示例中 “绕一圈” 是教学简化，实际场景里接口变量的类型是<strong>未知的</strong>，必须用断言识别；</li>
+<li>类型断言和 Java 的 <code>instanceof + 强制类型转换</code> 逻辑完全一致，核心都是 “先确认类型，再转换成该类型使用”；</li>
+<li>空接口 <code>interface&#123;&#125;</code> 是 Go 的 “万能类型容器”，类型断言是从这个容器里 “安全取出指定类型数据” 的唯一方式。</li>
+</ol>
+<hr>
+<h1 id="Go-语言接口"><a href="#Go-语言接口" class="headerlink" title="Go 语言接口"></a>Go 语言接口</h1><p>接口（interface）是 Go 语言中的一种类型，用于定义行为的集合，它通过描述类型必须实现的方法，规定了类型的行为契约。</p>
+<p>Go 语言提供了另外一种数据类型即接口，它把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口。</p>
+<p>Go 的接口设计简单却功能强大，是实现多态和解耦的重要工具。</p>
+<p>接口可以让我们将不同的类型绑定到一组公共的方法上，从而实现多态和灵活的设计。</p>
+<h3 id="接口的特点"><a href="#接口的特点" class="headerlink" title="接口的特点"></a>接口的特点</h3><p><strong>隐式实现</strong>：</p>
+<ul>
+<li>Go 中没有关键字显式声明某个类型实现了某个接口。</li>
+<li>只要一个类型实现了接口要求的所有方法，该类型就自动被认为实现了该接口。</li>
+</ul>
+<p><strong>接口类型变量</strong>：</p>
+<ul>
+<li>接口变量可以存储实现该接口的任意值。</li>
+<li>接口变量实际上包含了两个部分：<ul>
+<li><strong>动态类型</strong>：存储实际的值类型。</li>
+<li><strong>动态值</strong>：存储具体的值。</li>
+</ul>
+</li>
+</ul>
+<p><strong>零值接口</strong>：</p>
+<ul>
+<li>接口的零值是 <code>nil</code>。</li>
+<li>一个未初始化的接口变量其值为 <code>nil</code>，且不包含任何动态类型或值。</li>
+</ul>
+<p><strong>空接口</strong>：</p>
+<ul>
+<li>定义为 <code>interface&#123;&#125;</code>，可以表示任何类型。</li>
+</ul>
+<h3 id="接口的常见用法"><a href="#接口的常见用法" class="headerlink" title="接口的常见用法"></a>接口的常见用法</h3><ol>
+<li><strong>多态</strong>：不同类型实现同一接口，实现多态行为。</li>
+<li><strong>解耦</strong>：通过接口定义依赖关系，降低模块之间的耦合。</li>
+<li><strong>泛化</strong>：使用空接口 <code>interface&#123;&#125;</code> 表示任意类型。</li>
+</ol>
+<hr>
+<h2 id="接口定义和实现"><a href="#接口定义和实现" class="headerlink" title="接口定义和实现"></a>接口定义和实现</h2><p>接口定义使用关键字 <strong>interface</strong>，其中包含方法声明。</p>
+<pre><code class="go">/* 定义接口 */
+type interface_name interface &#123;
+   method_name1 [return_type]
+   method_name2 [return_type]
+   method_name3 [return_type]
+   ...
+   method_namen [return_type]
+&#125;
+
+/* 定义结构体 */
+type struct_name struct &#123;
+   /* variables */
+&#125;
+
+/* 实现接口方法 */
+func (struct_name_variable struct_name) method_name1() [return_type] &#123;
+   /* 方法实现 */
+&#125;
+...
+func (struct_name_variable struct_name) method_namen() [return_type] &#123;
+   /* 方法实现*/
+&#125;
+</code></pre>
+<p><strong>定义一个简单接口:</strong></p>
+<pre><code>type Shape interface &#123;
+    Area() float64
+    Perimeter() float64
+&#125;
+</code></pre>
+<ul>
+<li><code>Shape</code> 是一个接口，定义了两个方法：<code>Area</code> 和 <code>Perimeter</code>。</li>
+<li>任意类型只要实现了这两个方法，就被认为实现了 <code>Shape</code> 接口。</li>
+</ul>
+<p><strong>实现接口:</strong> 类型通过实现接口要求的所有方法来实现接口。</p>
+<pre><code class="go">package main
+
+import (
+        &quot;fmt&quot;
+        &quot;math&quot;
+)
+
+// 定义接口
+type Shape interface &#123;
+        Area() float64
+        Perimeter() float64
+&#125;
+
+// 定义一个结构体
+type Circle struct &#123;
+        Radius float64
+&#125;
+
+// Circle 实现 Shape 接口
+func (c Circle) Area() float64 &#123;
+        return math.Pi * c.Radius * c.Radius
+&#125;
+
+func (c Circle) Perimeter() float64 &#123;
+        return 2 * math.Pi * c.Radius
+&#125;
+
+func main() &#123;
+        c := Circle&#123;Radius: 5&#125;
+        var s Shape = c // 接口变量可以存储实现了接口的类型
+        fmt.Println(&quot;Area:&quot;, s.Area())
+        fmt.Println(&quot;Perimeter:&quot;, s.Perimeter())
+&#125;
+</code></pre>
+<hr>
+<h2 id="类型选择（type-switch）"><a href="#类型选择（type-switch）" class="headerlink" title="类型选择（type switch）"></a>类型选择（type switch）</h2><p>type switch 是 Go 中的语法结构，用于根据接口变量的具体类型执行不同的逻辑。</p>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><pre><code class="go">package main
+
+import &quot;fmt&quot;
+
+func printType(val interface&#123;&#125;) &#123;
+        switch v := val.(type) &#123;
+        case int:
+                fmt.Println(&quot;Integer:&quot;, v)
+        case string:
+                fmt.Println(&quot;String:&quot;, v)
+        case float64:
+                fmt.Println(&quot;Float:&quot;, v)
+        default:
+                fmt.Println(&quot;Unknown type&quot;)
+        &#125;
+&#125;
+
+func main() &#123;
+        printType(42)
+        printType(&quot;hello&quot;)
+        printType(3.14)
+        printType([]int&#123;1, 2, 3&#125;)
+&#125;
+</code></pre>
+<p>执行以上代码，输出结果为：</p>
+<pre><code>Integer: 42
+String: hello
+Float: 3.14
+Unknown type
+</code></pre>
+<hr>
+<h1 id="Go-语言泛型"><a href="#Go-语言泛型" class="headerlink" title="Go 语言泛型"></a>Go 语言泛型</h1><p>泛型是 Go 语言在 1.18 版本中引入的重要特性，它让开发者能够编写更加灵活和可重用的代码。</p>
+<p>泛型主要通过以下两个核心概念来实现：</p>
+<ul>
+<li><strong>类型参数（Type Parameters）：</strong>允许你在函数或类型定义中使用一个或多个类型作为参数。</li>
+<li><strong>类型约束（Type Constraints）：</strong>指定类型参数必须满足的条件，确保在函数内部可以安全地操作这些类型。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">概念</th>
+<th align="left">作用</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>类型参数</strong></td>
+<td align="left">在函数或类型名后声明，表示待定的类型。</td>
+<td align="left"><code>[T any]</code></td>
+</tr>
+<tr>
+<td align="left"><strong>类型约束</strong></td>
+<td align="left">定义类型参数必须满足的条件（如支持的操作符或方法）。</td>
+<td align="left"><code>int，float64，comparable，constraints.Ordered，any</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>any</code></strong></td>
+<td align="left">约束类型参数为<strong>任何</strong>类型。</td>
+<td align="left"><code>[T any]</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>comparable</code></strong></td>
+<td align="left">约束类型参数为<strong>可比较</strong>的类型。</td>
+<td align="left"><code>[K comparable]</code></td>
+</tr>
+</tbody></table>
+<p>泛型（Generics）允许我们编写不依赖特定数据类型的代码。</p>
+<p>在引入泛型之前，如果我们想要处理不同类型的数据，通常需要为每种类型编写重复的函数。</p>
+<h4 id="传统方式的局限性："><a href="#传统方式的局限性：" class="headerlink" title="传统方式的局限性："></a><strong>传统方式的局限性：</strong></h4><h5 id="实例-1"><a href="#实例-1" class="headerlink" title="实例"></a>实例</h5><pre><code class="go">*// 处理 int 类型的函数*
+func MaxInt(a, b int) int &#123;
+  **if** a &gt; b &#123;
+    **return** a
+  &#125;
+  **return** b
+&#125;
+
+*// 处理 float64 类型的函数*
+func MaxFloat(a, b float64) float64 &#123;
+  **if** a &gt; b &#123;
+    **return** a
+  &#125;
+  **return** b
+&#125;
+</code></pre>
+<h4 id="使用泛型的解决方案："><a href="#使用泛型的解决方案：" class="headerlink" title="使用泛型的解决方案："></a><strong>使用泛型的解决方案：</strong></h4><h5 id="实例-2"><a href="#实例-2" class="headerlink" title="实例"></a>实例</h5><pre><code class="go">*// 一个函数处理多种类型*
+func Max[T comparable](a, b T) T &#123;
+  **if** a &gt; b &#123;
+    **return** a
+  &#125;
+  **return** b
+&#125;
+</code></pre>
+<h2 id="泛型语法详解"><a href="#泛型语法详解" class="headerlink" title="泛型语法详解"></a>泛型语法详解</h2><h3 id="类型参数声明"><a href="#类型参数声明" class="headerlink" title="类型参数声明"></a>类型参数声明</h3><p>泛型函数和类型通过类型参数列表来声明，语法为 <code>[类型参数 约束]</code>。</p>
+<pre><code class="go">// 基本语法结构
+func 函数名[T 约束](参数 T) 返回值类型 &#123;
+    // 函数体
+&#125;
+
+type 类型名[T 约束] struct &#123;
+    // 结构体字段
+&#125;
+</code></pre>
+<h3 id="类型参数命名约定"><a href="#类型参数命名约定" class="headerlink" title="类型参数命名约定"></a>类型参数命名约定</h3><ul>
+<li>通常使用大写字母：<code>T</code>、<code>K</code>、<code>V</code>、<code>E</code> 等</li>
+<li><code>T</code>：表示 Type（类型）</li>
+<li><code>K</code>：表示 Key（键）</li>
+<li><code>V</code>：表示 Value（值）</li>
+<li><code>E</code>：表示 Element（元素）</li>
+</ul>
+<h2 id="约束（Constraints）"><a href="#约束（Constraints）" class="headerlink" title="约束（Constraints）"></a>约束（Constraints）</h2><p>约束定义了类型参数必须满足的条件，是泛型的核心概念。</p>
+<h3 id="内置约束"><a href="#内置约束" class="headerlink" title="内置约束"></a>内置约束</h3><h4 id="1-any-约束"><a href="#1-any-约束" class="headerlink" title="1. any 约束"></a>1. <code>any</code> 约束</h4><p><code>any</code> 是空接口 <code>interface&#123;&#125;</code> 的别名，表示任何类型都可以。</p>
+<pre><code class="go">func PrintAny[T any](value T) &#123;
+    fmt.Printf(&quot;Value: %v, Type: %T\n&quot;, value, value)
+&#125;
+
+// 使用示例
+PrintAny(42)        // Value: 42, Type: int
+PrintAny(&quot;hello&quot;)   // Value: hello, Type: string
+PrintAny(3.14)      // Value: 3.14, Type: float64
+</code></pre>
+<h4 id="2-comparable-约束"><a href="#2-comparable-约束" class="headerlink" title="2. comparable 约束"></a>2. <code>comparable</code> 约束</h4><p><code>comparable</code> 表示类型支持 <code>==</code> 和 <code>!=</code> 操作符。</p>
+<pre><code class="go">func FindIndex[T comparable](slice []T, target T) int &#123;
+    for i, v := range slice &#123;
+        if v == target &#123;
+            return i
+        &#125;
+    &#125;
+    return -1
+&#125;
+
+// 使用示例
+numbers := []int&#123;1, 2, 3, 4, 5&#125;
+fmt.Println(FindIndex(numbers, 3))  // 输出: 2
+
+names := []string&#123;&quot;Alice&quot;, &quot;Bob&quot;, &quot;Charlie&quot;&#125;
+fmt.Println(FindIndex(names, &quot;Bob&quot;))  // 输出: 1
+</code></pre>
+<h4 id="3-联合约束（Union-Constraints）"><a href="#3-联合约束（Union-Constraints）" class="headerlink" title="3. 联合约束（Union Constraints）"></a>3. 联合约束（Union Constraints）</h4><p>使用 <code>|</code> 运算符组合多个类型。</p>
+<pre><code class="go">// 数字类型约束
+type Number interface &#123;
+    int | int8 | int16 | int32 | int64 | 
+    uint | uint8 | uint16 | uint32 | uint64 | 
+    float32 | float64
+&#125;
+
+func Add[T Number](a, b T) T &#123;
+    return a + b
+&#125;
+
+// 使用示例
+fmt.Println(Add(10, 20))        // 输出: 30
+fmt.Println(Add(3.14, 2.71))    // 输出: 5.85
+</code></pre>
+<hr>
+<h1 id="Go-错误处理"><a href="#Go-错误处理" class="headerlink" title="Go 错误处理"></a>Go 错误处理</h1><p>Go 语言通过内置的错误接口提供了非常简单的错误处理机制。</p>
+<p>Go 语言的错误处理采用显式返回错误的方式，而非传统的异常处理机制。这种设计使代码逻辑更清晰，便于开发者在编译时或运行时明确处理错误。</p>
+<p><strong>Go 的错误处理主要围绕以下机制展开：</strong></p>
+<ol>
+<li><strong><code>error</code> 接口</strong>：标准的错误表示。</li>
+<li><strong>显式返回值</strong>：通过函数的返回值返回错误。</li>
+<li><strong>自定义错误</strong>：可以通过标准库或自定义的方式创建错误。</li>
+<li>**<code>panic</code> 和 <code>recover</code>**：处理不可恢复的严重错误。</li>
+</ol>
+<hr>
+<h2 id="error-接口"><a href="#error-接口" class="headerlink" title="error 接口"></a>error 接口</h2><p>Go 标准库定义了一个 error 接口，表示一个错误的抽象。</p>
+<p>error 类型是一个接口类型，这是它的定义：</p>
+<pre><code>type error interface &#123;
+    Error() string
+&#125;
+</code></pre>
+<ul>
+<li><strong>实现 <code>error</code> 接口</strong>：任何实现了 <code>Error()</code> 方法的类型都可以作为错误。</li>
+<li><code>Error()</code> 方法返回一个描述错误的字符串。</li>
+</ul>
+<h3 id="使用-errors-包创建错误"><a href="#使用-errors-包创建错误" class="headerlink" title="使用 errors 包创建错误"></a>使用 errors 包创建错误</h3><p>我们可以在编码中通过实现 error 接口类型来生成错误信息。</p>
+<p>创建一个简单错误：</p>
+<pre><code class="go">package main
+
+import (
+    &quot;errors&quot;
+    &quot;fmt&quot;
+)
+
+func main() &#123;
+    err := errors.New(&quot;this is an error&quot;)
+    fmt.Println(err) // 输出：this is an error
+&#125;
+</code></pre>
+<p>函数通常在最后的返回值中返回错误信息，使用 errors.New 可返回一个错误信息：</p>
+<pre><code>func Sqrt(f float64) (float64, error) &#123;
+    if f &lt; 0 &#123;
+        return 0, errors.New(&quot;math: square root of negative number&quot;)
+    &#125;
+    // 实现
+&#125;
+</code></pre>
+<p>在下面的例子中，我们在调用 Sqrt 的时候传递的一个负数，然后就得到了 non-nil 的 error 对象，将此对象与 nil 比较，结果为 true，所以 fmt.Println(fmt 包在处理 error 时会调用 Error 方法)被调用，以输出错误，请看下面调用的示例代码：</p>
+<pre><code>result, err:= Sqrt(-1)
+
+if err != nil &#123;
+   fmt.Println(err)
+&#125;
+</code></pre>
+
+            
+        </div>
+    </div>
+
+    <div class="post-tags">
+        
+        <span class="icon">
+            <a-icon type="tags" theme="filled" />
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="/tags/后端" style=color:#1bccbc>
+                后端
+            </a>
+        </span>
+        
+    </div>
+
+    <a href="/2026/03/04/后端/go/ " class="go-post">
+        阅读全文
+    </a>
+</div>
+
+<div class="post">
+
     <a href="/2025/12/22/后端/python/">
         <h2>
             python
@@ -3676,7 +4354,71 @@ setup(
 <li>Pycharm 安装自己打的包库</li>
 </ul>
 <p>右下角的编译器设置 → <code>Interpreter Settings...</code> → 点击蓝色的<code>Go to tool window</code> → 点击⚙ → <code>Install From Disk...</code></p>
+<h3 id="迭代器"><a href="#迭代器" class="headerlink" title="迭代器"></a>迭代器</h3><p>迭代是遍历容器中元素的一种 方式，而迭代器是一个可以记住遍历的位置的对象。迭代器对象从容器的第一个元素开始访问，直到所有的元素被访问完结束。迭代器只能往前不能后退，字符串。列或元组对象都可以用于创建迭代器 </p>
+<h4 id="可迭代对象"><a href="#可迭代对象" class="headerlink" title="可迭代对象"></a>可迭代对象</h4><p>我们发现大多数容器对象都可以使用 for 语句：</p>
+<pre><code class="python">import os
 
+for element in [1, 2, 3]:
+    print(element)
+for element in (1, 2, 3):
+    print(element)
+for key in &#123;&quot;one&quot;: 1, &quot;two&quot;: 2&#125;:
+    print(key)
+for char in &quot;123&quot;:
+    print(char)
+
+with open(&quot;myfile.txt&quot;, &quot;w&quot;) as f:
+    f.write(&quot;H\ne\nl\nl\no\n \nW\no\nr\nl\nd\n&quot;)
+for line in open(&quot;myfile.txt&quot;):
+    print(line, end=&quot;&quot;)
+os.remove(&quot;myfile.txt&quot;)
+</code></pre>
+<p>可以直接作用于 <strong>for</strong> 循环的数据类型有以下几种：</p>
+<p>Ø 容器，如 <strong>list</strong> 、 <strong>tuple</strong> 、 <strong>dict</strong> 、 <strong>set</strong> 、 <strong>str</strong> 等。</p>
+<p>Ø <strong>generator</strong> ，包括生成器和带 <strong>yield</strong> 的generator function。</p>
+<p>这些可以直接作用于 <strong>for</strong> 循环的对象统称为可迭代对象：<strong>Iterable</strong>。</p>
+<h4 id="使用迭代器"><a href="#使用迭代器" class="headerlink" title="使用迭代器"></a>使用迭代器</h4><p>迭代器有两个基本的方法：<strong>iter()</strong> 和 **next()**。</p>
+<p>在容器对象上使用 <strong>for</strong> 语句时，在幕后，<strong>for</strong> 语句会在容器对象上调用 <strong>iter()<strong>。该函数返回一个定义了 <strong><strong>next</strong>()</strong> 方法的迭代器对象，此方法将逐一访问容器中的元素。当元素用尽时，</strong><strong>next</strong>()</strong> 将引发 <strong>StopIteration</strong> 异常来通知终止 <strong>for</strong> 循环。 你可以使用 <strong>next()</strong> 内置函数来调用 <strong><strong>next</strong>()</strong> 方法。</p>
+<p>我们可以使用 <strong>iter()</strong> 获取一个可迭代对象的迭代器，并使用 <strong>next()</strong> 遍历迭代器：</p>
+<pre><code class="python">list = [1, 2, 3]
+it = iter(list)  # 创建迭代器对象
+print(next(it))  # 输出迭代器的下一个元素,1
+print(next(it))  # 2
+print(next(it))  # 3
+print(next(it))  # StopIteration
+</code></pre>
+<p>也可以使用 for 来遍历迭代器：</p>
+<pre><code class="python">list = [1, 2, 3]
+it = iter(list)  # 创建迭代器对象
+for i in it:
+    print(i)
+</code></pre>
+<h4 id="创建迭代器"><a href="#创建迭代器" class="headerlink" title="创建迭代器"></a>创建迭代器</h4><p>了解了迭代器协议背后的机制后，就可以为类添加迭代器行为了。定义 <strong><strong>iter</strong>()</strong> 方法用于返回一个带有 <strong><strong>next</strong>()</strong> 方法的对象。如果类已定义了 **<strong>next</strong>()**，那么 <strong><strong>iter</strong>()</strong> 可以简单地返回 <strong>self</strong>。</p>
+<pre><code class="python">class Reverse:
+    &quot;&quot;&quot;对一个序列执行反向循环的迭代器。&quot;&quot;&quot;
+
+    def __init__(self, data):
+        self.data = data
+        self.index = len(data)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index == 0:
+            raise StopIteration
+        self.index = self.index - 1
+        return self.data[self.index]
+
+rev = Reverse([2, 3, 5, 7, 11, 13, 17, 19])
+iter(rev)
+for char in rev:
+    print(char)
+</code></pre>
+<h4 id="生成器"><a href="#生成器" class="headerlink" title="生成器"></a>生成器</h4><p>生成器（<strong>generator</strong>）是一个用于创建迭代器的简单而强大的工具。它的写法类似于标准的函数，但当它要返回数据时会使用 <strong>yield</strong> 语句。当在生成器函数中使用 <strong>yield</strong> 语句时，函数的执行将会暂停，并将 <strong>yield</strong> 后的表达式作为当前迭代的值返回。</p>
+<p>每次调用生成器的 <strong>next()</strong> 方法或使用 <strong>for</strong> 循环进行迭代时，函数会从上次暂停的地方继续执行（它会记住上次执行语句时的所有数据值），直到再次遇到 <strong>yield</strong> 语句。这样，生成器函数可以逐步产生值，而不需要一次性计算并返回所有结果。</p>
+<p>生成器函数的优势是它们可以按需生成值，避免一次性生成大量数据并占用大量内存。此外，生成器还可以与其他迭代工具（如<strong>for</strong>循环）无缝配合使用，提供简洁和高效的迭代方式。</p>
+<h3 id="send"><a href="#send" class="headerlink" title="send()"></a>send()</h3><h5 id="向生成器fa’song"><a href="#向生成器fa’song" class="headerlink" title="向生成器fa’song"></a>向生成器fa’song</h5>
             
         </div>
     </div>
@@ -3690,7 +4432,7 @@ setup(
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -3891,7 +4633,7 @@ setup(
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#00bcd4>
+            <a href="/tags/软考" style=color:#ffa2c4>
                 软考
             </a>
         </span>
@@ -4262,7 +5004,7 @@ app.window(title_re=&#39;记事本&#39;).window(title_re=&#39;不保存&#39;).cl
         
         <span class="tag">
             
-            <a href="/tags/运维" style=color:#00bcd4>
+            <a href="/tags/运维" style=color:#879cff>
                 运维
             </a>
         </span>
@@ -4702,7 +5444,7 @@ export CLASSPATH=$JAVA_HOME/lib:$CLASSPATH
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#1bccbc>
+            <a href="/tags/AI" style=color:#879cff>
                 AI
             </a>
         </span>
@@ -9812,7 +10554,7 @@ public String chat(@RequestBody String prompt) &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#ff7d73>
                 AI
             </a>
         </span>
@@ -16554,7 +17296,7 @@ spec:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
@@ -17408,131 +18150,6 @@ plt.show()
     </div>
 
     <a href="/2025/03/30/AI/OpenCV/ " class="go-post">
-        阅读全文
-    </a>
-</div>
-
-<div class="post">
-
-    <a href="/2025/03/30/后端/python知识点/">
-        <h2>
-            python知识点
-        </h2>
-    </a>
-
-    <div class="category-and-date">
-
-        
-
-        <span class="date">
-            <span class="icon">
-                <a-icon type="calendar" theme="filled" />
-            </span>
-            2025/3/30
-        </span>
-
-    </div>
-
-    <div class="excerpt">
-        <div class="content" v-pre>
-            
-            
-            <h5 id="项目01-python源码实例知识点"><a href="#项目01-python源码实例知识点" class="headerlink" title="项目01 python源码实例知识点"></a>项目01 python源码实例知识点</h5><p>在控制台打出Icon表情：win+R → Wingdings → 字符码 0xcc  中间加个 f0 → 0xf0cc<br>大写字母转换为小写字母：str.upper()<br>小写字母转换为大写字母：str.lower()<br>station.reverse()   #对高铁站列表反向输出<br>world &#x3D; [“西北”, “中国”, “亚洲”, “世界”]<br>print(world[random.choice([0, 1, 2, 3])]<br>random.shuffle() 顺序打乱<br>random.sample(sqn,n) 从序列中选n个随机且不重复的元素<br>sdate&#x3D;datetime.datetime.today().strftime(‘%m-%d  %H:%M’)<br>sys.stdout.flush 刷新画面布<br>flag &#x3D; random.choice([“+”, “-“])   # 随机产生”+”或 “-“号<br>ces &#x3D; random.randint(1,100)  # 随机生成一个数字<br>fl &#x3D; f.readlines()<br>del fl[:8]    #del删除切片（前8行数据）<br>fl &#x3D; fl[1::3] #提取下标为1，步长为3的切片<br>str1 &#x3D; ‘ ‘.join(fl)  #join()函数分割文本数据<br>str1 &#x3D; str1.replace(‘[QQ红包]请使用新版手机QQ查收红包。’,’’)<br>#滤除无用文本</p>
-<h6 id="文件操作对比"><a href="#文件操作对比" class="headerlink" title="文件操作对比"></a>文件操作对比</h6><pre><code class="python">#打开文件
-def button1():
-  global file1
-  file1=tk.filedialog.askopenfilename()
-  txt_path1.set(file1)
-
-
-#对比文件
-def Diff():
-  with open(file1) as f1,open(file2) as f2:
-    text1 = f1.readlines()
-    text2 = f2.readlines()
-  d = difflib.HtmlDiff()
-  with open(&#39;result1.html&#39;,&#39;w&#39;) as f:
-    f.write(d.make_file(text1,text2))
-</code></pre>
-<p>a1&#x3D;list(set(list1))  #字符串列表去重</p>
-<pre><code class="python">print(&quot;&quot;.join([s for s in str1.splitlines(True) if s.strip()]))
-
-这行代码的作用是打印字符串 str1 中非空行的内容，并且保留原有的换行符。下面是逐部分的解析：
-
-str1.splitlines(True)
-splitlines() 是字符串的方法，用于将字符串按行分割成列表。
-参数 True 表示在分割时保留行尾的换行符。
-这部分代码将 str1 按行分割成一个列表，每个元素是一行字符串，包括换行符。
-
-[s for s in ... if s.strip()]
-这是一个列表推导式，用于生成一个新的列表。
-s for s in ... 表示对每个分割后的行字符串 s 进行迭代。
-
-if s.strip() 是一个条件表达式，用于过滤掉空行或只包含空白字符的行。strip() 方法移除字符串两端的空白字符（包括空格、制表符、换行符等），如果 s.strip() 返回一个空字符串，表示 s 是一个空行或只包含空白字符。
-
-&quot;&quot;.join(...)
-join() 是字符串的方法，用于将列表中的元素连接成一个字符串。这里使用空字符串 &quot;&quot; 作为连接符，表示不添加额外的字符。
-这部分代码将列表推导式生成的列表中的所有非空行连接成一个单一的字符串，保留每行末尾的换行符。
-print(...)
-print() 函数用于输出结果到控制台。
-这部分代码将最终连接好的字符串打印出来。
-综合起来，这行代码的执行流程是：
-----------------------------------------------------------------
-将 str1 按行分割成列表，保留每行的换行符。
-过滤掉列表中的空行或只包含空白字符的行。
-将过滤后的非空行连接成一个字符串。
-打印最终的结果。
-</code></pre>
-<p>#用线程控制自动切换单词<br>t &#x3D; threading.Thread(target&#x3D;autoChange)<br>t.start()</p>
-<pre><code class="python">print(&quot;电影:&quot;,film)
-print(&#39;判断演员是否本部电影的演员。回车确认“是”，输入任意键确认“不是”&#39;)
-for i in range(6):                     # 6次竞猜
-    new = random.choice(actall)        # 随机选择演员
-    actall.remove(new)                 # 从演员库删除选择的演员，防止下次再次出现
-    print(new)  # 显示竞猜演员
-    # 从用户输入中获取一个字符串 并移除该字符串两端的空白字符
-    num = input(&quot;&quot;).strip()  # 用户进行判断，选择回车还是其他键
-    if not num:  # 选择回车，确认是该部电影主演
-        if new not in acter:  # 如果该演员不在本部电影主演库里面
-            count -= 3  # 积分减3分
-            print(&quot;答错了，减三分！&quot;)
-        else:  # 答对了
-            count += 3  # 积分加3分
-            print(&quot;答对了，加三分！&quot;)
-        print(&quot;当前分数：&quot;, count)
-    else:  # 选择其他键，确认不是该部电影主演
-        if new not in acter:  # 如果该演员不在本部电影主演库里面
-            count += 3  # 积分加3分
-            print(&quot;答对了，加三分！&quot;)
-        else:  # 答错了
-            count -= 3  # 积分减3分
-            print(&quot;答错了，减三分！&quot;)
-        print(&quot;当前分数：&quot;, count)  # 输出当前积分
-</code></pre>
-<p>turtle（海龟）库是<a target="_blank" rel="noopener" href="https://zhida.zhihu.com/search?content_id=102483654&content_type=Article&match_order=1&q=turtle%E7%BB%98%E5%9B%BE%E4%BD%93%E7%B3%BB&zhida_source=entity">turtle绘图体系</a>python的实现；<br>turtle绘图体系：1969年诞生，主要用于程序设计入门；<br>turtle库是python的标准库之一；属于入门级的图形绘制函数库；<br>turtle库绘制原理：有一只海龟在窗体正中心，在画布上游走，走过的轨迹形成了绘制的图形，海龟由程序控制，可以自由改变颜色、方向宽度等；</p>
-<p>screen.onkeypress(None,”space”)  #按空格键启动转盘</p>
-
-            
-        </div>
-    </div>
-
-    <div class="post-tags">
-        
-        <span class="icon">
-            <a-icon type="tags" theme="filled" />
-        </span>
-        
-        
-        <span class="tag">
-            
-            <a href="/tags/后端" style=color:#ffa2c4>
-                后端
-            </a>
-        </span>
-        
-    </div>
-
-    <a href="/2025/03/30/后端/python知识点/ " class="go-post">
         阅读全文
     </a>
 </div>
