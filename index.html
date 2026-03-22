@@ -626,11 +626,68 @@
 <p><strong>节点讲解</strong>我们都将会在<code>LiblibAI</code>的在线版comfyui</p>
 <p><span style = "color:red"><strong>右键添加节点 → 加载器 → ‘ <u>所有加载器</u> ‘</strong></span></p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/ddc5ddc5e173db81408fe27b1f09a58e594192dc/%E5%8A%A0%E8%BD%BD%E5%99%A8(%E8%AF%A6%E8%A7%A3.).png"></p>
-<h3 id="ComfyUI基础节点详解——条件"><a href="#ComfyUI基础节点详解——条件" class="headerlink" title="ComfyUI基础节点详解——条件"></a><span style = "color:blue">ComfyUI基础节点详解——条件</span></h3><p><strong>条件节点</strong> &#x3D;&gt; 主要作用：充当指挥官，下达命令，设定生成条件。</p>
+<h2 id="ComfyUI基础节点详解——条件"><a href="#ComfyUI基础节点详解——条件" class="headerlink" title="ComfyUI基础节点详解——条件"></a><span style = "color:blue">ComfyUI基础节点详解——条件</span></h2><p><strong>条件节点</strong> &#x3D;&gt; 主要作用：充当指挥官，下达命令，设定生成条件。</p>
 <p>例如提示词要求生成什么内容，controlnet要求生成什么样的动作姿势，最终画面都需要遵循这些条件节点的要求来生成图像</p>
 <p><img src="https://raw.githubusercontent.com/P-luminary/images/a988c9d42f923369f19c1385d294c856e7b7eb71/%E6%9D%A1%E4%BB%B6%E5%B1%80%E9%83%A8%E9%87%8D%E7%BB%98+%E5%9B%BE%E7%94%9F%E8%A7%86%E9%A2%91.png"></p>
 <h3 id="StableZer123、StableZer123-批次"><a href="#StableZer123、StableZer123-批次" class="headerlink" title="StableZer123、StableZer123(批次)"></a>StableZer123、StableZer123(批次)</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/365696349d3dad145f6882ee953a3b1d7e11fb85/StableZero123.png"></p>
-
+<h3 id="SD4X放大条件节点-SD-4X放大条件"><a href="#SD4X放大条件节点-SD-4X放大条件" class="headerlink" title="SD4X放大条件节点(SD_4X放大条件)"></a>SD4X放大条件节点(SD_4X放大条件)</h3><h6 id="图片进行四倍放大后再进入潜空间进行采样降噪处理"><a href="#图片进行四倍放大后再进入潜空间进行采样降噪处理" class="headerlink" title="图片进行四倍放大后再进入潜空间进行采样降噪处理"></a>图片进行四倍放大后再进入潜空间进行采样降噪处理</h6><p>这里要用大模型<code>x4-upscal-ema.ckpt</code></p>
+<h3 id="Stable-Cascade-B阶段节点"><a href="#Stable-Cascade-B阶段节点" class="headerlink" title="Stable Cascade B阶段节点"></a>Stable Cascade B阶段节点</h3><p><strong>Stable Cascade B 阶段节点（Stage B）是 Stable Cascade 三阶段生成流程里的 “高清细节上采样 + 精修” 核心节点，负责把 Stage C 生成的低分辨率小 latent 放大、补全细节，为最终出图打基础</strong>。</p>
+<h5 id="一、Stable-Cascade-三阶段总览（先看懂流程）"><a href="#一、Stable-Cascade-三阶段总览（先看懂流程）" class="headerlink" title="一、Stable Cascade 三阶段总览（先看懂流程）"></a>一、Stable Cascade 三阶段总览（先看懂流程）</h5><p>Stable Cascade 分 <strong>Stage C → Stage B → Stage A</strong> 三步生成：</p>
+<ol>
+<li><strong>Stage C（Prior &#x2F; 先验）</strong>：在极小 latent 空间（如 24×24）生成基础构图、语义，速度快、显存占用低。</li>
+<li><strong>Stage B（Decoder &#x2F; 解码器）</strong>：<strong>核心上采样 + 细节精修</strong>，把 Stage C 的小 latent 放大到中高分辨率 latent，补纹理、结构、细节。</li>
+<li><strong>Stage A（VAE &#x2F; 最终解码）</strong>：把 Stage B 的 latent 解码成像素图，输出最终高清图。</li>
+</ol>
+<h5 id="二、Stage-B-节点的核心作用（你问的重点）"><a href="#二、Stage-B-节点的核心作用（你问的重点）" class="headerlink" title="二、Stage B 节点的核心作用（你问的重点）"></a>二、Stage B 节点的核心作用（你问的重点）</h5><h6 id="1-latent-上采样（最核心）"><a href="#1-latent-上采样（最核心）" class="headerlink" title="1.  latent 上采样（最核心）"></a>1.  latent 上采样（最核心）</h6><ul>
+<li>接收 Stage C 输出的<strong>低分辨率 latent</strong>（如 24×24），通过扩散模型将其<strong>放大到中高分辨率 latent</strong>（如 256×256、512×512）。</li>
+<li>相当于 “把模糊小图放大成清晰大图的 latent 版本”，是从 “小 latent” 到 “高清图” 的关键桥梁。</li>
+</ul>
+<h6 id="2-细节精修与语义对齐"><a href="#2-细节精修与语义对齐" class="headerlink" title="2. 细节精修与语义对齐"></a>2. 细节精修与语义对齐</h6><ul>
+<li>基于文本提示词，对放大后的 latent 进行<strong>去噪、补细节、修正结构</strong>，让图像更贴合提示词、更真实。</li>
+<li>解决 Stage C 生成的 latent 细节不足、结构粗糙的问题，是画质提升的关键环节。</li>
+</ul>
+<h6 id="3-显存友好的高清生成"><a href="#3-显存友好的高清生成" class="headerlink" title="3. 显存友好的高清生成"></a>3. 显存友好的高清生成</h6><ul>
+<li>相比直接在高分辨率 latent 上跑扩散，Stage B 先在小 latent 跑 Stage C，再上采样，<strong>大幅降低显存占用</strong>，让普通显卡也能生成高清图。</li>
+</ul>
+<h3 id="InstructPixToPixConditioning-条件节点"><a href="#InstructPixToPixConditioning-条件节点" class="headerlink" title="InstructPixToPixConditioning 条件节点"></a>InstructPixToPixConditioning 条件节点</h3><p>通过提示词可以在我们上传图片的基础上赋予一系列新的样式风格</p>
+<ul>
+<li>比如输入<code>make it file</code>让它着火；就会在原图的基础上产生效果</li>
+<li>也可以改变其他的元素，比如输入<code>make it old</code>就可以让他变老</li>
+</ul>
+<p>这里要用大模型<code>cosxl_edit.safetensors</code></p>
+<h3 id="Clip停止层"><a href="#Clip停止层" class="headerlink" title="Clip停止层"></a>Clip停止层</h3><p>参数：停止在CLIP层 (x)<br>真实风：-1<br>动漫风：-2</p>
+<h3 id="条件连接、条件平均、条件合并"><a href="#条件连接、条件平均、条件合并" class="headerlink" title="条件连接、条件平均、条件合并"></a>条件连接、条件平均、条件合并</h3><p><strong>条件连接</strong>(联结)：可以合并两个正向提示词，因为提示词都写在一个CLIP中可能会互相干扰</p>
+<p><strong>条件平均</strong>：由于有两个正向提示词，可以通过其参数来调整合并之后那个提示词会起更多的作用；</p>
+<ul>
+<li>例如默认值是1，就代表：上面的提示词起100%的作用（蓝色头发 无白色衣服）</li>
+<li>如果改成0，就代表：下面的提示词起100%的作用（白色衣服 无蓝色头发）</li>
+<li>所以要选择 <strong>0~1</strong> 的数值</li>
+</ul>
+<p><strong>条件合并</strong>：上下提示词进行完全混合！！！</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f54d1f35c36a1817137df1731cc864c88414a067/%E6%9D%A1%E4%BB%B6%E8%BF%9E%E6%8E%A5%E3%80%81%E5%B9%B3%E5%9D%87%E3%80%81%E5%90%88%E5%B9%B6.png"></p>
+<h3 id="条件设置遮罩"><a href="#条件设置遮罩" class="headerlink" title="条件设置遮罩"></a>条件设置遮罩</h3><p><img src="https://raw.githubusercontent.com/P-luminary/images/4c9912fc1bf409cc2f131d538147ba18652300e6/%E6%9D%A1%E4%BB%B6%E8%AE%BE%E7%BD%AE%E9%81%AE%E7%BD%A9.png"></p>
+<h3 id="CLIP视觉编码-unCLIP条件"><a href="#CLIP视觉编码-unCLIP条件" class="headerlink" title="CLIP视觉编码 + unCLIP条件"></a>CLIP视觉编码 + unCLIP条件</h3><p>在图生图下，让comfyUI参考图片的风格去生成图片</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ce48e5fc5564e6edc75b4d91cfdadda4bfa63600/[%E5%AD%A6%E4%B9%A0%E5%9B%BE%E7%89%87%E9%A3%8E%E6%A0%BC]CLIP%E8%A7%86%E8%A7%89%E7%BC%96%E7%A0%81%20+%20unCLIP%E6%9D%A1%E4%BB%B6(%E6%9D%A1%E4%BB%B6%E5%AD%90%E5%B7%A5%E4%BD%9C%E6%B5%81).json.png"></p>
+<h2 id="ComfyUI基础节点详解——Latent-潜空间"><a href="#ComfyUI基础节点详解——Latent-潜空间" class="headerlink" title="ComfyUI基础节点详解——Latent(潜空间)"></a><span style = "color:blue">ComfyUI基础节点详解——Latent<del>(潜空间)</del></span></h2><p>K采样器就是典型的潜空间模块，这个潜空间是专门AI处理图像的空间，不管是我们给它传输内容还是从潜空间里面产出的内容，都需要靠<code>Latent</code>节点来进行中转转化</p>
+<ul>
+<li>空<strong>Latent</strong>(适合文生图使用)：不需要传输内容进潜空间</li>
+<li>加载图像→VAE编码.Latent→K.Latent(给图片参考)：图片经过编码后转换成Latent，传输给K采样器；同理在K采样器里面处理完毕的图像就需要通过VAE解码节点来转换成像素，最终得到我们看得到的图片</li>
+</ul>
+<h3 id="Latent缩放，Latent按系数缩放"><a href="#Latent缩放，Latent按系数缩放" class="headerlink" title="Latent缩放，Latent按系数缩放"></a>Latent缩放，Latent按系数缩放</h3><p><strong>Latent缩放</strong>：可以手动改变我们上传图片的宽度和高度(因为不知道宽高比可能出现畸变)；所以一般用Latent按系数缩放节点</p>
+<p><strong>Latent按系数缩放节点</strong>：会自动获取图片的宽度和高度，通过<strong>系数值</strong>来进行等比放大或缩小</p>
+<ul>
+<li>缩放算法一般选择<code>nearest-exact</code>(缩放系数最高效果最好)【如果图片生成后有锯齿状可以切换其他柔和算法】</li>
+</ul>
+<h3 id="合成Latent、合成Latent遮罩"><a href="#合成Latent、合成Latent遮罩" class="headerlink" title="合成Latent、合成Latent遮罩"></a>合成Latent、合成Latent遮罩</h3><p>将两个图片的画面融合，把下面的源图片覆盖在目标图片上面</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/40db888195c823ea7c7898f4e13de5f3a0abd3a0/%E5%90%88%E6%88%90Latent%E3%80%81%E5%90%88%E6%88%90Latent%E9%81%AE%E7%BD%A9.png"></p>
+<h3 id="Latent相加、相减、相乘、插值"><a href="#Latent相加、相减、相乘、插值" class="headerlink" title="Latent相加、相减、相乘、插值"></a>Latent相加、相减、相乘、插值</h3><p><strong>Latent插值</strong>：比率是1，只显示上面的图片；比率是0，只显示下面的图片；比率是0.5，两个图片以插值的方式相互交互在一起<br><strong>Latent相加</strong>：把下面图片亮度最高的地方叠加到上面的图片来<br><strong>Latent相乘(图片阳光透光) + Latent相加</strong>：通过相乘的系数来调整阳光的亮度<br><strong>Latent相减</strong>：和相加相反，上面的图片减去下面阳光最亮的区域(光亮的地方变成阴影)</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f55dd438b02e926847778cbea965c4e086f5c2bf/Latent%E7%9B%B8%E5%8A%A0%E3%80%81%E7%9B%B8%E5%87%8F%E3%80%81%E7%9B%B8%E4%B9%98%E3%80%81%E6%8F%92%E5%80%BC.png"></p>
+<h3 id="VAE内补编码器、设置Latent噪波遮罩"><a href="#VAE内补编码器、设置Latent噪波遮罩" class="headerlink" title="VAE内补编码器、设置Latent噪波遮罩"></a>VAE内补编码器、设置Latent噪波遮罩</h3><p><strong>VAE内补编码器</strong><del>(VAE编码+设置Latent噪波遮罩)</del>：内补就是inpaint的意思是专门用来进行<strong>局部重绘</strong>的；其原理是把重绘区域涂抹成白色的潜空间进行重绘<br>[<span style = "color:red">适合重绘一切和原图没有关系的内容</span>]<br><strong>设置Latent噪波遮罩</strong>：让上传的图片多出遮罩的输入；其原理是原图的基础上进行重绘的，<strong>重绘出来的内容会考虑到原图</strong><br><img src="https://raw.githubusercontent.com/P-luminary/images/ceec2d727f621b4608420c1f9ae489b43207da6d/VAE%E5%86%85%E8%A1%A5%E7%BC%96%E7%A0%81%E5%99%A8%E3%80%81%E8%AE%BE%E7%BD%AELatent%E5%99%AA%E6%B3%A2%E9%81%AE%E7%BD%A9.png"></p>
+<h3 id="Latent旋转、翻转、裁剪"><a href="#Latent旋转、翻转、裁剪" class="headerlink" title="Latent旋转、翻转、裁剪"></a>Latent旋转、翻转、裁剪</h3><p>可以改变图像的位置和方位以及大小</p>
+<h3 id="批处理Latent节点【后续进阶批量化出图】"><a href="#批处理Latent节点【后续进阶批量化出图】" class="headerlink" title="批处理Latent节点【后续进阶批量化出图】"></a>批处理Latent节点【后续进阶批量化出图】</h3><h5 id="复制Latent批次、重设Latent批次、从批次获取Latent"><a href="#复制Latent批次、重设Latent批次、从批次获取Latent" class="headerlink" title="复制Latent批次、重设Latent批次、从批次获取Latent"></a>复制Latent批次、重设Latent批次、从批次获取Latent</h5><p>背景：我们在文生图的工作流里可以通过<code>空Latent</code>的批次大小 来改变一次生成多张图片；但如果是图生图工作流的话没有办法一次生成多个图片；所以需要Latent组合批次<br>批处理：一次生成多个图片的处理流程</p>
+<p><strong>复制Latent批次</strong>：连接后可以设置Latent生成图片的数量<br><strong>重设Latent批次</strong>：拆分重组批次节省批量出图显存占用<br><strong>从批次获取Latent</strong>：我想要通过复制Latent批次中的第二个索引(第三张图)的图片，此时只需要设置<strong>从批次获取Latent</strong>的批次索引为2即可；长度默认是1，也就是可以获取到索引以后的根据长度来断定图的数量</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/f011ccfe121a9817238c068fdfac8f7ed2239bbe/%E6%89%B9%E5%A4%84%E7%90%86Latent%E8%8A%82%E7%82%B9(%E5%A4%8D%E5%88%B6%2C%E9%87%8D%E8%AE%BE%2C%E4%BB%8E%E6%89%B9%E6%AC%A1%E8%8E%B7%E5%8F%96).png"></p>
+<h2 id="ComfyUI基础节点详解——图像"><a href="#ComfyUI基础节点详解——图像" class="headerlink" title="ComfyUI基础节点详解——图像"></a><span style = "color:blue">ComfyUI基础节点详解——图像</span></h2>
             
         </div>
     </div>
@@ -644,7 +701,7 @@
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -2367,7 +2424,7 @@ go get github.com/gin-gonic/gin@v1.9.0
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#00bcd4>
+            <a href="/tags/后端" style=color:#879cff>
                 后端
             </a>
         </span>
@@ -6002,7 +6059,7 @@ for char in rev:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#879cff>
+            <a href="/tags/后端" style=color:#1bccbc>
                 后端
             </a>
         </span>
@@ -6203,7 +6260,7 @@ for char in rev:
         
         <span class="tag">
             
-            <a href="/tags/软考" style=color:#879cff>
+            <a href="/tags/软考" style=color:#1bccbc>
                 软考
             </a>
         </span>
@@ -6574,7 +6631,7 @@ app.window(title_re=&#39;记事本&#39;).window(title_re=&#39;不保存&#39;).cl
         
         <span class="tag">
             
-            <a href="/tags/运维" style=color:#1bccbc>
+            <a href="/tags/运维" style=color:#ff7d73>
                 运维
             </a>
         </span>
@@ -7109,7 +7166,7 @@ public class MvcConfiguration implements WebMvcConfigurer &#123;
         
         <span class="tag">
             
-            <a href="/tags/攻略" style=color:#1bccbc>
+            <a href="/tags/攻略" style=color:#00bcd4>
                 攻略
             </a>
         </span>
@@ -9702,7 +9759,7 @@ public class ChatController &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#879cff>
+            <a href="/tags/AI" style=color:#1bccbc>
                 AI
             </a>
         </span>
@@ -12124,7 +12181,7 @@ public String chat(@RequestBody String prompt) &#123;
         
         <span class="tag">
             
-            <a href="/tags/AI" style=color:#ffa2c4>
+            <a href="/tags/AI" style=color:#00bcd4>
                 AI
             </a>
         </span>
@@ -18866,7 +18923,7 @@ spec:
         
         <span class="tag">
             
-            <a href="/tags/后端" style=color:#ff7d73>
+            <a href="/tags/后端" style=color:#ffa2c4>
                 后端
             </a>
         </span>
