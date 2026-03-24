@@ -126,7 +126,7 @@
             
             <span class="tag">
                 
-                <a href="/tags/AI" style=color:#1bccbc>
+                <a href="/tags/AI" style=color:#879cff>
                     AI
                 </a>
             </span>
@@ -685,6 +685,47 @@
 <h3 id="图像—预览图像"><a href="#图像—预览图像" class="headerlink" title="图像—预览图像"></a>图像—预览图像</h3><p>仅生成图像结果，不会在硬盘中保存</p>
 <h3 id="图像—保存图像"><a href="#图像—保存图像" class="headerlink" title="图像—保存图像"></a>图像—保存图像</h3><p>生成预览结果的同时，还会保存图片到对应文件夹</p>
 <h3 id="图像—外补画板"><a href="#图像—外补画板" class="headerlink" title="图像—外补画板"></a>图像—外补画板</h3><p>在图片扩充工作流里经常用的到<br>有<strong>上,下,左,右,羽化</strong>的参数；比如可以扩展图像左侧街道的画面 → 左 100<br>这里注意要对原来的图像进行扩充需要用到之前讲过的<code>VAE内补编码器</code><br><img src="https://raw.githubusercontent.com/P-luminary/images/def8891cb04f77ef7965fa037cd7772f2ea3e376/%E5%9B%BE%E5%83%8F%E2%80%94%E5%A4%96%E8%A1%A5%E7%94%BB%E6%9D%BF.png"></p>
+<h3 id="ComfyUI基础节点详解——采样器"><a href="#ComfyUI基础节点详解——采样器" class="headerlink" title="ComfyUI基础节点详解——采样器"></a><span style = "color:blue">ComfyUI基础节点详解——采样器</span></h3><ul>
+<li>**K采样器(高级)**：下面的开始、结束降噪步数专门是给<code>SDXL refiner</code>使用的</li>
+<li><strong>自定义采样器</strong>：左边输入接口多出了采样器和Sigmas(调度器)<ul>
+<li>K采样器选择</li>
+<li>基础调度器</li>
+</ul>
+</li>
+<li><strong>自定义采样器(高级)</strong><ul>
+<li>随机噪波</li>
+<li>基础引导器</li>
+<li>CFG引导器：CFG值越低，那么AI就会加入越多自己的想法【一般设置低一些(太低会带来画面动态闪烁)】</li>
+<li>双CFG引导器</li>
+</ul>
+</li>
+</ul>
+<p>把这些参数一一单独划分出来的好处就是同样的参数，我们分配给多个采样器共用，对多个采样器进行同步控制，增加工作流的灵活性。</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/1419cf11768b508f64cd3decb73c0e8152af48d8/%E9%87%87%E6%A0%B7%E5%99%A8%E8%AF%A6%E8%A7%A3.png"></p>
+<h3 id="面部检测与面部修复技巧"><a href="#面部检测与面部修复技巧" class="headerlink" title="面部检测与面部修复技巧"></a>面部检测与面部修复技巧</h3><p>右键 → 新建节点 → Impact节点 → 简易 → <code>面部细化</code>(FaceDetailer)</p>
+<p>这里有个大坑 新版要安装<code>comfyui-impact-subpack</code>插件，并用老的<code>UltralyticsDetectorProvider</code></p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/9ef9de50c635ee099fd1ce3772360990e005bb1f/%E8%84%B8%E9%83%A8%E6%A3%80%E6%B5%8B%E4%B8%8E%E9%9D%A2%E9%83%A8%E4%BF%AE%E5%A4%8D.png"></p>
+<h3 id="SUPIR智能修复高清放大"><a href="#SUPIR智能修复高清放大" class="headerlink" title="SUPIR智能修复高清放大"></a>SUPIR智能修复高清放大</h3><p>下载模型：<code>SUPIR-v0Q.ckpt</code>(适合大部分场景)、而<code>SUPIR-v0f.ckpt</code>(适合暗光场景) 这两个非常吃显卡资源，所以有平替<code>SUPIR-v0Q_fp16.safetensors</code>(容量降低一半的FP16半精度模型)</p>
+<p><code>SUPIR</code>是必须配对SDXL模型才有效果<br><img src="https://raw.githubusercontent.com/P-luminary/images/3514150dafbab890d0e51eb64b43e4b2f040c7e5/SUPIR%E6%99%BA%E8%83%BD%E4%BF%AE%E5%A4%8D%E9%AB%98%E6%B8%85%E6%94%BE%E5%A4%A7.png"></p>
+<h3 id="IC-Light智能自定义重打光"><a href="#IC-Light智能自定义重打光" class="headerlink" title="IC-Light智能自定义重打光"></a>IC-Light智能自定义重打光</h3><p><code>IC-Light</code> + <code>kjnode + video-Matting</code><br>下载<code>iclight_sd15_fbc.safetensors</code>放在<code>xxx/models/unet/IC-Light</code>文件夹里面</p>
+<h3 id="IC-Light-Native自定义背景融合打光"><a href="#IC-Light-Native自定义背景融合打光" class="headerlink" title="IC-Light-Native自定义背景融合打光"></a>IC-Light-Native自定义背景融合打光</h3><p>重映射图像范围<code>Remap Image Range</code>中的min 可以变小 就相相当于增加暗光的暗</p>
+<ul>
+<li><h4 id="手动调整光源"><a href="#手动调整光源" class="headerlink" title="手动调整光源"></a>手动调整光源</h4></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/1835de6fc5f4c50a1d0093f9b84a98ac44c1b66b/%E6%89%8B%E5%8A%A8%E8%B0%83%E6%95%B4%E5%85%89%E6%BA%90.png"></p>
+<ul>
+<li><h4 id="直接上传光源图"><a href="#直接上传光源图" class="headerlink" title="直接上传光源图"></a>直接上传光源图</h4></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/5542e224c52f5fee8774b833221b50b3de6579f9/%E7%9B%B4%E6%8E%A5%E4%B8%8A%E4%BC%A0%E5%85%89%E6%BA%90%E5%9B%BE.png"></p>
+<ul>
+<li><h4 id="上传背景图融合"><a href="#上传背景图融合" class="headerlink" title="上传背景图融合"></a>上传背景图融合</h4></li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/ec302e7a836a5eb6f7e7a29dc0a3d6158c205fe6/%E4%B8%8A%E4%BC%A0%E8%83%8C%E6%99%AF%E5%9B%BE%E8%9E%8D%E5%90%88.png"></p>
+<ul>
+<li><h4 id="直接创建背景融合-提示词-也需要抠图节点"><a href="#直接创建背景融合-提示词-也需要抠图节点" class="headerlink" title="直接创建背景融合(提示词)+也需要抠图节点"></a>直接创建背景融合<del>(提示词)+也需要抠图节点</del></h4></li>
+</ul>
+<p>需要安装<code>lc-light-native</code> + <code>layerdiffuse</code>插件<br>把<code>iclight_sd15_fbc_unet_ldm.safetensors</code>和<code>iclight_sd15_fc_unet_ldm.safetensors</code>模型放到<code>E:\ComfyUI-AI_DeskTop\ComfyUI-aki-v3\ComfyUI\models\unet</code>中</p>
+<p><img src="https://raw.githubusercontent.com/P-luminary/images/c54c50c3f8e25d3739b20a587ad43827306baf3c/%E6%8A%A0%E5%9B%BE+%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%8D%A2%E8%83%8C%E6%99%AF.png"></p>
 
     </div>
 
